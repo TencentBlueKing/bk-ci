@@ -3,22 +3,18 @@
   "required" : [ "version" ],
   "properties" : {
     "version" : {
-      "description" : "YAML 的版本，v2.0 为新语法第一版",
       "type" : "string",
       "const" : "v2.0"
     },
     "name" : {
-      "description" : "pipeline 名称，缺省则设置为 YAML 文件相对于代码仓库根目录的路径",
       "type" : "string"
     },
     "on" : {
-      "description" : "触发器设置，监听工蜂事件或定时任务等，满足条件时执行流水线",
       "type" : "object",
       "minProperties" : 1,
       "additionalProperties" : false,
       "properties" : {
         "push" : {
-          "description" : "代码仓库push时触发，简写为 push:array 在指定的分支上提交时触发执行",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -29,53 +25,46 @@
             "additionalProperties" : false,
             "properties" : {
               "branches" : {
-                "description" : "在指定的分支上提交时触发执行，分支名称支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "branches-ignore" : {
-                "description" : "排除的分支，满足条件的分支提交时不触发执行",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "paths" : {
-                "description" : "满足条件的路径上的提交才触发执行，path支持使用*匹配 0~n 个除了/之外的任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "paths-ignore" : {
-                "description" : "排除的路径，满足条件的路径提交时不触发执行",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "users" : {
-                "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "users-ignore" : {
-                "description" : "排除的用户，满足条件时不触发",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "action" : {
-                "description" : "push支持属性action，区分文件推送和新分支推送",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
-                  "enum" : [ "new-branch", "push-file" ]
+                  "enum" : [ "new-branch", "push-file", "new-branch-and-push-file" ]
                 },
                 "additionalItems" : false
               }
@@ -83,7 +72,6 @@
           } ]
         },
         "tag" : {
-          "description" : "代码仓库tag push时触发，简写为 tag:array 名称满足条件的tag推送时触发",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -94,35 +82,30 @@
             "additionalProperties" : false,
             "properties" : {
               "tags" : {
-                "description" : "名称满足条件的tag推送时触发， tag名称支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "tags-ignore" : {
-                "description" : "排除的tag，满足条件时不触发",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "from-branches" : {
-                "description" : "来源分支，满足条件时触发，分支名称支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "users" : {
-                "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "users-ignore" : {
-                "description" : "排除的用户，满足条件时不触发",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
@@ -132,7 +115,6 @@
           } ]
         },
         "mr" : {
-          "description" : "代码仓库merge-request时触发，简写为 mr:array mr的目标分支满足条件时触发执行",
           "anyOf" : [ {
             "type" : "array",
             "items" : {
@@ -143,35 +125,30 @@
             "additionalProperties" : false,
             "properties" : {
               "target-branches" : {
-                "description" : "mr的目标分支满足条件时触发执行，分支名称支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "source-branches-ignore" : {
-                "description" : "mr的源分支满足条件时不触发，分支名称支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "paths" : {
-                "description" : "满足条件的路径上的提交才触发执行，path支持使用*匹配 0~n 个除了/之外的任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "paths-ignore" : {
-                "description" : "排除的路径，满足条件的路径提交时不触发执行",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "action" : {
-                "description" : "缺省为 open、reopen、push-update，mr事件参见",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -180,14 +157,12 @@
                 "additionalItems" : false
               },
               "users" : {
-                "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
                 }
               },
               "users-ignore" : {
-                "description" : "排除的用户，满足条件时不触发",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
@@ -197,17 +172,14 @@
           } ]
         },
         "schedules" : {
-          "description" : "定时触发，不能定义秒级别的定时任务，yml 推送时检查，不合法时企业微信知会",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "cron" ],
           "properties" : {
             "cron" : {
-              "description" : "crontab 表达式，不支持秒级别的定时任务，定时计划以及对应的流水线编排均以 默认分支上的YAML为准",
               "type" : "string"
             },
             "branches" : {
-              "description" : "在指定的分支上执行定时任务。需指定明确的分支，不支持*通配。最多支持 3 个分支",
               "maxItems" : 3,
               "type" : "array",
               "items" : {
@@ -215,13 +187,11 @@
               }
             },
             "always" : {
-              "description" : "缺省为 false，表示只有在代码变更时（和上一次成功触发相比）才执行，当值为 true 时，表示始终执行",
               "type" : "boolean"
             }
           }
         },
         "delete" : {
-          "description" : "代码仓库delete时触发，简写为 delete:array 在指定的分支上提交时触发执行",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -232,7 +202,6 @@
             "additionalProperties" : false,
             "properties" : {
               "types" : {
-                "description" : "目前仅支持删除分支和删除tag触发",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -244,7 +213,6 @@
           } ]
         },
         "issue" : {
-          "description" : "代码仓库issue时触发，简写为 issue:action 在指定的issue状态上触发",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -255,7 +223,6 @@
             "additionalProperties" : false,
             "properties" : {
               "action" : {
-                "description" : "默认所有的action",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -267,7 +234,6 @@
           } ]
         },
         "review" : {
-          "description" : "当创建评审或者评审状态改变时会触发",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -278,7 +244,6 @@
             "additionalProperties" : false,
             "properties" : {
               "types" : {
-                "description" : "评审类型,comparison:commit评审、merge_request:MR评审",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -287,7 +252,6 @@
                 "additionalItems" : false
               },
               "states" : {
-                "description" : "CR评审状态值,approved:评审通过、approving:评审中、change_denied:评审被拒绝、change_required:代码要求修改",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -299,7 +263,6 @@
           } ]
         },
         "note" : {
-          "description" : "当创建评审或者评审状态改变时会触发",
           "oneOf" : [ {
             "type" : "array",
             "items" : {
@@ -310,7 +273,6 @@
             "additionalProperties" : false,
             "properties" : {
               "types" : {
-                "description" : "评论类型,commit:对提交进行评论、merge_request:对 mr 进行评论,issue:对缺陷进行评论",
                 "type" : "array",
                 "uniqueItems" : true,
                 "items" : {
@@ -319,7 +281,6 @@
                 "additionalItems" : false
               },
               "comment" : {
-                "description" : "评论",
                 "type" : "array",
                 "items" : {
                   "type" : "string"
@@ -329,10 +290,8 @@
           } ]
         },
         "repo_hook" : {
-          "description" : "定义一个或多个 远程仓库触发",
           "type" : "array",
           "items" : {
-            "description" : "远程仓库触发",
             "type" : "object",
             "additionalProperties" : false,
             "required" : [ "name", "credentials" ],
@@ -341,12 +300,9 @@
                 "type" : "string"
               },
               "credentials" : {
-                "description" : "支持两种密钥方式。1、利用凭证id访问已经存储的private token，2、直接填写private token",
                 "oneOf" : [ {
-                  "description" : "填写凭证id",
                   "type" : "string"
                 }, {
-                  "description" : "填写private token",
                   "type" : "object",
                   "properties" : {
                     "token" : {
@@ -356,13 +312,11 @@
                 } ]
               },
               "events" : {
-                "description" : "远程触发器设置，监听工蜂事件或定时任务等，满足条件时执行流水线",
                 "type" : "object",
                 "minProperties" : 1,
                 "additionalProperties" : false,
                 "properties" : {
                   "push" : {
-                    "description" : "代码仓库push时触发，简写为 push:array 在指定的分支上提交时触发执行",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -373,53 +327,46 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "branches" : {
-                          "description" : "在指定的分支上提交时触发执行，分支名称支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "branches-ignore" : {
-                          "description" : "排除的分支，满足条件的分支提交时不触发执行",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "paths" : {
-                          "description" : "满足条件的路径上的提交才触发执行，path支持使用*匹配 0~n 个除了/之外的任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "paths-ignore" : {
-                          "description" : "排除的路径，满足条件的路径提交时不触发执行",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "users" : {
-                          "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "users-ignore" : {
-                          "description" : "排除的用户，满足条件时不触发",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "action" : {
-                          "description" : "push支持属性action，区分文件推送和新分支推送",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
-                            "enum" : [ "new-branch", "push-file" ]
+                            "enum" : [ "new-branch", "push-file", "new-branch-and-push-file" ]
                           },
                           "additionalItems" : false
                         }
@@ -427,7 +374,6 @@
                     } ]
                   },
                   "tag" : {
-                    "description" : "代码仓库tag push时触发，简写为 tag:array 名称满足条件的tag推送时触发",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -438,35 +384,30 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "tags" : {
-                          "description" : "名称满足条件的tag推送时触发， tag名称支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "tags-ignore" : {
-                          "description" : "排除的tag，满足条件时不触发",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "from-branches" : {
-                          "description" : "来源分支，满足条件时触发，分支名称支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "users" : {
-                          "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "users-ignore" : {
-                          "description" : "排除的用户，满足条件时不触发",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
@@ -476,7 +417,6 @@
                     } ]
                   },
                   "mr" : {
-                    "description" : "代码仓库merge-request时触发，简写为 mr:array mr的目标分支满足条件时触发执行",
                     "anyOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -487,35 +427,30 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "target-branches" : {
-                          "description" : "mr的目标分支满足条件时触发执行，分支名称支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "source-branches-ignore" : {
-                          "description" : "mr的源分支满足条件时不触发，分支名称支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "paths" : {
-                          "description" : "满足条件的路径上的提交才触发执行，path支持使用*匹配 0~n 个除了/之外的任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "paths-ignore" : {
-                          "description" : "排除的路径，满足条件的路径提交时不触发执行",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "action" : {
-                          "description" : "缺省为 open、reopen、push-update，mr事件参见：",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -524,14 +459,12 @@
                           "additionalItems" : false
                         },
                         "users" : {
-                          "description" : "指定用户生成的事件才触发，用户名支持使用*匹配 0~n 个任意字符",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
                           }
                         },
                         "users-ignore" : {
-                          "description" : "排除的用户，满足条件时不触发",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
@@ -541,7 +474,6 @@
                     } ]
                   },
                   "delete" : {
-                    "description" : "代码仓库delete时触发，简写为 delete:array 在指定的分支上提交时触发执行",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -552,7 +484,6 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "types" : {
-                          "description" : "目前仅支持删除分支和删除tag触发",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -564,7 +495,6 @@
                     } ]
                   },
                   "issue" : {
-                    "description" : "代码仓库issue时触发，简写为 issue:action 在指定的issue状态上触发",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -575,7 +505,6 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "action" : {
-                          "description" : "默认所有的action",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -587,7 +516,6 @@
                     } ]
                   },
                   "review" : {
-                    "description" : "当创建评审或者评审状态改变时会触发",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -598,7 +526,6 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "types" : {
-                          "description" : "评审类型,comparison:commit评审、merge_request:MR评审",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -607,7 +534,6 @@
                           "additionalItems" : false
                         },
                         "states" : {
-                          "description" : "CR评审状态值,approved:评审通过、approving:评审中、change_denied:评审被拒绝、change_required:代码要求修改",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -619,7 +545,6 @@
                     } ]
                   },
                   "note" : {
-                    "description" : "当创建评审或者评审状态改变时会触发",
                     "oneOf" : [ {
                       "type" : "array",
                       "items" : {
@@ -630,7 +555,6 @@
                       "additionalProperties" : false,
                       "properties" : {
                         "types" : {
-                          "description" : "评论类型,commit:对提交进行评论、merge_request:对 mr 进行评论,issue:对缺陷进行评论",
                           "type" : "array",
                           "uniqueItems" : true,
                           "items" : {
@@ -639,7 +563,6 @@
                           "additionalItems" : false
                         },
                         "comment" : {
-                          "description" : "评论",
                           "type" : "array",
                           "items" : {
                             "type" : "string"
@@ -652,11 +575,14 @@
               }
             }
           }
+        },
+        "manual" : {
+          "type" : "string",
+          "pattern" : "(\\benabled\\b|\\bdisabled\\b)"
         }
       }
     },
     "variables" : {
-      "description" : "全局变量，值格式为：Object，可以定义一个，多个变量或使用template引用模板，以字母、数字和下划线组成，当变量的 readonly 属性为 true 时，不允许修改值",
       "type" : "object",
       "propertyNames" : {
         "pattern" : "^[0-9a-zA-Z_]+$"
@@ -679,7 +605,6 @@
           "required" : [ "value" ],
           "properties" : {
             "value" : {
-              "description" : "变量值",
               "anyOf" : [ {
                 "type" : "string"
               }, {
@@ -689,33 +614,124 @@
               } ]
             },
             "readonly" : {
-              "description" : "是否只可读",
               "type" : "boolean"
+            },
+            "allow-modify-at-startup" : {
+              "type" : "boolean"
+            },
+            "props" : {
+              "type" : "object",
+              "additionalProperties" : false,
+              "required" : [ "type" ],
+              "properties" : {
+                "label" : {
+                  "type" : "string"
+                },
+                "type" : {
+                  "enum" : [ "vuex-input", "vuex-textarea", "selector", "checkbox", "boolean", "company-staff-input", "tips" ]
+                },
+                "options" : {
+                  "type" : "array",
+                  "items" : {
+                    "type" : "object",
+                    "additionalProperties" : false,
+                    "required" : [ "id" ],
+                    "properties" : {
+                      "id" : {
+                        "anyOf" : [ {
+                          "type" : "string"
+                        }, {
+                          "type" : "number"
+                        }, {
+                          "type" : "boolean"
+                        } ]
+                      },
+                      "label" : {
+                        "type" : "string"
+                      },
+                      "description" : {
+                        "type" : "string"
+                      }
+                    }
+                  }
+                },
+                "datasource" : {
+                  "type" : "object",
+                  "additionalProperties" : false,
+                  "required" : [ "url" ],
+                  "properties" : {
+                    "url" : {
+                      "type" : "string"
+                    },
+                    "data-path" : {
+                      "type" : "string"
+                    },
+                    "param-id" : {
+                      "type" : "string"
+                    },
+                    "param-name" : {
+                      "type" : "string"
+                    },
+                    "has-add-item" : {
+                      "type" : "boolean"
+                    },
+                    "item-text" : {
+                      "type" : "string"
+                    },
+                    "item-target-url" : {
+                      "type" : "string"
+                    }
+                  }
+                },
+                "multiple" : {
+                  "type" : "boolean"
+                },
+                "description" : {
+                  "type" : "string"
+                },
+                "required" : {
+                  "type" : "boolean"
+                }
+              },
+              "allOf" : [ {
+                "if" : {
+                  "required" : [ "options" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "datasource" ]
+                  }
+                }
+              }, {
+                "if" : {
+                  "required" : [ "datasource" ]
+                },
+                "then" : {
+                  "not" : {
+                    "required" : [ "options" ]
+                  }
+                }
+              } ]
             }
           }
         } ]
       }
     },
     "stages" : {
-      "description" : "定义一个或多个 stage，值格式为：Array[Stage] | Array[Template]，注：顶级关键字下，jobs，steps，stages，只能定义一个",
       "type" : "array",
       "items" : {
         "anyOf" : [ {
-          "description" : "Stage实例",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "jobs" ],
           "properties" : {
             "name" : {
-              "description" : "stage 名称：缺省值为 stage-[stageNum]",
               "type" : "string"
             },
             "id" : {
-              "description" : "stage id：当前 pipeline 下 stage 的唯一标识，用户可以自定义。当前 pipeline 下不能重复，缺省时系统自动生成 16 位随机ID",
               "type" : "string"
             },
             "label" : {
-              "description" : "stage 标签：可以给当前stage设置一个或多个标签，值格式为 String|Array[String]，目前支持的标签为：Build、Test、Deploy、Approve",
               "anyOf" : [ {
                 "enum" : [ "Build", "Test", "Deploy", "Approve" ]
               }, {
@@ -728,19 +744,15 @@
               } ]
             },
             "if" : {
-              "description" : "stage if：满足条件时才执行当前 stage，不满足时跳过不执行，支持条件表达式",
               "type" : "string"
             },
             "check-in" : {
-              "description" : "stage 准入：在 stage 开始时判定，支持人工审核 以及 质量红线自动判定。详见 需要补充文档pages/viewpage.action?pageId=833350128",
               "$ref" : "#/definitions/check-in"
             },
             "check-out" : {
-              "description" : "stage 准出：在stage 结束时判定，支持质量红线自动判定。详见 需要补充文档pages/viewpage.action?pageId=833350128",
               "$ref" : "#/definitions/check-out"
             },
             "fast-kill" : {
-              "description" : "stage fast-kill：是否当 job失败时立即结束当前 stage",
               "type" : "boolean"
             },
             "jobs" : {
@@ -751,13 +763,11 @@
             }
           }
         }, {
-          "description" : "模板引用，支持传入模板名称引用模板实例，模板实例按引用顺序插入",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "template" ],
           "properties" : {
             "template" : {
-              "description" : "模板名称",
               "type" : "string"
             },
             "parameters" : {
@@ -768,21 +778,17 @@
       }
     },
     "jobs" : {
-      "description" : "定义一个或多个 job值格式为：Object[job_id, Job]， key 为 job id， value 为 job 相关配置，注：顶级关键字下，jobs，steps，stages，只能定义一个",
       "$ref" : "#/definitions/jobs"
     },
     "steps" : {
-      "description" : "定义一个或多个step，注：顶级关键字下，jobs，steps，stages，只能定义一个",
       "$ref" : "#/definitions/steps"
     },
     "extends" : {
-      "description" : "流水线模板引用，除了触发器、流水线名称，其他编排均由模板控制，不可定义。",
       "type" : "object",
       "required" : [ "template" ],
       "additionalProperties" : false,
       "properties" : {
         "template" : {
-          "description" : "模板名称",
           "type" : "string"
         },
         "parameters" : {
@@ -791,12 +797,10 @@
       }
     },
     "resources" : {
-      "description" : "resources：引用远程资源，变量包含：repositories，pools",
       "type" : "object",
       "additionalProperties" : false,
       "properties" : {
         "repositories" : {
-          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：需要补充文档pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -804,25 +808,20 @@
             "additionalProperties" : false,
             "properties" : {
               "repository" : {
-                "description" : "模板库命名空间和名称 group/repo",
                 "type" : "string"
               },
               "name" : {
-                "description" : "yaml引用时使用的名称 使用 xxx@name 引用",
                 "type" : "string"
               },
               "ref" : {
-                "description" : "用来拉取模板的分支，缺省为默认分支",
                 "type" : "string"
               },
               "credentials" : {
-                "description" : "拉取模板的凭证，使用用户自定的 private-key，默认为开启CI的用户的OAuth",
                 "type" : "object",
                 "additionalProperties" : false,
                 "required" : [ "personal-access-token" ],
                 "properties" : {
                   "personal-access-token" : {
-                    "description" : "用户自定的 private-key",
                     "type" : "string"
                   }
                 }
@@ -831,7 +830,6 @@
           }
         },
         "pools" : {
-          "description" : "引用第三方构建机池，详见：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -839,11 +837,9 @@
             "additionalProperties" : false,
             "properties" : {
               "from" : {
-                "description" : "语法和使用方方式，详见：需要补充文档pages/viewpage.action?pageId=914642753",
                 "type" : "string"
               },
               "name" : {
-                "description" : "pool-name 引用时使用的名字",
                 "type" : "string"
               }
             }
@@ -852,7 +848,6 @@
       }
     },
     "notices" : {
-      "description" : "流水线执行完成通知，可以使用variables 上下文更替其中内容，详见：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-notices",
       "type" : "array",
       "items" : {
         "type" : "object",
@@ -860,37 +855,30 @@
         "required" : [ "type" ],
         "properties" : {
           "type" : {
-            "description" : "发送通知的类型，支持 email：邮件，wework-message：企业微信TIPS消息通知，由【Stream消息通知】统一通知，wework-chat：企业微信群消息",
             "enum" : [ "email", "wework-message", "wework-chat" ]
           },
           "title" : {
-            "description" : "消息标题，当 type=email 时可以指定,非必填，缺省为 <repo>(<分支名>) - <流水线> #<构建号> run failed/success/canceled",
             "type" : "string"
           },
           "content" : {
-            "description" : "消息内容，缺省时使用系统内置消息模板",
             "type" : "string"
           },
           "receivers" : {
-            "description" : "消息接收人，当 type=email | wework-message 时可以指定，缺省为流水线触发人",
             "type" : "array",
             "items" : {
               "type" : "string"
             }
           },
           "ccs" : {
-            "description" : "邮件抄送人，当 type=email 时可以指定",
             "type" : "array",
             "items" : {
               "type" : "string"
             }
           },
           "if" : {
-            "description" : "条件执行当前步骤，支持如下条件，FAILURE，当失败时执行，SUCCESS，当成功时执行，CANCELLED，当取消时执行，缺省等同于 ALWAYS，总是执行，不支持自定义变量",
-            "enum" : [ "FAILURE", "SUCCESS", "CANCELLED", "ALWAYS" ]
+            "enum" : [ "FAILURE", "SUCCESS", "CANCELED", "CANCELLED", "ALWAYS" ]
           },
           "chat-id" : {
-            "description" : "企业微信会话ID，当 type=wework-chat 时可以指定，将服务号“Stream消息通知”加到群里，@Stream消息通知 会话ID，即可获得",
             "type" : "array",
             "items" : {
               "type" : "string"
@@ -926,14 +914,12 @@
       }
     },
     "label" : {
-      "description" : "可以给当前 pipeline 设置一个或多个标签",
       "type" : "array",
       "items" : {
         "type" : "string"
       }
     },
     "finally" : {
-      "description" : "当流水线执行结束时进行的一组操作，由一个或多个 job 组成，支持 job、step模板",
       "type" : "object",
       "properties" : {
         "template" : {
@@ -947,13 +933,10 @@
           "additionalProperties" : false,
           "properties" : {
             "name" : {
-              "description" : "job名称，缺省值为 job-<jobNum>",
               "type" : "string"
             },
             "runs-on" : {
-              "description" : "配置当前 job 的构建环境 详情：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-runs-on",
               "anyOf" : [ {
-                "description" : "公共构建资源池 支持docker，windows-xxx，macos-xx，agentless",
                 "type" : "string",
                 "pattern" : "(\\bdocker\\b|\\bwindows-|\\bmacos-|\\bagentless\\b)"
               }, {
@@ -961,11 +944,9 @@
                 "additionalProperties" : false,
                 "properties" : {
                   "pool-name" : {
-                    "description" : "构建资源池",
                     "type" : "string"
                   },
                   "agent-selector" : {
-                    "description" : "构建机类型：目前仅支持windows/linux/macos",
                     "type" : "array",
                     "items" : {
                       "type" : "string",
@@ -973,47 +954,39 @@
                     }
                   },
                   "container" : {
-                    "description" : "docker容器设置：当 pool-name=docker 时生效，用于设置执行镜像，支持如下属性",
                     "type" : "object",
                     "additionalProperties" : false,
                     "properties" : {
                       "image" : {
-                        "description" : "镜像地址，缺省为mirrors.tencent.com/ci/tlinux3_ci:1.2.2",
-                        "type" : "string"
+                        "type" : "string",
+                        "pattern" : "\\S+:\\S+|\\$\\{\\{.*\\}\\}"
                       },
                       "credentials" : {
-                        "description" : "拉取镜像的凭据：可以指定 凭据ID，或者指定 username + password",
                         "oneOf" : [ {
                           "type" : "object",
                           "additionalProperties" : false,
                           "required" : [ "username", "password" ],
                           "properties" : {
                             "username" : {
-                              "description" : "用户名称",
                               "type" : "string"
                             },
                             "password" : {
-                              "description" : "密码",
                               "type" : "string"
                             }
                           }
                         }, {
-                          "description" : "凭据ID",
                           "type" : "string"
                         } ]
                       }
                     }
                   },
                   "self-hosted" : {
-                    "description" : "是否为第三方构建机：缺省为 false， 当使用第三方构建资源池时，设置为 true",
                     "type" : "boolean"
                   },
                   "queue-timeout-minutes" : {
-                    "description" : "配置任务排队超时时间 省却默认为10，单位：分钟",
                     "type" : "integer"
                   },
                   "workspace" : {
-                    "description" : "当self-hosted=true时生效，用于指定工作空间，系统指定的工作空间会带上流水线ID等信息，比较长，在 windows 下，有可能会报路径超长。",
                     "type" : "string"
                   }
                 },
@@ -1030,18 +1003,15 @@
               } ]
             },
             "services" : {
-              "description" : "job服务：申明构建时需要的服务，如 mysql、redis 。key 为 Service 的名称，值为 Service 属性定义",
               "type" : "object",
               "additionalProperties" : {
                 "anyOf" : [ {
                   "type" : "object",
                   "properties" : {
                     "image" : {
-                      "description" : "镜像。仅支持指定镜像，如：mysql:8.0.23",
                       "type" : "string"
                     },
                     "with" : {
-                      "description" : "当启动mysql 服务时，支持如下属性: password",
                       "type" : "object",
                       "additionalProperties" : false,
                       "properties" : {
@@ -1055,29 +1025,23 @@
               }
             },
             "if" : {
-              "description" : "在finally下，job执行支持如下条件:（不支持其他的自定义条件）缺省等同于 ALWAYS，当前 stage 开始时，FAILURE 上游 stage 失败时，SUCCESS 上游 stage 成功时，CANCELLED 上游 stage 取消时",
-              "enum" : [ "ALWAYS", "FAILURE", "SUCCESS", "CANCELLED" ]
+              "enum" : [ "ALWAYS", "FAILURE", "SUCCESS", "CANCELED", "CANCELLED" ]
             },
             "steps" : {
-              "description" : "定义一个或多个step，注：顶级关键字下，jobs，steps，stages，只能定义一个",
               "$ref" : "#/definitions/steps"
             },
             "timeout-minutes" : {
-              "description" : "设置  job 的超时时间，单位为分钟，缺省值为 480 分钟 （8 小时），取值范围为 1~ 480 之间的整数",
               "type" : "integer",
               "minimum" : 1,
               "maximum" : 480
             },
             "env" : {
-              "description" : "环境变量，当前 job 下生效，由大写字母和下划线组成，CI_ 为系统内置变量前缀，不建议自定义此前缀开头的环境变量 详情：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-env",
               "$ref" : "#/definitions/env"
             },
             "continue-on-error" : {
-              "description" : "job失败时是否继续执行",
               "type" : "boolean"
             },
             "depend-on" : {
-              "description" : "用于设置当前 stage 下的 job 的执行顺序。可以配置一个或多个 job id，当依赖的所有 job 执行完毕时，才执行当前 job，循环依赖时报错，依赖的 job 不支持由变量指定",
               "type" : "array",
               "items" : {
                 "type" : "string"
@@ -1089,6 +1053,18 @@
           }
         } ]
       }
+    },
+    "concurrency" : {
+      "type" : "object",
+      "additionalProperties" : false,
+      "properties" : {
+        "group" : {
+          "type" : "string"
+        },
+        "cancel-in-progress" : {
+          "type" : "boolean"
+        }
+      }
     }
   },
   "definitions" : {
@@ -1097,13 +1073,11 @@
       "additionalProperties" : false,
       "properties" : {
         "reviews" : {
-          "description" : "人工审批流：支持flows，variables，description",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "flows" ],
           "properties" : {
             "flows" : {
-              "description" : "审批流，值格式为 Array[flow]，支持定义最多10个flow",
               "type" : "array",
               "maxItems" : 5,
               "items" : {
@@ -1112,11 +1086,9 @@
                 "required" : [ "name", "reviewers" ],
                 "properties" : {
                   "name" : {
-                    "description" : "审批流名称",
                     "type" : "string"
                   },
                   "reviewers" : {
-                    "description" : "审批人: 支持指定一个或多个审批人。当有多个审批人时，其中任意一位用户进行审核操作即可。",
                     "anyOf" : [ {
                       "type" : "string"
                     }, {
@@ -1130,22 +1102,18 @@
               }
             },
             "variables" : {
-              "description" : "审核变量：在下游步骤中通过 variables 上下文访问，值格式为 Object[var_name, variable]，key 为变量名",
               "type" : "object",
               "additionalProperties" : {
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
                   "label" : {
-                    "description" : "变量中文名",
                     "type" : "string"
                   },
                   "type" : {
-                    "description" : "字段类型，可选值有: INPUT，TEXTAREA，SELECTOR，SELECTOR-MULTIPLE，BOOL",
                     "enum" : [ "INPUT", "TEXTAREA", "SELECTOR", "SELECTOR-MULTIPLE", "BOOL" ]
                   },
                   "default" : {
-                    "description" : "变量默认值",
                     "anyOf" : [ {
                       "type" : "string"
                     }, {
@@ -1157,7 +1125,6 @@
                     } ]
                   },
                   "values" : {
-                    "description" : "变量指定为列表时的可选值",
                     "type" : "array",
                     "items" : {
                       "anyOf" : [ {
@@ -1170,20 +1137,17 @@
                     }
                   },
                   "description" : {
-                    "description" : "字段描述",
                     "type" : "string"
                   }
                 }
               }
             },
             "description" : {
-              "description" : "审核说明。描述如何审核",
               "type" : "string"
             }
           }
         },
         "gates" : {
-          "description" : "gates 用于定义质量红线，值为 Array，每个值定义一组规则，通过模板的方式引用红线，模板文件统一放置在 .ci/templates 目录下",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -1191,7 +1155,6 @@
             "required" : [ "template" ],
             "properties" : {
               "template" : {
-                "description" : "定义红线的模板名称",
                 "type" : "string"
               },
               "parameters" : {
@@ -1201,7 +1164,6 @@
           }
         },
         "timeout-hours" : {
-          "description" : "准入/准出的超时时间，单位为小时（h）。默认 24h，取值范围为1~720 之间的整数",
           "minimum" : 1,
           "maximum" : 720,
           "type" : "integer"
@@ -1213,7 +1175,6 @@
       "additionalProperties" : false,
       "properties" : {
         "gates" : {
-          "description" : "gates 用于定义质量红线，值为 Array，每个值定义一组规则，通过模板的方式引用红线，模板文件统一放置在 .ci/templates 目录下",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -1221,7 +1182,6 @@
             "required" : [ "template" ],
             "properties" : {
               "template" : {
-                "description" : "定义红线的模板名称",
                 "type" : "string"
               },
               "parameters" : {
@@ -1231,7 +1191,6 @@
           }
         },
         "timeout-hours" : {
-          "description" : "准入/准出的超时时间，单位为小时（h）。默认 24h，取值范围为1~720 之间的整数",
           "minimum" : 1,
           "maximum" : 720,
           "type" : "integer"
@@ -1239,7 +1198,6 @@
       }
     },
     "jobs" : {
-      "description" : "定义一个或多个 job值格式为：Object[job_id, Job]， key 为 job id， value 为 job 相关配置",
       "type" : "object",
       "properties" : {
         "template" : {
@@ -1253,93 +1211,79 @@
           "additionalProperties" : false,
           "properties" : {
             "name" : {
-              "description" : "job名称，缺省值为 job-<jobNum>",
               "type" : "string"
             },
             "runs-on" : {
-              "description" : "配置当前 job 的构建环境 详情：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-runs-on",
               "anyOf" : [ {
-                "description" : "公共构建资源池 支持docker，windows-xxx，macos-xx，agentless",
                 "type" : "string"
               }, {
                 "type" : "object",
                 "additionalProperties" : false,
                 "properties" : {
                   "pool-name" : {
-                    "description" : "构建资源池",
                     "type" : "string"
                   },
                   "agent-selector" : {
-                    "description" : "构建机类型：目前仅支持windows/linux/macos",
                     "type" : "array",
                     "items" : {
                       "type" : "string"
                     }
                   },
                   "container" : {
-                    "description" : "docker容器设置：当 pool-name=docker 时生效，用于设置执行镜像，支持如下属性",
                     "type" : "object",
                     "additionalProperties" : false,
                     "properties" : {
                       "image" : {
-                        "description" : "镜像地址，缺省为mirrors.tencent.com/ci/tlinux3_ci:1.2.2",
-                        "type" : "string"
+                        "type" : "string",
+                        "pattern" : "\\S+:\\S+|\\$\\{\\{.*\\}\\}"
                       },
                       "credentials" : {
-                        "description" : "拉取镜像的凭据：可以指定 凭据ID，或者指定 username + password",
                         "oneOf" : [ {
                           "type" : "object",
                           "additionalProperties" : false,
                           "required" : [ "username", "password" ],
                           "properties" : {
                             "username" : {
-                              "description" : "用户名称",
                               "type" : "string"
                             },
                             "password" : {
-                              "description" : "密码",
                               "type" : "string"
                             }
                           }
                         }, {
-                          "description" : "凭据ID",
                           "type" : "string"
                         } ]
                       }
                     }
                   },
                   "needs" : {
-                    "description" : "当使用linux公共构建机时（如pool-name=docker）有效，挂载第三方依赖到构建环境",
                     "$ref" : "#/definitions/buildEnv"
                   },
                   "self-hosted" : {
-                    "description" : "是否为第三方构建机：缺省为 false， 当使用第三方构建资源池时，设置为 true",
                     "type" : "boolean"
                   },
                   "queue-timeout-minutes" : {
-                    "description" : "配置任务排队超时时间 省却默认为10，单位：分钟",
                     "type" : "integer"
                   },
                   "workspace" : {
-                    "description" : "当self-hosted=true时生效，用于指定工作空间，系统指定的工作空间会带上流水线ID等信息，比较长，在 windows 下，有可能会报路径超长。",
+                    "type" : "string"
+                  },
+                  "xcode" : {
                     "type" : "string"
                   }
                 }
               } ]
             },
             "services" : {
-              "description" : "job服务：申明构建时需要的服务，如 mysql、redis 。key 为 Service 的名称，值为 Service 属性定义",
               "type" : "object",
               "additionalProperties" : {
                 "anyOf" : [ {
                   "type" : "object",
                   "properties" : {
                     "image" : {
-                      "description" : "镜像。仅支持指定镜像，如：mysql:8.0.23",
                       "type" : "string"
                     },
                     "with" : {
-                      "description" : "当启动mysql 服务时，支持如下属性: password",
                       "type" : "object",
                       "additionalProperties" : false,
                       "properties" : {
@@ -1353,49 +1297,33 @@
               }
             },
             "if" : {
-              "description" : "满足条件时才执行当前 job，不满足时跳过不执行，支持条件表达式",
               "type" : "string"
             },
             "steps" : {
-              "description" : "定义一个或多个step，注：顶级关键字下，jobs，steps，stages，只能定义一个",
               "$ref" : "#/definitions/steps"
             },
             "timeout-minutes" : {
-              "description" : "设置  job 的超时时间，单位为分钟，缺省值为 480 分钟 （8 小时），取值范围为 1~ 480 之间的整数",
               "type" : "integer",
               "minimum" : 1,
               "maximum" : 480
             },
             "env" : {
-              "description" : "环境变量，当前 job 下生效，由大写字母和下划线组成，CI_ 为系统内置变量前缀，不建议自定义此前缀开头的环境变量 详情：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-env",
               "$ref" : "#/definitions/env"
             },
             "continue-on-error" : {
-              "description" : "job失败时是否继续执行",
               "type" : "boolean"
             },
             "strategy" : {
-              "description" : "job 运行的策略",
               "type" : "object",
               "additionalProperties" : false,
               "required" : [ "matrix" ],
               "properties" : {
                 "matrix" : {
-                  "description" : "定义的每个选项都有键和值，键将作为 matrix 上下文中的属性，详见：需要补充文档pages/viewpage.action?pageId=673540263",
                   "oneOf" : [ {
                     "type" : "object",
                     "additionalProperties" : {
                       "anyOf" : [ {
-                        "type" : "array",
-                        "items" : {
-                          "anyOf" : [ {
-                            "type" : "string"
-                          }, {
-                            "type" : "number"
-                          }, {
-                            "type" : "boolean"
-                          } ]
-                        }
+                        "type" : "array"
                       }, {
                         "type" : "string"
                       } ]
@@ -1403,7 +1331,6 @@
                     "properties" : {
                       "include" : {
                         "oneOf" : [ {
-                          "description" : "用于给 matrix 的指定组合增加额外的属性，或者新增1个或多个组合每个元素为一个 Object",
                           "type" : "array",
                           "items" : {
                             "type" : "object",
@@ -1418,19 +1345,16 @@
                             }
                           }
                         }, {
-                          "description" : "用于给 matrix 的指定组合增加额外的属性,限于${{fromJSON()}}的形式",
                           "type" : "string"
                         } ]
                       },
                       "exclude" : {
                         "oneOf" : [ {
-                          "description" : "用于排除 matrix  中的一些组合 Object",
                           "type" : "array",
                           "items" : {
                             "type" : "object"
                           }
                         }, {
-                          "description" : "用于排除 matrix  中的一些组合,限于${{fromJSON()}}的形式",
                           "type" : "string"
                         } ]
                       }
@@ -1440,11 +1364,9 @@
                   } ]
                 },
                 "fast-kill" : {
-                  "description" : "当其中一个job失败时，是否立即结束所有job",
                   "type" : "boolean"
                 },
                 "max-parallel" : {
-                  "description" : "允许的最大并发数，不超过 20",
                   "type" : "integer",
                   "minimum" : 0,
                   "maximum" : 20
@@ -1452,7 +1374,6 @@
               }
             },
             "depend-on" : {
-              "description" : "用于设置当前 stage 下的 job 的执行顺序。可以配置一个或多个 job id，当依赖的所有 job 执行完毕时，才执行当前 job，循环依赖时报错，依赖的 job 不支持由变量指定",
               "type" : "array",
               "items" : {
                 "type" : "string"
@@ -1469,7 +1390,6 @@
       }
     },
     "steps" : {
-      "description" : "定义一个或多个step",
       "type" : "array",
       "items" : {
         "anyOf" : [ {
@@ -1477,66 +1397,56 @@
           "additionalProperties" : false,
           "properties" : {
             "uses" : {
-              "description" : "指定当前 step 使用的流水线插件标识和版本，值格式为：<atomCode>@<atomVersion>，<atomCode> 为插件标识，<atomVersion> 为插件对应的版本，支持设置始终使用指定大版本下的最新版本，如1.*，支持的插件有：从蓝盾研发商店上架的所有插件，不包括：蓝盾很早以前的旧版插件，这些插件目前已设置为不推荐使用人工审核：暂不支持",
-              "type" : "string"
+              "type" : "string",
+              "pattern" : "^.*@.*$"
             },
             "name" : {
-              "description" : "step 的名称",
               "type" : "string"
             },
             "id" : {
-              "description" : "当前 job 下 step 的唯一标识，用户可以自定义，当前 job 下不能重复，最大为64位",
               "type" : "string",
               "maxLength" : 64
             },
             "if" : {
-              "description" : "满足条件时才执行当前 step，不满足时跳过不执行，支持条件表达式",
               "type" : "string"
             },
             "with" : {
-              "description" : "当前插件的入参",
               "type" : "object"
             },
             "timeout-minutes" : {
-              "description" : "设置 step 的超时时间，单位为分钟，缺省值为 480 分钟 （8 小时），取值范围为 1~ 480 之间的整数",
               "type" : "integer",
               "minimum" : 1,
               "maximum" : 480
             },
             "continue-on-error" : {
-              "description" : "失败时是否继续执行",
               "type" : "boolean"
             },
             "retry-times" : {
-              "description" : "失败时自动重试次数，缺省值为 0，表示不需要重试，取值范围为 1~10 之间的整数，重试间隔算法：round(1~重试次数)",
               "type" : "integer",
               "minimum" : 0,
               "maximum" : 180
             },
             "env" : {
-              "description" : "环境变量，当前 step 下生效，优先级高于 job 级别的同名变量，由大写字母和下划线组成，BK_CI_ 为系统内置变量前缀，不允许自定义此前缀开头的环境变量",
               "$ref" : "#/definitions/env"
             },
             "run" : {
-              "description" : "特殊属性，和 uses、checkout不共存，最常用的脚本插件，可以直接配置需要执行的单行或多行命令，当在类 linux 系统下时，使用 bash，当在 windows 系统下时，使用 cmd 或者 git 自带的命令行工具执行，预留自定义执行引擎的入口  shell 属性，后续可以支持 python、nodejs 等，如何设置输出参数见：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0",
               "type" : "string"
             },
             "checkout" : {
-              "description" : "特殊属性，和 uses、run 不共存，拉取 git 代码插件，可以拉取工蜂当前库的代码，或拉取工蜂其他库的代码，也可以拉取 gitlab、github的代码，默认使用 开启CI 的用户的OAUTH权限拉取代码，语法为：checkout: self | repo url 详见：需要补充文档pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-checkout",
               "type" : "string"
             },
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "type" : "string"
             }
           },
           "allOf" : [ {
-            "$comment" : "steps 中 uses、run、checkout 不共存",
-            "description" : "steps 中 uses、run、checkout 不共存",
             "if" : {
               "required" : [ "uses" ]
             },
             "then" : {
-              "description" : "不允许定义",
               "allOf" : [ {
                 "not" : {
                   "required" : [ "run" ]
@@ -1548,13 +1458,10 @@
               } ]
             }
           }, {
-            "$comment" : "steps 中 uses、run、checkout 不共存",
-            "description" : "steps 中 uses、run、checkout 不共存",
             "if" : {
               "required" : [ "run" ]
             },
             "then" : {
-              "description" : "不允许定义",
               "allOf" : [ {
                 "not" : {
                   "required" : [ "uses" ]
@@ -1566,13 +1473,10 @@
               } ]
             }
           }, {
-            "$comment" : "steps 中 uses、run、checkout 不共存",
-            "description" : "steps 中 uses、run、checkout 不共存",
             "if" : {
               "required" : [ "checkout" ]
             },
             "then" : {
-              "description" : "不允许定义",
               "allOf" : [ {
                 "not" : {
                   "required" : [ "run" ]
@@ -1585,13 +1489,11 @@
             }
           } ]
         }, {
-          "description" : "模板引用，支持传入模板名称引用模板实例，模板实例按引用顺序插入",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "template" ],
           "properties" : {
             "template" : {
-              "description" : "模板名称",
               "type" : "string"
             },
             "parameters" : {
@@ -1603,20 +1505,17 @@
     },
     "env" : {
       "type" : "object",
-      "maxProperties" : 20
+      "maxProperties" : 100
     },
     "template" : {
-      "description" : "模板引用，支持传入 array[string]|string 引用模板对象",
       "anyOf" : [ {
         "type" : "array",
         "items" : {
-          "description" : "模板列表，name定义名称，parameters传递参数，按顺序依次插入模板实例",
           "type" : "object",
           "additionalProperties" : false,
           "required" : [ "name" ],
           "properties" : {
             "name" : {
-              "description" : "模板名称",
               "type" : "string"
             },
             "parameters" : {
@@ -1625,12 +1524,10 @@
           }
         }
       }, {
-        "description" : "模板名称",
         "type" : "string"
       } ]
     },
     "parameters" : {
-      "description" : "模板引用入参，支持传入 key:value，用来替换模板中定义的parameters的同名key的value",
       "type" : "object",
       "additionalProperties" : {
         "anyOf" : [ {
@@ -1648,91 +1545,26 @@
       }
     },
     "buildEnv" : {
-      "type" : "object",
-      "additionalProperties" : false,
-      "properties" : {
-        "golang" : {
-          "enum" : [ 1.1, "1.11.2", "1.12.4", "1.13.5", 1.14, 1.15, "1.15.2", "1.16.3", "1.16.7", 1.17, "1.6.4", "1.7.6", "1.8.7" ]
-        },
-        "ndk" : {
-          "enum" : [ "android-ndk-r10", "android-ndk-r10b", "android-ndk-r10c", "android-ndk-r10e", "android-ndk-r11", "android-ndk-r11b", "android-ndk-r11c", "android-ndk-r12", "android-ndk-r12b", "android-ndk-r13b", "android-ndk-r14b", "android-ndk-r15c", "android-ndk-r16b", "android-ndk-r17c", "android-ndk-r18b", "android-ndk-r19c", "android-ndk-r20", "android-ndk-r21", "android-ndk-r21d", "android-ndk-r21e", "android-ndk-r22b", "android-ndk-r9b", "android-ndk-r9d" ]
-        },
-        "cmake" : {
-          "enum" : [ "2.8.0", "3.10.2", "3.14.6", "3.15.1", "3.2.0", "3.6.0", "3.7.0", "3.9.6" ]
-        },
-        "sbt" : {
-          "enum" : [ "sbt-1.0.4", "sbt-1.3.8" ]
-        },
-        "jdk" : {
-          "enum" : [ "1.7.0_80", "1.8.0_161" ]
-        },
-        "nodejs" : {
-          "enum" : [ "10.11.0", "12.13.1", "12.16.1", "12.20.2", "14.13.1", "14.15.0", "16.13.0", "6.6.0", "7.10.1", "8.12.0", "8.9.0", "8.9.4", "9.7.1" ]
-        },
-        "7zip" : {
-          "enum" : [ 21.07, "p7zip_9.20.1" ]
-        },
-        "kotlin" : {
-          "enum" : [ "kotlin-compiler-1.1.2-2", "kotlin-compiler-1.3.71", "kotlin-compiler-1.3.72", "kotlin-compiler-1.4.0", "kotlin-compiler-1.4.10", "kotlin-compiler-1.4.32", "kotlin-compiler-1.5.0", "kotlin-compiler-1.5.31", "kotlin-compiler-1.6.0" ]
-        },
-        "scala" : {
-          "enum" : [ "scala-2.10.4", "scala-2.10.7", "scala-2.11.12", "scala-2.12.10", "scala-2.13.1" ]
-        },
-        "turbo" : {
-          "enum" : [ 1.0, 2.0, 3.0, "compatible" ]
-        },
-        "gradle" : {
-          "enum" : [ 2.1, 2.11, 2.12, 2.13, 2.14, "2.14.1", "2.2.1", 2.3, 2.4, 2.5, 2.6, 2.7, 2.8, 2.9, 3.0, 3.1, 3.2, 3.3, 3.4, "3.4.1", 3.5, 4.0, 4.1, 4.1, "4.10.1", "4.10.3", 4.2, "4.2.1", 4.3, "4.3.1", 4.4, "4.4.1", 4.5, "4.5.1", 4.6, 4.7, 4.8, 4.9, 5.0, 5.1, "5.1.1", 5.2, 5.3, "5.3.1", 5.4, "5.4.1", 5.5, "5.6.4", 6.0, 6.1, 6.2, 6.3, 6.4, "6.4.1", 6.5, "6.5.1", 6.6, 6.7, "6.7.1", 6.9, 7.0, 7.1, 7.2, 7.3 ]
-        },
-        "ant" : {
-          "enum" : [ "1.9.3" ]
-        },
-        "bazel" : {
-          "enum" : [ "0.15.2", "0.16.1", "0.17.2", "0.18.1", "0.19.1", "0.2.2" ]
-        },
-        "android-sdk-linux" : {
-          "enum" : [ "android-sdk", "android-sdk_new", "android-sdk_new_with_ndk" ]
-        },
-        "proguard" : {
-          "enum" : [ "proguard4.11", "proguard4.5.1", "proguard4.8", "proguard4.9", "proguard5.2.1", "proguard6.0", "proguard6.1.0" ]
-        },
-        "ninja" : {
-          "enum" : [ "v1.10.0", "v1.9.0" ]
-        },
-        "typhoon-blade" : {
-          "enum" : [ "1.1.0", "1.1.1", "1.1.2" ]
-        },
-        "maven" : {
-          "enum" : [ "3.2.1", "3.5.2", "3.5.4", "3.6.3", "3.8.1", "3.8.2", "3.8.3", "3.8.4" ]
-        },
-        "TencentKona" : {
-          "enum" : [ "TencentKona-8.0.2-252", "TencentKona-8.0.6-292-fiber", "TencentKonaJDK11.0.7-ga+3" ]
-        }
-      }
+      "type" : "object"
     },
     "ifModify" : {
-      "description" : "当指定文件变更时，才执行对应的stage/job/step，当不满足条件时，跳过stage/job/step，支持 glob 通配",
       "type" : "array",
       "items" : {
         "type" : "string"
       }
     },
     "resourceExclusiveDeclaration" : {
-      "description" : "资源独占申明：当构建资源不能并发共用、或者单任务占用资源非常高时，需要排队执行任务",
       "type" : "object",
       "required" : [ "label" ],
       "additionalProperties" : false,
       "properties" : {
         "label" : {
-          "description" : "独占标签",
           "type" : "string"
         },
         "queue-length" : {
-          "description" : "队列长度，默认为0（若资源已被占用，执行失败）",
           "type" : "integer"
         },
         "timeout-minutes" : {
-          "description" : "排队超时时间，默认为10分钟，不超过 480 分钟",
           "type" : "integer",
           "maximum" : 480
         }
@@ -1740,13 +1572,10 @@
     }
   },
   "allOf" : [ {
-    "$comment" : "使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources",
-    "description" : "使用 extends 时顶级关键字只能有触发器 name, on , version 与 resources",
     "if" : {
       "required" : [ "extends" ]
     },
     "then" : {
-      "description" : "不允许定义",
       "allOf" : [ {
         "not" : {
           "required" : [ "stages" ]
@@ -1778,13 +1607,10 @@
       } ]
     }
   }, {
-    "$comment" : "顶级关键字steps，jobs，stages不能同时定义",
-    "description" : "顶级关键字steps，jobs，stages不能同时定义",
     "if" : {
       "required" : [ "stages" ]
     },
     "then" : {
-      "description" : "不允许定义",
       "allOf" : [ {
         "not" : {
           "required" : [ "steps" ]
@@ -1796,13 +1622,10 @@
       } ]
     }
   }, {
-    "$comment" : "顶级关键字steps，jobs，stages不能同时定义",
-    "description" : "顶级关键字steps，jobs，stages不能同时定义",
     "if" : {
       "required" : [ "steps" ]
     },
     "then" : {
-      "description" : "不允许定义",
       "allOf" : [ {
         "not" : {
           "required" : [ "stages" ]
@@ -1814,13 +1637,10 @@
       } ]
     }
   }, {
-    "$comment" : "顶级关键字steps，jobs，stages不能同时定义",
-    "description" : "顶级关键字steps，jobs，stages不能同时定义",
     "if" : {
       "required" : [ "jobs" ]
     },
     "then" : {
-      "description" : "不允许定义",
       "allOf" : [ {
         "not" : {
           "required" : [ "steps" ]
@@ -1832,6 +1652,5 @@
       } ]
     }
   } ],
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "需要补充文档pages/viewpage.action?pageId=686380000"
+  "$schema" : "http://json-schema.org/draft-07/schema"
 }

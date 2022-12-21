@@ -4,6 +4,7 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.1",
     "@commitlint/config-conventional": "^16.2.4",
+    "@typescript-eslint/parser": "^1.9.0",
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
@@ -14,8 +15,9 @@
     "node-fetch": "^2.6.0",
     "ora": "^3.4.0",
     "svg-sprite-loader": "^6.0.9",
+    "typescript": "3.4.5",
     "webpack-bundle-analyzer": "^4.4.2",
-    "webpack-cli": "^4.9.0",
+    "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.3.1"
   },
   "resolutions": {
@@ -35,22 +37,35 @@
       "eslint --fix"
     ]
   },
-  "workspaces": [
-    "devops-codelib",
-    "devops-environment",
-    "devops-atomstore",
-    "devops-artifactory",
-    "devops-ticket",
-    "devops-pipeline",
-    "devops-quality",
-    "devops-nav",
-    "devops-turbo",
-    "devops-stream",
-    "bk-pipeline"
-  ],
+  "workspaces": {
+    "packages": [
+      "devops-codelib",
+      "devops-environment",
+      "devops-atomstore",
+      "devops-artifactory",
+      "devops-ticket",
+      "devops-pipeline",
+      "devops-quality",
+      "devops-nav",
+      "devops-turbo",
+      "devops-stream",
+      "devops-metrics",
+      "bk-pipeline"
+    ],
+    "nohoist": [
+      "devops-metrics",
+      "devops-metrics/**"
+    ]
+  },
   "dependencies": {
+    "@webpack-cli/serve": "^1.7.0",
+    "babel-plugin-istanbul": "6.1.1",
+    "core-js": "3.26.0",
+    "css-loader": "6.0.0",
     "cross-env": "^7.0.3",
+    "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "vue-eslint-parser": "^9.0.2"
   }
 }

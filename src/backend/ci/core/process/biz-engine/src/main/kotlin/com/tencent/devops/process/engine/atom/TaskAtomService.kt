@@ -27,9 +27,12 @@
 
 package com.tencent.devops.process.engine.atom
 
+import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
@@ -37,6 +40,8 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.EnvControlTaskType
 import com.tencent.devops.common.pipeline.pojo.element.RunCondition
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
@@ -47,8 +52,11 @@ import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.jmx.elements.JmxElements
+import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -63,7 +71,8 @@ class TaskAtomService @Autowired(required = false) constructor(
     private val jmxElements: JmxElements,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     @Autowired(required = false)
-    private val measureService: MeasureService?
+    private val measureService: MeasureService?,
+    private val client: Client
 ) {
 
     /**
@@ -89,7 +98,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildId = task.buildId,
                 taskId = task.taskId
             )
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载内置插件业务逻辑并执行
             atomResponse = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom).execute(task, runVariables)
         } catch (t: BuildTaskException) {
@@ -173,14 +182,34 @@ class TaskAtomService @Autowired(required = false) constructor(
             )
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(task.taskType) == null) {
+                val taskParams = task.taskParams
+                val taskVersion = taskParams[VERSION].toString()
+                val atomCode = taskParams[KEY_ATOM_CODE].toString()
+                val taskType = task.taskType
+                val marketAtomFlag = taskType == MarketBuildAtomElement.classType ||
+                    taskType == MarketBuildLessAtomElement.classType
+                val projectId = task.projectId
+                val atomVersion = if (marketAtomFlag) {
+                    if (taskVersion.contains("*")) {
+                        // 市场插件如果选择最新版本号需将版本号转换为具体的版本号
+                        client.get(ServiceAtomResource::class).getAtomRealVersion(projectId, atomCode, taskVersion).data
+                    } else {
+                        taskVersion
+                    }
+                } else {
+                    INIT_VERSION
+                }
                 val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(
-                    projectId = task.projectId,
-                    buildId = task.buildId,
-                    taskId = task.taskId,
-                    buildStatus = atomResponse.buildStatus,
-                    errorType = atomResponse.errorType,
-                    errorCode = atomResponse.errorCode,
-                    errorMsg = atomResponse.errorMsg
+                    TaskBuildEndParam(
+                        projectId = task.projectId,
+                        buildId = task.buildId,
+                        taskId = task.taskId,
+                        buildStatus = atomResponse.buildStatus,
+                        errorType = atomResponse.errorType,
+                        errorCode = atomResponse.errorCode,
+                        errorMsg = atomResponse.errorMsg,
+                        atomVersion = atomVersion
+                    )
                 )
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
@@ -238,7 +267,7 @@ class TaskAtomService @Autowired(required = false) constructor(
         var atomResponse = AtomResponse(BuildStatus.FAILED)
 
         try {
-            val runVariables = buildVariableService.getAllVariable(task.projectId, task.buildId)
+            val runVariables = buildVariableService.getAllVariable(task.projectId, task.pipelineId, task.buildId)
             // 动态加载插件业务逻辑
             val iAtomTask = SpringContextUtil.getBean(IAtomTask::class.java, task.taskAtom)
             atomResponse = iAtomTask.tryFinish(task = task, runVariables = runVariables, actionType = actionType)

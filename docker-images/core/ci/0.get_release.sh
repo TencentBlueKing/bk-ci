@@ -1,5 +1,5 @@
 #!/bin/bash
 set -e
-cp ../../../bkci-slim.tar.gz .
-rm -rf ci
-tar -xzf bkci-slim.tar.gz
+cp ../../../bkci-docker.tar.gz .
+rm -rf ci-docker
+tar -xzf bkci-docker.tar.gz

@@ -33,25 +33,28 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
+import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
-import org.jooq.Record2
 
 @Suppress("ALL")
 @Repository
@@ -178,7 +181,7 @@ class PipelineBuildDao {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
                 .fetch()
         }
     }
@@ -223,15 +226,6 @@ class PipelineBuildDao {
         }
     }
 
-    fun deletePipelineBuild(dslContext: DSLContext, projectId: String, buildId: String) {
-        with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(BUILD_ID.eq(buildId))
-                .execute()
-        }
-    }
-
     fun deletePipelineBuilds(dslContext: DSLContext, projectId: String, pipelineId: String) {
         with(T_PIPELINE_BUILD_HISTORY) {
             dslContext.delete(this)
@@ -254,8 +248,8 @@ class PipelineBuildDao {
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
             when (updateTimeDesc) {
-                true -> select.orderBy(UPDATE_TIME.desc())
-                false -> select.orderBy(UPDATE_TIME.asc())
+                true -> select.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> select.orderBy(UPDATE_TIME.asc(), BUILD_ID)
                 null -> select.orderBy(BUILD_NUM.desc())
             }
             select.limit(offset, limit)
@@ -314,7 +308,7 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
@@ -323,14 +317,18 @@ class PipelineBuildDao {
     fun getOneConcurrencyQueueBuild(
         dslContext: DSLContext,
         projectId: String,
-        concurrencyGroup: String
+        concurrencyGroup: String,
+        pipelineId: String? = null
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
-                .orderBy(QUEUE_TIME.asc()).limit(1)
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
+            if (pipelineId != null) {
+                select.and(PIPELINE_ID.eq(pipelineId))
+            }
+            select.orderBy(QUEUE_TIME.asc()).limit(1)
             select.fetchAny()
         }
     }
@@ -473,29 +471,24 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         oldBuildStatus: BuildStatus,
-        newBuildStatus: BuildStatus
+        newBuildStatus: BuildStatus,
+        startTime: LocalDateTime? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val update = dslContext.update(this)
                 .set(STATUS, newBuildStatus.ordinal)
-                .where(BUILD_ID.eq(buildId)).and(PROJECT_ID.eq(projectId)).and(STATUS.eq(oldBuildStatus.ordinal))
-                .execute()
-        } == 1
-    }
-
-    fun updateStageCancelStatus(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String
-    ): Boolean {
-        return with(T_PIPELINE_BUILD_HISTORY) {
-            dslContext.update(this)
-                .set(END_TIME, LocalDateTime.now())
-                .where(BUILD_ID.eq(buildId))
+            startTime?.let {
+                update.set(START_TIME, it)
+            }
+            errorInfoList?.let {
+                update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false))
+            }
+            return update.where(BUILD_ID.eq(buildId))
                 .and(PROJECT_ID.eq(projectId))
-                .and(STATUS.eq(BuildStatus.STAGE_SUCCESS.ordinal))
-                .execute()
-        } == 1
+                .and(STATUS.eq(oldBuildStatus.ordinal))
+                .execute() == 1
+        }
     }
 
     fun convert(t: TPipelineBuildHistoryRecord?): BuildInfo? {
@@ -532,7 +525,11 @@ class PipelineBuildDao {
                 },
                 retryFlag = t.isRetry,
                 executeTime = t.executeTime ?: 0,
-                concurrencyGroup = t.concurrencyGroup
+                concurrencyGroup = t.concurrencyGroup,
+                webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
+                errorType = t.errorType,
+                errorCode = t.errorCode,
+                errorMsg = t.errorMsg
             )
         }
     }
@@ -568,105 +565,35 @@ class PipelineBuildDao {
         remark: String?,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?
     ): Int {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            val where = dslContext.selectCount().from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
-                var conditionsOr: Condition
-                conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", lower = true
-                ).like(
-                    "%${materialAlias.first().toLowerCase()}%"
-                )
-                materialAlias.forEachIndexed { index, s ->
-                    if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(
-                        JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.toLowerCase()}%")
-                    )
-                }
-                where.and(conditionsOr)
-            }
-            if (materialUrl != null && materialUrl.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
-            }
-            if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
-                var conditionsOr: Condition
-                conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true
-                ).like(
-                    "%${materialBranch.first().toLowerCase()}%"
-                )
-                materialBranch.forEachIndexed { index, s ->
-                    if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(
-                        JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.toLowerCase()}%")
-                    )
-                }
-                where.and(conditionsOr)
-            }
-            if (materialCommitId != null && materialCommitId.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
-            }
-            if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
-            }
-            if (status != null && status.isNotEmpty()) { // filterNotNull不能删
-                where.and(STATUS.`in`(status.map { it.ordinal }))
-            }
-            if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
-                where.and(TRIGGER.`in`(trigger.map { it.name }))
-            }
-            if (queueTimeStartTime != null && queueTimeStartTime > 0) {
-                where.and(QUEUE_TIME.ge(Timestamp(queueTimeStartTime).toLocalDateTime()))
-            }
-            if (queueTimeEndTime != null && queueTimeEndTime > 0) {
-                where.and(QUEUE_TIME.le(Timestamp(queueTimeEndTime).toLocalDateTime()))
-            }
-            if (startTimeStartTime != null && startTimeStartTime > 0) {
-                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
-            }
-            if (startTimeEndTime != null && startTimeEndTime > 0) {
-                where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
-            }
-            if (endTimeStartTime != null && endTimeStartTime > 0) {
-                where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
-            }
-            if (endTimeEndTime != null && endTimeEndTime > 0) {
-                where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
-            }
-            if (totalTimeMin != null && totalTimeMin > 0) {
-                where.and(
-                    JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    ).greaterOrEqual(totalTimeMin)
-                )
-            }
-            if (totalTimeMax != null && totalTimeMax > 0) {
-                where.and(
-                    JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    ).lessOrEqual(totalTimeMax)
-                )
-            }
-            if (remark != null && remark.isNotEmpty()) {
-                where.and(REMARK.like("%$remark%"))
-            }
-            if (buildNoStart != null && buildNoStart > 0) {
-                where.and(BUILD_NUM.ge(buildNoStart))
-            }
-            if (buildNoEnd != null && buildNoEnd > 0) {
-                where.and(BUILD_NUM.le(buildNoEnd))
-            }
-            if (buildMsg != null && buildMsg.isNotEmpty()) {
-                where.and(BUILD_MSG.like("%$buildMsg%"))
-            }
+            val where = dslContext.selectCount()
+                .from(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+            makeCondition(
+                where = where,
+                materialAlias = materialAlias,
+                materialUrl = materialUrl,
+                materialBranch = materialBranch,
+                materialCommitId = materialCommitId,
+                materialCommitMessage = materialCommitMessage,
+                status = status,
+                startUser = startUser,
+                trigger = trigger,
+                queueTimeStartTime = queueTimeStartTime,
+                queueTimeEndTime = queueTimeEndTime,
+                startTimeStartTime = startTimeStartTime,
+                startTimeEndTime = startTimeEndTime,
+                endTimeStartTime = endTimeStartTime,
+                endTimeEndTime = endTimeEndTime,
+                totalTimeMin = totalTimeMin,
+                totalTimeMax = totalTimeMax,
+                remark = remark,
+                buildNoStart = buildNoStart,
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
+            )
             where.fetchOne(0, Int::class.java)!!
         }
     }
@@ -695,108 +622,164 @@ class PipelineBuildDao {
         limit: Int,
         buildNoStart: Int?,
         buildNoEnd: Int?,
-        buildMsg: String?
+        buildMsg: String?,
+        startUser: List<String>?,
+        updateTimeDesc: Boolean? = null
     ): Collection<TPipelineBuildHistoryRecord> {
         return with(T_PIPELINE_BUILD_HISTORY) {
-            val where = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-            if (materialAlias != null && materialAlias.isNotEmpty() && materialAlias.first().isNotBlank()) {
-                var conditionsOr: Condition
-                conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].aliasName", true
-                ).like(
-                    "%${materialAlias.first().toLowerCase()}%"
-                )
-                materialAlias.forEachIndexed { index, s ->
-                    if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(
-                        JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", true).like("%${s.toLowerCase()}%")
-                    )
-                }
-                where.and(conditionsOr)
+            val where = dslContext.selectFrom(this).where(PROJECT_ID.eq(projectId)).and(PIPELINE_ID.eq(pipelineId))
+            makeCondition(
+                where = where,
+                materialAlias = materialAlias,
+                materialUrl = materialUrl,
+                materialBranch = materialBranch,
+                materialCommitId = materialCommitId,
+                materialCommitMessage = materialCommitMessage,
+                status = status,
+                startUser = startUser,
+                trigger = trigger,
+                queueTimeStartTime = queueTimeStartTime,
+                queueTimeEndTime = queueTimeEndTime,
+                startTimeStartTime = startTimeStartTime,
+                startTimeEndTime = startTimeEndTime,
+                endTimeStartTime = endTimeStartTime,
+                endTimeEndTime = endTimeEndTime,
+                totalTimeMin = totalTimeMin,
+                totalTimeMax = totalTimeMax,
+                remark = remark,
+                buildNoStart = buildNoStart,
+                buildNoEnd = buildNoEnd,
+                buildMsg = buildMsg
+            )
+
+            when (updateTimeDesc) {
+                true -> where.orderBy(UPDATE_TIME.desc(), BUILD_ID)
+                false -> where.orderBy(UPDATE_TIME.asc(), BUILD_ID)
+                null -> where.orderBy(BUILD_NUM.desc())
             }
-            if (materialUrl != null && materialUrl.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
-            }
-            if (materialBranch != null && materialBranch.isNotEmpty() && materialBranch.first().isNotBlank()) {
-                var conditionsOr: Condition
-                conditionsOr = JooqUtils.jsonExtract(
-                    MATERIAL, "\$[*].branchName", lower = true
-                ).like(
-                    "%${materialBranch.first().toLowerCase()}%"
-                )
-                materialBranch.forEachIndexed { index, s ->
-                    if (index == 0) return@forEachIndexed
-                    conditionsOr = conditionsOr.or(
-                        JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", true).like("%${s.toLowerCase()}%")
-                    )
-                }
-                where.and(conditionsOr)
-            }
-            if (materialCommitId != null && materialCommitId.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
-            }
-            if (materialCommitMessage != null && materialCommitMessage.isNotEmpty()) {
-                where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
-            }
-            if (status != null && status.isNotEmpty()) { // filterNotNull不能删
-                where.and(STATUS.`in`(status.map { it.ordinal }))
-            }
-            if (trigger != null && trigger.isNotEmpty()) { // filterNotNull不能删
-                where.and(TRIGGER.`in`(trigger.map { it.name }))
-            }
-            if (queueTimeStartTime != null && queueTimeStartTime > 0) {
-                where.and(QUEUE_TIME.ge(Timestamp(queueTimeStartTime).toLocalDateTime()))
-            }
-            if (queueTimeEndTime != null && queueTimeEndTime > 0) {
-                where.and(QUEUE_TIME.le(Timestamp(queueTimeEndTime).toLocalDateTime()))
-            }
-            if (startTimeStartTime != null && startTimeStartTime > 0) {
-                where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
-            }
-            if (startTimeEndTime != null && startTimeEndTime > 0) {
-                where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
-            }
-            if (endTimeStartTime != null && endTimeStartTime > 0) {
-                where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
-            }
-            if (endTimeEndTime != null && endTimeEndTime > 0) {
-                where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
-            }
-            if (totalTimeMin != null && totalTimeMin > 0) {
-                where.and(
-                    JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    ).greaterOrEqual(totalTimeMin)
+
+            where.limit(offset, limit).fetch()
+        }
+    }
+
+    private fun TPipelineBuildHistory.makeCondition(
+        where: SelectConditionStep<*>,
+        materialAlias: List<String>?,
+        materialUrl: String?,
+        materialBranch: List<String>?,
+        materialCommitId: String?,
+        materialCommitMessage: String?,
+        status: List<BuildStatus>?,
+        startUser: List<String>?,
+        trigger: List<StartType>?,
+        queueTimeStartTime: Long?,
+        queueTimeEndTime: Long?,
+        startTimeStartTime: Long?,
+        startTimeEndTime: Long?,
+        endTimeStartTime: Long?,
+        endTimeEndTime: Long?,
+        totalTimeMin: Long?,
+        totalTimeMax: Long?,
+        remark: String?,
+        buildNoStart: Int?,
+        buildNoEnd: Int?,
+        buildMsg: String?
+    ) {
+        if (!materialAlias.isNullOrEmpty() && materialAlias.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(t1 = MATERIAL, t2 = "\$[*].aliasName", lower = true)
+                .like("%${materialAlias.first().toLowerCase()}%")
+
+            materialAlias.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].aliasName", lower = true).like("%${s.toLowerCase()}%")
                 )
             }
-            if (totalTimeMax != null && totalTimeMax > 0) {
-                where.and(
-                    JooqUtils.timestampDiff(
-                        DatePart.SECOND,
-                        START_TIME.cast(java.sql.Timestamp::class.java),
-                        END_TIME.cast(java.sql.Timestamp::class.java)
-                    ).lessOrEqual(totalTimeMax)
+            where.and(conditionsOr)
+        }
+
+        if (!materialUrl.isNullOrBlank()) {
+            where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].url").like("%$materialUrl%"))
+        }
+
+        if (!materialBranch.isNullOrEmpty() && materialBranch.first().isNotBlank()) {
+            var conditionsOr: Condition
+
+            conditionsOr = JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true)
+                .like("%${materialBranch.first().toLowerCase()}%")
+
+            materialBranch.forEachIndexed { index, s ->
+                if (index == 0) return@forEachIndexed
+                conditionsOr = conditionsOr.or(
+                    JooqUtils.jsonExtract(MATERIAL, "\$[*].branchName", lower = true).like("%${s.toLowerCase()}%")
                 )
             }
-            if (remark != null && remark.isNotEmpty()) {
-                where.and(REMARK.like("%$remark%"))
-            }
-            if (buildNoStart != null && buildNoStart > 0) {
-                where.and(BUILD_NUM.ge(buildNoStart))
-            }
-            if (buildNoEnd != null && buildNoEnd > 0) {
-                where.and(BUILD_NUM.le(buildNoEnd))
-            }
-            if (buildMsg != null && buildMsg.isNotEmpty()) {
-                where.and(BUILD_MSG.like("%$buildMsg%"))
-            }
-            where.orderBy(BUILD_NUM.desc())
-                .limit(offset, limit)
-                .fetch()
+            where.and(conditionsOr)
+        }
+        if (!materialCommitId.isNullOrBlank()) {
+            where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitId").like("%$materialCommitId%"))
+        }
+        if (!materialCommitMessage.isNullOrBlank()) {
+            where.and(JooqUtils.jsonExtract(MATERIAL, "\$[*].newCommitComment").like("%$materialCommitMessage%"))
+        }
+        if (!status.isNullOrEmpty()) { // filterNotNull不能删
+            where.and(STATUS.`in`(status.map { it.ordinal }))
+        }
+        if (!startUser.isNullOrEmpty()) {
+            where.and(START_USER.`in`(startUser.map { it }))
+        }
+        if (!trigger.isNullOrEmpty()) { // filterNotNull不能删
+            where.and(TRIGGER.`in`(trigger.map { it.name }))
+        }
+        if (queueTimeStartTime != null && queueTimeStartTime > 0) {
+            where.and(QUEUE_TIME.ge(Timestamp(queueTimeStartTime).toLocalDateTime()))
+        }
+        if (queueTimeEndTime != null && queueTimeEndTime > 0) {
+            where.and(QUEUE_TIME.le(Timestamp(queueTimeEndTime).toLocalDateTime()))
+        }
+        if (startTimeStartTime != null && startTimeStartTime > 0) {
+            where.and(START_TIME.ge(Timestamp(startTimeStartTime).toLocalDateTime()))
+        }
+        if (startTimeEndTime != null && startTimeEndTime > 0) {
+            where.and(START_TIME.le(Timestamp(startTimeEndTime).toLocalDateTime()))
+        }
+        if (endTimeStartTime != null && endTimeStartTime > 0) {
+            where.and(END_TIME.ge(Timestamp(endTimeStartTime).toLocalDateTime()))
+        }
+        if (endTimeEndTime != null && endTimeEndTime > 0) {
+            where.and(END_TIME.le(Timestamp(endTimeEndTime).toLocalDateTime()))
+        }
+        if (totalTimeMin != null && totalTimeMin > 0) {
+            where.and(
+                JooqUtils.timestampDiff(
+                    part = DatePart.SECOND,
+                    t1 = START_TIME.cast(Timestamp::class.java),
+                    t2 = END_TIME.cast(Timestamp::class.java)
+                ).greaterOrEqual(totalTimeMin)
+            )
+        }
+        if (totalTimeMax != null && totalTimeMax > 0) {
+            where.and(
+                JooqUtils.timestampDiff(
+                    part = DatePart.SECOND,
+                    t1 = START_TIME.cast(Timestamp::class.java),
+                    t2 = END_TIME.cast(Timestamp::class.java)
+                ).lessOrEqual(totalTimeMax)
+            )
+        }
+        if (remark != null && remark.isNotEmpty()) {
+            where.and(REMARK.like("%$remark%"))
+        }
+        if (buildNoStart != null && buildNoStart > 0) {
+            where.and(BUILD_NUM.ge(buildNoStart))
+        }
+        if (buildNoEnd != null && buildNoEnd > 0) {
+            where.and(BUILD_NUM.le(buildNoEnd))
+        }
+        if (buildMsg != null && buildMsg.isNotEmpty()) {
+            where.and(BUILD_MSG.like("%$buildMsg%"))
         }
     }
 
@@ -855,6 +838,25 @@ class PipelineBuildDao {
         }
     }
 
+    fun getBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.select(BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetch(BUILD_ID)
+        }
+    }
+
     fun updateArtifactList(
         dslContext: DSLContext,
         artifactList: String?,
@@ -888,12 +890,14 @@ class PipelineBuildDao {
         buildId: String,
         stageStatus: List<BuildStageStatus>,
         oldBuildStatus: BuildStatus? = null,
-        newBuildStatus: BuildStatus? = null
+        newBuildStatus: BuildStatus? = null,
+        errorInfoList: List<ErrorInfo>? = null
     ): Int {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this)
                 .set(STAGE_STATUS, JsonUtil.toJson(stageStatus, formatted = false))
-            newBuildStatus?.let { update.set(STATUS, newBuildStatus.ordinal) }
+            newBuildStatus?.let { update.set(STATUS, it.ordinal) }
+            errorInfoList?.let { update.set(ERROR_INFO, JsonUtil.toJson(it, formatted = false)) }
             return if (oldBuildStatus == null) {
                 update.where(BUILD_ID.eq(buildId))
                     .and(PROJECT_ID.eq(projectId))

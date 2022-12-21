@@ -8,7 +8,7 @@ local sub           = string.sub
 local format        = string.format
 local log           = ngx.log
 local ERR           = ngx.ERR
-local WARN          = STDERR
+local WARN          = ngx.WARN
 local ngx_header    = ngx.header
 
 local EQUAL         = byte("=")

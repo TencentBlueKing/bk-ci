@@ -32,6 +32,8 @@
 package com.tencent.bkrepo.auth.config
 
 import com.tencent.bkrepo.auth.interceptor.AuthInterceptor
+import com.tencent.bkrepo.common.security.http.core.HttpAuthSecurity
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry
@@ -40,15 +42,24 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer
 @Configuration
 class AuthConfig : WebMvcConfigurer {
 
+    @Value("\${auth.security.enablePrefix:false}")
+    var enablePrefix: Boolean = false
     override fun addInterceptors(registry: InterceptorRegistry) {
+        val httpAuthSecurity = HttpAuthSecurity()
+            .withPrefix("/auth")
+            .includePattern("/api/**")
+            .excludePattern("/external/**")
+            .excludePattern("/api/user/login")
+            .excludePattern("/api/user/info")
+            .excludePattern("/api/user/verify")
+            .excludePattern("/api/user/rsa")
+            .excludePattern("/api/oauth/token")
+        if (enablePrefix) {
+            httpAuthSecurity.enablePrefix()
+        }
         registry.addInterceptor(clientAuthInterceptor())
-            .addPathPatterns("/api/**")
-            .excludePathPatterns("/external/**")
-            .excludePathPatterns("/api/user/login")
-            .excludePathPatterns("/api/user/info")
-            .excludePathPatterns("/api/user/verify")
-            .excludePathPatterns("/api/user/rsa")
-            .excludePathPatterns("/api/oauth/token")
+            .addPathPatterns(httpAuthSecurity.getIncludedPatterns())
+            .excludePathPatterns(httpAuthSecurity.getExcludedPatterns())
             .order(0)
         super.addInterceptors(registry)
     }

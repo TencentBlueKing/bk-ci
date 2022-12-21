@@ -49,7 +49,7 @@ class SendQualityMrComment @Autowired constructor(
         ruleIds.forEach { ruleId ->
             val reportData = streamQualityService.getQualityGitMrResult(
                 client = client,
-                gitProjectId = action.data.eventCommon.gitProjectId,
+                gitProjectId = action.data.getGitProjectId(),
                 pipelineName = action.data.context.pipeline!!.displayName,
                 event = action.data.context.finishData!!,
                 ruleIds = listOf(ruleId)

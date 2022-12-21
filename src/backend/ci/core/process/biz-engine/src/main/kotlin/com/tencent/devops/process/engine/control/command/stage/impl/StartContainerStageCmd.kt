@@ -38,9 +38,7 @@ import com.tencent.devops.process.engine.control.command.CmdFlowState
 import com.tencent.devops.process.engine.control.command.stage.StageCmd
 import com.tencent.devops.process.engine.control.command.stage.StageContext
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
-import com.tencent.devops.process.engine.pojo.PipelineBuildStage
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
-import com.tencent.devops.process.engine.service.PipelineStageService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -49,7 +47,6 @@ import org.springframework.stereotype.Service
  */
 @Service
 class StartContainerStageCmd(
-    private val pipelineStageService: PipelineStageService,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : StageCmd {
 
@@ -86,6 +83,7 @@ class StartContainerStageCmd(
                     sendStageStartCallback(commandContext)
                     stageStatus = BuildStatus.RUNNING // 要启动Stage
                 }
+
                 newActionType.isEnd() -> stageStatus = BuildStatus.CANCELED // 若为终止命令，直接设置为取消
                 newActionType == ActionType.SKIP -> stageStatus = BuildStatus.SKIP // 要跳过Stage
             }
@@ -145,7 +143,7 @@ class StartContainerStageCmd(
                 cancel = BuildStatusSwitcher.stageStatusMaker.cancel(container.status)
             } else if (ControlUtils.checkContainerFailure(container)) {
                 commandContext.failureContainerNum++
-                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status)
+                fail = BuildStatusSwitcher.stageStatusMaker.forceFinish(container.status, commandContext.fastKill)
             } else if (container.status == BuildStatus.SKIP) {
                 commandContext.skipContainerNum++
             } else if (container.status.isRunning() && !actionType.isEnd()) {
@@ -210,10 +208,5 @@ class StartContainerStageCmd(
                 reason = commandContext.latestSummary
             )
         )
-    }
-
-    private fun hasFailedCheck(stage: PipelineBuildStage?): Boolean {
-        return stage?.checkIn?.status == BuildStatus.QUALITY_CHECK_FAIL.name ||
-            stage?.checkOut?.status == BuildStatus.QUALITY_CHECK_FAIL.name
     }
 }

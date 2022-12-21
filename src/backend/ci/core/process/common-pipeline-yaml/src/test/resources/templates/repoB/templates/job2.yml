@@ -3,7 +3,7 @@ parameters:
     type: string
     default: world
   - name: jobname
-    type: String
+    type: string
     default: JOBNAME
 
 jobs:

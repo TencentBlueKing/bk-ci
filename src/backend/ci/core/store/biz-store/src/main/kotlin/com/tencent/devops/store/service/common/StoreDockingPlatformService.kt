@@ -72,6 +72,7 @@ interface StoreDockingPlatformService {
      * 获取对接平台信息列表
      * @param userId 用户ID
      * @param platformName 平台名称
+     * @param id 平台ID
      * @param page 页码
      * @param pageSize 每页大小
      * @return 对接平台信息列表
@@ -79,7 +80,14 @@ interface StoreDockingPlatformService {
     fun getStoreDockingPlatforms(
         userId: String,
         platformName: String? = null,
+        id: String? = null,
         page: Int = 1,
         pageSize: Int = 10
     ): Page<StoreDockingPlatformInfo>?
+
+    /**
+     * 判断对接平台Code是否已注册
+     * @param platformCode 平台Code
+     */
+    fun isPlatformCodeRegistered(platformCode: String): Boolean
 }

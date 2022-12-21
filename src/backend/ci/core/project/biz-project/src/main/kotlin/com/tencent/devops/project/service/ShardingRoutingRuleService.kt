@@ -30,6 +30,7 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.ShardingRoutingRule
 import com.tencent.devops.common.api.pojo.ShardingRuleTypeEnum
+import com.tencent.devops.project.pojo.TableShardingConfig
 
 interface ShardingRoutingRuleService {
 
@@ -79,4 +80,28 @@ interface ShardingRoutingRuleService {
         routingName: String,
         tableName: String? = null
     ): ShardingRoutingRule?
+
+    /**
+     * 获取可用数据源名称
+     * @param clusterName db集群名称
+     * @param moduleCode 模块代码
+     * @param dataSourceNames 数据源名称集合
+     * @return 可用数据源名称
+     */
+    fun getValidDataSourceName(
+        clusterName: String,
+        moduleCode: SystemModuleEnum,
+        dataSourceNames: List<String>
+    ): String
+
+    /**
+     * 获取可用数据库表名称
+     * @param dataSourceName 数据源名称
+     * @param tableShardingConfig 分表配置
+     * @return 可用数据库表名称
+     */
+    fun getValidTableName(
+        dataSourceName: String,
+        tableShardingConfig: TableShardingConfig
+    ): String
 }

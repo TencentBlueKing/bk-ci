@@ -1,7 +1,7 @@
 <template>
     <bk-sideslider :is-show.sync="show" :quick-close="true" @hidden="hidden" :width="622" :title="isEdit ? $t('setting.ticket.editCredential') : $t('setting.ticket.addCredential')">
         <bk-form :model="formData" ref="credentialForm" slot="content" class="credential-form" form-type="vertical" label-width="400">
-            <bk-form-item :label="$t('type')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
+            <bk-form-item :label="$t('setting.ticket.credentialType')" :required="true" property="credentialType" :desc="{ content: computedTicket.desc, width: '400px' }" error-display-type="normal">
                 <bk-select v-model="formData.credentialType" :clearable="false" @change="changeCredentialType" :disabled="isEdit">
                     <bk-option v-for="option in ticketTypes"
                         :key="option.id"
@@ -10,10 +10,10 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item label="Key" :required="true" :rules="[requireRule('Code'), idRule]" property="credentialId" error-display-type="normal">
+            <bk-form-item :label="$t('setting.ticket.credentialKey')" :required="true" :desc="{ content: $t('setting.ticket.credentialDesc'), width: '400px' }" :rules="[requireRule('Code'), idRule]" property="credentialId" error-display-type="normal">
                 <bk-input v-model="formData.credentialId" :placeholder="$t('setting.ticket.credentialIdPlaceholder')" :disabled="isEdit"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" :desc="{ content: $t('setting.ticket.diaplayNameTips'), width: '400px' }" error-display-type="normal">
+            <bk-form-item :label="$t('displayName')" property="credentialName" :rules="[nameRule]" error-display-type="normal">
                 <bk-input v-model="formData.credentialName" :placeholder="$t('setting.ticket.credentialIdPlaceholder')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="com.label" :required="com.required" :property="com.id" v-for="com in computedTicket.content" :key="com.id" error-display-type="normal" :rules="com.rules">
@@ -64,7 +64,7 @@
                         name: this.$t('setting.ticket.usernamePassword'),
                         desc: this.$t('setting.ticket.passwordDesc'),
                         content: [
-                            { id: 'v1', label: this.$t('setting.ticket.username'), type: 'text', placeholder: this.$t('setting.ticket.usernamePlaceholder') },
+                            { id: 'v1', label: this.$t('setting.ticket.username'), type: 'text', required: true, rules: [this.requireRule('username')], placeholder: this.$t('setting.ticket.usernamePlaceholder') },
                             { id: 'v2', label: this.$t('setting.ticket.password'), type: 'password', required: true, rules: [this.requireRule('password')], placeholder: this.$t('setting.ticket.passwordPlaceholder') }
                         ]
                     },
@@ -100,7 +100,7 @@
                         content: [
                             {
                                 id: 'v1',
-                                label: 'privateKey',
+                                label: this.$t('setting.ticket.privateKey'),
                                 type: 'textarea',
                                 required: true,
                                 rules: [
@@ -179,7 +179,7 @@
             ...mapState(['projectId']),
 
             computedTicket () {
-                return this.ticketTypes.find((x) => (x.id === this.formData.credentialType))
+                return this.ticketTypes.find((x) => (x.id === this.formData.credentialType)) || {}
             },
             isEdit () {
                 return this.form.permissions
@@ -197,7 +197,7 @@
         methods: {
             initData () {
                 const defaultForm = {
-                    credentialType: 'PASSWORD',
+                    credentialType: '',
                     credentialId: '',
                     credentialName: '',
                     credentialRemark: '',

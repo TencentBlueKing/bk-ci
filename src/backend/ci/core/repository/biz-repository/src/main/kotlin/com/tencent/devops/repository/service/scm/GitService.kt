@@ -54,8 +54,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.repository.pojo.git.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitMrReviewInfo
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -81,6 +79,8 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
+import com.tencent.devops.scm.pojo.GitMrInfo
+import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -230,8 +230,10 @@ class GitService @Autowired constructor(
                             sshUrl = project["ssh_url_to_repo"].asString,
                             httpUrl = project["https_url_to_repo"].asString,
                             lastActivity = DateTimeUtil.convertLocalDateTimeToTimestamp(
-                                LocalDateTime.parse(lastActivityTime)) * 1000L
-                        ))
+                                LocalDateTime.parse(lastActivityTime)
+                            ) * 1000L
+                        )
+                    )
                 }
             }
         }
@@ -1044,8 +1046,10 @@ class GitService @Autowired constructor(
         token: String,
         repoUrl: String?
     ): GitMrInfo {
-        val url = StringBuilder("${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
-            "/merge_request/$mrId")
+        val url = StringBuilder(
+            "${getApiUrl(repoUrl)}/projects/${URLEncoder.encode(repoName, "UTF-8")}" +
+                "/merge_request/$mrId"
+        )
         logger.info("get mr info url: $url")
         setToken(tokenType, url, token)
         val request = Request.Builder()
@@ -1244,7 +1248,8 @@ class GitService @Autowired constructor(
     ): Result<GitCommit?> {
         logger.info("getRepoRecentCommitInfo repoName:$repoName, sha:$sha, tokenType is:$tokenType")
         val encodeProjectName = URLEncoder.encode(repoName, Charsets.UTF_8.name())
-        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$sha")
+        val encodeSha = URLEncoder.encode(sha, Charsets.UTF_8.name())
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/repository/commits/$encodeSha")
         setToken(tokenType, url, token)
         val request = Request.Builder()
             .url(url.toString())
@@ -1745,6 +1750,45 @@ class GitService @Autowired constructor(
         }
     }
 
+    @BkTimed(extraTags = ["operation", "enableCi"], value = "bk_tgit_api_time")
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        logger.info(
+            "enableCi projectName:$projectName," +
+                "enable:$enable,tokenType:$tokenType"
+        )
+        val encodeProjectName = URLEncoder.encode(projectName, "utf-8")
+        val url = StringBuilder("${gitConfig.gitApiUrl}/projects/$encodeProjectName/ci/enable")
+        setToken(tokenType, url, token)
+        url.append("&enable_ci=$enable")
+        val request = Request.Builder()
+            .url(url.toString())
+            .put(
+                RequestBody.create(
+                    MediaType.parse("application/json;charset=utf-8"), "{}"
+                )
+            )
+            .build()
+        OkhttpUtils.doHttp(request).use {
+            if (!it.isSuccessful) {
+                return Result(it.code(), "enableCi fail ${it.message()}")
+            }
+            val data = it.body()!!.string()
+            logger.info("enableCi response>> $data")
+            val dataMap = JsonUtil.toMap(data)
+            val code = dataMap["code"]
+            if (code != 200) {
+                // 把工蜂的错误提示抛出去
+                return Result(code as Int, "${dataMap["message"]}")
+            }
+            return Result(true)
+        }
+    }
+
     @BkTimed(extraTags = ["operation", "git_create_file"], value = "bk_tgit_api_time")
     override fun gitCreateFile(
         gitProjectId: String,
@@ -1772,7 +1816,16 @@ class GitService @Autowired constructor(
         }
     }
 
-    override fun getGitCodeProjectList(accessToken: String, page: Int?, pageSize: Int?, search: String?, orderBy: GitCodeProjectsOrder?, sort: GitCodeBranchesSort?, owned: Boolean?, minAccessLevel: GitAccessLevelEnum?): Result<List<GitCodeProjectInfo>> {
+    override fun getGitCodeProjectList(
+        accessToken: String,
+        page: Int?,
+        pageSize: Int?,
+        search: String?,
+        orderBy: GitCodeProjectsOrder?,
+        sort: GitCodeBranchesSort?,
+        owned: Boolean?,
+        minAccessLevel: GitAccessLevelEnum?
+    ): Result<List<GitCodeProjectInfo>> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 20
         val url = "$gitCIUrl/api/v3/projects?access_token=$accessToken&page=$pageNotNull&per_page=$pageSizeNotNull"

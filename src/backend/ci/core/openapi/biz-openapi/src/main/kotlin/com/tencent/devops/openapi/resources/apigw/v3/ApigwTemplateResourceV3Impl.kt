@@ -54,7 +54,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         page: Int,
         pageSize: Int
     ): Result<TemplateListModel> {
-        logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|list template|$projectId|$templateType|$storeFlag|$page|$pageSize")
         return client.get(ServicePTemplateResource::class).listTemplate(
             userId = userId,
             projectId = projectId,
@@ -73,7 +73,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         templateId: String,
         version: Long?
     ): Result<TemplateModelDetail> {
-        logger.info("get template, projectId($projectId) templateId($templateId) version($version) by $userId")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|get template|$projectId|$templateId|$version")
         return client.get(ServicePTemplateResource::class).getTemplate(
             userId = userId,
             projectId = projectId,
@@ -90,7 +90,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         page: Int,
         pageSize: Int
     ): Result<OptionalTemplateList> {
-        logger.info("get project's pipeline all template, projectId($projectId) by user $userId")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|list all template|$projectId|$page|$pageSize")
         return client.get(ServicePTemplateResource::class).listAllTemplate(
             userId = userId,
             projectId = projectId,
@@ -107,11 +107,12 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         template: Model
     ): Result<TemplateId> {
-        logger.info("createTemplate|userId=$userId|projectId=$projectId")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|create template|$projectId")
         return client.get(UserPTemplateResource::class).createTemplate(
             userId = userId,
             projectId = projectId,
-            template = template)
+            template = template
+        )
     }
 
     override fun deleteTemplate(
@@ -121,11 +122,12 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         projectId: String,
         templateId: String
     ): Result<Boolean> {
-        logger.info("DeleteTemplate|userId=$userId|projectId=$projectId|templateId=$templateId")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|delete template|$projectId|$templateId")
         return client.get(UserPTemplateResource::class).deleteTemplate(
             userId = userId,
             projectId = projectId,
-            templateId = templateId)
+            templateId = templateId
+        )
     }
 
     override fun deleteTemplateVersion(
@@ -136,7 +138,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         templateId: String,
         version: Long
     ): Result<Boolean> {
-        logger.info("deleteTemplateVersion|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|delete template version|$projectId|$templateId|$version")
         return client.get(UserPTemplateResource::class).deleteTemplate(
             userId = userId,
             projectId = projectId,
@@ -154,7 +156,7 @@ class ApigwTemplateResourceV3Impl @Autowired constructor(private val client: Cli
         versionName: String,
         template: Model
     ): Result<Boolean> {
-        logger.info("updateTemplate|userId=$userId|projectId=$projectId|templateId=$templateId|verName=$versionName")
+        logger.info("OPENAPI_TEMPLATE_V3|$userId|update template|$projectId|$templateId|$versionName")
         return client.get(UserPTemplateResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,

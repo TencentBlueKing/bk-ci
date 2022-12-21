@@ -32,7 +32,7 @@ class SampleApiFilter constructor(
         }
         val accessToken = requestContext.uriInfo.queryParameters.getFirst(API_ACCESS_TOKEN_PROPERTY)
         if (accessToken.isNullOrBlank()) {
-            logger.error("OPENAPI|verifyJWT accessToken is blank|" +
+            logger.warn("OPENAPI|verifyJWT accessToken is blank|" +
                 "context=${requestContext.uriInfo.queryParameters}")
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
@@ -47,7 +47,7 @@ class SampleApiFilter constructor(
             requestContext.headers.add(AUTH_HEADER_USER_ID, tokenInfo.userId)
             return true
         } catch (ignore: Throwable) {
-            logger.error("OPENAPI|verifyJWT with error:", ignore)
+            logger.warn("OPENAPI|verifyJWT with error:", ignore)
             requestContext.abortWith(
                 Response.status(Response.Status.BAD_REQUEST)
                     .entity("Verification failed : $ignore")

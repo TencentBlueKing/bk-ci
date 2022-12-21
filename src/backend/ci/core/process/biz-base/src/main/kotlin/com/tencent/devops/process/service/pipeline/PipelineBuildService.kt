@@ -44,6 +44,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
 import com.tencent.devops.common.redis.concurrent.SimpleRateLimiter
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.cfg.BuildIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
@@ -61,10 +62,16 @@ import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_CREATE_USER
 import com.tencent.devops.process.utils.PIPELINE_ID
 import com.tencent.devops.process.utils.PIPELINE_NAME
+import com.tencent.devops.process.utils.PIPELINE_RETRY_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
+import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT
 import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
+import com.tencent.devops.process.utils.PIPELINE_START_MANUAL_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_MOBILE
 import com.tencent.devops.process.utils.PIPELINE_START_PIPELINE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_REMOTE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_SERVICE_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_TIME_TRIGGER_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
@@ -76,7 +83,6 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import javax.ws.rs.core.Response
 
 @Suppress("ALL")
 @Service
@@ -89,12 +95,13 @@ class PipelineBuildService(
     private val templateService: TemplateService,
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val projectCacheService: ProjectCacheService,
-    private val simpleRateLimiter: SimpleRateLimiter
+    private val simpleRateLimiter: SimpleRateLimiter,
+    private val buildIdGenerator: BuildIdGenerator
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineBuildService::class.java)
         private val NO_LIMIT_CHANNEL = listOf(ChannelCode.CODECC)
-        private val CONTEXT_PREFIX = "variables."
+        private const val CONTEXT_PREFIX = "variables."
     }
 
     fun startPipeline(
@@ -109,7 +116,8 @@ class PipelineBuildService(
         frequencyLimit: Boolean = true,
         buildNo: Int? = null,
         startValues: Map<String, String>? = null,
-        handlePostFlag: Boolean = true
+        handlePostFlag: Boolean = true,
+        triggerReviewers: List<String>? = null
     ): String {
 
         val pipelineId = pipeline.pipelineId
@@ -117,10 +125,20 @@ class PipelineBuildService(
         val projectId = pipeline.projectId
         val pipelineSetting = pipelineRepositoryService.getSetting(projectId, pipelineId)
         val bucketSize = pipelineSetting!!.maxConRunningQueueSize
+        val projectVO = projectCacheService.getProject(projectId)
+        if (projectVO?.enabled == false) {
+            throw ErrorCodeException(
+                errorCode = ProcessMessageCode.ERROR_START_BUILD_PROJECT_UNENABLE,
+                defaultMessage = "Project [${projectVO.englishName}] has disabled",
+                params = arrayOf(projectVO.englishName)
+            )
+        }
         val lockKey = "PipelineRateLimit:$pipelineId"
         try {
             if (frequencyLimit && channelCode !in NO_LIMIT_CHANNEL) {
-                acquire = simpleRateLimiter.acquire(bucketSize, lockKey = lockKey)
+                acquire = simpleRateLimiter.acquire(
+                    bucketSize ?: PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT, lockKey = lockKey
+                )
                 if (!acquire) {
                     throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_START_BUILD_FREQUENT_LIMIT,
@@ -150,6 +168,10 @@ class PipelineBuildService(
             val userName = when (startType) {
                 StartType.PIPELINE -> pipelineParamMap[PIPELINE_START_PIPELINE_USER_ID]?.value ?: userId
                 StartType.WEB_HOOK -> pipelineParamMap[PIPELINE_START_WEBHOOK_USER_ID]?.value ?: userId
+                StartType.SERVICE -> pipelineParamMap[PIPELINE_START_SERVICE_USER_ID]?.value ?: userId
+                StartType.MANUAL -> pipelineParamMap[PIPELINE_START_MANUAL_USER_ID]?.value ?: userId
+                StartType.TIME_TRIGGER -> pipelineParamMap[PIPELINE_START_TIME_TRIGGER_USER_ID]?.value ?: userId
+                StartType.REMOTE -> startValues?.get(PIPELINE_START_REMOTE_USER_ID) ?: userId
                 else -> userId
             }
             // 维持原样，保证可修改
@@ -163,7 +185,7 @@ class PipelineBuildService(
             // 项目名称也是可能变化
             pipelineParamMap[PROJECT_NAME_CHINESE] = BuildParameters(
                 key = PROJECT_NAME_CHINESE,
-                value = projectCacheService.getProjectName(projectId) ?: "",
+                value = projectVO?.projectName ?: "",
                 valueType = BuildFormPropertyType.STRING
             )
 
@@ -175,13 +197,23 @@ class PipelineBuildService(
             realStartParamKeys.forEach { key ->
                 pipelineParamMap[key]?.let { param ->
                     originStartParams.add(param)
-                    originStartContexts.add(param.copy(key = "$CONTEXT_PREFIX${param.key}"))
+                    val keyWithPrefix = if (key.startsWith(CONTEXT_PREFIX)) {
+                        param.key
+                    } else {
+                        CONTEXT_PREFIX + param.key
+                    }
+                    originStartContexts.add(param.copy(key = keyWithPrefix))
                 }
             }
             pipelineParamMap.putAll(originStartContexts.associateBy { it.key })
             pipelineParamMap[PIPELINE_BUILD_MSG] = BuildParameters(
                 key = PIPELINE_BUILD_MSG,
-                value = BuildMsgUtils.getBuildMsg(startValues?.get(PIPELINE_BUILD_MSG), startType, channelCode),
+                value = BuildMsgUtils.getBuildMsg(
+                    buildMsg = startValues?.get(PIPELINE_BUILD_MSG)
+                        ?: pipelineParamMap[PIPELINE_BUILD_MSG]?.value?.toString(),
+                    startType = startType,
+                    channelCode = channelCode
+                ),
                 readOnly = true
             )
             pipelineParamMap[PIPELINE_START_TYPE] = BuildParameters(
@@ -207,6 +239,8 @@ class PipelineBuildService(
             pipelineParamMap[PIPELINE_BUILD_MSG]?.let { buildMsgParam -> originStartParams.add(buildMsgParam) }
             pipelineParamMap[PIPELINE_RETRY_COUNT]?.let { retryCountParam -> originStartParams.add(retryCountParam) }
 
+            val buildId = pipelineParamMap[PIPELINE_RETRY_BUILD_ID]?.value?.toString() ?: buildIdGenerator.getNextId()
+
             // #6987 修复stream的并发执行判断问题 在判断并发时再替换上下文
             setting?.concurrencyGroup?.let {
                 val varMap = pipelineParamMap.values.associate { param -> param.key to param.value.toString() }
@@ -219,13 +253,13 @@ class PipelineBuildService(
                     pipelineInfo = pipeline,
                     model = model,
                     startType = startType,
-                    setting = setting
+                    setting = setting,
+                    buildId = buildId
                 )
             )
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
                 throw ErrorCodeException(
-                    statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = interceptResult.status.toString(),
                     defaultMessage = "Pipeline start failed: [${interceptResult.message}]"
                 )
@@ -239,7 +273,9 @@ class PipelineBuildService(
                 pipelineParamMap = pipelineParamMap,
                 buildNo = buildNo,
                 buildNumRule = pipelineSetting.buildNumRule,
-                setting = setting
+                setting = setting,
+                buildId = buildId,
+                triggerReviewers = triggerReviewers
             )
         } finally {
             if (acquire) {

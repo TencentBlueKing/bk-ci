@@ -65,13 +65,34 @@ interface UserStreamDetailResource {
         @ApiParam(value = "蓝盾项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam(value = "pipelineId", required = false)
+        @ApiParam(value = "流水线ID", required = false)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam(value = "buildId", required = false)
+        @ApiParam(value = "构建ID", required = false)
         @QueryParam("buildId")
         buildId: String?
     ): Result<StreamModelDetail?>
+
+    @ApiOperation("触发审核")
+    @POST
+    @Path("/detail/{projectId}/review")
+    fun buildTriggerReview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam(value = "构建ID", required = false)
+        @QueryParam("buildId")
+        buildId: String,
+        @ApiParam("是否通过审核", required = true)
+        @QueryParam("approve")
+        approve: Boolean
+    ): Result<Boolean>
 
     @ApiOperation("根据元数据获取文件(有排序),searchProps条件为and")
     @Path("/artifactories/projects/{projectId}/search")

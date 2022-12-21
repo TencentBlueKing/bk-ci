@@ -58,7 +58,6 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.util.CollectionUtils
-import org.springframework.util.StringUtils
 
 /**
  * 构建容器逻辑类
@@ -111,7 +110,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         type: String?,
         os: OS?
     ): Result<List<ContainerResp>> {
-        logger.info("the get userId is :$userId,projectCode is :$projectCode, type is :$type,os is :$os")
+        logger.info("getAllContainerInfos params:[$userId|$projectCode|$type|$os]")
         val dataList = mutableListOf<ContainerResp>()
         val pipelineContainers = containerDao.getAllPipelineContainer(dslContext, type, os?.name)
         pipelineContainers?.forEach {
@@ -127,7 +126,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             val resources = HashMap<BuildType, ContainerResource>()
             val containerOS = if (!"NONE".equals(it.os, true)) {
                 appList = containerAppService.listAppsWithVersion(it.os)
-                logger.info("the appList is :$appList")
                 if (it.os.isNullOrBlank()) {
                     null
                 } else {
@@ -232,11 +230,12 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         containerOS: OS,
         buildType: BuildType
     ): Result<ContainerResourceValue?> {
-        logger.info("the userId is :$userId,projectCode is :$projectCode, os: $containerOS, buildType is :$buildType")
+        logger.info("getContainerResource params:[$userId|$projectCode|$containerOS|$buildType]")
         return try {
             Result(getResource(userId, projectCode, null, containerOS, buildType).second)
-        } catch (e: Exception) {
-            logger.info("get container resource error is :$e")
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|" +
+                "$buildType|error=${ignored.message}", ignored)
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
     }
@@ -251,10 +250,12 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         containerOS: OS,
         buildType: BuildType
     ): Result<ContainerResource?> {
+        logger.info("getContainerResource params:[$userId|$projectCode|$containerId|$containerOS|$buildType]")
         return try {
             Result(getResource(userId, projectCode, containerId, containerOS, buildType).first)
-        } catch (e: Exception) {
-            logger.info("get container resource error is :$e")
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|getContainerResource|$projectCode|$containerOS|$containerId|" +
+                "$buildType|error=${ignored.message}", ignored)
             MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         }
     }
@@ -263,9 +264,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      * 获取构建容器信息
      */
     override fun getPipelineContainer(id: String): Result<Container?> {
-        logger.info("the get id is :{}", id)
         val pipelineContainerRecord = containerDao.getPipelineContainer(dslContext, id)
-        logger.info("the pipelineContainerRecord is :{}", pipelineContainerRecord)
         return Result(
             if (pipelineContainerRecord == null) {
                 null
@@ -279,7 +278,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      * 保存构建容器信息
      */
     override fun savePipelineContainer(containerRequest: ContainerRequest): Result<Boolean> {
-        logger.info("the save containerRequest is :{}", containerRequest)
+        logger.info("savePipelineContainer containerRequest:$containerRequest")
         val name = containerRequest.name
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
@@ -296,9 +295,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             containerDao.savePipelineContainer(context, id, containerRequest)
             val resourceIdList = containerRequest.resourceIdList
             if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(
-                context,
-                id,
-                resourceIdList!!
+                dslContext = context,
+                containerId = id,
+                resourceIdList = resourceIdList!!
             )
         }
         return Result(true)
@@ -308,7 +307,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      * 更新构建容器信息
      */
     override fun updatePipelineContainer(id: String, containerRequest: ContainerRequest): Result<Boolean> {
-        logger.info("the update id is :{},the update containerRequest is :{}", id, containerRequest)
+        logger.info("updatePipelineContainer id:$id,containerRequest:$containerRequest")
         val name = containerRequest.name
         // 判断容器名称是否存在
         val count = containerDao.countByName(dslContext, name)
@@ -330,9 +329,9 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             containerResourceRelDao.deleteByContainerId(context, id)
             val resourceIdList = containerRequest.resourceIdList
             if (!CollectionUtils.isEmpty(resourceIdList)) containerResourceRelDao.batchAdd(
-                context,
-                id,
-                resourceIdList!!
+                dslContext = context,
+                containerId = id,
+                resourceIdList = resourceIdList!!
             )
         }
         return Result(true)
@@ -342,7 +341,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      * 删除构建容器信息
      */
     override fun deletePipelineContainer(id: String): Result<Boolean> {
-        logger.info("the delete id is :{}", id)
         containerDao.deletePipelineContainer(dslContext, id)
         return Result(true)
     }
@@ -366,7 +364,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
 
     @Suppress("UNCHECKED_CAST")
     private fun convertString(str: String?): Map<String, Any> {
-        return if (!StringUtils.isEmpty(str)) {
+        return if (!str.isNullOrBlank()) {
             JsonUtil.getObjectMapper().readValue(str, Map::class.java) as Map<String, Any>
         } else {
             mapOf()

@@ -51,7 +51,7 @@ class ApigwCredentialResourceV4Impl @Autowired constructor(private val client: C
         pageSize: Int?,
         keyword: String?
     ): Result<Page<CredentialWithPermission>> {
-        logger.info("get credential of project($projectId) by user($userId)")
+        logger.info("OPENAPI_CREDENTIAL_V4|$userId|list|$projectId|$credentialTypesString|$page|$pageSize|$keyword")
         return client.get(UserCredentialResource::class).list(
             userId = userId,
             projectId = projectId,
@@ -69,7 +69,7 @@ class ApigwCredentialResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         credential: CredentialCreate
     ): Result<Boolean> {
-        logger.info("create credential of project($projectId)")
+        logger.info("OPENAPI_CREDENTIAL_V4|$userId|create|$projectId|$credential")
         return client.get(UserCredentialResource::class).create(
             userId = userId,
             projectId = projectId,
@@ -84,7 +84,7 @@ class ApigwCredentialResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         credentialId: String
     ): Result<CredentialWithPermission> {
-        logger.info("get credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V4|$userId|get|$projectId|$credentialId")
         return client.get(UserCredentialResource::class).get(
             userId = userId,
             projectId = projectId,
@@ -100,7 +100,7 @@ class ApigwCredentialResourceV4Impl @Autowired constructor(private val client: C
         credentialId: String,
         credential: CredentialUpdate
     ): Result<Boolean> {
-        logger.info("edit credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V4|$userId|edit|$projectId|$credentialId|$credential")
         return client.get(UserCredentialResource::class).edit(
             userId = userId,
             projectId = projectId,
@@ -116,7 +116,7 @@ class ApigwCredentialResourceV4Impl @Autowired constructor(private val client: C
         projectId: String,
         credentialId: String
     ): Result<Boolean> {
-        logger.info("get credential of project($projectId),credentialId($credentialId)")
+        logger.info("OPENAPI_CREDENTIAL_V4|$userId|delete|$projectId|$credentialId")
         return client.get(UserCredentialResource::class).delete(
             userId = userId,
             projectId = projectId,

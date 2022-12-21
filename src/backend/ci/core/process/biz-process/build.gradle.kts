@@ -52,5 +52,6 @@ dependencies {
     api("javax.websocket:javax.websocket-api")
     api("io.undertow:undertow-servlet")
     api("io.undertow:undertow-websockets-jsr")
+    api("io.github.resilience4j:resilience4j-circuitbreaker")
     testImplementation(project(":core:common:common-test"))
 }

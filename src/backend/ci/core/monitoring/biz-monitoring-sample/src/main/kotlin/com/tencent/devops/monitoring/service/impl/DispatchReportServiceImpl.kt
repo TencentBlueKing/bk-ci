@@ -28,17 +28,14 @@ package com.tencent.devops.monitoring.service.impl
 
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.monitoring.service.DispatchReportService
-import org.slf4j.LoggerFactory
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 
 @Service
 @RefreshScope
 class DispatchReportServiceImpl : DispatchReportService {
-    private val logger = LoggerFactory.getLogger(DispatchReportServiceImpl::class.java)
 
     override fun reportDispatchStatus(dispatchStatus: DispatchStatus): Boolean {
-        logger.info("DispatchReportServiceImpl reportDispatchStatus: $dispatchStatus")
         return true
     }
 }

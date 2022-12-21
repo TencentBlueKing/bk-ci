@@ -53,7 +53,7 @@ interface ServiceQualityControlPointMarketResource {
         @QueryParam("userId")
         userId: String,
         controlPoint: QualityControlPoint
-    ): Result<Int>
+    ): Result<Long>
 
     @ApiOperation("刷新插件指标的指标")
     @Path("/refreshControlPoint")

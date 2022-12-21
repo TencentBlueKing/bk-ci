@@ -57,7 +57,10 @@ class BuildStatusSwitcherTest {
                     )
                 }
                 status.isReadyToRun() -> {
-                    Assertions.assertEquals(BuildStatus.CANCELED, BuildStatusSwitcher.pipelineStatusMaker.finish(status))
+                    Assertions.assertEquals(
+                        BuildStatus.CANCELED,
+                        BuildStatusSwitcher.pipelineStatusMaker.finish(status)
+                    )
                 }
                 status.isRunning() -> {
                     Assertions.assertEquals(BuildStatus.SUCCEED, BuildStatusSwitcher.pipelineStatusMaker.finish(status))

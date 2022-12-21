@@ -153,7 +153,7 @@ class FileTaskServiceImpl : FileTaskService {
                 archiveFileService.downloadFile(userId, destPath, FileOutputStream(tmpFile))
                 fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.DONE.status)
             } catch (e: Exception) {
-                logger.error("fail to download file:taskId=$taskId", e)
+                logger.error("BKSystemErrorMonitor|downloadFile|$taskId|error=${e.message}", e)
                 // 清理文件
                 tmpFile.delete()
                 fileTaskDao.updateFileTaskStatus(dslContext, taskId, FileTaskStatusEnum.ERROR.status)

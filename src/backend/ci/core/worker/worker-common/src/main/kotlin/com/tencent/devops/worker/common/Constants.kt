@@ -37,6 +37,8 @@ const val AGENT_SECRET_KEY = "devops_agent_secret_key"
 
 const val WORKSPACE_ENV = "WORKSPACE"
 
+const val COMMON_ENV_CONTEXT = "common_env"
+
 const val WORKSPACE_CONTEXT = "ci.workspace"
 
 const val CI_TOKEN_CONTEXT = "ci.token"
@@ -74,3 +76,5 @@ const val LOG_TASK_LINE_LIMIT = 1000000
 const val LOG_FILE_LENGTH_LIMIT = 1073741824 // 1 GB = 1073741824 Byte
 
 val PIPELINE_SCRIPT_ATOM_CODE = listOf("PipelineScriptDev", "PipelineScriptTest", "PipelineScript")
+
+const val BK_CI_ATOM_EXECUTE_ENV_PATH = "BK_CI_ATOM_EXECUTE_ENV_PATH"

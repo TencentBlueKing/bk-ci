@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwArtifactoryResourceV3
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -54,6 +55,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): Result<Url> {
+        logger.info("OPENAPI_ARTIFACTORY_V3|$userId|get user download url|$projectId|$artifactoryType|$path")
         return client.get(ServiceArtifactoryResource::class).downloadUrlForOpenApi(
             userId = userId,
             projectId = projectId,
@@ -72,6 +74,7 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<FileInfo>> {
+        logger.info("OPENAPI_ARTIFACTORY_V3|$userId|search|$projectId|$pipelineId|$buildId|$page|$pageSize")
         val map = mutableMapOf<String, String>()
         map["pipelineId"] = pipelineId
         map["buildId"] = buildId
@@ -96,6 +99,10 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
         elementId: String,
         executeCount: String
     ): Result<Url> {
+        logger.info(
+            "OPENAPI_ARTIFACTORY_V3|$userId|get plugin log url|$projectId|$pipelineId|$buildId|$elementId" +
+                "|$executeCount"
+        )
         return client.get(ServiceLogFileResource::class).getPluginLogUrl(
             userId = userId,
             projectId = projectId,
@@ -104,5 +111,9 @@ class ApigwArtifactoryResourceV3Impl @Autowired constructor(
             elementId = elementId,
             executeCount = executeCount
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryResourceV3Impl::class.java)
     }
 }

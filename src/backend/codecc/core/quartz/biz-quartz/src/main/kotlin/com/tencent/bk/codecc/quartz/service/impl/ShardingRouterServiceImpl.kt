@@ -9,23 +9,22 @@ import com.tencent.bk.codecc.quartz.service.JobManageService
 import com.tencent.bk.codecc.quartz.service.ShardingRouterService
 import com.tencent.bk.codecc.quartz.strategy.router.EnumRouterStrategy
 import com.tencent.bk.codecc.quartz.strategy.sharding.EnumShardingStrategy
+import com.tencent.devops.common.client.discovery.DiscoveryUtils
 import com.tencent.devops.common.service.Profile
 import org.quartz.Scheduler
 import org.quartz.impl.matchers.GroupMatcher
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.DiscoveryClient
-import org.springframework.cloud.client.serviceregistry.Registration
 import org.springframework.stereotype.Service
 
 @Service
 class ShardingRouterServiceImpl @Autowired constructor(
     private val discoveryClient: DiscoveryClient,
-    private val registration: Registration,
     private val profile: Profile,
     private val scheduler : Scheduler,
-    private val jobManageService: JobManageService
+    private val jobManageService: JobManageService,
+    private val discoveryUtils: DiscoveryUtils
 ) : ShardingRouterService {
 
     companion object {
@@ -42,9 +41,10 @@ class ShardingRouterServiceImpl @Autowired constructor(
             discoveryClient.getInstances(serviceName)
         //取本地服务
         logger.info("successfully get instance list and local instance!")
-        getInstanceList(instances, registration)
         //按照特定分片算法计算分片信息
-        val shardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
+        val shardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(
+            instances, discoveryUtils
+        )
         logger.info("shard info: ${shardingResult.currentShard}, node info: ${shardingResult.currentNode}")
         //缓存分片信息
         enumShardingStrategy.getShardingStrategy().setPreviousShardingResultIfNull(shardingResult)
@@ -92,9 +92,10 @@ class ShardingRouterServiceImpl @Autowired constructor(
         val instances =
             discoveryClient.getInstances(serviceName)
         //取本地服务
-        getInstanceList(instances, registration)
         val oldShardingResult = enumShardingStrategy.getShardingStrategy().getShardingResult()!!
-        val newShardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(instances, registration)
+        val newShardingResult = enumShardingStrategy.getShardingStrategy().shardInstances(
+            instances, discoveryUtils
+        )
         val jobsNeedToAdd = mutableListOf<JobInstanceEntity>()
         val jobsNeedToRemove = mutableListOf<JobInstanceEntity>()
         var shardChangeFlag = 0
@@ -165,17 +166,5 @@ class ShardingRouterServiceImpl @Autowired constructor(
             enumShardingStrategy.getShardingStrategy().setPreviousShardingResult(newShardingResult)
         }
         return JobInstancesChangeInfo(jobsNeedToAdd, jobsNeedToRemove)
-    }
-
-    private fun getInstanceList(
-        instances: MutableList<ServiceInstance>,
-        localInstance: ServiceInstance
-    ) {
-        val specificInstance = instances.find { it.host == localInstance.host && it.port == localInstance.port }
-        if (null == specificInstance) {
-            instances.add(localInstance)
-        } else {
-            instances[instances.indexOf(specificInstance)] = localInstance
-        }
     }
 }

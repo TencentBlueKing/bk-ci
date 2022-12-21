@@ -39,6 +39,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
@@ -54,15 +55,21 @@ import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.format.DateTimeFormatter
-import org.slf4j.LoggerFactory
+import java.util.concurrent.Executors
+import java.util.concurrent.LinkedBlockingQueue
+import java.util.concurrent.ThreadPoolExecutor
+import java.util.concurrent.TimeUnit
 
-@Service@Suppress("ALL")
+@Service
+@Suppress("ALL")
 class NodeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val nodeDao: NodeDao,
+    private val envDao: EnvDao,
     private val envNodeDao: EnvNodeDao,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val slaveGatewayService: SlaveGatewayService,
@@ -76,6 +83,7 @@ class NodeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(NodeService::class.java)
     }
 
+    val threadPoolExecutor = ThreadPoolExecutor(8, 8, 60, TimeUnit.SECONDS, LinkedBlockingQueue(50))
     fun deleteNodes(userId: String, projectId: String, nodeHashIds: List<String>) {
         val nodeLongIds = nodeHashIds.map { HashUtil.decodeIdToLong(it) }
         val canDeleteNodeIds =
@@ -104,7 +112,7 @@ class NodeService @Autowired constructor(
                 environmentPermissionService.deleteNode(projectId, it)
             }
             webSocketDispatcher.dispatch(
-                    nodeWebsocketService.buildDetailMessage(projectId, userId)
+                nodeWebsocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -193,7 +201,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
-                lastModifyUser = it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: "",
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
     }
@@ -265,7 +274,8 @@ class NodeService @Autowired constructor(
                 } else {
                     DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss").format(it.lastModifyTime)
                 },
-                lastModifyUser = it.lastModifyUser ?: ""
+                lastModifyUser = it.lastModifyUser ?: "",
+                agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
         }
     }
@@ -321,7 +331,7 @@ class NodeService @Autowired constructor(
 
     fun listRawServerNodeByIds(nodeHashIds: List<String>): List<NodeBaseInfo> {
         val nodeRecords =
-                nodeDao.listServerNodesByIds(dslContext, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
+            nodeDao.listServerNodesByIds(dslContext, nodeHashIds.map { HashUtil.decodeIdToLong(it) })
         return nodeRecords.map { NodeStringIdUtils.getNodeBaseInfo(it) }
     }
 
@@ -374,7 +384,8 @@ class NodeService @Autowired constructor(
         )
         if (!environmentPermissionService.checkNodePermission(userId, projectId, nodeId, AuthPermission.EDIT)) {
             throw PermissionForbiddenException(
-                    message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION))
+                message = MessageCodeUtil.getCodeLanMessage(ERROR_NODE_NO_EDIT_PERMISSSION)
+            )
         }
         checkDisplayName(projectId, nodeId, displayName)
         dslContext.transaction { configuration ->
@@ -384,7 +395,7 @@ class NodeService @Autowired constructor(
                 environmentPermissionService.updateNode(userId, projectId, nodeId, displayName)
             }
             webSocketDispatcher.dispatch(
-                    nodeWebsocketService.buildDetailMessage(projectId, userId)
+                nodeWebsocketService.buildDetailMessage(projectId, userId)
             )
         }
     }
@@ -487,5 +498,55 @@ class NodeService @Autowired constructor(
             logger.error("AUTH|refreshGateway failed with error: ", ignore)
             false
         }
+    }
+
+    fun addHashId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("OPRepositoryService:begin addHashId-----------")
+        val threadPoolExecutor = ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(1),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.AbortPolicy()
+        )
+        threadPoolExecutor.submit {
+            logger.info("NodeService:begin addHashId threadPoolExecutor-----------")
+            var offset = 0
+            val limit = 1000
+            try {
+                do {
+                    val envRecords = envDao.getAllEnv(dslContext, limit, offset)
+                    val envSize = envRecords?.size
+                    logger.info("envSize:$envSize")
+                    envRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        envDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (envSize == 1000)
+                offset = 0
+                do {
+                    val nodeRecords = nodeDao.getAllNode(dslContext, limit, offset)
+                    val nodeSize = nodeRecords?.size
+                    logger.info("nodeSize:$nodeSize")
+                    nodeRecords?.map {
+                        val id = it.value1()
+                        val hashId = HashUtil.encodeLongId(it.value1())
+                        nodeDao.updateHashId(dslContext, id, hashId)
+                    }
+                    offset += limit
+                } while (nodeSize == 1000)
+            } catch (e: Exception) {
+                logger.warn("NodeService：addHashId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
+            }
+        }
+        logger.info("NodeService:finish addHashId-----------")
+        logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 }

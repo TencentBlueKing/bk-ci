@@ -78,7 +78,7 @@ class MarketAtomDao : AtomBaseDao() {
         qualityFlag: Boolean?
     ): Int {
         val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
-        val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
+        val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(DSL.countDistinct(ta.ID)).from(ta).leftJoin(taf)
             .on(ta.ATOM_CODE.eq(taf.ATOM_CODE))
 
@@ -105,21 +105,25 @@ class MarketAtomDao : AtomBaseDao() {
         classifyCode: String?,
         dslContext: DSLContext
     ): Pair<TAtom, MutableList<Condition>> {
-        val ta = TAtom.T_ATOM.`as`("ta")
+        val ta = TAtom.T_ATOM
         val storeType = StoreTypeEnum.ATOM.type.toByte()
         val conditions = setAtomVisibleCondition(ta)
         conditions.add(ta.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
         if (!keyword.isNullOrEmpty()) {
-            conditions.add(ta.NAME.contains(keyword).or(ta.SUMMARY.contains(keyword)))
+            conditions.add(
+                ta.NAME.contains(keyword)
+                .or(ta.SUMMARY.contains(keyword))
+                .or(ta.ATOM_CODE.contains(keyword))
+            )
         }
         if (rdType != null) {
             conditions.add(ta.ATOM_TYPE.eq(rdType.type.toByte()))
         }
         if (!classifyCode.isNullOrEmpty()) {
-            val a = TClassify.T_CLASSIFY.`as`("a")
-            val classifyId = dslContext.select(a.ID)
-                .from(a)
-                .where(a.CLASSIFY_CODE.eq(classifyCode).and(a.TYPE.eq(storeType)))
+            val tClassify = TClassify.T_CLASSIFY
+            val classifyId = dslContext.select(tClassify.ID)
+                .from(tClassify)
+                .where(tClassify.CLASSIFY_CODE.eq(classifyCode).and(tClassify.TYPE.eq(storeType)))
                 .fetchOne(0, String::class.java)
             conditions.add(ta.CLASSIFY_ID.eq(classifyId))
         }
@@ -145,7 +149,7 @@ class MarketAtomDao : AtomBaseDao() {
         pageSize: Int?
     ): Result<out Record>? {
         val (ta, conditions) = formatConditions(keyword, rdType, classifyCode, dslContext)
-        val taf = TAtomFeature.T_ATOM_FEATURE.`as`("taf")
+        val taf = TAtomFeature.T_ATOM_FEATURE
         val baseStep = dslContext.select(
             ta.ID,
             ta.NAME,
@@ -188,7 +192,7 @@ class MarketAtomDao : AtomBaseDao() {
             val flag =
                 sortType == MarketAtomSortTypeEnum.DOWNLOAD_COUNT || sortType == MarketAtomSortTypeEnum.RECENT_EXECUTE_NUM
             if (flag && score == null) {
-                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+                val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
                 val t =
                     dslContext.select(
                         tas.STORE_CODE,
@@ -235,17 +239,17 @@ class MarketAtomDao : AtomBaseDao() {
         qualityFlag: Boolean?
     ) {
         if (labelCodeList != null && labelCodeList.isNotEmpty()) {
-            val c = TLabel.T_LABEL.`as`("c")
-            val labelIdList = dslContext.select(c.ID)
-                .from(c)
-                .where(c.LABEL_CODE.`in`(labelCodeList)).and(c.TYPE.eq(storeType))
+            val tLabel = TLabel.T_LABEL
+            val labelIdList = dslContext.select(tLabel.ID)
+                .from(tLabel)
+                .where(tLabel.LABEL_CODE.`in`(labelCodeList)).and(tLabel.TYPE.eq(storeType))
                 .fetch().map { it["ID"] as String }
-            val talr = TAtomLabelRel.T_ATOM_LABEL_REL.`as`("talr")
+            val talr = TAtomLabelRel.T_ATOM_LABEL_REL
             baseStep.leftJoin(talr).on(ta.ID.eq(talr.ATOM_ID))
             conditions.add(talr.LABEL_ID.`in`(labelIdList))
         }
         if (score != null) {
-            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL.`as`("tas")
+            val tas = TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL
             val t = dslContext.select(
                 tas.STORE_CODE,
                 tas.STORE_TYPE,
@@ -283,18 +287,18 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     private fun generateGetMyAtomConditions(
-        a: TAtom,
+        tAtom: TAtom,
         userId: String,
-        b: TStoreMember,
+        tStoreMember: TStoreMember,
         atomName: String?
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
-        conditions.add(a.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
-        conditions.add(a.LATEST_FLAG.eq(true))
-        conditions.add(b.USERNAME.eq(userId))
-        conditions.add(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+        conditions.add(tAtom.DELETE_FLAG.eq(false)) // 只查没有被删除的插件
+        conditions.add(tAtom.LATEST_FLAG.eq(true))
+        conditions.add(tStoreMember.USERNAME.eq(userId))
+        conditions.add(tStoreMember.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         if (null != atomName) {
-            conditions.add(a.NAME.contains(atomName))
+            conditions.add(tAtom.NAME.contains(atomName))
         }
         return conditions
     }
@@ -304,13 +308,13 @@ class MarketAtomDao : AtomBaseDao() {
         userId: String,
         atomName: String?
     ): Int {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
-        return dslContext.select(DSL.countDistinct(a.ATOM_CODE))
-            .from(a)
-            .leftJoin(b)
-            .on(a.ATOM_CODE.eq(b.STORE_CODE))
+        val tAtom = TAtom.T_ATOM
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName)
+        return dslContext.select(DSL.countDistinct(tAtom.ATOM_CODE))
+            .from(tAtom)
+            .leftJoin(tStoreMember)
+            .on(tAtom.ATOM_CODE.eq(tStoreMember.STORE_CODE))
             .where(conditions)
             .fetchOne(0, Int::class.java)!!
     }
@@ -322,32 +326,32 @@ class MarketAtomDao : AtomBaseDao() {
         page: Int?,
         pageSize: Int?
     ): Result<out Record>? {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TStoreMember.T_STORE_MEMBER.`as`("b")
-        val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
-        val conditions = generateGetMyAtomConditions(a, userId, b, atomName)
+        val tAtom = TAtom.T_ATOM
+        val tStoreMember = TStoreMember.T_STORE_MEMBER
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
+        val conditions = generateGetMyAtomConditions(tAtom, userId, tStoreMember, atomName)
         val baseStep = dslContext.select(
-            a.ID.`as`("atomId"),
-            a.ATOM_CODE.`as`("atomCode"),
-            a.NAME.`as`("name"),
-            a.CATEGROY.`as`("category"),
-            d.LANGUAGE.`as`("language"),
-            a.LOGO_URL.`as`("logoUrl"),
-            a.VERSION.`as`("version"),
-            a.ATOM_STATUS.`as`("atomStatus"),
-            a.CREATOR.`as`("creator"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.MODIFIER.`as`("modifier"),
-            a.UPDATE_TIME.`as`("updateTime")
+            tAtom.ID,
+            tAtom.ATOM_CODE,
+            tAtom.NAME,
+            tAtom.CATEGROY,
+            tAtomEnvInfo.LANGUAGE,
+            tAtom.LOGO_URL,
+            tAtom.VERSION,
+            tAtom.ATOM_STATUS,
+            tAtom.CREATOR,
+            tAtom.CREATE_TIME,
+            tAtom.MODIFIER,
+            tAtom.UPDATE_TIME
         )
-            .from(a)
-            .join(b)
-            .on(a.ATOM_CODE.eq(b.STORE_CODE))
-            .leftJoin(d)
-            .on(a.ID.eq(d.ATOM_ID))
+            .from(tAtom)
+            .join(tStoreMember)
+            .on(tAtom.ATOM_CODE.eq(tStoreMember.STORE_CODE))
+            .leftJoin(tAtomEnvInfo)
+            .on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
             .where(conditions)
-            .groupBy(a.ATOM_CODE)
-            .orderBy(a.UPDATE_TIME.desc())
+            .groupBy(tAtom.ID)
+            .orderBy(tAtom.UPDATE_TIME.desc())
         return if (null != page && null != pageSize) {
             baseStep.limit((page - 1) * pageSize, pageSize).fetch()
         } else {
@@ -436,7 +440,7 @@ class MarketAtomDao : AtomBaseDao() {
             dslContext.update(this)
                 .set(NAME, marketAtomUpdateRequest.name)
                 .set(JOB_TYPE, marketAtomUpdateRequest.jobType.name)
-                .set(OS, JsonUtil.getObjectMapper().writeValueAsString(marketAtomUpdateRequest.os))
+                .set(OS, JsonUtil.toJson(marketAtomUpdateRequest.os, formatted = false))
                 .set(CLASSIFY_ID, classifyId)
                 .set(SUMMARY, marketAtomUpdateRequest.summary)
                 .set(DESCRIPTION, marketAtomUpdateRequest.description)
@@ -511,7 +515,7 @@ class MarketAtomDao : AtomBaseDao() {
                     atomRecord.atomCode,
                     atomRecord.serviceScope,
                     atomRequest.jobType.name,
-                    JsonUtil.getObjectMapper().writeValueAsString(atomRequest.os),
+                    JsonUtil.toJson(atomRequest.os, formatted = false),
                     classifyId,
                     atomRecord.docsLink,
                     atomRecord.atomType,
@@ -607,50 +611,47 @@ class MarketAtomDao : AtomBaseDao() {
     }
 
     fun getAtomById(dslContext: DSLContext, atomId: String): Record? {
-        val a = TAtom.T_ATOM.`as`("a")
-        val b = TAtomVersionLog.T_ATOM_VERSION_LOG.`as`("b")
-        val c = TClassify.T_CLASSIFY.`as`("c")
-        val d = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("d")
+        val tAtom = TAtom.T_ATOM
+        val tAtomVersionLog = TAtomVersionLog.T_ATOM_VERSION_LOG
+        val tClassify = TClassify.T_CLASSIFY
 
         return dslContext.select(
-            a.ATOM_CODE.`as`("atomCode"),
-            a.NAME.`as`("name"),
-            a.LOGO_URL.`as`("logoUrl"),
-            c.CLASSIFY_CODE.`as`("classifyCode"),
-            c.CLASSIFY_NAME.`as`("classifyName"),
-            a.CATEGROY.`as`("category"),
-            a.DOCS_LINK.`as`("docsLink"),
-            a.ATOM_TYPE.`as`("atomType"),
-            a.JOB_TYPE.`as`("jobType"),
-            a.OS.`as`("os"),
-            a.SUMMARY.`as`("summary"),
-            a.DESCRIPTION.`as`("description"),
-            a.VERSION.`as`("version"),
-            a.ATOM_STATUS.`as`("atomStatus"),
-            a.ATOM_STATUS_MSG.`as`("atomStatusMsg"),
-            a.CODE_SRC.`as`("codeSrc"),
-            a.REPOSITORY_HASH_ID.`as`("repositoryHashId"),
-            a.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion"),
-            a.PUBLISHER.`as`("publisher"),
-            a.CREATOR.`as`("creator"),
-            a.CREATE_TIME.`as`("createTime"),
-            a.MODIFIER.`as`("modifier"),
-            a.UPDATE_TIME.`as`("updateTime"),
-            a.DEFAULT_FLAG.`as`("defaultFlag"),
-            b.RELEASE_TYPE.`as`("releaseType"),
-            b.CONTENT.`as`("versionContent"),
-            d.LANGUAGE.`as`("language"),
-            a.VISIBILITY_LEVEL.`as`("visibilityLevel"),
-            a.PRIVATE_REASON.`as`("privateReason")
+            tAtom.ATOM_CODE,
+            tAtom.NAME,
+            tAtom.LOGO_URL,
+            tClassify.CLASSIFY_CODE,
+            tClassify.CLASSIFY_NAME,
+            tAtom.CATEGROY,
+            tAtom.DOCS_LINK,
+            tAtom.ATOM_TYPE,
+            tAtom.JOB_TYPE,
+            tAtom.OS,
+            tAtom.SUMMARY,
+            tAtom.DESCRIPTION,
+            tAtom.VERSION,
+            tAtom.ATOM_STATUS,
+            tAtom.ATOM_STATUS_MSG,
+            tAtom.CODE_SRC,
+            tAtom.REPOSITORY_HASH_ID,
+            tAtom.HTML_TEMPLATE_VERSION,
+            tAtom.PUBLISHER,
+            tAtom.CREATOR,
+            tAtom.CREATE_TIME,
+            tAtom.MODIFIER,
+            tAtom.UPDATE_TIME,
+            tAtom.DEFAULT_FLAG,
+            tAtomVersionLog.RELEASE_TYPE,
+            tAtomVersionLog.CONTENT,
+            tAtom.VISIBILITY_LEVEL,
+            tAtom.PRIVATE_REASON
         )
-            .from(a)
-            .leftJoin(b)
-            .on(a.ID.eq(b.ATOM_ID))
-            .leftJoin(c)
-            .on(a.CLASSIFY_ID.eq(c.ID))
-            .leftJoin(d)
-            .on(a.ID.eq(d.ATOM_ID))
-            .where(a.ID.eq(atomId))
+            .from(tAtom)
+            .leftJoin(tAtomVersionLog)
+            .on(tAtom.ID.eq(tAtomVersionLog.ATOM_ID))
+            .leftJoin(tClassify)
+            .on(tAtom.CLASSIFY_ID.eq(tClassify.ID))
+            .where(tAtom.ID.eq(atomId))
+            .limit(1)
             .fetchOne()
     }
 
@@ -776,7 +777,7 @@ class MarketAtomDao : AtomBaseDao() {
                 .set(ATOM_TYPE, approveReq.atomType.type.toByte())
                 .set(DEFAULT_FLAG, approveReq.defaultFlag)
                 .set(BUILD_LESS_RUN_FLAG, approveReq.buildLessRunFlag)
-                .set(SERVICE_SCOPE, JsonUtil.getObjectMapper().writeValueAsString(approveReq.serviceScope))
+                .set(SERVICE_SCOPE, JsonUtil.toJson(approveReq.serviceScope, formatted = false))
                 .set(MODIFIER, userId)
                 .set(UPDATE_TIME, LocalDateTime.now())
             val weight = approveReq.weight

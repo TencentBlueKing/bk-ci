@@ -57,7 +57,9 @@ data class BuildTask(
     @ApiModelProperty("环境参数", required = false)
     val buildVariable: Map<String, String>? = null,
     @ApiModelProperty("容器类型", required = false)
-    val containerType: String? = null
+    val containerType: String? = null,
+    @ApiModelProperty("签名token", required = false)
+    val signToken: String? = null
 ) {
 
     /**

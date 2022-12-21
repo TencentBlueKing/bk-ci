@@ -27,23 +27,19 @@
 
 package com.tencent.devops.stream.service
 
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.common.pipeline.container.Stage
-import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.stream.tables.records.TGitPipelineResourceRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
-import com.tencent.devops.process.pojo.setting.PipelineSetting
+import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
@@ -59,6 +55,7 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import javax.ws.rs.core.Response
 
 @Service
 class StreamPipelineService @Autowired constructor(
@@ -124,7 +121,6 @@ class StreamPipelineService @Autowired constructor(
                     displayName = it.displayName,
                     enabled = it.enabled,
                     creator = it.creator,
-                    latestBuildInfo = null,
                     latestBuildBranch = pipelineBranchMap[it.pipelineId] ?: "master",
                     yamlLink = genYamlLink(
                         pathWithNamespace = basicSetting?.pathWithNamespace,
@@ -188,7 +184,6 @@ class StreamPipelineService @Autowired constructor(
                 displayName = it.displayName,
                 enabled = it.enabled,
                 creator = it.creator,
-                latestBuildInfo = null,
                 latestBuildBranch = null
             )
         }
@@ -197,7 +192,7 @@ class StreamPipelineService @Autowired constructor(
     fun getPipelineById(
         pipelineId: String
     ): StreamGitProjectPipeline? {
-        logger.info("get pipeline: $pipelineId")
+        logger.info("StreamPipelineService|getPipelineById|pipeline|$pipelineId")
         val pipeline = gitPipelineResourceDao.getPipelinesInIds(
             dslContext = dslContext,
             gitProjectId = null,
@@ -210,11 +205,33 @@ class StreamPipelineService @Autowired constructor(
             displayName = pipeline.displayName,
             enabled = pipeline.enabled,
             creator = pipeline.creator,
-            latestBuildInfo = null,
             latestBuildBranch = null
         )
     }
 
+    fun getPipelineInfoByYamlPath(
+        gitProjectId: Long,
+        yamlPath: String
+    ): StreamGitProjectPipeline {
+        logger.info("getPipelineInfoByYamlPath|getPipelineById|pipeline|$gitProjectId|$yamlPath")
+        val pipeline = getPipelineByFile(
+            gitProjectId, yamlPath
+        ) ?: throw CustomException(
+            Response.Status.NOT_FOUND,
+            "project $gitProjectId not found pipeline who is $yamlPath"
+        )
+        return StreamGitProjectPipeline(
+            gitProjectId = pipeline.gitProjectId,
+            pipelineId = pipeline.pipelineId,
+            filePath = pipeline.filePath,
+            displayName = pipeline.displayName,
+            enabled = pipeline.enabled,
+            creator = pipeline.creator,
+            latestBuildBranch = null
+        )
+    }
+
+    @Suppress("ReturnCount")
     fun enablePipeline(
         userId: String,
         gitProjectId: Long,
@@ -233,17 +250,20 @@ class StreamPipelineService @Autowired constructor(
                 .forEach { it.additionalOptions?.enable = enabled }
             val edited = saveModel(processClient, userId, gitProjectId, pipelineId, model)
             logger.info(
-                "gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled" +
-                    ", edit timerTrigger with $edited"
+                "StreamPipelineService|enablePipeline|$gitProjectId|$pipelineId|$enabled|$edited"
             )
-            websocketService.pushPipelineWebSocket(gitProjectId.toString(), pipelineId, userId)
+            websocketService.pushPipelineWebSocket(
+                GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
+                pipelineId,
+                userId
+            )
             return gitPipelineResourceDao.enablePipelineById(
                 dslContext = dslContext,
                 pipelineId = pipelineId,
                 enabled = enabled
             ) == 1
         } catch (e: Exception) {
-            logger.error("gitProjectId: $gitProjectId enable pipeline[$pipelineId] to $enabled error ${e.message}")
+            logger.warn("StreamPipelineService|enablePipeline|error=${e.message}")
             return false
         } finally {
             lock.unlock()
@@ -255,7 +275,7 @@ class StreamPipelineService @Autowired constructor(
         pipelineId: String,
         ref: String
     ): String? {
-        logger.info("get yaml by pipelineId:($pipelineId), ref: $ref")
+        logger.info("StreamPipelineService|getYamlByPipeline|pipelineId|$pipelineId|ref|$ref")
         val conf = streamBasicSettingService.getStreamConf(gitProjectId) ?: return null
 
         val filePath =
@@ -276,12 +296,13 @@ class StreamPipelineService @Autowired constructor(
         projectCode: String,
         modelAndSetting: PipelineModelAndSetting,
         updateLastModifyUser: Boolean,
-        branch: String
+        branch: String,
+        md5: String?
     ) {
         val processClient = client.get(ServicePipelineResource::class)
         if (pipeline.pipelineId.isBlank()) {
             // 直接新建
-            logger.info("create newpipeline: $pipeline")
+            logger.info("StreamPipelineService|savePipeline|newpipeline|$pipeline")
 
             pipeline.pipelineId = processClient.create(
                 userId = userId,
@@ -298,7 +319,8 @@ class StreamPipelineService @Autowired constructor(
                 dslContext = dslContext,
                 gitProjectId = gitProjectId,
                 pipeline = pipeline.toGitPipeline(),
-                version = ymlVersion
+                version = ymlVersion,
+                md5 = md5
             )
             websocketService.pushPipelineWebSocket(
                 projectId = projectCode,
@@ -313,9 +335,11 @@ class StreamPipelineService @Autowired constructor(
             setting = modelAndSetting.setting.copy(
                 projectId = projectCode,
                 pipelineId = pipeline.pipelineId,
-                pipelineName = modelAndSetting.model.name
+                pipelineName = modelAndSetting.model.name,
+                maxConRunningQueueSize = null
             ),
-            updateLastModifyUser = updateLastModifyUser
+            updateLastModifyUser = updateLastModifyUser,
+            channelCode = channelCode
         )
     }
 
@@ -335,7 +359,7 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineId = "",
             filePath = file.filePath,
-            displayName = file.filePath,
+            displayName = getDisplayName(file),
             enabled = true,
             creator = userId,
             lastUpdateBranch = file.branch
@@ -346,7 +370,10 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             filePath = pipeline.filePath
         )
-        val gitProjectCode = GitCommonUtils.getCiProjectId(gitProjectId = gitProjectId.toLong())
+        val gitProjectCode = GitCommonUtils.getCiProjectId(
+            gitProjectId = gitProjectId.toLong(),
+            scmType = gitConfig.getScmType()
+        )
         val realPipeline: StreamTriggerPipeline
         // 避免出现多个触发拿到空的pipelineId后依次进来创建，所以需要在锁后重新获取pipeline
         triggerLock.use {
@@ -360,11 +387,23 @@ class StreamPipelineService @Autowired constructor(
                     userId = userId,
                     gitProjectId = gitProjectId.toLong(),
                     projectCode = gitProjectCode,
-                    modelAndSetting = createTriggerModel(gitProjectCode),
+                    modelAndSetting = StreamPipelineUtils.createEmptyPipelineAndSetting(realPipeline.displayName),
                     updateLastModifyUser = true,
-                    branch = branch
+                    branch = branch,
+                    // 空model计算md5没有意义，直接传空
+                    md5 = null
                 )
             }
+        }
+    }
+
+    private fun getDisplayName(file: StreamCreateFileInfo): String {
+        val originYaml = file.content
+        val ymlName = ScriptYmlUtils.parseName(originYaml)?.name
+        return if (!ymlName.isNullOrBlank()) {
+            ymlName
+        } else {
+            file.filePath
         }
     }
 
@@ -375,36 +414,6 @@ class StreamPipelineService @Autowired constructor(
         )?.let {
             StreamTriggerPipeline(it)
         } ?: pipeline
-
-    private fun getProjectCode(gitProjectId: String): String {
-        return "git_$gitProjectId"
-    }
-
-    private fun createTriggerModel(projectCode: String) = PipelineModelAndSetting(
-        model = Model(
-            name = StreamPipelineUtils.genBKPipelineName(projectCode),
-            desc = "",
-            stages = listOf(
-                Stage(
-                    id = VMUtils.genStageId(1),
-                    name = VMUtils.genStageId(1),
-                    containers = listOf(
-                        TriggerContainer(
-                            id = "0",
-                            name = "构建触发",
-                            elements = listOf(
-                                ManualTriggerElement(
-                                    name = "手动触发",
-                                    id = "T-1-1-1"
-                                )
-                            )
-                        )
-                    )
-                )
-            )
-        ),
-        setting = PipelineSetting()
-    )
 
     private fun getPipelineLastBuildBranch(
         gitProjectId: Long,
@@ -418,7 +427,8 @@ class StreamPipelineService @Autowired constructor(
             gitProjectId = gitProjectId,
             pipelineIds = pipelineIds
         ).associate { it.value1() to it.value2() }
-        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, pipelineIds)
+        val lastEventIds = gitRequestEventBuildDao.getLastEventBuildIds(dslContext, pipelineIds)
+        val pipelineBuild = gitRequestEventBuildDao.getPipelinesLastBuild(dslContext, gitProjectId, lastEventIds)
             ?.associate { it.pipelineId to it.branch }
         // 获取没有构建记录的流水线的未构建成功的分支
         val noBuildPipelines = (pipelineIds - pipelineBuild?.keys).map { it.toString() }.toSet()
@@ -472,20 +482,17 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.get(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 channelCode = channelCode
             )
             if (response.isNotOk()) {
-                logger.error("get pipeline failed, msg: ${response.message}")
+                logger.warn("StreamPipelineService|getModel|msg: ${response.message}")
                 return null
             }
             return response.data
         } catch (e: Exception) {
-            logger.error(
-                "get pipeline failed, pipelineId: " +
-                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
-            )
+            logger.error("BKSystemErrorMonitor|getModel|$pipelineId|$gitProjectId|error", e)
             return null
         }
     }
@@ -500,21 +507,18 @@ class StreamPipelineService @Autowired constructor(
         try {
             val response = processClient.edit(
                 userId = userId,
-                projectId = "${StreamConstant.DEVOPS_PROJECT_PREFIX}$gitProjectId",
+                projectId = GitCommonUtils.getCiProjectId(gitProjectId, gitConfig.getScmType()),
                 pipelineId = pipelineId,
                 pipeline = model,
                 channelCode = channelCode
             )
             if (response.isNotOk()) {
-                logger.error("edit pipeline failed, msg: ${response.message}")
+                logger.warn("StreamPipelineService|saveModel|msg=${response.message}")
                 return null
             }
             return response.data
         } catch (e: Exception) {
-            logger.error(
-                "edit pipeline failed, pipelineId: " +
-                    "$pipelineId, projectCode: $gitProjectId, error msg: ${e.message}"
-            )
+            logger.error("BKSystemErrorMonitor|StreamPipelineService|saveModel|error", e)
             return null
         }
     }

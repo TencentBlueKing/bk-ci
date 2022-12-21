@@ -17,6 +17,9 @@ WORKER=0
 VERSION=latest
 PUSH=0
 REGISTRY=docker.io
+BASEIMAGE=
+IMAGE=
+ENGINE=disttask
 USERNAME=
 PASSWORD=
 
@@ -34,6 +37,9 @@ usage () {
             [ --dashboard           [可选] 打包dashboard镜像 ]
             [ --downloader          [可选] 打包downloader镜像 ]
             [ --worker              [可选] 打包worker镜像 ]
+            [ -b --baseimage        [可选] worker镜像的基础镜像，打包worker时必选 ]
+            [ -i --image            [可选] worker镜像的名称，打包worker时必选 ]
+            [ -e --engine           [可选] worker镜像对应的engine类型，默认disttask ]
             [ -v, --version         [可选] 镜像版本tag, 默认latest ]
             [ -p, --push            [可选] 推送镜像到docker远程仓库，默认不推送 ]
             [ -r, --registry        [可选] docker仓库地址, 默认docker.io ]
@@ -97,6 +103,18 @@ while (( $# > 0 )); do
             shift
             REGISTRY=$1
             ;;
+        -b | --baseimage )
+            shift
+            BASEIMAGE=$1
+            ;;
+        -i | --image )
+            shift
+            IMAGE=$1
+            ;;
+        -e | --engine )
+            shift
+            ENGINE=$1
+            ;;        
         --username )
             shift
             USERNAME=$1
@@ -189,7 +207,13 @@ if [[ $WORKER -eq 1 ]] ; then
     mkdir -p tmp/worker
     cp -rf worker/* tmp/worker
     cp -rf $ROOT_DIR/build/bkdist/bk-dist-worker tmp/worker
-    docker build -f tmp/worker/Dockerfile -t $REGISTRY/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION tmp/worker --no-cache --network=host
+    if [[ $ENGINE = 'distcc' ]] ; then
+        echo 'docker build -f tmp/worker/distcc/Dockerfile --build-arg BASE_IMAGE=$BASEIMAGE -t $REGISTRY/$IMAGE:$VERSION tmp/worker --no-cache --network=host'
+        docker build -f tmp/worker/distcc/Dockerfile --build-arg BASE_IMAGE=$BASEIMAGE -t $REGISTRY/$IMAGE:$VERSION tmp/worker --no-cache --network=host
+    else
+        echo 'docker build -f tmp/worker/Dockerfile --build-arg BASE_IMAGE=$BASEIMAGE -t $REGISTRY/$IMAGE:$VERSION tmp/worker --no-cache --network=host'
+        docker build -f tmp/worker/Dockerfile --build-arg BASE_IMAGE=$BASEIMAGE -t $REGISTRY/$IMAGE:$VERSION tmp/worker --no-cache --network=host
+    fi
 fi
 
 echo "BUILD SUCCESSFUL!"
@@ -213,6 +237,6 @@ if [[ $PUSH -eq 1 ]]; then
     fi
 
     if [[ $WORKER -eq 1 ]] ; then
-        docker push $REGISTRY/bktbs-worker-tlinux2.4-gcc4.8.5:$VERSION
+        docker push $REGISTRY/$IMAGE:$VERSION
     fi
 fi

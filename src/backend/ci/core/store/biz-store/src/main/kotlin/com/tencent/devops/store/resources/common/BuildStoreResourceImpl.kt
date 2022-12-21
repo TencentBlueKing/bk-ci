@@ -31,14 +31,17 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.BuildStoreResource
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
+import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
 import com.tencent.devops.store.pojo.common.enums.FieldTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StorePkgRunEnvInfoService
 import com.tencent.devops.store.service.common.UserSensitiveConfService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class BuildStoreResourceImpl @Autowired constructor(
-    private val sensitiveConfService: UserSensitiveConfService
+    private val sensitiveConfService: UserSensitiveConfService,
+    private val storePkgRunEnvInfoService: StorePkgRunEnvInfoService
 ) : BuildStoreResource {
 
     override fun getSensitiveConf(
@@ -55,6 +58,25 @@ class BuildStoreResourceImpl @Autowired constructor(
             storeCode = storeCode,
             isDecrypt = true,
             types = types
+        )
+    }
+
+    override fun getStorePkgRunEnvInfo(
+        storeType: StoreTypeEnum,
+        language: String,
+        runtimeVersion: String,
+        osName: String,
+        osArch: String
+    ): Result<StorePkgRunEnvInfo?> {
+        return Result(
+            storePkgRunEnvInfoService.getStorePkgRunEnvInfo(
+                userId = "",
+                storeType = storeType,
+                language = language,
+                osName = osName,
+                osArch = osArch,
+                runtimeVersion = runtimeVersion
+            )
         )
     }
 }

@@ -72,9 +72,24 @@ enum class PipelineNotifyTemplateEnum(val templateCode: String) {
     PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL("PIPELINE_SHUTDOWN_CANCEL_NOTIFY_TEMPLATE_DETAIL"),
 
     /**
+     * 流水线设置-触发审核的通知触发人模板代码
+     */
+    PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE("PIPELINE_TRIGGER_REVIEW_NOTIFY_TEMPLATE"),
+
+    /**
      * 流水线设置-人工审核插件的通知模板代码
      */
     PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE("MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE"),
+
+    /**
+     * 流水线设置-stage阶段审核的通知触发人模板代码
+     */
+    PIPELINE_MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE("MANUAL_REVIEW_STAGE_NOTIFY_TO_TRIGGER_TEMPLATE"),
+
+    /**
+     * 流水线设置-stage阶段审核驳回时通知触发人模板代码
+     */
+    PIPELINE_MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE("MANUAL_REVIEW_STAGE_REJECT_TO_TRIGGER_TEMPLATE"),
 
     /**
      * 流水线设置-stage阶段审核的通知模板代码

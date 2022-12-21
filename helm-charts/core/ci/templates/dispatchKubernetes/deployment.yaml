@@ -27,8 +27,7 @@ spec:
         app.kubernetes.io/component: microservice
         app.kubernetes.io/name: dispatch-kubernetes
     spec:
-      # 这里需要创建一个集群管理员权限的账户，先用固定的测试
-      serviceAccountName: bkci-kube-client-account
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.dispatchKubernetes.hostAliases }}
       hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchKubernetes.hostAliases "context" $) | nindent 8 }}
       {{- end }}
@@ -96,10 +95,10 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -108,12 +107,19 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
           - mountPath: /data/workspace/dispatch-kubernetes/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data

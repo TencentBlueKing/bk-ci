@@ -52,7 +52,6 @@ class CodeCCMonitorProcessor : AbstractMonitorProcessor() {
     }
 
     private fun buildMonitorData(it: Any?, extData: Map<String, Any>): MonitorData? {
-        logger.info("run data : $it")
         if (it is Map<*, *>) {
             val startTime = (it["startTime"]?.toString() ?: "0").toLong()
             val endTime = (it["endTime"]?.toString() ?: "0").toLong()

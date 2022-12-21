@@ -1,5 +1,5 @@
 <template>
-    <iframe :src="metricUrl"></iframe>
+    <iframe :src="metricUrl" class="iframe"></iframe>
 </template>
 
 <script>
@@ -13,7 +13,7 @@
         setup () {
             const metricUrl = computed(() => {
                 const projectId = store.state.projectId
-                return `//${DEVOPS_HOST}/console/metrics/${projectId}`
+                return `/metrics/${projectId}`
             })
             return {
                 metricUrl
@@ -21,3 +21,10 @@
         }
     })
 </script>
+
+<style lang="postcss" scoped>
+    .iframe {
+        position: absolute;
+        border: none;
+    }
+</style>

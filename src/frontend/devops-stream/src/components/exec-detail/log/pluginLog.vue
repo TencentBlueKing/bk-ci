@@ -2,7 +2,7 @@
     <section class="plugin-log">
         <bk-log-search :execute-count="plugin.executeCount" @change-execute="changeExecute" class="log-tools">
             <template #tool>
-                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('pipeline.showLog') : $t('pipeline.hideLog')}}</li>
+                <li class="more-button" @click="toggleShowDebugLog">{{ showDebug ? $t('pipeline.hideLog') : $t('pipeline.showLog')}}</li>
                 <li class="more-button" @click="downloadLog">{{$t('pipeline.downloadLog')}}</li>
             </template>
         </bk-log-search>
@@ -190,8 +190,7 @@
                 }
                 try {
                     const logStatusRes = await pipelines.getLogStatus(pluginData)
-                    const data = logStatusRes.data || {}
-                    const logMode = data.logMode || ''
+                    const logMode = logStatusRes?.logMode || ''
                     if (logMode === 'LOCAL') {
                         this.$bkMessage({ theme: 'primary', message: this.$t('history.uploadLog') })
                         return

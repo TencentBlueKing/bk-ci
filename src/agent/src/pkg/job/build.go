@@ -32,9 +32,11 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io/fs"
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
@@ -46,6 +48,17 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
+
+type BuildTotalManagerType struct {
+	// Lock 多协程修改时的执行锁，这个锁主要用来判断当前是否还有任务，所以添加了任务就可以解锁了
+	Lock sync.Mutex
+}
+
+var BuildTotalManager *BuildTotalManagerType
+
+func init() {
+	BuildTotalManager = new(BuildTotalManagerType)
+}
 
 const buildIntervalInSeconds = 5
 
@@ -94,35 +107,83 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		if config.GAgentConfig.ParallelTaskCount != 0 &&
-			GBuildManager.GetInstanceCount() >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
-				"ParallelTaskCount config: %d, instance count: %d",
-				config.GAgentConfig.ParallelTaskCount, GBuildManager.GetInstanceCount()))
+		dockerCanRun, normalCanRun := checkParallelTaskCount()
+		if !dockerCanRun && !normalCanRun {
 			continue
 		}
 
-		if config.GIsAgentUpgrading {
-			logs.Info("agent is upgrading, skip")
-			continue
-		}
+		// 在接取任务先获取锁，防止与其他操作产生干扰
+		BuildTotalManager.Lock.Lock()
 
 		buildInfo, err := getBuild()
 		if err != nil {
 			logs.Error("get build failed, retry, err", err.Error())
+			BuildTotalManager.Lock.Unlock()
 			continue
 		}
 
 		if buildInfo == nil {
 			logs.Info("no build to run, skip")
+			BuildTotalManager.Lock.Unlock()
 			continue
 		}
+
+		logs.Info("build info ", buildInfo, " dockerCanRun ", dockerCanRun)
+
+		if buildInfo.DockerBuildInfo != nil && dockerCanRun {
+			// 接取job任务之后才可以解除总任务锁解锁
+			GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
+				ProjectId: buildInfo.ProjectId,
+				BuildId:   buildInfo.BuildId,
+				VmSeqId:   buildInfo.VmSeqId,
+			})
+			BuildTotalManager.Lock.Unlock()
+
+			runDockerBuild(buildInfo)
+			continue
+		}
+
+		if !normalCanRun {
+			BuildTotalManager.Lock.Unlock()
+			continue
+		}
+
+		// 接取任务之后解锁
+		GBuildManager.AddPreInstance(buildInfo.BuildId)
+		BuildTotalManager.Lock.Unlock()
 
 		err = runBuild(buildInfo)
 		if err != nil {
 			logs.Error("start build failed: ", err.Error())
 		}
 	}
+}
+
+// checkParallelTaskCount 检查当前运行的最大任务数
+func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
+	// 检查docker任务
+	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
+	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
+		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
+			"maxJob config: %d, instance count: %d",
+			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
+		dockerCanRun = false
+	} else {
+		dockerCanRun = true
+	}
+
+	// 检查普通任务
+	instanceCount := GBuildManager.GetInstanceCount()
+	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
+		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
+			"ParallelTaskCount config: %d, instance count: %d",
+			config.GAgentConfig.ParallelTaskCount, instanceCount))
+		normalCanRun = false
+	} else {
+		normalCanRun = true
+	}
+
+	return dockerCanRun, normalCanRun
 }
 
 // getBuild 从服务器认领要构建的信息
@@ -171,7 +232,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 						"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
 					agentJarPath, workDir, agentJarPath, workDir)
 				logs.Error(errorMsg)
-				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+				workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.RecoverRunFileErrorEnum))
 			} else { // #5806 替换后修正版本号
 				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
 					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
@@ -183,7 +244,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 					"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
 				agentJarPath, workDir, agentJarPath, workDir)
 			logs.Error(errorMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
 		}
 	}
 
@@ -211,15 +272,16 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	if tmpMkErr != nil {
 		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
 		logs.Error(errMsg)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+		workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.MakeTmpDirErrorEnum))
 		return tmpMkErr
 	}
 	if systemutil.IsWindows() {
 		startCmd := config.GetJava()
 		agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
+		errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 		args := []string{
 			"-Djava.io.tmpdir=" + tmpDir,
-			"-Ddevops.agent.error.file=" + systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
+			"-Ddevops.agent.error.file=" + errorMsgFile,
 			"-Dbuild.type=AGENT",
 			"-DAGENT_LOG_PREFIX=" + agentLogPrefix,
 			"-Xmx2g", // #5806 兼容性问题，必须独立一行
@@ -230,9 +292,12 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
+		// 添加需要构建结束后删除的文件
+		buildInfo.ToDelTmpFiles = []string{errorMsgFile}
+
 		GBuildManager.AddBuild(pid, buildInfo)
 		logs.Info(fmt.Sprintf("[%s]|Job#_%s|Build started, pid:%d ", buildInfo.BuildId, buildInfo.VmSeqId, pid))
 		return nil
@@ -241,14 +306,14 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "准备构建脚本生成失败(create start script failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.PrepareScriptCreateErrorEnum))
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
 			errMsg := "启动构建进程失败(start worker process failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)
@@ -275,8 +340,10 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 		"%s/devops_agent_start_%s_%s_%s.sh",
 		systemutil.GetWorkDir(), buildInfo.ProjectId, buildInfo.BuildId, buildInfo.VmSeqId)
 
+	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
 	buildInfo.ToDelTmpFiles = []string{
-		scriptFile, prepareScriptFile, systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)}
+		scriptFile, prepareScriptFile, errorMsgFile,
+	}
 
 	logs.Info("start agent script: ", scriptFile)
 	agentLogPrefix := fmt.Sprintf("%s_%s_agent", buildInfo.BuildId, buildInfo.VmSeqId)
@@ -287,7 +354,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 			"-Ddevops.agent.error.file=%s "+
 			"-Dbuild.type=AGENT -DAGENT_LOG_PREFIX=%s -Xmx2g -Djava.io.tmpdir=%s -jar %s %s",
 			config.GetJava(), scriptFile, prepareScriptFile,
-			systemutil.GetWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId),
+			errorMsgFile,
 			agentLogPrefix, tmpDir, config.BuildAgentJarPath(), getEncodedBuildInfo(buildInfo)),
 	}
 	scriptContent := strings.Join(lines, "\n")
@@ -300,11 +367,7 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	if err != nil {
 		return "", err
 	} else {
-		newLines := []string{
-			"#!" + getCurrentShell(),
-			"exec " + getCurrentShell() + " -l " + scriptFile,
-		}
-		prepareScriptContent := strings.Join(newLines, "\n")
+		prepareScriptContent := strings.Join(getShellLines(scriptFile), "\n")
 		err := ioutil.WriteFile(prepareScriptFile, []byte(prepareScriptContent), os.ModePerm)
 		if err != nil {
 			return "", err
@@ -314,6 +377,24 @@ func writeStartBuildAgentScript(buildInfo *api.ThirdPartyBuildInfo, tmpDir strin
 	}
 }
 
+// getShellLines 根据不同的shell的参数要求，这里可能需要不同的参数或者参数顺序
+func getShellLines(scriptFile string) (newLines []string) {
+	shell := getCurrentShell()
+	switch shell {
+	case "/bin/tcsh":
+		newLines = []string{
+			"#!" + shell,
+			"exec " + shell + " " + scriptFile + " -l",
+		}
+	default:
+		newLines = []string{
+			"#!" + shell,
+			"exec " + shell + " -l " + scriptFile,
+		}
+	}
+	return newLines
+}
+
 func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	if buildInfo == nil {
 		logs.Warn("buildInfo not exist")
@@ -321,12 +402,16 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 	}
 
 	// #5806 防止意外情况没有清理生成的脚本
+	// 清理构建过程生成的文件
 	if buildInfo.ToDelTmpFiles != nil {
 		for _, filePath := range buildInfo.ToDelTmpFiles {
 			e := fileutil.TryRemoveFile(filePath)
 			logs.Info(fmt.Sprintf("build[%s] finish, delete:%s, err:%s", buildInfo.BuildId, filePath, e))
 		}
 	}
+
+	// #7453 Agent build_tmp目录清理
+	go checkAndDeleteBuildTmpFile()
 
 	if buildInfo.Success {
 		time.Sleep(8 * time.Second)
@@ -339,6 +424,58 @@ func workerBuildFinish(buildInfo *api.ThirdPartyBuildWithStatus) {
 		logs.Error("send worker build finish failed: ", result.Message)
 	}
 	logs.Info("workerBuildFinish done")
+}
+
+// checkAndDeleteBuildTmpFile 删除可能因为进程中断导致的没有被删除的构建过程临时文件
+// Job最长运行时间为7天，所以这里通过检查超过7天最后修改时间的文件
+func checkAndDeleteBuildTmpFile() {
+	// win只用检查build_tmp目录
+	workDir := systemutil.GetWorkDir()
+	dir := workDir + "/build_tmp"
+	fss, err := os.ReadDir(dir)
+	if err != nil {
+		logs.Error("checkAndDeleteBuildTmpFile|read build_tmp dir error ", err)
+		return
+	}
+	for _, f := range fss {
+		if f.IsDir() {
+			continue
+		}
+		// build_tmp 目录下的文件超过7天都清除掉
+		removeFileThan7Days(dir, f)
+	}
+
+	// darwin和linux还有prepare 和start文件
+	if !systemutil.IsWindows() {
+		fss, err = os.ReadDir(workDir)
+		if err != nil {
+			logs.Error("checkAndDeleteBuildTmpFile|read worker dir error ", err)
+			return
+		}
+		for _, f := range fss {
+			if f.IsDir() {
+				continue
+			}
+			if !(strings.HasPrefix(f.Name(), startScriptFilePrefix) && strings.HasSuffix(f.Name(), startScriptFileSuffix)) &&
+				!(strings.HasPrefix(f.Name(), prepareStartScriptFilePrefix) && strings.HasSuffix(f.Name(), prepareStartScriptFileSuffix)) {
+				continue
+			}
+			removeFileThan7Days(workDir, f)
+		}
+	}
+}
+
+func removeFileThan7Days(dir string, f fs.DirEntry) {
+	info, err := f.Info()
+	if err != nil {
+		logs.Error("removeFileThan7Days|read file info error ", "file: ", f.Name(), " error: ", err)
+	}
+	if (time.Now().Sub(info.ModTime())) > 7*24*time.Hour {
+		err = os.Remove(dir + "/" + f.Name())
+		if err != nil {
+			logs.Error("removeFileThan7Days|remove file error ", "file: ", f.Name(), " error: ", err)
+		}
+	}
 }
 
 func getCurrentShell() (shell string) {

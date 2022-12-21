@@ -127,7 +127,6 @@
                                 containers: [stage]
                             }
                         }
-
                         return stage
                     })
                     this.updatePipeline(this.pipeline, {

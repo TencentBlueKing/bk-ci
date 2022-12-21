@@ -59,6 +59,7 @@ class OpStoreDockingPlatformResourceImpl @Autowired constructor(
     override fun listPlatforms(
         userId: String,
         platformName: String?,
+        id: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<StoreDockingPlatformInfo>?> {
@@ -66,6 +67,7 @@ class OpStoreDockingPlatformResourceImpl @Autowired constructor(
             storeDockingPlatformService.getStoreDockingPlatforms(
                 userId = userId,
                 platformName = platformName,
+                id = id,
                 page = page,
                 pageSize = pageSize)
         )

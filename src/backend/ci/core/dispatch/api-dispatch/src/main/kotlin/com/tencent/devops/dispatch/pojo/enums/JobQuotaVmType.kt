@@ -35,6 +35,7 @@ enum class JobQuotaVmType(val displayName: String) {
     KUBERNETES("kubernetes"),
     DOCKER_DEVCLOUD("Docker on DevCloud"),
     MACOS_DEVCLOUD("MacOS on DevCloud"),
+    WINDOWS_DEVCLOUD("Windows on DevCloud"),
     OTHER("私有构建机或集群"),
     AGENTLESS("无编译环境"),
     DOCKER_GITCI("工蜂CI构建机"),

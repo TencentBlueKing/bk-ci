@@ -30,35 +30,43 @@ package com.tencent.devops.stream.trigger
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
+import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.dao.StreamPipelineTriggerDao
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.EventActionFactory
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
-import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.exception.CommitCheck
+import com.tencent.devops.stream.trigger.actions.data.context.TriggerCache
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandler
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerDispatch
 import com.tencent.devops.stream.trigger.mq.streamTrigger.StreamTriggerEvent
 import com.tencent.devops.stream.trigger.parsers.CheckStreamSetting
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
-import com.tencent.devops.stream.trigger.parsers.yamlCheck.YamlSchemaCheck
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.pojo.CheckType
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
+import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
 import com.tencent.devops.stream.trigger.service.RepoTriggerEventService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.UUID
+import java.util.concurrent.Executors
 
 @Service
 class StreamTriggerRequestService @Autowired constructor(
@@ -68,44 +76,74 @@ class StreamTriggerRequestService @Autowired constructor(
     private val actionFactory: EventActionFactory,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerCache: StreamTriggerCache,
-    private val yamlSchemaCheck: YamlSchemaCheck,
     private val exHandler: StreamTriggerExceptionHandler,
+    private val triggerMatcher: TriggerMatcher,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val streamTriggerRequestRepoService: StreamTriggerRequestRepoService,
     private val streamSettingDao: StreamBasicSettingDao,
     private val gitRequestEventDao: GitRequestEventDao,
-    private val gitPipelineResourceDao: GitPipelineResourceDao
+    private val gitPipelineResourceDao: GitPipelineResourceDao,
+    private val streamPipelineTriggerDao: StreamPipelineTriggerDao
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamTriggerRequestService::class.java)
     }
 
-    fun externalCodeGitBuild(eventType: String?, event: String): Boolean? {
-        logger.info("Trigger code git build($event, $eventType)")
-        val eventObject = try {
-            objectMapper.readValue<GitEvent>(event)
-        } catch (ignore: Exception) {
-            logger.warn("Fail to parse the git web hook commit event, errMsg: ${ignore.message}")
-            return false
+    private val executors = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors())
+
+    fun externalCodeGitBuild(eventType: String?, webHookType: String, event: String): Boolean? {
+        logger.info("StreamTriggerRequestService|externalCodeGitBuild|event|$event|type|$eventType|$webHookType")
+        when (ScmType.valueOf(webHookType)) {
+            ScmType.CODE_GIT -> {
+                val eventObject = try {
+                    objectMapper.readValue<GitEvent>(event)
+                } catch (ignore: Exception) {
+                    logger.warn(
+                        "StreamTriggerRequestService|externalCodeGitBuild" +
+                            "|Fail to parse the git web hook commit event|errMsg|${ignore.message}"
+                    )
+                    return false
+                }
+                // 处理不需要项目信息的，或不同软件源的预处理逻辑
+
+                return start(eventObject, event, ScmType.CODE_GIT)
+            }
+            ScmType.GITHUB -> {
+                val eventObject: GithubEvent = when (eventType) {
+                    GithubPushEvent.classType -> objectMapper.readValue<GithubPushEvent>(event)
+                    GithubPullRequestEvent.classType -> objectMapper.readValue<GithubPullRequestEvent>(event)
+                    else -> {
+                        logger.info("Github event($eventType) is ignored")
+                        return true
+                    }
+                }
+                return start(eventObject, event, ScmType.GITHUB)
+            }
+            // 对接其他平台时扩充
+            else -> {}
         }
-
-        // 处理不需要项目信息的，或不同软件源的预处理逻辑
-
-        return start(eventObject, event)
+        return false
     }
 
-    fun start(eventObject: GitEvent, event: String): Boolean? {
+    fun start(eventObject: CodeWebhookEvent, event: String, scmType: ScmType): Boolean? {
         // 加载不同源的action
         val action = actionFactory.load(eventObject)
         if (action == null) {
-            logger.warn("request event not support: $event")
+            logger.warn("StreamTriggerRequestService|start|request event not support|$event")
             return false
         }
+        val eventCommon = action.data.eventCommon
 
+        // 初始化setting
+        if (!action.data.isSettingInitialized) {
+            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
+            if (null != gitCIBasicSetting) {
+                action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
+            }
+        }
+        action.initCacheData()
         // 获取前端展示相关的requestEvent
         val requestEvent = action.buildRequestEvent(event) ?: return false
-
-        val eventCommon = action.data.eventCommon
 
         val repoTriggerPipelineList = repoTriggerEventService.getTargetPipelines(
             eventCommon.gitProjectName
@@ -116,35 +154,37 @@ class StreamTriggerRequestService @Autowired constructor(
             val requestEventId = gitRequestEventDao.saveGitRequest(dslContext, requestEvent)
             action.data.context.requestEventId = requestEventId
 
-            if (action.skipStream()) {
-                return true
-            }
-
             try {
+                if (action.skipStream()) {
+                    return true
+                }
                 // 为了不影响主逻辑对action进行深拷贝
-                streamTriggerRequestRepoService.repoTriggerBuild(
-                    triggerPipelineList = repoTriggerPipelineList,
-                    eventStr = event,
-                    actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
-                    actionContext = objectMapper.writeValueAsString(action.data.context)
-                )
+                val bizId = MDC.get(TraceTag.BIZID)
+                val newId = UUID.randomUUID().toString()
+                logger.info("stream start repo trigger|old bizId:$bizId| new bizId:$newId")
+                executors.submit {
+                    // 新线程biz id会断，需要重新注入
+                    MDC.put(TraceTag.BIZID, newId)
+                    logger.info("stream start repo trigger|old bizId:$bizId| new bizId:${MDC.get(TraceTag.BIZID)}")
+                    streamTriggerRequestRepoService.repoTriggerBuild(
+                        triggerPipelineList = repoTriggerPipelineList,
+                        eventStr = event,
+                        actionCommonData = objectMapper.writeValueAsString(action.data.eventCommon),
+                        actionContext = objectMapper.writeValueAsString(action.data.context)
+                    )
+                }
             } catch (ignore: Throwable) {
-                logger.error("Fail to start repo trigger (${action.data.eventCommon.gitProjectName})", ignore)
+                logger.warn("StreamTriggerRequestService|start|${action.data.eventCommon.gitProjectName}|error", ignore)
             }
         }
 
-        // 没开启stream的就不存event事件信息
-        if (!action.data.isSettingInitialized) {
-            val gitCIBasicSetting = streamSettingDao.getSetting(dslContext, eventCommon.gitProjectId.toLong())
-
-            if (null == gitCIBasicSetting || !gitCIBasicSetting.enableCi) {
-                logger.info(
-                    "git ci is not enabled , but it has repo trigger , git project id: ${action.data.getGitProjectId()}"
-                )
-                return null
-            }
-
-            action.data.setting = StreamTriggerSetting(gitCIBasicSetting)
+        // 上方已尝试初始化setting，在这还未初始化setting的说明没有开启过ci
+        if (!action.data.isSettingInitialized || !action.data.setting.enableCi) {
+            logger.info(
+                "StreamTriggerRequestService|start" +
+                    "|git ci is not enabled , but it has repo trigger|project_id|${action.data.getGitProjectId()}"
+            )
+            return null
         }
 
         if (action.data.context.requestEventId == null) {
@@ -152,17 +192,21 @@ class StreamTriggerRequestService @Autowired constructor(
             action.data.context.requestEventId = requestEventId
         }
 
-        if (action.skipStream()) {
-            return true
+        return exHandler.handle(action) {
+            if (action.skipStream()) {
+                return@handle true
+            }
+            checkRequest(action)
         }
-
-        return exHandler.handle(action) { checkRequest(action) }
     }
 
     private fun checkRequest(
         action: BaseAction
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|checkRequest|action|${action.format()}")
+        logger.info(
+            "StreamTriggerRequestService|checkRequest" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         CheckStreamSetting.checkGitProjectConf(action)
 
@@ -179,6 +223,17 @@ class StreamTriggerRequestService @Autowired constructor(
             )
         }
 
+        val projectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitProjectKey = action.data.getGitProjectId(),
+            action = action,
+            getProjectInfo = action.api::getGitProjectInfo
+        ) ?: throw StreamTriggerException(
+            action = action,
+            triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
+            reasonParams = listOf("ci开启人${action.data.setting.enableUser} 无当前项目执行权限, 请重新授权")
+        )
+
+        action.data.context.defaultBranch = projectInfo.defaultBranch
         // 校验mr请求是否产生冲突
         if (!action.checkMrConflict(path2PipelineExists = path2PipelineExists)) {
             return false
@@ -192,109 +247,129 @@ class StreamTriggerRequestService @Autowired constructor(
         action: BaseAction,
         path2PipelineExists: Map<String, StreamTriggerPipeline>
     ): Boolean {
-        logger.info("|${action.data.context.requestEventId}|matchAndTriggerPipeline|action|${action.format()}")
-
+        logger.info(
+            "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
         // 判断本次mr/push提交是否需要删除流水线, fork不用
         // 远程触发不存在删除流水线的情况
         if (action.data.context.repoTrigger == null) {
             action.checkAndDeletePipeline(path2PipelineExists)
         }
 
-        action.data.context.defaultBranch = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-            gitProjectKey = action.data.getGitProjectId(),
-            action = action,
-            getProjectInfo = action.api::getGitProjectInfo
-        )!!.defaultBranch
-
         // 获取yaml文件列表，同时会拿到Mr的changeSet
         val yamlPathList = action.getYamlPathList()
 
         logger.info(
-            "matchAndTriggerPipeline in gitProjectId:${action.data.eventCommon.gitProjectId}," +
-                "yamlPathList: $yamlPathList, path2PipelineExists: $path2PipelineExists, "
+            "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                "|gitProjectId|${action.data.eventCommon.gitProjectId}|" +
+                "yamlPathList|$yamlPathList|path2PipelineExists|$path2PipelineExists"
         )
 
         // 如果没有Yaml文件则直接不触发
         if (yamlPathList.isEmpty()) {
-            logger.warn("event: ${action.data.context.requestEventId} cannot found ci yaml from git")
+            logger.warn(
+                "StreamTriggerRequestService|matchAndTriggerPipeline" +
+                    "|event|${action.data.context.requestEventId}|cannot found ci yaml from git"
+            )
             throw StreamTriggerException(action, TriggerReason.CI_YAML_NOT_FOUND)
         }
 
-        yamlPathList.forEach { (filePath, checkType) ->
-            // 如果该流水线已保存过，则继续使用
-            // 对于来自fork库的mr新建的流水线，当前库不维护其状态
-            val buildPipeline = path2PipelineExists[filePath] ?: StreamTriggerPipeline(
-                gitProjectId = action.data.eventCommon.gitProjectId,
-                displayName = filePath,
-                pipelineId = "", // 留空用于是否创建判断
-                filePath = filePath,
-                enabled = true,
-                creator = action.data.getUserId()
-            )
-            // 远程仓库触发时，主库不需要新建流水线
-            if (action.data.context.repoTrigger != null && buildPipeline.pipelineId.isBlank()) {
-                return@forEach
+        val confirmProjectUseTriggerCache = triggerMatcher.confirmProjectUseTriggerCache(action.getProjectCode())
+
+        // 获取缓存的触发器, 使用空文本来区分是有缓存但是触发器没内容的情况
+        // 使用blobId 20个一组来取，减少内存占用
+        val blobIdMap = mutableMapOf<Int, MutableList<String>>()
+        val yamlMap = mutableMapOf<Int, MutableList<YamlPathListEntry>>()
+        var index = 1
+        yamlPathList.forEach { yamlPath ->
+            if (blobIdMap[index]?.size == 20) {
+                index++
+            }
+            if (!yamlPath.blobId.isNullOrBlank()) {
+                blobIdMap[index] = blobIdMap[index]?.also { it.add(yamlPath.blobId) } ?: mutableListOf(yamlPath.blobId)
+            }
+            yamlMap[index] = yamlMap[index]?.also { it.add(yamlPath) } ?: mutableListOf(yamlPath)
+        }
+
+        val bizId = MDC.get(TraceTag.BIZID)
+
+        yamlMap.forEach { (i, yamlList) ->
+            val triggers = if (!confirmProjectUseTriggerCache) {
+                null
+            } else {
+                streamPipelineTriggerDao.getTriggers(
+                    dslContext = dslContext,
+                    projectId = action.getProjectCode(),
+                    pipelineId = null,
+                    branch = null,
+                    ciFileBlobIds = blobIdMap[i]?.toSet() ?: emptySet()
+                ).associate { it.pipelineId to it.trigger }
             }
 
-            action.data.context.pipeline = buildPipeline
-
-            // 针对每个流水线处理异常
-            exHandler.handle(action) {
-                // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
-                if (checkType == CheckType.NO_TRIGGER) {
-                    throw StreamTriggerException(
-                        action = action,
-                        triggerReason = TriggerReason.MR_BRANCH_FILE_ERROR,
-                        reasonParams = listOf(filePath)
-                    )
+            yamlList.forEach yamlEach@{ (filePath, checkType, ref, blobId) ->
+                // 保存触发器缓存信息
+                if (!ref.isNullOrBlank() && !blobId.isNullOrBlank()) {
+                    action.data.context.triggerCache = TriggerCache(pipelineFileBranch = ref, blobId = blobId)
+                }
+                // 如果该流水线已保存过，则继续使用
+                // 对于来自fork库的mr新建的流水线，当前库不维护其状态
+                val buildPipeline = path2PipelineExists[filePath] ?: StreamTriggerPipeline(
+                    gitProjectId = action.data.eventCommon.gitProjectId,
+                    displayName = filePath,
+                    pipelineId = "", // 留空用于是否创建判断
+                    filePath = filePath,
+                    enabled = true,
+                    creator = action.data.getUserId()
+                )
+                // 远程仓库触发时，主库不需要新建流水线
+                if (action.checkRepoHookTrigger() && buildPipeline.pipelineId.isBlank()) {
+                    return@yamlEach
                 }
 
-                checkAndTrigger(buildPipeline = buildPipeline, action = action)
+                action.data.context.pipeline = buildPipeline
+
+                // 新增流水线，需要校验的不使用缓存的触发器
+                val trigger = if (!confirmProjectUseTriggerCache ||
+                    buildPipeline.pipelineId.isBlank() || checkType != CheckType.NO_NEED_CHECK
+                ) {
+                    null
+                } else {
+                    triggers?.get(buildPipeline.pipelineId)
+                }
+
+                // 针对每个流水线处理异常
+                exHandler.handle(action) {
+                    // 目前只针对mr情况下源分支有目标分支没有且变更列表没有
+                    if (checkType == CheckType.NO_TRIGGER) {
+                        throw StreamTriggerException(
+                            action = action,
+                            triggerReason = TriggerReason.MR_BRANCH_FILE_ERROR,
+                            reasonParams = listOf(filePath)
+                        )
+                    }
+                    val newId = UUID.randomUUID().toString()
+                    logger.info("stream start local trigger $filePath|old bizId:$bizId| new bizId:$newId")
+                    MDC.put(TraceTag.BIZID, newId)
+                    logger.info(
+                        "stream start local trigger $filePath|old bizId:$bizId|" +
+                            " new bizId:${MDC.get(TraceTag.BIZID)}"
+                    )
+                    trigger(action = action, trigger = trigger)
+                    MDC.put(TraceTag.BIZID, bizId)
+                }
             }
         }
+
         // 流水线启动后，发送解锁webhook锁请求
         action.sendUnlockWebhook()
         return true
     }
 
-    private fun checkAndTrigger(
-        buildPipeline: StreamTriggerPipeline,
-        action: BaseAction
-    ) {
-        logger.info("|${action.data.context.requestEventId}|checkAndTrigger|action|${action.format()}")
-
-        val filePath = buildPipeline.filePath
-        // 流水线未启用则跳过
-        if (!buildPipeline.enabled) {
-            logger.warn(
-                "Pipeline $filePath is not enabled, gitProjectId: ${action.data.eventCommon.gitProjectId}, " +
-                    "eventId: ${action.data.context.requestEventId}"
-            )
-            throw StreamTriggerException(action, TriggerReason.PIPELINE_DISABLE)
-        }
-
-        val (ref, originYaml) = action.getYamlContent(filePath)
-        action.data.context.originYaml = originYaml
-
-        // 如果当前文件没有内容直接不触发
-        if (originYaml.isBlank()) {
-            throw StreamTriggerException(
-                action,
-                TriggerReason.CI_YAML_CONTENT_NULL,
-                commitCheck = CommitCheck(
-                    block = action.metaData.isStreamMr(),
-                    state = StreamCommitCheckState.FAILURE
-                )
-            )
-        }
-
-        yamlSchemaCheck.check(action = action, templateType = null, isCiFile = true)
-
-        // 进入触发流程
-        trigger(action)
-    }
-
-    protected fun trigger(action: BaseAction) = when (streamGitConfig.getScmType()) {
+    protected fun trigger(
+        action: BaseAction,
+        trigger: String?
+    ) = when (streamGitConfig.getScmType()) {
         ScmType.CODE_GIT -> StreamTriggerDispatch.dispatch(
             rabbitTemplate = rabbitTemplate,
             event = StreamTriggerEvent(
@@ -309,7 +384,18 @@ class StreamTriggerRequestService @Autowired constructor(
                 },
                 actionCommonData = action.data.eventCommon,
                 actionContext = action.data.context,
-                actionSetting = action.data.setting
+                actionSetting = action.data.setting,
+                trigger = trigger
+            )
+        )
+        ScmType.GITHUB -> StreamTriggerDispatch.dispatch(
+            rabbitTemplate = rabbitTemplate,
+            event = StreamTriggerEvent(
+                eventStr = objectMapper.writeValueAsString(action.data.event as GithubEvent),
+                actionCommonData = action.data.eventCommon,
+                actionContext = action.data.context,
+                actionSetting = action.data.setting,
+                trigger = trigger
             )
         )
         else -> TODO("对接其他Git平台时需要补充")

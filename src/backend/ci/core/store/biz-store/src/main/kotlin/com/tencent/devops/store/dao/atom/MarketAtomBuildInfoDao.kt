@@ -30,6 +30,7 @@ package com.tencent.devops.store.dao.atom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record3
 import org.springframework.stereotype.Repository
@@ -38,16 +39,21 @@ import org.springframework.stereotype.Repository
 class MarketAtomBuildInfoDao {
 
     fun getAtomBuildInfo(dslContext: DSLContext, atomId: String): Record3<String, String, String> {
-        val a = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("a")
-        val b = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("b")
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
+        val tStoreBuildInfo = TStoreBuildInfo.T_STORE_BUILD_INFO
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tAtomEnvInfo.ATOM_ID.eq(atomId))
+        conditions.add(tAtomEnvInfo.DEFAULT_FLAG.eq(true))
+        conditions.add(tStoreBuildInfo.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
         return dslContext.select(
-            b.SCRIPT.`as`("script"),
-            b.REPOSITORY_PATH.`as`("repositoryPath"),
-            b.LANGUAGE.`as`("language")
-        ).from(a)
-            .join(b)
-            .on(a.LANGUAGE.eq(b.LANGUAGE))
-            .where(a.ATOM_ID.eq(atomId)).and(b.STORE_TYPE.eq(StoreTypeEnum.ATOM.type.toByte()))
+            tStoreBuildInfo.SCRIPT,
+            tStoreBuildInfo.REPOSITORY_PATH,
+            tStoreBuildInfo.LANGUAGE
+        ).from(tAtomEnvInfo)
+            .join(tStoreBuildInfo)
+            .on(tAtomEnvInfo.LANGUAGE.eq(tStoreBuildInfo.LANGUAGE))
+            .where(conditions)
+            .limit(1)
             .fetchOne()!!
     }
 }

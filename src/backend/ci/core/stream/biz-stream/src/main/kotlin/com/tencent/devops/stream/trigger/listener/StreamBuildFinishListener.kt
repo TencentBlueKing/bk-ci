@@ -67,7 +67,7 @@ class StreamBuildFinishListener @Autowired constructor(
         try {
             finishListenerService.doFinish(buildFinishEvent)
         } catch (e: Throwable) {
-            logger.error("Fail to listenPipelineBuildFinishBroadCastEvent(${buildFinishEvent.buildId})", e)
+            logger.error("BKSystemErrorMonitor|listenPipelineBuildFinishBroadCastEvent|${buildFinishEvent.buildId}", e)
         }
     }
 }

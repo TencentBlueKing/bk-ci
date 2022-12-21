@@ -7,6 +7,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAuthValidateResourceV4
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -22,11 +23,16 @@ class ApigwAuthValidateResourceV4Impl @Autowired constructor(
         projectId: String,
         group: BkAuthGroup?
     ): Result<Boolean> {
+        logger.info("OPENAPI_AUTH_VALIDATE_V4|$userId|is project user|$projectId|$group")
         return client.get(ServiceProjectAuthResource::class).isProjectUser(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             group = group
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ApigwAuthValidateResourceV4Impl::class.java)
     }
 }

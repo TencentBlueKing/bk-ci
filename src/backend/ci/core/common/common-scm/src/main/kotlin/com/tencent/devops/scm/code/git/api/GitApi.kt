@@ -394,7 +394,6 @@ open class GitApi {
     ) {
         try {
             val registry = SpringContextUtil.getBean(MeterRegistry::class.java)
-            logger.info("registry get success")
             sample.stop(
                 Timer.builder(metricName)
                     .description(description)
@@ -404,7 +403,7 @@ open class GitApi {
                     .register(registry)
             )
         } catch (err: BeansException) {
-            logger.error("registry get failed")
+            logger.warn("registry get failed")
             throw err
         } catch (ignore: Exception) {
             logger.warn("record failed", ignore)

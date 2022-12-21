@@ -1,0 +1,58 @@
+version: v2.0
+name: log_download代码质量扫描
+on:
+  mr:
+  - master
+  push:
+  - master
+resources:
+  repositories:
+  - repository: sissicchen/log_download
+    name: tcoder
+    ref: refs/heads/master
+stages:
+- name: 腾讯代码质量扫描
+  jobs:
+    job_tcoder_codecc_new:
+      name: 腾讯代码质量扫描
+      runs-on:
+        pool-name: docker  #docker-on-devcloud、docker、local、agentless
+        container:
+          image: mirrors.tencent.com/ci/tlinux3_ci:latest
+      steps:
+        - name: 代码拉取
+          id: "step-1"
+          checkout: self
+          with:
+            strategy: FRESH_CHECKOUT
+            enableVirtualMergeBranch: true
+            enableSubmodule: true
+            enableSubmoduleRecursive: true
+        - template: steps/codecc.yml
+          parameters:
+            languages:
+              - C_CPP
+            script: |-
+              cd src
+              mkdir build
+              cd build
+              cmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..
+              make -j`nproc`
+              echo "213123123 ${{ ci.actor }}"
+              echo '123123123 ${{ ci.actor }}'
+            receivers:
+              - ${{ ci.actor }}
+            newDefectJudgeFromDate: '2021-11-01'
+            image: mirrors.tencent.com/ci/tlinux3_ci:latest
+            pyVersion: py3
+            C_CPP_RULE:
+              - standard_cpp
+              - codecc_fast_cpp
+              - pecker_cpp
+              - codecc_default_coverity_cpp
+            iftest: false
+        - template: steps/ifArrayTest_old.yml
+          parameters:
+            iftest:
+              - JAVA
+              - JS

@@ -34,6 +34,8 @@ import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.process.pojo.BuildId
+import com.tencent.devops.process.yaml.v2.enums.needInput
+import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -46,11 +48,16 @@ import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerSetting
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamManualAction
+import com.tencent.devops.stream.trigger.actions.streamActions.StreamOpenApiAction
 import com.tencent.devops.stream.trigger.exception.handler.StreamTriggerExceptionHandlerUtil
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.pojo.toStreamGitProjectInfoWithProject
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
+import com.tencent.devops.stream.trigger.pojo.ManualPreScriptBuildYaml
 import com.tencent.devops.stream.trigger.service.StreamEventService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,26 +81,12 @@ abstract class BaseManualTriggerService @Autowired constructor(
     }
 
     open fun triggerBuild(userId: String, pipelineId: String, triggerBuildReq: TriggerBuildReq): TriggerBuildResult {
-        logger.info("Trigger build, userId: $userId, pipeline: $pipelineId, triggerBuildReq: $triggerBuildReq")
+        logger.info(
+            "BaseManualTriggerService|triggerBuild" +
+                "|userId|$userId|pipeline|$pipelineId|triggerBuildReq|$triggerBuildReq"
+        )
 
-        val streamTriggerSetting = streamBasicSettingDao.getSettingByProjectCode(
-            dslContext = dslContext,
-            projectCode = triggerBuildReq.projectId
-        )?.let {
-            StreamTriggerSetting(
-                enableCi = it.enableCi,
-                buildPushedBranches = it.buildPushedBranches,
-                buildPushedPullRequest = it.buildPushedPullRequest,
-                enableUser = it.enableUserId,
-                gitHttpUrl = it.gitHttpUrl,
-                projectCode = it.projectCode,
-                enableCommitCheck = it.enableCommitCheck,
-                enableMrBlock = it.enableMrBlock,
-                name = it.name,
-                enableMrComment = it.enableMrComment,
-                homepage = it.homePage
-            )
-        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        val streamTriggerSetting = getSetting(triggerBuildReq)
 
         // open api 通过提供事件原文模拟事件触发
         val action = loadAction(
@@ -130,7 +123,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
         val originYaml = triggerBuildReq.yaml
         // 如果当前文件没有内容直接不触发
         if (originYaml.isNullOrBlank()) {
-            logger.warn("Matcher is false, event: ${action.data.context.requestEventId} yaml is null")
+            logger.warn(
+                "BaseManualTriggerService|triggerBuild" +
+                    "|yaml is null|event|${action.data.context.requestEventId}"
+            )
             streamEventService.saveBuildNotBuildEvent(
                 action = action,
                 reason = TriggerReason.CI_YAML_CONTENT_NULL.name,
@@ -158,7 +154,10 @@ abstract class BaseManualTriggerService @Autowired constructor(
                 "(${TriggerReason.PIPELINE_RUN_ERROR.detail})"
         )
         return TriggerBuildResult(
-            projectId = action.data.eventCommon.gitProjectId.toLong(),
+            projectId = GitCommonUtils.getCiProjectId(
+                action.data.eventCommon.gitProjectId.toLong(),
+                streamGitConfig.getScmType()
+            ),
             branch = triggerBuildReq.branch,
             customCommitMsg = triggerBuildReq.customCommitMsg,
             description = triggerBuildReq.description,
@@ -173,6 +172,30 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
     }
 
+    protected fun getSetting(triggerBuildReq: TriggerBuildReq): StreamTriggerSetting {
+        val streamTriggerSetting = streamBasicSettingDao.getSetting(
+            dslContext = dslContext,
+            gitProjectId = GitCommonUtils.getGitProjectId(triggerBuildReq.projectId),
+            hasLastInfo = false
+        )?.let {
+            StreamTriggerSetting(
+                enableCi = it.enableCi,
+                buildPushedBranches = it.buildPushedBranches,
+                buildPushedPullRequest = it.buildPushedPullRequest,
+                enableUser = it.enableUserId,
+                gitHttpUrl = it.gitHttpUrl,
+                projectCode = it.projectCode,
+                enableCommitCheck = it.enableCommitCheck,
+                enableMrBlock = it.enableMrBlock,
+                name = it.name,
+                enableMrComment = it.enableMrComment,
+                homepage = it.homepage,
+                triggerReviewSetting = it.triggerReviewSetting
+            )
+        } ?: throw CustomException(Response.Status.FORBIDDEN, message = TriggerReason.CI_DISABLED.detail)
+        return streamTriggerSetting
+    }
+
     abstract fun loadAction(
         streamTriggerSetting: StreamTriggerSetting,
         userId: String,
@@ -181,12 +204,17 @@ abstract class BaseManualTriggerService @Autowired constructor(
 
     abstract fun getStartParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>
 
+    abstract fun getInputParams(action: BaseAction, triggerBuildReq: TriggerBuildReq): Map<String, String>?
+
     fun handleTrigger(
         action: BaseAction,
         originYaml: String,
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
-        logger.info("|${action.data.context.requestEventId}|handleTrigger|action|${action.format()}")
+        logger.info(
+            "BaseManualTriggerService|handleTrigger" +
+                "|requestEventId|${action.data.context.requestEventId}|action|${action.format()}"
+        )
 
         var buildId: BuildId? = null
         StreamTriggerExceptionHandlerUtil.handleManualTrigger {
@@ -202,15 +230,31 @@ abstract class BaseManualTriggerService @Autowired constructor(
         triggerBuildReq: TriggerBuildReq
     ): BuildId? {
         val yamlReplaceResult = streamYamlTrigger.prepareCIBuildYaml(action)!!
-        val parsedYaml = YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
+        val parsedYaml = if (action.metaData.streamObjectKind.needInput()) {
+            YamlCommonUtils.toYamlNotNull(
+                ManualPreScriptBuildYaml(yamlReplaceResult.preYaml, getInputParams(action, triggerBuildReq))
+            )
+        } else {
+            YamlCommonUtils.toYamlNotNull(yamlReplaceResult.preYaml)
+        }
         val normalizedYaml = YamlUtil.toYaml(yamlReplaceResult.normalYaml)
+
+        val triggerOn = yamlReplaceResult.preYaml.triggerOn
+        if ((action is StreamManualAction) && (triggerOn?.manual == EnableType.FALSE.value)) {
+            throw CustomException(Response.Status.BAD_REQUEST, "manual trigger is disabled")
+        }
+
+        if ((action is StreamOpenApiAction) && (triggerOn?.openapi == EnableType.FALSE.value)) {
+            throw CustomException(Response.Status.BAD_REQUEST, "openapi trigger is disabled")
+        }
+
         action.data.context.parsedYaml = parsedYaml
         action.data.context.normalizedYaml = normalizedYaml
 
         // 拼接插件时会需要传入GIT仓库信息需要提前刷新下状态
         val gitProjectInfo = action.api.getGitProjectInfo(
             action.getGitCred(),
-            action.data.getGitProjectId(),
+            action.getGitProjectIdOrName(),
             ApiRequestRetryInfo(true)
         )!!.toStreamGitProjectInfoWithProject()
         streamBasicSettingService.updateProjectInfo(action.data.getUserId(), gitProjectInfo)
@@ -235,16 +279,18 @@ abstract class BaseManualTriggerService @Autowired constructor(
         )
         return streamYamlBuild.gitStartBuild(
             action = action,
-            TriggerResult(
-                trigger = true,
-                startParams = params,
+            triggerResult = TriggerResult(
+                trigger = TriggerBody(true),
+                triggerOn = null,
                 timeTrigger = false,
                 deleteTrigger = false
             ),
+            startParams = params,
             yaml = yamlReplaceResult.normalYaml,
             gitBuildId = gitBuildId,
             onlySavePipeline = false,
-            yamlTransferData = yamlReplaceResult.yamlTransferData
+            yamlTransferData = yamlReplaceResult.yamlTransferData,
+            manualInputs = getInputParams(action, triggerBuildReq)
         )
     }
 }

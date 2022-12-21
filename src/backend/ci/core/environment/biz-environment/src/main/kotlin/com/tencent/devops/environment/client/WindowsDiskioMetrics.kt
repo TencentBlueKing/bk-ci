@@ -39,6 +39,8 @@ import javax.annotation.PostConstruct
 @AgentMetrics(metricsType = UsageMetrics.MetricsType.DISK, osTypes = [OS.WINDOWS])
 class WindowsDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbClient) : UsageMetrics {
 
+    private val emptyDiskioMetrics = mapOf("io" to listOf(mapOf("time" to "0")))
+
     @PostConstruct
     private fun init() {
         UsageMetrics.registerBean(this)
@@ -50,8 +52,13 @@ class WindowsDiskioMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
             " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null); " +
             "select mean(\"Disk_Read_Bytes_persec\") as \"read\"  from \"win_diskio\"" +
             " where \"agentId\" =~ /$agentHashId\$/ and $timePart, \"instance\" fill(null)"
-        val queryResult = influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB))
-            ?: return mapOf("io" to listOf(mapOf("time" to "0")))
+
+        val queryResult = try {
+            influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyDiskioMetrics
+        } catch (ignore: Exception) {
+            return emptyDiskioMetrics
+        }
+
         if (queryResult.hasError()) {
             throw ErrorCodeException(
                 errorCode = EnvironmentMessageCode.ERROR_NODE_INFLUX_QUERY_DISK_INFO_FAIL,

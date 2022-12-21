@@ -12,8 +12,9 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
+    "@vue/runtime-dom": "^3.2.37",
     "axios": "^0.26.1",
-    "bkui-vue": "^0.0.1-beta.117",
+    "bkui-vue": "0.0.1-beta.123",
     "core-js": "^3.6.5",
     "js-cookie": "^3.0.1",
     "jsencrypt": "^3.2.1",

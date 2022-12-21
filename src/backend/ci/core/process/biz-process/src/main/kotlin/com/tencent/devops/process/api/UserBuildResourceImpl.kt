@@ -85,7 +85,8 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         values: Map<String, String>,
-        buildNo: Int?
+        buildNo: Int?,
+        triggerReviewers: List<String>?
     ): Result<BuildId> {
         checkParam(userId, projectId, pipelineId)
         return Result(
@@ -97,7 +98,8 @@ class UserBuildResourceImpl @Autowired constructor(
                     pipelineId = pipelineId,
                     values = values,
                     channelCode = ChannelCode.BS,
-                    buildNo = buildNo
+                    buildNo = buildNo,
+                    triggerReviewers = triggerReviewers
                 )
             )
         )
@@ -171,6 +173,28 @@ class UserBuildResourceImpl @Autowired constructor(
             checkPermission = ChannelCode.isNeedAuth(ChannelCode.BS)
         )
         return Result(true)
+    }
+
+    override fun buildTriggerReview(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        approve: Boolean
+    ): Result<Boolean> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.buildTriggerReview(
+                userId = userId,
+                buildId = buildId,
+                pipelineId = pipelineId,
+                projectId = projectId,
+                approve = approve
+            )
+        )
     }
 
     override fun manualStartStage(

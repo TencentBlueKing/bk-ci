@@ -167,7 +167,7 @@ class ContainerAppServiceImpl @Autowired constructor(
      * 添加编译环境信息
      */
     override fun addContainerAppInfo(containerAppRequest: ContainerAppRequest): Result<Boolean> {
-        logger.info("the containerAppRequest is {}", containerAppRequest)
+        logger.info("addContainerAppInfo containerAppRequest:$containerAppRequest")
         val containerApp = containerAppRequest.containerApp
         // 判断编译环境名称和操作系统组合是否存在系统
         val count = containerAppsDao.countByNameAndOs(dslContext, containerApp.name, containerApp.os)
@@ -180,8 +180,12 @@ class ContainerAppServiceImpl @Autowired constructor(
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val id = containerAppsDao.add(context, containerApp.name, containerApp.os, containerApp.binPath)
-            logger.info("the id is {}", id)
+            val id = containerAppsDao.add(
+                dslContext = context,
+                name = containerApp.name,
+                os = containerApp.os,
+                binPath = containerApp.binPath
+            )
             // 插入环境变量
             containerAppRequest.containerAppEnvList?.forEach {
                 containerAppsEnvDao.add(context, id, it.name, it.path, it.description)
@@ -198,7 +202,7 @@ class ContainerAppServiceImpl @Autowired constructor(
      * 更新编译环境信息
      */
     override fun updateContainerAppInfo(id: Int, containerAppRequest: ContainerAppRequest): Result<Boolean> {
-        logger.info("the update id is {} ,the containerAppRequest is {}", id, containerAppRequest)
+        logger.info("updateContainerAppInfo id:$id ,containerAppRequest:$containerAppRequest")
         val containerApp = containerAppRequest.containerApp
         val name = containerApp.name
         val os = containerApp.os
@@ -220,7 +224,13 @@ class ContainerAppServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 更新编译环境基本信息
-            containerAppsDao.update(context, id, containerApp.name, containerApp.os, containerApp.binPath)
+            containerAppsDao.update(
+                dslContext = context,
+                id = id,
+                name = containerApp.name,
+                os = containerApp.os,
+                binPath = containerApp.binPath
+            )
             // 更新版本日志信息
             containerAppsVersionDao.deleteByAppId(context, id)
             containerAppRequest.containerAppVersionList?.forEach {
@@ -229,7 +239,13 @@ class ContainerAppServiceImpl @Autowired constructor(
             // 更新编译环境基本信息
             containerAppsEnvDao.deleteByAppId(context, id)
             containerAppRequest.containerAppEnvList?.forEach {
-                containerAppsEnvDao.add(context, id, it.name, it.path, it.description)
+                containerAppsEnvDao.add(
+                    dslContext = context,
+                    appId = id,
+                    name = it.name,
+                    path = it.path,
+                    description = it.description
+                )
             }
         }
         return Result(true)
@@ -239,7 +255,6 @@ class ContainerAppServiceImpl @Autowired constructor(
      * 删除编译环境信息
      */
     override fun deleteContainerAppInfo(id: Int): Result<Boolean> {
-        logger.info("the delete id is {}", id)
         dslContext.transaction { t ->
             val context = DSL.using(t)
             // 删除版本日志信息
@@ -249,7 +264,6 @@ class ContainerAppServiceImpl @Autowired constructor(
             // 删除编译环境基本信息
             containerAppsDao.delete(context, id)
         }
-        logger.info("the $id delete success!")
         return Result(true)
     }
 
@@ -261,7 +275,6 @@ class ContainerAppServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val containerAppInfoRecord = containerAppsDao.getContainerAppInfo(context, id)
-            logger.info("the containerAppInfoRecord is :{}", containerAppInfoRecord)
             if (null != containerAppInfoRecord) {
                 val containerApp = containerAppInfoRecord.map { containerAppsDao.convert(it as TAppsRecord) }
                 val containerAppEnvList =
@@ -271,7 +284,7 @@ class ContainerAppServiceImpl @Autowired constructor(
                 containerAppInfo = ContainerAppInfo(containerApp, containerAppEnvList, containerAppVersionList)
             }
         }
-        logger.info("the containerAppInfo is :{}", containerAppInfo)
+        logger.info("getContainerAppInfo id:$id,containerAppInfo:$containerAppInfo")
         return Result(containerAppInfo)
     }
 

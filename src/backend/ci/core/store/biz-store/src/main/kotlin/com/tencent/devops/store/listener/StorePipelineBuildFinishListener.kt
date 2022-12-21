@@ -42,13 +42,11 @@ class StorePipelineBuildFinishListener @Autowired constructor(
 ) : BaseListener<PipelineBuildFinishBroadCastEvent>(pipelineEventDispatcher) {
 
     override fun run(event: PipelineBuildFinishBroadCastEvent) {
-        logger.info("store event is:$event")
-        val result = storeBuildService.handleStoreBuildStatus(
-            event.userId,
-            event.buildId,
-            event.pipelineId,
-            BuildStatus.valueOf(event.status)
+        storeBuildService.handleStoreBuildStatus(
+            userId = event.userId,
+            buildId = event.buildId,
+            pipelineId = event.pipelineId,
+            status = BuildStatus.valueOf(event.status)
         )
-        logger.info("the handleStoreBuildStatus result is:$result")
     }
 }

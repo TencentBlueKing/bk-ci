@@ -51,12 +51,13 @@ class BuildResourceServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val buildResourceDao: BuildResourceDao
 ) : BuildResourceService {
+
+    private val logger = LoggerFactory.getLogger(BuildResourceServiceImpl::class.java)
+
     override fun getDefaultBuildResource(buildType: BuildType): Any? {
         logger.info("Input(${buildType.name})")
         return null
     }
-
-    private val logger = LoggerFactory.getLogger(BuildResourceServiceImpl::class.java)
 
     /**
      * 获取所有构建资源信息
@@ -72,7 +73,6 @@ class BuildResourceServiceImpl @Autowired constructor(
      */
     override fun getPipelineBuildResource(id: String): Result<BuildResource?> {
         val pipelineBuildResourceRecord = buildResourceDao.getBuildResource(dslContext, id)
-        logger.info("the pipelineBuildResourceRecord is :$pipelineBuildResourceRecord")
         return Result(
             if (pipelineBuildResourceRecord == null) {
                 null
@@ -112,8 +112,13 @@ class BuildResourceServiceImpl @Autowired constructor(
                 false
             )
         }
-        val id = UUIDUtil.generate()
-        buildResourceDao.add(dslContext, id, defaultFlag, buildResourceCode, buildResourceName)
+        buildResourceDao.add(
+            dslContext = dslContext,
+            id = UUIDUtil.generate(),
+            defaultFlag = defaultFlag,
+            buildResourceCode = buildResourceCode,
+            buildResourceName = buildResourceName
+        )
         return Result(true)
     }
 
@@ -146,7 +151,13 @@ class BuildResourceServiceImpl @Autowired constructor(
             if (defaultFlag) {
                 buildResourceDao.setAllBuildResourceDefaultFlag(context, false)
             }
-            buildResourceDao.update(context, id, defaultFlag, buildResourceCode, buildResourceName)
+            buildResourceDao.update(
+                dslContext = context,
+                id = id,
+                defaultFlag = defaultFlag,
+                buildResourceCode = buildResourceCode,
+                buildResourceName = buildResourceName
+            )
         }
         return Result(true)
     }
@@ -155,7 +166,6 @@ class BuildResourceServiceImpl @Autowired constructor(
      * 删除构建资源信息
      */
     override fun deletePipelineBuildResource(id: String): Result<Boolean> {
-        logger.info("the delete id is :{}", id)
         buildResourceDao.delete(dslContext, id)
         return Result(true)
     }

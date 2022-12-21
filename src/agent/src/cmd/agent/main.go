@@ -29,10 +29,12 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/agent"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
@@ -45,6 +47,8 @@ const (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	err := logs.Init(logFilePath)

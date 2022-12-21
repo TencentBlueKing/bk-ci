@@ -79,6 +79,7 @@ object BuildStatusSwitcher {
                 } else {
                     canceled
                 }
+
                 else -> canceled // 其他状态暂定
             }
         }
@@ -107,11 +108,12 @@ object BuildStatusSwitcher {
 
         /**
          * 强制结束构建时，[currentBuildStatus]应该切换成什么状态。
-         * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
+         * 如已经结束并且[fastKill]=false，则直接返回[currentBuildStatus], 否则返回[BuildStatus.FAILED]，
+         *
          */
-        fun forceFinish(currentBuildStatus: BuildStatus): BuildStatus {
+        fun forceFinish(currentBuildStatus: BuildStatus, fastKill: Boolean = false): BuildStatus {
             return if (currentBuildStatus.isFinish() || currentBuildStatus == BuildStatus.STAGE_SUCCESS) {
-                if (statusSet().contains(currentBuildStatus)) { // 在定义范围内的最终态直接返回
+                if (statusSet().contains(currentBuildStatus) && !fastKill) { // 在定义范围内并且fastKill=false直接返回
                     currentBuildStatus
                 } else {
                     if (currentBuildStatus.isSuccess()) {
@@ -135,10 +137,10 @@ object BuildStatusSwitcher {
         }
 
         /**
-         * 强制结束构建时，[currentBuildStatus]如果是[BuildStatus.isRunning]状态，则为[BuildStatus.TERMINATE]
+         * 强制结束构建时，[currentBuildStatus]如果是[BuildStatus.isRunning]状态并且[fastKill] = false, 则为[BuildStatus.TERMINATE]
          * 如已经结束，则直接返回[currentBuildStatus],否则返回[BuildStatus.FAILED]
          */
-        override fun forceFinish(currentBuildStatus: BuildStatus): BuildStatus {
+        override fun forceFinish(currentBuildStatus: BuildStatus, fastKill: Boolean): BuildStatus {
             return if (currentBuildStatus.isFinish()) {
                 if (statusSet().contains(currentBuildStatus)) { // 在定义范围内的最终态直接返回
                     currentBuildStatus
@@ -149,7 +151,7 @@ object BuildStatusSwitcher {
                         BuildStatus.FAILED
                     }
                 }
-            } else if (currentBuildStatus.isRunning()) {
+            } else if (currentBuildStatus.isRunning() && !fastKill) {
                 BuildStatus.TERMINATE // 运行中 -> 终止
             } else { // 其它状态 -> 失败
                 BuildStatus.FAILED

@@ -28,6 +28,7 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.repository.pojo.AppInstallationResult
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -81,8 +82,8 @@ interface StreamGitTransferService {
      */
     fun getProjectList(
         userId: String,
-        page: Int?,
-        pageSize: Int?,
+        page: Int,
+        pageSize: Int,
         search: String?,
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?,
@@ -108,9 +109,18 @@ interface StreamGitTransferService {
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        gitProjectId: Long?,
+        gitProjectId: Long,
         refreshToken: Boolean?
     ): Result<AuthorizeResult>
+
+    /**
+     * 主动开启git侧 ci
+     */
+    fun enableCi(
+        userId: String,
+        projectName: String,
+        enable: Boolean? = true
+    ): Result<Boolean>
 
     /**
      * 获取当前项目的提交记录
@@ -156,4 +166,12 @@ interface StreamGitTransferService {
         page: Int,
         pageSize: Int
     ): List<StreamGitGroup>?
+
+    /**
+     * app是否安装
+     */
+    fun isInstallApp(
+        userId: String,
+        gitProjectId: Long
+    ): AppInstallationResult
 }

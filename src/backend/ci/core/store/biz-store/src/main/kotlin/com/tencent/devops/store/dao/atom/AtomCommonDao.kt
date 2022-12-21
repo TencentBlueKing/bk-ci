@@ -28,13 +28,23 @@
 package com.tencent.devops.store.dao.atom
 
 import com.tencent.devops.common.api.constant.JS
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_HASH_ID
+import com.tencent.devops.common.api.constant.KEY_REPOSITORY_PATH
+import com.tencent.devops.common.api.constant.KEY_SCRIPT
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.model.store.tables.TAtom
 import com.tencent.devops.model.store.tables.TAtomEnvInfo
 import com.tencent.devops.model.store.tables.TStoreBuildInfo
 import com.tencent.devops.model.store.tables.TStorePipelineRel
 import com.tencent.devops.model.store.tables.TStoreProjectRel
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
+import com.tencent.devops.store.pojo.common.KEY_CODE_SRC
+import com.tencent.devops.store.pojo.common.KEY_CREATOR
+import com.tencent.devops.store.pojo.common.KEY_LANGUAGE
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreBaseInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -84,23 +94,23 @@ class AtomCommonDao : AbstractStoreCommonDao() {
         dslContext: DSLContext,
         storeCodeList: List<String>
     ): Result<out Record>? {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("taei")
-        val tsbi = TStoreBuildInfo.T_STORE_BUILD_INFO.`as`("tsbi")
-        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL.`as`("tspr")
-        val tspir = TStorePipelineRel.T_STORE_PIPELINE_REL.`as`("tspir")
+        val ta = TAtom.T_ATOM
+        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO
+        val tsbi = TStoreBuildInfo.T_STORE_BUILD_INFO
+        val tspr = TStoreProjectRel.T_STORE_PROJECT_REL
+        val tspir = TStorePipelineRel.T_STORE_PIPELINE_REL
         return dslContext.select(
-            ta.ATOM_CODE.`as`("storeCode"),
-            ta.VERSION.`as`("version"),
-            ta.REPOSITORY_HASH_ID.`as`("repositoryHashId"),
-            ta.CODE_SRC.`as`("codeSrc"),
-            taei.LANGUAGE.`as`("language"),
-            tsbi.SCRIPT.`as`("script"),
-            tsbi.REPOSITORY_PATH.`as`("repositoryPath"),
-            tspr.PROJECT_CODE.`as`("projectCode"),
-            tspr.CREATOR.`as`("creator"),
-            tspir.PIPELINE_ID.`as`("pipelineId")
-        ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
+            ta.ATOM_CODE.`as`(KEY_STORE_CODE),
+            ta.VERSION.`as`(KEY_VERSION),
+            ta.REPOSITORY_HASH_ID.`as`(KEY_REPOSITORY_HASH_ID),
+            ta.CODE_SRC.`as`(KEY_CODE_SRC),
+            taei.LANGUAGE.`as`(KEY_LANGUAGE),
+            tsbi.SCRIPT.`as`(KEY_SCRIPT),
+            tsbi.REPOSITORY_PATH.`as`(KEY_REPOSITORY_PATH),
+            tspr.PROJECT_CODE.`as`(KEY_PROJECT_CODE),
+            tspr.CREATOR.`as`(KEY_CREATOR),
+            tspir.PIPELINE_ID.`as`(KEY_PIPELINE_ID)
+        ).from(ta).leftJoin(taei).on(ta.ID.eq(taei.ATOM_ID))
             .join(tsbi).on(taei.LANGUAGE.eq(tsbi.LANGUAGE))
             .join(tspr).on(ta.ATOM_CODE.eq(tspr.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspr.STORE_TYPE)))
             .join(tspir).on(ta.ATOM_CODE.eq(tspir.STORE_CODE).and(tsbi.STORE_TYPE.eq(tspir.STORE_TYPE)))
@@ -108,17 +118,23 @@ class AtomCommonDao : AbstractStoreCommonDao() {
             .and(ta.LATEST_FLAG.eq(true))
             .and(tspr.TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
             .and(ta.ATOM_CODE.`in`(storeCodeList))
+            .and(taei.DEFAULT_FLAG.eq(true))
             .fetch()
     }
 
     override fun getStoreDevLanguages(dslContext: DSLContext, storeCode: String): List<String>? {
-        val ta = TAtom.T_ATOM.`as`("ta")
-        val taei = TAtomEnvInfo.T_ATOM_ENV_INFO.`as`("taei")
+        val tAtom = TAtom.T_ATOM
+        val tAtomEnvInfo = TAtomEnvInfo.T_ATOM_ENV_INFO
+        val conditions = mutableListOf<Condition>()
+        conditions.add(tAtom.ATOM_CODE.eq(storeCode))
+        conditions.add(tAtom.LATEST_FLAG.eq(true))
+        conditions.add(tAtomEnvInfo.DEFAULT_FLAG.eq(true))
         val record = dslContext.select(
-            ta.HTML_TEMPLATE_VERSION.`as`("htmlTemplateVersion"),
-            taei.LANGUAGE.`as`("language")
-        ).from(ta).join(taei).on(ta.ID.eq(taei.ATOM_ID))
-            .where(ta.ATOM_CODE.eq(storeCode).and(ta.LATEST_FLAG.eq(true)))
+            tAtom.HTML_TEMPLATE_VERSION,
+            tAtomEnvInfo.LANGUAGE
+        ).from(tAtom).join(tAtomEnvInfo).on(tAtom.ID.eq(tAtomEnvInfo.ATOM_ID))
+            .where(conditions)
+            .limit(1)
             .fetchOne()!!
         val htmlTemplateVersion = record[0] as String
         val language = record[1] as String

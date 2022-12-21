@@ -239,6 +239,13 @@ func initDistTaskActions() {
 	if api.GetDistTaskServerAPIResource().MySQL == nil {
 		return
 	}
+	// disttask client version
+	api.RegisterV1Action(api.Action{
+		Verb:    "GET",
+		Path:    "/disttask/resource/version",
+		Params:  nil,
+		Handler: api.NoLimit(disttask.ListClientVersion),
+	})
 
 	// disttask task
 	api.RegisterV1Action(api.Action{

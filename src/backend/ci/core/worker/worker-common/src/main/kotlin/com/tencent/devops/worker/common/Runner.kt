@@ -36,12 +36,10 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
@@ -51,6 +49,7 @@ import com.tencent.devops.worker.common.service.EngineService
 import com.tencent.devops.worker.common.service.QuotaService
 import com.tencent.devops.worker.common.task.TaskDaemon
 import com.tencent.devops.worker.common.task.TaskFactory
+import com.tencent.devops.worker.common.utils.CredentialUtils
 import com.tencent.devops.worker.common.utils.KillBuildProcessTree
 import com.tencent.devops.worker.common.utils.ShellUtil
 import org.slf4j.LoggerFactory
@@ -109,6 +108,8 @@ object Runner {
             // #1613 worker-agent.jar 增强在启动之前的异常情况上报（本机故障）
             EngineService.submitError(
                 ErrorInfo(
+                    stageId = "",
+                    jobId = buildVariables.containerId,
                     taskId = "",
                     taskName = "",
                     atomCode = "",
@@ -183,6 +184,7 @@ object Runner {
                     try {
                         LoggerService.elementId = buildTask.taskId!!
                         LoggerService.elementName = buildTask.elementName ?: LoggerService.elementId
+                        CredentialUtils.signToken = buildTask.signToken ?: ""
 
                         // 开始Task执行
                         taskDaemon.runWithTimeout()
@@ -191,6 +193,9 @@ object Runner {
                         logger.info("Complete the task (${buildTask.elementName})")
                         // 获取执行结果
                         val buildTaskRst = taskDaemon.getBuildResult()
+                        val finishKillFlag = task.getFinishKillFlag()
+                        val projectId = buildVariables.projectId
+                        handleTaskProcess(finishKillFlag, projectId, buildTask)
                         EngineService.completeTask(buildTaskRst)
                         logger.info("Finish completing the task ($buildTask)")
                     } catch (ignore: Throwable) {
@@ -217,6 +222,19 @@ object Runner {
         }
 
         return failed
+    }
+
+    private fun handleTaskProcess(finishKillFlag: Boolean?, projectId: String, buildTask: BuildTask) {
+        if (finishKillFlag == true) {
+            // 杀掉task对应的进程（配置DEVOPS_DONT_KILL_PROCESS_TREE标识的插件除外）
+            KillBuildProcessTree.killProcessTree(
+                projectId = projectId,
+                buildId = buildTask.buildId,
+                vmSeqId = buildTask.vmSeqId,
+                taskIds = setOf(buildTask.taskId!!),
+                forceFlag = true
+            )
+        }
     }
 
     private fun finally(workspacePathFile: File?, failed: Boolean) {
@@ -281,10 +299,7 @@ object Runner {
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
-            errorMessage = CommonUtils.interceptStringInLength(
-                string = message,
-                length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-            ),
+            errorMessage = message,
             errorType = errorType,
             errorCode = errorCode
         )

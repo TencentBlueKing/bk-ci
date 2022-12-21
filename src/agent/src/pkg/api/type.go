@@ -36,18 +36,52 @@ type ThirdPartyAgentStartInfo struct {
 }
 
 type ThirdPartyBuildInfo struct {
-	ProjectId     string   `json:"projectId"`
-	BuildId       string   `json:"buildId"`
-	VmSeqId       string   `json:"vmSeqId"`
-	Workspace     string   `json:"workspace"`
-	PipelineId    string   `json:"pipelineId"`
-	ToDelTmpFiles []string `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
+	ProjectId       string                     `json:"projectId"`
+	BuildId         string                     `json:"buildId"`
+	VmSeqId         string                     `json:"vmSeqId"`
+	Workspace       string                     `json:"workspace"`
+	PipelineId      string                     `json:"pipelineId"`
+	ToDelTmpFiles   []string                   `json:"-"` // #5806 增加异常时清理脚本文件列表, 不序列化
+	DockerBuildInfo *ThirdPartyDockerBuildInfo `json:"dockerBuildInfo"`
+	ExecuteCount    *int                       `json:"executeCount"`
+	ContainerHashId string                     `json:"containerHashId"`
+}
+
+type ThirdPartyDockerBuildInfo struct {
+	AgentId        string            `json:"agentId"`
+	SecretKey      string            `json:"secretKey"`
+	Image          string            `json:"image"`
+	Credential     *Credential       `json:"credential"`
+	Envs           map[string]string `json:"envs"`
+	DockerResource *DockerResourceOptions
+}
+
+type Credential struct {
+	User     string `json:"user"`
+	Password string `json:"password"`
+}
+
+type DockerResourceOptions struct {
+	MemoryLimitBytes    int64
+	CpuPeriod           int64
+	CpuQuota            int64
+	BlkioDeviceWriteBps int64
+	BlkioDeviceReadBps  int64
+	Disk                int
+	Description         string
 }
 
 type ThirdPartyBuildWithStatus struct {
 	ThirdPartyBuildInfo
 	Success bool   `json:"success"`
 	Message string `json:"message"`
+	Error   *Error `json:"error"`
+}
+
+type Error struct {
+	ErrorType    ErrorTypes `json:"errorType"`
+	ErrorMessage string     `json:"errorMessage"`
+	ErrorCode    ErrorCode  `json:"errorCode"`
 }
 
 type PipelineResponse struct {
@@ -57,30 +91,72 @@ type PipelineResponse struct {
 }
 
 type AgentHeartbeatInfo struct {
-	MasterVersion     string                `json:"masterVersion"`
-	SlaveVersion      string                `json:"slaveVersion"`
-	HostName          string                `json:"hostName"`
-	AgentIp           string                `json:"agentIp"`
-	ParallelTaskCount int                   `json:"parallelTaskCount"`
-	AgentInstallPath  string                `json:"agentInstallPath"`
-	StartedUser       string                `json:"startedUser"`
-	TaskList          []ThirdPartyBuildInfo `json:"taskList"`
+	MasterVersion           string                     `json:"masterVersion"`
+	SlaveVersion            string                     `json:"slaveVersion"`
+	HostName                string                     `json:"hostName"`
+	AgentIp                 string                     `json:"agentIp"`
+	ParallelTaskCount       int                        `json:"parallelTaskCount"`
+	AgentInstallPath        string                     `json:"agentInstallPath"`
+	StartedUser             string                     `json:"startedUser"`
+	TaskList                []ThirdPartyTaskInfo       `json:"taskList"`
+	Props                   AgentPropsInfo             `json:"props"`
+	DockerParallelTaskCount int                        `json:"dockerParallelTaskCount"`
+	DockerTaskList          []ThirdPartyDockerTaskInfo `json:"dockerTaskList"`
+}
+
+type ThirdPartyTaskInfo struct {
+	ProjectId string `json:"projectId"`
+	BuildId   string `json:"buildId"`
+	VmSeqId   string `json:"vmSeqId"`
+	Workspace string `json:"workspace"`
+}
+
+type ThirdPartyDockerTaskInfo struct {
+	ProjectId string `json:"projectId"`
+	BuildId   string `json:"buildId"`
+	VmSeqId   string `json:"vmSeqId"`
+}
+
+type AgentPropsInfo struct {
+	Arch              string             `json:"arch"`
+	JdkVersion        []string           `json:"jdkVersion"`
+	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileMd5"`
 }
 
 type AgentHeartbeatResponse struct {
-	MasterVersion     string            `json:"masterVersion"`
-	SlaveVersion      string            `json:"slaveVersion"`
-	AgentStatus       string            `json:"agentStatus"`
-	ParallelTaskCount int               `json:"parallelTaskCount"`
-	Envs              map[string]string `json:"envs"`
-	Gateway           string            `json:"gateway"`
-	FileGateway       string            `json:"fileGateway"`
-	Props             AgentProps        `json:"props"`
+	MasterVersion           string            `json:"masterVersion"`
+	SlaveVersion            string            `json:"slaveVersion"`
+	AgentStatus             string            `json:"agentStatus"`
+	ParallelTaskCount       int               `json:"parallelTaskCount"`
+	Envs                    map[string]string `json:"envs"`
+	Gateway                 string            `json:"gateway"`
+	FileGateway             string            `json:"fileGateway"`
+	Props                   AgentPropsResp    `json:"props"`
+	DockerParallelTaskCount int               `json:"dockerParallelTaskCount"`
 }
 
-type AgentProps struct {
+type AgentPropsResp struct {
 	IgnoreLocalIps string `json:"ignoreLocalIps"`
 	KeepLogsHours  int    `json:"keepLogsHours"`
+}
+
+type UpgradeInfo struct {
+	WorkerVersion      string             `json:"workerVersion"`
+	GoAgentVersion     string             `json:"goAgentVersion"`
+	JdkVersion         []string           `json:"jdkVersion"`
+	DockerInitFileInfo DockerInitFileInfo `json:"dockerInitFileInfo"`
+}
+
+type DockerInitFileInfo struct {
+	FileMd5     string `json:"fileMd5"`
+	NeedUpgrade bool   `json:"needUpgrade"`
+}
+
+type UpgradeItem struct {
+	Agent          bool `json:"agent"`
+	Worker         bool `json:"worker"`
+	Jdk            bool `json:"jdk"`
+	DockerInitFile bool `json:"dockerInitFile"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {
@@ -89,4 +165,23 @@ func NewPipelineResponse(seqId string, status string, response string) *Pipeline
 		Status:   status,
 		Response: response,
 	}
+}
+
+type LogType string
+
+const (
+	LogtypeLog   LogType = "LOG"
+	LogtypeDebug LogType = "DEBUG"
+	LogtypeError LogType = "ERROR"
+	LogtypeWarn  LogType = "WARN"
+)
+
+type LogMessage struct {
+	Message      string  `json:"message"`
+	Timestamp    int64   `json:"timestamp"` // Millis
+	Tag          string  `json:"tag"`
+	JobId        string  `json:"jobId"`
+	LogType      LogType `json:"logType"`
+	ExecuteCount *int    `json:"executeCount"`
+	SubTag       *string `json:"subTag"`
 }

@@ -23,7 +23,7 @@
                 >
                     <bk-table-column label="Id" prop="gitProjectId" min-width="150">
                         <template slot-scope="props">
-                            {{ props.row.gitProjectId.replace('git_', '')}}
+                            {{ props.row.gitProjectId }}
                         </template>
                     </bk-table-column>
                     <bk-table-column :label="$t('name')" prop="name" min-width="150"></bk-table-column>
@@ -41,12 +41,12 @@
                 <h5>{{$t('setting.agent.emptyLinkTips')}}</h5>
                 <div>
                     <bk-button class="import-agent" @click="toLinkShare('PROJECT')">{{$t('setting.agent.linkProject')}}</bk-button>
-                    <bk-button @click="toLinkShare('GROUP')">Link group{{$t('setting.agent.linkGroup')}}</bk-button>
+                    <bk-button @click="toLinkShare('GROUP')">{{$t('setting.agent.linkGroup')}}</bk-button>
                 </div>
             </section>
         </main>
 
-        <share-env 
+        <share-env
             :select-type="selectType"
             :share-select-conf="shareSelectConf"
             :row-list="curPageList"

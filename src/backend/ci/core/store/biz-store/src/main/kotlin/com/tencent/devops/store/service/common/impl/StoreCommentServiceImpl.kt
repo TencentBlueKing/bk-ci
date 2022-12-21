@@ -90,7 +90,7 @@ class StoreCommentServiceImpl @Autowired constructor(
     private lateinit var commentNotifyAdmin: String
 
     override fun getStoreComment(userId: String, commentId: String): Result<StoreCommentInfo?> {
-        logger.info("userId is :$userId, commentId is :$commentId")
+        logger.info("getStoreComment params:[$userId|$commentId]")
         val storeCommentRecord = storeCommentDao.getStoreComment(dslContext, commentId)
             ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
@@ -130,7 +130,6 @@ class StoreCommentServiceImpl @Autowired constructor(
         // 判断用户是否已点赞
         var praiseFlag = false
         val count = storeCommentPraiseDao.countByIds(dslContext, userId, it.id)
-        logger.info("the count is:$count")
         if (count > 0) {
             praiseFlag = true
         }
@@ -171,8 +170,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         storeCommentRequest: StoreCommentRequest,
         storeType: StoreTypeEnum
     ): Result<StoreCommentInfo?> {
-        logger.info("addStoreComment userId is :$userId,storeId is :$storeId,  storeCode is :$storeCode")
-        logger.info("storeCommentRequest is :$storeCommentRequest, storeType is :$storeType")
+        logger.info("addStoreComment params:[$userId|$storeId|$storeCode|$storeCommentRequest|$storeType")
         val score = storeCommentRequest.score
         // 校验评分是否合法
         if (!validateScore(score)) return MessageCodeUtil.generateResponseDataObject(
@@ -182,12 +180,10 @@ class StoreCommentServiceImpl @Autowired constructor(
         // 校验用户是否已评论过，如果评论过则提示用户去修改评论
         val latestCommentRecord =
             storeCommentDao.getUserLatestCommentByStoreCode(dslContext, userId, storeCode, storeType.type.toByte())
-        logger.info("the latestCommentRecord is:$latestCommentRecord")
         if (null != latestCommentRecord) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_COMMENT_IS_INVALID)
         }
         val userDeptNameResult = storeUserService.getUserFullDeptName(userId)
-        logger.info("the userDeptNameResult is:$userDeptNameResult")
         if (userDeptNameResult.isNotOk()) {
             return Result(userDeptNameResult.status, userDeptNameResult.message ?: "")
         }
@@ -197,18 +193,26 @@ class StoreCommentServiceImpl @Autowired constructor(
             val context = DSL.using(t)
             // 添加评论信息
             storeCommentDao.addStoreComment(
-                context,
-                commentId,
-                userId,
-                userDeptNameResult.data.toString(),
-                storeId,
-                storeCode,
-                profileUrl,
-                storeCommentRequest,
-                storeType.type.toByte()
+                dslContext = context,
+                commentId = commentId,
+                userId = userId,
+                commenterDept = userDeptNameResult.data.toString(),
+                storeId = storeId,
+                storeCode = storeCode,
+                profileUrl = profileUrl,
+                storeCommentRequest = storeCommentRequest,
+                storeType = storeType.type.toByte()
             )
             // 更新统计信息
-            storeStatisticDao.updateCommentInfo(context, userId, storeId, storeCode, storeType.type.toByte(), 1, score)
+            storeStatisticDao.updateCommentInfo(
+                dslContext = context,
+                userId = userId,
+                storeId = storeId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte(),
+                commentIncrement = 1,
+                scoreIncrement = score
+            )
             storeTotalStatisticService.updateStoreTotalStatisticByCode(storeCode, storeType.type.toByte())
         }
         sendNotifyMessage(storeCode, storeType, storeId, userId, storeCommentRequest)
@@ -236,7 +240,6 @@ class StoreCommentServiceImpl @Autowired constructor(
         if (receivers.contains("system")) {
             receivers.toMutableSet().remove("system")
         }
-        logger.info("the receivers is:$receivers")
         val url = storeCommonService.getStoreDetailUrl(storeType, storeCode)
         val storeName = storeCommonService.getStoreNameById(storeId, storeType)
         val bodyParams = mapOf(
@@ -270,7 +273,7 @@ class StoreCommentServiceImpl @Autowired constructor(
         commentId: String,
         storeCommentRequest: StoreCommentRequest
     ): Result<Boolean> {
-        logger.info("userId is :$userId,commentId is :$commentId, storeCommentRequest is :$storeCommentRequest")
+        logger.info("updateStoreComment params:[$userId|$commentId|$storeCommentRequest]")
         val score = storeCommentRequest.score
         // 校验评分是否合法
         if (!validateScore(score)) return MessageCodeUtil.generateResponseDataObject(
@@ -285,7 +288,6 @@ class StoreCommentServiceImpl @Autowired constructor(
                 arrayOf(commentId),
                 false
             )
-        logger.info("the storeCommentRecord is:$storeCommentRecord")
         val creator = storeCommentRecord.creator
         if (userId != creator) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PERMISSION_DENIED, false)
@@ -297,13 +299,13 @@ class StoreCommentServiceImpl @Autowired constructor(
             storeCommentDao.updateStoreComment(dslContext, userId, commentId, storeCommentRequest)
             // 更新统计信息
             storeStatisticDao.updateCommentInfo(
-                context,
-                userId,
-                storeCommentRecord.storeId,
-                storeCommentRecord.storeCode,
-                storeCommentRecord.storeType,
-                0,
-                scoreIncrement
+                dslContext = context,
+                userId = userId,
+                storeId = storeCommentRecord.storeId,
+                storeCode = storeCommentRecord.storeCode,
+                storeType = storeCommentRecord.storeType,
+                commentIncrement = 0,
+                scoreIncrement = scoreIncrement
             )
             storeTotalStatisticService.updateStoreTotalStatisticByCode(
                 storeCommentRecord.storeCode,
@@ -325,7 +327,7 @@ class StoreCommentServiceImpl @Autowired constructor(
      * 评论点赞/取消点赞
      */
     override fun updateStoreCommentPraiseCount(userId: String, commentId: String): Result<Int> {
-        logger.info("userId is :$userId,commentId is :$commentId")
+        logger.info("updateStoreCommentPraiseCount params:[$userId|$commentId]")
         val commentRecord =
             storeCommentDao.getStoreComment(dslContext, commentId) ?: return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_INVALID,
@@ -356,10 +358,14 @@ class StoreCommentServiceImpl @Autowired constructor(
         storeCode: String,
         storeType: StoreTypeEnum
     ): StoreUserCommentInfo {
-        logger.info("userId is :$userId,storeCode is :$storeCode, storeType is :$storeType")
+        logger.info("getStoreUserCommentInfo params:[$userId|$storeCode|$storeType]")
         val latestCommentRecord =
-            storeCommentDao.getUserLatestCommentByStoreCode(dslContext, userId, storeCode, storeType.type.toByte())
-        logger.info("the latestCommentRecord is:$latestCommentRecord")
+            storeCommentDao.getUserLatestCommentByStoreCode(
+                dslContext = dslContext,
+                userId = userId,
+                storeCode = storeCode,
+                storeType = storeType.type.toByte()
+            )
         var commentFlag = false
         if (null != latestCommentRecord) {
             commentFlag = true

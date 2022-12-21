@@ -1,7 +1,12 @@
 #artifactory StatefulSet
 {{ if .Values.artifactory.enabled -}}
+{{ if eq .Values.config.bkCiArtifactoryRealm "local"}}
 apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
 kind: StatefulSet
+{{ else }}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+{{ end }}
 metadata:
   name: {{ include "bkci.names.fullname" . }}-artifactory
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
@@ -18,7 +23,9 @@ spec:
   {{- if not .Values.artifactory.autoscaling.enabled }}
   replicas: {{ .Values.artifactory.replicas }}
   {{- end }} 
+  {{ if eq .Values.config.bkCiArtifactoryRealm "local"}}
   serviceName: {{ include "bkci.names.fullname" . }}-artifactory
+  {{ end }}
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
@@ -102,10 +109,10 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 90
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           readinessProbe:
             httpGet:
@@ -114,7 +121,7 @@ spec:
             initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
-            failureThreshold: 5
+            failureThreshold: 20
             successThreshold: 1
           volumeMounts:
             - name: storage
@@ -122,9 +129,16 @@ spec:
             - mountPath: /data/workspace/dispatch/jvm
               name: log-volume
               subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
         - name: storage
-          {{- if .Values.persistence.enabled }}
+          {{- if and .Values.persistence.enabled (eq .Values.config.bkCiArtifactoryRealm "local") }}
           persistentVolumeClaim:
             claimName: {{ if .Values.persistence.existingClaim }}{{ .Values.persistence.existingClaim }}{{- else }}{{ template "bkci.names.fullname" . }}-storage{{- end }}
           {{- else }}

@@ -45,7 +45,6 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_LOGO"], description = "STORE-LOGO")
@@ -65,9 +64,6 @@ interface UserStoreLogoResource {
         @ApiParam("contentLength", required = true)
         @HeaderParam("content-length")
         contentLength: Long,
-        @ApiParam("是否压缩", required = false)
-        @QueryParam("compressFlag")
-        compressFlag: Boolean? = false,
         @ApiParam("logo", required = true)
         @FormDataParam("logo")
         inputStream: InputStream,

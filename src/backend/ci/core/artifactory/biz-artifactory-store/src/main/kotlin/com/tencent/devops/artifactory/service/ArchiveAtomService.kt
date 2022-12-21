@@ -43,6 +43,7 @@ interface ArchiveAtomService {
         userId: String,
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
+        atomId: String,
         archiveAtomRequest: ArchiveAtomRequest
     ): Result<ArchiveAtomResponse?>
 
@@ -60,4 +61,20 @@ interface ArchiveAtomService {
      * 获取插件相关文件内容
      */
     fun getAtomFileContent(filePath: String): String
+
+    /**
+     * 删除插件
+     */
+    fun deleteAtom(userId: String, projectCode: String, atomCode: String)
+
+    /**
+     * 更新插件相关文件内容
+     */
+    fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean
 }

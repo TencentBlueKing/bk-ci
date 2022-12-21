@@ -62,6 +62,10 @@ export default {
         return api.post(`${STREAM_PERFIX}/user/basic/setting/${projectId}/save`, params)
     },
 
+    saveTriggerSetting (projectId, params) {
+        return api.post(`${STREAM_PERFIX}/user/basic/setting/${projectId}/save_review_setting`, params)
+    },
+
     getSetting (projectId) {
         return api.get(`${STREAM_PERFIX}/user/basic/setting/${projectId}`)
     },

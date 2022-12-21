@@ -209,11 +209,13 @@ export default {
             const preVerModelProps = preVerAtomModal.props || {}
             const diffRes = diffAtomVersions(preVerData.input, preVerModelProps.input, atomModal.props.input, isChangeAtom)
             atomVersionChangedKeys = diffRes.atomVersionChangedKeys
+            const canPause = atomModal.props.config?.canPauseBeforeRun === true
+
             atom = {
                 id: `e-${hashID(32)}`,
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
-                name: atomModal.name,
+                name: isChangeAtom ? atomModal.name : preVerEle.name,
                 version,
                 data: {
                     input: {
@@ -225,7 +227,12 @@ export default {
                     },
                     namespace: isChangeAtom ? '' : preVerData.namespace || '',
                     config: atomModal.props.config
-                }
+                },
+                additionalOptions: canPause
+                    ? {
+                        pauseBeforeExec: true
+                    }
+                    : {}
             }
         } else {
             const diffRes = diffAtomVersions(preVerEle, preVerAtomModal.props, atomModal.props, isChangeAtom)
@@ -236,7 +243,7 @@ export default {
                 '@type': atomModal.classType !== atomCode ? atomModal.classType : atomCode,
                 atomCode,
                 version,
-                name: atomModal.name,
+                name: isChangeAtom ? atomModal.name : preVerEle.name,
                 ...getAtomDefaultValue(atomModal.props),
                 ...diffRes.atomValue
             }
@@ -251,7 +258,8 @@ export default {
             ...atom,
             os: atomModal.os,
             buildLessRunFlag: atomModal.buildLessRunFlag,
-            logoUrl: atomModal.logoUrl
+            logoUrl: atomModal.logoUrl,
+            additionalOptions: isChangeAtom ? (atom.additionalOptions ?? {}) : { ...preVerEle.additionalOptions }
         })
     },
     [UPDATE_ATOM]: (state, { atom, newParam }) => {

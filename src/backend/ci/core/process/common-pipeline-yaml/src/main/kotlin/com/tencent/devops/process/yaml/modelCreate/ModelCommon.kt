@@ -76,8 +76,26 @@ object ModelCommon {
                 installAtomReq = InstallAtomReq(projectCodes, atomCode)
             )
         } catch (e: Throwable) {
-            logger.warn("install atom($atomCode) failed, exception:", e)
+            logger.warn("$projectCode $userId install atom($atomCode) failed, exception:", e)
             // 可能之前安装过，继续执行不退出
         }
+    }
+
+    // #7592 支持通过 , 分隔来一次填写多个接收人
+    fun parseReceivers(receivers: Collection<String>?): Set<String> {
+        if (receivers.isNullOrEmpty()) {
+            return emptySet()
+        }
+
+        val parseReceivers = mutableSetOf<String>()
+        receivers.forEach { re ->
+            if (!re.contains(',')) {
+                parseReceivers.add(re)
+                return@forEach
+            }
+            parseReceivers.addAll(re.split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet())
+        }
+
+        return parseReceivers
     }
 }

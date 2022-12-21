@@ -109,6 +109,8 @@ data class GitMrInfo(
     val author: GitMrInfoAuthor = GitMrInfoAuthor(),
     @JsonProperty("base_commit")
     val baseCommit: String? = null,
+    @JsonProperty("merge_status")
+    val mergeStatus: String? = null,
     @JsonProperty("target_commit")
     val targetCommit: String? = null,
     @JsonProperty("source_commit")

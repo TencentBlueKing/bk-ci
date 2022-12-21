@@ -126,4 +126,28 @@ class TurboSummaryDao @Autowired constructor(
             .set("updated_date", LocalDateTime.now())
         mongoTemplate.updateFirst(query, update, TTurboDaySummaryEntity::class.java)
     }
+
+    /**
+     * 以项目维度分组统计预计时间和实际时间
+     */
+    fun findProjectBySummaryDatePage(
+        summaryDate: LocalDate,
+        pageNum: Int,
+        pageSize: Int
+    ): List<TurboDaySummaryOverviewModel> {
+        val match = Aggregation.match(Criteria.where("summary_day").`is`(summaryDate))
+
+        val group = Aggregation.group("project_id")
+            .first("project_id").`as`("project_id")
+            .sum("execute_time").`as`("execute_time")
+            .sum("estimate_time").`as`("estimate_time")
+
+        val skip = Aggregation.skip((pageNum * pageSize).toLong())
+        val limit = Aggregation.limit(pageSize.toLong())
+
+        val aggregation = Aggregation.newAggregation(match, group, skip, limit)
+        val queryResults: AggregationResults<TurboDaySummaryOverviewModel> =
+            mongoTemplate.aggregate(aggregation, "t_turbo_day_summary_entity", TurboDaySummaryOverviewModel::class.java)
+        return queryResults.mappedResults
+    }
 }

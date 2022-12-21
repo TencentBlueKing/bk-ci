@@ -27,17 +27,18 @@
 
 package com.tencent.devops.worker.common.task
 
-import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.pojo.element.ElementAdditionalOptions
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import java.io.File
 
-@Suppress("NestedBlockDepth")
+@Suppress("NestedBlockDepth", "TooManyFunctions")
 abstract class ITask {
 
     private val environment = HashMap<String, String>()
@@ -47,6 +48,8 @@ abstract class ITask {
     private var platformCode: String? = null
 
     private var platformErrorCode: Int? = null
+
+    private var finishKillFlag: Boolean? = null
 
     fun run(
         buildTask: BuildTask,
@@ -65,7 +68,13 @@ abstract class ITask {
                     additionalOptions.customEnv!!.forEach {
                         if (!it.key.isNullOrBlank()) {
                             // 解决BUG:93319235,将Task的env变量key加env.前缀塞入variables，塞入之前需要对value做替换
-                            val value = EnvUtils.parseEnv(it.value ?: "", variablesBuild)
+                            val value = EnvReplacementParser.parse(
+                                value = it.value ?: "",
+                                contextMap = variablesBuild,
+                                onlyExpression = buildVariables.pipelineAsCodeSettings?.enable,
+                                functions = SpecialFunctions.functions,
+                                output = SpecialFunctions.output
+                            )
                             variablesBuild["envs.${it.key}"] = value
                             variables[it.key!!] = value
                         }
@@ -142,6 +151,14 @@ abstract class ITask {
 
     fun getPlatformErrorCode(): Int? {
         return platformErrorCode
+    }
+
+    protected fun addFinishKillFlag(taskFinishKillFlag: Boolean) {
+        finishKillFlag = taskFinishKillFlag
+    }
+
+    fun getFinishKillFlag(): Boolean? {
+        return finishKillFlag
     }
 
     protected fun isThirdAgent() = BuildEnv.getBuildType() == BuildType.AGENT

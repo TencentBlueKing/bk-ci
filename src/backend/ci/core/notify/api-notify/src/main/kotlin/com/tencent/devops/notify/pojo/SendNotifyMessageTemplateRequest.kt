@@ -44,5 +44,7 @@ data class SendNotifyMessageTemplateRequest(
     @ApiModelProperty("邮件抄送接收者", required = false)
     val cc: MutableSet<String>? = null,
     @ApiModelProperty("消息内容", required = false)
-    val bcc: MutableSet<String>? = null
+    val bcc: MutableSet<String>? = null,
+    @ApiModelProperty("回调内容", required = false)
+    val callbackData: Map<String, String>? = null
 )

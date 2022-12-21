@@ -64,17 +64,8 @@ class StreamPermissionService @Autowired constructor(
         checkPermissionAndOauth(userId, projectId, permission)
     }
 
-    // 校验只需要OAuth的
-    fun checkStreamAndOAuth(
-        userId: String,
-        projectId: String,
-        permission: AuthPermission = AuthPermission.EDIT
-    ) {
-        checkPermissionAndOauth(userId, projectId, permission)
-    }
-
     fun checkWebPermission(userId: String, projectId: String): Boolean {
-        logger.info("stream EnvironmentPermission user:$userId projectId: $projectId ")
+        logger.info("StreamPermissionService|checkWebPermission|user|$userId|projectId|$projectId ")
 
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
@@ -84,7 +75,7 @@ class StreamPermissionService @Autowired constructor(
             resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data ?: false
         if (!result) {
-            logger.warn("$projectId $userId checkWebPermission fail")
+            logger.warn("StreamPermissionService|checkWebPermission|fail|projectId|$projectId|userId|$userId")
         }
         return result
     }
@@ -112,19 +103,19 @@ class StreamPermissionService @Autowired constructor(
     fun checkCommonUser(userId: String) {}
 
     private fun checkPermissionAndOauth(userId: String, projectId: String, permission: AuthPermission) {
-        logger.info("stream EnvironmentPermission user:$userId projectId: $projectId ")
+        logger.info("StreamPermissionService|checkPermissionAndOauth|user|$userId|projectId|$projectId ")
         val result = client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             userId = userId,
             token = tokenCheckService.getSystemToken(null) ?: "",
             action = permission.value,
             projectCode = projectId,
-            resourceCode = null
+            resourceCode = AuthResourceType.PIPELINE_DEFAULT.value
         ).data
         // 说明用户没有stream 权限
         if (result == null || !result) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                "Permission denied."
+                "Access to Stream project permission denied."
             )
         }
     }

@@ -174,7 +174,8 @@ export function getbuildTypeIcon (objectKind, operationKind) {
         openApi: 'open-api',
         issue: 'issue',
         review: 'code-review',
-        note: 'comment'
+        note: 'comment',
+        pull_request: 'merge'
     }
     return operationKindMap[operationKind] || objectKindIconMap[objectKind] || 'well'
 }
@@ -232,6 +233,53 @@ export function getCookie (key) {
     return cookieObj[key] || ''
 }
 
+export function getLanguageMap (key = '') {
+    if (!key) return ''
+    let language = ''
+    if (key.toLowerCase() === 'en' || key.toLowerCase() === 'en-us' || key.toLowerCase() === 'en_us') {
+        language = 'en-US'
+    } else {
+        language = 'zh-CN'
+    }
+    return language
+}
+
 export function getDisplayName (displayName = '') {
     return displayName.replace(/^\.ci\//, '')
+}
+
+export const getSubdomain = () => {
+    try {
+        let subdomain = ''
+        const key = `mh_${Math.random()}`
+        const expiredDate = new Date(0)
+        const { domain } = document
+        const domainList = domain.split('.')
+  
+        const reg = new RegExp(`(^|;)\\s*${key}=12345`)
+        // 若为 IP 地址、localhost，则直接返回
+        if (domain === 'localhost') {
+            return domain
+        }
+  
+        const urlItems = []
+        urlItems.unshift(domainList.pop())
+  
+        while (domainList.length) {
+            urlItems.unshift(domainList.pop())
+            subdomain = urlItems.join('.')
+  
+            const cookie = `${key}=12345;domain=.${subdomain}`
+            document.cookie = cookie
+  
+            if (reg.test(document.cookie)) {
+                document.cookie = `${cookie};expires=${expiredDate}`
+                break
+            }
+        }
+  
+        return subdomain || document.domain
+    } catch (e) {
+        return document.domain
+    }
 }

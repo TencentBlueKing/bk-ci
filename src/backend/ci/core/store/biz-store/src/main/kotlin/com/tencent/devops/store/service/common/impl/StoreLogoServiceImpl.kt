@@ -38,8 +38,6 @@ import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.StoreLogoReq
 import com.tencent.devops.store.service.common.StoreLogoService
-import net.coobird.thumbnailator.Thumbnails
-import org.apache.commons.codec.binary.Base64
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -95,12 +93,12 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     override fun uploadStoreLogo(
         userId: String,
         contentLength: Long,
-        compressFlag: Boolean?,
+        sizeLimitFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<StoreLogoInfo?> {
-        logger.info("uploadStoreLogo upload file info is:$disposition,contentLength is:$contentLength")
         val fileName = disposition.fileName
+        logger.info("uploadStoreLogo upload file fileName is:$fileName,contentLength is:$contentLength")
         val index = fileName.lastIndexOf(".")
         val fileType = fileName.substring(index + 1).toLowerCase()
         // 校验文件类型是否满足上传文件类型的要求
@@ -127,11 +125,13 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
             // 判断上传的logo是否为512x512规格
             val width = img.width
             val height = img.height
-            if (width != height || width < allowUploadLogoWidth.toInt()) {
-                return MessageCodeUtil.generateResponseDataObject(
-                    StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
-                    arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
-                )
+            if (sizeLimitFlag != false) {
+                if (width != height || width < allowUploadLogoWidth.toInt()) {
+                    return MessageCodeUtil.generateResponseDataObject(
+                        StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
+                        arrayOf(allowUploadLogoWidth, allowUploadLogoHeight)
+                    )
+                }
             }
             ImageIO.write(img, fileType, output)
         } else {
@@ -147,8 +147,8 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                     }
                 }
                 output.flush()
-            } catch (e: Exception) {
-                logger.error("the output write error is:$e", e)
+            } catch (ignored: Throwable) {
+                logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             } finally {
                 output.close()
@@ -156,23 +156,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         }
         val logoUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreLogo logoUrl is:$logoUrl")
-        var iconData: String? = null
-        if (compressFlag == true && "svg" != fileType) {
-            // 生成压缩图标
-            val tmpFile = Files.createTempFile(UUIDUtil.generate(), ".png").toFile()
-            val bytes: ByteArray?
-            try {
-                Thumbnails.of(file)
-                    .size(18, 18)
-                    .outputFormat("png")
-                    .toFile(tmpFile)
-                bytes = Files.readAllBytes(tmpFile.toPath())
-                iconData = "data:image/png;base64," + Base64.encodeBase64String(bytes)
-            } finally {
-                tmpFile.delete()
-            }
-        }
-        return Result(StoreLogoInfo(logoUrl, iconData))
+        return Result(StoreLogoInfo(logoUrl))
     }
 
     abstract fun uploadStoreLogo(userId: String, file: File): Result<String?>

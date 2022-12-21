@@ -27,69 +27,18 @@
 
 package com.tencent.devops.project.service
 
-import com.tencent.devops.project.pojo.OpGrayProject
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.Result
 
 @Suppress("ALL")
 interface OpProjectService {
 
-    fun listGrayProject(): Result<OpGrayProject>
-
-    fun setGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
-
-    fun setCodeCCGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
-
-    fun setMacOSGrayProject(projectCodeList: List<String>, operateFlag: Int): Boolean
-
     fun updateProjectFromOp(userId: String, accessToken: String, projectInfoRequest: OpProjectUpdateInfoRequest): Int
 
-    fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean
-    ): Result<Map<String, Any?>?>
+    fun synProject(projectCode: String, isRefresh: Boolean? = true): Result<Boolean>
 
-    fun getProjectList(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        offset: Int,
-        limit: Int,
-        grayFlag: Boolean,
-        codeCCGrayFlag: Boolean?,
-        repoGrayFlag: Boolean?,
-        macosGrayFlag: Boolean?
-    ): Result<Map<String, Any?>?>
+    fun synProjectInit(isRefresh: Boolean? = true): Result<List<String>>
 
-    fun getProjectCount(
-        projectName: String?,
-        englishName: String?,
-        projectType: Int?,
-        isSecrecy: Boolean?,
-        creator: String?,
-        approver: String?,
-        approvalStatus: Int?,
-        grayFlag: Boolean
-    ): Result<Int>
-
-    fun synProject(
-        projectCode: String,
-        isRefresh: Boolean? = true
-    ): Result<Boolean>
-
-    fun synProjectInit(
-        isRefresh: Boolean? = true
-    ): Result<List<String>>
+    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
 }

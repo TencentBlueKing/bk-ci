@@ -68,6 +68,7 @@ import com.tencent.devops.store.dao.image.ImageAgentTypeDao
 import com.tencent.devops.store.dao.image.ImageCategoryRelDao
 import com.tencent.devops.store.dao.image.ImageDao
 import com.tencent.devops.store.dao.image.ImageFeatureDao
+import com.tencent.devops.store.dao.image.ImageLabelRelDao
 import com.tencent.devops.store.dao.image.ImageVersionLogDao
 import com.tencent.devops.store.dao.image.MarketImageDao
 import com.tencent.devops.store.dao.image.MarketImageFeatureDao
@@ -94,7 +95,6 @@ import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import com.tencent.devops.store.pojo.image.enums.MarketImageSortTypeEnum
 import com.tencent.devops.store.pojo.image.exception.UnknownImageSourceType
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
-import com.tencent.devops.store.pojo.image.request.ImageFeatureUpdateRequest
 import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.store.pojo.image.response.MarketImageItem
@@ -142,6 +142,8 @@ abstract class ImageService @Autowired constructor() {
     @Autowired
     lateinit var imageVersionLogDao: ImageVersionLogDao
     @Autowired
+    lateinit var imageLabelRelDao: ImageLabelRelDao
+    @Autowired
     lateinit var marketImageDao: MarketImageDao
     @Autowired
     lateinit var marketImageFeatureDao: MarketImageFeatureDao
@@ -172,9 +174,6 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeCommonService: StoreCommonService
     @Autowired
     lateinit var client: Client
-
-    @Value("\${store.baseImageDocsLink}")
-    private lateinit var baseImageDocsLink: String
 
     private val logger = LoggerFactory.getLogger(ImageService::class.java)
 
@@ -444,7 +443,7 @@ abstract class ImageService @Autowired constructor() {
                     flag = it.flag,
                     publicFlag = it.publicFlag,
                     buildLessRunFlag = false,
-                    docsLink = baseImageDocsLink + it.code,
+                    docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
                     updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
                     recommendFlag = it.recommendFlag
@@ -695,9 +694,9 @@ abstract class ImageService @Autowired constructor() {
             bodyParams["url"] = buildResultBaseUrl.removeSuffix("/") + "/$projectCode/$pipelineId/detail/$buildId"
             try {
                 supportService.sendImageExecuteNullToManagers(titleParams, bodyParams)
-            } catch (e: Exception) {
+            } catch (ignored: Throwable) {
                 // 通知失败不应影响执行
-                logger.error("$interfaceName:getImageRepoInfoByCodeAndVersion:sendImageExecuteNullToManagers fail", e)
+                logger.warn("sendImageExecuteNullToManagers fail", ignored)
             }
             getDefaultImageRepoInfo()
         } else {
@@ -708,7 +707,6 @@ abstract class ImageService @Autowired constructor() {
     fun getSelfDevelopPublicImages(
         interfaceName: String? = "Anon interface"
     ): List<ImageRepoInfo> {
-        logger.info("$interfaceName:Input()")
         val records = imageDao.listRunnableSelfDevelopPublicImages(dslContext)
         return records?.map {
             getImageRepoInfoByRecord(it)
@@ -829,8 +827,8 @@ abstract class ImageService @Autowired constructor() {
             } else {
                 imageSizeStr.toLong()
             }
-        } catch (e: NumberFormatException) {
-            logger.warn("imageSizeStr=$imageSizeStr", e)
+        } catch (ignored: Throwable) {
+            logger.warn("imageSizeStr=$imageSizeStr", ignored)
         }
         val imageSize = if (0L == imageSizeNum) {
             "-"
@@ -910,7 +908,7 @@ abstract class ImageService @Autowired constructor() {
             logoUrl = imageRecord.logoUrl ?: "",
             icon = icon ?: "",
             summary = imageRecord.summary ?: "",
-            docsLink = baseImageDocsLink + imageCode,
+            docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, imageCode),
             projectCode = projectCode ?: "",
             score = storeStatistic.score ?: 0.0,
             downloads = storeStatistic.downloads,
@@ -987,30 +985,31 @@ abstract class ImageService @Autowired constructor() {
         if (installedCnt > 0) {
             return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_IMAGE_USED, arrayOf(imageCode))
         }
-        deleteImageLogically(userId, imageCode)
+        deleteImage(userId, imageCode)
         return Result(true)
     }
 
-    /**
-     * 软删除，主表置删除态
-     */
-    fun deleteImageLogically(
+    fun deleteImage(
         userId: String,
         imageCode: String
     ) {
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            marketImageDao.updateImageBaseInfoByCode(
-                dslContext = context,
-                userId = userId,
-                imageCode = imageCode,
-                imageBaseInfoUpdateRequest = ImageBaseInfoUpdateRequest(deleteFlag = true)
-            )
-            marketImageFeatureDao.updateImageFeature(
-                dslContext = context,
-                userId = userId,
-                imageFeatureUpdateRequest = ImageFeatureUpdateRequest(imageCode = imageCode, deleteFlag = true)
-            )
+            val imageIds = marketImageDao.getImagesIdByImageCode(context, imageCode)
+            storeCommonService.deleteStoreInfo(context, imageCode, StoreTypeEnum.IMAGE.type.toByte())
+            // 删除镜像代理类型数据
+            imageAgentTypeDao.deleteAgentTypeByImageCode(context, imageCode)
+            // 删除镜像特性信息
+            marketImageFeatureDao.daleteImageFeature(context, imageCode)
+            if (!imageIds.isNullOrEmpty()) {
+                // 删除镜像与范畴关联关系
+                imageCategoryRelDao.batchDeleteByImageId(context, imageIds)
+                // 删除镜像与标签关联关系
+                imageLabelRelDao.deleteByImageIds(context, imageIds)
+                // 删除镜像版本日志
+                imageVersionLogDao.deleteByImageIds(context, imageIds)
+                imageDao.deleteByImageIds(context, imageIds)
+            }
         }
     }
 
@@ -1062,7 +1061,6 @@ abstract class ImageService @Autowired constructor() {
      */
     @Suppress("UNCHECKED_CAST")
     fun getPipelineImageVersions(projectCode: String, imageCode: String): List<VersionInfo> {
-        logger.info("the projectCode is: $projectCode,imageCode is: $imageCode")
         val imageStatusList = imageCommonService.generateImageStatusList(imageCode, projectCode)
         val versionList = mutableListOf<VersionInfo>()
         val versionRecords =
@@ -1097,7 +1095,6 @@ abstract class ImageService @Autowired constructor() {
             }
             versionList.add(VersionInfo(versionName + "(Tag: $imageTag)", imageVersion)) // 添加具体的版本号
         }
-        logger.info("the imageCode is: $imageCode,versionList is: $versionList")
         return versionList
     }
 

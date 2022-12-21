@@ -1,11 +1,26 @@
 parameters:
   - name: username
     type: string
-    default: world
+    default: world,xxxx
 
 variables:
   USERNAME:
     value: ${{ parameters.username }}
+    allow-modify-at-startup: true
+    props:
+      label: 我是预定义下拉可选值的字段
+      type: selector
+      options:
+      - id: 1
+      - id: 2
+        label: 二
+      - id: 3
+        description: xxx
+      - id: VARIABLES
+      - id: xxxxx
+      multiple: true
+      description: 这是个允许多选的下拉选择字段
+
   template:
     - name: cyclic/variable/templates/variable1.yml
       parameters:

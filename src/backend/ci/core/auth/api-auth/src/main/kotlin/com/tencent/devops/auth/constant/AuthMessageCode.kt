@@ -35,7 +35,7 @@ package com.tencent.devops.auth.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-持续集成环境 06：experience-版本体验 07：image-镜像 08：log-持续集成日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-持续集成支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限）
  * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  *
@@ -75,4 +75,11 @@ object AuthMessageCode {
     const val MANAGER_GRANT_WHITELIST_USER_EXIST = "2121207" // 权限系统： 用户{0}不在白名单内,请先配置策略白名单
     const val STRATEGT_NAME_EXIST = "2121208" // 权限系统： 权限集合名称重复
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
+    const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
+    const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
+
+    const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
+    const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
+    const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
+    const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
 }

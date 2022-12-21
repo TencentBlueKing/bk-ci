@@ -29,7 +29,7 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ExternalThirdPartyAgentResource
-import com.tencent.devops.environment.model.AgentArchType
+import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
 import com.tencent.devops.environment.service.thirdPartyAgent.ImportService
 import org.springframework.beans.factory.annotation.Autowired

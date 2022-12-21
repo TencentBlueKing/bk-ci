@@ -46,7 +46,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -62,6 +62,7 @@ import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType
 import com.tencent.devops.quality.pojo.enum.RuleOperation
 import com.tencent.devops.quality.service.QualityNotifyGroupService
+import com.tencent.devops.quality.util.ElementUtils
 import com.tencent.devops.quality.util.ThresholdOperationUtil
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
@@ -343,7 +344,6 @@ class QualityRuleCheckService @Autowired constructor(
         ruleInterceptList: List<Triple<QualityRule, Boolean, List<QualityRuleInterceptRecord>>>
     ): RuleCheckResult {
         // generate result
-        logger.info("QUALITY|ruleInterceptList is: $ruleInterceptList")
         val failRule = ruleInterceptList.filter { !it.second }.map { it.first }
         logger.info("QUALITY|failRule is: $failRule")
         val allPass = failRule.isEmpty()
@@ -365,7 +365,6 @@ class QualityRuleCheckService @Autowired constructor(
         result.forEach {
             val rule = it.first
             val ruleId = HashUtil.decodeIdToLong(rule.hashId)
-            logger.info("ruleId is: $ruleId")
             val interceptResult = it.second
 
             with(buildCheckParams) {
@@ -376,7 +375,7 @@ class QualityRuleCheckService @Autowired constructor(
 
                     try {
                         if (rule.opList != null) {
-                            logger.info("do op list action: $buildId, $rule")
+                            logger.info("do op list action: $buildId, ${rule.name}")
                             rule.opList!!.forEach { ruleOp ->
                                 val finalRule = qualityRuleBuildHisService.listRuleBuildHis(
                                     listOf(ruleId)).firstOrNull()
@@ -400,7 +399,7 @@ class QualityRuleCheckService @Autowired constructor(
                                 }
                             }
                         } else {
-                            logger.info("op list is empty for rule and build: $buildId, $rule")
+                            logger.info("op list is empty for rule and build: $buildId, ${rule.name}")
                             doRuleOperation(
                                 this,
                                 resultList.filter { result -> result.ruleName == rule.name },
@@ -415,7 +414,7 @@ class QualityRuleCheckService @Autowired constructor(
                             )
                         }
                     } catch (ignored: Throwable) {
-                        logger.error("send notification fail", ignored)
+                        logger.warn("QUALITY|checkPostHandle|send notification fail|$buildId|warn=${ignored.message}")
                     }
                 }
                 countService.countIntercept(projectId, pipelineId, ruleId, interceptResult)
@@ -477,6 +476,7 @@ class QualityRuleCheckService @Autowired constructor(
         var allCheckResult = true
         val interceptList = mutableListOf<QualityRuleInterceptRecord>()
         var ruleTaskStepsCopy = ruleTaskSteps?.toMutableList()
+        // 借助临时list,把红线指标添加的控制点前缀塞进要判断的指标taskName
         if (!ruleTaskStepsCopy.isNullOrEmpty()) {
             indicators.forEach { indicator ->
                 val taskStep = ruleTaskStepsCopy.firstOrNull { it.indicatorEnName == indicator.enName }
@@ -484,30 +484,37 @@ class QualityRuleCheckService @Autowired constructor(
                 if (taskStep != null) ruleTaskStepsCopy.remove(taskStep)
             }
         }
+
         logger.info("QUALITY|metadataList is: $metadataList, indicators is:$indicators")
+
+        val (indicatorsCopy, metadataListCopy) = handleWithMultiIndicator(indicators, metadataList)
+
+        logger.info("QUALITY|indicatorsCopy is:$indicatorsCopy")
         // 遍历每个指标
-        indicators.forEach { indicator ->
+        indicatorsCopy.forEach { indicator ->
             val thresholdType = indicator.thresholdType
             var checkResult = true
 
             // 脚本原子的指标特殊处理：取指标英文名 = 基础数据名
             val filterMetadataList = if (indicator.taskName.isNullOrBlank()) {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataList
+                    listOf(metadataListCopy
                         .find { indicator.enName == it.enName &&
                                 it.elementType in QualityIndicator.SCRIPT_ELEMENT })
                 } else {
-                    indicator.metadataList.map {
-                        metadata -> metadataList.find { it.enName == metadata.enName }
+                    indicator.metadataList.map { metadata ->
+                        metadataListCopy.find {
+                            it.enName == metadata.enName && it.taskName.startsWith(indicator.taskName ?: "")
+                        }
                     }.toList()
                 }
             } else {
                 if (indicator.isScriptElementIndicator()) {
-                    listOf(metadataList
+                    listOf(metadataListCopy
                         .filter { it.elementType in QualityIndicator.SCRIPT_ELEMENT }
                         .find { indicator.enName == it.enName && it.taskName.startsWith(indicator.taskName ?: "") })
                 } else {
-                    metadataList.filter {
+                    metadataListCopy.filter {
                         it.taskName.startsWith(indicator.taskName ?: "") &&
                         indicator.metadataList.map { metadata -> metadata.enName }.contains(it.enName)
                     }
@@ -574,7 +581,6 @@ class QualityRuleCheckService @Autowired constructor(
                 }
                 // 布尔类型把所有基础数据求与
                 QualityDataType.BOOLEAN -> {
-                    logger.info("is boolean...")
                     var result: Boolean? = null
                     val threshold = indicator.threshold.toBoolean()
                     logger.info("boolean threshold: $threshold")
@@ -617,9 +623,20 @@ class QualityRuleCheckService @Autowired constructor(
             with(indicator) {
                 interceptList.add(
                     QualityRuleInterceptRecord(
-                        indicatorId = hashId, indicatorName = cnName, indicatorType = elementType,
-                        controlPoint = controlPointName, operation = operation, value = threshold, actualValue = result,
-                        pass = checkResult, detail = elementDetail, logPrompt = logPrompt
+                        indicatorId = hashId,
+                        indicatorName = if (indicator.taskName.isNullOrEmpty()) {
+                            cnName
+                        } else {
+                            "[${indicator.taskName!!.substringBeforeLast("+")}]$cnName"
+                        },
+                        indicatorType = elementType,
+                        controlPoint = controlPointName,
+                        operation = operation,
+                        value = threshold,
+                        actualValue = result,
+                        pass = checkResult,
+                        detail = elementDetail,
+                        logPrompt = logPrompt
                     )
                 )
             }
@@ -751,7 +768,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         // 获取通知用户集合
         val notifyUserSet = auditNotifyUserList.toMutableSet()
-        val triggerUserId = runtimeVariable?.get(PIPELINE_START_WEBHOOK_USER_ID)
+        val triggerUserId = runtimeVariable?.get(PIPELINE_START_USER_NAME)
             ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
         notifyUserSet.add(triggerUserId)
 
@@ -821,8 +838,8 @@ class QualityRuleCheckService @Autowired constructor(
 
         val groupUsers = qualityNotifyGroupService.serviceGetUsers(endNotifyGroupList)
         // 获取构建触发人
-        val triggerUserId = runtimeVariable?.get("BK_CI_START_WEBHOOK_USER_ID")
-            ?: runtimeVariable?.get("BK_CI_START_USER_ID") ?: ""
+        val triggerUserId = runtimeVariable?.get(PIPELINE_START_USER_NAME)
+            ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 
@@ -890,6 +907,93 @@ class QualityRuleCheckService @Autowired constructor(
     private fun getProjectName(projectId: String): String {
         val project = client.get(ServiceProjectResource::class).listByProjectCode(setOf(projectId)).data?.firstOrNull()
         return project?.projectName ?: throw OperationException("ProjectId: $projectId not exist")
+    }
+
+    private fun handleWithMultiIndicator(
+        indicators: List<QualityIndicator>,
+        metadataList: List<QualityHisMetadata>
+    ): Pair<List<QualityIndicator>, List<QualityHisMetadata>> {
+        val indicatorsCopy = indicators.toMutableList()
+        val metadataListCopy = metadataList.map { it.clone() }
+
+        // // CodeCC插件一个指标的元数据对应多条，先对多个CodeCC插件提前做标识
+        val codeccMetaList = metadataListCopy.filter {
+            ElementUtils.QUALITY_CODECC_METATYPE.contains(it.elementType)
+        }.groupBy { it.taskId }
+        if (codeccMetaList.size > 1) {
+            codeccMetaList.values.forEachIndexed { index, codeccMeta ->
+                codeccMeta.map { it.taskName = "${it.taskName}+$index" }
+            }
+        }
+
+        indicators.forEach { indicator ->
+            // 没有设置taskName时，当输出多个相同指标值，每一个都要加入判断，否则把使用通配符的替换为taskName全名，用于后面加入到指标前缀
+            if (indicator.taskName.isNullOrEmpty()) {
+                // 没有设置taskName且多个CodeCC插件时，每个要检查的指标额外添加为有对应元数据输出的插件个数
+                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
+                    if (codeccMetaList.size > 1) {
+                        indicatorsCopy.remove(indicator)
+                        codeccMetaList.values.forEach { codeccMeta ->
+                            if (codeccMeta.map { it.enName }.containsAll(indicator.metadataList.map { it.enName })) {
+                                handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                            }
+                        }
+                    }
+                } else {
+                    // 脚本及三方插件可直接用指标英文名判断，并对结果元数据和指标taskName添加标识后缀
+                    if (metadataListCopy.count { it.enName == indicator.enName } > 1) {
+                        indicatorsCopy.remove(indicator)
+                        metadataListCopy.filter { it.enName == indicator.enName }.forEachIndexed { index, metadata ->
+                            handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
+                        }
+                    }
+                }
+            } else {
+                // 设置了taskName的CodeCC插件指标，将匹配到的元数据taskName赋给检查指标的taskName，统一后面对taskName不为空的去标识后缀
+                if (CodeccUtils.isCodeccAtom(indicator.elementType)) {
+                    codeccMetaList.values.forEach { codeccMeta ->
+                        if (codeccMeta.firstOrNull()?.taskName?.startsWith(indicator.taskName ?: "") == true) {
+                            indicatorsCopy.remove(indicator)
+                            handleCodeCCPlugin(indicator, codeccMeta, indicatorsCopy)
+                        }
+                    }
+                } else {
+                    // 脚本及三方插件设置了taskName，将匹配到的结果元数据和指标taskName均加上标识后缀
+                    metadataListCopy.filter { it.enName == indicator.enName &&
+                            it.taskName.startsWith(indicator.taskName ?: "")
+                    }.forEachIndexed { index, metadata ->
+                        indicatorsCopy.remove(indicator)
+                        handleScriptAndThirdPlugin(indicator, metadata, index, indicatorsCopy)
+                    }
+                }
+            }
+        }
+        return Pair(indicatorsCopy, metadataListCopy)
+    }
+
+    private fun handleScriptAndThirdPlugin(
+        indicator: QualityIndicator,
+        metadata: QualityHisMetadata,
+        index: Int,
+        indicatorsCopy: MutableList<QualityIndicator>
+    ) {
+        // 非CodeCC插件的指标和对应元数据taskName添加标识后缀
+        val extraIndicator = indicator.copy()
+        val extraTaskName = "${metadata.taskName}+$index"
+        extraIndicator.taskName = extraTaskName
+        metadata.taskName = extraTaskName
+        indicatorsCopy.add(extraIndicator)
+    }
+
+    private fun handleCodeCCPlugin(
+        indicator: QualityIndicator,
+        metadata: List<QualityHisMetadata>,
+        indicatorsCopy: MutableList<QualityIndicator>
+    ) {
+        // 将指标taskName修改为元数据的taskName
+        val extraIndicator = indicator.copy()
+        extraIndicator.taskName = metadata.firstOrNull()?.taskName
+        indicatorsCopy.add(extraIndicator)
     }
 
     companion object {

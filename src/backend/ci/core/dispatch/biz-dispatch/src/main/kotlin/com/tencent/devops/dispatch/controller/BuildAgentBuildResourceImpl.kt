@@ -30,11 +30,13 @@ package com.tencent.devops.dispatch.controller
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.api.BuildAgentBuildResource
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 
 @RestResource
 @Suppress("ALL")
@@ -61,6 +63,21 @@ class BuildAgentBuildResourceImpl constructor(
             secretKey,
             version,
             masterVersion
+        )
+    }
+
+    override fun upgradeNew(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ): AgentResult<UpgradeItem> {
+        checkParam(projectId, agentId, secretKey)
+        return thirdPartyAgentBuildService.checkIfCanUpgradeByVersionNew(
+            projectId = projectId,
+            agentId = agentId,
+            secretKey = secretKey,
+            info = info
         )
     }
 

@@ -28,13 +28,14 @@
         </bk-dialog>
         <template v-if="editingElementPos != null">
             <plugin-log
-                v-if="Number.isInteger(editingElementPos.pluginIndex)"
+                v-if="editingElementPos.logData"
                 v-bind="editingElementPos"
                 @close="closeLog"
             />
             <job-log
                 v-else-if="Number.isInteger(editingElementPos.jobIndex)"
                 v-bind="editingElementPos"
+                :job="getJob(editingElementPos)"
                 :stages="pipeline.stages"
                 @close="closeLog"
             />
@@ -54,28 +55,38 @@
             stageReviewPanel,
             pluginLog,
             jobLog
-
         },
+
         props: {
             pipeline: {
                 type: Object,
                 required: true
             }
         },
+
         data () {
             return {
                 showRetryStageDialog: false,
                 failedContainer: false,
                 isRetrying: false,
                 taskId: null,
-                editingElementPos: null
+                editingElementPos: null,
+                firstIn: true
             }
         },
+
         computed: {
             ...mapState(['projectId', 'permission', 'curPipeline'])
         },
-        mounted () {
-            this.autoOpenReview()
+
+        watch: {
+            pipeline (val) {
+                if (val.stages?.length > 0 && this.firstIn) {
+                    this.firstIn = false
+                    this.autoOpenReview()
+                    this.autoOpenLog()
+                }
+            }
         },
 
         methods: {
@@ -108,11 +119,13 @@
                 const job = this.getJob(this.editingElementPos)
                 if (Number.isInteger(elementIndex)) {
                     this.editingElementPos.logData = job.elements[elementIndex]
+                } else if (!Reflect.has(args, 'containerGroupIndex')) {
+                    this.editingElementPos.logData = job
                 } else if (Number.isInteger(containerIndex)) {
                     this.editingElementPos.job = job
                 }
-                console.log(this.editingElementPos)
             },
+
             closeLog () {
                 this.editingElementPos = null
             },
@@ -129,6 +142,20 @@
                     }
                     return true
                 })
+            },
+
+            autoOpenLog () {
+                if (this.$route.query.stageIndex) {
+                    const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
+                    const params = {
+                        // stream 流水线隐藏了第一个stage,所以减去1
+                        stageIndex: Number(stageIndex) - 1,
+                        elementIndex: Number(elementIndex),
+                        containerIndex: Number(containerIndex)
+                    }
+                    if (containerGroupIndex) params.containerGroupIndex = Number(containerGroupIndex)
+                    this.handlePipelineClick(params)
+                }
             },
 
             handleStageCheck ({ type, stageIndex }) {

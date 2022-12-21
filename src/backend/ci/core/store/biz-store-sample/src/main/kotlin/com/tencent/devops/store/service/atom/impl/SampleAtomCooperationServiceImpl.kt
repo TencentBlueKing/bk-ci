@@ -28,22 +28,17 @@
 package com.tencent.devops.store.service.atom.impl
 
 import com.tencent.devops.store.pojo.atom.AtomCollaboratorCreateReq
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class SampleAtomCooperationServiceImpl @Autowired constructor() : AtomCooperationServiceImpl() {
 
-    private val logger = LoggerFactory.getLogger(SampleAtomCooperationServiceImpl::class.java)
-
     override fun sendMoaMessage(
         atomCode: String,
         atomCollaboratorCreateReq: AtomCollaboratorCreateReq,
         approveId: String,
-        userId: String
-    ) {
-        logger.info("sendMoaMessage atomCode is :$atomCode,atomCollaboratorCreateReq is :$atomCollaboratorCreateReq")
-        logger.info("sendMoaMessage approveId is :$approveId,userId is :$userId")
-    }
+        userId: String,
+        token: String
+    ) = Unit
 }

@@ -50,12 +50,10 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
     private val logger = LoggerFactory.getLogger(SampleContainerServiceImpl::class.java)
 
     override fun buildTypeEnable(buildType: BuildType, projectCode: String): Boolean {
-        logger.info("buildTypeEnable buildType is :$buildType,projectCode is :$projectCode")
         return true
     }
 
     override fun clickable(buildType: BuildType, projectCode: String, enableFlag: Boolean?): Boolean {
-        logger.info("clickable buildType is :$buildType,projectCode is :$projectCode,enableFlag is :$enableFlag")
         return enableFlag ?: true
     }
 
@@ -67,8 +65,7 @@ class SampleContainerServiceImpl @Autowired constructor() : ContainerServiceImpl
         containerOS: OS,
         buildType: BuildType
     ): Pair<ContainerResource, ContainerResourceValue> {
-        logger.info("getResource userId is :$userId,projectCode is :$projectCode,containerId is :$containerId")
-        logger.info("getResource containerOS is :$containerOS,buildType is :$buildType")
+        logger.info("getResource params:[$userId|$projectCode|$containerId|$containerOS|$buildType]")
         val containerResourceValue: List<String>?
         val resource = when (buildType) {
             BuildType.THIRD_PARTY_AGENT_ENV -> {

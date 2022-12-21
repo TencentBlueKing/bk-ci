@@ -45,5 +45,11 @@ data class PipelineNewViewSummary(
     @ApiModelProperty("更新时间", required = false)
     val updateTime: Long,
     @ApiModelProperty("创建者", required = false)
-    val creator: String
+    val creator: String,
+    @ApiModelProperty("是否置顶", required = false)
+    val top: Boolean = false,
+    @ApiModelProperty("流水线组类型,1--动态,2--静态", required = true)
+    val viewType: Int,
+    @ApiModelProperty("流水线个数", required = true)
+    val pipelineCount: Int
 )

@@ -35,13 +35,13 @@ object StreamTriggerDispatch {
     fun dispatch(rabbitTemplate: RabbitTemplate, event: StreamTriggerEvent) {
         try {
             logger.info(
-                "${event.actionContext.pipeline?.pipelineId}|${event.actionContext.pipeline?.filePath}" +
-                    "|Dispatch stream trigger event"
+                "StreamTriggerDispatch|${event.actionContext.pipeline?.pipelineId}" +
+                    "|${event.actionContext.pipeline?.filePath}"
             )
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
-            logger.error("Fail to dispatch the event($event)", e)
+            logger.error("BKSystemErrorMonitor|StreamTriggerDispatch|error:", e)
         }
     }
 

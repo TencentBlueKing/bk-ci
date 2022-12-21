@@ -27,24 +27,27 @@
 
 package com.tencent.devops.artifactory.service
 
-import com.tencent.devops.artifactory.client.bkrepo.DefaultBkRepoClient
 import com.tencent.devops.artifactory.dao.FileDao
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.artifactory.pojo.Property
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.archive.client.BkRepoClient
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
 
 @Service@Suppress("ALL")
 class SamplePipelineBuildArtifactoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val fileDao: FileDao,
-    private val defaultBkRepoClient: DefaultBkRepoClient
+    private val bkRepoClient: BkRepoClient
 ) : PipelineBuildArtifactoryService {
 
     override fun getArtifactList(
@@ -53,7 +56,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<FileInfo> {
-        return if (defaultBkRepoClient.useBkRepo()) {
+        return if (bkRepoClient.useBkRepo()) {
             getBkRepoArtifactoryList(userId, projectId, pipelineId, buildId)
         } else {
             getLocalArtifactList(projectId, pipelineId, buildId)
@@ -68,7 +71,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
     ): List<FileInfo> {
         logger.info("getBkRepoArtifactoryList, userId: $userId, projectId: $projectId, pipelineId: $pipelineId, " +
             "buildId: $buildId")
-        val nodeList = defaultBkRepoClient.queryByNameAndMetadata(
+        val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
             repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, BkRepoUtils.REPO_NAME_CUSTOM),
@@ -76,8 +79,18 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             metadata = mapOf("pipelineId" to pipelineId, "buildId" to buildId),
             page = 1,
             pageSize = 1000
-        )
-        return nodeList.map { it.toFileInfo() }
+        ).records
+        return nodeList.map { FileInfo(
+            name = it.name,
+            fullName = it.name,
+            path = it.path,
+            fullPath = it.fullPath,
+            size = it.size,
+            folder = it.folder,
+            properties = it.metadata?.map { m -> Property(m.key, m.value) },
+            modifiedTime = LocalDateTime.parse(it.lastModifiedDate, DateTimeFormatter.ISO_DATE_TIME).timestamp(),
+            artifactoryType = BkRepoUtils.parseArtifactoryType(it.repoName)
+        ) }
     }
 
     private fun getLocalArtifactList(projectId: String, pipelineId: String, buildId: String): List<FileInfo> {

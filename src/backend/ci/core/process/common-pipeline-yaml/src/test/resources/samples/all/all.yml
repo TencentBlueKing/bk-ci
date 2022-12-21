@@ -56,3 +56,8 @@ stages:
             - codecc_fast_cpp
             - pecker_cpp
             - codecc_default_coverity_cpp
+    template:
+      - name: all-test/all-job-1.yml
+        parameters:
+          mutex-label: mutex-1
+          mutex-queue-length: 3

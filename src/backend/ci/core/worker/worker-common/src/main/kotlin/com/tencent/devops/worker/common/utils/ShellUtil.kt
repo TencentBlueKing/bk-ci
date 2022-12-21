@@ -37,6 +37,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
 import java.io.File
 import java.nio.file.Files
+import java.util.regex.Pattern
 
 @Suppress("ALL")
 object ShellUtil {
@@ -78,6 +79,7 @@ object ShellUtil {
 
     private val specialKey = listOf(".", "-")
     private val specialCharToReplace = Regex("['\n]") // --bug=75509999 Agent环境变量中替换掉破坏性字符
+    private const val chineseRegex = "[\u4E00-\u9FA5|\\！|\\，|\\。|\\（|\\）|\\《|\\》|\\“|\\”|\\？|\\：|\\；|\\【|\\】]"
 
     fun execute(
         buildId: String,
@@ -124,7 +126,9 @@ object ShellUtil {
         workspace: File = dir
     ): File {
         val file = Files.createTempFile("devops_script", ".sh").toFile()
+        val userScriptFile = Files.createTempFile("devops_script_user_", ".sh").toFile()
         file.deleteOnExit()
+        userScriptFile.deleteOnExit()
 
         val command = StringBuilder()
         val bashStr = script.split("\n")[0]
@@ -186,10 +190,11 @@ object ShellUtil {
             newValue = "\"${File(dir, ScriptEnvUtils.getEnvFile(buildId)).absolutePath}\""))
         command.append(setGateValue.replace(oldValue = "##gateValueFile##",
             newValue = "\"${File(dir, ScriptEnvUtils.getQualityGatewayEnvFile()).absolutePath}\""))
-        command.append(script)
-
+        command.append(". ${userScriptFile.absolutePath}")
+        userScriptFile.writeText(script)
         file.writeText(command.toString())
         executeUnixCommand(command = "chmod +x ${file.absolutePath}", sourceDir = dir)
+        executeUnixCommand(command = "chmod +x ${userScriptFile.absolutePath}", sourceDir = dir)
 
         return file
     }
@@ -218,7 +223,7 @@ object ShellUtil {
             )
         } catch (ignored: Throwable) {
             val errorInfo = errorMessage ?: "Fail to run the command $command"
-            LoggerService.addNormalLine("$errorInfo because of error(${ignored.message})")
+            LoggerService.addNormalLine("$errorInfo because exit code not equal 0")
             throw throw TaskExecuteException(
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
@@ -228,6 +233,15 @@ object ShellUtil {
     }
 
     private fun specialEnv(key: String): Boolean {
-        return specialKey.any { key.contains(it) }
+        return specialKey.any { key.contains(it) } || isContainChinese(key)
+    }
+
+    private fun isContainChinese(str: String): Boolean {
+        val pattern = Pattern.compile(chineseRegex)
+        val matcher = pattern.matcher(str)
+        if (matcher.find()) {
+            return true
+        }
+        return false
     }
 }

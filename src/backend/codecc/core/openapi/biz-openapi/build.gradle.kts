@@ -5,7 +5,7 @@ dependencies {
     api(project(":core:openapi:api-openapi"))
     api(project(":core:openapi:model-openapi"))
     api(project(":core:common:common-client"))
-    api(group = "com.tencent.bk.devops.ci.project", name="api-project", version = Versions.devopsVersion){
+    api(group = "com.tencent.bk.devops.ci.project", name="api-project"){
         isChanging=true
         exclude(group="com.tencent.bk.devops.ci.project", module = "model-project")
         exclude(group="com.tencent.bk.devops.ci.common", module = "common-api")

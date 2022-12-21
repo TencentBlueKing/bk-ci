@@ -46,7 +46,7 @@ class StreamGitService @Autowired constructor(
     }
 
     fun getProjectInfo(gitProjectId: String): StreamGitProjectInfoWithProject? {
-        logger.info("getGitProjectInfo|get from DB|gitProjectId=$gitProjectId")
+        logger.info("StreamGitService|getProjectInfo|get from DB|gitProjectId=$gitProjectId")
         val setting = try {
             streamBasicSettingDao.getSetting(dslContext, gitProjectId.toLong())
         } catch (e: NumberFormatException) {
@@ -59,7 +59,7 @@ class StreamGitService @Autowired constructor(
                 userId = setting.enableUserId
             )
         } catch (e: Exception) {
-            logger.info("getGitProjectInfo|stream scm service is unavailable.|gitProjectId=$gitProjectId")
+            logger.info("StreamGitService|getProjectInfo|stream scm service is unavailable|gitProjectId=$gitProjectId")
             StreamGitProjectInfoWithProject(
                 gitProjectId = setting.gitProjectId,
                 name = setting.name,

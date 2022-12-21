@@ -386,6 +386,8 @@ func (r *CommonRemoteHandler) ExecuteSendFile(
 		}
 	}
 
+	debug.FreeOSMemory() // free memory anyway
+
 	blog.Debugf("success pack-up to server %s", server)
 	// send request
 	dcSDK.StatsTimeNow(&r.recordStats.RemoteWorkSendCommonStartTime)
@@ -396,6 +398,8 @@ func (r *CommonRemoteHandler) ExecuteSendFile(
 		blog.Warnf("error: %v", err)
 		return nil, err
 	}
+
+	debug.FreeOSMemory() // free memory anyway
 
 	blog.Debugf("success sent to server %s", server)
 	// receive result

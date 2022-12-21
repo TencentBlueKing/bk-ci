@@ -52,7 +52,10 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceCreate>
     ): TemplateOperationRet {
-        logger.info("createTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|create template instances|$projectId|$templateId|$version" +
+                "|$useTemplateSettings|$instances"
+        )
         return client.get(ServiceTemplateInstanceResource::class).createTemplateInstances(
             userId = userId,
             projectId = projectId,
@@ -73,7 +76,10 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         useTemplateSettings: Boolean,
         instances: List<TemplateInstanceUpdate>
     ): TemplateOperationRet {
-        logger.info("updateTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|ver=$version")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|update template instances|$projectId|$templateId|$version" +
+                "|$useTemplateSettings|$instances"
+        )
         return client.get(ServiceTemplateInstanceResource::class).updateTemplate(
             userId = userId,
             projectId = projectId,
@@ -96,8 +102,10 @@ class ApigwTemplateInstanceResourceV3Impl @Autowired constructor(private val cli
         sortType: TemplateSortTypeEnum?,
         desc: Boolean?
     ): Result<TemplateInstancePage> {
-        logger.info("listTemplateInstances|userId=$userId|projectId=$projectId|templateId=$templateId|" +
-            "page=$page|pageSize=$pageSize|searchKey=$searchKey")
+        logger.info(
+            "OPENAPI_TEMPLATE_INSTANCE_V3|$userId|list template instances|$projectId|$templateId|$page" +
+                "|$pageSize|$searchKey|$sortType|$desc"
+        )
         return client.get(ServiceTemplateInstanceResource::class).listTemplate(
             userId = userId,
             projectId = projectId,

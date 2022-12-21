@@ -22,17 +22,17 @@
             // 判断是否灰度的 cookie key
             var ROUTER_TAG = 'ROUTER_TAG'
             // 自动登录地址
-            var LOGIN_SERVICE_URL = '__LOGIN_SERVICE_URL__'
+            var LOGIN_SERVICE_URL = '__STREAM_SERVICE_LOGIN_URL__'
             // 蓝鲸登录地址
-            var LOGIN_URL = '__LOGIN_URL__'
+            var LOGIN_URL = '__STREAM_LOGIN_URL__'
             // devnet host
-            var DEVNET_HOST = '__DEVNET_HOST__'
+            var DEVNET_HOST = '__BKCI_DEVNET_FQDN__'
             // 蓝盾 host
-            var DEVOPS_HOST = '__DEVOPS_HOST__'
+            var DEVOPS_HOST = '__BKCI_FQDN__'
             // 仓库 host
-            var BKREPO_HOST = '__BKREPO_HOST__'
+            var BKREPO_HOST = '__BK_REPO_HOST__'
             // app key
-            var APP_KEY = '__APP_KEY__'
+            var APP_KEY = '__STREAM_LOGIN_APP_KEY__'
         </script>
         <script>
             function getLoginUrl (domain = LOGIN_SERVICE_URL) {
@@ -50,6 +50,6 @@
                 return loginUrl.href
             }
         </script>
-        <link href="/static/iconcool/iconcool.js" rel="stylesheet">
+        <script src="/static/iconcool/iconcool.js"></script>
     </body>
 </html>

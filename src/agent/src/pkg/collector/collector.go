@@ -30,8 +30,10 @@ package collector
 import (
 	"context"
 	"fmt"
-	"github.com/influxdata/telegraf/logger"
 	"time"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/influxdata/telegraf/logger"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 
@@ -53,18 +55,20 @@ const (
 	templateKeyAgentSecret = "###{agentSecret}###"
 	templateKeyGateway     = "###{gateway}###"
 	templateKeyTlsCa       = "###{tls_ca}###"
+	templateKeyProjectId   = "###{projectId}###"
 )
 
 const configTemplateLinux = `[global_tags]
+  projectId = "###{projectId}###"
   agentId = "###{agentId}###"
   agentSecret = "###{agentSecret}###"
 [agent]
-  interval = "10s"
+  interval = "1m"
   round_interval = true
   metric_batch_size = 1000
   metric_buffer_limit = 10000
   collection_jitter = "0s"
-  flush_interval = "10s"
+  flush_interval = "1m"
   flush_jitter = "0s"
   precision = ""
   debug = false
@@ -94,15 +98,16 @@ const configTemplateLinux = `[global_tags]
 `
 
 const configTemplateWindows = `[global_tags]
+  projectId = "###{projectId}###"
   agentId = "###{agentId}###"
   agentSecret = "###{agentSecret}###"
 [agent]
-  interval = "10s"
+  interval = "1m"
   round_interval = true
   metric_batch_size = 1000
   metric_buffer_limit = 10000
   collection_jitter = "0s"
-  flush_interval = "10s"
+  flush_interval = "1m"
   flush_jitter = "0s"
   precision = ""
   debug = false
@@ -116,6 +121,8 @@ const configTemplateWindows = `[global_tags]
   skip_database_creation = true
   ###{tls_ca}###
 [[inputs.mem]]
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
     ObjectName = "Processor"
@@ -215,9 +222,14 @@ func DoAgentCollect() {
 
 	writeTelegrafConfig()
 
+	// 每次重启agent要清理掉无意义的telegraf.log日志，重新记录
+	logFile := fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir())
+	if fileutil.Exists(logFile) {
+		_ = fileutil.TryRemoveFile(logFile)
+	}
 	tAgent, err := getTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
-		fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir()),
+		logFile,
 	)
 	if err != nil {
 		logs.Error("init telegraf agent failed: %v", err)
@@ -261,15 +273,18 @@ func writeTelegrafConfig() {
 	configContent := strings.Replace(configTemplate, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
+	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 1)
 	if config.UseCert {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, `tls_ca = ".cert"`, 1)
 	} else {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
 	}
-	ioutil.WriteFile(
-		systemutil.GetWorkDir()+"/telegraf.conf",
-		[]byte(configContent),
-		0666)
+
+	err := ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
+	if err != nil {
+		logs.Error("write telegraf config err: ", err)
+		return
+	}
 }
 
 func buildGateway(gateway string) string {

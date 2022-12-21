@@ -47,6 +47,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun validateUserActionPermission(
         userId: String,
         token: String,
+        type: String?,
         action: String
     ): Result<Boolean> {
         return Result(permissionService.validateUserActionPermission(userId, action))
@@ -55,6 +56,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun validateUserResourcePermission(
         userId: String,
         token: String,
+        type: String?,
         action: String,
         projectCode: String,
         resourceCode: String?
@@ -65,6 +67,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun validateUserResourcePermissionByRelation(
         userId: String,
         token: String,
+        type: String?,
         action: String,
         projectCode: String,
         resourceCode: String,
@@ -86,6 +89,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun batchValidateUserResourcePermissionByRelation(
         userId: String,
         token: String,
+        type: String?,
         projectCode: String,
         resourceCode: String,
         resourceType: String,
@@ -113,6 +117,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun getUserResourceByPermission(
         userId: String,
         token: String,
+        type: String?,
         action: String,
         projectCode: String,
         resourceType: String
@@ -130,6 +135,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun getUserResourcesByPermissions(
         userId: String,
         token: String,
+        type: String?,
         actions: List<String>,
         projectCode: String,
         resourceType: String
@@ -147,6 +153,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     override fun resourceCreateRelation(
         userId: String,
         token: String,
+        type: String?,
         projectCode: String,
         resourceType: String,
         resourceCode: String,

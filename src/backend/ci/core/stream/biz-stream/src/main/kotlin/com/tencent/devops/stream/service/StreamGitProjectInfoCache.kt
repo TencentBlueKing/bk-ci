@@ -70,7 +70,11 @@ class StreamGitProjectInfoCache @Autowired constructor(
                 accessToken = accessToken
             )
         } catch (ignored: Throwable) {
-            logger.error("update cache error| ${ignored.message}", ignored)
+            logger.warn(
+                "StreamGitProjectInfoCache|getAndSaveGitProjectInfo" +
+                    "|update cache error",
+                ignored
+            )
             return null
         }
 
@@ -106,7 +110,11 @@ class StreamGitProjectInfoCache @Autowired constructor(
                 null
             }
         } catch (ignore: Exception) {
-            logger.warn("stream request gitProjectInfo cache get$gitProjectName error", ignore)
+            logger.warn(
+                "StreamGitProjectInfoCache|getRequestGitProjectInfo" +
+                    "$gitProjectName|error",
+                ignore
+            )
             null
         }
     }

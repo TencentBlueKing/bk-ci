@@ -35,6 +35,7 @@ import com.tencent.devops.repository.service.github.IGithubService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
+import javax.ws.rs.core.UriBuilder
 
 @RestResource
 class ExternalGithubResourceImpl @Autowired constructor(
@@ -49,7 +50,8 @@ class ExternalGithubResourceImpl @Autowired constructor(
     }
 
     override fun oauthCallback(code: String, state: String): Response {
-        return githubOauthService.githubCallback(code, state)
+        val githubCallback = githubOauthService.githubCallback(code, state)
+        return Response.temporaryRedirect(UriBuilder.fromUri(githubCallback.redirectUrl).build()).build()
     }
 
     companion object {

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryTypeNew
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.message.LogMessage
@@ -59,6 +60,7 @@ import com.tencent.devops.common.webhook.pojo.code.svn.SvnCommitEvent
 import com.tencent.devops.common.webhook.service.code.loader.WebhookElementParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.loader.WebhookStartParamsRegistrar
 import com.tencent.devops.common.webhook.service.code.matcher.ScmWebhookMatcher
+import com.tencent.devops.common.webhook.util.EventCacheUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -68,7 +70,6 @@ import com.tencent.devops.process.engine.service.PipelineWebhookService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.code.GitWebhookUnlockDispatcher
 import com.tencent.devops.process.engine.service.code.ScmWebhookMatcherBuilder
-import com.tencent.devops.repository.utils.RepositoryUtils
 import com.tencent.devops.process.pojo.code.WebhookCommit
 import com.tencent.devops.process.service.builds.PipelineBuildCommitService
 import com.tencent.devops.process.service.pipeline.PipelineBuildService
@@ -76,6 +77,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TASK_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
+import com.tencent.devops.repository.utils.RepositoryUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.ApplicationContext
 import org.springframework.context.ApplicationContextAware
@@ -241,6 +243,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             }
 
             watcher.start("webhookTriggerPipelineBuild")
+            EventCacheUtil.initEventCache()
             pipelines.forEach outside@{ pipeline ->
                 val projectId = pipeline.first
                 val pipelineId = pipeline.second
@@ -270,7 +273,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                         )
                     ) return@outside
                 } catch (e: Throwable) {
-                    logger.error("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
+                    logger.warn("[$pipelineId]|webhookTriggerPipelineBuild fail: $e", e)
                 }
             }
             /* #3131,当对mr的commit check有强依赖，但是蓝盾与git的commit check交互存在一定的时延，可以增加双重锁。
@@ -283,6 +286,12 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             gitWebhookUnlockDispatcher.dispatchUnlockHookLockEvent(matcher)
             return true
         } finally {
+            if (logger.isDebugEnabled) {
+                logger.debug(
+                    "webhook event repository cache: ${JsonUtil.toJson(EventCacheUtil.getAll(), false)}"
+                )
+            }
+            EventCacheUtil.remove()
             logger.info("$watcher")
         }
     }
@@ -492,10 +501,10 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
             val newVarName = PipelineVarUtil.oldVarToNewVar(it.key)
             if (newVarName == null) { // 为空表示该变量是新的，或者不需要兼容，直接加入，能会覆盖旧变量转换而来的新变量
                 params[it.key] = it.value
-                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value, readOnly = true)
+                pipelineParamMap[it.key] = BuildParameters(key = it.key, value = it.value)
             } else if (!params.contains(newVarName)) { // 新变量还不存在，加入
                 params[newVarName] = it.value
-                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value, readOnly = true)
+                pipelineParamMap[newVarName] = BuildParameters(key = newVarName, value = it.value)
             }
         }
 
@@ -505,7 +514,7 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 userId = userId,
                 pipeline = pipelineInfo,
                 startType = StartType.WEB_HOOK,
-                pipelineParamMap = pipelineParamMap,
+                pipelineParamMap = HashMap(pipelineParamMap),
                 channelCode = pipelineInfo.channelCode,
                 isMobile = false,
                 model = model,
@@ -519,13 +528,16 @@ abstract class PipelineBuildWebhookService : ApplicationContextAware {
                 variables = webhookCommit.params
             )
             // #2958 webhook触发在触发原子上输出变量
-            buildLogPrinter.addLines(buildId = buildId, logMessages = pipelineParamMap.map {
-                LogMessage(
-                    message = "${it.key}=${it.value}",
-                    timestamp = System.currentTimeMillis(),
-                    tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
-                )
-            })
+            buildLogPrinter.addLines(
+                buildId = buildId,
+                logMessages = pipelineParamMap.map {
+                    LogMessage(
+                        message = "${it.key}=${it.value.value}",
+                        timestamp = System.currentTimeMillis(),
+                        tag = startParams[PIPELINE_START_TASK_ID]?.toString() ?: ""
+                    )
+                }
+            )
             if (buildId.isNotBlank()) {
                 webhookBuildParameterService.save(
                     projectId = projectId,

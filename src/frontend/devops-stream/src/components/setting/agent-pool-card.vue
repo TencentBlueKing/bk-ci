@@ -22,7 +22,9 @@
                 <bk-progress :theme="getTheme(usage.val)" :percent="usage.val" :show-text="false"></bk-progress>
             </li>
         </ul>
-        <bk-exception class="exception-wrap-item exception-part card-useages" type="empty" scene="part" v-else>{{$t('noData')}}</bk-exception>
+        <div v-else style="height: 150px; padding: 7px 24px">
+            {{pool.desc || $t('noDesc')}}
+        </div>
         <div v-if="editable" class="operate-btns">
             <bk-button @click="addAgent" class="card-button">{{$t('setting.agent.addAgent')}}</bk-button>
             <bk-button @click="importNewNode" class="card-button">{{$t('setting.agent.importAgent')}}</bk-button>
@@ -145,7 +147,7 @@
 
 <style lang="postcss" scoped>
     .agent-pool-card {
-        width: 368px;
+        width: 350px;
         height: 310px;
         background: #FFFFFF;
         border: 1px solid #dde4eb;

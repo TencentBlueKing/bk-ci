@@ -34,9 +34,9 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils.buildConfi
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.ExternalCodeccRepoResource
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.repository.service.CommonRepoFileService
 import com.tencent.devops.repository.service.RepoFileService
+import com.tencent.devops.scm.pojo.GitMember
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -51,7 +51,7 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
         branch: String?,
         subModule: String?,
         repositoryType:
-        RepositoryType?
+            RepositoryType?
     ): Result<String> {
         return Result(
             repoFileService.getFileContent(
@@ -79,7 +79,8 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
                 reversion = reversion,
                 branch = branch,
                 subModule = subModule,
-                svnFullPath = true)
+                svnFullPath = true
+            )
         )
     }
 
@@ -98,7 +99,8 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
                 ref = ref,
                 token = token,
                 authType = authType,
-                subModule = subModule)
+                subModule = subModule
+            )
         )
     }
 
@@ -122,6 +124,10 @@ class ExternalCodeccRepoResourceImpl @Autowired constructor(
 
     override fun getRepoAllMembers(repoUrl: String, userId: String): Result<List<GitMember>> {
         return commonRepoFileService.getGitProjectAllMembers(repoUrl, userId)
+    }
+
+    override fun isProjectMember(repoUrl: String, userId: String): Result<Boolean> {
+        return commonRepoFileService.isProjectMember(repoUrl = repoUrl, userId = userId)
     }
 
     override fun getFileContentByUrl(

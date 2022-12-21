@@ -75,7 +75,6 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -245,7 +244,7 @@ object LoggerService {
         }
 
         // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
-        realMessage = fixSensitiveContent(realMessage)
+        realMessage = SensitiveValueService.fixSensitiveContent(realMessage)
 
         val logMessage = LogMessage(
             message = realMessage,
@@ -284,16 +283,6 @@ object LoggerService {
         } catch (ignored: InterruptedException) {
             logger.error("写入 $logType 日志行失败：", ignored)
         }
-    }
-
-    private fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        SensitiveValueService.sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
     }
 
     fun addWarnLine(message: String) {
@@ -418,7 +407,7 @@ object LoggerService {
             }
 
             // 通过上报的结果感知是否需要调整模式
-            val result = logResourceApi.addLogMultiLine(logMessages)
+            val result = logResourceApi.addLogMultiLine(buildVariables?.buildId ?: "", logMessages)
             when {
                 // 当log服务返回拒绝请求或者并发量超限制时，自动切换模式为本地保存并归档
                 result.status == 503 || result.status == 509 -> {

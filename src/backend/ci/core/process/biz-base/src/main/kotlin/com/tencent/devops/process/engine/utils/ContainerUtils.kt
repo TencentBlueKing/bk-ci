@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.utils
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 
 object ContainerUtils {
 
@@ -74,18 +75,24 @@ object ContainerUtils {
     }
 
     private const val queuePrefix = "排队中(Queuing)"
+    private const val reviewPrefix = "审核中(Pending)"
 
     fun clearQueueContainerName(container: Container) {
         if (container.name.startsWith(queuePrefix)) {
             container.name = container.name.substring(queuePrefix.length)
+        } else if (container.name.startsWith(reviewPrefix)) {
+            container.name = container.name.substring(reviewPrefix.length)
         }
     }
 
-    fun setQueuingWaitName(container: Container) {
-        if (container.name.startsWith(queuePrefix)) {
+    fun setQueuingWaitName(container: Container, startBuildStatus: BuildStatus) {
+        if (container.name.startsWith(queuePrefix) || container.name.startsWith(reviewPrefix)) {
             return
         }
-
-        container.name = "$queuePrefix${container.name}"
+        if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
+            container.name = "$reviewPrefix${container.name}"
+        } else {
+            container.name = "$queuePrefix${container.name}"
+        }
     }
 }

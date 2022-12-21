@@ -36,6 +36,10 @@ const val PIPELINE_START_USER_ID = "BK_CI_START_USER_ID" // "pipeline.start.user
 const val PIPELINE_START_USER_NAME = "BK_CI_START_USER_NAME" // "pipeline.start.user.name"
 const val PIPELINE_START_WEBHOOK_USER_ID = "BK_CI_START_WEBHOOK_USER_ID" // "pipeline.start.webhook.user.id"
 const val PIPELINE_START_PIPELINE_USER_ID = "BK_CI_START_PIPELINE_USER_ID" // "pipeline.start.pipeline.user.id"
+const val PIPELINE_START_SERVICE_USER_ID = "BK_CI_START_SERVICE_USER_ID" // "pipeline.start.service.user.id"
+const val PIPELINE_START_MANUAL_USER_ID = "BK_CI_START_MANUAL_USER_ID" // "pipeline.start.manual.user.id"
+const val PIPELINE_START_TIME_TRIGGER_USER_ID = "BK_CI_START_TIME_TRIGGER_USER_ID"
+const val PIPELINE_START_REMOTE_USER_ID = "BK_CI_START_REMOTE_USER_ID"
 const val PIPELINE_START_TYPE = "BK_CI_START_TYPE" // "pipeline.start.type"
 const val PIPELINE_START_CHANNEL = "BK_CI_START_CHANNEL" // "pipeline.start.channel"
 const val PIPELINE_BUILD_NUM = "BK_CI_BUILD_NUM" // "pipeline.build.num"
@@ -75,8 +79,10 @@ const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
 
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
+const val PIPELINE_VIEW_MY_LIST_PIPELINES = "myListPipeline" // 兼容APP , 后面需要干掉
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
+const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"
 
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url
 const val PIPELINE_MATERIAL_BRANCHNAME = "BK_CI_PIPELINE_MATERIAL_BRANCHNAME" // pipeline.material.branchName
@@ -104,6 +110,7 @@ const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"
 const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本"
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
 const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
+const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
 
 /**
  * 流水线设置-最大排队数量-默认值
@@ -176,12 +183,20 @@ const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
  */
 const val PIPELINE_STAGE_CONTAINERS_COUNT_MAX = 256
 
+/**
+ * 入库VAR表，流水线变量最大长度
+ */
+const val PIPELINE_VARIABLES_STRING_LENGTH_MAX = 4000
+
 const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start"
 
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
-
+/**
+ * 流水线设置-CONCURRENCY GROUP 并发组-默认值
+ */
+const val PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT = "\${{ci.pipeline_id}}"
 /**
  * 保存流水线编排的最大个数
  */
@@ -189,7 +204,11 @@ const val PIPELINE_RES_NUM_MIN = 50
 
 const val KEY_PIPELINE_ID = "pipelineId"
 
+const val KEY_PIPELINE_NAME = "pipelineName"
+
 const val KEY_PROJECT_ID = "projectId"
+
+const val KEY_TEMPLATE_ID = "templateId"
 
 const val KEY_STAGE = "stage"
 

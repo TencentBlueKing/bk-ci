@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.AgentAction
@@ -65,6 +66,7 @@ import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentEnableProjectsDao
 import com.tencent.devops.environment.exception.AgentPermissionUnAuthorizedException
 import com.tencent.devops.environment.model.AgentHostInfo
+import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.EnvVar
 import com.tencent.devops.environment.pojo.enums.NodeStatus
@@ -158,6 +160,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
         val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
+        val dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString()
         val agentHostInfo = try {
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
@@ -185,6 +188,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentInstallPath = agentRecord.agentInstallPath ?: "",
             maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
             parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = dockerParallelTaskCount,
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),
@@ -639,7 +643,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -671,40 +676,52 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
 
     fun getAgnetByEnvName(projectId: String, envName: String): List<ThirdPartyAgent> {
         logger.info("[$projectId|$envName] Get the agents by env name")
-        // get shared project first
-        val sharedThridPartyAgentList = run {
-            val sharedProjEnv = envName.split("@") // sharedProjId@poolName
-            if (sharedProjEnv.size != 2 || sharedProjEnv[0].isBlank() || sharedProjEnv[1].isBlank()) {
-                return@run emptyList()
+        // 共享环境由 被共享的项目ID@环境名称 组成，这里通过@分隔出的数量来区分是否是共享环境
+        val envNameItems = envName.split("@")
+        val thirdPartyAgentList = mutableListOf<ThirdPartyAgent>()
+
+        // 因为环境名称有可能也含有@所以只有 仅包含一个@的才是绝对的共享环境
+        // 共享环境也有情况是共享环境自己使用，这种情况则直接走下面的逻辑
+        var realEnvName = envName
+        run sharedEnv@{
+            if (envNameItems.size == 2 && envNameItems[0].isNotBlank() && envNameItems[1].isNotBlank()) {
+                if (projectId == envNameItems[0]) {
+                    realEnvName = envNameItems[1]
+                    return@sharedEnv
+                }
+                thirdPartyAgentList.addAll(
+                    getSharedThirdPartyAgentList(
+                        projectId = projectId,
+                        sharedProjectId = envNameItems[0],
+                        sharedEnvName = envNameItems[1],
+                        sharedEnvId = null
+                    )
+                )
+                return thirdPartyAgentList
             }
-            getSharedThirdPartyAgentList(
-                projectId = projectId,
-                sharedProjectId = sharedProjEnv[0],
-                sharedEnvName = sharedProjEnv[1],
-                sharedEnvId = null
-            )
-        }
-        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = envName)
-        if (envRecord == null && sharedThridPartyAgentList.isEmpty()) {
-            logger.warn("[$projectId|$envName] The env is not exist")
-            throw CustomException(
-                Response.Status.FORBIDDEN,
-                "第三方构建机环境不存在($projectId:$envName)"
-            )
         }
 
-        return (if (envRecord != null) {
+        val envRecord = envDao.getByEnvName(dslContext = dslContext, projectId = projectId, envName = realEnvName)
+        if (envRecord == null) {
+            logger.warn("[$projectId|$realEnvName] The env is not exist")
+            throw CustomException(
+                Response.Status.FORBIDDEN,
+                "第三方构建机环境不存在($projectId:$realEnvName)"
+            )
+        }
+        thirdPartyAgentList.addAll(
             getAgentByEnvId(projectId = projectId, envHashId = HashUtil.encodeLongId(envRecord.envId))
-        } else {
-            emptyList()
-        }).plus(sharedThridPartyAgentList)
+        )
+
+        return thirdPartyAgentList
     }
 
     private fun getSharedThirdPartyAgentList(
@@ -738,6 +755,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     )
                 }
             }
+
             sharedEnvId != null -> {
                 envShareProjectDao.list(
                     dslContext = dslContext,
@@ -746,6 +764,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     envId = sharedEnvId
                 )
             }
+
             else -> emptyList()
         }
         // 兼容如果更改了环境名称
@@ -765,7 +784,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedEnvRecord.isEmpty()) {
             logger.info(
                 "env name not exists, envName: $sharedEnvName, envId: $sharedEnvId, projectId：$projectId, " +
-                    "mainProjectId: $sharedProjectId"
+                        "mainProjectId: $sharedProjectId"
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
@@ -812,7 +831,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             }
         }
         if (sharedThirdPartyAgents.isEmpty()) {
-            throw CustomException(Response.Status.FORBIDDEN, "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)")
+            throw CustomException(
+                Response.Status.FORBIDDEN,
+                "无权限使用第三方构建机环境($sharedProjectId:$sharedEnvName)"
+            )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
         return sharedThirdPartyAgents
@@ -866,7 +888,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(it.secretKey),
                 createUser = it.createdUser,
                 createTime = it.createdTime.timestamp(),
-                parallelTaskCount = it.parallelTaskCount
+                parallelTaskCount = it.parallelTaskCount,
+                dockerParallelTaskCount = it.dockerParallelTaskCount
             )
         }.plus(sharedThridPartyAgentList)
     }
@@ -983,8 +1006,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             status = AgentStatus.IMPORT_OK
         }
         if (!(AgentStatus.isImportException(status) ||
-                AgentStatus.isUnImport(status) ||
-                agentRecord.startRemoteIp.isNullOrBlank())
+                    AgentStatus.isUnImport(status) ||
+                    agentRecord.startRemoteIp.isNullOrBlank())
         ) {
             if (startInfo.hostIp != agentRecord.startRemoteIp) {
                 return AgentStatus.DELETE
@@ -1016,7 +1039,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             if (agentRecord.nodeId != null) {
                 val nodeRecord = nodeDao.get(context, projectId, agentRecord.nodeId)
                 if (nodeRecord != null && (nodeRecord.nodeIp != startInfo.hostIp ||
-                        nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
+                            nodeRecord.nodeStatus == NodeStatus.ABNORMAL.name)
                 ) {
                     nodeRecord.nodeStatus = NodeStatus.NORMAL.name
                     nodeRecord.nodeIp = startInfo.hostIp
@@ -1086,9 +1109,13 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     slaveVersion = "",
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
-                    envs = mapOf(), props = mapOf()
+                    envs = mapOf(),
+                    props = mapOf(),
+                    dockerParallelTaskCount = -1
                 )
             }
+
+            val oldUserProps = getUserProps(projectId, agentRecord.id, agentRecord)
 
             var agentChanged = false
             if (newHeartbeatInfo.masterVersion != agentRecord.masterVersion) {
@@ -1123,6 +1150,25 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 agentRecord.startedUser = newHeartbeatInfo.startedUser
                 agentChanged = true
             }
+            if (newHeartbeatInfo.props != null) {
+                val props = JsonUtil.toJson(
+                    AgentProps(
+                        arch = newHeartbeatInfo.props!!.arch,
+                        jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
+                        userProps = oldUserProps,
+                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo
+                    ),
+                    false
+                )
+                if (props != agentRecord.agentProps) {
+                    agentRecord.agentProps = props
+                    agentChanged = true
+                }
+            }
+            if (newHeartbeatInfo.dockerParallelTaskCount != null && agentRecord.dockerParallelTaskCount == null) {
+                agentRecord.dockerParallelTaskCount = newHeartbeatInfo.dockerParallelTaskCount
+                agentChanged = true
+            }
             if (agentChanged) {
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
             }
@@ -1139,9 +1185,11 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     )
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 AgentStatus.UN_IMPORT_OK -> {
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 else /* AgentStatus.IMPORT_OK || AgentStatus.IMPORT_EXCEPTION */ -> {
                     if (agentRecord.status == AgentStatus.IMPORT_EXCEPTION.status) {
                         logger.info("update agent($agentHashId) status from exception to ok")
@@ -1172,7 +1220,9 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 slaveVersion = "",
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
-                                envs = mapOf(), props = mapOf()
+                                envs = mapOf(),
+                                props = mapOf(),
+                                dockerParallelTaskCount = -1
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1207,11 +1257,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 },
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
-                props = try {
-                    agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
-                } catch (ignore: Exception) {
-                    mapOf()
-                }
+                props = oldUserProps,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
             )
         }
     }
@@ -1266,6 +1313,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     thirdPartyAgentDao.updateStatus(context, agentRecord.id, null, projectId, AgentStatus.UN_IMPORT_OK)
                     AgentStatus.UN_IMPORT_OK
                 }
+
                 AgentStatus.isImportException(status) -> {
                     logger.info("Update the agent($agentId) from exception to ok")
                     agentDisconnectNotifyService?.online(
@@ -1285,6 +1333,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     }
                     AgentStatus.IMPORT_OK
                 }
+
                 else -> {
                     logger.info("Get the node id(${agentRecord.nodeId}) of agent($agentId)")
                     if (agentRecord.nodeId != null) {
@@ -1386,32 +1435,32 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         }
     }
 
-    fun saveAgentProps(userId: String, projectId: String, nodeHashId: String, props: Map<String, Any>) {
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        checkEditPermmission(userId, projectId, nodeId)
+    private fun getUserProps(
+        projectId: String,
+        agentId: Long,
+        record: TEnvironmentThirdpartyAgentRecord
+    ): Map<String, Any> {
+        if (record.agentProps == null) {
+            return mapOf()
+        }
+        // 兼容曾经在数据库中的数据
+        val oldVersion = try {
+            JsonUtil.to(record.agentProps, object : TypeReference<Map<String, Any>>() {})
+        } catch (ignore: Exception) {
+            logger.warn("projectId: $projectId|agentId: $agentId|json to map props error", ignore)
+            return mapOf()
+        }
 
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
-            )
+        if (!oldVersion.containsKey("arch") && !oldVersion.containsKey("jdkVersion")) {
+            return oldVersion
+        }
 
-        thirdPartyAgentDao.saveAgentProps(
-            dslContext = dslContext,
-            agentId = agentRecord.id,
-            propsJsonStr = JsonUtil.toJson(props, formatted = false)
-        )
-    }
-
-    fun getAgentProps(projectId: String, nodeHashId: String): Map<String, Any> {
-        val nodeId = HashUtil.decodeIdToLong(nodeHashId)
-        val agentRecord = thirdPartyAgentDao.getAgentByNodeId(dslContext, nodeId, projectId)
-            ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                params = arrayOf(nodeHashId)
-            )
-
-        return agentRecord.agentProps?.let { self -> JsonUtil.to(self) } ?: mapOf()
+        return try {
+            JsonUtil.to(record.agentProps, AgentProps::class.java).userProps ?: mapOf()
+        } catch (ignore: Exception) {
+            logger.warn("projectId: $projectId|agentId: $agentId|json to props error", ignore)
+            mapOf()
+        }
     }
 
     companion object {

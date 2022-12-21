@@ -43,13 +43,19 @@ class BuildMarketAtomEnvResourceImpl @Autowired constructor(private val marketAt
         projectCode: String,
         atomCode: String,
         version: String,
-        atomStatus: Byte?
+        atomStatus: Byte?,
+        osName: String?,
+        osArch: String?,
+        convertOsFlag: Boolean?
     ): Result<AtomEnv?> {
         return marketAtomEnvService.getMarketAtomEnvInfo(
             projectCode = projectCode,
             atomCode = atomCode,
             version = version,
-            atomStatus = atomStatus
+            atomStatus = atomStatus,
+            osName = osName,
+            osArch = osArch,
+            convertOsFlag = convertOsFlag
         )
     }
 

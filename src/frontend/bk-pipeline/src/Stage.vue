@@ -291,7 +291,9 @@
                         }
                     })
                     if (data.length === 0) {
-                        this.deleteStageHandler()
+                        this.$nextTick(() => {
+                            this.deleteStageHandler()
+                        })
                     } else {
                         this.handleChange(this.stage, {
                             containers: data
@@ -367,7 +369,7 @@
             }
             document.addEventListener('click', this.hideAddStage)
         },
-        beforeDestroyed () {
+        beforeDestroy () {
             window.removeEventListener('click', this.hideAddStage)
         },
         updated () {

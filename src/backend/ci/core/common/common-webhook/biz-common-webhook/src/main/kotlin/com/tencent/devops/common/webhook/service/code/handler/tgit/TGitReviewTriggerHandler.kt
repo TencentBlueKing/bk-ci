@@ -49,7 +49,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ST
 import com.tencent.devops.common.webhook.pojo.code.CI_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.EventTypeFilter
 import com.tencent.devops.common.webhook.service.code.filter.GitUrlFilter
@@ -62,7 +62,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitReviewTriggerHandler(
-    private val gitScmService: GitScmService
+    private val eventCacheService: EventCacheService
 ) : CodeWebhookTriggerHandler<GitReviewEvent> {
     override fun eventClass(): Class<GitReviewEvent> {
         return GitReviewEvent::class.java
@@ -96,7 +96,7 @@ class TGitReviewTriggerHandler(
         return ""
     }
 
-    @SuppressWarnings("ComplexMethod")
+    @SuppressWarnings("ComplexMethod", "ComplexCondition")
     override fun retrieveParams(event: GitReviewEvent, projectId: String?, repository: Repository?): Map<String, Any> {
         val startParams = mutableMapOf<String, Any>()
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_REVIEWABLE_ID] = event.reviewableId ?: ""
@@ -119,13 +119,21 @@ class TGitReviewTriggerHandler(
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_ID] = event.id
         startParams[BK_REPO_GIT_WEBHOOK_REVIEW_IID] = event.iid
         startParams[PIPELINE_GIT_EVENT_URL] = "${event.repository.homepage}/reviews/${event.iid}"
-        if (event.reviewableType == "merge_request" && event.reviewableId != null) {
+        if (event.reviewableType == "merge_request" &&
+            event.reviewableId != null &&
+            projectId != null &&
+            repository != null
+        ) {
+            // MR提交人
+            val mrInfo = eventCacheService.getMergeRequestInfo(projectId, event.reviewableId, repository)
+            val reviewInfo =
+                eventCacheService.getMergeRequestReviewersInfo(projectId, event.reviewableId, repository)
+
             startParams.putAll(
                 WebhookUtils.mrStartParam(
-                    gitScmService = gitScmService,
+                    mrInfo = mrInfo,
+                    reviewInfo = reviewInfo,
                     mrRequestId = event.reviewableId!!,
-                    projectId = projectId,
-                    repository = repository,
                     homepage = event.repository.homepage
                 )
             )
@@ -136,7 +144,7 @@ class TGitReviewTriggerHandler(
         startParams[PIPELINE_GIT_REPO_URL] = event.repository.git_http_url
         if (projectId != null && repository != null) {
             val (defaultBranch, commitInfo) =
-                gitScmService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
+                eventCacheService.getDefaultBranchLatestCommitInfo(projectId = projectId, repo = repository)
             startParams[PIPELINE_GIT_REF] = defaultBranch ?: ""
             startParams[CI_BRANCH] = defaultBranch ?: ""
 

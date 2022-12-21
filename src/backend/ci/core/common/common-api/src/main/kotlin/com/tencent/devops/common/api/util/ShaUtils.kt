@@ -69,6 +69,10 @@ object ShaUtils {
         return messageDigest.toHexString()
     }
 
+    fun sha256(input: String) = MessageDigest
+        .getInstance("SHA-256")
+        .digest(input.toByteArray()).toHexString()
+
     private fun ByteArray.toHexString() = joinToString("") { String.format("%02x", it) }
 
     fun hmacSha1(key: ByteArray, data: ByteArray): String {

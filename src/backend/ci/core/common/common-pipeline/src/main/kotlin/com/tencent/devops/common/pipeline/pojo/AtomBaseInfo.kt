@@ -42,6 +42,16 @@ data class AtomBaseInfo(
     val atomStatus: String,
     @ApiModelProperty("插件开发语言", required = false)
     val language: String? = null,
+    @ApiModelProperty("分支", required = false)
+    val branch: String? = null,
     @ApiModelProperty("代码提交ID", required = false)
-    val commitId: String? = null
+    val commitId: String? = null,
+    @ApiModelProperty("支持的操作系统名称", required = false)
+    val osName: String? = null,
+    @ApiModelProperty("支持的操作系统架构", required = false)
+    val osArch: String? = null,
+    @ApiModelProperty("不支持的操作系统组合信息", required = false)
+    val invalidOsInfo: String? = null,
+    @ApiModelProperty("运行时版本", required = false)
+    val runtimeVersion: String? = null
 )

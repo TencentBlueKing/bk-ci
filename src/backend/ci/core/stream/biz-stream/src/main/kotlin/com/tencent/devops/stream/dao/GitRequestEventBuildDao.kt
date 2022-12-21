@@ -27,7 +27,9 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEventBuild
 import com.tencent.devops.model.stream.tables.records.TGitRequestEventBuildRecord
@@ -43,10 +45,9 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "ComplexMethod")
 @Repository
 class GitRequestEventBuildDao {
-
     fun save(
         dslContext: DSLContext,
         eventId: Long,
@@ -500,7 +501,8 @@ class GitRequestEventBuildDao {
         buildStatus: Set<String>?,
         limit: Int,
         offset: Int,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -513,7 +515,8 @@ class GitRequestEventBuildDao {
                 event = event,
                 commitMsg = commitMsg,
                 buildStatus = buildStatus,
-                pipelineIds = pipelineIds
+                pipelineIds = pipelineIds,
+                buildIds = buildIds
             ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
@@ -528,7 +531,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
@@ -568,6 +572,9 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
+            }
             return dsl.fetchOne(0, Int::class.java)!!
         }
     }
@@ -582,7 +589,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -622,7 +630,29 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
+            }
             return dsl
+        }
+    }
+
+    fun getProjectLocalBranches(
+        dslContext: DSLContext,
+        projectId: Long,
+        branchName: String?,
+        pageNotNull: Int,
+        pageSizeNotNull: Int
+    ): List<String> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = pageNotNull, pageSize = pageSizeNotNull)
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.select(BRANCH).from(this)
+                .where(GIT_PROJECT_ID.eq(projectId))
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.like("%$branchName%"))
+            }
+            return dsl.groupBy(BRANCH).orderBy(ID).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+                .map { it.value1() }
         }
     }
 
@@ -724,18 +754,30 @@ class GitRequestEventBuildDao {
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
-        pipelineIds: Set<String>
+        ids: List<String>
     ): List<TGitRequestEventBuildRecord>? {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
-                .and(
-                    ID.`in`(
-                        dslContext.select(DSL.max(ID))
-                            .from(this)
-                            .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
-                    )
-                ).fetch()
+                .and(ID.`in`(ids))
+                .fetch()
+        }
+    }
+
+    fun getLastEventBuildIds(
+        dslContext: DSLContext,
+        pipelineIds: Set<String>
+    ): List<String> {
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val records = dslContext.select(DSL.max(ID))
+                .from(this)
+                .groupBy(PIPELINE_ID).having(PIPELINE_ID.`in`(pipelineIds))
+                .fetch()
+            return if (records.isEmpty()) {
+                emptyList()
+            } else {
+                records.map { result -> result.getValue(0).toString() }
+            }
         }
     }
 
@@ -764,12 +806,40 @@ class GitRequestEventBuildDao {
         endTime: Long
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val dsl = dslContext.selectDistinct(GIT_PROJECT_ID).from(this)
+            val dsl = dslContext.select(DSL.countDistinct(GIT_PROJECT_ID)).from(this)
                 .where(CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
                 .and(CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
                 .and(BUILD_ID.isNotNull)
                 .and(PARSED_YAML.like("%v2.0%"))
-            return dsl.fetch().size
+            return dsl.fetchOne(0, Int::class.java)!!
         }
+    }
+
+    // 获取指定日期返回内的repo-hook监听库活跃
+    fun getBuildRepoHookActiveProjectCount(
+        dslContext: DSLContext,
+        startTime: Long,
+        endTime: Long
+    ): Int {
+        val repoProjectTable = TGitPipelineRepoResource.T_GIT_PIPELINE_REPO_RESOURCE
+        val eventBuildTable = TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD
+        val eventTable = TGitRequestEvent.T_GIT_REQUEST_EVENT
+        val targetProjectResult = dslContext.selectDistinct(repoProjectTable.TARGET_GIT_PROJECT_ID)
+            .from(repoProjectTable)
+
+        val eventResult = dslContext
+            .select(targetProjectResult.field("TARGET_GIT_PROJECT_ID", String::class.java), eventBuildTable.EVENT_ID)
+            .from(targetProjectResult)
+            .leftJoin(eventBuildTable)
+            .on(eventBuildTable.GIT_PROJECT_ID.eq(targetProjectResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
+
+        val countResult = dslContext.select(DSL.countDistinct(eventTable.GIT_PROJECT_ID))
+            .from(eventResult)
+            .leftJoin(eventTable).on(eventTable.ID.eq(eventResult.field("EVENT_ID", Long::class.java)))
+            .where(eventTable.GIT_PROJECT_ID.ne(eventResult.field("TARGET_GIT_PROJECT_ID", Long::class.java)))
+            .and(eventTable.CREATE_TIME.ge(Timestamp(startTime).toLocalDateTime()))
+            .and(eventTable.CREATE_TIME.le(Timestamp(endTime).toLocalDateTime()))
+
+        return countResult.fetchOne(0, Int::class.java)!!
     }
 }

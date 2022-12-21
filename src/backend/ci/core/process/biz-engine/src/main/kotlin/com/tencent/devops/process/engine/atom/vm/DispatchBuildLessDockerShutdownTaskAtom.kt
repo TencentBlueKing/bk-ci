@@ -35,6 +35,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
+import com.tencent.devops.process.engine.control.BuildingHeartBeatUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import org.slf4j.LoggerFactory
@@ -47,6 +48,7 @@ import org.springframework.stereotype.Component
 @Scope(ConfigurableBeanFactory.SCOPE_PROTOTYPE)
 class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
+    private val buildingHeartBeatUtils: BuildingHeartBeatUtils,
     private val pipelineEventDispatcher: PipelineEventDispatcher
 ) : IAtomTask<NormalContainer> {
     override fun getParamElement(task: PipelineBuildTask): NormalContainer {
@@ -81,6 +83,7 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
                 executeCount = task.executeCount
             )
         )
+
         // 同步Job执行状态
         buildLogPrinter.stopLog(
             buildId = buildId,
@@ -88,6 +91,9 @@ class DispatchBuildLessDockerShutdownTaskAtom @Autowired constructor(
             jobId = task.containerHashId ?: "",
             executeCount = task.executeCount
         )
+
+        // 关闭心跳
+        buildingHeartBeatUtils.dropHeartbeat(buildId, vmSeqId, task.executeCount)
 
         logger.info("[$buildId]|SHUTDOWN_VM|stageId=${task.stageId}|container=${task.containerId}|vmSeqId=$vmSeqId")
         return AtomResponse(BuildStatus.SUCCEED)

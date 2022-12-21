@@ -1,0 +1,47 @@
+# 初始化数据库
+{{ if .Values.init.sql }}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubernetes-manager-init-sql
+  labels:
+    app.kubernetes.io/component: init-sql
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/component: init-sql
+    spec:
+      {{- if .Values.mysql.enabled }}
+      initContainers:
+        - name: wait-for-mysql
+          image: {{ .Values.kubernetesManager.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              until getent hosts {{ include "bkci.mysql.fullname" . }}
+              do 
+                echo waiting for {{ include "bkci.mysql.fullname" . }};
+                sleep 2;
+              done
+              echo "MySQL is available";
+      {{- end }}
+      containers:
+        - name: init-sql
+          image: {{ .Values.kubernetesManager.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          workingDir: /data/workspace/support-files/sql
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              for SQL in *.sql; do mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }}< $SQL; done ;
+      restartPolicy: OnFailure
+{{- end -}}

@@ -32,7 +32,12 @@ import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.worker.common.api.WorkerRestApiSDK
 
 interface CredentialSDKApi : WorkerRestApiSDK {
-    fun get(credentialId: String, publicKey: String): Result<CredentialInfo>
+    fun get(credentialId: String, publicKey: String, signToken: String): Result<CredentialInfo>
 
-    fun getAcrossProject(targetProjectId: String, credentialId: String, publicKey: String): Result<CredentialInfo>
+    fun getAcrossProject(
+        targetProjectId: String,
+        credentialId: String,
+        publicKey: String,
+        signToken: String
+    ): Result<CredentialInfo>
 }

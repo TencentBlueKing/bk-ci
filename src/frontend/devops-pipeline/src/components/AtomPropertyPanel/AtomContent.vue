@@ -509,11 +509,13 @@
                 const { atomModalMap, fetchAtomModal, getAtomModalKey } = this
                 const atomModalKey = getAtomModalKey(atomCode, version)
                 const atomModal = atomModalMap[atomModalKey]
+                const queryOfflineFlag = !this.editable
                 if (!atomModal && atomCode) { // 获取插件详情
                     fetchAtomModal({
                         projectCode: this.projectId,
                         atomCode,
-                        version
+                        version,
+                        queryOfflineFlag
                     })
                 }
             },

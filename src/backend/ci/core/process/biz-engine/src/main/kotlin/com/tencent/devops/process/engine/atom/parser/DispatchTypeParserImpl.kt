@@ -117,7 +117,7 @@ class DispatchTypeParserImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
-        val runVariables = buildVariableService.getAllVariable(projectId, buildId)
+        val runVariables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         // 获取跨项目引用模板信息
         val buildTemplateAcrossInfo =
             if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {

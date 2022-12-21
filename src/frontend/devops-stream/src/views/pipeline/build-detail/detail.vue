@@ -1,80 +1,108 @@
 <template>
     <article class="detail-home" v-bkloading="{ isLoading }">
-        <section class="detail-header">
-            <i :class="[getIconClass(buildDetail.status), 'header-icon']"></i>
-            <p class="detail-info">
-                <span class="info-title">
-                    <span class="build-title text-ellipsis" v-bk-overflow-tips>{{ buildDetail.buildTitle }}</span>
-                    <span class="title-item">
-                        <icon
-                            :name="buildTypeIcon"
-                            size="14"
-                            v-bk-tooltips="{
-                                content: buildDetail.operationKind === 'delete' ? 'delete' : buildDetail.objectKind,
-                                placements: ['top']
-                            }"
-                        ></icon>
-                    </span>
-                    <span class="title-item">
-                        <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
-                        <template v-else>
-                            <i class="stream-icon stream-user"></i>
-                            <template v-if="buildDetail.objectKind === 'openApi'">
-                                {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
-                            </template>
-                            <template v-else>
-                                {{ buildDetail.userId }}
-                            </template>
-                        </template>
-                    </span>
-                </span>
-                <span class="info-data">
-                    <span class="info-item text-ellipsis">
-                        <template v-if="buildDetail.operationKind === 'delete' && buildDetail.deleteTag">
-                            <icon name="tag" size="14"></icon>
-                            {{ buildDetail.commitId }}
-                        </template>
-                        <template v-else>
-                            <icon name="source-branch" size="14"></icon>
-                            {{ buildDetail.branch }}
-                        </template>
-                    </span>
-                    <span class="info-item text-ellipsis"><icon name="clock" size="14"></icon>{{ buildDetail.executeTime | spendTimeFilter }}</span>
-                    <span class="info-item text-ellipsis">
-                        <icon name="message" size="14"></icon>
-                        {{ buildDetail.buildHistoryRemark || '--' }}
-                        <bk-popconfirm trigger="click" @confirm="confirmUpdateRemark" placement="bottom" :confirm-text="$t('confirm')" :cancel-text="$t('cancel')">
-                            <div slot="content">
-                                <h3 class="mb10">{{$t('pipeline.editNote')}}</h3>
-                                <bk-input type="textarea" v-model="remark" :placeholder="$t('pipeline.notePlaceholder')" class="mb10 w200"></bk-input>
-                            </div>
-                            <bk-icon type="edit2" style="font-size: 18px;cursor:pointer" />
-                        </bk-popconfirm>
-                    </span>
-                </span>
-                <span class="info-data">
-                    <span :class="['info-item', 'text-ellipsis', { 'text-link': buildDetail.jumpUrl }]" @click="goToLink(buildDetail.jumpUrl)">
-                        <icon name="commit" size="14" v-if="buildDetail.objectKind === 'schedule'"></icon>
-                        <icon :name="buildTypeIcon" size="14" v-else></icon>
-                        {{ buildDetail.buildSource || '--' }}
-                    </span>
-                    <span class="info-item text-ellipsis"><icon name="date" size="14"></icon>{{ buildDetail.startTime | timeFilter }}</span>
-                </span>
-            </p>
-
-            <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-if="buildDetail.status === 'RUNNING'">
-                <bk-button class="detail-button" @click="cancleBuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.cancelBuild')}}</bk-button>
-            </div>
-            <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-else>
-                <bk-button class="detail-button" @click="rebuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.rebuild')}}</bk-button>
+        <section class="review-info" v-if="buildDetail.status === 'TRIGGER_REVIEWING'">
+            <div class="review-title">{{$t('pipeline.reviewInfo')}}</div>
+            <div class="review-content">
+                <div class="sub-title">
+                    <span>{{$t("pipeline.reviewTitle")}}</span>
+                    <span class="link-info primary" @click="goToLink(buildDetail.jumpUrl)">{{buildDetail.buildSource}}</span>
+                    <span class="branch-info"><icon name="source-branch" size="12"></icon>{{buildDetail.branch || '--'}}</span>
+                    <span><i class="bk-icon icon-arrows-right"></i></span>
+                    <span class="branch-info"><icon name="source-branch" size="12"></icon>{{buildDetail.targetBranch || '--'}}</span>
+                </div>
+                <div class="file-list">
+                    <p class="link-info" v-for="item in (buildDetail.changeYamlList || [])" :key="item.url" @click="goToLink(buildDetail.jumpUrl + item.url)">
+                        {{item.path}}
+                    </p>
+                    <p v-if="(buildDetail.changeYamlList || []).length === 0">{{$t('pipeline.noYmlFiles')}}</p>
+                </div>
+                <div class="help-tips">
+                    {{$t('pipeline.reviewTips')}}
+                    <!-- <span class="link-tips">{{$t('exception.learnMore')}}</span> -->
+                </div>
+                <div>
+                    <bk-button theme="primary" :disabled="!isTriggerReviewUser" @click="reviewTrigger(true)" style="margin-right: 10px">{{$t('pipeline.approveAndRun')}}</bk-button>
+                    <bk-button theme="danger" :disabled="!isTriggerReviewUser" @click="reviewTrigger(false)">{{$t('pipeline.refuse')}}</bk-button>
+                </div>
             </div>
         </section>
-        <pipeline
-            class="detail-stages"
-            :editable="false"
-            :is-exec-detail="true"
-            :pipeline="{ stages: stageList }"
-        ></pipeline>
+        <section class="detail-content">
+            <section class="detail-header">
+                <i :class="[getIconClass(buildDetail.status), 'header-icon']"></i>
+                <p class="detail-info">
+                    <span class="info-title">
+                        <span class="build-title text-ellipsis" v-bk-overflow-tips>{{ buildDetail.buildTitle }}</span>
+                        <span class="title-item">
+                            <icon
+                                :name="buildTypeIcon"
+                                size="14"
+                                v-bk-tooltips="{
+                                    content: buildDetail.operationKind === 'delete' ? 'delete' : buildDetail.objectKind,
+                                    placements: ['top']
+                                }"
+                            ></icon>
+                        </span>
+                        <span class="title-item">
+                            <span v-if="buildDetail.objectKind === 'schedule'">{{$t('pipeline.system')}}</span>
+                            <template v-else>
+                                <i class="stream-icon stream-user"></i>
+                                <template v-if="buildDetail.objectKind === 'openApi'">
+                                    {{$t('pipeline.openapi')}}（{{ buildDetail.userId }}）
+                                </template>
+                                <template v-else>
+                                    {{ buildDetail.userId }}
+                                </template>
+                            </template>
+                        </span>
+                    </span>
+                    <span class="info-data">
+                        <span class="info-item text-ellipsis">
+                            <template v-if="buildDetail.operationKind === 'delete' && buildDetail.deleteTag">
+                                <icon name="tag" size="14"></icon>
+                                {{ buildDetail.commitId }}
+                            </template>
+                            <template v-else>
+                                <icon name="source-branch" size="14"></icon>
+                                {{ buildDetail.branch }}
+                            </template>
+                        </span>
+                        <span class="info-item text-ellipsis"><icon name="clock" size="14"></icon>{{ buildDetail.executeTime | spendTimeFilter }}</span>
+                        <span class="info-item text-ellipsis">
+                            <icon name="message" size="14"></icon>
+                            {{ buildDetail.buildHistoryRemark || '--' }}
+                            <bk-popconfirm trigger="click" @confirm="confirmUpdateRemark" placement="bottom" :confirm-text="$t('confirm')" :cancel-text="$t('cancel')">
+                                <div slot="content">
+                                    <h3 class="mb10">{{$t('pipeline.editNote')}}</h3>
+                                    <bk-input type="textarea" v-model="remark" :placeholder="$t('pipeline.notePlaceholder')" class="mb10 w200"></bk-input>
+                                </div>
+                                <bk-icon type="edit2" style="font-size: 18px;cursor:pointer" />
+                            </bk-popconfirm>
+                        </span>
+                    </span>
+                    <span class="info-data">
+                        <span :class="['info-item', 'text-ellipsis', { 'text-link': buildDetail.jumpUrl }]" @click="goToLink(buildDetail.jumpUrl)">
+                            <icon name="commit" size="14" v-if="buildDetail.objectKind === 'schedule'"></icon>
+                            <icon :name="buildTypeIcon" size="14" v-else></icon>
+                            {{ buildDetail.buildSource || '--' }}
+                        </span>
+                        <span class="info-item text-ellipsis"><icon name="date" size="14"></icon>{{ buildDetail.startTime | timeFilter }}</span>
+                    </span>
+                </p>
+
+                <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING', 'TRIGGER_REVIEWING'].includes(buildDetail.status)">
+                    <bk-button class="detail-button" @click="cancleBuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.cancelBuild')}}</bk-button>
+                </div>
+                <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-else>
+                    <bk-button class="detail-button" @click="rebuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.rebuild')}}</bk-button>
+                </div>
+            </section>
+            <pipeline
+                class="detail-stages"
+                :editable="false"
+                :is-exec-detail="true"
+                :pipeline="{ stages: stageList }"
+            ></pipeline>
+        </section>
     </article>
 </template>
 
@@ -108,24 +136,30 @@
             return {
                 stageList: [],
                 buildDetail: {},
+                modelEvent: {},
                 isLoading: false,
                 isOperating: false,
-                remark: ''
+                remark: '',
+                fileList: ['.ci/templates/a.yml', '.ci/templates/b.yml', '.ci/templates/c.yml']
             }
         },
 
         computed: {
-            ...mapState(['projectId', 'projectInfo', 'permission', 'curPipeline']),
+            ...mapState(['projectId', 'projectInfo', 'permission', 'curPipeline', 'user']),
 
             computedOptToolTip () {
                 return {
-                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.pemissionDeny'),
+                    content: !this.curPipeline.enabled ? this.$t('pipeline.pipelineDisabled') : this.$t('exception.permissionDeny'),
                     disabled: this.curPipeline.enabled && this.permission
                 }
             },
 
             buildTypeIcon () {
                 return getbuildTypeIcon(this.buildDetail.objectKind, this.buildDetail.operationKind)
+            },
+
+            isTriggerReviewUser () {
+                return (this.buildDetail?.triggerReviewers || []).indexOf(this.user?.username) !== -1
             }
         },
 
@@ -171,7 +205,9 @@
                         buildHistoryRemark: res.buildHistoryRemark,
                         executeTime: modelDetail.executeTime,
                         startTime: modelDetail.startTime,
-                        status: modelDetail.status
+                        status: modelDetail.status,
+                        buildNum: modelDetail.buildNum,
+                        triggerReviewers: modelDetail.triggerReviewers || []
                     }
                 }).catch((err) => {
                     this.$bkMessage({ theme: 'error', message: err.message || err })
@@ -233,6 +269,14 @@
                 if (url) {
                     window.open(url, '_blank')
                 }
+            },
+
+            reviewTrigger (approve = true) {
+                pipelines.reviewTrigger(this.projectId, this.$route.params.pipelineId, this.$route.params.buildId, approve).then(() => {
+                    this.getPipelineBuildDetail()
+                }).catch((err) => {
+                    this.$bkMessage({ theme: 'error', message: err.message || err })
+                })
             }
         }
     }
@@ -240,7 +284,68 @@
 
 <style lang="postcss" scoped>
     .detail-home {
+        background: #f5f5f5;
+    }
+    .review-info {
         background: #fff;
+        margin-bottom: 26px;
+        padding: 24px;
+        .review-title {
+            font-size: 16px;
+            color: #313328;
+            margin-bottom: 12px;
+        }
+        .review-content {
+            border: 1px solid #F0F1F5;
+            padding: 12px 16px 20px;
+            font-size: 12px;
+            .sub-title {
+                .bold {
+                    font-weight: bold;
+                }
+                .primary {
+                    color: #3a84ff;
+                    margin: 0 6px;
+                }
+                .branch-info {
+                    background: #F0F3FA;
+                    color: #979BA5;
+                    padding: 3px 6px;
+                }
+                .icon-arrows-right {
+                    font-size: 18px;
+                    color: #63656E;
+                }
+            }
+            .link-info {
+                cursor: pointer;
+                &:hover {
+                    color: #3a84ff;
+                }
+            }
+            .file-list {
+                margin: 10px 0;
+                background: #FAFBFD;
+                border: 1px solid #E1E3E9;
+                padding: 10px 10px 4px;
+                overflow-y: auto;
+                max-height: 400px;
+                p {
+                    margin-bottom: 6px;
+                }
+            }
+            .help-tips {
+                margin-bottom: 10px;
+                .link-tips {
+                    cursor: pointer;
+                    color: #3a84ff;
+                }
+            }
+        }
+    }
+    .detail-content {
+        background: #fff;
+        height: 100%;
     }
     .detail-header {
         padding: 10px 24px;
@@ -257,7 +362,7 @@
             &.executing {
                 font-size: 14px;
             }
-            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock {
+            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock, &.stream-reviewing-2 {
                 font-size: 24px;
             }
             &.running {

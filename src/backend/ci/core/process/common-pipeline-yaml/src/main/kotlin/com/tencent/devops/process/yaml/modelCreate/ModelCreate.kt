@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -65,7 +66,8 @@ class ModelCreate @Autowired constructor(
         modelName: String,
         event: ModelCreateEvent,
         yaml: ScriptBuildYaml,
-        pipelineParams: List<BuildFormProperty>
+        pipelineParams: List<BuildFormProperty>,
+        asCodeSettings: PipelineAsCodeSettings?
     ): PipelineModelAndSetting {
         // 流水线插件标签设置
         val labelList = preparePipelineLabels(event, yaml)
@@ -154,7 +156,12 @@ class ModelCreate @Autowired constructor(
                     yaml.concurrency?.group != null -> PipelineRunLockType.GROUP_LOCK
                     else -> PipelineRunLockType.MULTIPLE
                 },
-                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt()
+                waitQueueTimeMinute = TimeUnit.HOURS.toMinutes(8).toInt(),
+                // #6090 stream重试时均需要清理变量表
+                cleanVariablesWhenRetry = true,
+                maxQueueSize = 1,
+                labels = labelList,
+                pipelineAsCodeSettings = asCodeSettings
             )
         )
     }

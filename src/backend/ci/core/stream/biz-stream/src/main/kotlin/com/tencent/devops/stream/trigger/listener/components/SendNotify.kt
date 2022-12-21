@@ -44,7 +44,6 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.trigger.actions.data.context.getBuildStatus
-import com.tencent.devops.stream.trigger.actions.data.context.getGitCommitCheckState
 import com.tencent.devops.stream.trigger.actions.data.context.isSuccess
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
@@ -123,9 +122,9 @@ class SendNotify @Autowired constructor(
     ) {
         val pipeline = action.data.context.pipeline!!
 
-        val receivers = replaceVar(notice.receivers, noticeVariables)
-        val ccs = replaceVar(notice.ccs, noticeVariables)?.toMutableSet()
-        val chatIds = replaceVar(notice.chatId, noticeVariables)?.toMutableSet()
+        val receivers = replaceSetVar(notice.receivers, noticeVariables)
+        val ccs = replaceSetVar(notice.ccs, noticeVariables)?.toMutableSet()
+        val chatIds = replaceSetVar(notice.chatId, noticeVariables)?.toMutableSet()
         val title = replaceVar(notice.title, noticeVariables)
         val content = replaceVar(notice.content, noticeVariables)
         val projectName = action.data.eventCommon.gitProjectName ?: GitCommonUtils.getRepoName(
@@ -155,14 +154,14 @@ class SendNotify @Autowired constructor(
         var realReceivers = replaceReceivers(receivers, build.buildParameters)
         // 接收人默认带触发人
         if (realReceivers.isEmpty()) {
-            realReceivers = mutableSetOf(build.userId)
+            realReceivers = mutableSetOf(action.data.eventCommon.userId)
         }
-        val state = action.data.context.finishData!!.getGitCommitCheckState()
+        val status = action.data.context.finishData!!.getBuildStatus()
 
         when (notifyType) {
             StreamNotifyType.EMAIL -> {
                 val request = SendEmail.getEmailSendRequest(
-                    state = state,
+                    status = status,
                     receivers = realReceivers,
                     projectName = projectName,
                     branchName = branchName,
@@ -174,7 +173,7 @@ class SendNotify @Autowired constructor(
                     content = content,
                     ccs = ccs,
                     streamUrl = streamGitConfig.streamUrl!!,
-                    gitProjectId = action.data.eventCommon.gitProjectId
+                    gitProjectId = action.data.getGitProjectId()
                 )
                 client.get(ServiceNotifyMessageTemplateResource::class).sendNotifyMessageByTemplate(request)
             }
@@ -187,7 +186,7 @@ class SendNotify @Autowired constructor(
                 val (rtxReceivers, receiversType) = Pair(realReceivers, ReceiverType.SINGLE)
 
                 SendRtx.getRtxSendRequest(
-                    state = state,
+                    status = status,
                     receivers = rtxReceivers,
                     projectName = projectName,
                     branchName = branchName,
@@ -196,12 +195,12 @@ class SendNotify @Autowired constructor(
                     build = build,
                     isMr = action.metaData.isStreamMr(),
                     requestId = requestId,
-                    openUser = build.userId,
+                    openUser = action.data.eventCommon.userId,
                     buildTime = build.totalTime,
                     gitUrl = streamGitConfig.gitUrl!!,
                     streamUrl = streamGitConfig.streamUrl!!,
                     content = content,
-                    gitProjectId = action.data.eventCommon.gitProjectId,
+                    gitProjectId = action.data.getGitProjectId(),
                     scmType = streamGitConfig.getScmType()
                 )
             }
@@ -221,14 +220,14 @@ class SendNotify @Autowired constructor(
         if (ifField.isNullOrBlank()) {
             return true
         }
-        // stage审核的状态专门判断为成功
-        val success = finishData.isSuccess()
+
         return when (ifField) {
             IfType.SUCCESS.name -> {
-                return success
+                // stage审核的状态专门判断为成功
+                return finishData.isSuccess()
             }
             IfType.FAILURE.name -> {
-                return !success
+                return finishData.getBuildStatus().isFailure()
             }
             IfType.CANCELLED.name, IfType.CANCELED.name -> {
                 return finishData.getBuildStatus().isCancel()
@@ -237,7 +236,7 @@ class SendNotify @Autowired constructor(
                 return true
             }
             else -> {
-                logger.error("buidld: $buildId , ifField: $ifField is error!")
+                logger.warn("SendNotify|checkStatus|buildId|$buildId|ifField|$ifField")
                 false
             }
         }
@@ -254,14 +253,25 @@ class SendNotify @Autowired constructor(
         return EnvUtils.parseEnv(value, variables)
     }
 
-    protected fun replaceVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
+    // #7592 支持通过 , 分隔来一次填写多个接收人
+    protected fun replaceSetVar(value: Set<String>?, variables: Map<String, String>?): Set<String>? {
         if (value.isNullOrEmpty()) {
             return value
         }
-        if (variables.isNullOrEmpty()) {
-            return value
+
+        val vars = mutableSetOf<String>()
+        value.forEach { re ->
+            if (!re.contains(',')) {
+                vars.add(re)
+                return@forEach
+            }
+            vars.addAll(re.split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet())
         }
-        return value.map {
+
+        if (variables.isNullOrEmpty()) {
+            return vars
+        }
+        return vars.map {
             EnvUtils.parseEnv(it, variables)
         }.toSet()
     }
@@ -278,7 +288,7 @@ class SendNotify @Autowired constructor(
                 StreamNotifyType.RTX_GROUP
             }
             else -> {
-                logger.error("buidld: $buildId , type: $type is error!")
+                logger.warn("SendNotify|getNoticeType|buidld|$buildId|type|$type")
                 null
             }
         }
@@ -286,12 +296,14 @@ class SendNotify @Autowired constructor(
 
     // 使用启动参数替换接收人
     protected fun replaceReceivers(receivers: Set<String>?, startParams: List<BuildParameters>?): MutableSet<String> {
-        if (receivers == null || receivers.isEmpty()) {
+        if (receivers.isNullOrEmpty()) {
             return mutableSetOf()
         }
-        if (startParams == null || startParams.isEmpty()) {
+
+        if (startParams.isNullOrEmpty()) {
             return receivers.toMutableSet()
         }
+
         val paramMap = startParams.associate {
             it.key to it.value.toString()
         }

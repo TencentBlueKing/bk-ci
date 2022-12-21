@@ -32,6 +32,11 @@ function _M:get_addr(service_name)
     if ngx.var.name_space ~= "" then
         return service_prefix .. service_name .. "." .. ngx.var.name_space .. ".svc.cluster.local"
     end
+    
+    -- boot assembly部署
+    if config.service_name ~= nil and config.service_name ~= ""  then
+        return config.bkrepo.domain
+    end
 
     local ns_config = config.ns
     local tag = ns_config.tag

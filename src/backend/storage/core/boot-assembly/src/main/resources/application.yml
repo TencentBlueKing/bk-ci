@@ -4,6 +4,9 @@ server:
 spring:
   application:
     name: bkrepo
+  cloud:
+    stream:
+      default-binder: memoryMessageChannelBinder
   data:
     mongodb:
       uri: mongodb://127.0.0.1:27017/bkrepo
@@ -13,6 +16,8 @@ spring:
     allow-bean-definition-overriding: true
 
 logging:
+  config: classpath:logback-config.xml
+  path: /data/logs
   level:
     com.tencent: DEBUG
 
@@ -26,4 +31,14 @@ security:
     enabled: true
     jwt:
       secretKey: bkrepo@secret
+
+auth:
+  security:
+    enablePrefix: true
+
+management:
+  metrics:
+    export:
+      influx:
+        enabled: false
 

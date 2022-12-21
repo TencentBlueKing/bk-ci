@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwArtifactoryFileTaskResourceV3
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -47,6 +48,7 @@ class ApigwArtifactoryFileTaskResourceV3Impl @Autowired constructor(
         buildId: String,
         createFileTaskReq: CreateFileTaskReq
     ): Result<String> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V3|$userId|create file task|$projectId|$pipelineId|$buildId")
         return client.get(ServiceArtifactoryFileTaskResource::class).createFileTask(
             userId = userId,
             projectId = projectId,
@@ -63,6 +65,7 @@ class ApigwArtifactoryFileTaskResourceV3Impl @Autowired constructor(
         buildId: String,
         taskId: String
     ): Result<FileTaskInfo?> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V3|$userId|get status|$projectId|$pipelineId|$buildId|$taskId")
         return client.get(ServiceArtifactoryFileTaskResource::class).getStatus(
             userId = userId,
             projectId = projectId,
@@ -81,6 +84,7 @@ class ApigwArtifactoryFileTaskResourceV3Impl @Autowired constructor(
         buildId: String,
         taskId: String
     ): Result<Boolean> {
+        logger.info("OPENAPI_ARTIFACTORY_FILE_TASK_V3|$userId|clear file task|$projectId|$pipelineId|$buildId|$taskId")
         return client.get(ServiceArtifactoryFileTaskResource::class).clearFileTask(
             userId = userId,
             projectId = projectId,
@@ -88,5 +92,9 @@ class ApigwArtifactoryFileTaskResourceV3Impl @Autowired constructor(
             buildId = buildId,
             taskId = taskId
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwArtifactoryFileTaskResourceV3Impl::class.java)
     }
 }

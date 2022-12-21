@@ -54,6 +54,10 @@ class P4Server(
     val password: String
 ) : AutoCloseable {
 
+    companion object {
+        private const val MAX_CHANGE_LIST_FILES = 1000
+    }
+
     private val server = if (p4port.startsWith("ssl:")) {
         getOptionsServer("p4javassl://${p4port.substring(4)}", null)
     } else {
@@ -136,11 +140,11 @@ class P4Server(
     }
 
     fun getChangelistFiles(change: Int): List<IFileSpec> {
-        return server.getChangelistFiles(change)
+        return server.getChangelistFiles(change, MAX_CHANGE_LIST_FILES)
     }
 
     fun getShelvedFiles(change: Int): List<IFileSpec> {
-        return server.getShelvedFiles(change)
+        return server.getShelvedFiles(change, MAX_CHANGE_LIST_FILES)
     }
 
     fun getFileContent(filePath: String, reversion: Int): String {

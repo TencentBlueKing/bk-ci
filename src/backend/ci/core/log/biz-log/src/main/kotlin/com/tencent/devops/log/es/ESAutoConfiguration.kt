@@ -136,7 +136,7 @@ class ESAutoConfiguration : DisposableBean {
         val tcpKeepAliveSeconds = 30000 // 探活连接时长
         val connectTimeOut = 1000 // 请求连接超时
         val connectionRequestTimeOut = 500 // 获取连接的超时时间
-        val maxConnectNum = 10 // 最大连接数
+        val maxConnectNum = 100 // 最大连接数
         val maxConnectPerRoute = 30 // 最大路由连接数
         val requestTimeout = if (socketTimeout > 0) { // ES响应超时，取主动超时的一半
             socketTimeout / 2

@@ -37,6 +37,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentDetail
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
+import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
@@ -77,6 +78,13 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         version: String?,
         masterVersion: String?
     ) = upgradeService.checkUpgrade(projectId, agentId, secretKey, version, masterVersion)
+
+    override fun upgradeByVersionNew(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        info: ThirdPartyAgentUpgradeByVersionInfo
+    ) = upgradeService.checkUpgradeNew(projectId, agentId, secretKey, info)
 
     override fun scheduleAgentPipeline(
         userId: String,

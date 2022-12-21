@@ -46,10 +46,10 @@ class ImageVersionLogDao {
         }
     }
 
-    fun deleteByImageId(dslContext: DSLContext, imageId: String) {
+    fun deleteByImageIds(dslContext: DSLContext, imageIds: List<String>) {
         with(TImageVersionLog.T_IMAGE_VERSION_LOG) {
             dslContext.deleteFrom(this)
-                .where(IMAGE_ID.eq(imageId))
+                .where(IMAGE_ID.`in`(imageIds))
                 .execute()
         }
     }

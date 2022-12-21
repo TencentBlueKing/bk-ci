@@ -40,6 +40,7 @@ import com.tencent.devops.common.webhook.pojo.code.git.GitNoteEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitPushEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitReviewEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitTagPushEvent
+import com.tencent.devops.common.webhook.service.code.EventCacheService
 import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitIssueTriggerHandler
 import com.tencent.devops.common.webhook.service.code.handler.tgit.TGitMrTriggerHandler
@@ -51,10 +52,10 @@ import com.tencent.devops.common.webhook.service.code.loader.CodeWebhookHandlerR
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
 import java.nio.charset.Charset
-import org.junit.jupiter.api.BeforeEach
 
 class GitWebHookMatcherTest {
 
@@ -83,12 +84,20 @@ class GitWebHookMatcherTest {
     @BeforeEach
     fun setUp() {
         val gitScmService: GitScmService = mock()
-        CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(gitScmService))
+        val eventCacheService: EventCacheService = mock()
+        CodeWebhookHandlerRegistrar.register(TGitPushTriggerHandler(eventCacheService, gitScmService))
         CodeWebhookHandlerRegistrar.register(TGitTagPushTriggerHandler())
-        CodeWebhookHandlerRegistrar.register(TGitMrTriggerHandler(gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitReviewTriggerHandler(gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitIssueTriggerHandler(gitScmService))
-        CodeWebhookHandlerRegistrar.register(TGitNoteTriggerHandler(gitScmService))
+        CodeWebhookHandlerRegistrar.register(
+            TGitMrTriggerHandler(
+                gitScmService = gitScmService,
+                eventCacheService = eventCacheService
+            )
+        )
+        CodeWebhookHandlerRegistrar.register(
+            TGitReviewTriggerHandler(eventCacheService = eventCacheService)
+        )
+        CodeWebhookHandlerRegistrar.register(TGitIssueTriggerHandler(eventCacheService))
+        CodeWebhookHandlerRegistrar.register(TGitNoteTriggerHandler(eventCacheService))
     }
 
     @Test

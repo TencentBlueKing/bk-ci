@@ -120,4 +120,12 @@ class MarketImageFeatureDao {
                 .execute()
         }
     }
+
+    fun daleteImageFeature(dslContext: DSLContext, imageCode: String) {
+        with(TImageFeature.T_IMAGE_FEATURE) {
+            dslContext.deleteFrom(this)
+                .where(IMAGE_CODE.eq(imageCode))
+                .execute()
+        }
+    }
 }

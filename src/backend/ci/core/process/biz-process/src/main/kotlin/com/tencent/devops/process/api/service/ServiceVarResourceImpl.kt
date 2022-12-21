@@ -29,6 +29,7 @@ package com.tencent.devops.process.api.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineContextService
 import org.springframework.beans.factory.annotation.Autowired
@@ -36,14 +37,23 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class ServiceVarResourceImpl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
+    private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelineContextService: PipelineContextService
 ) : ServiceVarResource {
 
-    override fun getBuildVar(projectId: String, buildId: String, varName: String?): Result<Map<String, String>> {
+    override fun getBuildVar(
+        projectId: String,
+        buildId: String,
+        varName: String?,
+        pipelineId: String?
+    ): Result<Map<String, String>> {
+        val pid = pipelineId
+            ?: pipelineRuntimeService.getBuildInfo(projectId, buildId)?.pipelineId
+            ?: return Result(emptyMap())
         return if (varName.isNullOrBlank()) {
-            Result(buildVariableService.getAllVariable(projectId, buildId))
+            Result(buildVariableService.getAllVariable(projectId, pid, buildId))
         } else {
-            Result(mapOf(varName to (buildVariableService.getVariable(projectId, buildId, varName) ?: "")))
+            Result(mapOf(varName to (buildVariableService.getVariable(projectId, pid, buildId, varName) ?: "")))
         }
     }
 
@@ -53,11 +63,13 @@ class ServiceVarResourceImpl @Autowired constructor(
         buildId: String,
         contextName: String?
     ): Result<Map<String, String>> {
-        val variables = buildVariableService.getAllVariable(projectId, buildId)
+        val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         return if (contextName.isNullOrBlank()) {
-            Result(variables.plus(
-                pipelineContextService.buildFinishContext(projectId, pipelineId, buildId, variables)
-            ))
+            Result(
+                variables.plus(
+                    pipelineContextService.buildFinishContext(projectId, pipelineId, buildId, variables)
+                )
+            )
         } else {
             val context = pipelineContextService.getBuildContext(variables, contextName)
             if (context.isNullOrEmpty()) {

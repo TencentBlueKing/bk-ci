@@ -19,14 +19,14 @@ import { bkMessage } from 'bk-magic-vue'
 import bkPipeline from 'bkui-pipeline'
 
 import {
-    getCookie
+    getCookie, getLanguageMap
 } from '@/utils'
 import VueI18n from 'vue-i18n'
 Vue.use(VueI18n)
-const DEFAULT_LANG = 'en-US'
-const COOKIE_KEY = 'stream_language'
+const DEFAULT_LANG = 'zh-CN'
+const COOKIE_KEY = 'blueking_language'
 
-const lang = getCookie(COOKIE_KEY) || DEFAULT_LANG
+const lang = getLanguageMap(getCookie(COOKIE_KEY) || '') || DEFAULT_LANG
 const i18n = new VueI18n({
     locale: lang,
     messages: {

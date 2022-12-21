@@ -48,7 +48,10 @@ open class AbsPermissionGradeServiceImpl @Autowired constructor(
         val managerProject = iamManagerService.getUserRole(userId, pageInfoDTO)?.map { it.id }
 
         if (managerProject == null || !managerProject.contains(projectId)) {
-            logger.warn("checkGradeManagerUser $userId $projectId $managerProject")
+            logger.warn(
+                "User has no grade manager permission: userId = $userId " +
+                    "| projectId = $projectId | managerProject = $managerProject"
+            )
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(AuthMessageCode.GRADE_CHECK_FAIL))
         }
     }

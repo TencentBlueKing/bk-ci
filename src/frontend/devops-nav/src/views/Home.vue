@@ -1,149 +1,160 @@
 <template>
     <div class="devops-home-page">
-        <section>
-            <accordion>
-                <accordion-item :init-content-show="true">
-                    <span
-                        slot="header"
-                        class="home-accordion-header"
-                    >{{ $t('recentVisiteService') }}</span>
-                    <div
-                        slot="content"
-                        class="recent-visit-service-list"
-                    >
-                        <template v-if="recentVisitService.length">
-                            <router-link
-                                v-for="service in recentVisitService"
-                                :key="service.key"
-                                :to="addConsole(service.link_new)"
-                            >
-                                <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
-                                <Logo
-                                    v-else
-                                    :name="service.logoUrl"
-                                    size="16"
-                                />
-                                {{ serviceName(service.name) }}
-                            </router-link>
-                        </template>
-                        <p
-                            v-else
-                            class="no-recent-service"
+        <div class="devops-home-content">
+            <section>
+                <accordion>
+                    <accordion-item :init-content-show="true">
+                        <span
+                            slot="header"
+                            class="home-accordion-header"
+                        >{{ $t('recentVisiteService') }}</span>
+                        <div
+                            slot="content"
+                            class="recent-visit-service-list"
                         >
-                            {{ $t("noRecentVisiteService") }}
-                            <span @click="updateShowAllService(true)">{{ $t('allService') }}</span>
+                            <template v-if="recentVisitService.length">
+                                <router-link
+                                    v-for="service in recentVisitService"
+                                    :key="service.key"
+                                    :to="addConsole(service.link_new)"
+                                    @click.native="getDocumentTitle(service.link_new)"
+                                >
+                                    <img v-if="isAbsoluteUrl(service.logoUrl)" :src="service.logoUrl" class="recent-logo-icon" />
+                                    <Logo
+                                        v-else
+                                        :name="service.logoUrl"
+                                        size="16"
+                                    />
+                                    {{ serviceName(service.name) }}
+                                </router-link>
+                            </template>
+                            <p
+                                v-else
+                                class="no-recent-service"
+                            >
+                                {{ $t("noRecentVisiteService") }}
+                                <span @click="updateShowAllService(true)">{{ $t('allService') }}</span>
+                            </p>
+                        </div>
+                    </accordion-item>
+                    <accordion-item
+                        :init-content-show="isAllServiceListShow"
+                        @update:contentShow="updateShowAllService"
+                    >
+                        <p
+                            slot="header"
+                            class="all-service-header"
+                        >
+                            {{ $t('allService') }}
+                            
+                            <span class="service-count">{{ $t("sumService", { serviceCount }) }}</span>
+                        </p>
+                        <NavBox
+                            slot="content"
+                            class="all-service-list"
+                            column-width="190px"
+                            :with-hover="false"
+                            :services="services"
+                        />
+                    </accordion-item>
+                </accordion>
+
+                <div class="bkdevops-box">
+                    <h2>{{ $t('slogan') }}</h2>
+                    <span
+                        v-for="(item, index) in funcArray"
+                        :key="index"
+                        :style="{ left: item.left }"
+                    >{{ item.label }}</span>
+                    <div class="bkdevops-button">
+                        <a
+                            :href="DOCS_URL_PREFIX"
+                            target="_blank"
+                        >
+                            <bk-button
+                                theme="primary"
+                                icon-right="angle-double-right"
+                            >
+                                {{ $t('accessGuide') }}
+                            </bk-button>
+                        </a>
+                    </div>
+                </div>
+
+                <div class="devops-news">
+                    <header>
+                        <p class="title">
+                            {{ $t("latestNews") }}
+                        </p>
+                    </header>
+
+                    <div class="devops-news-content">
+                        <p
+                            v-for="(item, index) in news"
+                            :key="item.name"
+                            class="news-item"
+                        >
+                            <a
+                                target="_blank"
+                                :href="item.link"
+                            >
+                                <span v-if="index === 0">[{{ $t("latest") }}]</span>
+                                {{ item.name }}
+                            </a>
+                            <span>{{ item.create_time }}</span>
                         </p>
                     </div>
-                </accordion-item>
-                <accordion-item
-                    :init-content-show="isAllServiceListShow"
-                    @update:contentShow="updateShowAllService"
-                >
-                    <p
-                        slot="header"
-                        class="all-service-header"
-                    >
-                        {{ $t('allService') }}
-                        
-                        <span class="service-count">{{ $t("sumService", { serviceCount }) }}</span>
-                    </p>
-                    <NavBox
-                        slot="content"
-                        class="all-service-list"
-                        column-width="190px"
-                        :with-hover="false"
-                        :services="services"
-                    />
-                </accordion-item>
-            </accordion>
-
-            <div class="bkdevops-box">
-                <h2>{{ $t('slogan') }}</h2>
-                <span
-                    v-for="(item, index) in funcArray"
-                    :key="index"
-                    :style="{ left: item.left }"
-                >{{ item.label }}</span>
-                <div class="bkdevops-button">
-                    <a
-                        :href="DOCS_URL_PREFIX"
-                        target="_blank"
-                    >
-                        <bk-button
-                            theme="primary"
-                            icon-right="angle-double-right"
-                        >
-                            {{ $t('accessGuide') }}
-                        </bk-button>
-                    </a>
                 </div>
-            </div>
-
-            <div class="devops-news">
-                <header>
-                    <p class="title">
-                        {{ $t("latestNews") }}
-                    </p>
-                </header>
-
-                <div class="devops-news-content">
-                    <p
-                        v-for="(item, index) in news"
-                        :key="item.name"
-                        class="news-item"
-                    >
+            </section>
+            <aside>
+                <article>
+                    <h2>
+                        {{ $t("bkdevopsTitle") }}
+                        <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
+                    </h2>
+                    <p>
+                        {{ $t("bkdevopsDesc") }}
                         <a
+                            :href="DOCS_URL_PREFIX"
+                            class="more"
                             target="_blank"
+                        >{{ $t("learnMore") }}</a>
+                    </p>
+                </article>
+                <article>
+                    <h2>{{ $t("bkdevopsTarget") }}</h2>
+                    <p>
+                        {{ $t("bkdevopsWay") }}
+                        <!-- <a
+                            :href="DOCS_URL_PREFIX"
+                            target="_blank"
+                            class="more"
+                        >{{ $t("learnMore") }}</a> -->
+                    </p>
+                </article>
+                <article>
+                    <h2>{{ $t("relatedLink") }}</h2>
+                    <div>
+                        <a
+                            v-for="item in related"
+                            :key="item.name"
                             :href="item.link"
+                            target="_blank"
                         >
-                            <span v-if="index === 0">[{{ $t("latest") }}]</span>
                             {{ item.name }}
                         </a>
-                        <span>{{ item.create_time }}</span>
-                    </p>
-                </div>
+                    </div>
+                </article>
+            </aside>
+        </div>
+        <section class="devops-home-footer">
+            <div class="item">
+                <a href="https://wpa1.qq.com/KziXGWJs?_type=wpa&qidian=true" target="_blank">{{ $t('technicalSupport') }}</a> |
+                <a href="https://bk.tencent.com/s-mart/community/" target="_blank">{{ $t('communityForum') }}</a> |
+                <a href="https://bk.tencent.com/index/" target="_blank">{{ $t('ProductOfficialWebsite') }}</a>
             </div>
+            <p class="bkci-copyright">Copyright © 2012-{{ getFullYear() }} Tencent BlueKing. All Rights Reserved v{{ BK_CI_VERSION.trim() }}</p>
         </section>
-        <aside>
-            <article>
-                <h2>
-                    {{ $t("bkdevopsTitle") }}
-                    <bk-tag v-if="BK_CI_VERSION" theme="info" type="stroke">{{ BK_CI_VERSION.trim() }}</bk-tag>
-                </h2>
-                <p>
-                    {{ $t("bkdevopsDesc") }}
-                    <a
-                        :href="DOCS_URL_PREFIX"
-                        class="more"
-                        target="_blank"
-                    >{{ $t("learnMore") }}</a>
-                </p>
-            </article>
-            <article>
-                <h2>{{ $t("bkdevopsTarget") }}</h2>
-                <p>
-                    {{ $t("bkdevopsWay") }}
-                    <!-- <a
-                        :href="DOCS_URL_PREFIX"
-                        target="_blank"
-                        class="more"
-                    >{{ $t("learnMore") }}</a> -->
-                </p>
-            </article>
-            <article>
-                <h2>{{ $t("relatedLink") }}</h2>
-                <div>
-                    <a
-                        v-for="item in related"
-                        :key="item.name"
-                        :href="item.link"
-                        target="_blank"
-                    >
-                        {{ item.name }}
-                    </a>
-                </div>
-            </article>
-        </aside>
     </div>
 </template>
 
@@ -209,10 +220,43 @@
         addConsole (link: string): string {
             return urlJoin('/console/', link)
         }
+        
+        getDocumentTitle (linkNew) {
+            const title = linkNew.split('/')[1]
+            const titlesMap = {
+                pipeline: this.$t('documentTitlePipeline'),
+                codelib: this.$t('documentTitleCodelib'),
+                artifactory: this.$t('documentTitleArtifactory'),
+                codecc: this.$t('documentTitleCodecc'),
+                experience: this.$t('documentTitleExperience'),
+                turbo: this.$t('documentTitleTurbo'),
+                repo: this.$t('documentTitleRepo'),
+                preci: this.$t('documentTitlePreci'),
+                stream: this.$t('documentTitleStream'),
+                wetest: this.$t('documentTitleWetest'),
+                quality: this.$t('documentTitleQuality'),
+                xinghai: this.$t('documentTitleXinghai'),
+                bcs: this.$t('documentTitleBcs'),
+                job: this.$t('documentTitleJob'),
+                environment: this.$t('documentTitleEnvironment'),
+                vs: this.$t('documentTitleVs'),
+                apk: this.$t('documentTitleApk'),
+                monitor: this.$t('documentTitleMonitor'),
+                perm: this.$t('documentTitlePerm'),
+                ticket: this.$t('documentTitleTicket'),
+                store: this.$t('documentTitleStore'),
+                metrics: this.$t('documentTitleMetrics')
+            }
+            document.title = titlesMap[title]
+        }
 
         serviceName (name = ''): string {
             const charPos = name.indexOf('(')
             return charPos > -1 ? name.slice(0, charPos) : name
+        }
+
+        getFullYear () {
+            return (new Date()).getFullYear()
         }
 
         created () {
@@ -227,8 +271,10 @@
 </script>
 <style lang="scss">
     @import '../assets/scss/conf';
-
     .devops-home-page {
+        margin: 0 auto;
+    }
+    .devops-home-content {
         display: flex;
         flex: 1;
         justify-content: center;
@@ -410,6 +456,17 @@
                     color: $primaryColor;
                 }
             }
+        }
+    }
+    .devops-home-footer {
+        text-align: center;
+        font-size: 12px;
+        padding-bottom: 20px;
+        .item {
+            margin-bottom: 5px;
+        }
+        a {
+            color: #3c96ff;
         }
     }
 </style>

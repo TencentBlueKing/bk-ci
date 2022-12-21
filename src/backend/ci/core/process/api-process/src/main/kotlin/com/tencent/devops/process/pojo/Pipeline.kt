@@ -87,6 +87,10 @@ data class Pipeline(
     var instanceFromTemplate: Boolean? = null,
     @ApiModelProperty("模板ID", required = false)
     var templateId: String? = null,
+    @ApiModelProperty("版本名称", required = false)
+    var versionName: String? = null,
+    @ApiModelProperty("版本", required = false)
+    var version: Long? = null,
     @ApiModelProperty("流水线更新人", required = false)
     val updater: String,
     @ApiModelProperty("流水线创建人", required = false)
@@ -98,5 +102,25 @@ data class Pipeline(
     @ApiModelProperty("自定义构建号规则", required = false)
     var buildNumRule: String? = null,
     @ApiModelProperty("编排详情", required = false)
-    var model: Model? = null
+    var model: Model? = null,
+    @ApiModelProperty("流水线组名称列表", required = false)
+    var viewNames: List<String>? = null,
+    @ApiModelProperty("最后一次构建的构建信息", required = false)
+    var lastBuildMsg: String? = null,
+    @ApiModelProperty("最后一次构建所有的任务个数", required = false)
+    var lastBuildTotalCount: Int? = null,
+    @ApiModelProperty("最后一次构建已完成的任务个数", required = false)
+    var lastBuildFinishCount: Int? = null,
+    @ApiModelProperty("触发方式", required = false)
+    var trigger: String? = null,
+    @ApiModelProperty("webhook仓库别名", required = false)
+    var webhookAliasName: String? = null,
+    @ApiModelProperty("webhook提交信息", required = false)
+    var webhookMessage: String? = null,
+    @ApiModelProperty("webhook仓库地址", required = false)
+    var webhookRepoUrl: String? = null,
+    @ApiModelProperty("webhook类型", required = false)
+    var webhookType: String? = null,
+    @ApiModelProperty("是否已删除", required = false)
+    var delete: Boolean? = false
 )

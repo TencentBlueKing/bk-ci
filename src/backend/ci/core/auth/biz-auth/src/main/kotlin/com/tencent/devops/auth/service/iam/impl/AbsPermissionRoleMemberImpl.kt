@@ -75,7 +75,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     ) {
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
-            logger.warn("$roleId can not find relationId")
+            logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
 
@@ -97,7 +97,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
         try {
             iamManagerService.createRoleGroupMember(iamId!!.toInt(), managerMemberGroupDTO)
         } catch (iamEx: IamException) {
-            logger.warn("create group user fail. code: ${iamEx.errorCode}| msg: ${iamEx.errorMsg}")
+            logger.warn("create group user fail. code: ${iamEx.errorCode} | msg: ${iamEx.errorMsg}")
             throw OperationException(
                 MessageCodeUtil.getCodeMessage(
                     messageCode = AuthMessageCode.IAM_SYSTEM_ERROR,
@@ -133,7 +133,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     ) {
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
-            logger.warn("$roleId can not find relationId")
+            logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
         permissionGradeService.checkGradeManagerUser(userId, projectId)
@@ -153,7 +153,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     ): ManagerGroupMemberVo {
         val iamId = groupService.getRelationId(roleId)
         if (iamId == null) {
-            logger.warn("$roleId can not find relationId")
+            logger.warn("$roleId can not find iam relationId")
             throw ParamBlankException(MessageCodeUtil.getCodeLanMessage(CAN_NOT_FIND_RELATION))
         }
         val pageInfoDTO = PageInfoDTO()
@@ -165,7 +165,7 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
 
     override fun getProjectAllMember(projectId: Int, page: Int?, pageSiz: Int?): ProjectMembersVO? {
         if (projectMemberCache.getIfPresent(projectId.toString()) != null) {
-            logger.info("getProjectAllMember $projectId get by cache")
+            logger.info("getProjectAllMember: projectId = $projectId")
             return projectMemberCache.getIfPresent(projectId.toString())!!
         }
 
@@ -200,9 +200,9 @@ abstract class AbsPermissionRoleMemberImpl @Autowired constructor(
     }
 
     override fun getUserGroups(projectId: Int, userId: String): List<ManagerRoleGroupInfo>? {
-        logger.info("getUserGroup: $projectId $userId")
+        logger.info("getUserGroup: projectId = $projectId | userId = $userId")
         val groupInfos = iamManagerService.getUserGroup(projectId, userId)
-        logger.info("getUserGroup: $projectId $userId $groupInfos")
+        logger.info("getUserGroup: projectId = $projectId | userId = $userId | groupInfos = $groupInfos")
         return groupInfos
     }
 

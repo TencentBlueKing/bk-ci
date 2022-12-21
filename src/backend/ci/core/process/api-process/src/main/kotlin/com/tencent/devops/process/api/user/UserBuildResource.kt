@@ -118,7 +118,10 @@ interface UserBuildResource {
         values: Map<String, String>,
         @ApiParam("手动指定构建版本参数", required = false)
         @QueryParam("buildNo")
-        buildNo: Int? = null
+        buildNo: Int? = null,
+        @ApiParam("触发审核人列表", required = false)
+        @QueryParam("triggerReviewers")
+        triggerReviewers: List<String>? = null
     ): Result<BuildId>
 
     @ApiOperation("重试流水线-重试或者跳过失败插件")
@@ -459,6 +462,27 @@ interface UserBuildResource {
         @QueryParam("alias")
         alias: List<String>?
     ): Result<List<String>>
+
+    @ApiOperation("触发审核")
+    @POST
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/review")
+    fun buildTriggerReview(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建ID", required = true)
+        @PathParam("buildId")
+        buildId: String,
+        @ApiParam("是否通过审核", required = true)
+        @QueryParam("approve")
+        approve: Boolean
+    ): Result<Boolean>
 
     @ApiOperation("手动触发启动阶段")
     @POST

@@ -50,7 +50,8 @@ config = {
     url = "__BK_CI_GATEWAY_SSM_TOKEN_URL__",     -- 接口路径
     app_code = "__BK_CI_APP_CODE__",
     app_secret = "__BK_CI_APP_TOKEN__"
-  }
+  },
+  bkci = {host = "__BK_CI_FQDN__", port = 80},
 }
   
 require("init_common")

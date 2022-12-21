@@ -1,0 +1,262 @@
+---
+version: "v2.0"
+name: ""
+label: []
+triggerOn:
+  push:
+    branches:
+    - "*"
+  tag:
+    tags:
+    - "*"
+  mr:
+    target-branches:
+    - "*"
+    action:
+    - "open"
+    - "reopen"
+    - "push-update"
+stages:
+- name: "stage-1"
+  label: []
+  if: null
+  fast-kill: false
+  jobs:
+  - id: "job_1"
+    name: null
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with:
+        sourceMirrorTicketPair:
+        - host: 11
+          username: 111
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo \"hello 1\"\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    - name: "腾讯代码分析(官方-代码分析工作组)"
+      id: "check"
+      if: "true == true"
+      if-modify: null
+      uses: "CodeccCheckAtomDebug@4.*"
+      with:
+        beAutoLang: false
+        checkerSetType: "normal"
+        toolScanType: "1"
+        languages:
+        - "C_CPP"
+        tools: "${{ parameters.tools }}"
+        languageRuleSetMap:
+          C_CPP_RULE:
+          - "standard_cpp"
+          - "codecc_fast_cpp"
+          - "pecker_cpp"
+          - "codecc_default_coverity_cpp"
+          JAVA_RULE: []
+          C_SHARP_RULE: []
+          JS_RULE: []
+          OC_RULE: []
+          OTHERS_RULE: []
+          PYTHON_RULE: []
+          PHP_RULE: []
+          RUBY_RULE: []
+          GOLANG_RULE: []
+          SWIFT_RULE: []
+          TYPESCRIPT_RULE: []
+          KOTLIN_RULE: []
+          LUA_RULE: []
+          DART_RULE: []
+          SOLIDITY_RULE: []
+        pyVersion: "py3"
+        goPath: ""
+        scriptType: "SHELL"
+        script: "cd src\nmkdir build\ncd build\ncmake -DLIB_LEGO_DIR=${{ ci.workspace }}/tmp/liblego ..\nmake -j`nproc`"
+        newDefectJudgeFromDate: "2021-11-01"
+        rtxReceiverType: 4
+        rtxReceiverList: []
+        instantReportStatus: 1
+        emailReceiverType: 4
+        emailReceiverList: []
+        emailCCReceiverList: []
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: null
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "all-job-1"
+    name: "all-job-1"
+    mutex: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "123"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env:
+      output_content: "all-job-1 [基本语法] 执行完成"
+    continue-on-error: null
+    strategy: null
+    depend-on: null
+  - id: "all-job-1-2"
+    name: "互斥组放弃测试"
+    mutex:
+      label: "mutex-1"
+      queue-length: null
+      timeout-minutes: null
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo 123\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: true
+    strategy: null
+    depend-on: null
+  - id: "all-job-1-3"
+    name: "互斥组等待测试"
+    mutex:
+      label: "mutex-2"
+      queue-length: 3
+      timeout-minutes: 10
+    runs-on:
+      self-hosted: false
+      pool-name: "docker"
+      container: null
+      agent-selector: null
+      workspace: null
+      xcode: null
+      queue-timeout-minutes: null
+      needs: null
+    services: []
+    if: null
+    steps:
+    - name: null
+      id: null
+      if: null
+      if-modify: null
+      uses: null
+      with: null
+      timeout-minutes: null
+      continue-on-error: null
+      retry-times: null
+      env: null
+      run: "echo 123\n"
+      runAdditionalOptions:
+        shell: null
+      checkout: null
+    if-modify: null
+    timeout-minutes: null
+    env: null
+    continue-on-error: true
+    strategy: null
+    depend-on: null
+  if-modify: null
+  check-in:
+    reviews:
+      flows:
+      - name: "审批组1"
+        reviewers:
+        - "${{ci.actor}}"
+      - name: "审批组2"
+        reviewers:
+        - "${{ci.actor}}"
+      variables:
+        var_1:
+          label: "中文"
+          type: "SELECTOR"
+          default: 1
+          values:
+          - 1
+          - 2
+          - 3
+          - 4
+          description: null
+      description: "说明下如何审核\n参数var_1如何取值\n"
+    gates:
+    - name: "gate-1"
+      rule:
+      - "CodeccCheckAtomDebug.coverity_serious_defect <= 3"
+      - "CodeccCheckAtomDebug.sensitive_defect < 2"
+      notify-on-fail:
+      - type: "wework-message"
+        receivers:
+        - "ruotiantang"
+        - "${{ci.actor}}"
+      continue-on-fail: null
+    timeout-hours: 10
+  check-out: null
+finally: []

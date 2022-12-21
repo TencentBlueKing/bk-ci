@@ -70,6 +70,7 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("容器选择， 0 是不选， 1 是k8s, 2 是mesos")
     val kind: Int?,
     @ApiModelProperty("是否保密")
-    var secrecy: Boolean = false
-
+    var secrecy: Boolean = false,
+    @ApiModelProperty("项目相关配置")
+    val properties: ProjectProperties? = null
 )

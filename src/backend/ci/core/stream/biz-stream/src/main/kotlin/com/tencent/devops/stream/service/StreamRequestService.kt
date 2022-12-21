@@ -28,14 +28,17 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
+import com.tencent.devops.stream.dao.StreamUserMessageDao
 import com.tencent.devops.stream.pojo.StreamBuildHistory
 import com.tencent.devops.stream.pojo.StreamGitRequestEventReq
 import com.tencent.devops.stream.pojo.StreamGitRequestHistory
@@ -54,9 +57,11 @@ class StreamRequestService @Autowired constructor(
     private val gitRequestEventDao: GitRequestEventDao,
     private val gitRequestEventBuildDao: GitRequestEventBuildDao,
     private val gitRequestEventNotBuildDao: GitRequestEventNotBuildDao,
+    private val streamUserMessageDao: StreamUserMessageDao,
     private val pipelineResourceDao: GitPipelineResourceDao,
     private val streamBasicSettingService: StreamBasicSettingService,
-    private val streamGitProjectInfoCache: StreamGitProjectInfoCache
+    private val streamGitProjectInfoCache: StreamGitProjectInfoCache,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(StreamRequestService::class.java)
@@ -68,17 +73,35 @@ class StreamRequestService @Autowired constructor(
     fun getRequestList(userId: String, gitProjectId: Long, page: Int?, pageSize: Int?): Page<StreamGitRequestHistory> {
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: 10
-        logger.info("get request list, gitProjectId: $gitProjectId")
+        logger.info("StreamRequestService|getRequestList|gitProjectId|$gitProjectId")
         val conf = streamBasicSettingService.getStreamBasicSettingAndCheck(gitProjectId)
-        val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
-        val requestList = gitRequestEventDao.getRequestList(
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+        val count = streamUserMessageDao.getMessageCount(
             dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull
+            projectId = projectId,
+            userId = null,
+            messageType = null,
+            messageId = null,
+            haveRead = null
         )
-        if (requestList.isEmpty() || count == 0L) {
-            logger.info("Get request build list return empty, gitProjectId: $gitProjectId")
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
+        val messageData = streamUserMessageDao.getMessages(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = null,
+            messageType = null,
+            haveRead = null,
+            messageId = null,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        val requestList = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext,
+            requestIds = messageData?.map { it.messageId.toInt() }?.toSet() ?: emptySet(),
+            hasEvent = false
+        )
+        if (requestList.isEmpty() || count == 0) {
+            logger.info("StreamRequestService|getRequestList|empty|gitProjectId|$gitProjectId")
             return Page(
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -118,12 +141,11 @@ class StreamRequestService @Autowired constructor(
 
             // 已触发的所有记录
             val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
-            logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
+            logger.info("StreamRequestService|getRequestList|requestBuildsList|$buildsList|gitProjectId|$gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class)
                 .getBatchBuildStatus(conf.projectCode!!, builds, channelCode).data
             if (buildList?.isEmpty() == false) {
-                logger.info("Get build history list buildHistoryList: $buildList, gitProjectId: $gitProjectId")
                 val records = mutableListOf<StreamBuildHistory>()
                 buildsList.forEach nextBuild@{
                     try {
@@ -141,9 +163,9 @@ class StreamRequestService @Autowired constructor(
                             )
                         )
                     } catch (e: Exception) {
-                        logger.error(
-                            "Load gitProjectId: ${it.gitProjectId}, eventId: ${it.eventId}, pipelineId:" +
-                                " ${it.pipelineId} failed with error: ",
+                        logger.warn(
+                            "StreamRequestService|getRequestList|${it.gitProjectId}|${it.eventId}|" +
+                                "${it.pipelineId}|error",
                             e
                         )
                         return@nextBuild
@@ -151,13 +173,13 @@ class StreamRequestService @Autowired constructor(
                 }
                 requestHistory.buildRecords.addAll(records)
             } else {
-                logger.info("Get branch build history list return empty, gitProjectId: $gitProjectId")
+                logger.info("StreamRequestService|getRequestList|empty|gitProjectId|$gitProjectId")
             }
             // -------
 
             // 未触发的所有记录
             val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
-            logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
+            logger.info("StreamRequestService|getRequestList|no build List|$noBuildList|gitProjectId|$gitProjectId")
             val records = mutableListOf<StreamBuildHistory>()
 
             // 取所有记录的非空流水线ID，查出对应流水线
@@ -189,7 +211,7 @@ class StreamRequestService @Autowired constructor(
         return Page(
             page = pageNotNull,
             pageSize = pageSizeNotNull,
-            count = count,
+            count = count.toLong(),
             records = resultList
         )
     }

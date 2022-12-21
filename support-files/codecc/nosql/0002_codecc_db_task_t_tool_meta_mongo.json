@@ -1457,3 +1457,225 @@
     "updated_date" : 1640161640009,
     "updated_by" : "admin"
 }
+
+{
+  "_id": {
+    "$oid": "6232a42e0b66974a4a9205dd"
+  },
+  "name": "LUACHECK",
+  "pattern": "LINT",
+  "display_name": "LuaCheck",
+  "type": "STANDARD",
+  "lang": 256,
+  "brief_introduction": "一个用于检测和静态分析Lua代码的工具。",
+  "logo": "",
+  "privated": true,
+  "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+  "docker_image_url": "bkcodecc/luacheck_scan",
+  "docker_image_version": "latest",
+  "docker_image_account": "",
+  "docker_image_passwd": "",
+  "debug_pipeline_id": "p-b47c0146bf8142de9b2068d42f6d2a2d",
+  "tool_scan_command": "",
+  "tool_versions": [
+    {
+      "version_type": "P",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656643417501,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "T",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656573842167,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "G",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656578850243,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "PRE_PROD",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1656573842167,
+      "created_by": "admin",
+      "updated_date": 1656643393132,
+      "updated_by": "admin"
+    }
+  ],
+  "last_tool_versions": [
+    {
+      "version_type": "P",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656643417501,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "G",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656578850243,
+      "updated_by": "admin"
+    },
+    {
+      "version_type": "PRE_PROD",
+      "docker_trigger_shell": "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+      "docker_image_url": "bkcodecc/luacheck_scan",
+      "docker_image_version": "latest",
+      "foreign_docker_image_version": "latest",
+      "create_date": 1648112062606,
+      "created_by": "admin",
+      "updated_date": 1656643393132,
+      "updated_by": "admin"
+    }
+  ],
+  "create_date": 1647485991951,
+  "created_by": "admin",
+  "updated_date": 1656573842162,
+  "updated_by": "admin",
+  "_class": "com.tencent.bk.codecc.task.model.ToolMetaEntity"
+}
+
+
+{
+    "_id" : {
+      "$oid": "62bb04a83e63f0404d823309"
+    },
+    "name" : "RESHARPER",
+    "pattern" : "LINT",
+    "display_name" : "Resharper",
+    "type" : "STANDARD",
+    "lang" : 2115,
+    "brief_introduction" : "One of ReSharper’s most notable features, code inspection, is available even without opening the IDE. InspectCode, a free cross-platform command line tool requires a minimum of one parameter — your solution file — to apply all of ReSharper’s inspections.",
+    "logo" : "",
+    "privated" : true,
+    "docker_trigger_shell" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+    "docker_image_url" : "bkcodecc/resharper_scan",
+    "docker_image_version" : "latest",
+    "docker_image_account" : "",
+    "docker_image_passwd" : "",
+    "debug_pipeline_id" : "p-729ac3cd6f2749bd8a275e4c9bf0c26c",
+    "tool_scan_command" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+    "tool_versions" : [
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:df7c86d327b5fd615efd4a494d5c7076e5b41c475e6b4e16397d693f0dc8a6e5",
+            "create_date" : 1658907280623,
+            "created_by" : "admin",
+            "updated_date" : 1659062348377,
+            "updated_by" : "admin"
+        },
+        {
+            "version_type" : "T",
+            "docker_trigger_shell" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:df7c86d327b5fd615efd4a494d5c7076e5b41c475e6b4e16397d693f0dc8a6e5",
+            "create_date" : 1658907280623,
+            "created_by" : "admin",
+            "updated_date" : 1658907280623,
+            "updated_by" : "admin"
+        },
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:df7c86d327b5fd615efd4a494d5c7076e5b41c475e6b4e16397d693f0dc8a6e5",
+            "create_date" : 1658907280623,
+            "created_by" : "admin",
+            "updated_date" : 1658915957917,
+            "updated_by" : "admin"
+        },
+        {
+            "version_type" : "PRE_PROD",
+            "docker_trigger_shell" : "python3 ./sdk/src/scan.py --input {input.json} --output {output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:df7c86d327b5fd615efd4a494d5c7076e5b41c475e6b4e16397d693f0dc8a6e5",
+            "create_date" : 1658907280623,
+            "created_by" : "admin",
+            "updated_date" : 1659062323579,
+            "updated_by" : "admin"
+        }
+    ],
+    "last_tool_versions" : [
+        {
+            "version_type" : "P",
+            "docker_trigger_shell" : "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:2d6456dc2603c90fe9023962c2294ca081931031e88b78a26c1af056731ff1f2",
+            "create_date" : 1656990298366,
+            "created_by" : "admin",
+            "updated_date" : 1659062348377,
+            "updated_by" : "admin"
+        },
+        {
+            "version_type" : "G",
+            "docker_trigger_shell" : "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:2d6456dc2603c90fe9023962c2294ca081931031e88b78a26c1af056731ff1f2",
+            "create_date" : 1656990298366,
+            "created_by" : "admin",
+            "updated_date" : 1658915957917,
+            "updated_by" : "admin"
+        },
+        {
+            "version_type" : "PRE_PROD",
+            "docker_trigger_shell" : "python3 /usr/codecc/tool_scan/sdk/src/scan.py --input={input.json} --output={output.json}",
+            "docker_image_url" : "bkcodecc/resharper_scan",
+            "docker_image_version" : "latest",
+            "foreign_docker_image_version" : "latest",
+            "docker_image_hash" : "sha256:2d6456dc2603c90fe9023962c2294ca081931031e88b78a26c1af056731ff1f2",
+            "create_date" : 1656990298366,
+            "created_by" : "admin",
+            "updated_date" : 1659062323579,
+            "updated_by" : "admin"
+        }
+    ],
+    "create_date" : 1656423470888,
+    "created_by" : "admin",
+    "updated_date" : 1658907280611,
+    "updated_by" : "admin",
+    "_class" : "com.tencent.bk.codecc.task.model.ToolMetaEntity"
+}

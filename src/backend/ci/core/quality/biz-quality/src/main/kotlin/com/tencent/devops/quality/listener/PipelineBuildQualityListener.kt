@@ -37,6 +37,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import org.jooq.DSLContext
@@ -55,7 +56,8 @@ class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityHistoryDao: HistoryDao,
-    private val qualityRuleReviewerDao: QualityRuleReviewerDao
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao,
+    private val qualityHisMetadataDao: QualityHisMetadataDao
 ) {
 
     companion object {
@@ -75,7 +77,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineCancelQualityListener(pipelineCancelEvent: PipelineBuildCancelBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineCancelListener cancelEvent: $pipelineCancelEvent")
+            logger.info("QUALITY|pipelineCancelListener cancelEvent: ${pipelineCancelEvent.buildId}")
             val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                 dslContext = dslContext,
                 projectId = pipelineCancelEvent.projectId,
@@ -104,8 +106,9 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineRetryBroadCastEvent(pipelineRetryStartEvent: PipelineBuildQueueBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineRetryListener retryEvent: $pipelineRetryStartEvent")
+            logger.info("QUALITY|pipelineRetryListener retryEvent: ${pipelineRetryStartEvent.buildId}")
             if (pipelineRetryStartEvent.actionType.isRetry()) {
+                qualityHisMetadataDao.deleteHisMetaByBuildId(dslContext, pipelineRetryStartEvent.buildId)
                 val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                     dslContext = dslContext,
                     projectId = pipelineRetryStartEvent.projectId,
@@ -136,7 +139,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineTimeoutBroadCastEvent(pipelineTimeoutEvent: PipelineBuildReviewBroadCastEvent) {
         try {
-            logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: $pipelineTimeoutEvent")
+            logger.info("QUALITY|pipelineTimeoutListener timeoutEvent: ${pipelineTimeoutEvent.buildId}")
             val projectId = pipelineTimeoutEvent.projectId
             val pipelineId = pipelineTimeoutEvent.pipelineId
             val buildId = pipelineTimeoutEvent.buildId
@@ -184,7 +187,7 @@ class PipelineBuildQualityListener @Autowired constructor(
     )
     fun listenPipelineQualityReviewBroadCastEvent(event: PipelineBuildQualityReviewBroadCastEvent) {
         try {
-            logger.info("QUALITY|qualityReviewListener reviewEvent: $event")
+            logger.info("QUALITY|qualityReviewListener reviewEvent: ${event.buildId}")
             val action = if (event.reviewType == BuildReviewType.QUALITY_TASK_REVIEW_PASS)
                 RuleInterceptResult.INTERCEPT_PASS else RuleInterceptResult.INTERCEPT
             val projectId = event.projectId
@@ -224,7 +227,7 @@ class PipelineBuildQualityListener @Autowired constructor(
             }
             logger.info("QUALITY|[${event.buildId}]save reviewer info done.")
         } catch (e: Exception) {
-            logger.error("quality review error: ${e.message}")
+            logger.warn("QUALITY|listenPipelineQualityReviewBroadCastEvent|${event.buildId}|warn=${e.message}")
         }
     }
 

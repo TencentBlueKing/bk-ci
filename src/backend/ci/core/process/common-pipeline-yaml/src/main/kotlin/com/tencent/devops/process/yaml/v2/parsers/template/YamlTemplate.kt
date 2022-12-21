@@ -69,6 +69,9 @@ class YamlTemplate<T>(
     // 额外所有引用的resource-pool，这样不会干扰替换逻辑
     val resourcePoolMapExt: MutableMap<String, ResourcesPools>? = null,
 
+    // 模板替换配置，针对某些替换功能提供可配置项
+    val conf: YamlTemplateConf = YamlTemplateConf(),
+
     // 来自文件
     private val fileFromPath: String? = null,
 
@@ -365,7 +368,9 @@ class YamlTemplate<T>(
                     variableMap[key] = Variable(value.toString(), false)
                 } else {
                     variableMap[key] = YamlObjects.getVariable(
-                        YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
+                        fromPath = fromPath,
+                        key = key,
+                        variable = YamlObjects.transValue(fromPath, TemplateType.VARIABLE.text, value)
                     )
                 }
             }
@@ -658,7 +663,8 @@ class YamlTemplate<T>(
             rootDeepTree = deepTree,
             resTemplateType = templateType,
             getTemplateMethod = getTemplateMethod,
-            resourcePoolMapExt = resourcePoolMapExt
+            resourcePoolMapExt = resourcePoolMapExt,
+            conf = conf
         ).replace(parameters = parameters)
 
         // 将远程模板引用的pools加入
@@ -708,13 +714,23 @@ class YamlTemplate<T>(
             }
         }
 
-        return TemplateYamlUtil.parseTemplateParameters(
-            fromPath = fromPath,
-            path = path,
-            template = template,
-            templateParameters = templateMap.values.toMutableList(),
-            parameters = parameters
-        )
+        return if (conf.useOldParametersExpression) {
+            TemplateYamlUtil.parseTemplateParametersOld(
+                fromPath = fromPath,
+                path = path,
+                template = template,
+                templateParameters = templateMap.values.toMutableList(),
+                parameters = parameters
+            )
+        } else {
+            ParametersExpressionParse.parseTemplateParameters(
+                fromPath = fromPath,
+                path = path,
+                template = template,
+                templateParameters = templateMap.values.toMutableList(),
+                parameters = parameters
+            )
+        }
     }
 
     private fun error(content: String) {

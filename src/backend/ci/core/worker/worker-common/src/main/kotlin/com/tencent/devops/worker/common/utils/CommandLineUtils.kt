@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.CharsetType
+import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.worker.common.env.AgentEnv.getOS
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.script.ScriptEnvUtils
@@ -64,6 +65,7 @@ object CommandLineUtils {
     ): String {
 
         val result = StringBuilder()
+        val errorResult = StringBuilder()
 
         val cmdLine = CommandLine.parse(command)
         val executor = CommandLineExecutor()
@@ -134,6 +136,7 @@ object CommandLineUtils {
                 } else {
                     result.append(tmpLine).append("\n")
                 }
+                errorResult.append(tmpLine).append("\n")
             }
         }
         executor.streamHandler = PumpStreamHandler(outputStream, errorStream)
@@ -143,7 +146,9 @@ object CommandLineUtils {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
-                    errorMsg = "$prefix Script command execution failed with exit code($exitCode)"
+                    errorMsg = "$prefix Script command execution failed with exit code($exitCode) \n" +
+                        "Error message tracking:\n" +
+                        errorResult.toString().takeLast(PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX - 200)
                 )
             }
         } catch (ignored: Throwable) {

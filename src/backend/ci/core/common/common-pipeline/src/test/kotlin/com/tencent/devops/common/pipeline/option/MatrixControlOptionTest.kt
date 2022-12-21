@@ -73,9 +73,44 @@ internal class MatrixControlOptionTest {
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 21
+        Assertions.assertEquals(19, contextCase.size)
+    }
+
+    @Test
+    fun calculateValueMatrix1() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+                    platform: [Android, IOS]
+                    env: [Test, Development, Shipping]
+                """,
+            includeCaseStr = YamlUtil.toYaml(
+                listOf(
+                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
+                    mapOf(
+                        "platform" to "Android",
+                        "file_ext" to "apk"
+                    ),
+                    // +0 符合 os = macos, var1 = a, var2 = 1 增加 var3 = xxx
+                    mapOf(
+                        "platform" to "IOS",
+                        "file_ext" to "ipa"
+                    )
+                )
+            ),
+            // -1
+            excludeCaseStr = null,
+            totalCount = 10, // 2*3*3 -1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
         )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
@@ -158,7 +193,7 @@ var2:
             println("$index: $map")
         }
         Assertions.assertEquals(
-            contextCase, JsonUtil.to(
+            JsonUtil.to(
                 "[{\"matrix.os\":\"docker\",\"matrix.var1\":\"a\",\"matrix.var2\":\"2\"},{\"matrix.os\":\"docker\"," +
                     "\"matrix.var1\":\"a\",\"matrix.var2\":\"3\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"," +
                     "\"matrix.var2\":\"1\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\",\"matrix.var2\":\"2\"}," +
@@ -174,10 +209,9 @@ var2:
                     "\"matrix.var3\":\"yyy\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"1\"," +
                     "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"2\"," +
                     "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"macos\",\"matrix.var1\":\"c\",\"matrix.var2\":\"3\"," +
-                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"d\",\"matrix.var2\":\"0\"}," +
-                    "{\"matrix.os\":\"macos\",\"matrix.var1\":\"b\",\"matrix.var3\":\"yyy\"},{\"matrix.var1\":\"c\"," +
-                    "\"matrix.var3\":\"zzz\"}]\n"
-            )
+                    "\"matrix.var3\":\"zzz\"},{\"matrix.os\":\"docker\",\"matrix.var1\":\"d\",\"matrix.var2\":\"0\"}]\n"
+            ),
+            contextCase
         )
     }
 
@@ -200,7 +234,7 @@ var2:
                 """,
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +0 os = docker, var1 = d 在矩阵中不存在，抛弃
+                    // +1 os = docker, var1 = d, var2 = 0 不存在，直接计入
                     mapOf(
                         "os" to "docker",
                         "var1" to "d",
@@ -224,7 +258,7 @@ var2:
                         "var1" to "c",
                         "var3" to "zzz"
                     ),
-                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    // +1 符合 var1 = c 的增加 var3 = zzz
                     mapOf(
                         "var1" to "c",
                         "os" to "docker",
@@ -252,9 +286,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 21
-        )
+        Assertions.assertEquals(19, contextCase.size)
     }
 
     @Test
@@ -270,7 +302,7 @@ var2:
                         "var1" to "b",
                         "var3" to "yyy"
                     ),
-                    // +0 符合 var1 = c 的增加 var3 = zzz
+                    // +1 不存在 service = c, cpu = zzz ，直接计入新组合
                     mapOf(
                         "service" to "c",
                         "cpu" to "zzz"
@@ -301,9 +333,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
@@ -347,9 +377,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 2
-        )
+        Assertions.assertEquals(2, contextCase.size)
     }
 
     @Test
@@ -380,9 +408,12 @@ var2:
                     "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
                 )
             ),
+            // +0 service = api 时追加 var1 = b, var3 = yyy
+            // +1 service = c, cpu = zzz 同key全都不匹配，增加组合
             "depends.job1.outputs.matrix_include" to """
                 [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
             """,
+            // -1 排除一种情况
             "depends.job1.outputs.matrix_exclude" to """
                 [{"service":"project","cpu":"arm64"}]
             """,
@@ -398,9 +429,7 @@ var2:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
@@ -428,9 +457,12 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
                     "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
                 )
             ),
+            // +0 service = api 时追加 var1 = b, var3 = yyy
+            // +1 service = c, cpu = zzz 同key全都不匹配，增加组合
             "depends.job1.outputs.matrix_include" to """
                 [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
             """,
+            // -1 排除一种情况
             "depends.job1.outputs.matrix_exclude" to """
                 [{"service":"project","cpu":"arm64"}]
             """,
@@ -446,9 +478,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
@@ -479,9 +509,12 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
                     "cpu" to "\${{ fromJSON(depends.job1.outputs.cpu) }}"
                 )
             ),
+            // +0 service = api 时追加 var1 = b, var3 = yyy
+            // +1 service = c, cpu = zzz 同key全都不匹配，增加组合
             "depends.job1.outputs.matrix_include" to """
                 [{"service":"api","var1":"b","var3":"yyy"},{"service":"c","cpu":"zzz"}]
             """,
+            // -1 排除一种情况
             "depends.job1.outputs.matrix_exclude" to """
                 [{"service":"project","cpu":"arm64"}]
             """,
@@ -497,9 +530,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
@@ -536,6 +567,8 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             fastKill = true,
             maxConcurrency = 50
         )
+        // +1 service = gateway, cpu = m1max 无法完全匹配
+        // -1 排除掉一种情况
         val buildContext = mapOf(
             "depends.job1.outputs.matrix" to """
             {
@@ -568,25 +601,22 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(
-            contextCase.size, 7
-        )
+        Assertions.assertEquals(6, contextCase.size)
     }
 
     @Test
     fun calculateValueMatrixMaxSizeTest() {
         val matrixControlOption = MatrixControlOption(
-            // 2*3*3 = 18
+            // 4 * 4 * 4 * 4 = 256
             strategyStr = """
                     os: [docker,macos,os1,os2]
                     var1: [a,b,c,d]
                     var2: [1,2,3,4]
                     var3: [Q,W,E,R]
                 """,
-            // +2
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +1 额外的情况
+                    // +0 var2 = 1 的全部增加 var4 = a
                     mapOf(
                         "var4" to "a",
                         "var2" to "1"
@@ -613,7 +643,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase.size, 257)
+        Assertions.assertEquals(256, contextCase.size)
     }
 
     @Test
@@ -624,12 +654,13 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
                 """,
             includeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // +1 额外的情况
+                    // +0 追加 var1 var2
                     mapOf(
                         "os" to "docker",
                         "var1" to "a",
                         "var2" to "1"
                     ),
+                    // 追加 var1
                     mapOf(
                         "os" to "docker",
                         "var1" to "b"
@@ -638,15 +669,11 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             ),
             excludeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // -0 先exclude再include
+                    // -1 先include再exclude，能匹配
                     mapOf(
                         "os" to "docker",
-                        "var1" to "a",
+                        "var1" to "b",
                         "var2" to "1"
-                    ),
-                    // -1
-                    mapOf(
-                        "os" to "docker"
                     )
                 )
             ),
@@ -660,7 +687,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase.size, 0)
+        Assertions.assertEquals(0, contextCase.size)
     }
 
     @Test
@@ -683,7 +710,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
             ),
             excludeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // -0 先exclude再include
+                    // -0 不匹配
                     mapOf(
                         "os" to "docker",
                         "var1" to "a",
@@ -701,7 +728,7 @@ cpu: ${'$'}{{ fromJSON(depends.job1.outputs.cpu) }}""",
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase, JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"))
+        Assertions.assertEquals(JsonUtil.to("[{\"matrix.os\":\"docker\",\"matrix.var1\":\"b\"}]"), contextCase)
     }
 
     @Test
@@ -723,7 +750,7 @@ os:
             ),
             excludeCaseStr = YamlUtil.toYaml(
                 listOf(
-                    // -0 先exclude再include
+                    // -0 先include再exclude
                     mapOf(
                         "os" to "docker",
                         "var1" to "a",
@@ -741,7 +768,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase.size, 2)
+        Assertions.assertEquals(1, contextCase.size)
     }
 
     @Test
@@ -797,7 +824,7 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase.size, 2)
+        Assertions.assertEquals(2, contextCase.size)
     }
 
     @Test
@@ -849,6 +876,27 @@ os:
         contextCase.forEachIndexed { index, map ->
             println("$index: $map")
         }
-        Assertions.assertEquals(contextCase.size, 1)
+        Assertions.assertEquals(0, contextCase.size)
+    }
+
+    @Test
+    fun calculateValueMatrixJson3() {
+        val matrixControlOption = MatrixControlOption(
+            // 2*3*3 = 18
+            strategyStr = """
+var1: ['OFF', 'ON']
+var2: [ { a: '1', b: '2' }, { a: '3', b: '4' } ]
+                """,
+            totalCount = 10, // 3*3 + 2 - 1
+            finishCount = 1,
+            fastKill = true,
+            maxConcurrency = 50
+        )
+        val contextCase = matrixControlOption.convertMatrixConfig(emptyMap()).getAllCombinations()
+        println(contextCase.size)
+        contextCase.forEachIndexed { index, map ->
+            println("$index: $map")
+        }
+        Assertions.assertEquals(4, contextCase.size)
     }
 }

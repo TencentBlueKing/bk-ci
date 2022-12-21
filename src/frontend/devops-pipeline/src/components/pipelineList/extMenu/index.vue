@@ -1,33 +1,56 @@
 <template>
-    
-    <bk-popover class="dot-menu" placement="right" ref="dotMenuRef" theme="dot-menu light" trigger="mouseenter" :arrow="false" offset="15" :distance="0">
-        <div v-if="config.extMenu.length" class="dot-menu-trigger">
-            <div class="footer-ext-dots">
-                <div class="ext-dot"></div>
-                <div class="ext-dot"></div>
-                <div class="ext-dot"></div>
-            </div>
+    <bk-popover
+        :disabled="config.length === 0"
+        placement="bottom"
+        ref="dotMenuRef"
+        theme="dot-menu light"
+        trigger="click"
+        class="pipeline-ext-menu"
+        :tippy-options="{
+            arrow: false,
+            placement: 'bottom-end'
+        }"
+    >
+        <div :class="`dot-menu-trigger ${extCls}`">
+            <i class="devops-icon icon-more"></i>
         </div>
-        <ul class="dot-menu-list" slot="content">
-            <li :class="[{ 'is-disable': item.disable }, 'dot-menu-item']" v-for="(item, index) of config.extMenu" :key="index" @click.stop="clickMenuItem(item)">{{ item.text }}</li>
+        <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
+            <li
+                :class="[{ 'is-disable': item.disable }, 'dot-menu-item']"
+                v-for="(item, index) of config"
+                v-bk-tooltips="getTooltips(item)"
+                :key="index"
+                @click.stop="clickMenuItem(item)">
+                {{ item.text }}
+            </li>
         </ul>
     </bk-popover>
-    
+
 </template>
 
 <script>
     export default {
         props: {
-            config: {
+            data: {
                 type: Object,
-                default () {
-                    return {
-                        extMenu: []
-                    }
-                }
+                default: () => ({})
+            },
+            config: {
+                type: Array,
+                default: () => []
+            },
+            extCls: {
+                type: String,
+                default: ''
             }
         },
         methods: {
+            getTooltips (item) {
+                return {
+                    content: item?.tooltips,
+                    disabled: !item?.tooltips
+                }
+            },
             clickMenuItem (item) {
                 if (item.disable) return
 
@@ -38,7 +61,8 @@
                 }
 
                 this.$refs.dotMenuRef.hideHandler()
-                item.handler(this.config.pipelineId)
+                console.log(this.data)
+                item.handler(this.data, item)
             }
         }
     }
@@ -46,7 +70,14 @@
 
 <style lang="scss">
      @import './../../../scss/conf';
-    
+
+    .pipeline-ext-menu {
+        display: flex;
+        .tippy-active .dot-menu-trigger {
+            background: #EAEBF0;
+        }
+    }
+
     .ext-dot {
         width: 3px;
         height: 3px;
@@ -56,11 +87,11 @@
             margin-top: 4px;
         }
     }
-    
+
     .dot-menu {
         position: relative;
-        width: 23px;
-        height: 30px;
+        padding: 0 4px;
+        display: inline-flex;
         cursor: pointer;
         &:hover,
         &.active {
@@ -88,13 +119,16 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        width: 23px;
-        height: 100%;
         text-align: center;
-        font-size: 0;
+        font-size: 22px;
         cursor: pointer;
+        border-radius: 50%;
+        &:hover {
+            background: #EAEBF0;
+            color: $primaryColor;
+        }
     }
-    
+
     .dot-menu-list {
         margin: 0;
         padding: 0;
@@ -107,10 +141,10 @@
         .dot-menu-item {
             display: block;
             width: 100%;
-            height: 42px;
-            line-height: 42px;
-            text-align: center;
-            font-size: 14px;
+            height: 32px;
+            line-height: 32px;
+            font-size: 12px;
+            padding: 0 20px;
             color: $fontWeightColor;
             background-color: #fff;
             cursor: pointer;

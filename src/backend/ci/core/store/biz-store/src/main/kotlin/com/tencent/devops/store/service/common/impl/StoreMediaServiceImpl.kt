@@ -49,7 +49,7 @@ class StoreMediaServiceImpl : StoreMediaService {
     lateinit var storeMediaInfoDao: StoreMediaInfoDao
 
     override fun add(userId: String, type: StoreTypeEnum, storeMediaInfo: StoreMediaInfoRequest): Result<Boolean> {
-        logger.info("addMedia input: userId[$userId] type[$type] storeMediaInfo:[$storeMediaInfo]")
+        logger.info("addMedia params: [$userId|$type|$storeMediaInfo]")
         storeMediaInfoDao.add(
             dslContext = dslContext,
             id = UUIDUtil.generate(),
@@ -65,7 +65,7 @@ class StoreMediaServiceImpl : StoreMediaService {
         id: String,
         storeMediaInfo: StoreMediaInfoRequest
     ): Result<Boolean> {
-        logger.info("updateMedia input: userId[$userId] id[$id] storeMediaInfo:[$storeMediaInfo]")
+        logger.info("updateMedia params: [$userId|$id|$storeMediaInfo]")
         storeMediaInfoDao.updateById(
             dslContext = dslContext,
             id = id,
@@ -76,13 +76,12 @@ class StoreMediaServiceImpl : StoreMediaService {
     }
 
     override fun deleteByStoreCode(userId: String, storeCode: String, storeType: StoreTypeEnum): Result<Boolean> {
-        logger.info("deleteByStoreCode input: userId[$userId] storeCode[$storeCode] storeType:[${storeType.type}]")
+        logger.info("deleteByStoreCode params: [$userId|$storeCode|$storeType]")
         storeMediaInfoDao.deleteByStoreCode(dslContext, storeCode, storeType.type.toByte())
         return Result(true)
     }
 
     override fun get(userId: String, id: String): Result<StoreMediaInfo?> {
-        logger.info("getMedia input: userId[$userId] id[$id] ")
         val storeMediaRecord = storeMediaInfoDao.getMediaInfo(
             dslContext = dslContext,
             id = id
@@ -97,7 +96,6 @@ class StoreMediaServiceImpl : StoreMediaService {
     }
 
     override fun getByCode(storeCode: String, storeType: StoreTypeEnum): Result<List<StoreMediaInfo>?> {
-        logger.info("getMedia input: storeCode[$storeCode] storeType[$storeType] ")
         val storeMediaInfoList = mutableListOf<StoreMediaInfo>()
         val storeMediaRecord = storeMediaInfoDao.getMediaInfoByStoreCode(
             dslContext = dslContext,

@@ -206,7 +206,6 @@ class PipelineBuildVarDao @Autowired constructor() {
         with(T_PIPELINE_BUILD_VAR) {
             variables.forEach { v ->
                 val baseStep = dslContext.update(this)
-                    .set(BUILD_ID, buildId)
                 val valueType = v.valueType
                 if (valueType != null) {
                     baseStep.set(VAR_TYPE, valueType.name)

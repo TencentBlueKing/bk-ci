@@ -97,6 +97,12 @@ interface NotifyMessageTemplateService {
     fun sendNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean>
 
     /**
+     * 使用模板取消消息通知
+     * @param request 使用模板发送消息通知请求报文体
+     */
+    fun completeNotifyMessageByTemplate(request: SendNotifyMessageTemplateRequest): Result<Boolean>
+
+    /**
      * 使用模板发送消息通知
      * @param getNotifyMessageByTemplate 使用模板发送消息通知请求报文体
      */

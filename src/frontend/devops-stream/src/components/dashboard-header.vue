@@ -56,25 +56,25 @@
                         name: this.$t('dashboardNav'),
                         active: this.$route.name === 'dashboard',
                         routeName: 'dashboard'
-                    },
-                    {
-                        name: this.$t('changeLog'),
-                        active: false,
-                        type: 'url',
-                        url: LINK_CONFIG.CHANGE_LOG
-                    },
-                    {
-                        name: this.$t('documentation'),
-                        active: false,
-                        type: 'url',
-                        url: LINK_CONFIG.STREAM
-                    },
-                    {
-                        name: this.$t('issue'),
-                        active: false,
-                        type: 'url',
-                        url: LINK_CONFIG.ISSUE
                     }
+                    // {
+                    //     name: this.$t('changeLog'),
+                    //     active: false,
+                    //     type: 'url',
+                    //     url: LINK_CONFIG.CHANGE_LOG
+                    // },
+                    // {
+                    //     name: this.$t('documentation'),
+                    //     active: false,
+                    //     type: 'url',
+                    //     url: LINK_CONFIG.STREAM
+                    // },
+                    // {
+                    //     name: this.$t('issue'),
+                    //     active: false,
+                    //     type: 'url',
+                    //     url: LINK_CONFIG.ISSUE
+                    // }
                 ]
             }
         },

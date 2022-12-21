@@ -132,6 +132,6 @@ interface ArchiveSDKApi : WorkerRestApiSDK {
         url: String,
         file: File,
         headers: Map<String, String>? = emptyMap(),
-        isVmBuildEnv: Boolean
+        isVmBuildEnv: Boolean? = null
     ): Result<Boolean>
 }

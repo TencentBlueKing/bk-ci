@@ -34,6 +34,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectLogo
+import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
@@ -57,9 +58,9 @@ interface ProjectService {
         userId: String,
         projectCreateInfo: ProjectCreateInfo,
         accessToken: String?,
-        createExt: ProjectCreateExtInfo,
-        projectId: String? = null,
-        channel: ProjectChannelCode
+        createExtInfo: ProjectCreateExtInfo,
+        defaultProjectId: String? = null,
+        projectChannel: ProjectChannelCode
     ): String
 
     fun createExtProject(
@@ -86,26 +87,28 @@ interface ProjectService {
     fun getByEnglishName(englishName: String): ProjectVO?
 
     /**
-     * 修改项目信息
+     * 修改项目信息 [englishName]是项目英文名，目前平台在api接口上会把他命名成projectId，实际上与t_project表中的project_id字段不同
+     * 后续会统一
      */
-    fun update(userId: String, projectId: String, projectUpdateInfo: ProjectUpdateInfo, accessToken: String?): Boolean
+    fun update(
+        userId: String,
+        englishName: String,
+        projectUpdateInfo: ProjectUpdateInfo,
+        accessToken: String?
+    ): Boolean
 
     /**
      * 更新Logo
      */
     fun updateLogo(
         userId: String,
-        projectId: String,
+        englishName: String, /* englishName is projectId */
         inputStream: InputStream,
         disposition: FormDataContentDisposition,
         accessToken: String?
     ): Result<ProjectLogo>
 
-    fun updateProjectName(
-        userId: String,
-        projectCode: String,
-        projectName: String
-    ): Boolean
+    fun updateProjectName(userId: String, projectId: String/* projectId is englishName */, projectName: String): Boolean
 
     /**
      * 获取所有项目信息
@@ -133,9 +136,7 @@ interface ProjectService {
 
     fun getNameByCode(projectCodes: String): HashMap<String, String>
 
-    fun grayProjectSet(): Set<String>
-
-    fun updateUsableStatus(userId: String, projectId: String, enabled: Boolean)
+    fun updateUsableStatus(userId: String, englishName: String /* englishName is projectId */, enabled: Boolean)
 
     fun searchProjectByProjectName(projectName: String, limit: Int, offset: Int): Page<ProjectVO>
 
@@ -145,10 +146,7 @@ interface ProjectService {
 
     fun getMaxId(): Long
 
-    fun getProjectListById(
-        minId: Long,
-        maxId: Long
-    ): List<ProjectBaseInfo>
+    fun getProjectListById(minId: Long, maxId: Long): List<ProjectBaseInfo>
 
     fun verifyUserProjectPermission(
         userId: String,
@@ -163,7 +161,7 @@ interface ProjectService {
 
     fun relationIamProject(projectCode: String, relationId: String): Boolean
 
-    fun getProjectByName(
-        projectName: String
-    ): ProjectVO?
+    fun getProjectByName(projectName: String): ProjectVO?
+
+    fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
 }

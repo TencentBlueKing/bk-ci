@@ -92,7 +92,8 @@ class CommitService @Autowired constructor(
             CommitResponse(
                 name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: "unknown repo"),
                 elementId = elementId,
-                records = a.value.filter { it.commit.isNotBlank() })
+                records = a.value.filter { it.commit.isNotBlank() }
+            )
         } ?: listOf()
     }
 
@@ -118,7 +119,8 @@ class CommitService @Autowired constructor(
                 elementId = elementId,
                 repoId = repoId,
                 page = page,
-                pageSize = pageSize) ?: return listOf()
+                pageSize = pageSize
+            ) ?: return listOf()
         } else {
             commitDao.getLatestCommitByName(
                 dslContext = dslContext,
@@ -126,7 +128,8 @@ class CommitService @Autowired constructor(
                 elementId = elementId,
                 repoName = repositoryId,
                 page = page,
-                pageSize = pageSize) ?: return listOf()
+                pageSize = pageSize
+            ) ?: return listOf()
         }
         return commitList.map { data ->
             CommitData(

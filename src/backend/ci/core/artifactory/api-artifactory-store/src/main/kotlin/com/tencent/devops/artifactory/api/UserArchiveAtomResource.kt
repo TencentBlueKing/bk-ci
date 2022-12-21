@@ -54,7 +54,7 @@ interface UserArchiveAtomResource {
 
     @ApiOperation("归档插件包")
     @POST
-    @Path("/projects/{projectCode}/atoms/{atomCode}/versions/{version}/types/{releaseType}/archive")
+    @Path("/projects/{projectCode}/ids/{atomId}/codes/{atomCode}/versions/{version}/types/{releaseType}/archive")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun archiveAtom(
         @ApiParam("userId", required = true)
@@ -63,6 +63,9 @@ interface UserArchiveAtomResource {
         @ApiParam("项目编码", required = true)
         @PathParam("projectCode")
         projectCode: String,
+        @ApiParam("插件ID", required = true)
+        @PathParam("atomId")
+        atomId: String,
         @ApiParam("插件代码", required = true)
         @PathParam("atomCode")
         atomCode: String,

@@ -11,7 +11,7 @@ interface TurboPlanInstanceRepository : MongoRepository<TTurboPlanInstanceEntity
     /**
      * 根据编译加速方案id和客户端ip查询
      */
-    fun findByTurboPlanIdAndClientIp(turboPlanId: String, clientIp: String): TTurboPlanInstanceEntity?
+    fun findFirstByTurboPlanIdAndClientIp(turboPlanId: String, clientIp: String): TTurboPlanInstanceEntity?
 
     /**
      * 根据编译加速方案id，流水线id和流水线元素id查询

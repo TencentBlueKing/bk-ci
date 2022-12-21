@@ -29,6 +29,7 @@ package com.tencent.devops.stream.pojo
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties
 import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.sdk.github.response.CommitResponse
 import com.tencent.devops.scm.pojo.Commit
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -84,5 +85,22 @@ data class StreamCommitInfo(
         shortId = c.shortId,
         title = c.title,
         scrollObjectId = c.scrollObjectId
+    )
+
+    constructor(c: CommitResponse) : this(
+        // todo 确定以下属性是否正确
+        authorEmail = c.commit.author.email,
+        authorName = c.commit.author.name,
+        authoredDate = c.commit.author.date,
+        committedDate = c.commit.committer.date,
+        committerEmail = c.commit.committer.email,
+        committerName = c.commit.committer.name,
+        createdAt = c.commit.committer.date,
+        id = c.nodeId,
+        message = c.commit.message,
+        parentIds = c.parents.map { it.sha },
+        shortId = null,
+        title = null,
+        scrollObjectId = null
     )
 }

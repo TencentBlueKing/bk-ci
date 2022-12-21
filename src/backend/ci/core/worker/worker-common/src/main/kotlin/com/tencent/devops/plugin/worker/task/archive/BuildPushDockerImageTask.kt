@@ -132,7 +132,9 @@ class BuildPushDockerImageTask : ITask() {
                 runtimeVariables = runtimeVariables,
                 projectId = projectId,
                 dir = workspace,
-                buildEnvs = buildVariables.buildEnvs)
+                buildEnvs = buildVariables.buildEnvs,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+            )
 
             LoggerService.addNormalLine("Start to build the docker image. imageName:$imageName; imageTag:$imageTag")
             val buildScript =
@@ -145,7 +147,9 @@ class BuildPushDockerImageTask : ITask() {
                     runtimeVariables = runtimeVariables,
                     projectId = projectId,
                     dir = workspace,
-                    buildEnvs = buildVariables.buildEnvs)
+                    buildEnvs = buildVariables.buildEnvs,
+                    asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+                )
             } catch (t: RuntimeException) {
                 LoggerService.addErrorLine("Dockerfile第一行请确认使用 $repoAddr")
                 throw TaskExecuteException(
@@ -157,13 +161,16 @@ class BuildPushDockerImageTask : ITask() {
 
             LoggerService.addNormalLine("Start to push the docker image. imageName:$imageName; imageTag:$imageTag")
             val pushScript = "sudo docker push $repoAddr/paas/$projectId/$imageName:$imageTag"
-            command.execute(buildId = buildId,
+            command.execute(
+                buildId = buildId,
                 script = pushScript,
                 taskParam = taskParams,
                 runtimeVariables = runtimeVariables,
                 projectId = projectId,
                 dir = workspace,
-                buildEnvs = buildVariables.buildEnvs)
+                buildEnvs = buildVariables.buildEnvs,
+                asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
+            )
         }
     }
 

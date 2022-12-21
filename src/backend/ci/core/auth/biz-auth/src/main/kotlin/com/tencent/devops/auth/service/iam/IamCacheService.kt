@@ -153,7 +153,7 @@ class IamCacheService @Autowired constructor(
         managerActionDto.id = action
         val actionPolicyDTO = policyService!!.getPolicyByAction(userId, managerActionDto, null)
             ?: return emptyList()
-        logger.info("[IAM] getIamData actionPolicyDTO $actionPolicyDTO")
+        logger.info("[IAM] getProjectIamData : actionPolicyDTO = $actionPolicyDTO")
         return AuthUtils.getProjects(actionPolicyDTO)
     }
 

@@ -56,6 +56,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
+import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @JsonTypeInfo(
@@ -94,37 +95,46 @@ import io.swagger.annotations.ApiModelProperty
     JsonSubTypes.Type(value = CodeP4WebHookTriggerElement::class, name = CodeP4WebHookTriggerElement.classType)
 )
 @Suppress("ALL")
+@ApiModel("Element 基类")
 abstract class Element(
     @ApiModelProperty("任务名称", required = false)
     open val name: String,
     @ApiModelProperty("id", required = false)
     open var id: String? = null,
-    @ApiModelProperty("状态", required = false)
+    @ApiModelProperty("状态(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var status: String? = null,
-    @ApiModelProperty("执行次数", required = false)
+    @ApiModelProperty("执行次数(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var executeCount: Int = 1,
-    @ApiModelProperty("是否重试", required = false)
+    @ApiModelProperty("是否重试(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canRetry: Boolean? = null,
-    @ApiModelProperty("是否跳过", required = false)
+    @ApiModelProperty("是否跳过(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var canSkip: Boolean? = null,
-    @ApiModelProperty("执行时间", required = false)
+    @ApiModelProperty("执行时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var elapsed: Long? = null,
-    @ApiModelProperty("启动时间", required = false)
+    @ApiModelProperty("启动时间(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var startEpoch: Long? = null,
-    @ApiModelProperty("插件版本", required = false)
+    @ApiModelProperty("插件原始版本(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var originVersion: String? = null,
+    @ApiModelProperty("插件版本", required = true)
     open var version: String = "1.*",
-    @ApiModelProperty("模板对比的时候是不是有变更", required = false)
+    @ApiModelProperty("模板对比的时候是不是有变更(temporary field)", required = false)
     open var templateModify: Boolean? = null, // 模板对比的时候是不是又变更
     @ApiModelProperty("附加参数", required = false)
     open var additionalOptions: ElementAdditionalOptions? = null,
     @ApiModelProperty("用户自定义ID，用于上下文键值设置", required = false)
     open var stepId: String? = null, // 用于上下文键值设置
-    @ApiModelProperty("错误类型", required = false)
+    @ApiModelProperty("错误类型(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorType: String? = null,
-    @ApiModelProperty("错误代码", required = false)
+    @ApiModelProperty("错误代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
     open var errorCode: Int? = null,
-    @ApiModelProperty("错误信息", required = false)
-    open var errorMsg: String? = null
+    @ApiModelProperty("错误信息(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var errorMsg: String? = null,
+    @ApiModelProperty("插件名称,构建结束后的快照名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var atomName: String? = null,
+    @ApiModelProperty("所属插件分类代码(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var classifyCode: String? = null,
+    @ApiModelProperty("所属插件分类名称(仅在运行构建时有用的中间参数，不要在编排保存阶段设置值）", required = false)
+    open var classifyName: String? = null
 ) {
 
     open fun getAtomCode() = getClassType()

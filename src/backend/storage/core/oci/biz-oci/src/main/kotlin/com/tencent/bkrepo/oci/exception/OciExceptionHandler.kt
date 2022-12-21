@@ -57,8 +57,8 @@ import org.springframework.web.bind.annotation.ExceptionHandler
 import org.springframework.web.bind.annotation.ResponseStatus
 import org.springframework.web.bind.annotation.RestControllerAdvice
 
-@Order(Ordered.HIGHEST_PRECEDENCE + 1)
-@RestControllerAdvice
+@Order(Ordered.HIGHEST_PRECEDENCE)
+@RestControllerAdvice("com.tencent.bkrepo.oci")
 class OciExceptionHandler(
     private val ociProperties: OciProperties
 ) {

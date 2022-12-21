@@ -39,6 +39,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleSummaryWithPermission
 import com.tencent.devops.quality.pojo.RuleInterceptHistory
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import com.tencent.devops.quality.api.v3.ServiceQualityRuleResource as ServiceQualityRuleResourceV3
 
@@ -55,6 +56,7 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<QualityRuleSummaryWithPermission>> {
+        logger.info("OPENAPI_QUALITY_V4|$userId|list rule|$projectId|$page|$pageSize")
         return client.get(ServiceQualityRuleResource::class).list(
             userId = userId,
             projectId = projectId,
@@ -70,6 +72,7 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         userId: String,
         rule: RuleCreateRequest
     ): Result<String> {
+        logger.info("OPENAPI_QUALITY_V4|$userId|create rule|$projectId|$rule")
         return client.get(ServiceQualityRuleResource::class).create(userId, projectId, rule)
     }
 
@@ -81,6 +84,7 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         ruleHashId: String,
         rule: RuleUpdateRequest
     ): Result<Boolean> {
+        logger.info("OPENAPI_QUALITY_V4|$userId|update rule|$projectId|$ruleHashId|$rule")
         return client.get(ServiceQualityRuleResource::class).update(userId, projectId, ruleHashId, rule)
     }
 
@@ -91,6 +95,7 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         userId: String,
         ruleHashId: String
     ): Result<Boolean> {
+        logger.info("OPENAPI_QUALITY_V4|$userId|delete rule|$projectId|$ruleHashId")
         return client.get(ServiceQualityRuleResource::class).delete(userId, projectId, ruleHashId)
     }
 
@@ -107,6 +112,10 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>> {
+        logger.info(
+            "OPENAPI_QUALITY_V4|$userId|list intercepts|$projectId|$pipelineId|$ruleHashId|$interceptResult" +
+                "|$startTime|$endTime|$page|$pageSize"
+        )
         return client.get(ServiceQualityInterceptResource::class).list(
             userId = userId,
             projectId = projectId,
@@ -132,6 +141,10 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<Page<RuleInterceptHistory>> {
+        logger.info(
+            "OPENAPI_QUALITY_V4|$userId|list build hisRule|$projectId|$pipelineId|$ruleHashId|$startTime" +
+                "|$endTime|$page|$pageSize"
+        )
         return client.get(ServiceQualityRuleResourceV3::class).listQualityRuleBuildHis(
             userId = userId,
             projectId = projectId,
@@ -142,5 +155,9 @@ class ApigwQualityResourceV4Impl @Autowired constructor(
             page = page ?: 1,
             pageSize = pageSize ?: 20
         )
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ApigwQualityResourceV4Impl::class.java)
     }
 }

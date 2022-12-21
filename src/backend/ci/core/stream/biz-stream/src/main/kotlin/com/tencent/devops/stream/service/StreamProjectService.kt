@@ -152,10 +152,16 @@ class StreamProjectService @Autowired constructor(
         orderBy: StreamProjectsOrder?,
         sort: StreamSortAscOrDesc?
     ): List<StreamProjectGitInfo>? {
-        return try {
-            if (!redisOperation.hasKey(getProjectListKey(userId))) {
-                cacheProjectList(userId)
+        return if (search.isNullOrBlank()) {
+            val cacheList = cacheProjectList(userId)
+            if (cacheList.isEmpty()) {
+                logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
+                return null
             }
+            val start = ((realPage - 1) * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            val end = (realPage * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
+            cacheList.subList(start, end).map { StreamProjectGitInfo(it) }
+        } else {
             streamGitTransferService.getProjectList(
                 userId = userId,
                 page = realPage,
@@ -170,20 +176,6 @@ class StreamProjectService @Autowired constructor(
                     null
                 }
             )
-        } catch (e: Exception) {
-            logger.warn(
-                "STREAM|gitProjects|stream scm service is unavailable.|userId=$userId|" +
-                    "realPage=$realPage|realPageSize=$realPageSize"
-            )
-            val res = redisOperation.get(getProjectListKey(userId))
-            if (res.isNullOrEmpty()) {
-                logger.info("STREAM|gitProjects|This does not exist in redis|userId=$userId")
-                return null
-            }
-            val cacheList = JsonUtil.to(res, object : TypeReference<List<StreamProjectGitInfo>>() {})
-            val start = ((realPage - 1) * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
-            val end = (realPage * realPageSize).takeIf { it < cacheList.size && it >= 0 } ?: cacheList.size
-            cacheList.subList(start, end)
         }
     }
 
@@ -200,7 +192,7 @@ class StreamProjectService @Autowired constructor(
                 val list = streamGitTransferService.getProjectList(
                     userId = userId,
                     page = page,
-                    pageSize = 150,
+                    pageSize = 75,
                     search = null,
                     orderBy = StreamProjectsOrder.ACTIVITY,
                     sort = StreamSortAscOrDesc.DESC,
@@ -219,12 +211,19 @@ class StreamProjectService @Autowired constructor(
                             description = item.description,
                             avatarUrl = item.avatarUrl,
                             enabledCi = settings[item.id]?.enableCi ?: false,
-                            projectCode = settings[item.id]?.projectCode
+                            projectCode = settings[item.id]?.projectCode,
+                            public = item.public,
+                            name = item.name,
+                            httpsUrlToRepo = item.httpsUrlToRepo,
+                            webUrl = item.webUrl
                         )
                     )
                 }
                 page += 1
             } while (list.isNotEmpty() && page < 3)
+            if (projectList.isEmpty()) {
+                return emptyList()
+            }
             val updateLock = RedisLock(redisOperation, getProjectListLockKey(userId), 10)
             updateLock.lock()
             try {
@@ -272,7 +271,7 @@ class StreamProjectService @Autowired constructor(
             } else {
                 size - 1
             }
-        )?.map { it.removePrefix("git_").toLong() }.let {
+        )?.map { GitCommonUtils.getGitProjectId(it) }.let {
             if (it.isNullOrEmpty()) {
                 return null
             }

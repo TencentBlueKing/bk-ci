@@ -26,13 +26,13 @@ configmap:
 
 # 镜像配置
 gatewayImage:
-  registry: mirrors.tencent.com/bkce
+  registry: __image_registry__
   repository: bkci-gateway
   tag: __image_gateway_tag__
   pullPolicy: IfNotPresent 
   pullSecrets: []
 backendImage:
-  registry: mirrors.tencent.com/bkce
+  registry: __image_registry__
   repository: bkci-backend
   tag: __image_backend_tag__
   pullPolicy: IfNotPresent 
@@ -71,6 +71,14 @@ multiCluster:
   # 兜底策略, 为空则不用兜底
   defaultNamespace: ""
 
+# 构建机资源配置变量
+buildResource:
+  publicDocker:
+    enabled: false
+  k8sBuild:
+    enabled: true
+  defaultValue: KUBERNETES
+
 # 内部数据源配置
 mysql:
   image: 
@@ -101,6 +109,7 @@ mysql:
       collation-server=utf8_general_ci
       max_connections=2000
       default-time-zone='+08:00'
+      sql_mode=STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION
       [client]
       port=3306
       socket=/opt/bitnami/mysql/tmp/mysql.sock
@@ -140,8 +149,7 @@ rabbitmq:
   auth:
     username: admin
     password: blueking
-    # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
-    erlangCookie: blueking
+    erlangCookie: blueking # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
   communityPlugins: "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
@@ -464,7 +472,7 @@ dispatch:
 
 # dispatchDocker Deployment
 dispatchDocker:
-  enabled: true
+  enabled: false
   replicas: 1
   podLabels: {}
   resources:
@@ -616,6 +624,44 @@ image:
 
 # misc Deployment
 misc:
+  enabled: true
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+
+# metrics Deployment
+metrics:
   enabled: true
   replicas: 1
   podLabels: {}
@@ -1199,6 +1245,7 @@ turbo:
 # gateway Deployment
 gateway:
   enabled: true
+  type: ClusterIP
   replicas: 1
   podLabels: {}
   resources:
@@ -1208,6 +1255,44 @@ gateway:
     limits:
       cpu: 500m
       memory: 800Mi
+  hostAliases: []
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: []
+  affinity: {}
+  nodeSelector: {}
+  tolerations: []
+  podAnnotations: {}
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80
+
+# stream Deployment
+stream:
+  enabled: true
+  replicas: 1
+  podLabels: {}
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2000Mi
+    limits:
+      cpu: 500m
+      memory: 3000Mi
   hostAliases: []
   containerSecurityContext:
     enabled: false

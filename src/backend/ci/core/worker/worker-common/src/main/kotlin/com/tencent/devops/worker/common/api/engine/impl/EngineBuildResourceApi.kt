@@ -44,8 +44,10 @@ import okhttp3.RequestBody
 @ApiPriority(priority = 1)
 open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKApi {
 
+    protected var buildId: String? = null
+
     override fun getRequestUrl(path: String, retryCount: Int, executeCount: Int): String {
-        return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount"
+        return "/ms/process/$path?retryCount=$retryCount&executeCount=$executeCount&buildId=$buildId"
     }
 
     override fun setStarted(retryCount: Int): Result<BuildVariables> {
@@ -59,7 +61,9 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
             readTimeoutInSec = 30L,
             writeTimeoutInSec = 30L
         )
-        return objectMapper.readValue(responseContent)
+        val result = objectMapper.readValue<Result<BuildVariables>>(responseContent)
+        buildId = result.data?.buildId
+        return result
     }
 
     override fun claimTask(retryCount: Int): Result<BuildTask> {
@@ -95,7 +99,17 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     }
 
     override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
-        return workerEnd(retryCount)
+        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
+        val request = buildPost(path)
+        val errorMessage = "构建完成请求失败"
+        val responseContent = request(
+            request = request,
+            connectTimeoutInSec = 5L,
+            errorMessage = errorMessage,
+            readTimeoutInSec = 30L,
+            writeTimeoutInSec = 30L
+        )
+        return objectMapper.readValue(responseContent)
     }
 
     override fun heartbeat(executeCount: Int): Result<HeartBeatInfo> {
@@ -163,20 +177,6 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         } catch (ignore: Throwable) {
             return Result("")
         }
-        return objectMapper.readValue(responseContent)
-    }
-
-    protected fun workerEnd(retryCount: Int): Result<Boolean> {
-        val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
-        val request = buildPost(path)
-        val errorMessage = "构建完成请求失败"
-        val responseContent = request(
-            request = request,
-            connectTimeoutInSec = 5L,
-            errorMessage = errorMessage,
-            readTimeoutInSec = 30L,
-            writeTimeoutInSec = 30L
-        )
         return objectMapper.readValue(responseContent)
     }
 }

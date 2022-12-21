@@ -28,7 +28,7 @@
 package com.tencent.devops.stream.pojo
 
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.webhook.enums.code.tgit.TGitObjectKind
+import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -49,7 +49,7 @@ data class StreamBuildHistorySearch(
     @ApiModelProperty("Commit Msg", required = false)
     val commitMsg: String?,
     @ApiModelProperty("Event", required = false)
-    val event: Set<TGitObjectKind>?,
+    val event: Set<StreamGitObjectKind>?,
     @ApiModelProperty("构建状态", required = false)
     val status: Set<BuildStatus>?,
     @ApiModelProperty("流水线列表", required = false)

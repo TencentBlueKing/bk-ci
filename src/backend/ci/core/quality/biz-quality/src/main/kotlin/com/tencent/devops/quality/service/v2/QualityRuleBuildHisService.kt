@@ -119,7 +119,7 @@ class QualityRuleBuildHisService constructor(
                     .filter { it.enable ?: false }.forEach {
                     val requestIndicator = indicatorsCopy.find { indicator -> indicator.enName == it.enName }
                         ?: throw OperationException("${ruleRequest.name} indicator ${it.enName} is not exist")
-                    logger.info("QUALITY|requestIndicator is: $requestIndicator")
+                    logger.info("QUALITY|requestIndicator is: ${requestIndicator.enName}")
 
                         // 使用上下文变量表示阈值时不检查类型
                     if (!Regex("\\$\\{\\{.*\\}\\}").matches(requestIndicator.threshold) &&
@@ -376,7 +376,6 @@ class QualityRuleBuildHisService constructor(
             }
         }
 
-        logger.info("stageFinish is $stageFinish")
         if (stageFinish) {
             stageRules.filter { it.id != record.id }.map {
                 if (it?.status == RuleInterceptResult.INTERCEPT_PASS.name ||
@@ -387,7 +386,7 @@ class QualityRuleBuildHisService constructor(
                     return@map
                 }
             }
-            logger.info("passFlag is $passFlag. start to send stageRequest")
+            logger.info("QUALITY|checkReview|${record.buildId}|passFlag is $passFlag. start to send stageRequest.")
             val ruleHistory = historyDao.list(dslContext, record.projectId, record.pipelineId, null, null,
                 null, null, null, null)
             return client.get(ServiceBuildResource::class).qualityTriggerStage(

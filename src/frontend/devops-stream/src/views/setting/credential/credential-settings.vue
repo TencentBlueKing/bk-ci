@@ -83,7 +83,7 @@
 <style lang="postcss" scoped>
     .credential-settings {
         padding: 16px;
-        height: calc(100vh - 60px);
+        height: calc(100vh - 61px);
         overflow: auto;
 
         .setting-head {

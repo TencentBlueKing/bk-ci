@@ -54,11 +54,7 @@ class ScriptYmlUtilsTest {
             sb.append(str).append("\n")
         }
         val formatStr = ScriptYmlUtils.formatYaml(sb.toString())
-        val preTemplateYamlObject =
-            YamlUtil.getObjectMapper().readValue(formatStr, PreTemplateScriptBuildYaml::class.java)
-
-        println("dasdasd")
-        // val normalize = ScriptYmlUtils.normalizeGitCiYaml(obj, ".ci.yml")
+        YamlUtil.getObjectMapper().readValue(formatStr, PreTemplateScriptBuildYaml::class.java)
     }
 
     @Test
@@ -100,21 +96,6 @@ class ScriptYmlUtilsTest {
             println(formatVariablesValue(u.value!!, settingMap))
         }
         println(obj.variables)
-    }
-
-    private fun getFileStr(fileName: String): String {
-        val classPathResource = ClassPathResource(fileName)
-        val inputStream: InputStream = classPathResource.inputStream
-        val isReader = InputStreamReader(inputStream)
-
-        val reader = BufferedReader(isReader)
-        val sb = StringBuffer()
-        var str: String?
-        while (reader.readLine().also { str = it } != null) {
-            sb.append(str).append("\n")
-        }
-
-        return sb.toString()
     }
 
     private fun formatVariablesValue(value: String, settingMap: Map<String, String>): String {

@@ -40,7 +40,10 @@ class QuartzTraceJobListener : JobListenerSupport() {
 
     override fun jobToBeExecuted(context: JobExecutionContext) {
         MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
-        log.info("${context.jobDetail.key.name}|STREAM_TIMER|bizId:${MDC.get(TraceTag.BIZID)}")
+        log.info(
+            "QuartzTraceJobListener|jobToBeExecuted" +
+                "|STREAM_TIMER|${context.jobDetail.key.name}|bizId|${MDC.get(TraceTag.BIZID)}"
+        )
     }
 
     override fun jobExecutionVetoed(context: JobExecutionContext?) {

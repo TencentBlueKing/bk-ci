@@ -267,7 +267,7 @@ class CodeSvnScmImpl constructor(
             }
             return sb.toString()
         } catch (e: SVNException) {
-            logger.error("获取工程($projectName})版本更新日志失败", e)
+            logger.warn("获取工程($projectName})版本更新日志失败", e)
             throw ScmException(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name

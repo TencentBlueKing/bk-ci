@@ -22,13 +22,15 @@ class ApigwAuthGrantResourceV3Impl @Autowired constructor(
         projectId: String,
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
-        logger.info("grantInstancePermission|$userId|$projectId|$grantInstance")
-        return Result(client.get(ServicePermissionAuthResource::class).grantInstancePermission(
-            userId = userId,
-            projectCode = projectId,
-            grantInstance = grantInstance,
-            token = tokenService.getSystemToken(null)!!
-        ).data ?: false)
+        logger.info("OPENAPI_AUTH_GRANT_V3|$userId|grant instance permission|$projectId|$grantInstance")
+        return Result(
+            client.get(ServicePermissionAuthResource::class).grantInstancePermission(
+                userId = userId,
+                projectCode = projectId,
+                grantInstance = grantInstance,
+                token = tokenService.getSystemToken(null)!!
+            ).data ?: false
+        )
     }
 
     companion object {
