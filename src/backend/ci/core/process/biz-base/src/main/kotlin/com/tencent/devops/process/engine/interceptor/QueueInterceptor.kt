@@ -253,9 +253,9 @@ class QueueInterceptor @Autowired constructor(
                 status = PIPELINE_SETTING_NOT_EXISTS.toInt(),
                 message = "流水线设置不存在/Setting not found"
             )
-        val concurrencyGroup = setting.concurrencyGroup
+        val concurrencyGroup = setting.concurrencyGroup ?: task.pipelineInfo.pipelineId
         return when {
-            !concurrencyGroup.isNullOrBlank() -> {
+            concurrencyGroup.isNotBlank() -> {
                 if (setting.concurrencyCancelInProgress) {
                     val detailUrl = pipelineUrlBean.genBuildDetailUrl(
                         projectCode = projectId,
@@ -279,6 +279,7 @@ class QueueInterceptor @Autowired constructor(
                             0,
                             pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                                 projectId = projectId,
+                                pipelineId = task.pipelineInfo.pipelineId,
                                 status = status
                             )
                         )
