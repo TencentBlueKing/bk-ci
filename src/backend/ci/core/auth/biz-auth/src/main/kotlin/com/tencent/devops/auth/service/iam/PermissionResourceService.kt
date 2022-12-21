@@ -29,8 +29,8 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
 
 /**
@@ -76,7 +76,7 @@ interface PermissionResourceService {
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): List<GroupInfoVo>
+    ): List<IamGroupInfoVo>
 
     /**
      * 获取用户所属组

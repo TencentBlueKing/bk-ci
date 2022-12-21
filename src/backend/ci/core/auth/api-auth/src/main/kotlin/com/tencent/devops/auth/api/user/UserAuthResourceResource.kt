@@ -29,8 +29,8 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
@@ -103,7 +103,7 @@ interface UserAuthResourceResource {
         @ApiParam("资源ID")
         @PathParam("resourceCode")
         resourceCode: String
-    ): Result<List<GroupInfoVo>>
+    ): Result<List<IamGroupInfoVo>>
 
     @GET
     @Path("{resourceCode}/groupMember")

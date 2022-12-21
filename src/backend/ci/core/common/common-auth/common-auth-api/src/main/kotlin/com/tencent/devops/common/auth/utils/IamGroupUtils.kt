@@ -35,6 +35,8 @@ import java.time.LocalDateTime
 object IamGroupUtils {
 
     private const val SYSTEM_DEFAULT_NAME = "蓝盾"
+    // 用户组默认6个月有效期
+    const val DEFAULT_EXPIRED_AT = 180L
 
     fun buildIamGroup(projectName: String, groupName: String): String {
         return "$projectName-$groupName"
@@ -72,8 +74,13 @@ object IamGroupUtils {
         return false
     }
 
+    fun buildSubsetManagerGroupStrategyName(resourceType: String, groupCode: String) = "${resourceType}_$groupCode"
+
     fun buildSubsetManagerGroupName(resourceName: String, groupName: String) =
         "${SYSTEM_DEFAULT_NAME}_${resourceName}_${groupName}"
+
+    fun getSubsetManagerGroupDisplayName(groupName: String) =
+        groupName.substringAfterLast("-")
 
     fun buildSubsetManagerDescription(resourceName: String, userId: String): String {
         return "$resourceName 二级管理员, 由$userId 创建于" +
