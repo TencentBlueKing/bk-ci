@@ -61,7 +61,7 @@ func ListWorkerImages(req *restful.Request, resp *restful.Response) {
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
 
-	result := commonTypes.DisttaskImage{
+	result := commonTypes.WorkerImage{
 		Mesos: make([]commonTypes.Image, 0, 100),
 		K8s:   make([]commonTypes.Image, 0, 100),
 	}

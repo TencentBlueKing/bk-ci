@@ -157,8 +157,8 @@ type Image struct {
 	ProjectWhitelist []string `json:"visual_range"`
 }
 
-// DisttaskImage define a worker iamge on devops
-type DisttaskImage struct {
+// WorkerImage define a worker iamge on devops
+type WorkerImage struct {
 	Mesos []Image `json:"mesos"`
 	K8s   []Image `json:"k8s"`
 }

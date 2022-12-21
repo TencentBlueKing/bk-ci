@@ -10,10 +10,8 @@
 package disttask
 
 import (
-	"bufio"
 	"encoding/json"
 	"fmt"
-	"io"
 	"io/ioutil"
 	"os"
 	"sort"
@@ -35,22 +33,17 @@ import (
 
 // ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
-	f, err := os.Open("./data/VersionList.txt")
-	defer f.Close()
+	f, err := ioutil.ReadFile("./data/VersionList.txt")
 	if err != nil {
 		blog.Error("List Version error:(%v)", err)
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
-
-	result := make([]string, 0, 100)
-	r := bufio.NewReader(f)
-	for {
-		s, _, c := r.ReadLine()
-		if c == io.EOF {
-			break
-		}
-		result = append(result, string(s))
+	s := string(f)
+	if strings.HasSuffix(s, "\n") {
+		s = s[:len(s)-1]
 	}
+	result := strings.Split(s, "\n")
+
 	sort.Sort(sort.Reverse(sort.StringSlice(result)))
 	api.ReturnRest(&api.RestResponse{Resp: resp, Data: result})
 }
@@ -67,7 +60,7 @@ func ListWorkerImages(req *restful.Request, resp *restful.Response) {
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
 
-	result := commonTypes.DisttaskImage{
+	result := commonTypes.WorkerImage{
 		Mesos: make([]commonTypes.Image, 0, 100),
 		K8s:   make([]commonTypes.Image, 0, 100),
 	}
