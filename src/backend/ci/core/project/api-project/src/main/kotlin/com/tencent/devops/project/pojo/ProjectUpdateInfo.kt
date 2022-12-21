@@ -76,7 +76,7 @@ data class ProjectUpdateInfo(
     @ApiModelProperty("项目相关配置")
     val properties: ProjectProperties? = null,
     @ApiModelProperty("项目最大可授权人员范围")
-    val subjectScopes: ArrayList<ManagerScopes>? = ArrayList(),
+    val subjectScopes: ArrayList<SubjectScopeInfo>? = ArrayList(),
     @ApiModelProperty("logo地址")
     val logoAddress: String? = null,
     @ApiModelProperty("是否权限私密")

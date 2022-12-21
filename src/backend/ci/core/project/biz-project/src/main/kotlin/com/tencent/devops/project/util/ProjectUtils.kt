@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.SubjectScopeInfo
 
 @Suppress("ALL")
 object ProjectUtils {
@@ -47,7 +48,6 @@ object ProjectUtils {
             cc_app_id = tProjectRecord.ccAppId ?: 0,
             cc_app_name = tProjectRecord.ccAppName ?: "",
             hybrid_cc_app_id = tProjectRecord.hybridCcAppId,
-
             id = tProjectRecord.id,
             projectId = tProjectRecord.projectId ?: "",
             projectName = tProjectRecord.projectName,
@@ -98,7 +98,7 @@ object ProjectUtils {
                 JsonUtil.to(self, ProjectProperties::class.java)
             },
             subjectScopes = tProjectRecord.subjectscopes?.let {
-                JsonUtil.to(it, object : TypeReference<ArrayList<ManagerScopes>>() {})
+                JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
             },
             authSecrecy = tProjectRecord.isAuthSecrecy
         )
