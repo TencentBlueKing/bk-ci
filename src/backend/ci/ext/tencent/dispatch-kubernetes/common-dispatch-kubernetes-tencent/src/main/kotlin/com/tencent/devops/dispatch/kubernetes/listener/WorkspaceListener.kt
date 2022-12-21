@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.dispatch.sdk.listener
+package com.tencent.devops.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.client.Client
@@ -61,14 +61,12 @@ interface WorkspaceListener {
     @BkTimed
     fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
         try {
-            logger.info("Start to handle the startup message -(${DispatcherContext.getEvent()})")
+            logger.info("Start to handle the startup message")
             onWorkspaceCreate(event)
         } catch (e: BuildFailureException) {
             //onFailure(dispatchService, event, e)
         } catch (t: Throwable) {
             // TODO
-        } finally {
-            DispatcherContext.removeEvent()
         }
     }
 
@@ -83,33 +81,6 @@ interface WorkspaceListener {
         } catch (t: Throwable) {
             logger.warn("Fail to handle the shutdown message - ($event)", t)
         }
-    }
-
-    fun retry(sleepTimeInMS: Int = 30000, retryTimes: Int = 3): Boolean {
-        val event = DispatcherContext.getEvent()
-        if (event == null) {
-            logger.warn("The event is empty")
-            return false
-        }
-        logger.info("Retry the event($event) in $sleepTimeInMS ms")
-        if (event.retryTime > retryTimes) {
-            logger.warn("Fail to dispatch the agent start event with $retryTimes times - ($event)")
-            onFailure(errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.RETRY_STARTUP_FAIL,
-                formatErrorMessage = "Fail to start up the job after $retryTimes times",
-                message = "Fail to start up the job after $retryTimes times")
-        }
-        val sleepTime = if (sleepTimeInMS <= 5000) {
-            // 重试不能低于5秒
-            logger.warn("The retry time is less than 5 seconds, use 5 as default")
-            5000
-        } else {
-            sleepTimeInMS
-        }
-        event.retryTime += 1
-        event.delayMills = sleepTime
-        getDispatchService().redispatch(event)
-        return true
     }
 
     fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
