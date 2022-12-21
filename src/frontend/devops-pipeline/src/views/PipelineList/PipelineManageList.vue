@@ -37,10 +37,10 @@
                     <pipeline-searcher
                         v-model="filters"
                     />
-                    <bk-dropdown-menu class="pipeline-sort-dropdown-menu" align="right">
+                    <bk-dropdown-menu trigger="click" class="pipeline-sort-dropdown-menu" align="right">
                         <template slot="dropdown-trigger">
                             <bk-button class="icon-button">
-                                <logo name="sort" size="12" />
+                                <logo :name="currentSortIconName" size="12" />
                             </bk-button>
                         </template>
                         <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -50,7 +50,10 @@
                                 :active="item.active"
                                 @click="changeSortType(item.id)"
                             >
-                                <a href="javascript:;">{{ item.name }}</a>
+                                <a class="pipeline-sort-item" href="javascript:;">
+                                    {{ item.name }}
+                                    <logo class="pipeline-sort-item-icon" :name="item.sortIcon" size="12" />
+                                </a>
                             </li>
                         </ul>
                     </bk-dropdown-menu>
@@ -238,22 +241,25 @@
                 return [
                     {
                         id: PIPELINE_SORT_FILED.pipelineName,
-                        name: this.$t('newlist.orderByAlpha'),
-                        active: this.isActiveSort(PIPELINE_SORT_FILED.pipelineName)
+                        name: this.$t('newlist.orderByAlpha')
                     }, {
                         id: PIPELINE_SORT_FILED.createTime,
-                        name: this.$t('newlist.orderByCreateTime'),
-                        active: this.isActiveSort(PIPELINE_SORT_FILED.createTime)
+                        name: this.$t('newlist.orderByCreateTime')
                     }, {
                         id: PIPELINE_SORT_FILED.updateTime,
-                        name: this.$t('newlist.orderByUpdateTime'),
-                        active: this.isActiveSort(PIPELINE_SORT_FILED.updateTime)
+                        name: this.$t('newlist.orderByUpdateTime')
                     }, {
                         id: PIPELINE_SORT_FILED.latestBuildStartDate,
-                        name: this.$t('newlist.orderByExecuteTime'),
-                        active: this.isActiveSort(PIPELINE_SORT_FILED.latestBuildStartDate)
+                        name: this.$t('newlist.orderByExecuteTime')
                     }
-                ]
+                ].map(sort => ({
+                    ...sort,
+                    active: this.isActiveSort(sort.id),
+                    sortIcon: this.getSortIconName(sort.id)
+                }))
+            },
+            currentSortIconName () {
+                return this.getSortIconName(this.$route.query.sortType)
             }
 
         },
@@ -300,6 +306,13 @@
             isActiveSort (sortType) {
                 return this.$route.query.sortType === sortType
             },
+            getSortIconName (sortType) {
+                if (this.isActiveSort(sortType) && this.$route.query.collation) {
+                    console.log(123, this.$route.query.collation.toLowerCase())
+                    return `sort-${this.$route.query.collation.toLowerCase()}`
+                }
+                return 'sort'
+            },
             goList () {
                 if (!this.$route.params.viewId) {
                     const viewId = getCacheViewId(this.$route.params.projectId)
@@ -326,13 +339,30 @@
             },
             changeSortType (sortType) {
                 this.$refs?.pipelineBox?.clearSort?.()
+                const { sortType: currentSort, collation, ...restQuery } = this.$route.query
+                const newSortQuery = {
+                    ...restQuery,
+                    sortType,
+                    collation
+                }
+                if (sortType === currentSort) {
+                    newSortQuery.collation = collation === ORDER_ENUM.descending ? ORDER_ENUM.ascending : ORDER_ENUM.descending
+                } else {
+                    switch (sortType) {
+                        case PIPELINE_SORT_FILED.pipelineName:
+                            newSortQuery.collation = ORDER_ENUM.ascending
+                            break
+                        case PIPELINE_SORT_FILED.createTime:
+                        case PIPELINE_SORT_FILED.updateTime:
+                        case PIPELINE_SORT_FILED.latestBuildStartDate:
+                            newSortQuery.collation = ORDER_ENUM.descending
+                            break
+                    }
+                }
+                
                 this.$router.push({
                     ...this.$route,
-                    query: {
-                        ...this.$route.query,
-                        sortType,
-                        collation: ORDER_ENUM.ascending
-                    }
+                    query: newSortQuery
                 })
             },
 
@@ -387,11 +417,18 @@
     .pipeline-sort-dropdown-menu {
         margin: 0 8px;
         .bk-dropdown-list {
+            a.pipeline-sort-item {
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                .pipeline-sort-item-icon {
+                    margin-left: 6px;
+                }
+            }
             [active],
             [active]:hover {
-                > a {
-                    background-color: $primaryColor;
-                    color: white;
+                > a.pipeline-sort-item {
+                    color: $primaryColor;
                  }
             }
         }
