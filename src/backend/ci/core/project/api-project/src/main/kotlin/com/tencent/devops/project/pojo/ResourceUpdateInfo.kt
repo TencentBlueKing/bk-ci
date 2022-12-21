@@ -1,6 +1,5 @@
 package com.tencent.devops.project.pojo
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

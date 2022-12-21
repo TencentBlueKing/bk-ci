@@ -32,10 +32,8 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.config.IamConfiguration
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
@@ -60,6 +58,7 @@ import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -115,12 +114,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             authSecrecy = resourceCreateInfo.projectCreateInfo.authSecrecy
         )
         if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(
-                ManagerScopes(
-                    ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
-                    ALL_MEMBERS
-                )
-            )
+            iamSubjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         if (needApproval) {
             projectDispatcher.dispatch(
@@ -157,7 +151,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        projectInfo: TProjectRecord,
+        dbProjectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         val needApproval = resourceUpdateInfo.needApproval
@@ -165,13 +159,13 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val projectCode = resourceUpdateInfo.projectUpdateInfo.englishName
         val projectName = resourceUpdateInfo.projectUpdateInfo.projectName
         val userId = resourceUpdateInfo.userId
-        val approvalStatus = projectInfo.approvalStatus
-        val relationId = projectInfo.relationId
+        val approvalStatus = dbProjectInfo.approvalStatus
+        val relationId = dbProjectInfo.relationId
         val reason = resourceUpdateInfo.projectUpdateInfo.description
         // todo 上线之前这里必须刷数据，要不会报错，因为拿出的数据库，可授权人员范围为空。
         // 数据库中的最大可授权人员范围
         val dbSubjectscopes = JsonUtil.to(
-            projectInfo.subjectscopes, object : TypeReference<ArrayList<ManagerScopes>>() {}
+            dbProjectInfo.subjectscopes, object : TypeReference<ArrayList<SubjectScopeInfo>>() {}
         )
         logger.info(
             "Rbac modifyResource : $needApproval|$iamSubjectScopes|$projectCode|" +
@@ -183,12 +177,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             authSecrecy = resourceUpdateInfo.projectUpdateInfo.authSecrecy
         )
         if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(
-                ManagerScopes(
-                    ManagerScopesEnum.getType(ManagerScopesEnum.ALL),
-                    ALL_MEMBERS
-                )
-            )
+            iamSubjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
         if (approvalStatus == ApproveStatus.CREATE_PENDING.status ||
@@ -217,7 +206,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                 )
             )
         } else {
-            val isAuthSecrecyChange = projectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
+            val isAuthSecrecyChange = dbProjectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
+            // todo 注意空处理，可能会出现未刷数据的出现问题
             val isSubjectScopesChange = (dbSubjectscopes.toSet() != iamSubjectScopes.toSet())
             logger.info("Rbac modifyResource :$isAuthSecrecyChange|$isAuthSecrecyChange")
             // 若可授权人员范围和私密字段未改变，直接结束
@@ -230,7 +220,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                     projectName = projectName,
                     userId = userId,
                     iamSubjectScopes = iamSubjectScopes,
-                    projectInfo = projectInfo,
+                    projectInfo = dbProjectInfo,
                     isAuthSecrecyChange = isAuthSecrecyChange,
                     isSubjectScopesChange = isSubjectScopesChange,
                     subjectScopesStr = subjectScopesStr
@@ -246,7 +236,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                         projectName = projectName,
                         userId = userId,
                         iamSubjectScopes = iamSubjectScopes,
-                        relationId = projectInfo.relationId
+                        relationId = dbProjectInfo.relationId
                     )
                 }
             }
@@ -255,7 +245,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
 
     private fun checkParams(
         needApproval: Boolean,
-        subjectScopes: ArrayList<ManagerScopes>?,
+        subjectScopes: ArrayList<SubjectScopeInfo>?,
         authSecrecy: Boolean?
     ) {
         if (needApproval && (subjectScopes!!.isEmpty() || authSecrecy == null)) {
@@ -396,6 +386,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         val logger = LoggerFactory.getLogger(TxRbacProjectPermissionServiceImpl::class.java)
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val ALL_MEMBERS = "*"
+        private const val ALL_MEMBERS_NAME = "全体成员"
         private const val VIEW_PROJECT_PERMISSION_GROUP_NAME = "查看项目权限组"
     }
 }
