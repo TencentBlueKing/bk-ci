@@ -39,7 +39,7 @@ import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
-import com.tencent.devops.auth.service.ResourceGroupService
+import com.tencent.devops.auth.service.PermissionResourceGroupService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
@@ -97,7 +97,7 @@ class RbacAuthConfiguration {
         strategyService: StrategyService,
         dslContext: DSLContext,
         authDefaultGroupDao: AuthDefaultGroupDao,
-        resourceGroupService: ResourceGroupService
+        permissionResourceGroupService: PermissionResourceGroupService
     ) = RbacPermissionResourceService(
         client = client,
         permissionScopesService = permissionScopesService,
@@ -107,7 +107,7 @@ class RbacAuthConfiguration {
         strategyService = strategyService,
         dslContext = dslContext,
         authDefaultGroupDao = authDefaultGroupDao,
-        resourceGroupService = resourceGroupService
+        permissionResourceGroupService = permissionResourceGroupService
     )
 
     @Bean
