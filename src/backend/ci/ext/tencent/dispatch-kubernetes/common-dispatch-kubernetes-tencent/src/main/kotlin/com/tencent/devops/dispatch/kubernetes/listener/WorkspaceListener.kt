@@ -28,41 +28,53 @@
 package com.tencent.devops.dispatch.kubernetes.listener
 
 import com.tencent.devops.common.api.pojo.ErrorType
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
-import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
-import com.tencent.devops.notify.api.service.ServiceNotifyResource
-import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.process.engine.common.VMUtils
-import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
-import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
+import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.regex.Pattern
 
 @Component@Suppress("ALL")
-interface WorkspaceListener {
-
-    fun onWorkspaceCreate(event: WorkspaceCreateEvent)
-
-    fun onWorkspaceOperate(event: WorkspaceOperateEvent)
+class WorkspaceListener @Autowired constructor(
+    private val remoteDevService: RemoteDevService,
+    private val remoteDevDispatcher: RemoteDevDispatcher
+) {
 
     @BkTimed
     fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
         try {
-            logger.info("Start to handle the startup message")
-            onWorkspaceCreate(event)
+            logger.info("Start to handle workspace create ($event)")
+            remoteDevService.createWorkspace(
+                userId = event.userId,
+                workspaceReq = WorkspaceReq(
+                    workspaceId = 0L,
+                    name = event.workspaceName,
+                    repositoryUrl = event.repositoryUrl,
+                    branch = event.branch,
+                    devFilePath = event.devFilePath,
+                    devFile = event.devFile,
+                    image = event.image
+                )
+            )
+
+            // 业务逻辑处理完成回调remotedev事件
+            remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
+                traceId = event.traceId,
+                userId = event.userId,
+                workspaceName = event.workspaceName,
+                type = UpdateEventType.CREATE,
+                status = true
+            ))
         } catch (e: BuildFailureException) {
             //onFailure(dispatchService, event, e)
         } catch (t: Throwable) {
@@ -70,25 +82,40 @@ interface WorkspaceListener {
         }
     }
 
-    fun handleWorkspaceOperateMessage(event: WorkspaceOperateEvent) {
+    @BkTimed
+    fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
         try {
-            logger.info("Start to handle the shutdown message ($event)")
+            logger.info("Start to handle workspace operate ($event)")
             try {
-                onWorkspaceOperate(event)
+                when (event.type) {
+                    UpdateEventType.START -> {
+                        remoteDevService.startWorkspace(event.userId, event.workspaceName)
+                    }
+                    UpdateEventType.STOP -> {
+                        remoteDevService.stopWorkspace(event.userId, event.workspaceName)
+                    }
+                    UpdateEventType.DELETE -> {
+                        remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
+                    }
+                    else -> {
+
+                    }
+                }
+
+                // 业务逻辑处理完成回调remotedev事件
+                remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
+                    traceId = event.traceId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName,
+                    type = event.type,
+                    status = true
+                ))
             } catch (t: Throwable) {
-                logger.warn("Fail to handle the shutdown message - ($event)", t)
+                logger.warn("Fail to handle workspace operate ($event)", t)
             }
         } catch (t: Throwable) {
-            logger.warn("Fail to handle the shutdown message - ($event)", t)
+            logger.warn("Fail to handle workspace operate ($event)", t)
         }
-    }
-
-    fun onFailure(errorType: ErrorType, errorCode: Int, formatErrorMessage: String, message: String) {
-        throw BuildFailureException(errorType, errorCode, formatErrorMessage, message)
-    }
-
-    private fun getDispatchService(): DispatchService {
-        return SpringContextUtil.getBean(DispatchService::class.java)
     }
 
     companion object {

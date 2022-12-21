@@ -28,6 +28,8 @@
 package com.tencent.devops.dispatch.kubernetes.pojo.mq
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.remotedev.WorkspaceEvent
+import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)

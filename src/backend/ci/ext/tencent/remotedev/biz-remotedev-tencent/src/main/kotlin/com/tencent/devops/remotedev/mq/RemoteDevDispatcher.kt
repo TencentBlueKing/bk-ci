@@ -28,7 +28,7 @@
 package com.tencent.devops.remotedev.mq
 
 import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceEvent
+import com.tencent.devops.common.remotedev.WorkspaceEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.stereotype.Service

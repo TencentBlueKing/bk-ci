@@ -306,7 +306,7 @@ include(":ext:tencent:common:common-archive-tencent")
 include(":ext:tencent:common:common-pipeline-tencent")
 include(":ext:tencent:common:common-auth:common-auth-tencent")
 include(":ext:tencent:common:common-kafka-tencent")
-include(":ext:tencent:common:common-dispatch-sdk-tencent")
+include(":ext:tencent:common:common-remotedev-tencent")
 
 include(":ext:tencent:project")
 include(":ext:tencent:project:api-project-tencent")

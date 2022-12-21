@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
@@ -52,7 +53,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
-import com.tencent.devops.remotedev.mq.RemoteDevDispatcher
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace

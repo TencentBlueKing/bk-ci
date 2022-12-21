@@ -25,15 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.mq
-
-import com.tencent.devops.common.event.annotation.Event
-
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
-open class WorkspaceEvent(
-    open val userId: String,
-    open val traceId: String,
-    open val workspaceName: String,
-    open val delayMills: Int = 0,
-    open val retryTime: Int = 0
-)
+dependencies {
+    api(project(":core:common:common-event"))
+    compileOnly("org.springframework.boot:spring-boot-starter-amqp")
+}

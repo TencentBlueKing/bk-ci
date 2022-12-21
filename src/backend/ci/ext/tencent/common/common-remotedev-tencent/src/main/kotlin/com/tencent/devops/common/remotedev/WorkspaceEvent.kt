@@ -25,7 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:common:common-dispatch-sdk"))
-    api(project(":ext:tencent:dispatch-kubernetes:api-dispatch-kubernetes-tencent"))
-}
+package com.tencent.devops.common.remotedev
+
+import com.tencent.devops.common.event.annotation.Event
+
+@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
+open class WorkspaceEvent(
+    open val userId: String,
+    open val traceId: String,
+    open val workspaceName: String,
+    open val delayMills: Int = 0,
+    open val retryTime: Int = 0
+)

@@ -28,6 +28,7 @@
 dependencies {
     api(project(":ext:tencent:scm:api-scm-tencent"))
     api(project(":ext:tencent:common:common-pipeline-tencent"))
+    api(project(":ext:tencent:common:common-remotedev-tencent"))
     api(project(":ext:tencent:process:api-process-tencent"))
     api(project(":ext:tencent:project:api-project-tencent"))
 }

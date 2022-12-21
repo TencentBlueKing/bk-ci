@@ -25,13 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo.mq
+package com.tencent.devops.common.remotedev
 
-object MQ {
-    // 远程开发工作空间 ====================================
-    const val EXCHANGE_REMOTE_DEV_LISTENER_DIRECT = "e.engine.remotedev.workspace.listener"
-    const val ROUTE_WORKSPACE_CREATE_STARTUP = "r.engine.remotedev.workspace.listener.create"
-    const val QUEUE_WORKSPACE_CREATE_STARTUP = "q.engine.remotedev.workspace.listener.create"
-    const val ROUTE_WORKSPACE_OPERATE_STARTUP = "r.engine.remotedev.workspace.listener.operate"
-    const val QUEUE_WORKSPACE_OPERATE_STARTUP = "q.engine.remotedev.workspace.listener.operate"
+import com.tencent.devops.common.event.annotation.Event
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
+import org.springframework.stereotype.Service
+
+@Service
+class RemoteDevDispatcher constructor(
+    private val rabbitTemplate: RabbitTemplate
+) {
+    fun dispatch(event: WorkspaceEvent) {
+        try {
+            val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+            rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
+        } catch (e: Throwable) {
+            logger.error("BKSystemErrorMonitor|StreamTriggerDispatcher|error:", e)
+        }
+    }
+
+    private val logger = LoggerFactory.getLogger(RemoteDevDispatcher::class.java)
 }

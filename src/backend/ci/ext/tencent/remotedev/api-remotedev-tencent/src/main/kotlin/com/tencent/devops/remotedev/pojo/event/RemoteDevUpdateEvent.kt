@@ -1,22 +1,21 @@
 package com.tencent.devops.remotedev.pojo.event
 
 import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.remotedev.pojo.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
-import com.tencent.devops.remotedev.pojo.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.MDC
 
 @Event(EXCHANGE_WORKSPACE_UPDATE_FROM_K8S, ROUTE_WORKSPACE_UPDATE_FROM_K8S)
-@ApiModel("k8s -> remoteDev 消息队列事件")
 data class RemoteDevUpdateEvent(
-    @ApiModelProperty("BIZ ID")
-    val traceId: String = MDC.get(TraceTag.BIZID),
-    @ApiModelProperty("操作类型")
+    override val userId: String,
+    override val traceId: String = MDC.get(TraceTag.BIZID),
+    override val workspaceName: String,
     val type: UpdateEventType,
-    @ApiModelProperty("工作空间名称<唯一性id>")
-    val workspaceName: String,
-    @ApiModelProperty("是否执行成功")
-    val status: Boolean
-)
+    val status: Boolean,
+    override val delayMills: Int = 0,
+    override val retryTime: Int = 0
+) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

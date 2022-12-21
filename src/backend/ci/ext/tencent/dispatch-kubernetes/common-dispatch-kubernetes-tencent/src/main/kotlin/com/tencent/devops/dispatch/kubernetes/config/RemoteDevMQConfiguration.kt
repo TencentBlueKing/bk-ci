@@ -28,12 +28,12 @@
 package com.tencent.devops.dispatch.kubernetes.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.remotedev.MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT
+import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_CREATE_STARTUP
+import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_OPERATE_STARTUP
+import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_CREATE_STARTUP
+import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_OPERATE_STARTUP
 import com.tencent.devops.dispatch.kubernetes.listener.WorkspaceListener
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.MQ.QUEUE_WORKSPACE_CREATE_STARTUP
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.MQ.QUEUE_WORKSPACE_OPERATE_STARTUP
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.MQ.ROUTE_WORKSPACE_CREATE_STARTUP
-import com.tencent.devops.dispatch.kubernetes.pojo.mq.MQ.ROUTE_WORKSPACE_OPERATE_STARTUP
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -137,7 +137,7 @@ class RemoteDevMQConfiguration @Autowired constructor() {
         @Autowired workspaceListener: WorkspaceListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(workspaceListener, workspaceListener::handleWorkspaceOperateMessage.name)
+        val adapter = MessageListenerAdapter(workspaceListener, workspaceListener::handleWorkspaceOperate.name)
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
