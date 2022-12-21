@@ -28,6 +28,7 @@ const state = {
     pageLoading: false,
     showViewManage: false,
     showViewCreate: false,
+    isManage: false,
     currentViewId: '',
     userInfo: [],
     currentViewList: [],
@@ -133,6 +134,16 @@ const actions = {
         return ajax.get(`/project/api/user/users/projects/${projectId}/roles/list/`).then(response => {
             return response.data
         })
+    },
+    async checkViewManageAuth ({ commit, state }, { projectId }) {
+        try {
+            const { data } = await ajax.get(`/auth/api/user/project/members/projectIds/${projectId}/checkManager`)
+            state.isManage = data
+            return data
+        } catch (error) {
+            console.error(error)
+            return false
+        }
     }
 }
 

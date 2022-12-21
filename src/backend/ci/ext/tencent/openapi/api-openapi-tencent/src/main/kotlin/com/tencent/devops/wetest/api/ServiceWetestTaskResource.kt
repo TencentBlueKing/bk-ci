@@ -142,7 +142,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("用户rtx", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("私有云ID，逗号分隔", required = true)
@@ -215,7 +215,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("用户ID", required = true)
         @QueryParam("userId")
         userId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
@@ -227,7 +227,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("用户ID", required = true)
         @QueryParam("pipelineIds")
         pipelineIds: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String
     ): Result<Map<String, String>>
@@ -246,7 +246,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("插件执行状态")
@@ -261,7 +261,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("提测ID")
@@ -279,7 +279,7 @@ interface ServiceWetestTaskResource {
         @ApiParam("插件执行id", required = true)
         @QueryParam("Id")
         Id: Int,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("插件执行状态")

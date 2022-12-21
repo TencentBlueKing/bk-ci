@@ -5,6 +5,13 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io"
+	"os"
+	"path/filepath"
+	"strings"
+	"sync"
+	"time"
+
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
@@ -16,11 +23,6 @@ import (
 	"github.com/docker/docker/api/types/mount"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
-	"io"
-	"os"
-	"strings"
-	"sync"
-	"time"
 )
 
 // buildDockerManager docker构建机构建对象管理
@@ -97,8 +99,17 @@ func runDockerBuild(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	}
 
+	// 每次执行前都校验并修改一次dockerfile权限，防止用户修改或者升级丢失权限
+	if err := systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
+		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
+		dockerBuildFinish(buildInfo.ToFinish(false, "校验并修改Docker启动脚本权限失败|"+err.Error(), api.DockerChmodInitshErrorEnum))
+		return
+	}
+
 	go doDockerJob(buildInfo)
 }
+
+const longLogTag = "toolong"
 
 // doDockerJob 使用docker启动构建
 func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
@@ -106,6 +117,8 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	defer func() {
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
 	}()
+
+	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
 	ctx := context.Background()
@@ -195,15 +208,22 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	}
 
 	creatResp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: imageStr,
-		Cmd:   []string{"/bin/sh", entryPointCmd},
-		Env:   parseContainerEnv(dockerBuildInfo),
+		Image:      imageStr,
+		Cmd:        []string{},
+		Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
+		Env:        parseContainerEnv(dockerBuildInfo),
 	}, hostConfig, nil, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
 		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("创建容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerCreateErrorEnum))
 		return
 	}
+
+	defer func() {
+		if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
+			logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
+		}
+	}()
 
 	// 启动容器
 	if err := cli.ContainerStart(ctx, creatResp.ID, types.ContainerStartOptions{}); err != nil {
@@ -212,25 +232,81 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	// 等待容器结束
+	// 等待容器结束，处理错误信息并上报
 	statusCh, errCh := cli.ContainerWait(ctx, creatResp.ID, container.WaitConditionNotRunning)
 	select {
 	case err := <-errCh:
 		if err != nil {
 			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), err)
 			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("等待容器 %s 结束错误|%s", containerName, err.Error()), api.DockerContainerRunErrorEnum))
-			if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-				logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
-			}
 			return
 		}
-	case <-statusCh:
+	case status := <-statusCh:
+		if status.Error != nil {
+			logs.Error(fmt.Sprintf("DOCKER_JOB|wait container %s over error ", creatResp.ID), status.Error)
+			dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("等待容器 %s 结束错误|%s", containerName, status.Error.Message), api.DockerContainerRunErrorEnum))
+			return
+		} else {
+			if status.StatusCode != 0 {
+				logs.Warn(fmt.Sprintf("DOCKER_JOB|wait container %s over status not 0, exit code %d", creatResp.ID, status.StatusCode))
+				msg := ""
+				// 如果docker状态不为零，将日志上报
+				logFile := func(tag string) (string, error) {
+					logsDir := fmt.Sprintf("%s/%s/logs/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.BuildId, buildInfo.VmSeqId)
+					logFile := filepath.Join(logsDir, "docker.log")
+					content, err := os.ReadFile(logFile)
+					if err != nil && os.IsNotExist(err) {
+						return "", nil
+					} else if err != nil {
+						return "", err
+					}
+					// 超过字数说明肯定不是错误，不打印
+					if len(content) > 1000 {
+						return tag, nil
+					}
+					return string(content), nil
+				}
+				content, err := logFile(longLogTag)
+				if err != nil {
+					msg = fmt.Sprintf("read log file error %s", err.Error())
+				} else {
+					msg = content
+				}
+				// 这里可能就是docker最开始执行时报错，拿一下docker log
+				if msg == "" {
+					logs, err := cli.ContainerLogs(ctx, creatResp.ID, types.ContainerLogsOptions{
+						ShowStdout: true,
+						ShowStderr: true,
+					})
+					if err != nil {
+						msg = ""
+					} else {
+						buf := new(strings.Builder)
+						_, err := io.Copy(buf, logs)
+						if err != nil {
+							msg = ""
+						} else {
+							msg = buf.String()
+						}
+					}
+				}
+
+				if msg == longLogTag {
+					msg = ""
+				}
+
+				dockerBuildFinish(
+					buildInfo.ToFinish(false, fmt.Sprintf(
+						"等待容器 %s 结束状态码为 %d 不为0 \n %s",
+						containerName, status.StatusCode, msg),
+						api.DockerContainerRunErrorEnum,
+					))
+				return
+			}
+		}
 	}
 
 	dockerBuildFinish(buildInfo.ToFinish(true, "", api.NoErrorEnum))
-	if err = cli.ContainerRemove(ctx, creatResp.ID, types.ContainerRemoveOptions{Force: true}); err != nil {
-		logs.Error(fmt.Sprintf("DOCKER_JOB|remove container %s error ", creatResp.ID), err)
-	}
 }
 
 // dockerBuildFinish docker构建结束相关

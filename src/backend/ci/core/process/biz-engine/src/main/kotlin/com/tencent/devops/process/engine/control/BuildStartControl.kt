@@ -267,7 +267,18 @@ class BuildStartControl @Autowired constructor(
                 projectId = projectId,
                 concurrencyGroup = concurrencyGroup,
                 status = listOf(BuildStatus.RUNNING)
-            )
+            ).toMutableList()
+
+            // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 #8143
+            if (concurrencyGroup == pipelineId) {
+                concurrencyGroupRunning.addAll(
+                    0,
+                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                        projectId = projectId,
+                        status = listOf(BuildStatus.RUNNING)
+                    )
+                )
+            }
 
             LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|${concurrencyGroupRunning.count()}")
             if (concurrencyGroupRunning.isNotEmpty()) {

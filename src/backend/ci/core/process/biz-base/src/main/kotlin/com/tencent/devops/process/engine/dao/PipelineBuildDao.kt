@@ -181,7 +181,21 @@ class PipelineBuildDao {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
+                .fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroupNull(
+        dslContext: DSLContext,
+        projectId: String,
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
                 .fetch()
         }
     }

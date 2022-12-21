@@ -85,7 +85,7 @@
                     this.triggleChange()
                 }
                 this.$bkInfo({
-                    theme: 'danger',
+                    theme: 'error',
                     title: this.$t('stageReview.confirmDelete'),
                     confirmFn
                 })
