@@ -27,10 +27,17 @@
 
 package com.tencent.devops.store.dao.common
 
+import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
+import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
+import com.tencent.devops.model.store.tables.TStoreIndexResult
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
+import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
+import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -45,6 +52,66 @@ class StoreIndexManageDao {
         tStoreIndexLevelInfoRecord: List<TStoreIndexLevelInfoRecord>
     ) {
         dslContext.batchInsert(tStoreIndexLevelInfoRecord).execute()
+    }
+
+    fun getStoreIndexBaseInfoById(dslContext: DSLContext, indexId: String): TStoreIndexBaseInfoRecord? {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(indexId))
+                .fetchOne()
+        }
+    }
+
+    fun count(dslContext: DSLContext, keyWords: String?): Long {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            val condition = mutableListOf<Condition>()
+            keyWords?.let {
+                condition.add(INDEX_NAME.like("%$it%"))
+            }
+            return dslContext.selectCount()
+                .from(this)
+                .where(condition)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun list(dslContext: DSLContext, keyWords: String?, page: Int, pageSize: Int): List<StoreIndexBaseInfo> {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            val condition = mutableListOf<Condition>()
+            keyWords?.let {
+                condition.add(INDEX_NAME.like("%$it%"))
+            }
+            return dslContext.select()
+                .from(this)
+                .where(condition)
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetchInto(StoreIndexBaseInfo::class.java)
+        }
+    }
+
+    fun listByIds(dslContext: DSLContext, indexIds: List<String>): List<StoreIndexBaseInfo> {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.select()
+                .from(this)
+                .where(ID.`in`(indexIds))
+                .fetchInto(StoreIndexBaseInfo::class.java)
+        }
+    }
+
+    fun deleteTStoreIndexLevelInfo(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_ID.eq(indexId))
+                .execute()
+        }
+    }
+
+    fun deleteTStoreIndexBaseInfo(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(indexId))
+                .execute()
+        }
     }
 
 }

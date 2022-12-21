@@ -93,4 +93,15 @@ interface StoreLogoService {
         userId: String,
         id: String
     ): Result<Boolean>
+
+    /**
+     * 上传图标
+     */
+    fun uploadStoreIcon(
+        userId: String,
+        contentLength: Long,
+        compressFlag: Boolean?,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }

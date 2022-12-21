@@ -40,4 +40,12 @@ class UserStoreIndexManageResourceImpl @Autowired constructor(
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
         TODO("Not yet implemented")
     }
+
+    override fun delete(userId: String, indexId: String) {
+        TODO("Not yet implemented")
+    }
+
+    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int) {
+        TODO("Not yet implemented")
+    }
 }

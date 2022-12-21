@@ -27,20 +27,27 @@
 
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.StoreIndexManageDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
+import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -51,7 +58,9 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storePipelineRelDao: StorePipelineRelDao,
     private val storeIndexManageDao: StoreIndexManageDao,
-    private val client: Client
+    private val atomDao: AtomDao,
+    private val client: Client,
+    private val redisOperation: RedisOperation
 ) : StoreIndexManageService {
 
     @Value("\${store.computeMetricsProjectId}")
@@ -112,4 +121,62 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         }
         return true
     }
+
+    override fun delete(userId: String, indexId: String): Boolean {
+        //管理员权限校验
+
+        val indexBaseInfo = storeIndexManageDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return false
+        val atomPipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
+            dslContext,
+            indexBaseInfo.atomCode!!
+            , StoreTypeEnum.IMAGE
+        )
+        val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
+            computeMetricsProjectId,
+            listOf(atomPipelineRelRecord!!.pipelineId)
+        ).data?.get("atomPipelineRelRecord!!.pipelineId")
+        pipelineBuildInfo?.let {
+            if ( it.status == BuildStatus.PREPARE_ENV.statusName || it.status == BuildStatus.RUNNING.statusName) {
+                client.get(ServiceBuildResource::class).manualShutdown(
+                    userId = userId,
+                    projectId = computeMetricsProjectId,
+                    pipelineId = atomPipelineRelRecord.pipelineId,
+                    buildId = it.buildId,
+                    channelCode = ChannelCode.AM
+                )
+            }
+        }
+        // 考虑到数据量的问题，使用定时任务处理
+        redisOperation.sadd("deleteStoreIndexResultKey", indexId)
+        dslContext.transaction { t ->
+            val context = DSL.using(t)
+            storeIndexManageDao.deleteTStoreIndexLevelInfo(context, indexId)
+            storeIndexManageDao.deleteTStoreIndexBaseInfo(context, indexId)
+        }
+        return true
+    }
+
+    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo> {
+        //管理员权限校验
+
+
+        val count = storeIndexManageDao.count(dslContext, keyWords)
+        val records = storeIndexManageDao.list(dslContext, keyWords, page, pageSize)
+        records.forEach {
+            val totalTaskNum = redisOperation.get("${it.indexCode}_totalTaskNum")
+            val finishTaskNum = redisOperation.get("${it.indexCode}_finishTaskNum")
+            if (totalTaskNum != null && finishTaskNum != null) {
+                it.totalTaskNum = totalTaskNum.toInt()
+                it.finishTaskNum = finishTaskNum.toInt()
+            }
+        }
+        return Page(
+            count = count,
+            page = page,
+            pageSize = pageSize,
+            records = records
+        )
+    }
+
+
 }

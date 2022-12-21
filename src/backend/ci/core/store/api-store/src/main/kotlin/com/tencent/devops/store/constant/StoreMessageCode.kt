@@ -88,6 +88,9 @@ object StoreMessageCode {
     const val USER_ATOM_COMPATIBLE_OUTPUT_FIELD_CONFIRM = "2120031"
     const val USER_ATOM_INPUT_NUM_IS_TOO_MANY = "2120032" // 研发商店：插件入参数量太多，系统规定的数量最大为：{0}
     const val USER_ATOM_OUTPUT_NUM_IS_TOO_MANY = "2120033" // 研发商店：插件出参数量太多，系统规定的数量最大为：{0}
+    const val USER_ATOM_ICON_TYPE_IS_SVG = "2120034" // 研发商店：组件图标类型应为SVG
+    const val USER_ATOM_ICON_IS_SQUARE = "2120035" // 研发商店：组件图标形状应该为正方形
+    const val UPLOAD_ICON_IS_TOO_LARGE = "2120013" // 研发商店：上传的icon文件不能超过{0}
 
     // 模板相关的错误提示
     const val USER_TEMPLATE_VERSION_IS_NOT_FINISH = "2120201" // 研发商店：模板{0}的{1}版本发布未结束，请稍后再试

@@ -29,67 +29,49 @@ package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
-import javax.validation.Valid
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
-@Path("/user/store/indexs/manage")
+@Api(tags = ["USER_STORE_ICON"], description = "STORE-ICON")
+@Path("/user/store/icon")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStoreIndexManageResource {
+interface UserStoreIconResource {
 
-    @ApiOperation("新增研发商店指标")
+    @ApiOperation("上传图标")
     @POST
-    @Path("/add")
-    fun add(
+    @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadStoreIcon(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("研发商店指标请求报文体", required = true)
-        @Valid
-        storeIndexCreateRequest: StoreIndexCreateRequest
-    ): Result<Boolean>
-
-    @ApiOperation("删除研发商店指标")
-    @DELETE
-    @Path("/delete/{indexId}")
-    fun delete(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("指标ID", required = true)
-        @PathParam("indexId")
-        indexId: String
-    )
-
-    @ApiOperation("查询研发商店指标")
-    @GET
-    @Path("/list")
-    fun list(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("查询关键字", required = false)
-        @QueryParam("keyWords")
-        keyWords: String?,
-        @ApiParam("页码", required = true, defaultValue = "1")
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("页码大小", required = true, defaultValue = "10")
-        @QueryParam("pageSize")
-        @BkField(maxLength = 100)
-        pageSize: Int
-    )
-
+        @ApiParam("contentLength", required = true)
+        @HeaderParam("content-length")
+        contentLength: Long,
+        @ApiParam("是否压缩", required = false)
+        @QueryParam("compressFlag")
+        compressFlag: Boolean? = false,
+        @ApiParam("icon", required = true)
+        @FormDataParam("icon")
+        inputStream: InputStream,
+        @FormDataParam("icon")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }
-

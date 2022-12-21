@@ -83,6 +83,10 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     @Value("\${logo.maxUploadLogoSize}")
     private lateinit var maxUploadLogoSize: String
 
+    @Value("\${logo.maxUploadLogoSize}")
+    private lateinit var maxUploadIconSize: String
+
+
     private val logger = LoggerFactory.getLogger(StoreLogoServiceImpl::class.java)
 
     /**
@@ -111,7 +115,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val maxFileSize = maxUploadLogoSize.toLong()
         if (contentLength > maxFileSize) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
+                StoreMessageCode.USER_ATOM_LOGO_SIZE_IS_INVALID,
                 arrayOf((maxFileSize / 1048576).toString() + "M")
             )
         }
@@ -239,5 +243,47 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         logger.info("delete logo: userId=$userId, id=$id")
         storeLogoDao.delete(dslContext, id)
         return Result(true)
+    }
+
+    override fun uploadStoreIcon(
+        userId: String,
+        contentLength: Long,
+        compressFlag: Boolean?,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        logger.info("uploadStoreIcon upload file info is:$disposition,contentLength is:$contentLength")
+        val fileName = disposition.fileName
+        val index = fileName.lastIndexOf(".")
+        val fileType = fileName.substring(index + 1).toLowerCase()
+        // 校验文件类型是否满足上传文件类型的要求
+        if (fileType != "svg") {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_ATOM_ICON_TYPE_IS_SVG
+            )
+        }
+        // 校验上传文件大小是否超出限制
+        val maxFileSize = maxUploadIconSize.toLong()
+        if (contentLength > maxFileSize) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
+                arrayOf((maxFileSize / 1048576).toString() + "M")
+            )
+        }
+        val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
+        val output = file.outputStream()
+        val img = ImageIO.read(inputStream)
+        // 判断上传的Icon是否为正方形规格
+        val width = img.width
+        val height = img.height
+        if (width != height) {
+            return MessageCodeUtil.generateResponseDataObject(
+                StoreMessageCode.USER_ATOM_ICON_IS_SQUARE
+            )
+        }
+        ImageIO.write(img, fileType, output)
+        val iconUrl = uploadStoreLogo(userId, file).data
+        logger.info("uploadStoreIcon iconUrl is:$iconUrl")
+        return Result(iconUrl)
     }
 }
