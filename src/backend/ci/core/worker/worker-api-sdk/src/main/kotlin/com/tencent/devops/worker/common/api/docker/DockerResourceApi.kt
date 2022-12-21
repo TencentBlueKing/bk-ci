@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
@@ -49,7 +50,7 @@ class DockerResourceApi : AbstractBuildResourceApi(), DockerSDKApi {
     ): Result<Boolean> {
         val path = "/ms/store/api/build/market/image/projectCodes/$projectCode/imageCodes/$imageCode/versions/$version"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(imageBaseInfoUpdateRequest)
         )
         val headMap = mapOf(AUTH_HEADER_USER_ID to userId)

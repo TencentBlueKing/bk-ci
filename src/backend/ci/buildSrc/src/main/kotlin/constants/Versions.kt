@@ -49,4 +49,5 @@ object Versions {
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
     const val KubernetesDiscovery = "2.0.6"
+    const val Okhttp = "4.9.0"
 }

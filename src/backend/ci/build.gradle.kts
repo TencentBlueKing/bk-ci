@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.6"
+    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
     detektCheck
 }
 
@@ -108,11 +108,23 @@ allprojects {
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }
-            // TODO 等后面spring cloud版本升级上来就可以去掉
+            // TODO 修复all-namespace无效的问题, 等后面spring cloud版本升级上来就可以去掉
             dependency(
                 "org.springframework.cloud:spring-cloud-kubernetes-client-discovery:" +
                         "${Versions.KubernetesDiscovery}"
             )
+            // TODO 修复IPv6单栈环境报错问题, 等后面Okhttp3版本升级上来就可以去掉
+            dependencySet("com.squareup.okhttp3:${Versions.Okhttp}") {
+                entry("logging-interceptor")
+                entry("mockwebserver")
+                entry("okcurl")
+                entry("okhttp")
+                entry("okhttp-dnsoverhttps")
+                entry("okhttp-sse")
+                entry("okhttp-testing-support")
+                entry("okhttp-tls")
+                entry("okhttp-urlconnection")
+            }
         }
     }
 

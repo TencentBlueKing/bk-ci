@@ -40,6 +40,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,11 +65,11 @@ class KubernetesJobClient @Autowired constructor(
         logger.info("Create job request url: $url, body: $body")
         val request = clientCommon.baseRequest(userId, url).post(
             RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
                 body
             )
         ).build()
-        val responseBody = OkhttpUtils.doHttp(request).body()!!.string()
+        val responseBody = OkhttpUtils.doHttp(request).body!!.string()
         logger.info("Create job response: ${JsonUtil.toJson(responseBody)}")
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
@@ -78,7 +79,7 @@ class KubernetesJobClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         logger.info("Get job: $jobName status request url: $url, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Get job: $jobName status response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
@@ -86,7 +87,7 @@ class KubernetesJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
                     "${ConstantsMessage.TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
-                        "http response code: ${response.code()}"
+                            "http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -103,7 +104,7 @@ class KubernetesJobClient @Autowired constructor(
         logger.info("Get job: $jobName logs request url: $url, jobName: $jobName, " +
                         "sinceTime: $sinceTime, staffName: $userId")
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Get job: $jobName logs response: $responseContent")
             if (!response.isSuccessful) {
                 throw BuildFailureException(
@@ -111,7 +112,7 @@ class KubernetesJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
                     "${ConstantsMessage.TROUBLE_SHOOTING}获取Job logs接口异常" +
-                        "（Fail to getJobLogs, http response code: ${response.code()}"
+                            "（Fail to getJobLogs, http response code: ${response.code}"
                 )
             }
             return objectMapper.readValue(responseContent)
@@ -128,21 +129,21 @@ class KubernetesJobClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url)
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(buildImageInfo)
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(buildImageInfo)
                 )
             )
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("$userId build and push image response: $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        "构建并推送接口异常（Fail to build image, http response code: ${response.code()}"
+                        "构建并推送接口异常（Fail to build image, http response code: ${response.code}"
                     )
                 }
                 val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)

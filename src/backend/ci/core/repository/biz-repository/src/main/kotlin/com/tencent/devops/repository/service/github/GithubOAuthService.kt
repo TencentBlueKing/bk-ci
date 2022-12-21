@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.RandomStringUtils
@@ -136,14 +137,14 @@ class GithubOAuthService @Autowired constructor(
         val request = Request.Builder()
             .url(url)
             .header("Accept", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+            .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.info("Github get code(${response.code()}) and response($data)")
+                logger.info("Github get code(${response.code}) and response($data)")
                 throw CustomException(
-                    Response.Status.fromStatusCode(response.code())
+                    Response.Status.fromStatusCode(response.code)
                         ?: Response.Status.BAD_REQUEST,
                     "获取Github access_token失败: $data"
                 )

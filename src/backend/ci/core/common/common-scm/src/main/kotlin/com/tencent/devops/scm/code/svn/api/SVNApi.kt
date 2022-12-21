@@ -38,6 +38,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.scm.config.SVNConfig
 import com.tencent.devops.scm.exception.ScmException
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -74,7 +75,7 @@ object SVNApi {
 
     fun addWebhooks(svnConfig: SVNConfig, username: String, url: String, hookUrl: String) {
         val request = request(svnConfig, composePostUrl(svnConfig, toHttpUrl(url), hookUrl, username))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), ""))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), ""))
             .build()
         val body = getBody(request)
         logger.info("Get the add hook response $body")
@@ -99,7 +100,7 @@ object SVNApi {
         val request = Request.Builder()
             .url(url)
             .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         val body = getBody(request)
         logger.info("lock the svn repo response $body")
@@ -126,7 +127,7 @@ object SVNApi {
         val request = Request.Builder()
             .url(url)
             .addHeader("ApiKey", svnConfig.apiKey).addHeader("Content-type", "application/json")
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         val body = getBody(request)
         logger.info("unlock the svn repo response $body")
@@ -144,12 +145,12 @@ object SVNApi {
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
                 when {
-                    response.code() == 401 -> throw ScmException("工程仓库访问未授权", ScmType.CODE_SVN.name)
-                    response.code() == 404 -> throw ScmException("工程仓库不存在", ScmType.CODE_SVN.name)
+                    response.code == 401 -> throw ScmException("工程仓库访问未授权", ScmType.CODE_SVN.name)
+                    response.code == 404 -> throw ScmException("工程仓库不存在", ScmType.CODE_SVN.name)
                     else -> throw ScmException("工程仓库访问异常", ScmType.CODE_SVN.name)
                 }
             }
-            return response.body()!!.string()
+            return response.body!!.string()
         }
     }
 
