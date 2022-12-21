@@ -164,19 +164,19 @@ class WeworkServiceImpl(
         val url = buildUrl("${weWorkConfiguration.apiUrl}/cgi-bin/message/send?access_token=${getAccessToken()}")
         val requestBody = JsonUtil.toJson(abstractSendMessageRequest)
         return OkhttpUtils.doPost(url, requestBody).use {
-            val responseBody = it.body()?.string() ?: ""
+            val responseBody = it.body?.string() ?: ""
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<SendMessageResp>())
                 if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "send wework message failed",
                         errorCode = sendMessageResp.errCode
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
-                LOG.warn("${it.request()}|send wework message failed, $responseBody")
+                LOG.warn("${it.request}|send wework message failed, $responseBody")
                 Optional.of(e)
             })
         }
@@ -324,14 +324,14 @@ class WeworkServiceImpl(
                 fileFieldName = "media",
                 fileName = mediaName
             ).use {
-                val responseBody = it.body()?.string() ?: "{}"
+                val responseBody = it.body?.string() ?: "{}"
                 return kotlin.runCatching {
                     val uploadMediaResp = JsonUtil.to(responseBody, jacksonTypeRef<UploadMediaResp>())
                     val mediaId = uploadMediaResp.mediaId
                     if (!it.isSuccessful || mediaId.isNullOrBlank()) {
-                        LOG.warn("${it.request()}|upload media($mediaName) to wework failed, $responseBody")
+                        LOG.warn("${it.request}|upload media($mediaName) to wework failed, $responseBody")
                         throw RemoteServiceException(
-                            httpStatus = it.code(),
+                            httpStatus = it.code,
                             responseContent = responseBody,
                             errorMessage = "upload media($mediaName) to wework failed",
                             errorCode = uploadMediaResp.errCode
@@ -339,7 +339,7 @@ class WeworkServiceImpl(
                     }
                     mediaId
                 }.onFailure { _ ->
-                    LOG.warn("${it.request()}|upload media($mediaName) to wework failed, $responseBody")
+                    LOG.warn("${it.request}|upload media($mediaName) to wework failed, $responseBody")
                 }.getOrThrow()
             }
         } finally {
@@ -367,13 +367,13 @@ class WeworkServiceImpl(
                     "/gettoken?corpId=${weWorkConfiguration.corpId}&corpSecret=${weWorkConfiguration.corpSecret}"
             )
         ).use {
-            val responseBody = it.body()?.string() ?: "{}"
+            val responseBody = it.body?.string() ?: "{}"
             return kotlin.runCatching {
                 val accessTokenResp = JsonUtil.to(responseBody, jacksonTypeRef<AccessTokenResp>())
                 if (!it.isSuccessful && accessTokenResp.isOk()) {
-                    LOG.warn("${it.request()}|failed to get wework access token: $responseBody")
+                    LOG.warn("${it.request}|failed to get wework access token: $responseBody")
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "failed to get wework access token: $responseBody",
                         errorCode = accessTokenResp.errCode
@@ -391,7 +391,7 @@ class WeworkServiceImpl(
                 }
                 accessToken
             }.onFailure { _ ->
-                LOG.warn("${it.request()}|failed to get wework access token: $responseBody")
+                LOG.warn("${it.request}|failed to get wework access token: $responseBody")
             }.getOrThrow()
         }
     }

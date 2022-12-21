@@ -44,6 +44,7 @@ import com.tencent.devops.plugin.codecc.pojo.CodeccCallback
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -179,7 +180,7 @@ class CodeccService @Autowired constructor(
     }
 
     private fun getCodeccBlueShield(request: BlueShieldRequest): BlueShieldResponse {
-        val mediaType = MediaType.parse("application/json")
+        val mediaType = "application/json".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(request)
         val requestBody = RequestBody.create(mediaType, json)
         val url = "http://$codeccHost/blueShield/dataMeasure"
@@ -193,11 +194,11 @@ class CodeccService @Autowired constructor(
 
         try {
             OkhttpUtils.doHttp(httpReq).use { response ->
-                val body = response.body()!!.string()
+                val body = response.body!!.string()
                 logger.info("codecc blueShield response: $body")
                 if (!response.isSuccessful) {
                     throw ErrorCodeException(
-                        errorCode = response.code().toString(),
+                        errorCode = response.code.toString(),
                         defaultMessage = "get codecc blueShield response fail $body"
                     )
                 }

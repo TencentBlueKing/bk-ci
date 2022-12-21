@@ -53,6 +53,7 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.process.pojo.setting.PipelineModelVersion
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -79,7 +80,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectPipelineCallBackService::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     fun createCallBack(
@@ -324,19 +325,19 @@ class ProjectPipelineCallBackService @Autowired constructor(
         var status = ProjectPipelineCallbackStatus.SUCCESS
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                if (response.code() != 200) {
-                    logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                if (response.code != 200) {
+                    logger.warn("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code}")
                     throw ErrorCodeException(
-                        statusCode = response.code(),
+                        statusCode = response.code,
                         errorCode = ProcessMessageCode.ERROR_CALLBACK_REPLY_FAIL,
                         defaultMessage = "回调重试失败"
                     )
                 } else {
-                    logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code()}")
+                    logger.info("[${record.projectId}]|CALL_BACK|url=${record.callBackUrl}| code=${response.code}")
                 }
-                responseCode = response.code()
-                responseBody = response.body()?.string()
-                errorMsg = response.message()
+                responseCode = response.code
+                responseBody = response.body?.string()
+                errorMsg = response.message
             }
         } catch (e: Exception) {
             logger.error("[$projectId]|[$userId]|CALL_BACK|url=${record.callBackUrl} error", e)
@@ -350,7 +351,7 @@ class ProjectPipelineCallBackService @Autowired constructor(
                     events = record.events,
                     status = status.name,
                     errorMsg = errorMsg,
-                    requestHeaders = request.headers().names().map {
+                    requestHeaders = request.headers.names().map {
                         CallBackHeader(
                             name = it,
                             value = request.header(it) ?: ""

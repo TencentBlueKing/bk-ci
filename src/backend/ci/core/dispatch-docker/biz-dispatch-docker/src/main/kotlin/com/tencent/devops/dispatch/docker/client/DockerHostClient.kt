@@ -67,6 +67,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import com.tencent.devops.store.pojo.image.enums.ImageRDTypeEnum
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -317,12 +318,12 @@ class DockerHostClient @Autowired constructor(
             clusterType = clusterType
         ).delete(
             RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
-            JsonUtil.toJson(requestBody)
-        )).build()
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            )).build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             LOG.info("[$projectId|$pipelineId|$buildId] End build Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
@@ -357,14 +358,17 @@ class DockerHostClient @Autowired constructor(
             dockerHostIp = dockerIp,
             dockerHostPort = dockerHostPort,
             clusterType = clusterType
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(dockerHostBuildInfo)))
+        ).post(RequestBody.create(
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
+            JsonUtil.toJson(dockerHostBuildInfo)
+        ))
             .build()
 
-        LOG.info("dockerStart|${dockerHostBuildInfo.buildId}|$retryTime|$dockerIp|${request.url()}")
+        LOG.info("dockerStart|${dockerHostBuildInfo.buildId}|$retryTime|$dockerIp|${request.url}")
         try {
             OkhttpUtils.doLongHttp(request).use { resp ->
                 if (resp.isSuccessful) {
-                    val responseBody = resp.body()!!.string()
+                    val responseBody = resp.body!!.string()
                     val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                     when {
                         response["status"] == 0 -> {
@@ -408,7 +412,7 @@ class DockerHostClient @Autowired constructor(
                         dockerIp = dockerIp,
                         dockerHostBuildInfo = dockerHostBuildInfo,
                         driftIpInfo = driftIpInfo,
-                        errorMessage = resp.message(),
+                        errorMessage = resp.message,
                         unAvailableIpList = unAvailableIpList,
                         clusterType = clusterType
                     )

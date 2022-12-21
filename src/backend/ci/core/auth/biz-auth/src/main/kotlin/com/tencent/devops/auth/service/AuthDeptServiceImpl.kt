@@ -55,6 +55,7 @@ import com.tencent.devops.common.auth.api.pojo.EsbBaseReq
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -280,7 +281,7 @@ class AuthDeptServiceImpl @Autowired constructor(
     private fun callUserCenter(url: String, searchEntity: EsbBaseReq): String {
         val url = getAuthRequestUrl(url)
         val content = objectMapper.writeValueAsString(searchEntity)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
             .post(requestBody)
@@ -290,26 +291,28 @@ class AuthDeptServiceImpl @Autowired constructor(
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
-                    messageCode = AuthMessageCode.USER_NOT_EXIST
-                ))
+                        messageCode = AuthMessageCode.USER_NOT_EXIST
+                    )
+                )
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             logger.info("callUserCenter : response = $responseStr")
             val responseDTO = JsonUtil.to(responseStr, ResponseDTO::class.java)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
                 logger.warn(
                     "call user center fail: url = $url | searchEntity = $searchEntity" +
-                        " | response = ($it)"
+                            " | response = ($it)"
                 )
                 throw OperationException(
                     MessageCodeUtil.getCodeLanMessage(
                         messageCode = AuthMessageCode.USER_NOT_EXIST
-                    ))
+                    )
+                )
             }
             logger.info("user center response：${objectMapper.writeValueAsString(responseDTO.data)}")
             return objectMapper.writeValueAsString(responseDTO.data)

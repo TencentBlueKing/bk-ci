@@ -47,6 +47,7 @@ import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import com.tencent.devops.worker.common.task.script.CommandFactory
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -186,7 +187,7 @@ class BuildPushDockerImageTask : ITask() {
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 LoggerService.addErrorLine("启动构建镜像失败！请联系【蓝盾助手】")
@@ -241,10 +242,10 @@ class BuildPushDockerImageTask : ITask() {
         logger.info("request body: $requestBody")
 
         val request = Request.Builder().url(url)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")

@@ -38,6 +38,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.api.engine.EngineBuildSDKApi
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 @Suppress("UNUSED", "TooManyFunctions")
@@ -83,7 +84,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun completeTask(result: BuildTaskResult, retryCount: Int): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/complete", retryCount = retryCount)
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)
@@ -143,7 +144,7 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
     override fun submitError(errorInfo: ErrorInfo): Result<Boolean> {
         val path = getRequestUrl(path = "api/build/worker/submit_error")
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(errorInfo)
         )
         val request = buildPost(path, requestBody)

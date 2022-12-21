@@ -89,6 +89,7 @@ import com.tencent.devops.scm.pojo.TapdWorkItem
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.store.pojo.common.BK_FRONTEND_DIR_NAME
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -153,7 +154,7 @@ class GitService @Autowired constructor(
                     .build()
 
                 OkhttpUtils.doHttp(request).use { response ->
-                    val data = response.body()!!.string()
+                    val data = response.body!!.string()
                     val repoList = JsonParser().parse(data).asJsonArray
                     repoList.forEach {
                         val obj = it.asJsonObject
@@ -216,7 +217,7 @@ class GitService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
             if (!repoList.isJsonNull) {
                 repoList.forEach {
@@ -266,7 +267,7 @@ class GitService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val branList = JsonParser().parse(data).asJsonArray
             if (!branList.isJsonNull) {
                 branList.forEach {
@@ -324,7 +325,7 @@ class GitService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val tagList = JsonParser().parse(data).asJsonArray
             if (!tagList.isJsonNull) {
                 tagList.forEach {
@@ -378,10 +379,10 @@ class GitService @Autowired constructor(
                 "&redirect_uri=${gitConfig.gitHookUrl}"
             val request = Request.Builder()
                 .url(url)
-                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
@@ -407,11 +408,11 @@ class GitService @Autowired constructor(
             logger.info("getToken url>> $tokenUrl")
             val request = Request.Builder()
                 .url(tokenUrl)
-                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
+                .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 return objectMapper.readValue(data, GitToken::class.java)
             }
         } finally {
@@ -432,7 +433,7 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 return objectMapper.readValue(data, GitUserInfo::class.java)
             }
         } finally {
@@ -497,7 +498,7 @@ class GitService @Autowired constructor(
                 val data = it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
                 if (!it.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
                         message = "fail to get git file content with: $url($data)"
                     )
                 }
@@ -571,10 +572,10 @@ class GitService @Autowired constructor(
         }
         val request = Request.Builder()
             .url(url.toString())
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             val dataMap = JsonUtil.toMap(data)
             val atomRepositoryUrl = dataMap["http_url_to_repo"]
             if (StringUtils.isEmpty(atomRepositoryUrl)) {
@@ -718,10 +719,10 @@ class GitService @Autowired constructor(
             params["access_level"] = gitAccessLevel.level
             val request = Request.Builder()
                 .url(url.toString())
-                .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), JsonUtil.toJson(params)))
+                .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 if (!StringUtils.isEmpty(data)) {
                     val dataMap = JsonUtil.toMap(data)
                     val message = dataMap["message"]
@@ -777,7 +778,7 @@ class GitService @Autowired constructor(
                     .delete()
                     .build()
                 OkhttpUtils.doHttp(request).use { response ->
-                    val data = response.body()!!.string()
+                    val data = response.body!!.string()
                     logger.info("deleteGitProjectMember response>> $data")
                     if (!StringUtils.isEmpty(data)) {
                         val dataMap = JsonUtil.toMap(data)
@@ -814,7 +815,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("getGitProjectMemberInfo  response>> $data")
             if (!StringUtils.isEmpty(data)) {
                 val dataMap = JsonUtil.toMap(data)
@@ -838,7 +839,7 @@ class GitService @Autowired constructor(
             .delete()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("deleteGitProject  response>> $data")
             if (!StringUtils.isEmpty(data)) {
                 val dataMap = JsonUtil.toMap(data)
@@ -867,7 +868,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("getGitUserInfo response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             if (!StringUtils.isEmpty(data)) {
@@ -892,7 +893,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("GitProjectInfo response>> $data")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(data, GitProjectInfo::class.java))
@@ -924,7 +925,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("getGitRepositoryTreeInfo response>> $data")
             if (!StringUtils.isEmpty(data)) {
                 var message: String? = null
@@ -959,13 +960,13 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .put(
                 RequestBody.create(
-                    MediaType.parse("application/json;charset=utf-8"),
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(updateGitProjectInfo)
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("updateGitProjectInfo response>> $data")
             val dataMap = JsonUtil.toMap(data)
             val message = dataMap["message"]
@@ -1008,14 +1009,14 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json;charset=utf-8"),
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(mapOf<String, String>())
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                val data = it.body()!!.string()
+                val data = it.body!!.string()
                 logger.info("moveProjectToGroup response>> $data")
                 val dataMap = JsonUtil.toMap(data)
                 val message = dataMap["message"]
@@ -1059,11 +1060,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get merge info error for $repoName, $mrId(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge info error for $repoName, $mrId(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("get mr info response body: $data")
             return JsonUtil.to(data, GitMrInfo::class.java)
         }
@@ -1090,11 +1091,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get merge reviewers info error for $id, $mrId(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge reviewers info error for $id, $mrId(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             return JsonUtil.to(data, GitMrReviewInfo::class.java)
         }
     }
@@ -1125,11 +1126,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get merge changes request info error for $id, $mrId(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get merge changes request info error for $id, $mrId(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             return JsonUtil.to(data, GitMrChangeInfo::class.java)
         }
     }
@@ -1183,11 +1184,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get repo members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo members for $userId, $repoName fail(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             return JsonUtil.to(data)
         }
     }
@@ -1230,11 +1231,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get repo all members for $userId, $repoName fail(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo all members for $userId, $repoName fail(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             return JsonUtil.to(data)
         }
     }
@@ -1256,7 +1257,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             if (!StringUtils.isEmpty(data)) {
                 val dataMap = JsonUtil.toMap(data)
@@ -1303,11 +1304,11 @@ class GitService @Autowired constructor(
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "getProjectGroupInfo $id, $includeSubgroups(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "getProjectGroupInfo $id, $includeSubgroups(${it.code}): ${it.message}"
                 )
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("getProjectGroupInfo response body: $data")
             return JsonUtil.to(data, GitProjectGroupInfo::class.java)
         }
@@ -1332,13 +1333,13 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json;charset=utf-8"),
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(params)
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("createGitTag response>> $data")
             val dataMap = JsonUtil.toMap(data)
             val message = dataMap["message"]
@@ -1467,11 +1468,11 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "get repo member error for $gitProjectId(${it.code()}): ${it.message()}"
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = "get repo member error for $gitProjectId(${it.code}): ${it.message}"
                 )
             }
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
@@ -1498,7 +1499,7 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
-                val body = response.body()!!.string()
+                val body = response.body!!.string()
                 logger.info("[$rtxUserId]|[$gitProjectId]| Get gitUserId response body: $body")
                 val userInfo = JsonUtil.to(body, Map::class.java)
                 return Result(userInfo["id"].toString())
@@ -1536,7 +1537,7 @@ class GitService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             if (!it.isSuccessful) throw RuntimeException("fail to getGitCIAllMembers with: $url($data)")
             return Result(JsonUtil.to(data, object : TypeReference<List<GitMember>>() {}))
         }
@@ -1577,11 +1578,11 @@ class GitService @Autowired constructor(
                 logger.info("[url=$url]|getFileInfo with response=$response")
                 if (!response.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "(${response.code()})${response.message()}"
+                        status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code})${response.message}"
                     )
                 }
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 val result = try {
                     JsonUtil.to(data, GitCodeFileInfo::class.java)
                 } catch (e: Throwable) {
@@ -1669,11 +1670,11 @@ class GitService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 if (!it.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "(${it.code()})${it.message()}"
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code})${it.message}"
                     )
                 }
-                val data = it.body()!!.string()
+                val data = it.body!!.string()
                 return Result(JsonUtil.getObjectMapper().readValue(data) as List<GitFileInfo>)
             }
         } finally {
@@ -1738,11 +1739,11 @@ class GitService @Autowired constructor(
             OkhttpUtils.doHttp(request).use {
                 if (!it.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "(${it.code()})${it.message()}"
+                        status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${it.code})${it.message}"
                     )
                 }
-                val data = it.body()!!.string()
+                val data = it.body!!.string()
                 return Result(JsonUtil.getObjectMapper().readValue(data) as List<Commit>)
             }
         } finally {
@@ -1769,15 +1770,15 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .put(
                 RequestBody.create(
-                    MediaType.parse("application/json;charset=utf-8"), "{}"
+                    "application/json;charset=utf-8".toMediaTypeOrNull(), "{}"
                 )
             )
             .build()
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
-                return Result(it.code(), "enableCi fail ${it.message()}")
+                return Result(it.code, "enableCi fail ${it.message}")
             }
-            val data = it.body()!!.string()
+            val data = it.body!!.string()
             logger.info("enableCi response>> $data")
             val dataMap = JsonUtil.toMap(data)
             val code = dataMap["code"]
@@ -1802,7 +1803,7 @@ class GitService @Autowired constructor(
             .url(url.toString())
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json;charset=utf-8"),
+                    "application/json;charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(gitCreateFile)
                 )
             )
@@ -1845,7 +1846,7 @@ class GitService @Autowired constructor(
             .build()
         logger.info("getProjectList: $url")
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
             if (!repoList.isJsonNull) {
                 return Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))
