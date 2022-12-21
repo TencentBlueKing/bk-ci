@@ -71,14 +71,6 @@ multiCluster:
   # 兜底策略, 为空则不用兜底
   defaultNamespace: ""
 
-# 构建机资源配置变量
-buildResource:
-  publicDocker:
-    enabled: false
-  k8sBuild:
-    enabled: true
-  defaultValue: KUBERNETES
-
 # 内部数据源配置
 mysql:
   image: 
@@ -472,7 +464,7 @@ dispatch:
 
 # dispatchDocker Deployment
 dispatchDocker:
-  enabled: false
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:

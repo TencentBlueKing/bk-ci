@@ -1,5 +1,5 @@
 # kubernetes-manager
-
+src/backend/dispatch-k8s-manager
 ## 开发须知
 
 1. 修改resource下的config文件时需要同步修改 manifests中的configmap，保持一致。
