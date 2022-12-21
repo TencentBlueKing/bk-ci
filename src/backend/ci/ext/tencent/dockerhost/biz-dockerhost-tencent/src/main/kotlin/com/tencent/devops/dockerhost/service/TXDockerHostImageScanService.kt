@@ -17,6 +17,7 @@ import com.tencent.devops.dockerhost.services.DockerHostImageScanService
 import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -125,12 +126,13 @@ class TXDockerHostImageScanService(
                 .addHeader("Content-Type", "application/json; charset=utf-8")
                 .post(
                     RequestBody.create(
-                        MediaType.parse("application/json; charset=utf-8"),
-                        JsonUtil.toJson(leakScanReq)))
+                        "application/json; charset=utf-8".toMediaTypeOrNull(),
+                        JsonUtil.toJson(leakScanReq)
+                    ))
                 .build()
 
             OkhttpUtils.doHttp(request).use { resp ->
-                val responseBody = resp.body()!!.string()
+                val responseBody = resp.body!!.string()
                 logger.info("$logSuffix Leak scan imageId: $imageId responseBody: $responseBody")
                 val response: LeakScanResponse = jacksonObjectMapper().readValue(responseBody)
 

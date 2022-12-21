@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.third.enum.BcsCategory
 import com.tencent.devops.process.pojo.third.enum.BcsOperation
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -317,7 +318,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get instance status, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -445,7 +446,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .post(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Create instance, response: $data")
             if (!response.isSuccessful) {
                 logger.warn("Create instance failed, msg: $data")
@@ -513,7 +514,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .post(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Recreate instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -547,7 +548,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .delete(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("delete instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -582,7 +583,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .put(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Scale instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -620,7 +621,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .put(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Update application instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -660,7 +661,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .put(RequestBody.create(JSON, requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Update instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -685,7 +686,7 @@ class BcsContainerOpAtom @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get project info, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -711,7 +712,7 @@ class BcsContainerOpAtom @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BcsContainerOpAtom::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     data class TaskResult(val isFinish: Boolean, val success: Boolean, val msg: String)

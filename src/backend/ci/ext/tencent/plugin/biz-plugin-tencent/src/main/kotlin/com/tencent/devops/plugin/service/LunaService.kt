@@ -36,10 +36,12 @@ import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.plugin.pojo.luna.LunaUploadParam
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
 import okio.Okio
+import okio.source
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -124,10 +126,10 @@ class LunaService @Autowired constructor(
                                 executeCount = fileParams.executeCount
                             )
                             val request = with(lunaUploadParam) {
-                                val mediaType = MediaType.parse("application/octet-stream")
+                                val mediaType = "application/octet-stream".toMediaTypeOrNull()
                                 val requestBody = object : RequestBody() {
                                     override fun writeTo(sink: BufferedSink) {
-                                        val source = Okio.source(file.inputStream())
+                                        val source = file.inputStream().source()
                                         sink!!.writeAll(source)
                                     }
 
@@ -139,12 +141,19 @@ class LunaService @Autowired constructor(
                                 val dateFormat = SimpleDateFormat("EEE, dd MMM yyyy HH:mm:ss 'GMT'", Locale.US)
                                 val dateStr = dateFormat.format(file.lastModified())
                                 val url = if (lunaUploadParam.para.destFileDir.isNullOrBlank()) {
-                                    "$LUNA_URL${urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath))
-                                        .replace("%2F", "/")}"
+                                    "$LUNA_URL${
+                                        urlEncode(file.canonicalPath.removePrefix(zipFileDecompressPath))
+                                            .replace("%2F", "/")
+                                    }"
                                 } else {
-                                    "$LUNA_URL${urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/")
-                                        .removePrefix("/")}/${urlEncode(
-                                        file.canonicalPath.removePrefix(zipFileDecompressPath)).replace("%2F", "/")}"
+                                    "$LUNA_URL${
+                                        urlEncode(lunaUploadParam.para.destFileDir!!).replace("%2F", "/")
+                                            .removePrefix("/")
+                                    }/${
+                                        urlEncode(
+                                            file.canonicalPath.removePrefix(zipFileDecompressPath)
+                                        ).replace("%2F", "/")
+                                    }"
                                 }
                                 logger.info("Upload file to luna, url: $url")
 
@@ -161,7 +170,7 @@ class LunaService @Autowired constructor(
                             }
                             OkhttpUtils.doHttp(request).use { res ->
                                 // {"ret":-1, "msg":"file content md5 check failed"}
-                                val response = res.body()!!.string()
+                                val response = res.body!!.string()
                                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(response)
                                 val code = responseData["ret"] as Int
                                 if (0 != code) {

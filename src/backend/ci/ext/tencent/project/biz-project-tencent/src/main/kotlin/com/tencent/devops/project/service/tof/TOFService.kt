@@ -57,6 +57,7 @@ import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectUserService
 import com.tencent.devops.project.utils.CostUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -343,7 +344,7 @@ class TOFService @Autowired constructor(
         logger.info("Start to request $url with body $requestContent")
         val requestBody = Request.Builder()
             .url(url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestContent))
             .build()
         val response = request(requestBody, errorMessage)
         logger.info("Get the response $response of request $url")
@@ -359,10 +360,11 @@ class TOFService @Autowired constructor(
 //        val httpClient = HttpUtil.getHttpClient()
 //        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request $request with code ${response.code()}, " +
-                                "message ${response.message()} and body $responseContent")
+                logger.warn(
+                    "Fail to request $request with code ${response.code}, " +
+                            "message ${response.message} and body $responseContent")
                 throw RuntimeException(errorMessage)
             }
             return responseContent

@@ -155,9 +155,9 @@ class PCGImageServiceImpl @Autowired constructor(
                 .get()
                 .build()
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.warn("Fail to get the pcg images with url($pcgImageUrl) and response(${response.code()}|${response.message()}|$responseContent)")
+                    logger.warn("Fail to get the pcg images with url($pcgImageUrl) and response(${response.code}|${response.message}|$responseContent)")
                     return
                 }
                 pcgImageCache.clear()

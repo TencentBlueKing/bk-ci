@@ -39,6 +39,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
@@ -167,7 +168,7 @@ class BSAuthResourceApi @Autowired constructor(
             authorizedGroups
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -177,7 +178,7 @@ class BSAuthResourceApi @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
 //        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth create resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error("Fail to create auth resource. $responseContent")
@@ -212,7 +213,7 @@ class BSAuthResourceApi @Autowired constructor(
             resourceType.value
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceCreateRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -222,7 +223,7 @@ class BSAuthResourceApi @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
 //        httpClient.newCall(request).execute().use { response ->
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth modify resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.warn("Fail to modify auth resource. $responseContent")
@@ -255,7 +256,7 @@ class BSAuthResourceApi @Autowired constructor(
             resourceType.value
         )
         val content = objectMapper.writeValueAsString(bkAuthResourceDeleteRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -263,7 +264,7 @@ class BSAuthResourceApi @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth delete resource response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error("Fail to delete auth resource. $responseContent")
@@ -305,7 +306,7 @@ class BSAuthResourceApi @Autowired constructor(
         )
 
         val content = objectMapper.writeValueAsString(requestData)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -313,7 +314,7 @@ class BSAuthResourceApi @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("Auth batch create resource response: $responseContent")
 
             if (!response.isSuccessful) {

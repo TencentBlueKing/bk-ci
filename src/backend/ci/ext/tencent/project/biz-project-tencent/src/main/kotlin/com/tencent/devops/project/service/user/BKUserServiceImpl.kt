@@ -34,6 +34,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserVO
 import com.tencent.devops.project.service.UserService
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -70,7 +71,7 @@ class BKUserServiceImpl constructor(
         map["bk_app_secret"] = bkAppSecret
         map["bk_username"] = userId
 
-        val mediaType = MediaType.parse("application/json")
+        val mediaType = "application/json".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(map)
         logger.info("Get the user from url $url with body $json")
         val requestBody = RequestBody.create(mediaType, json)
@@ -80,7 +81,7 @@ class BKUserServiceImpl constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("CommitResourceApi $path$getUser fail.")
                 throw RemoteServiceException("CommitResourceApi $path$getUser fail")

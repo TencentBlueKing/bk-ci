@@ -48,7 +48,9 @@ import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.common.environment.agent.pojo.devcloud.VolumeDetail
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONArray
@@ -92,20 +94,22 @@ class DevCloudClient {
         logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(
-                appId = devCloudAppId,
-                token = devCloudToken,
-                staffName = dispatchMessage.userId,
-                proxyToken = smartProxyToken
-            )))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(
+                SmartProxyUtil.makeHeaders(
+                    appId = devCloudAppId,
+                    token = devCloudToken,
+                    staffName = dispatchMessage.userId,
+                    proxyToken = smartProxyToken
+                ).toHeaders()
+            )
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info(
-                    "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}]code:${response.code()}, $responseContent"
+                    "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}]code:${response.code}, $responseContent"
                 )
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
@@ -113,7 +117,7 @@ class DevCloudClient {
                         errorCode = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.CREATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "创建容器接口异常: Fail to createContainer, http response code: ${response.code()}"
+                                "创建容器接口异常: Fail to createContainer, http response code: ${response.code}"
                     )
                 }
 
@@ -167,19 +171,19 @@ class DevCloudClient {
         logger.info("[$buildId]|[$vmSeqId] request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         errorType = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorType,
                         errorCode = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.OPERATE_VM_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                            "操作容器接口异常（Fail to $action docker, http response code: ${response.code()}"
+                                "操作容器接口异常（Fail to $action docker, http response code: ${response.code}"
                     )
                 }
                 logger.info("[$buildId]|[$vmSeqId] response: $responseContent")
@@ -218,11 +222,11 @@ class DevCloudClient {
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to get containers")
             }
@@ -242,12 +246,12 @@ class DevCloudClient {
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
             .get()
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("[$buildId]|[$vmSeqId] containerName: $name response: $responseContent")
                 if (!response.isSuccessful) {
                     if (retryTime > 0) {
@@ -260,7 +264,7 @@ class DevCloudClient {
                         errorCode = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                         formatErrorMessage = ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                         errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -" +
-                            " 获取容器状态接口异常（Fail to get container status, http response code: ${response.code()}"
+                                " 获取容器状态接口异常（Fail to get container status, http response code: ${response.code}"
                     )
                 }
                 return JSONObject(responseContent)
@@ -286,11 +290,11 @@ class DevCloudClient {
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to get container status")
@@ -306,11 +310,11 @@ class DevCloudClient {
         logger.info("request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 // throw RuntimeException("Fail to createImage")
                 throw BuildFailureException(
@@ -318,7 +322,7 @@ class DevCloudClient {
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                        "创建镜像接口异常（Fail to createImage, http response code: ${response.code()}"
+                            "创建镜像接口异常（Fail to createImage, http response code: ${response.code}"
                 )
             }
             logger.info("response: $responseContent")
@@ -347,11 +351,11 @@ class DevCloudClient {
         logger.info("request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw RuntimeException("Fail to createImageVersions")
@@ -360,7 +364,7 @@ class DevCloudClient {
                     errorCode = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.CREATE_IMAGE_VERSION_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                        "创建镜像新版本接口异常（Fail to createImageVersions, http response code: ${response.code()}"
+                            "创建镜像新版本接口异常（Fail to createImageVersions, http response code: ${response.code}"
                 )
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -385,28 +389,28 @@ class DevCloudClient {
         val url = "$devCloudUrl/api/v2.1/tasks/$taskId"
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Get task status failed, responseCode: ${response.code()}")
+                    logger.error("Get task status failed, responseCode: ${response.code}")
 
                     // 接口请求失败时，sleep 5s，再查一次
                     Thread.sleep(5 * 1000)
                     OkhttpUtils.doHttp(request).use {
-                        val retryResponseContent = it.body()!!.string()
+                        val retryResponseContent = it.body!!.string()
                         if (!it.isSuccessful) {
                             // 没机会了，只能失败
-                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code()}")
+                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code}")
                             throw BuildFailureException(
                                 errorType = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                                 errorCode = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                                 formatErrorMessage = ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                errorMessage = "获取TASK状态接口异常：http response code: ${response.code()}"
+                                errorMessage = "获取TASK状态接口异常：http response code: ${response.code}"
                             )
                         }
 
@@ -438,11 +442,11 @@ class DevCloudClient {
         logger.info("request url: $url, staffName: $staffName")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
@@ -451,7 +455,7 @@ class DevCloudClient {
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 -" +
-                        " 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
+                            " 获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return JSONObject(responseContent)
@@ -478,9 +482,9 @@ class DevCloudClient {
         val url = "$devCloudUrl/api/v2.1/job"
         val body = JsonUtil.toJson(jobRequestBody)
         val request = Request.Builder().url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body)).build()
-        val responseBody = OkhttpUtils.doHttp(request).body()!!.string()
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body)).build()
+        val responseBody = OkhttpUtils.doHttp(request).body!!.string()
         return JsonUtil.getObjectMapper().readValue(responseBody)
     }
 
@@ -489,11 +493,11 @@ class DevCloudClient {
         logger.info("getJobStatus request url: $url, staffName: $userId")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
@@ -502,7 +506,7 @@ class DevCloudClient {
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
+                            "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return responseContent
@@ -514,11 +518,11 @@ class DevCloudClient {
         logger.info("getJobStatus request url: $url, staffName: $userId")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("response: $responseContent")
             if (!response.isSuccessful) {
                 // throw OperationException("Fail to get container websocket")
@@ -527,7 +531,7 @@ class DevCloudClient {
                     errorCode = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.errorCode,
                     formatErrorMessage = ErrorCodeEnum.WEBSOCKET_URL_INTERFACE_ERROR.formatErrorMessage,
                     errorMessage = "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - " +
-                        "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code()}"
+                            "获取websocket接口异常（Fail to getWebsocket, http response code: ${response.code}"
                 )
             }
             return responseContent
@@ -541,14 +545,15 @@ class DevCloudClient {
         logger.info("request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .post(RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
-                ObjectMapper().writeValueAsString(body))
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                ObjectMapper().writeValueAsString(body)
+            )
             )
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to start docker")
             }
@@ -718,11 +723,11 @@ class DevCloudClient {
         val request = Request.Builder()
             .url(url)
             // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to createImageVersions")
             }
@@ -745,13 +750,13 @@ class DevCloudClient {
         val request = Request.Builder()
             .url(url)
             // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.error("Fail to get cfs detail, error code: ${response.code()}")
+                logger.error("Fail to get cfs detail, error code: ${response.code}")
                 throw RuntimeException("Fail to get cfs detail")
             }
             logger.info("response: $responseContent")
@@ -778,11 +783,11 @@ class DevCloudClient {
         val request = Request.Builder()
             .url(url)
             // .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, userId)))
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, userId, smartProxyToken).toHeaders())
             .delete()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to delete cfs")
             }

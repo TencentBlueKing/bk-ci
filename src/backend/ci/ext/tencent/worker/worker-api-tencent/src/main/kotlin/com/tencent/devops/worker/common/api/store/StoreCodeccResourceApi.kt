@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreValidateCodeccResultRequest
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 
 class StoreCodeccResourceApi : AbstractBuildResourceApi() {
@@ -40,7 +41,7 @@ class StoreCodeccResourceApi : AbstractBuildResourceApi() {
     ): Result<Boolean> {
         val path = "/ms/store/api/build/store/codecc/validate"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(storeValidateCodeccResultRequest)
         )
         val request = buildPost(path, body)

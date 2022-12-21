@@ -45,6 +45,7 @@ import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
 import com.tencent.devops.image.pojo.tke.TkePushImageParam
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.math.NumberUtils
@@ -92,7 +93,7 @@ class TkeService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(TkeService::class.java)
         private val executorService = Executors.newFixedThreadPool(8)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     private val dockerClientConfig = DefaultDockerClientConfig.createDefaultConfigBuilder()
@@ -249,7 +250,7 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|requestUrl: $url")
             logger.info("[${pushImageParam.buildId}]|requestBody: $requestBody")
             OkhttpUtils.doHttp(request).use { res ->
-                val responseBody = res.body()!!.string()
+                val responseBody = res.body!!.string()
                 logger.info("[${pushImageParam.buildId}]|responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)

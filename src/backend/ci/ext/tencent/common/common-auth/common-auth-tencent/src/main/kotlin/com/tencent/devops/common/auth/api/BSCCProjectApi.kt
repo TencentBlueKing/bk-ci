@@ -35,6 +35,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthProject
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -58,7 +59,7 @@ class BSCCProjectApi @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("Fail to get project $projectCode. $responseContent")
                 throw RemoteServiceException("Fail to get project $projectCode")
@@ -92,11 +93,11 @@ class BSCCProjectApi @Autowired constructor(
         val requestContent = objectMapper.writeValueAsString(mapOf("project_codes" to projectCodes))
         val request = Request.Builder()
             .url(url)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestContent))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestContent))
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("Fail to list project. $responseContent")
                 throw RemoteServiceException("Fail to list project.")

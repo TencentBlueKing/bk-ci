@@ -43,6 +43,7 @@ import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURC
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCES
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.VALIDATE_USER_RESOURCE
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -80,7 +81,8 @@ class BSAuthPermissionApi @Autowired constructor(
         var success = false
         try {
             val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
-            val url = "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
+            val url =
+                "${bkAuthProperties.url}/permission/project/service/policy/resource/user/verfiy?access_token=$accessToken"
             logger.info("[$user|$serviceCode|$resourceType|$projectCode|$resourceCode|$permission] BSAuthPermissionApi url:$url")
             val bkAuthPermissionRequest = BkAuthPermissionVerifyRequest(
                 projectCode = projectCode,
@@ -91,13 +93,13 @@ class BSAuthPermissionApi @Autowired constructor(
                 userId = user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder().url(url).post(requestBody).build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to validate user permission. $responseContent")
                     throw RemoteServiceException("Fail to validate user permission")
@@ -147,7 +149,7 @@ class BSAuthPermissionApi @Autowired constructor(
             val request = Request.Builder().url(url).get().build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resource by permission. $responseContent")
                     throw RemoteServiceException("Fail to get user resource by permission")
@@ -200,7 +202,7 @@ class BSAuthPermissionApi @Autowired constructor(
                 user
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionsResourcesRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder()
@@ -209,7 +211,7 @@ class BSAuthPermissionApi @Autowired constructor(
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
@@ -270,13 +272,13 @@ class BSAuthPermissionApi @Autowired constructor(
                 userId = userId
             )
             val content = objectMapper.writeValueAsString(bkAuthPermissionsResourcesRequest)
-            val mediaType = MediaType.parse("application/json; charset=utf-8")
+            val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
             val requestBody = RequestBody.create(mediaType, content)
 
             val request = Request.Builder().url(url).post(requestBody).build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("Fail to get user resources by permissions. $responseContent")
                     throw RemoteServiceException("Fail to get user resources by permissions")
@@ -336,13 +338,13 @@ class BSAuthPermissionApi @Autowired constructor(
             resourceType = resourceType.value,
             userIdList = userIdList
         )
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val content = objectMapper.writeValueAsString(grantRequest)
         logger.info("addResourcePermissionForUsers url[$url], body[$content]")
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(requestBody).build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("createUserPermissions fail : user[$userId], projectCode[$projectCode]")
                 throw RemoteServiceException("add Resource Permission remote fail")

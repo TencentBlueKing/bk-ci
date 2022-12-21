@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -56,11 +57,11 @@ object DevCloudContainerInstanceClient {
         val request = Request.Builder()
             .url(url)
 //            .headers(Headers.of(getHeaders(devCloudAppId, devCloudToken, staffName)))
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, staffName, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.THIRD_PARTY_INTERFACE_ERROR,

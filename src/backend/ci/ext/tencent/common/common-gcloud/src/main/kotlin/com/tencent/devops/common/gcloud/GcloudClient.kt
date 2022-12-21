@@ -46,6 +46,7 @@ import com.tencent.devops.common.gcloud.api.pojo.UploadResParam
 import com.tencent.devops.common.gcloud.utils.GcloudUtil.getRequestUriWithSignature
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -67,7 +68,10 @@ class GcloudClient constructor(
         val uri = getRequestUriWithSignature(host, fileHost, uploadAppParam.beanToMap(), commonParam, ModuleParam.FILE, ActionParam.UploadApp)
         val body = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                .addFormDataPart("file", file.name, RequestBody.create(
+                    "application/octet-stream".toMediaTypeOrNull(),
+                    file
+                ))
                 .build()
         val request = Request.Builder()
                 .url(uri)
@@ -76,7 +80,7 @@ class GcloudClient constructor(
         logger.info("upload app url: $uri")
         logger.info("upload app param: $uploadAppParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val uploadResp = res.body()!!.string()
+            val uploadResp = res.body!!.string()
             logger.info("uploadApp response>> $uploadResp")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -102,7 +106,10 @@ class GcloudClient constructor(
         val uri = getRequestUriWithSignature(host, fileHost, uploadResParam.beanToMap(), commonParam, ModuleParam.FILE, ActionParam.UploadRes)
         val body = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                .addFormDataPart("file", file.name, RequestBody.create(
+                    "application/octet-stream".toMediaTypeOrNull(),
+                    file
+                ))
                 .build()
         val request = Request.Builder()
                 .url(uri)
@@ -111,7 +118,7 @@ class GcloudClient constructor(
         logger.info("upload res url: $uri")
         logger.info("get upload res params: $uploadResParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val uploadResp = res.body()!!.string()
+            val uploadResp = res.body!!.string()
             logger.info("uploadRes response>> $uploadResp")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -142,7 +149,7 @@ class GcloudClient constructor(
         logger.info("get upload task url: $uri")
         logger.info("get upload task params: $commonParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
 
             logger.info("getUploadTask response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
@@ -183,7 +190,7 @@ class GcloudClient constructor(
         logger.info("new app url: $uri")
         logger.info("newApp params: $newAppParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("newApp response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -213,7 +220,7 @@ class GcloudClient constructor(
         logger.info("newResource app url: $uri")
         logger.info("newResource params: $newResParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("newResource response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -241,7 +248,7 @@ class GcloudClient constructor(
                 .build()
         logger.info("pre publish url: $uri")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("newApp response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -273,7 +280,7 @@ class GcloudClient constructor(
                 .build()
         logger.info("update version url: $uri")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("update version response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -301,7 +308,7 @@ class GcloudClient constructor(
                 .build()
         logger.info("update version url: $uri")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("update version response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,

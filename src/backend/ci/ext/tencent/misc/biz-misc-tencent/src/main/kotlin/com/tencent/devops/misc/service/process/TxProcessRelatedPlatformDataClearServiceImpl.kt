@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.misc.pojo.BasicAuthProperties
 import okhttp3.Credentials
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -77,7 +78,7 @@ class TxProcessRelatedPlatformDataClearServiceImpl(
         )
 
         val body = RequestBody.create(
-            MediaType.parse("application/json"),
+            "application/json".toMediaTypeOrNull(),
             JsonUtil.toJson(context)
         )
 
@@ -88,7 +89,7 @@ class TxProcessRelatedPlatformDataClearServiceImpl(
             .addHeader(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("cleanBuildDataRequest fail body is $body")
             }

@@ -42,6 +42,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.stream.config.RtxCustomConfig
 import com.tencent.devops.stream.trigger.listener.notify.RtxCustomApi
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.dom4j.Document
@@ -231,18 +232,18 @@ class OpenRtxCustomService constructor(
         val jsonString = jacksonObjectMapper().writeValueAsString(richtextMessage)
 
         val sendURL = "${rtxCustomConfig.rtxUrl}/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException(
-                    "RtxCustomApi sendRichText error code: ${response.code()} " +
-                        "messge: ${response.message()}"
+                    "RtxCustomApi sendRichText error code: ${response.code} " +
+                            "messge: ${response.message}"
                 )
             }
         }

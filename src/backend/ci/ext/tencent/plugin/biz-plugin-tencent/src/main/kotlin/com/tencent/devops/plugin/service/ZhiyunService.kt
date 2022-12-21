@@ -40,6 +40,7 @@ import com.tencent.devops.plugin.dao.ZhiyunProductDao
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunProduct
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -89,7 +90,7 @@ class ZhiyunService @Autowired constructor(
                         val body = MultipartBody.Builder()
                             .setType(MultipartBody.FORM)
                             .addFormDataPart("tarball", file.name,
-                                RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                                RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
                             .addFormDataPart("caller", zhiyunConfig.caller)
                             .addFormDataPart("password", zhiyunConfig.password)
                             .addFormDataPart("operator", operator)
@@ -108,7 +109,7 @@ class ZhiyunService @Autowired constructor(
                             .build()
                     }
                     OkhttpUtils.doHttp(request).use { res ->
-                        val response = res.body()!!.string()
+                        val response = res.body!!.string()
                         logger.info("zhi yun upload response for build(${fileParams.buildId}): $response")
                         val jsonMap = objectMapper.readValue<Map<String, Any>>(response)
                         val code = jsonMap["code"]

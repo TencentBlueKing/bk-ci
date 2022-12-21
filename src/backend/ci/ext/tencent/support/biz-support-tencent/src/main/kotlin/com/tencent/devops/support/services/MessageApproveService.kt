@@ -40,6 +40,7 @@ import com.tencent.devops.support.model.approval.CreateEsbMoaWorkItem
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -88,10 +89,10 @@ class MessageApproveService @Autowired constructor() {
         val requestBody = JsonUtil.toJson(createEsbMoaApproveParam)
         val request = Request.Builder()
             .url(urlPrefix + moaPushDataUrl)
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("the response>> $data")
             if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             val response: Map<String, Any> = JsonUtil.toMap(data)
@@ -113,10 +114,10 @@ class MessageApproveService @Autowired constructor() {
         val requestBody = JsonUtil.toJson(createEsbMoaWorkItem)
         val request = Request.Builder()
             .url(urlPrefix + moaPushWorkItemUrl)
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("the response>> $data")
             if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             val response: Map<String, Any> = JsonUtil.toMap(data)
@@ -142,10 +143,10 @@ class MessageApproveService @Autowired constructor() {
         val requestBody = JsonUtil.toJson(completeEsbMoaWorkItem)
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteWorkItemUrl)
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("the response>> $data")
             if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             val response: Map<String, Any> = JsonUtil.toMap(data)
@@ -168,10 +169,10 @@ class MessageApproveService @Autowired constructor() {
         val requestBody = JsonUtil.toJson(createEsbMoaCompleteParam)
         val request = Request.Builder()
             .url(urlPrefix + moaCompleteUrl)
-            .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), requestBody))
+            .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), requestBody))
             .build()
         OkhttpUtils.doHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("the response>> $data")
             if (!res.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             val response: Map<String, Any> = JsonUtil.toMap(data)
