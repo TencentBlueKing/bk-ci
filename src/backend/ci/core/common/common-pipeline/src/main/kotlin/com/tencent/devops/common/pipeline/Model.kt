@@ -59,7 +59,9 @@ data class Model(
     @ApiModelProperty("提示", required = false)
     var tips: String? = null,
     @ApiModelProperty("流水线事件回调", required = false)
-    var events: Map<String, PipelineCallbackEvent>? = emptyMap()
+    var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
+    @ApiModelProperty("静态流水线组", required = false)
+    var staticViews: List<String> = emptyList()
 ) {
     @ApiModelProperty("提交时流水线最新版本号", required = false)
     var latestVersion: Int = 0
@@ -108,6 +110,7 @@ data class Model(
                             jobId = container.jobId
                         )
                     }
+
                     is NormalContainer -> {
                         NormalContainer(
                             containerId = container.containerId,
@@ -127,6 +130,7 @@ data class Model(
                             jobId = container.jobId
                         )
                     }
+
                     else -> {
                         container
                     }

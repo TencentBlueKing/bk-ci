@@ -215,6 +215,15 @@ class StreamTGitTransferService @Autowired constructor(
         )
     }
 
+    override fun enableCi(userId: String, projectName: String, enable: Boolean?): Result<Boolean> {
+        return client.get(ServiceGitResource::class).enableCi(
+            projectName = projectName,
+            token = getAndCheckOauthToken(userId).accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+            enable = enable
+        )
+    }
+
     override fun getCommits(
         userId: String,
         gitProjectId: Long,

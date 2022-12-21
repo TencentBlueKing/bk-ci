@@ -131,7 +131,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>,
+        values: Map<String, String>?,
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V3|$userId|start|$projectId|$pipelineId|$values|$buildNo")
@@ -139,7 +139,7 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
+            values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
             startType = StartType.SERVICE
@@ -175,8 +175,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         failedContainer: Boolean?,
         skipFailedTask: Boolean?
     ): Result<BuildId> {
-        logger.info("OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
-            "|$skipFailedTask")
+        logger.info(
+            "OPENAPI_BUILD_V3|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
+                "|$skipFailedTask"
+        )
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
@@ -219,8 +221,10 @@ class ApigwBuildResourceV3Impl @Autowired constructor(
         cancel: Boolean?,
         reviewRequest: StageReviewRequest?
     ): Result<Boolean> {
-        logger.info("OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
-            "|$reviewRequest")
+        logger.info(
+            "OPENAPI_BUILD_V3|$userId|manual start stage|$projectId|$pipelineId|$buildId|$stageId|$cancel" +
+                "|$reviewRequest"
+        )
         return client.get(ServiceBuildResource::class).manualStartStage(
             userId = userId,
             projectId = projectId,

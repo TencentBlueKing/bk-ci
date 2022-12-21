@@ -37,6 +37,8 @@ import com.tencent.devops.common.expression.context.DictionaryContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.RuntimeDictionaryContextData
 import com.tencent.devops.common.expression.context.RuntimeNamedValue
+import com.tencent.devops.common.expression.expression.ExpressionOutput
+import com.tencent.devops.common.expression.expression.IFunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.apache.tools.ant.filters.StringInputStream
 import org.slf4j.LoggerFactory
@@ -60,27 +62,33 @@ object EnvReplacementParser {
      * @param contextMap 环境变量map值
      * @param contextPair 自定义表达式计算上下文（如果指定则不使用表达式替换或默认替换逻辑）
      * @param onlyExpression 只进行表达式替换（若指定了自定义替换逻辑此字段无效，为false）
+     * @param functions 用户自定义的拓展用函数
+     * @param output 表达式计算时输出
      */
     fun parse(
         value: String?,
         contextMap: Map<String, String>,
         onlyExpression: Boolean? = false,
-        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null
+        contextPair: Pair<ExecutionContext, List<NamedValueInfo>>? = null,
+        functions: Iterable<IFunctionInfo>? = null,
+        output: ExpressionOutput? = null
     ): String {
         if (value.isNullOrBlank()) return ""
         return if (onlyExpression == true) {
             try {
                 val (context, nameValues) = contextPair
                     ?: getCustomExecutionContextByMap(contextMap)
-                    ?: return ""
+                    ?: return value
                 parseExpression(
                     value = value,
                     context = context,
-                    nameValues = nameValues
+                    nameValues = nameValues,
+                    functions = functions,
+                    output = output
                 )
             } catch (ignore: Throwable) {
                 logger.warn("[$value]|EnvReplacementParser expression invalid: ", ignore)
-                ""
+                value
             }
         } else {
             ObjectReplaceEnvVarUtil.replaceEnvVar(value, contextMap).let {
@@ -114,7 +122,9 @@ object EnvReplacementParser {
     private fun parseExpression(
         value: String,
         nameValues: List<NamedValueInfo>,
-        context: ExecutionContext
+        context: ExecutionContext,
+        functions: Iterable<IFunctionInfo>? = null,
+        output: ExpressionOutput? = null
     ): String {
         val strReader = InputStreamReader(StringInputStream(value))
         val bufferReader = BufferedReader(strReader)
@@ -133,7 +143,9 @@ object EnvReplacementParser {
                     value = line,
                     blocks = blocks,
                     context = context,
-                    nameValues = nameValues
+                    nameValues = nameValues,
+                    functions = functions,
+                    output = output
                 )
 
                 val newLine = findExpressions(onceResult).let {
@@ -144,7 +156,9 @@ object EnvReplacementParser {
                             value = onceResult,
                             blocks = it,
                             context = context,
-                            nameValues = nameValues
+                            nameValues = nameValues,
+                            functions = functions,
+                            output = output
                         )
                     }
                 }
@@ -165,7 +179,9 @@ object EnvReplacementParser {
         value: String,
         blocks: List<List<ExpressionBlock>>,
         nameValues: List<NamedValueInfo>,
-        context: ExecutionContext
+        context: ExecutionContext,
+        functions: Iterable<IFunctionInfo>? = null,
+        output: ExpressionOutput? = null
     ): String {
         var chars = value.toList()
         blocks.forEachIndexed nextBlockLevel@{ blockLevel, blocksInLevel ->
@@ -174,8 +190,8 @@ object EnvReplacementParser {
                 val expression = chars.joinToString("").substring(block.startIndex + 3, block.endIndex - 1)
 
                 var result = try {
-                    ExpressionParser.createTree(expression, null, nameValues, null)!!
-                        .evaluate(null, context, null).value.let {
+                    ExpressionParser.createTree(expression, null, nameValues, functions)!!
+                        .evaluate(null, context, null, output).value.let {
                             if (it is PipelineContextData) it.fetchValue() else it
                         }?.let {
                             JsonUtil.toJson(it, false)

@@ -33,6 +33,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.builds.BuildExperienceResource
 import com.tencent.devops.experience.pojo.ExperienceCreateResp
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
+import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.service.ExperienceService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -46,7 +47,7 @@ class BuildExperienceResourceImpl @Autowired constructor(private val experienceS
         experience: ExperienceServiceCreate
     ): Result<ExperienceCreateResp> {
         checkParam(userId, projectId)
-        return Result(experienceService.serviceCreate(userId, projectId, experience))
+        return Result(experienceService.serviceCreate(userId, projectId, experience, Source.PIPELINE))
     }
 
     private fun checkParam(userId: String, projectId: String) {

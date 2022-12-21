@@ -252,13 +252,19 @@ object ExportJob {
             val envId = param.thirdPartyAgentEnvId ?: ""
             val workspace = param.thirdPartyWorkspace ?: ""
             return if (agentId.isNotBlank()) {
-                ThirdPartyAgentIDDispatchType(displayName = agentId, workspace = workspace, agentType = AgentType.ID)
+                ThirdPartyAgentIDDispatchType(
+                    displayName = agentId,
+                    workspace = workspace,
+                    agentType = AgentType.ID,
+                    dockerInfo = null
+                )
             } else if (envId.isNotBlank()) {
                 ThirdPartyAgentEnvDispatchType(
                     envName = envId,
                     envProjectId = null,
                     workspace = workspace,
-                    agentType = AgentType.ID
+                    agentType = AgentType.ID,
+                    dockerInfo = null
                 )
             } // docker建机指定版本(旧)
             else if (!param.dockerBuildVersion.isNullOrBlank()) {

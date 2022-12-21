@@ -33,7 +33,6 @@ import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
 import com.tencent.devops.stream.pojo.message.UserMessageType
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -234,29 +233,6 @@ class StreamUserMessageDao {
         }
     }
 
-    private fun selectMessage(
-        dslContext: DSLContext,
-        projectId: String,
-        messageType: UserMessageType?,
-        messageId: String?,
-        haveRead: Boolean?
-    ): SelectConditionStep<TGitUserMessageRecord> {
-        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-            if (messageType != null) {
-                dsl.and(MESSAGE_TYPE.eq(messageType.name))
-            }
-            if (haveRead != null) {
-                dsl.and(HAVE_READ.eq(haveRead))
-            }
-            if (messageId != null) {
-                dsl.and(MESSAGE_ID.eq(messageId))
-            }
-            return dsl
-        }
-    }
-
     private fun selectMessageCount(
         dslContext: DSLContext,
         projectId: String,
@@ -277,33 +253,6 @@ class StreamUserMessageDao {
                 dsl.and(MESSAGE_ID.eq(messageId))
             }
             return dsl.fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    private fun selectMessage(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String? = null,
-        messageType: UserMessageType?,
-        messageId: String?,
-        haveRead: Boolean?
-    ): SelectConditionStep<TGitUserMessageRecord> {
-        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId))
-            if (!projectId.isNullOrBlank()) {
-                dsl.and(PROJECT_ID.eq(projectId))
-            }
-            if (messageType != null) {
-                dsl.and(MESSAGE_TYPE.eq(messageType.name))
-            }
-            if (haveRead != null) {
-                dsl.and(HAVE_READ.eq(haveRead))
-            }
-            if (messageId != null) {
-                dsl.and(MESSAGE_ID.eq(messageId))
-            }
-            return dsl
         }
     }
 

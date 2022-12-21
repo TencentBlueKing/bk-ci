@@ -154,7 +154,10 @@ func (m *Mgr) GetNewlyTaskID() string {
 // SetSpecificHosts set the specific worker list instead of applying
 func (m *Mgr) SetSpecificHosts(hostList []string) {
 	m.reslock.Lock()
-	defer m.reslock.Unlock()
+	defer func() {
+		m.reslock.Unlock()
+		m.onResChanged()
+	}()
 	m.resources = append(m.resources, &Res{
 		taskid: "",
 		status: ResourceSpecified,
@@ -169,7 +172,7 @@ func (m *Mgr) SetSpecificHosts(hostList []string) {
 		info.ResourceApplied()
 	}
 
-	m.onResChanged()
+	// m.onResChanged()
 }
 
 // GetHosts return the worker list
@@ -515,15 +518,19 @@ func (m *Mgr) SendStats(brief bool) error {
 	return nil
 }
 
-func (m *Mgr) SendAndResetStats(brief bool, t int64) error {
+// send stats and reset after sent, if brief true, then will not send the job stats
+// !! this will call m.work.Lock() , to avoid dead lock
+func (m *Mgr) SendAndResetStats(brief bool, resapplytimes []int64) error {
 
-	data, _ := m.getSendStatsData(false, t)
-	go m.sendStatsData(data)
+	for _, t := range resapplytimes {
+		data, _ := m.getSendStatsData(brief, t)
+		go m.sendStatsData(data)
 
-	// reset stat
-	m.work.Lock()
-	m.work.Basic().ResetStat()
-	m.work.Unlock()
+		// reset stat
+		m.work.Lock()
+		m.work.Basic().ResetStat()
+		m.work.Unlock()
+	}
 
 	return nil
 }
@@ -682,7 +689,10 @@ func (m *Mgr) inspectInfo(taskID string) {
 					s = ResourceApplyFailed
 				}
 
-				m.clearOldInvalidRes(&info)
+				resapplytimes, err := m.clearOldInvalidRes(&info)
+				if err == nil {
+					m.SendAndResetStats(false, resapplytimes)
+				}
 				m.addRes(&info, s)
 
 				m.updateApplyEndStatus(s == ResourceApplySucceed)
@@ -691,7 +701,10 @@ func (m *Mgr) inspectInfo(taskID string) {
 				return
 
 			case engine.TaskStatusFinish, engine.TaskStatusFailed:
-				m.clearOldInvalidRes(&info)
+				resapplytimes, err := m.clearOldInvalidRes(&info)
+				if err == nil {
+					m.SendAndResetStats(false, resapplytimes)
+				}
 				m.addRes(&info, ResourceApplyFailed)
 
 				m.updateApplyEndStatus(false)
@@ -703,14 +716,14 @@ func (m *Mgr) inspectInfo(taskID string) {
 }
 
 // clean old resources which host list is empty, and notify server to terminate these resources
-func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
+func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) ([]int64, error) {
 	blog.Infof("resource: ready check and clean old invalid resource")
 
 	m.reslock.Lock()
 	defer m.reslock.Unlock()
 
 	if len(m.resources) == 0 {
-		return nil
+		return nil, nil
 	}
 
 	needrelease := false
@@ -725,9 +738,10 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 	}
 
 	if !needrelease {
-		return nil
+		return nil, nil
 	}
 
+	resapplytimes := []int64{}
 	newres := []*Res{}
 	for _, r := range m.resources {
 		// do nothing with current task info, it mabye need by others
@@ -738,18 +752,10 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 
 		if len(r.taskInfo.HostList) == 0 {
 			m.releaseOne(nil, r)
+			// 确保 m.reslock.Lock() 和 m.work.Lock() 不要相互包含，避免死锁
 			// TODO : send detail stat data and reset stat data
-
-			// // send stat
-			// data, _ := m.getSendStatsData(false, r.applyTime.UnixNano())
-			// go m.sendStatsData(data)
-
-			// // reset stat
-			// m.work.Lock()
-			// m.work.Basic().ResetStat()
-			// m.work.Unlock()
-
-			m.SendAndResetStats(false, r.applyTime.UnixNano())
+			// m.SendAndResetStats(false, r.applyTime.UnixNano())
+			resapplytimes = append(resapplytimes, r.applyTime.UnixNano())
 
 		} else {
 			newres = append(newres, r)
@@ -757,25 +763,13 @@ func (m *Mgr) clearOldInvalidRes(info *v2.RespTaskInfo) error {
 	}
 	m.resources = newres
 
-	return nil
+	return resapplytimes, nil
 }
 
 func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 	if info == nil {
 		return nil
 	}
-
-	changed := false
-	m.reslock.Lock()
-	defer func() {
-		m.reslock.Unlock()
-		if changed {
-			m.onResChanged()
-		}
-	}()
-
-	// send stat data with the newly taskid(resource id)
-	m.newlyTaskID = info.TaskID
 
 	// TODO : reset stat data to new status
 	// 更新work info状态
@@ -799,6 +793,18 @@ func (m *Mgr) addRes(info *v2.RespTaskInfo, status Status) error {
 		}
 	}
 	m.work.Unlock()
+
+	changed := false
+	m.reslock.Lock()
+	defer func() {
+		m.reslock.Unlock()
+		if changed {
+			m.onResChanged()
+		}
+	}()
+
+	// send stat data with the newly taskid(resource id)
+	m.newlyTaskID = info.TaskID
 
 	for _, r := range m.resources {
 		if r.taskid == info.TaskID {

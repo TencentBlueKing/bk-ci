@@ -195,7 +195,7 @@ class WorkspaceDao {
     }
 
     fun updateWorkspaceName(
-        workspaceId: Long,
+        oldName: String,
         name: String,
         dslContext: DSLContext
     ) {
@@ -203,7 +203,7 @@ class WorkspaceDao {
             dslContext.update(this)
                 .set(NAME, name)
                 .set(UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(workspaceId))
+                .where(NAME.eq(oldName))
                 .execute()
         }
     }

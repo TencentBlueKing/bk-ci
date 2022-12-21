@@ -16,7 +16,7 @@ const argv = yargs.alias({
 }).default({
     dist: 'frontend',
     env: 'master',
-    lsVersion: 'dev',
+    lsVersion: 'v2',
     type: 'tencent'
 }).describe({
     dist: 'build output dist directory',
