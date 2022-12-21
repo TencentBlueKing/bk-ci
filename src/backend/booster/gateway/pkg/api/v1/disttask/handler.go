@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -33,7 +32,8 @@ import (
 
 // ListClientVersion handle the http request for listing client version
 func ListClientVersion(req *restful.Request, resp *restful.Response) {
-	f, err := ioutil.ReadFile("./data/VersionList.txt")
+	filePath := "./data/VersionList.txt"
+	f, err := ioutil.ReadFile(filePath)
 	if err != nil {
 		blog.Error("List Version error:(%v)", err)
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
@@ -53,19 +53,14 @@ func ListWorkerImages(req *restful.Request, resp *restful.Response) {
 	args := req.Request.URL.Query()
 	queueName := args.Get("queue_name")
 
-	f, err := os.Open("./data/DisttaskWorkerList.json")
-	defer f.Close()
-	if err != nil {
-		blog.Error("List worker images error:(%v)", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
-	}
+	filePath := "./data/DisttaskWorkerList.json"
 
 	result := commonTypes.WorkerImage{
 		Mesos: make([]commonTypes.Image, 0, 100),
 		K8s:   make([]commonTypes.Image, 0, 100),
 	}
-	data, _ := ioutil.ReadAll(f)
-	err = json.Unmarshal([]byte(data), &result)
+	data, _ := ioutil.ReadFile(filePath)
+	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
