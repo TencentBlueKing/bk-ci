@@ -25,10 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.service.atom
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 平台
+import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
+
+interface AtomIndexTriggerCalService {
+
+    /**
+     * 插件升级触发指标计算
+     * @param userId 用户ID
+     * @param atomCode 插件标识
+     * @param version 插件版本
+     * @param releaseType 发布类型
+     * @return 布尔值
+     */
+    fun upgradeTriggerCalculate(
+        userId: String,
+        atomCode: String,
+        version: String,
+        releaseType: ReleaseTypeEnum
+    ): Boolean
 }
