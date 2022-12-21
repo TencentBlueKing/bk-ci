@@ -25,10 +25,31 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.dao.common
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 平台
+import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
+import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.jooq.Condition
+import org.jooq.DSLContext
+import org.springframework.stereotype.Repository
+
+@Repository
+class StoreIndexBaseInfoDao {
+
+    fun getIndexCodesByAtomCode(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        atomCode: String,
+        executeTimeType: IndexExecuteTimeTypeEnum? = null
+    ): List<String> {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
+            conditions.add(ATOM_CODE.eq(atomCode))
+            executeTimeType?.let { conditions.add(EXECUTE_TIME_TYPE.eq(executeTimeType.name)) }
+            return dslContext.select(INDEX_CODE).from(this)
+                .where(conditions).fetchInto(String::class.java)
+        }
+    }
 }

@@ -27,8 +27,7 @@
 
 package com.tencent.devops.store.pojo.common.enums
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 平台
+enum class StorePipelineBusTypeEnum {
+    BUILD, // 构建
+    INDEX; // 指标
 }

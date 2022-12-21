@@ -25,10 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common.enums
+package com.tencent.devops.store.pojo.common.index
 
-enum class IndexExecuteTimeTypeEnum {
-    INDEX_CHANGE, // 指标变动
-    COMPONENT_UPGRADE, // 组件升级
-    CRON; // 平台
-}
+import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("新增指标请求报文体")
+data class StoreIndexPipelineInitRequest(
+    @ApiModelProperty("指标代码", required = true)
+    val indexCode: String,
+    @ApiModelProperty("指标对应的插件件代码", required = true)
+    val atomCode: String,
+    @ApiModelProperty("指标对应的插件版本", required = true)
+    val atomVersion: String = "1.*",
+    @ApiModelProperty("指标执行时机类型", required = true)
+    val executeTimeType: IndexExecuteTimeTypeEnum,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: StoreTypeEnum
+)
