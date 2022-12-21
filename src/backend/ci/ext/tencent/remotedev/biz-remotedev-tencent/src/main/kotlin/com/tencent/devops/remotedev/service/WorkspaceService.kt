@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -44,7 +45,6 @@ import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -63,7 +63,6 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisWaiting4K8s
@@ -193,7 +192,7 @@ class WorkspaceService @Autowired constructor(
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
-                name = bizId, // 先临时生成一个，后面拿k8s返回的name替换掉
+                name = "$userId-${UUIDUtil.generate().takeLast(10)}",
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -222,6 +221,7 @@ class WorkspaceService @Autowired constructor(
             WorkspaceCreateEvent(
                 userId = userId,
                 traceId = bizId,
+                workspaceName = workspace.name,
                 repositoryUrl = workspace.repositoryUrl,
                 branch = workspace.branch,
                 devFilePath = workspace.devFilePath,
@@ -292,12 +292,6 @@ class WorkspaceService @Autowired constructor(
                 workspaceDao.deleteWorkspace(workspaceId, dslContext)
                 throw CustomException(Response.Status.BAD_REQUEST, "工作空间创建失败")
             }
-        }
-    }
-
-    fun createWorkspace4K8s(event: RemoteDevUpdateEvent) {
-        if (event.status) {
-            workspaceDao.updateWorkspaceName(event.traceId, event.workspaceName, dslContext)
         }
     }
 

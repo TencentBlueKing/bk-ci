@@ -34,6 +34,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,
+    override val workspaceName: String,
     val repositoryUrl: String,
     val branch: String,
     val devFilePath: String?,
@@ -41,4 +42,4 @@ data class WorkspaceCreateEvent(
     val image: String = "",
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)
