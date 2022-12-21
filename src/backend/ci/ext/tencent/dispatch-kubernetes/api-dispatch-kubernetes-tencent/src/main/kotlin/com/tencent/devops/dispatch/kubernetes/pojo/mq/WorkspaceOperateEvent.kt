@@ -35,7 +35,7 @@ data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String,
     val type: UpdateEventType,
-    val workspaceName: String,
+    override val workspaceName: String,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
-) : WorkspaceEvent(userId, traceId, delayMills, retryTime)
+) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)
