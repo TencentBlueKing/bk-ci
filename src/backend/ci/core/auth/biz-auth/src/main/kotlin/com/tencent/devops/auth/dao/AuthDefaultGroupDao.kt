@@ -71,4 +71,17 @@ class AuthDefaultGroupDao {
                 .fetch()
         }
     }
+
+    fun getByName(
+        dslContext: DSLContext,
+        resourceType: String,
+        groupName: String
+    ): TAuthDefaultGroupRecord? {
+        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_NAME.eq(groupName))
+                .fetchOne()
+        }
+    }
 }

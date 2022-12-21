@@ -65,6 +65,8 @@ object DateTimeUtil {
 
     const val YYYY_MM_DD_HH_MM_SS = "yyyy-MM-dd HH:mm:ss"
 
+    const val YYYY_MM_DD_T_HH_MM_SSZ = "yyyy-MM-dd'T'HH:mm:ssZ"
+
     const val YYYYMMDD = "yyyyMMdd"
 
     /**
