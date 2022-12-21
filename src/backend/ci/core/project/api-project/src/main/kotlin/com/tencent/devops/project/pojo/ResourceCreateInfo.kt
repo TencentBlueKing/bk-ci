@@ -14,7 +14,7 @@ data class ResourceCreateInfo(
     @ApiModelProperty("用户部门详细")
     val userDeptDetail: UserDeptDetail?,
     @ApiModelProperty("iamSubjectScopes")
-    val iamSubjectScopes: ArrayList<ManagerScopes>,
+    val iamSubjectScopes: ArrayList<SubjectScopeInfo>,
     @ApiModelProperty("projectCreateInfo")
     val projectCreateInfo: ProjectCreateInfo,
     @ApiModelProperty("是否需要审批（从页面调起）")

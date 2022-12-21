@@ -1,0 +1,14 @@
+package com.tencent.devops.project.pojo
+
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("授权范围")
+data class SubjectScopeInfo(
+    @ApiModelProperty("ID")
+    val id: String,
+    @ApiModelProperty("name")
+    val name: String,
+    @ApiModelProperty("类型")
+    val type: String
+)

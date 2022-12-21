@@ -28,10 +28,10 @@
 
 package com.tencent.devops.project.listener
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
 
 @Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
@@ -42,5 +42,5 @@ data class TxIamRbacCreateEvent(
     override var delayMills: Int = 0,
     val resourceRegisterInfo: ResourceRegisterInfo,
     var iamProjectId: String?,
-    val subjectScopes: List<ManagerScopes>? = emptyList()
+    val subjectScopes: List<SubjectScopeInfo>? = emptyList()
 ) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)

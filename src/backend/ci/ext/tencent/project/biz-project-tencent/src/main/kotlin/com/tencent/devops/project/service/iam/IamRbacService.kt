@@ -74,6 +74,7 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
 import com.tencent.devops.project.listener.TxIamRbacCreateEvent
+import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
@@ -211,7 +212,7 @@ class IamRbacService @Autowired constructor(
         projectCode: String,
         projectName: String,
         userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
+        iamSubjectScopes: List<SubjectScopeInfo>,
         relationId: String
     ) {
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
@@ -236,7 +237,7 @@ class IamRbacService @Autowired constructor(
         projectCode: String,
         projectName: String,
         userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
+        iamSubjectScopes: List<SubjectScopeInfo>,
         projectInfo: TProjectRecord,
         isAuthSecrecyChange: Boolean,
         isSubjectScopesChange: Boolean,
@@ -354,7 +355,7 @@ class IamRbacService @Autowired constructor(
     private fun createGradeManagerApplication(
         projectInfo: TProjectRecord,
         userId: String,
-        iamSubjectScopes: List<ManagerScopes>,
+        iamSubjectScopes: List<SubjectScopeInfo>,
         subjectScopesStr: String
     ) {
         val projectCode = projectInfo.englishName
@@ -419,7 +420,7 @@ class IamRbacService @Autowired constructor(
     private fun createGradeManager(
         userId: String,
         resourceRegisterInfo: ResourceRegisterInfo,
-        subjectScopes: List<ManagerScopes>?
+        subjectScopes: List<SubjectScopeInfo>?
     ): String {
         val authorizationScopes = AuthorizationUtils.buildManagerResources(
             projectId = resourceRegisterInfo.resourceCode,
@@ -443,23 +444,8 @@ class IamRbacService @Autowired constructor(
         desc: String,
         organization: String,
         authSecrecy: Boolean,
-        subjectScopes: List<ManagerScopes>
+        subjectScopes: List<SubjectScopeInfo>
     ): ItsmContentDTO {
-        val itsmSubjectScopes = ArrayList<ManagerScopes>()
-        subjectScopes.forEach {
-            val managerScopes = ManagerScopes()
-            if (it.type == "*") {
-                managerScopes.type = ALL_COMPANY
-                managerScopes.id = ALL_MEMBER
-            } else if (it.type == "depart") {
-                managerScopes.type = DEPARTMENT_CHINESE_NAME
-                managerScopes.id = userManageService.getDepartment(it.id)
-            } else {
-                managerScopes.type = USER_CHINESE_NAME
-                managerScopes.id = it.id
-            }
-            itsmSubjectScopes.add(managerScopes)
-        }
         val itsmColumns = listOf(
             ItsmColumn.builder().key("projectName").name("项目名称").type("text").build(),
             ItsmColumn.builder().key("projectId").name("项目ID").type("text").build(),
@@ -478,7 +464,7 @@ class IamRbacService @Autowired constructor(
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
         value["authSecrecy"] = ItsmStyle.builder().value(if (authSecrecy) "私密项目" else "公开项目").build()
-        value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(itsmSubjectScopes)).build()
+        value["subjectScopes"] = ItsmStyle.builder().value(objectMapper.writeValueAsString(subjectScopes)).build()
         val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
     }
@@ -732,16 +718,15 @@ class IamRbacService @Autowired constructor(
         return Pair(projectStrategyList, resourceStrategyMap)
     }
 
-    private fun buildIamSubjectScopes(iamSubjectScopes: List<ManagerScopes>): List<ManagerScopes> {
+    private fun buildIamSubjectScopes(iamSubjectScopes: List<SubjectScopeInfo>): List<ManagerScopes> {
         val subjectScopeList = ArrayList<ManagerScopes>()
         iamSubjectScopes.forEach {
-            if (it.type == "depart") {
-                val subjectScope = ManagerScopes()
-                subjectScope.type = DEPARTMENT
-                subjectScope.id = it.id
-                subjectScopeList.add(subjectScope)
+            if (it.type == DEPARTMENT_TYPE) {
+                subjectScopeList.add(ManagerScopes(DEPARTMENT, it.id))
+            } else if (it.type == USER_TYPE) {
+                subjectScopeList.add(ManagerScopes(it.type, it.name))
             } else {
-                subjectScopeList.add(it)
+                subjectScopeList.add(ManagerScopes(it.type, it.id))
             }
         }
         logger.info("buildIamSubjectScopes:$subjectScopeList")
@@ -753,9 +738,7 @@ class IamRbacService @Autowired constructor(
         private const val DEFAULT_EXPIRED_AT = 365L // 用户组默认一年有效期
         private const val SYSTEM_DEFAULT_NAME = "蓝盾"
         private const val DEPARTMENT = "department"
-        private const val ALL_COMPANY = "全公司"
-        private const val ALL_MEMBER = "全体人员"
-        private const val USER_CHINESE_NAME = "用户"
-        private const val DEPARTMENT_CHINESE_NAME = "部门"
+        private const val DEPARTMENT_TYPE = "depart"
+        private const val USER_TYPE = "user"
     }
 }
