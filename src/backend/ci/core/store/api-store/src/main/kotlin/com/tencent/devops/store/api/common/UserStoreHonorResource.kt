@@ -34,6 +34,7 @@ import com.tencent.devops.store.pojo.common.StoreHonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -66,9 +67,9 @@ interface UserStoreHonorResource {
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("页码大小", required = true, defaultValue = "10")
+        @ApiParam("每页数量", required = true, defaultValue = "10")
         @QueryParam("pageSize")
-        @BkField(maxLength = 100)
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
     ): Result<Page<StoreHonorInfo>>
 

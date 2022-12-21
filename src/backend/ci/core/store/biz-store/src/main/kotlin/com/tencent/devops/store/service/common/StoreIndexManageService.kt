@@ -28,14 +28,15 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 
 interface StoreIndexManageService {
 
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Boolean
+    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
 
-    fun delete(userId: String, indexId: String): Boolean
+    fun delete(userId: String, indexId: String): Result<Boolean>
 
     fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
 }

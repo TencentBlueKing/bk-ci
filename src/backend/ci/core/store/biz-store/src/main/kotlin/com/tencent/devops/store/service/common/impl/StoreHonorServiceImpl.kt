@@ -52,12 +52,7 @@ class StoreHonorServiceImpl @Autowired constructor(
 
 
         return Page(
-            count = storeHonorDao.count(
-                dslContext = dslContext,
-                keyWords = keyWords,
-                page = page,
-                pageSize = pageSize
-            ),
+            count = storeHonorDao.count(dslContext, keyWords),
             page = page,
             pageSize = pageSize,
             records = storeHonorDao.list(
@@ -88,6 +83,7 @@ class StoreHonorServiceImpl @Autowired constructor(
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Boolean {
         // 权限校验
 
+
         val id = UUIDUtil.generate()
         val storeHonorInfo = StoreHonorInfo(
             id = id,
@@ -110,6 +106,9 @@ class StoreHonorServiceImpl @Autowired constructor(
             tStoreHonorRelRecord.createTime = LocalDateTime.now()
             tStoreHonorRelRecord.updateTime = LocalDateTime.now()
             tStoreHonorRelRecord
+        }
+        dslContext.transaction { t -
+
         }
         storeHonorDao.createStoreHonorInfo(dslContext, userId, storeHonorInfo)
         storeHonorDao.batchCreateStoreHonorRel(dslContext,tStoreHonorRelList)

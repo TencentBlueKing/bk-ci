@@ -55,7 +55,7 @@ data class StoreIndexBaseInfo(
     val description: String,
     @ApiModelProperty("运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
-    @ApiModelProperty("指标对应的插件件代码")
+    @ApiModelProperty("指标对应的插件代码")
     val atomCode: String,
     @ApiModelProperty("插件执行版本号")
     val atomVersion: String,

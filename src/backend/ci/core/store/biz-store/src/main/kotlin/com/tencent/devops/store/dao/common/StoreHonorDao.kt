@@ -41,9 +41,7 @@ class StoreHonorDao {
 
     fun count(
         dslContext: DSLContext,
-        keyWords: String?,
-        page: Int,
-        pageSize: Int
+        keyWords: String?
     ): Long {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
