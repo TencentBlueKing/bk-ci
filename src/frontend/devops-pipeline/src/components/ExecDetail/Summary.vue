@@ -1,8 +1,12 @@
 <template>
     <header class="exec-detail-summary">
         <div class="exec-detail-summary-row">
+            <span :class="{
+                'exec-detail-build-summary-anchor': true,
+                [execDetail.status]: execDetail.status
+            }"></span>
             <aside class="exec-detail-summary-title">
-                <bk-tag :class="{ [execDetail.status]: execDetail.status }">
+                <bk-tag type="stroke" :theme="statusTheme">
                     {{statusLabel}}
                     <span
                         v-if="execDetail.status === 'CANCELED'"
@@ -11,7 +15,7 @@
                     >
                     </span>
                 </bk-tag>
-                <span>
+                <span class="exec-detail-summary-title-build-msg">
                     {{execDetail.buildMsg}}
                 </span>
             </aside>
@@ -138,6 +142,33 @@
             statusLabel () {
                 return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
             },
+            statusTheme () {
+                switch (this.execDetail?.status) {
+                    case 'CANCELED':
+                    case 'REVIEW_ABORT':
+                        return 'warning'
+                    case 'SUCCEED':
+                    case 'REVIEW_PROCESSED':
+                    case 'STAGE_SUCCESS':
+                        return 'success'
+                    case 'FAILED':
+                    case 'TERMINATE':
+                    case 'HEARTBEAT_TIMEOUT':
+                    case 'QUALITY_CHECK_FAIL':
+                    case 'QUEUE_TIMEOUT':
+                    case 'EXEC_TIMEOUT':
+                        return 'danger'
+                    case 'QUEUE':
+                    case 'RUNNING':
+                    case 'REVIEWING':
+                    case 'PREPARE_ENV':
+                    case 'LOOP_WAITING':
+                    case 'CALL_WAITING':
+                        return 'info'
+                    default:
+                        return ''
+                }
+            },
             visibleMaterial () {
                 if (Array.isArray(this.execDetail?.material) && this.execDetail?.material.length > 0) {
                     return [
@@ -216,33 +247,45 @@
 <style lang="scss">
     @import "@/scss/conf";
     @import "@/scss/mixins/ellipsis";
+    @import "@/scss/buildStatus";
     .exec-detail-summary {
         background: white;
         padding: 18px 24px;
         box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
         &-row {
+            position: relative;
             display: flex;
             justify-content: space-between;
             margin-bottom: 24px;
-        }
-        &-title {
-            position: relative;
-            height: 24px;
-            display: flex;
-            align-items: center;
-            margin: 0;
-            &:before {
+            .exec-detail-build-summary-anchor {
+                @include build-status();
                 position: absolute;
                 content: '';
                 width: 6px;
                 height: 100%;
                 left: -24px;
-                background: $dangerColor;
+
+            }
+        }
+        &-title {
+            height: 24px;
+            display: flex;
+            align-items: center;
+            flex: 1;
+            margin: 0;
+            overflow: hidden;
+
+            &-build-msg {
+                flex: 1;
+                margin: 0 24px 0 8px;
+                @include ellipsis();
+                min-width: auto;
             }
         }
         &-trigger {
             display: flex;
             align-items: center;
+            flex-shrink: 0;
             .exec-trigger-profile {
                 width: 24px;
                 height: 24px;

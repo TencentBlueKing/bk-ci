@@ -64,7 +64,6 @@
                 <bk-pipeline
                     :editable="false"
                     is-exec-detail
-                    :hide-skip-task="hideSkipTask"
                     :cancel-user-id="cancelUserId"
                     :pipeline="curPipeline"
                     v-bind="$attrs"
@@ -297,7 +296,22 @@
                 return this.execDetail?.cancelUserId ?? '--'
             },
             curPipeline () {
-                return this.execDetail?.model ?? null
+                const stages = this.hideSkipTask
+                    ? this.execDetail?.model?.stages.filter(stage => {
+                        if (this.isSkip(stage.status)) return false
+                        return stage.containers.filter(container => {
+                            if (this.isSkip(container.status)) return false
+                            return container.elements.filter(element => this.isSkip(element.status))
+                        })
+                    })
+                    : this.execDetail?.model?.stages
+                console.log(stages)
+                return this.execDetail?.model
+                    ? {
+                        ...this.execDetail.model,
+                        stages
+                    }
+                    : null
             },
             pipelineModes () {
                 return [
@@ -385,6 +399,9 @@
             ...mapActions('pipelines', [
                 'requestRetryPipeline'
             ]),
+            isSkip (status) {
+                return ['SKIP', 'UNEXEC'].includes(status) || typeof status === 'undefined'
+            },
             toggleCompleteLog () {
                 this.showLog = !this.showLog
             },
