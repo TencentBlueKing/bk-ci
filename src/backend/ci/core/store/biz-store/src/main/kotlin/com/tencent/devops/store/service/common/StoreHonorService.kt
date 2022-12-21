@@ -28,6 +28,7 @@
 package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.StoreHonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
@@ -43,5 +44,5 @@ interface StoreHonorService {
 
     fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Boolean
 
-    fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Boolean
+    fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean>
 }
