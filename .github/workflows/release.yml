@@ -141,7 +141,7 @@ jobs:
       - name: Gradle Build Backend Service -- CLOUD NATIVE
         working-directory: src/backend/ci
         run: |
-          ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=K8S \
+          ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
       - name: Get Agent - CLOUD NATIVE
         uses: actions/download-artifact@v1
