@@ -25,17 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.UserStoreIconResource
+import com.tencent.devops.store.api.common.UserStoreLogoResource
+import com.tencent.devops.store.pojo.common.Logo
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
+import com.tencent.devops.store.service.common.StoreLogoService
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
-interface StoreIndexManageService {
+@RestResource
+class UserStoreIconResourceImpl @Autowired constructor(
+    private val storeLogoService: StoreLogoService
+) : UserStoreIconResource {
+    override fun uploadStoreIcon(
+        userId: String,
+        contentLength: Long,
+        compressFlag: Boolean?,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        return storeLogoService.uploadStoreIcon(
+            userId = userId,
+            contentLength = contentLength,
+            compressFlag = compressFlag,
+            inputStream = inputStream,
+            disposition = disposition
+        )
+    }
 
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Boolean
-
-    fun delete(userId: String, indexId: String): Boolean
-
-    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
 }

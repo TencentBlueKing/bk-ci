@@ -30,10 +30,14 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.validation.Valid
 import javax.ws.rs.*
 import javax.ws.rs.core.MediaType
@@ -68,7 +72,7 @@ interface UserStoreIndexManageResource {
         indexId: String
     )
 
-    @ApiOperation("删除研发商店指标")
+    @ApiOperation("查询研发商店指标")
     @GET
     @Path("/list")
     fun list(
@@ -86,4 +90,6 @@ interface UserStoreIndexManageResource {
         @BkField(maxLength = 100)
         pageSize: Int
     )
+
 }
+
