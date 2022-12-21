@@ -75,10 +75,6 @@ spec:
               value: {{ .Chart.Name }}
             - name: MULTI_CLUSTER
               value: {{ .Values.multiCluster.enabled | quote }}
-            - name: ENABLE_PUBLIC_DOCKER
-              value: {{ .Values.buildResource.publicDocker.enabled | quote }}
-            - name: ENABLE_K8S_BUILD
-              value: {{ .Values.buildResource.k8sBuild.enabled | quote }}
             - name: DEFAULT_NAMESPACE
               value: {{ .Values.multiCluster.defaultNamespace }}
             - name: POD_NAME
