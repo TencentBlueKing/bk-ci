@@ -29,7 +29,8 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.dao.AuthResourceDao
-import com.tencent.devops.auth.entity.AuthResourceInfo
+import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.common.api.util.PageUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -77,5 +78,56 @@ class AuthResourceService @Autowired constructor(
             resourceCode = resourceCode
         ) ?: return null
         return authResourceDao.convert(record)
+    }
+
+    fun enable(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        return authResourceDao.enable(
+            dslContext = dslContext,
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
+    fun disable(
+        userId: String,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        return authResourceDao.disable(
+            dslContext = dslContext,
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
+    @SuppressWarnings("LongParameterList")
+    fun list(
+        projectCode: String?,
+        resourceType: String?,
+        resourceName: String?,
+        page: Int,
+        pageSize: Int
+    ): List<AuthResourceInfo> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val resourceList: MutableList<AuthResourceInfo> = ArrayList()
+        authResourceDao.list(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceName = resourceName,
+            resourceType = resourceType,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )?.map { resourceList.add(authResourceDao.convert(it)) }
+        return resourceList
     }
 }

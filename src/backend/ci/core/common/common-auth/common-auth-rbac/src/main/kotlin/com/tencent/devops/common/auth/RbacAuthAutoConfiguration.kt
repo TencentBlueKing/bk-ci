@@ -61,10 +61,7 @@ import org.springframework.core.Ordered
 class RbacAuthAutoConfiguration {
 
     @Bean
-    fun authTokenApi(
-        redisOperation: RedisOperation,
-        tokenServiceImpl: TokenServiceImpl
-    ) = RbacAuthTokenApi(redisOperation, tokenServiceImpl)
+    fun authTokenApi() = RbacAuthTokenApi()
 
     @Bean
     fun authResourceApi(

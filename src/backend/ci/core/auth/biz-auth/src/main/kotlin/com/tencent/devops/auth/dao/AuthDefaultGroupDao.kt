@@ -26,16 +26,49 @@
  *
  */
 
-package com.tencent.devops.auth.entity
+package com.tencent.devops.auth.dao
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.model.auth.tables.TAuthDefaultGroup
+import com.tencent.devops.model.auth.tables.records.TAuthDefaultGroupRecord
+import org.jooq.DSLContext
+import org.jooq.Result
+import org.springframework.stereotype.Repository
 
-@ApiModel("iam资源映射信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
-    val projectCode: String,
-    val resourceType: String,
-    val resourceCode: String,
-    val resourceName: String,
-    val relationId: String
-)
+@Repository
+class AuthDefaultGroupDao {
+
+    fun get(
+        dslContext: DSLContext,
+        resourceType: String,
+        groupCode: String
+    ): TAuthDefaultGroupRecord? {
+        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_CODE.eq(groupCode))
+                .fetchOne()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        resourceType: String
+    ): Result<TAuthDefaultGroupRecord> {
+        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+            dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType)).fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        resourceType: String,
+        createMode: Boolean
+    ): Result<TAuthDefaultGroupRecord> {
+        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(CREATE_MODE.eq(createMode))
+                .fetch()
+        }
+    }
+}

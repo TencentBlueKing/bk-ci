@@ -17,6 +17,6 @@ data class GroupInfoVo(
     val defaultRole: Boolean,
     @ApiModelProperty("用户组人数")
     val userCount: Int,
-    @ApiModelProperty("iam组关联ID")
-    val iamRelatonId: Int? = null
+    @ApiModelProperty("用户组部门数")
+    val departmentCount: Int = 0
 )

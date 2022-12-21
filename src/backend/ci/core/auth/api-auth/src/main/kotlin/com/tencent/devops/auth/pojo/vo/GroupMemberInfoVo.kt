@@ -26,15 +26,23 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.dto
+package com.tencent.devops.auth.pojo.vo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("资源开启权限管理")
-data class ResourceEnablePermissionDTO(
-    @ApiModelProperty("资源类型")
-    val resourceType: String,
-    @ApiModelProperty("资源ID")
-    val resourceCode: String
+@ApiModel("组成员信息")
+data class GroupMemberInfoVo(
+    @ApiModelProperty("成员名")
+    val userId: String,
+    @ApiModelProperty("用户组ID")
+    val groupId: Int,
+    @ApiModelProperty("用户组名")
+    val groupName: String,
+    @ApiModelProperty("加入时间")
+    val createdTime: String,
+    @ApiModelProperty("是否加入组")
+    val status: String,
+    @ApiModelProperty("过期时间")
+    val expiredTime: String
 )

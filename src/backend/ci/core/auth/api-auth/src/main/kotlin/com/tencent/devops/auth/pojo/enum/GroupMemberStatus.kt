@@ -23,21 +23,15 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.common.auth.enums
+package com.tencent.devops.auth.pojo.enum
 
-/**
- * 二级管理员用户组类型
- */
-enum class SubsetGroupType(val value: String) {
-    // 拥有者
-    OWNER("owner"),
-    // 编辑执行者
-    EDIT_EXECUTOR("edit_executor"),
-    // 执行者
-    EXECUTOR("executor"),
-    // 查看者
-    VIEWER("viewer")
+enum class GroupMemberStatus {
+    // 未加入
+    NOT_JOINED,
+    // 正常
+    NORMAL,
+    // 已过期
+    EXPIRED
 }

@@ -26,21 +26,17 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.vo
+package com.tencent.devops.auth.pojo
 
 import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("用户所属组信息")
-data class UserGroupBelongInfoVo(
-    @ApiModelProperty("用户组ID")
-    val groupId: Int,
-    @ApiModelProperty("用户组名")
-    val groupName: String,
-    @ApiModelProperty("加入时间")
-    val createdTime: String,
-    @ApiModelProperty("是否加入组")
-    val belong: Boolean,
-    @ApiModelProperty("有效期")
-    val expiredAt: Long
+@ApiModel("资源信息")
+data class AuthResourceInfo(
+    val id: Long? = null,
+    val projectCode: String,
+    val resourceType: String,
+    val resourceCode: String,
+    val resourceName: String,
+    val enable: Boolean,
+    val relationId: String
 )

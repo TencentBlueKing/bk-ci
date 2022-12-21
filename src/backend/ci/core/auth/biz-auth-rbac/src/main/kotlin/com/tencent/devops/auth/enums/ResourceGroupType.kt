@@ -26,17 +26,22 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.vo
+package com.tencent.devops.auth.enums
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+enum class ResourceGroupType(val value: String, val displayName: String) {
+    // 拥有者
+    OWNER("owner", "拥有者"),
+    // 编辑执行者
+    EDIT_EXECUTOR("edit_executor", "编辑执行者"),
+    // 执行者
+    EXECUTOR("executor", "执行者"),
+    // 查看者
+    VIEWER("viewer", "查看者")
+    ;
 
-@ApiModel("用户列表返回")
-data class IamSubSetGroupInfoVo(
-    @ApiModelProperty("是否开启权限管理")
-    val enable: Boolean,
-    @ApiModelProperty("二级管理员ID")
-    val subsetManagerId: Int,
-    @ApiModelProperty("二级管理员用户组列表")
-    val groups: List<IamGroupInfoVo>
-)
+    fun getStrategyName(resourceType: String) = "${resourceType}_$value"
+
+    companion object {
+        fun getStrategyName(resourceType: String, groupCode: String) = "${resourceType}_$groupCode"
+    }
+}

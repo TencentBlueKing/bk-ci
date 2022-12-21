@@ -70,6 +70,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -209,7 +210,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
                 if (subjectScopes.isEmpty()) {
-                    subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                    subjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
                 }
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
@@ -363,7 +364,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val context = DSL.using(configuration)
                     // 修改时，若传递的可授权人员范围为空，则直接用全公司
                     if (subjectScopes.isEmpty()) {
-                        subjectScopes.add(ManagerScopes(ManagerScopesEnum.getType(ManagerScopesEnum.ALL), ALL_MEMBERS))
+                        subjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
                     }
                     val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                     logger.info("subjectScopesStr : $subjectScopesStr")
@@ -390,7 +391,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             ProjectUpdateLogoBroadCastEvent(
                                 userId = userId,
                                 projectId = projectId,
-                                logoAddr = logoAddress!!
+                                logoAddr = logoAddress
                             )
                         )
                     }
@@ -998,5 +999,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
         private const val ALL_MEMBERS = "*"
+        private const val ALL_MEMBERS_NAME = "全体成员"
     }
 }
