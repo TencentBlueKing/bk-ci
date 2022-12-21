@@ -13,7 +13,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	"os"
 	"strconv"
 	"strings"
 
@@ -54,19 +53,14 @@ func ListWorkerImages(req *restful.Request, resp *restful.Response) {
 	args := req.Request.URL.Query()
 	queueName := args.Get("queue_name")
 
-	f, err := os.Open("./data/DistccWorkerList.json")
-	defer f.Close()
-	if err != nil {
-		blog.Error("List worker images error:(%v)", err)
-		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
-	}
-
+	filePath := "./data/DistccWorkerList.json"
 	result := commonTypes.WorkerImage{
 		Mesos: make([]commonTypes.Image, 0, 100),
 		K8s:   make([]commonTypes.Image, 0, 100),
 	}
-	data, _ := ioutil.ReadAll(f)
-	err = json.Unmarshal([]byte(data), &result)
+
+	data, _ := ioutil.ReadFile(filePath)
+	err := json.Unmarshal([]byte(data), &result)
 	if err != nil {
 		api.ReturnRest(&api.RestResponse{Resp: resp, Message: err.Error()})
 	}
