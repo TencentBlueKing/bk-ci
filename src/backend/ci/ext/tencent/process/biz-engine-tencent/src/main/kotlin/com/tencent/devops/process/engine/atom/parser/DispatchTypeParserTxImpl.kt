@@ -43,7 +43,6 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
@@ -105,16 +104,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
                             false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
-                    } else if (dispatchType is IDCDispatchType) {
-                        dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
                 } else {
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
                         genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
-                    } else if (dispatchType is IDCDispatchType) {
-                        dispatchType.image = dispatchType.value
                     } else {
                         dispatchType.dockerBuildVersion = dispatchType.value
                     }
