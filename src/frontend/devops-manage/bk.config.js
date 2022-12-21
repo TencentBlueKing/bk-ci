@@ -9,6 +9,15 @@ module.exports = {
   open: false,
   replaceStatic: false,
   typescript: true,
+  resource: {
+    main: {
+      entry: './src/main',
+      html: {
+        filename: 'frontend#manage#index.html',
+        template: './index.html',
+      },
+    },
+  },
   chainWebpack (config) {
     config.resolve
       .modules

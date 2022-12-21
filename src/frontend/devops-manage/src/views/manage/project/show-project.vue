@@ -49,7 +49,7 @@ const handleCancelCreation = () => {
         message: t('取消创建成功'),
       });
       const { origin } = window.location;
-      window.location.href = `${origin}/console/pm`
+      window.location.href = `${origin}/console/pm`;
     }
   };
 
@@ -124,7 +124,14 @@ onMounted(() => {
             <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
           </bk-form-item>
           <bk-form-item :label="t('项目最大可授权人员范围')" :property="'name'">
-            <span class="item-value">腾讯公司</span>
+            <span class="item-value">
+              <bk-tag
+                v-for="(subjectScope, index) in projectData.subjectScopes"
+                :key="index"
+              >
+                {{ subjectScope.name }}
+              </bk-tag>
+            </span>
           </bk-form-item>
           <bk-form-item>
             <bk-button
