@@ -80,7 +80,7 @@ object IamGroupUtils {
         "${SYSTEM_DEFAULT_NAME}_${resourceName}_${groupName}"
 
     fun getSubsetManagerGroupDisplayName(groupName: String) =
-        groupName.substringAfterLast("-")
+        groupName.substringAfterLast("_")
 
     fun buildSubsetManagerDescription(resourceName: String, userId: String): String {
         return "$resourceName 二级管理员, 由$userId 创建于" +

@@ -81,7 +81,7 @@ class PermissionResourceGroupService(
                 groupName = name,
                 userId = userId
             )
-            val managerRoleGroup = ManagerRoleGroup(name, description, true)
+            val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateSubsetRoleGroup(subsetManagerId, managerRoleGroupDTO)
             grantGroupPermission(
@@ -152,7 +152,7 @@ class PermissionResourceGroupService(
         val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
             strategyName = IamGroupUtils.buildSubsetManagerGroupStrategyName(
                 resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
+                groupCode = groupCode
             ),
             projectCode = projectCode,
             projectName = projectName,

@@ -29,7 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
 
@@ -86,7 +86,7 @@ interface PermissionResourceService {
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): List<GroupMemberInfoVo>
+    ): List<IamGroupMemberInfoVo>
 
     /**
      * 获取组策略
@@ -95,7 +95,7 @@ interface PermissionResourceService {
         userId: String,
         projectId: String,
         resourceType: String,
-        groupId: Int
+        groupName: String
     ): List<String>
 
     /**
@@ -125,7 +125,8 @@ interface PermissionResourceService {
         userId: String,
         projectId: String,
         resourceType: String,
-        groupId: Int
+        groupId: Int,
+        expiredAt: Long
     ): Boolean
 
     fun delete(

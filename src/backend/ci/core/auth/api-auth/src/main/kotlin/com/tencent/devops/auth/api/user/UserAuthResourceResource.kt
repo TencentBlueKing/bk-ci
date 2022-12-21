@@ -29,7 +29,7 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Pagination
@@ -121,7 +121,7 @@ interface UserAuthResourceResource {
         @ApiParam("资源ID")
         @PathParam("resourceCode")
         resourceCode: String
-    ): Result<List<GroupMemberInfoVo>>
+    ): Result<List<IamGroupMemberInfoVo>>
 
     @PUT
     @Path("{resourceCode}/enable")
@@ -172,9 +172,9 @@ interface UserAuthResourceResource {
         @ApiParam("资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("用户组Id")
-        @QueryParam("groupId")
-        groupId: Int
+        @ApiParam("用户组名")
+        @QueryParam("groupName")
+        groupName: String
     ): Result<List<String>>
 
     @PUT
@@ -192,7 +192,10 @@ interface UserAuthResourceResource {
         resourceType: String,
         @ApiParam("用户组Id")
         @QueryParam("groupId")
-        groupId: Int
+        groupId: Int,
+        @ApiParam("续期时间,单位(s)")
+        @QueryParam("expireAt")
+        expiredAt: Long,
     ): Result<Boolean>
 
     @DELETE

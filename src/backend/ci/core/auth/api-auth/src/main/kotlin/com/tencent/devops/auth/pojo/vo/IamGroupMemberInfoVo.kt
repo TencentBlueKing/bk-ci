@@ -32,7 +32,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("组成员信息")
-data class GroupMemberInfoVo(
+data class IamGroupMemberInfoVo(
     @ApiModelProperty("成员名")
     val userId: String,
     @ApiModelProperty("用户组ID")

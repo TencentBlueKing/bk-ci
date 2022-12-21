@@ -36,15 +36,16 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthDefaultGroupDao
-import com.tencent.devops.auth.enums.ResourceGroupType
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
-import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
@@ -196,7 +197,7 @@ class RbacPermissionResourceService(
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): List<GroupMemberInfoVo> {
+    ): List<IamGroupMemberInfoVo> {
         val resourceInfo = getResourceInfo(
             projectId = projectId,
             resourceType = resourceType,
@@ -208,51 +209,61 @@ class RbacPermissionResourceService(
         val iamGroupInfos =
             iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
         val iamIds = iamGroupInfos.results.map { it.id }
+        val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
         val verifyResult =
             iamV2ManagerService.verifyGroupValidMember(userId, iamIds.joinToString(",")).verifyResult
-        val localGroupInfos = groupService.getGroupByRelationIds(iamIds).associateBy { it.relationId }
-        val groupMemberInfoList = mutableListOf<GroupMemberInfoVo>()
-        verifyResult.forEach { (iamGroupId, result) ->
-            val localGroupInfo = localGroupInfos[iamGroupId.toString()] ?: return@forEach
-            // TODO 需验证下,如果没有加入,返回值为啥
+        return verifyResult.map { (iamGroupId, result) ->
             val (status, createTime, expiredTime) = if (result.belong) {
-                val status = GroupMemberStatus.NORMAL.name
-                val createTime = ""
-                val expiredTime = ""
+                val createTime = DateTimeUtil.toDateTime(
+                    dateTime = DateTimeUtil.stringToLocalDateTime(result.createdAt, YYYY_MM_DD_T_HH_MM_SSZ)
+                )
+                val expiredAt = result.expiredAt * 1000
+                val expiredTime = DateTimeUtil.formatMilliTime(expiredAt)
+                val status = if (System.currentTimeMillis() >= expiredAt) {
+                    GroupMemberStatus.EXPIRED.name
+                } else {
+                    GroupMemberStatus.NORMAL.name
+                }
                 Triple(status, createTime, expiredTime)
             } else {
                 val status = GroupMemberStatus.NOT_JOINED.name
-                val createTime = ""
-                val expiredTime = ""
+                val createTime = "--"
+                val expiredTime = "--"
                 Triple(status, createTime, expiredTime)
             }
-            groupMemberInfoList.add(
-                GroupMemberInfoVo(
-                    userId = userId,
-                    groupId = localGroupInfo.id,
-                    groupName = localGroupInfo.displayName,
-                    createdTime = createTime,
-                    status = status,
-                    expiredTime = expiredTime
-                )
+            IamGroupMemberInfoVo(
+                userId = userId,
+                groupId = iamGroupId,
+                groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
+                createdTime = createTime,
+                status = status,
+                expiredTime = expiredTime
             )
         }
-        return groupMemberInfoList
     }
 
     override fun getGroupPolicies(
         userId: String,
         projectId: String,
         resourceType: String,
-        groupId: Int
+        groupName: String
     ): List<String> {
-        val groupInfo = groupService.getGroupCode(groupId = groupId) ?: return emptyList()
+        val displayGroupName = IamGroupUtils.getSubsetManagerGroupDisplayName(groupName = groupName)
+        val defaultGroupInfo = authDefaultGroupDao.getByName(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupName = displayGroupName
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
+        )
         val policies = mutableListOf<String>()
         strategyService.getStrategyByName(
-            ResourceGroupType.getStrategyName(
+            IamGroupUtils.buildSubsetManagerGroupStrategyName(
                 resourceType = resourceType,
-                groupCode = groupInfo.groupCode
-            )
+                groupCode = defaultGroupInfo.groupCode
+            ),
         )?.strategy?.forEach { policies.addAll(it.value) }
         return policies
     }
@@ -291,7 +302,8 @@ class RbacPermissionResourceService(
         userId: String,
         projectId: String,
         resourceType: String,
-        groupId: Int
+        groupId: Int,
+        expiredAt: Long
     ): Boolean {
         logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
         val groupInfo = groupService.getGroupCode(groupId) ?: throw ErrorCodeException(
@@ -302,7 +314,7 @@ class RbacPermissionResourceService(
         val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
             .members(listOf(managerMember))
-            .expiredAt(365)
+            .expiredAt(expiredAt)
             .build()
         iamV2ManagerService.renewalRoleGroupMemberV2(
             groupInfo.relationId.toInt(),
@@ -380,7 +392,9 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode
         ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND
+            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+            params = arrayOf(resourceCode),
+            defaultMessage = "权限系统：资源${resourceCode}不存在"
         )
     }
 }
