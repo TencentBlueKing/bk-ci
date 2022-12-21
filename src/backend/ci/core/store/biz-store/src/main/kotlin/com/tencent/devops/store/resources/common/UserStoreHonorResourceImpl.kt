@@ -34,23 +34,34 @@ import com.tencent.devops.store.api.common.UserStoreHonorResource
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
 import com.tencent.devops.store.pojo.common.StoreHonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.service.common.StoreHonorService
+import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreHonorResourceImpl: UserStoreHonorResource {
+class UserStoreHonorResourceImpl @Autowired constructor(
+    private val storeHonorService: StoreHonorService
+): UserStoreHonorResource {
     override fun list(
         userId: String,
         keyWords: String?,
         page: Int,
         pageSize: Int
     ): Result<Page<StoreHonorInfo>> {
-        TODO("Not yet implemented")
+        return Result(
+            storeHonorService.list(
+                userId = userId,
+                keyWords = keyWords,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 
     override fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(storeHonorService.batchDelete(userId, storeHonorRelList))
     }
 
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(storeHonorService.add(userId, addStoreHonorRequest))
     }
 }

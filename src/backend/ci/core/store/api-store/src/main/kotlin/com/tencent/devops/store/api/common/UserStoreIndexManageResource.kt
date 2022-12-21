@@ -28,8 +28,11 @@
 package com.tencent.devops.store.api.common
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import io.swagger.annotations.Api
@@ -70,7 +73,7 @@ interface UserStoreIndexManageResource {
         @ApiParam("指标ID", required = true)
         @PathParam("indexId")
         indexId: String
-    )
+    ): Result<Boolean>
 
     @ApiOperation("查询研发商店指标")
     @GET
@@ -85,11 +88,11 @@ interface UserStoreIndexManageResource {
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,
-        @ApiParam("页码大小", required = true, defaultValue = "10")
+        @ApiParam("每页数量", required = true, defaultValue = "10")
         @QueryParam("pageSize")
-        @BkField(maxLength = 100)
+        @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
-    )
+    ): Result<Page<StoreIndexBaseInfo>>
 
 }
 

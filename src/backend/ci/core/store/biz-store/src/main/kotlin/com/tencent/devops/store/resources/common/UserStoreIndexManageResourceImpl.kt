@@ -27,25 +27,35 @@
 
 package com.tencent.devops.store.resources.common
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreIndexManageResource
+import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStoreIndexManageResourceImpl @Autowired constructor(
-
+    private val storeIndexManageService: StoreIndexManageService
 ) : UserStoreIndexManageResource {
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
-        TODO("Not yet implemented")
+        return storeIndexManageService.add(userId, storeIndexCreateRequest)
     }
 
-    override fun delete(userId: String, indexId: String) {
-        TODO("Not yet implemented")
+    override fun delete(userId: String, indexId: String): Result<Boolean> {
+        return storeIndexManageService.delete(userId, indexId)
     }
 
-    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int) {
-        TODO("Not yet implemented")
+    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Result<Page<StoreIndexBaseInfo>> {
+        return Result(
+            storeIndexManageService.list(
+                userId = userId,
+                keyWords = keyWords,
+                page = page,
+                pageSize = pageSize
+            )
+        )
     }
 }

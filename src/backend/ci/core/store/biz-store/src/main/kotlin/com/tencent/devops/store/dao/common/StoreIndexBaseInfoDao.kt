@@ -28,6 +28,11 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
+import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
+import com.tencent.devops.model.store.tables.TStoreIndexResult
+import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
+import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -50,6 +55,94 @@ class StoreIndexBaseInfoDao {
             executeTimeType?.let { conditions.add(EXECUTE_TIME_TYPE.eq(executeTimeType.name)) }
             return dslContext.select(INDEX_CODE).from(this)
                 .where(conditions).fetchInto(String::class.java)
+        }
+    }
+
+    fun createStoreIndexBaseInfo(dslContext: DSLContext, tStoreIndexBaseInfoRecord: TStoreIndexBaseInfoRecord): Int {
+        return dslContext.executeInsert(tStoreIndexBaseInfoRecord)
+    }
+
+    fun batchCreateStoreIndexLevelInfo(
+        dslContext: DSLContext,
+        tStoreIndexLevelInfoRecord: List<TStoreIndexLevelInfoRecord>
+    ) {
+        dslContext.batchInsert(tStoreIndexLevelInfoRecord).execute()
+    }
+
+    fun getStoreIndexBaseInfoById(dslContext: DSLContext, indexId: String): TStoreIndexBaseInfoRecord? {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(ID.eq(indexId))
+                .fetchOne()
+        }
+    }
+
+    fun getStoreIndexBaseInfoByCode(dslContext: DSLContext, storeType: StoreTypeEnum, indexCode: String): Int {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(INDEX_CODE.eq(indexCode).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun getStoreIndexBaseInfoByName(dslContext: DSLContext, storeType: StoreTypeEnum, indexName: String): Int {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.selectCount()
+                .from(this)
+                .where(INDEX_NAME.eq(indexName).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun count(dslContext: DSLContext, keyWords: String?): Long {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            val condition = mutableListOf<Condition>()
+            keyWords?.let {
+                condition.add(INDEX_NAME.like("%$it%"))
+            }
+            return dslContext.selectCount()
+                .from(this)
+                .where(condition)
+                .fetchOne(0, Long::class.java) ?: 0L
+        }
+    }
+
+    fun list(dslContext: DSLContext, keyWords: String?, page: Int, pageSize: Int): List<StoreIndexBaseInfo> {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            val condition = mutableListOf<Condition>()
+            keyWords?.let {
+                condition.add(INDEX_NAME.like("%$it%"))
+            }
+            return dslContext.select()
+                .from(this)
+                .where(condition)
+                .limit(pageSize).offset((page - 1) * pageSize)
+                .fetchInto(StoreIndexBaseInfo::class.java)
+        }
+    }
+
+    fun deleteStoreIndexResulById(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_ID.eq(indexId))
+                .execute()
+        }
+    }
+
+    fun deleteTStoreIndexLevelInfo(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_ID.eq(indexId))
+                .execute()
+        }
+    }
+
+    fun deleteTStoreIndexBaseInfo(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            dslContext.deleteFrom(this)
+                .where(ID.eq(indexId))
+                .execute()
         }
     }
 }
