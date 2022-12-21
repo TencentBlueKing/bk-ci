@@ -825,8 +825,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
     protected fun replaceContentEmailParams(params: Map<String, String>?, content: String): String {
         var content1 = content
         params?.forEach { (paramName, paramValue) ->
-            content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
-                .replace("{{$paramName}}", paramValue).replace("\n", "<br>")
+            val replaceValue = paramValue.replace("\n", "<br>")
+            content1 = content1.replace("\${$paramName}", replaceValue).replace("#{$paramName}", replaceValue)
+                .replace("{{$paramName}}", replaceValue)
         }
         return content1
     }
