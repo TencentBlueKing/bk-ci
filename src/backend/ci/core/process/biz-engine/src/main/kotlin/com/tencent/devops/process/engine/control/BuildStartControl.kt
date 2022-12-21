@@ -251,7 +251,7 @@ class BuildStartControl @Autowired constructor(
         executeCount: Int
     ): Boolean {
         var checkStart = true
-        val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
+        val concurrencyGroup = buildInfo.concurrencyGroup ?: pipelineId
         ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
             groupLock.lock()
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
