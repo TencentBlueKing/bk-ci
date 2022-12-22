@@ -23,26 +23,39 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.repository.service.permission
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
+import com.tencent.devops.repository.dao.RepositoryDao
+import org.jooq.DSLContext
 
-class RbacCertPermissionService constructor(
+class MockRepositoryPermissionService constructor(
+    private val dslContext: DSLContext,
+    private val repositoryDao: RepositoryDao,
     authResourceApi: AuthResourceApi,
     authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
+    codeAuthServiceCode: CodeAuthServiceCode
+) : AbstractRepositoryPermissionService(
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    codeAuthServiceCode = codeAuthServiceCode
 ) {
 
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            repositoryDao.listByProject(
+                dslContext = dslContext,
+                projectId = projectId,
+                repositoryType = null
+            ).forEach {
+                fakeList.add(it.repositoryId.toString())
+            }
+            fakeList
+        }
     }
 }

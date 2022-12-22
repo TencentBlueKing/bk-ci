@@ -23,26 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.quality.service.permission
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 
-class RbacCertPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
-    authResourceApi = authResourceApi,
+class RbacQualityPermissionServiceImpl(
+    override val authPermissionApi: AuthPermissionApi,
+    override val authResourceApi: AuthResourceApi,
+    override val qualityAuthServiceCode: QualityAuthServiceCode
+) : AbsQualityPermissionServiceImpl(
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    authResourceApi = authResourceApi,
+    qualityAuthServiceCode = qualityAuthServiceCode
 ) {
-
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
+    override fun supplierForPermissionGroup(projectId: String): () -> MutableList<String> {
         return { mutableListOf() }
+    }
+
+    override fun supplierForPermissionRule(projectId: String): () -> MutableList<String> {
+        return { mutableListOf() }
+    }
+
+    override fun supplierPermissionRule(projectId: String): List<Long> {
+        return listOf()
+    }
+
+    override fun supplierPermissionGroup(projectId: String): List<Long> {
+        return listOf()
     }
 }

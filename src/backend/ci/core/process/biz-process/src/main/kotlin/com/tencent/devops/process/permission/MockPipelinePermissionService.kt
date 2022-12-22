@@ -23,26 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import org.jooq.DSLContext
 
-class RbacCertPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
+/**
+ * Pipeline专用权限校验接口
+ */
+class MockPipelinePermissionService constructor(
+    private val dslContext: DSLContext,
+    private val pipelineInfoDao: PipelineInfoDao,
+    private val authProjectApi: AuthProjectApi,
+    private val authResourceApi: AuthResourceApi,
+    override val authPermissionApi: AuthPermissionApi,
+    override val pipelineAuthServiceCode: PipelineAuthServiceCode
+) : AbstractPipelinePermissionService(
+    authProjectApi = authProjectApi,
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    pipelineAuthServiceCode = pipelineAuthServiceCode
 ) {
 
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            pipelineInfoDao.listPipelineIdByProject(dslContext, projectId).forEach {
+                fakeList.add(it)
+            }
+            fakeList
+        }
     }
 }
