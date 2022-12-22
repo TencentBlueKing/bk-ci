@@ -100,7 +100,6 @@ interface StoreLogoService {
     fun uploadStoreIcon(
         userId: String,
         contentLength: Long,
-        compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?>
