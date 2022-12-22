@@ -76,10 +76,7 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
-import com.tencent.devops.store.dao.common.StoreBuildInfoDao
-import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.*
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -176,6 +173,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
+
+    @Autowired
+    lateinit var storeHonorDao: StoreHonorDao
 
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
@@ -291,6 +291,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
+            val atomHonorInfoMap = storeHonorDao.getHonorInfos(dslContext, storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -305,6 +306,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val atomCode = it[tAtom.ATOM_CODE] as String
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
+                val atomHonorInfos = atomHonorInfoMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
@@ -351,7 +353,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         updateTime = DateTimeUtil.toDateTime(it[tAtom.UPDATE_TIME] as LocalDateTime),
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
-                        recentExecuteNum = statistic?.recentExecuteNum ?: 0
+                        recentExecuteNum = statistic?.recentExecuteNum ?: 0,
+                        honorInfoList = atomHonorInfos
                     )
                 )
             }
@@ -808,7 +811,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     // 开启插件yml显示
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
-                    dailyStatisticList = getRecentDailyStatisticList(atomCode)
+                    dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                    honorInfos = storeHonorDao.getHonorInfosBycode(dslContext, StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }

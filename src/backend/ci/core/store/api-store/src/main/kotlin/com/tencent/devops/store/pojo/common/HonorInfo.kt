@@ -33,24 +33,14 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
 
-@ApiModel("研发商店荣誉信息")
-data class StoreHonorInfo(
-    @ApiModelProperty("ID", required = true)
-    val id: String,
+@ApiModel("荣誉信息")
+data class HonorInfo(
     @ApiModelProperty("荣誉头衔", required = true)
     @BkField(maxLength = 4)
     val honorTitle: String,
     @ApiModelProperty("荣誉名称", required = true)
     @BkField(maxLength = 40)
     val honorName: String,
-    @ApiModelProperty("组件范畴", required = true)
-    val storeType: StoreTypeEnum,
-    @ApiModelProperty("创建者", required = true)
-    val creator: String,
-    @ApiModelProperty("修改者", required = true)
-    val modifier: String,
-    @ApiModelProperty("更新时间", required = true)
-    val updateTime: LocalDateTime,
-    @ApiModelProperty("创建时间", required = true)
-    val createTime: LocalDateTime
+    @ApiModelProperty("是否佩戴", required = true)
+    val mountFlag: Boolean
 )

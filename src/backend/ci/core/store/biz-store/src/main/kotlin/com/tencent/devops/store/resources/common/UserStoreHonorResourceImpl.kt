@@ -32,7 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreHonorResource
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.StoreHonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.service.common.StoreHonorService
 import org.springframework.beans.factory.annotation.Autowired
@@ -46,7 +46,7 @@ class UserStoreHonorResourceImpl @Autowired constructor(
         keyWords: String?,
         page: Int,
         pageSize: Int
-    ): Result<Page<StoreHonorInfo>> {
+    ): Result<Page<StoreHonorManageInfo>> {
         return Result(
             storeHonorService.list(
                 userId = userId,

@@ -32,12 +32,18 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.dao.atom.AtomDao
+import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreHonorDao
+import com.tencent.devops.store.dao.template.TemplateCommonDao
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.StoreHonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.*
 import com.tencent.devops.store.service.common.StoreHonorService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -52,7 +58,7 @@ class StoreHonorServiceImpl @Autowired constructor(
     private val storeHonorDao: StoreHonorDao
 ) : StoreHonorService {
 
-    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorInfo> {
+    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
         // 权限校验
 
 
@@ -88,7 +94,7 @@ class StoreHonorServiceImpl @Autowired constructor(
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
         // 权限校验
 
-
+        logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
         val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
         if (honorTitleCount > 0) {
             // 抛出错误提示
@@ -98,20 +104,21 @@ class StoreHonorServiceImpl @Autowired constructor(
             )
         }
         val id = UUIDUtil.generate()
-        val storeHonorInfo = StoreHonorInfo(
-            id = id,
-            honorTitle = addStoreHonorRequest.honorTitle,
-            honorName = addStoreHonorRequest.honorName,
-            storeType = addStoreHonorRequest.storeType,
-            creator = userId,
-            modifier = userId,
-            createTime = LocalDateTime.now(),
-            updateTime = LocalDateTime.now()
-        )
+        val storeHonorInfo = TStoreHonorInfoRecord()
+        storeHonorInfo.id = id
+        storeHonorInfo.honorTitle = addStoreHonorRequest.honorTitle
+        storeHonorInfo.honorName = addStoreHonorRequest.honorName
+        storeHonorInfo.storeType = addStoreHonorRequest.storeType.type.toByte()
+        storeHonorInfo.creator = userId
+        storeHonorInfo.modifier = userId
+        storeHonorInfo.createTime = LocalDateTime.now()
+        storeHonorInfo.updateTime = LocalDateTime.now()
         val tStoreHonorRelList = addStoreHonorRequest.storeCodes.split(",").map {
+            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext,it)!!
             val tStoreHonorRelRecord = TStoreHonorRelRecord()
             tStoreHonorRelRecord.id = UUIDUtil.generate()
             tStoreHonorRelRecord.storeCode = it
+            tStoreHonorRelRecord.storeName = atomName
             tStoreHonorRelRecord.storeType = addStoreHonorRequest.storeType.type.toByte()
             tStoreHonorRelRecord.honorId = id
             tStoreHonorRelRecord.creator = userId
@@ -126,6 +133,10 @@ class StoreHonorServiceImpl @Autowired constructor(
             storeHonorDao.batchCreateStoreHonorRel(context,tStoreHonorRelList)
         }
         return Result(true)
+    }
+
+    private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {
+        return SpringContextUtil.getBean(AbstractStoreCommonDao::class.java, "${storeType}_COMMON_DAO")
     }
 
     companion object {
