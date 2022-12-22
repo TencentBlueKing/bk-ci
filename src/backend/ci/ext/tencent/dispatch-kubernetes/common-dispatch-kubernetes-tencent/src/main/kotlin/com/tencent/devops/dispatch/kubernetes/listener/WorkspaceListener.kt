@@ -52,6 +52,7 @@ class WorkspaceListener @Autowired constructor(
 
     @BkTimed
     fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
+        var status = false
         try {
             logger.info("Start to handle workspace create ($event)")
             remoteDevService.createWorkspace(
@@ -67,18 +68,22 @@ class WorkspaceListener @Autowired constructor(
                 )
             )
 
+            status = true
+        } catch (e: BuildFailureException) {
+            status = false
+            logger.error("Handle workspace create error.", e)
+        } catch (t: Throwable) {
+            status = false
+            logger.error("Handle workspace create error.", t)
+        } finally {
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
                 traceId = event.traceId,
                 userId = event.userId,
                 workspaceName = event.workspaceName,
                 type = UpdateEventType.CREATE,
-                status = true
+                status = status
             ))
-        } catch (e: BuildFailureException) {
-            //onFailure(dispatchService, event, e)
-        } catch (t: Throwable) {
-            // TODO
         }
     }
 
@@ -86,35 +91,31 @@ class WorkspaceListener @Autowired constructor(
     fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
         try {
             logger.info("Start to handle workspace operate ($event)")
-            try {
-                when (event.type) {
-                    UpdateEventType.START -> {
-                        remoteDevService.startWorkspace(event.userId, event.workspaceName)
-                    }
-                    UpdateEventType.STOP -> {
-                        remoteDevService.stopWorkspace(event.userId, event.workspaceName)
-                    }
-                    UpdateEventType.DELETE -> {
-                        remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
-                    }
-                    else -> {
-
-                    }
+            when (event.type) {
+                UpdateEventType.START -> {
+                    remoteDevService.startWorkspace(event.userId, event.workspaceName)
                 }
+                UpdateEventType.STOP -> {
+                    remoteDevService.stopWorkspace(event.userId, event.workspaceName)
+                }
+                UpdateEventType.DELETE -> {
+                    remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
+                }
+                else -> {
 
-                // 业务逻辑处理完成回调remotedev事件
-                remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
-                    traceId = event.traceId,
-                    userId = event.userId,
-                    workspaceName = event.workspaceName,
-                    type = event.type,
-                    status = true
-                ))
-            } catch (t: Throwable) {
-                logger.warn("Fail to handle workspace operate ($event)", t)
+                }
             }
         } catch (t: Throwable) {
             logger.warn("Fail to handle workspace operate ($event)", t)
+        } finally {
+            // 业务逻辑处理完成回调remotedev事件
+            remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
+                traceId = event.traceId,
+                userId = event.userId,
+                workspaceName = event.workspaceName,
+                type = event.type,
+                status = true
+            ))
         }
     }
 
