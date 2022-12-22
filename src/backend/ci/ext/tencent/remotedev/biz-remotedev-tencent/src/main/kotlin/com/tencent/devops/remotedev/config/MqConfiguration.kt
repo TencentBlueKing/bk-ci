@@ -1,10 +1,10 @@
 package com.tencent.devops.remotedev.config
 
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
+import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.remotedev.listener.RemoteDevUpdateListener
-import com.tencent.devops.remotedev.pojo.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
-import com.tencent.devops.remotedev.pojo.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
-import com.tencent.devops.remotedev.pojo.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
