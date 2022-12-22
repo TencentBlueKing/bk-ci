@@ -30,7 +30,7 @@ package com.tencent.devops.store.api.common
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
-import com.tencent.devops.store.pojo.common.StoreHonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
@@ -71,7 +71,7 @@ interface UserStoreHonorResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
-    ): Result<Page<StoreHonorInfo>>
+    ): Result<Page<StoreHonorManageInfo>>
 
     @ApiOperation("批量删除组件荣誉")
     @DELETE
@@ -84,7 +84,7 @@ interface UserStoreHonorResource {
         storeHonorRelList: List<StoreHonorRel>
     ): Result<Boolean>
 
-    @ApiOperation("添加荣誉")
+    @ApiOperation("添加组件荣誉")
     @POST
     @Path("/add")
     fun add(

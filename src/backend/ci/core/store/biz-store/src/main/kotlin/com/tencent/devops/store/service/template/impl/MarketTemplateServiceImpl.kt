@@ -57,10 +57,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
-import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
-import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.common.StoreMemberDao
-import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.dao.common.*
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
@@ -127,6 +124,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+    @Autowired
+    lateinit var storeHonorDao: StoreHonorDao
     @Autowired
     lateinit var templateCategoryService: TemplateCategoryService
     @Autowired
@@ -251,6 +250,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeType = storeType.type.toByte(),
                 storeCodeList = templateCodeList
             )
+            val templateHonorInfoMap = storeHonorDao.getHonorInfos(dslContext, storeType, templateCodeList)
 
             // 获取成员
             val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
@@ -266,6 +266,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 val code = it["TEMPLATE_CODE"] as String
                 val visibleList = templateVisibleData?.get(code)
                 val statistic = templateStatisticData[code]
+                val honorInfos = templateHonorInfoMap[code]
                 val members = memberData?.get(code)
                 val publicFlag = it["PUBLIC_FLAG"] as Boolean
                 val canInstall = storeCommonService.generateInstallFlag(
@@ -298,7 +299,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     docsLink = "",
                     modifier = it["MODIFIER"] as String,
                     updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
-                    installed = installed
+                    installed = installed,
+                    honorInfoList = honorInfos
                 )
                 when {
                     installed == true -> installedTemplates.add(marketItem)
@@ -483,6 +485,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         )
+        val templateHonorInfos = storeHonorDao.getHonorInfosBycode(dslContext, StoreTypeEnum.TEMPLATE, templateCode)
         // 查找范畴列表
         val categoryList = templateCategoryService.getCategorysByTemplateId(templateRecord.id).data
         val labelList = templateLabelService.getLabelsByTemplateId(templateRecord.id).data // 查找标签列表
@@ -524,7 +527,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             pubDescription = templateRecord.pubDescription,
             flag = installFlag,
             releaseFlag = releaseFlag,
-            userCommentInfo = userCommentInfo
+            userCommentInfo = userCommentInfo,
+            honorInfo = templateHonorInfos
         ))
     }
 
