@@ -65,13 +65,11 @@ const rules = {
   ],
   subjectScopes: [
     {
-      validator: (val) => {
-        return projectData.value.subjectScopes.length >= 1
-      },
+      validator: () => projectData.value.subjectScopes.length >= 1,
       message: t('请选择项目项目最大可授权人员范围'),
       trigger: 'change',
-    }
-  ]
+    },
+  ],
 };
 
 const projectData = ref<any>(props.data);
@@ -148,9 +146,7 @@ const handleChangeCenter = (type: string, id: any) => {
   };
 };
 
-const formValidate = () => {
-  return projectFrom.value.validate();
-};
+const formValidate = () => projectFrom.value.validate();
 
 const fetchDepartmentList = () => {
   const { bgId, deptId } = projectData.value;
@@ -192,9 +188,9 @@ const handleUploadLogo = async (res: any) => {
     formData.append('logo', file);
     await http.uploadProjectLogo({
       formData,
-    }).then(res => {
-      projectData.value.logoAddress = res
-    })
+    }).then((res) => {
+      projectData.value.logoAddress = res;
+    });
   }
 };
 
@@ -332,7 +328,7 @@ onBeforeUnmount(() => {
       >
         <bk-radio class="mr10" :label="false">
           <Popover :content="t('非项目成员可通过`申请加入项目`申请加入')">
-           <span class="authSecrecy-item">{{ t('私有项目') }}</span>
+            <span class="authSecrecy-item">{{ t('私有项目') }}</span>
           </Popover>
         </bk-radio>
         <bk-radio :label="true">
@@ -342,13 +338,19 @@ onBeforeUnmount(() => {
         </bk-radio>
       </bk-radio-group>
     </bk-form-item>
-     <bk-form-item
+    <bk-form-item
       :label="t('项目最大可授权人员范围')"
       :description="t('该范围表示您可以给哪些人员分配权限，同时也只有他们才能申请到您创建的用户组')"
       property="subjectScopes"
       :required="true">
-      <edit-line
-        class="edit-line"
+      <bk-tag
+        v-for="(subjectScope, index) in projectData.subjectScopes"
+        :key="index"
+      >
+        {{ subjectScope.name }}
+      </bk-tag>
+      <EditLine
+        class="edit-line ml5"
         @click="(showDialog = true)"
       />
     </bk-form-item>
