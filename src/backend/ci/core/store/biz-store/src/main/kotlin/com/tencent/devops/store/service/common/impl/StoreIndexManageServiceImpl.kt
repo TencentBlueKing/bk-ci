@@ -28,14 +28,12 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
@@ -56,7 +54,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -173,24 +170,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    /**
-     * 执行删除组件指标存量数据
-     */
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
-    fun deleteStoreIndexResul() {
-        val lock = RedisLock(redisOperation, "deleteStoreIndexResul", 60L)
-        try {
-            lock.lock()
-            redisOperation.getSetMembers("deleteStoreIndexResultKey")?.forEach {
-                logger.info("expired indexId is: {}", it)
-                storeIndexBaseInfoDao.deleteStoreIndexResulById(dslContext, it)
-            }
-        } catch (ignored: Throwable) {
-            logger.warn("Fail to offline index: {}", ignored)
-        } finally {
-            lock.unlock()
-        }
-    }
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo> {
         //管理员权限校验

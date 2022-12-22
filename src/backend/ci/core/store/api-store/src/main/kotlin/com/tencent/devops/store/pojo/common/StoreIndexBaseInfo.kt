@@ -56,9 +56,9 @@ data class StoreIndexBaseInfo(
     @ApiModelProperty("运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
     @ApiModelProperty("指标对应的插件代码")
-    val atomCode: String,
+    val atomCode: String? = null,
     @ApiModelProperty("插件执行版本号")
-    val atomVersion: String,
+    val atomVersion: String? = null,
     @ApiModelProperty("完成执行任务数量", required = true)
     var finishTaskNum: Int,
     @ApiModelProperty("执行任务总数", required = true)
