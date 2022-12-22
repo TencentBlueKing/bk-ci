@@ -93,8 +93,6 @@ class RbacAuthConfiguration {
         permissionScopesService: PermissionScopesService,
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
-        groupService: AuthGroupService,
-        strategyService: StrategyService,
         dslContext: DSLContext,
         authDefaultGroupDao: AuthDefaultGroupDao,
         permissionResourceGroupService: PermissionResourceGroupService
@@ -103,8 +101,6 @@ class RbacAuthConfiguration {
         permissionScopesService = permissionScopesService,
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
-        groupService = groupService,
-        strategyService = strategyService,
         dslContext = dslContext,
         authDefaultGroupDao = authDefaultGroupDao,
         permissionResourceGroupService = permissionResourceGroupService

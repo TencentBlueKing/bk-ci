@@ -37,9 +37,10 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthDefaultGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -51,7 +52,6 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
@@ -64,8 +64,6 @@ class RbacPermissionResourceService(
     private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val groupService: AuthGroupService,
-    private val strategyService: StrategyService,
     private val dslContext: DSLContext,
     private val authDefaultGroupDao: AuthDefaultGroupDao,
     private val permissionResourceGroupService: PermissionResourceGroupService
@@ -140,7 +138,8 @@ class RbacPermissionResourceService(
             projectName = projectInfo.projectName,
             resourceType = resourceType,
             resourceCode = resourceCode,
-            resourceName = resourceName
+            resourceName = resourceName,
+            createMode = false
         )
         return true
     }
@@ -205,7 +204,7 @@ class RbacPermissionResourceService(
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )
-        }
+        }.sortedBy { it.id }
     }
 
     override fun listUserBelongGroup(
@@ -231,7 +230,10 @@ class RbacPermissionResourceService(
         return verifyResult.map { (iamGroupId, result) ->
             val (status, createTime, expiredTime) = if (result.belong) {
                 val createTime = DateTimeUtil.toDateTime(
-                    dateTime = DateTimeUtil.stringToLocalDateTime(result.createdAt, YYYY_MM_DD_T_HH_MM_SSZ)
+                    dateTime = DateTimeUtil.stringToLocalDateTime(
+                        dateTimeStr = result.createdAt.replace("Z", " UTC"),
+                        formatStr = YYYY_MM_DD_T_HH_MM_SSZ
+                    )
                 )
                 val expiredAt = result.expiredAt * 1000
                 val expiredTime = DateTimeUtil.formatMilliTime(expiredAt)
@@ -262,26 +264,9 @@ class RbacPermissionResourceService(
         userId: String,
         projectId: String,
         resourceType: String,
-        groupName: String
+        groupId: Int
     ): List<String> {
-        val displayGroupName = IamGroupUtils.getSubsetManagerGroupDisplayName(groupName = groupName)
-        val defaultGroupInfo = authDefaultGroupDao.getByName(
-            dslContext = dslContext,
-            resourceType = resourceType,
-            groupName = displayGroupName
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
-            params = arrayOf(DefaultGroupType.MANAGER.value),
-            defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
-        )
-        val policies = mutableListOf<String>()
-        strategyService.getStrategyByName(
-            IamGroupUtils.buildSubsetManagerGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = defaultGroupInfo.groupCode
-            ),
-        )?.strategy?.forEach { policies.addAll(it.value) }
-        return policies
+        return iamV2ManagerService.getRoleGroupActionV2(groupId).map { it.id }
     }
 
     override fun enableResourcePermission(
@@ -291,17 +276,36 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        val hasManagerPermission = hasManagerPermission(
-            userId = userId,
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode
-        )
-        if (!hasManagerPermission) {
+        // 1. 先判断是否是项目管理员
+        val projectInfo = getProjectInfo(projectId)
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
+        if (!gradeManagerDetail.members.contains(userId)) {
             throw PermissionForbiddenException(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         }
+        // 2. 判断是否是资源管理员
+        val resourceInfo = getResourceInfo(
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId.toInt())
+        if (!subsetManagerDetail.members.contains(userId)) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
+        permissionResourceGroupService.createDefaultGroup(
+            subsetManagerId = resourceInfo.relationId.toInt(),
+            userId = userId,
+            projectCode = projectId,
+            projectName = projectInfo.projectName,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceInfo.resourceName,
+            createMode = true
+        )
         return authResourceService.enable(
             userId = userId,
             projectCode = projectId,
@@ -341,21 +345,16 @@ class RbacPermissionResourceService(
         projectId: String,
         resourceType: String,
         groupId: Int,
-        expiredAt: Long
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
         logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
-        val groupInfo = groupService.getGroupCode(groupId) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.GROUP_NOT_EXIST,
-            params = arrayOf(groupId.toString()),
-            defaultMessage = "权限系统： 用户组[$groupId]不存在"
-        )
         val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
             .members(listOf(managerMember))
-            .expiredAt(expiredAt)
+            .expiredAt(memberRenewalDTO.expiredAt)
             .build()
         iamV2ManagerService.renewalRoleGroupMemberV2(
-            groupInfo.relationId.toInt(),
+            groupId,
             managerMemberGroupDTO
         )
         return true
@@ -368,13 +367,8 @@ class RbacPermissionResourceService(
         groupId: Int
     ): Boolean {
         logger.info("delete group member|$userId|$projectId|$resourceType|$groupId")
-        val groupInfo = groupService.getGroupCode(groupId) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.GROUP_NOT_EXIST,
-            params = arrayOf(groupId.toString()),
-            defaultMessage = "权限系统： 用户组[$groupId]不存在"
-        )
         iamV2ManagerService.deleteRoleGroupMemberV2(
-            groupInfo.relationId.toInt(),
+            groupId,
             ManagerScopesEnum.USER.name,
             userId
         )
