@@ -63,7 +63,7 @@ class StoreIndexCronService constructor(
         }
     }
 
-    fun
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(StoreIndexManageServiceImpl::class.java)

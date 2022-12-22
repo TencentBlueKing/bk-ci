@@ -232,7 +232,6 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     override fun uploadStoreIcon(
         userId: String,
         contentLength: Long,
-        compressFlag: Boolean?,
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ): Result<String?> {

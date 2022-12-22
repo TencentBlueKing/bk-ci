@@ -53,7 +53,6 @@ class UserStoreIconResourceImpl @Autowired constructor(
         return storeLogoService.uploadStoreIcon(
             userId = userId,
             contentLength = contentLength,
-            compressFlag = compressFlag,
             inputStream = inputStream,
             disposition = disposition
         )
