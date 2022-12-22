@@ -19,15 +19,15 @@ const getters: GetterTree<RootState, any> = {
     },
 
     enableProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => (project.approvalStatus === 1 || project.approvalStatus === 2) && project.enabled)
+        return state.projectList.filter((project: ObjectMap) => [1, 2, 4, 6].includes(project.approvalStatus) && project.enabled)
     },
 
     disableProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => (project.approvalStatus === 1 || project.approvalStatus === 2) && !project.enabled)
+        return state.projectList.filter((project: ObjectMap) => [1, 2, 4, 6].includes(project.approvalStatus) && !project.enabled)
     },
 
     approvalingProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => project.approvalStatus === 1)
+        return state.projectList.filter((project: ObjectMap) => [1, 4].includes(project.approvalStatus))
     },
 
     // 是否显示跑马灯类型公告
