@@ -186,7 +186,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                 storeIndexBaseInfoDao.deleteStoreIndexResulById(dslContext, it)
             }
         } catch (ignored: Throwable) {
-            logger.warn("Fail to offline atom: {}", ignored)
+            logger.warn("Fail to offline index: {}", ignored)
         } finally {
             lock.unlock()
         }
