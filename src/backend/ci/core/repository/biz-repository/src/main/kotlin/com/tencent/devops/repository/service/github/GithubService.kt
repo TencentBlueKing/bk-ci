@@ -48,6 +48,7 @@ import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubRepo
 import com.tencent.devops.repository.pojo.github.GithubRepoBranch
 import com.tencent.devops.repository.pojo.github.GithubRepoTag
+import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
@@ -339,6 +340,38 @@ class GithubService @Autowired constructor(
             else -> "GitHub平台${operation}失败"
         }
         throw GithubApiException(code, msg)
+    }
+
+    override fun getProject(accessToken: String): List<GithubRepository> {
+        val githubRepos = mutableListOf<GithubRepo>()
+        val perPage = 100
+        var page = 0
+        run outside@{
+            while (page < 100) {
+                page++
+                val request = buildGet(accessToken, "user/repos?page=$page&per_page=$perPage")
+                val body = getBody(OPERATION_GET_REPOS, request)
+                val repos = objectMapper.readValue<List<GithubRepo>>(body)
+                githubRepos.addAll(repos)
+
+                if (repos.size < perPage) {
+                    return@outside
+                }
+            }
+        }
+        logger.info("GitHub get repos($githubRepos)")
+
+        val formatter = DateTimeFormatter.ISO_INSTANT.withZone(ZoneId.systemDefault())
+        return githubRepos.map {
+            GithubRepository(
+                id = it.id.toString(),
+                name = it.name,
+                fullName = it.fullName,
+                sshUrl = it.sshUrl,
+                httpUrl = it.httpUrl,
+                updatedAt = ZonedDateTime.parse(it.updateAt, formatter).toEpochSecond() * 1000L
+            )
+        }
     }
 
     // TODO:脱敏

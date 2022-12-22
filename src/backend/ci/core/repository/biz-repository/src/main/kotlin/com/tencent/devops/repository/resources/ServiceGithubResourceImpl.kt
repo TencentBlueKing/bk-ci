@@ -34,6 +34,8 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.repository.service.github.GithubOAuthService
@@ -101,5 +103,13 @@ class ServiceGithubResourceImpl @Autowired constructor(
 
     override fun listTags(accessToken: String, projectName: String): Result<List<String>> {
         return Result(githubService.listTags(accessToken, projectName))
+    }
+
+    override fun getOauth(projectId: String, userId: String, repoHashId: String?): Result<GithubOauth> {
+        return Result(githubOAuthService.getGithubOauth(projectId, userId, repoHashId))
+    }
+
+    override fun getProject(accessToken: String, userId: String): Result<List<GithubRepository>> {
+        return Result(githubService.getProject(accessToken))
     }
 }

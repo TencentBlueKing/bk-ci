@@ -32,6 +32,8 @@ import com.tencent.devops.repository.pojo.GithubCheckRuns
 import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
+import com.tencent.devops.repository.pojo.github.GithubOauth
+import com.tencent.devops.repository.pojo.github.GithubRepository
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
 import io.swagger.annotations.Api
@@ -181,4 +183,31 @@ interface ServiceGithubResource {
         @QueryParam("projectName")
         projectName: String
     ): Result<List<String>>
+
+    @ApiOperation("获取Github Oauth信息")
+    @GET
+    @Path("/oauth")
+    fun getOauth(
+        @ApiParam(value = "项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam(value = "用户ID", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam(value = "仓库ID", required = true)
+        @QueryParam("repoHashId")
+        repoHashId: String?
+    ): Result<GithubOauth>
+
+    @ApiOperation("获取Github仓库列表")
+    @GET
+    @Path("/project")
+    fun getProject(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String
+    ): Result<List<GithubRepository>>
 }

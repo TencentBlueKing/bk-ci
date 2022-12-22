@@ -25,43 +25,13 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.service.github
+package com.tencent.devops.repository.pojo.github
 
-import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.GithubCheckRuns
-import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
-import com.tencent.devops.repository.pojo.github.GithubBranch
-import com.tencent.devops.repository.pojo.github.GithubRepository
-import com.tencent.devops.repository.pojo.github.GithubTag
-
-interface IGithubService {
-
-    fun webhookCommit(event: String, guid: String, signature: String, body: String)
-
-    fun addCheckRuns(
-        token: String,
-        projectName: String,
-        checkRuns: GithubCheckRuns
-    ): GithubCheckRunsResponse
-
-    fun updateCheckRuns(
-        token: String,
-        projectName: String,
-        checkRunId: Long,
-        checkRuns: GithubCheckRuns
-    )
-
-    fun getProject(projectId: String, userId: String, repoHashId: String?): AuthorizeResult
-
-    fun getBranch(token: String, projectName: String, branch: String?): GithubBranch?
-
-    fun getTag(token: String, projectName: String, tag: String): GithubTag?
-
-    fun getFileContent(projectName: String, ref: String, filePath: String): String
-
-    fun listBranches(token: String, projectName: String): List<String>
-
-    fun listTags(token: String, projectName: String): List<String>
-
-    fun getProject(accessToken: String): List<GithubRepository>
-}
+data class GithubRepository(
+    val id: String,
+    val name: String,
+    val fullName: String,
+    val sshUrl: String,
+    val httpUrl: String,
+    val updatedAt: Long
+)
