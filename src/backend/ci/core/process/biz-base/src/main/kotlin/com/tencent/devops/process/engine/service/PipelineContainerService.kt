@@ -939,26 +939,28 @@ class PipelineContainerService @Autowired constructor(
         ContainerUtils.setQueuingWaitName(container, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
-        stageBuildRecords.add(
-            BuildRecordStage(
-                buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
-                resourceVersion = resourceVersion, stageId = stage.id!!, status = BuildStatus.RUNNING.name,
-                executeCount = context.executeCount, stageSeq = 0, stageVar = mutableMapOf(), timestamps = mapOf()
-            )
-        )
-        containerBuildRecords.add(
-            BuildRecordContainer(
-                buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
-                resourceVersion = resourceVersion, stageId = stage.id!!, containerId = container.containerId!!,
-                executeCount = context.executeCount, matrixGroupFlag = null, matrixGroupId = null,
-                containerType = container.getClassType(), status = BuildStatus.RUNNING.name, timestamps = mapOf(),
-                containerVar = mutableMapOf(
-                    // 名字刷新成非队列中
-                    Container::name.name to container.name,
-                    Container::startEpoch.name to System.currentTimeMillis()
-                )
-            )
-        )
+
+        // TODO #7983 后续全换到record时保持同步刷新
+//        stageBuildRecords.add(
+//            BuildRecordStage(
+//                buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
+//                resourceVersion = resourceVersion, stageId = stage.id!!, status = BuildStatus.RUNNING.name,
+//                executeCount = context.executeCount, stageSeq = 0, stageVar = mutableMapOf(), timestamps = mapOf()
+//            )
+//        )
+//        containerBuildRecords.add(
+//            BuildRecordContainer(
+//                buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
+//                resourceVersion = resourceVersion, stageId = stage.id!!, containerId = container.containerId!!,
+//                executeCount = context.executeCount, matrixGroupFlag = null, matrixGroupId = null,
+//                containerType = container.getClassType(), status = BuildStatus.RUNNING.name, timestamps = mapOf(),
+//                containerVar = mutableMapOf(
+//                    // 名字刷新成非队列中
+//                    Container::name.name to container.name,
+//                    Container::startEpoch.name to System.currentTimeMillis()
+//                )
+//            )
+//        )
         container.elements.forEachIndexed { index, atomElement ->
             if (context.firstTaskId.isBlank() && atomElement.isElementEnable()) {
                 context.firstTaskId = atomElement.findFirstTaskIdByStartType(context.startType)
@@ -967,15 +969,15 @@ class PipelineContainerService @Autowired constructor(
             if (context.firstTaskId.isNotBlank() && context.firstTaskId == atomElement.id) {
                 atomElement.status = BuildStatus.SUCCEED.name
                 atomElement.executeCount = context.executeCount
-                taskBuildRecords.add(
-                    BuildRecordTask(
-                        buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
-                        resourceVersion = resourceVersion, stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = atomElement.id!!, taskSeq = index + 1, executeCount = context.executeCount,
-                        taskVar = mutableMapOf(), classType = atomElement.getClassType(), atomCode = atomElement.getAtomCode(),
-                        status = BuildStatus.SUCCEED.name, timestamps = mapOf(), originClassType = null
-                    )
-                )
+//                taskBuildRecords.add(
+//                    BuildRecordTask(
+//                        buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
+//                        resourceVersion = resourceVersion, stageId = stage.id!!, containerId = container.containerId!!,
+//                        taskId = atomElement.id!!, taskSeq = index + 1, executeCount = context.executeCount,
+//                        taskVar = mutableMapOf(), classType = atomElement.getClassType(), atomCode = atomElement.getAtomCode(),
+//                        status = BuildStatus.SUCCEED.name, timestamps = mapOf(), originClassType = null
+//                    )
+//                )
                 buildLogPrinter.addLine(
                     buildId = context.buildId,
                     message = "触发人(trigger user): ${context.triggerUser}, 执行人(start user): ${context.userId}",
