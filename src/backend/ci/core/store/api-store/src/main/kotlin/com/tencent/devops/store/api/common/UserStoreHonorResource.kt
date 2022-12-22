@@ -75,7 +75,7 @@ interface UserStoreHonorResource {
 
     @ApiOperation("批量删除组件荣誉")
     @DELETE
-    @Path("/batch/deletes")
+    @Path("/batch/delete")
     fun batchDelete(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
