@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
