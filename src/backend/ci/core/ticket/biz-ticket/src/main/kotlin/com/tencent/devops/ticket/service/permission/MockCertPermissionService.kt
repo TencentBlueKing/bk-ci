@@ -32,7 +32,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CertDao
-import com.tencent.devops.ticket.service.AbstractCertPermissionService
 import org.jooq.DSLContext
 
 class MockCertPermissionService constructor(

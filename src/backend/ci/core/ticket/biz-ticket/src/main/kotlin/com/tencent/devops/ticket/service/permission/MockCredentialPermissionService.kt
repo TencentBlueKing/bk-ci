@@ -32,7 +32,6 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
 import com.tencent.devops.ticket.dao.CredentialDao
-import com.tencent.devops.ticket.service.AbstractCredentialPermissionService
 import org.jooq.DSLContext
 
 class MockCredentialPermissionService constructor(
