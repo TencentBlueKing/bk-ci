@@ -21,11 +21,14 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Conditional
 import org.springframework.context.annotation.Configuration
 import org.springframework.jmx.export.MBeanExporter
+import java.util.Arrays
 
 @Configuration
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
+@Conditional(CommonAuthCondition::class)
 class CommonConfiguration {
     @Bean
     @ConditionalOnMissingBean
