@@ -60,6 +60,7 @@ import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailServ
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import org.jooq.DSLContext
@@ -848,6 +849,7 @@ class PipelineContainerService @Autowired constructor(
         container: TriggerContainer,
         context: StartBuildContext,
         startBuildStatus: BuildStatus,
+        stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
@@ -937,6 +939,13 @@ class PipelineContainerService @Autowired constructor(
         ContainerUtils.setQueuingWaitName(container, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
+        stageBuildRecords.add(
+            BuildRecordStage(
+                buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
+                resourceVersion = resourceVersion, stageId = stage.id!!, status = BuildStatus.RUNNING.name,
+                executeCount = context.executeCount, stageSeq = 0, stageVar = mutableMapOf(), timestamps = mapOf()
+            )
+        )
         containerBuildRecords.add(
             BuildRecordContainer(
                 buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
