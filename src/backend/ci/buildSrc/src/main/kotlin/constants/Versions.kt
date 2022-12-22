@@ -46,5 +46,5 @@ object Versions {
     const val reflections = "0.10.2"
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
-    const val iam = "1.0.3-SNAPSHOT"
+    const val iam = "1.0.4-SNAPSHOT"
 }
