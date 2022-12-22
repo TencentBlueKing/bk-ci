@@ -10,7 +10,7 @@ const ManageEntry = () => import(/* webpackChunkName: "ManageEntry" */ '../views
 const EditProject = () => import(/* webpackChunkName: "EditProject" */ '../views/manage/project/edit-project.vue');
 const ShowProject = () => import(/* webpackChunkName: "ShowProject" */ '../views/manage/project/show-project.vue');
 // 用户组管理
-const UserGroup = () => import(/* webpackChunkName: "UserGroup" */ '../views/manage/group/user-group.vue');
+const UserGroup = () => import(/* webpackChunkName: "UserGroup" */ '../views/manage/group/index.vue');
 const ExpandManage = () => import(/* webpackChunkName: "ExpandManage" */ '../views/manage/expand/list.vue');
 
 const router = createRouter({

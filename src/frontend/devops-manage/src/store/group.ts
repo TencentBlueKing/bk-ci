@@ -1,10 +1,10 @@
-
 import { defineStore } from 'pinia';
 
 export const useGroup = defineStore('group', {
   state: () => ({
     resourceType: '',
     resourceCode: '',
+    projectCode: '',
   }),
   actions: {
     setResourceType(type: string) {
@@ -12,6 +12,9 @@ export const useGroup = defineStore('group', {
     },
     setResourceCode(code: string) {
       this.resourceCode = code;
+    },
+    setProjectCode(code: string) {
+      this.projectCode = code;
     },
   },
 });
