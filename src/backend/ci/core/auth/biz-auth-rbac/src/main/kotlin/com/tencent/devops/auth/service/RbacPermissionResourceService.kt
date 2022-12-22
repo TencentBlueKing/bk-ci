@@ -43,12 +43,15 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
@@ -149,9 +152,22 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         // 1. 先判断是否是项目管理员
-
+        val projectInfo = getProjectInfo(projectId)
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
+        if (gradeManagerDetail.members.contains(userId)) {
+            return true
+        }
         // 2. 判断是否是资源管理员
-        return true
+        val resourceInfo = getResourceInfo(
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId.toInt())
+        if (subsetManagerDetail.members.contains(userId)) {
+            return true
+        }
+        return false
     }
 
     override fun isEnablePermission(
@@ -211,7 +227,7 @@ class RbacPermissionResourceService(
         val iamIds = iamGroupInfos.results.map { it.id }
         val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
         val verifyResult =
-            iamV2ManagerService.verifyGroupValidMember(userId, iamIds.joinToString(",")).verifyResult
+            iamV2ManagerService.verifyGroupValidMember(userId, iamIds.joinToString(","))
         return verifyResult.map { (iamGroupId, result) ->
             val (status, createTime, expiredTime) = if (result.belong) {
                 val createTime = DateTimeUtil.toDateTime(
@@ -275,6 +291,17 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
+        val hasManagerPermission = hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode
+        )
+        if (!hasManagerPermission) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
         return authResourceService.enable(
             userId = userId,
             projectCode = projectId,
@@ -290,6 +317,17 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("disable resource permission|$userId|$projectId|$resourceType|$resourceCode")
+        val hasManagerPermission = hasManagerPermission(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode
+        )
+        if (!hasManagerPermission) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
         return authResourceService.disable(
             userId = userId,
             projectCode = projectId,
