@@ -40,9 +40,9 @@ import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
-import java.util.concurrent.TimeUnit
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LongParameterList")
@@ -54,6 +54,11 @@ class PermissionResourceGroupService(
     private val groupService: AuthGroupService
 ) {
 
+    /**
+     * 创建默认分组
+     *
+     * @param createMode false-创建资源时就创建默认分组,true-启用资源时才创建
+     */
     fun createDefaultGroup(
         subsetManagerId: Int,
         userId: String,
@@ -61,13 +66,13 @@ class PermissionResourceGroupService(
         projectName: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        createMode: Boolean
     ) {
-        // createLocalManagerGroup(resourceType, subsetManagerId, userId, projectCode)
         val defaultGroups = authDefaultGroupDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
-            createMode = false
+            createMode = createMode
         )
         defaultGroups.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
@@ -94,17 +99,6 @@ class PermissionResourceGroupService(
                 iamGroupId = iamGroupId
             )
             addGroupMember(userId = userId, iamGroupId = iamGroupId)
-            /*groupService.createGroup(
-                userId = userId,
-                projectCode = projectCode,
-                groupInfo = GroupDTO(
-                    groupCode = defaultGroup.groupCode,
-                    groupType = true,
-                    groupName = name,
-                    displayName = defaultGroup.groupName,
-                    relationId = iamGroupId.toString()
-                )
-            )*/
         }
     }
 
