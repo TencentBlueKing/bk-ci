@@ -348,7 +348,7 @@ class RbacPermissionResourceService(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
         logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
-        val managerMember = ManagerMember(ManagerScopesEnum.USER.name, userId)
+        val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
         val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
             .members(listOf(managerMember))
             .expiredAt(memberRenewalDTO.expiredAt)
@@ -369,7 +369,7 @@ class RbacPermissionResourceService(
         logger.info("delete group member|$userId|$projectId|$resourceType|$groupId")
         iamV2ManagerService.deleteRoleGroupMemberV2(
             groupId,
-            ManagerScopesEnum.USER.name,
+            ManagerScopesEnum.getType(ManagerScopesEnum.USER),
             userId
         )
         return true
