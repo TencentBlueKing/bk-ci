@@ -27,6 +27,7 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -41,6 +42,7 @@ import com.tencent.devops.process.utils.KEY_PIPELINE_NAME
 import com.tencent.devops.store.dao.common.BusinessConfigDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
+import com.tencent.devops.store.pojo.common.KEY_ATOM_CODE
 import com.tencent.devops.store.pojo.common.KEY_INDEX_CODE
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
@@ -84,7 +86,11 @@ class StoreIndexPipelineServiceImpl @Autowired constructor(
         var pipelineModelStr = pipelineModelConfig!!.configValue
         val atomCode = storeIndexPipelineInitRequest.atomCode
         val pipelineName = "am-$atomCode-${UUIDUtil.generate()}"
-        val paramMap = mapOf(KEY_PIPELINE_NAME to pipelineName)
+        val paramMap = mapOf(
+            KEY_PIPELINE_NAME to pipelineName,
+            KEY_ATOM_CODE to atomCode,
+            KEY_VERSION to storeIndexPipelineInitRequest.atomVersion
+        )
         // 将流水线模型中的变量替换成具体的值
         paramMap.forEach { (key, value) ->
             pipelineModelStr = pipelineModelStr.replace("#{$key}", value)
