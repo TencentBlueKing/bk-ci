@@ -23,41 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.repository.service.permission
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.OwnerUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.ticket.dao.CertDao
+import com.tencent.devops.repository.dao.RepositoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("ALL")
-class V3CertPermissionService @Autowired constructor(
-    private val certDao: CertDao,
-    private val dslContext: DSLContext,
+class V3RepositoryPermissionService constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
+    private val dslContext: DSLContext,
+    private val repositoryDao: RepositoryDao,
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val codeAuthServiceCode: CodeAuthServiceCode
+) : AbstractRepositoryPermissionService(
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    codeAuthServiceCode = codeAuthServiceCode
 ) {
 
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
         return { mutableListOf() }
     }
 
@@ -65,96 +64,82 @@ class V3CertPermissionService @Autowired constructor(
         userId: String,
         projectId: String,
         authPermission: AuthPermission,
+        repositoryId: Long?,
         message: String
     ) {
         if (isProjectOwner(projectId, userId)) {
             return
         }
-        super.validatePermission(userId, projectId, authPermission, message)
+        super.validatePermission(userId, projectId, authPermission, repositoryId, message)
     }
 
-    override fun validatePermission(
+    override fun hasPermission(
         userId: String,
         projectId: String,
-        resourceCode: String,
         authPermission: AuthPermission,
-        message: String
-    ) {
-        if (isProjectOwner(projectId, userId)) {
-            return
-        }
-        super.validatePermission(userId, projectId, resourceCode, authPermission, message)
-    }
-
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
-        if (isProjectOwner(projectId, userId)) {
-            return true
-        }
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = ticketAuthServiceCode,
-            resourceType = AuthResourceType.TICKET_CERT,
-            projectCode = projectId,
-            resourceCode = projectId,
-            permission = AuthPermission.CREATE,
-            relationResourceType = AuthResourceType.PROJECT
-        )
-    }
-
-    override fun validatePermission(
-        userId: String,
-        projectId: String,
-        resourceCode: String,
-        authPermission: AuthPermission
+        repositoryId: Long?
     ): Boolean {
         if (isProjectOwner(projectId, userId)) {
             return true
         }
-        return super.validatePermission(userId, projectId, resourceCode, authPermission)
+        return super.hasPermission(userId, projectId, authPermission, repositoryId)
     }
 
-    override fun filterCert(userId: String, projectId: String, authPermission: AuthPermission): List<String> {
-        val certInfo = if (isProjectOwner(projectId, userId)) {
+    override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
+        val resourceCodeList = if (isProjectOwner(projectId, userId)) {
             arrayListOf("*")
         } else {
-            super.filterCert(userId, projectId, authPermission)
+            authPermissionApi.getUserResourceByPermission(
+                user = userId,
+                serviceCode = codeAuthServiceCode,
+                resourceType = AuthResourceType.CODE_REPERTORY,
+                projectCode = projectId,
+                permission = authPermission,
+                supplier = supplierForFakePermission(projectId)
+            )
         }
-        logger.info("filterCert user[$userId] project[$projectId] auth[$authPermission] list[$certInfo]")
-        if (certInfo.contains("*")) {
-            return getAllCertByProject(projectId)
+
+        if (resourceCodeList.contains("*")) {
+            return getAllInstance(resourceCodeList, projectId, userId)
         }
-        return certInfo
+        return resourceCodeList.map { HashUtil.decodeOtherIdToLong(it) }
     }
 
-    override fun filterCerts(
+    override fun filterRepositories(
         userId: String,
         projectId: String,
         authPermissions: Set<AuthPermission>
-    ): Map<AuthPermission, List<String>> {
-        val certMaps = super.filterCerts(userId, projectId, authPermissions)
-        val certResultMap = mutableMapOf<AuthPermission, List<String>>()
-        certMaps.forEach { key, value ->
-            if (isProjectOwner(projectId, userId)) {
-                certResultMap[key] = getAllCertByProject(projectId)
-                return@forEach
-            }
-            if (value.contains("*")) {
-                certResultMap[key] = getAllCertByProject(projectId)
+    ): Map<AuthPermission, List<Long>> {
+        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = codeAuthServiceCode,
+            resourceType = AuthResourceType.CODE_REPERTORY,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = supplierForFakePermission(projectId)
+        )
+        val instanceMap = mutableMapOf<AuthPermission, List<Long>>()
+
+        permissionResourcesMap.forEach { (key, value) ->
+            instanceMap[key] = if (isProjectOwner(projectId, userId)) {
+                getAllInstance(arrayListOf("*"), projectId, userId)
             } else {
-                certResultMap[key] = value
+                getAllInstance(value, projectId, userId)
             }
         }
-        return certResultMap
+        return instanceMap
     }
 
-    private fun getAllCertByProject(projectId: String): List<String> {
-        val idList = mutableListOf<String>()
-        val count = certDao.countByProject(dslContext, projectId, null)
-        val records = certDao.listByProject(dslContext, projectId, 0, count.toInt())
-        records.map {
-            idList.add(it.certId)
+    private fun getAllInstance(resourceCodeList: List<String>, projectId: String, userId: String): List<Long> {
+        if (resourceCodeList.contains("*")) {
+            val instanceIds = mutableListOf<Long>()
+            val repositoryInfos = repositoryDao.listByProject(dslContext, projectId, null)
+            repositoryInfos.map {
+                instanceIds.add(it.repositoryId)
+            }
+            return instanceIds
         }
-        return idList
+        return resourceCodeList.map { HashUtil.decodeOtherIdToLong(it) }
     }
 
     private fun isProjectOwner(projectId: String, userId: String): Boolean {
@@ -162,7 +147,7 @@ class V3CertPermissionService @Autowired constructor(
         if (cacheOwner.isNullOrEmpty()) {
             val projectVo = client.get(ServiceProjectResource::class).get(projectId).data ?: return false
             val projectCreator = projectVo.creator
-            logger.info("cert permission get ProjectOwner $projectId | $projectCreator | $userId")
+            logger.info("repository permission get ProjectOwner $projectId | $projectCreator| $userId")
             return if (!projectCreator.isNullOrEmpty()) {
                 redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
                 userId == projectCreator
@@ -175,6 +160,6 @@ class V3CertPermissionService @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(V3CertPermissionService::class.java)
+        val logger = LoggerFactory.getLogger(V3RepositoryPermissionService::class.java)
     }
 }

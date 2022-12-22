@@ -23,26 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.repository.service.permission
 
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 
-class RbacCertPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
+class RbacRepositoryPermissionService(
+    private val authResourceApi: AuthResourceApi,
+    private val authPermissionApi: AuthPermissionApi,
+    private val codeAuthServiceCode: CodeAuthServiceCode
+) : AbstractRepositoryPermissionService(
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    codeAuthServiceCode = codeAuthServiceCode
 ) {
-
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
+    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
         return { mutableListOf() }
     }
 }

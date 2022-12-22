@@ -26,23 +26,23 @@
  *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.auth.pojo.vo
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class RbacCertPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
-    authResourceApi = authResourceApi,
-    authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
-) {
-
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
-    }
-}
+@ApiModel("组成员信息")
+data class IamGroupMemberInfoVo(
+    @ApiModelProperty("成员名")
+    val userId: String,
+    @ApiModelProperty("用户组ID")
+    val groupId: Int,
+    @ApiModelProperty("用户组名")
+    val groupName: String,
+    @ApiModelProperty("加入时间")
+    val createdTime: String,
+    @ApiModelProperty("是否加入组")
+    val status: String,
+    @ApiModelProperty("过期时间")
+    val expiredTime: String
+)

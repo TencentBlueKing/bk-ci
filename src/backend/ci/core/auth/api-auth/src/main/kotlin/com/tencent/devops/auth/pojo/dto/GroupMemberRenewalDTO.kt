@@ -23,26 +23,15 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.auth.pojo.dto
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class RbacCertPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
-    authResourceApi = authResourceApi,
-    authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
-) {
-
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
-    }
-}
+@ApiModel("用户组成员续期")
+data class GroupMemberRenewalDTO(
+    @ApiModelProperty("过期时间戳(单位秒)，即用户或部门在 expired_at 后将不具有该用户组的相关权限")
+    val expiredAt: Long
+)

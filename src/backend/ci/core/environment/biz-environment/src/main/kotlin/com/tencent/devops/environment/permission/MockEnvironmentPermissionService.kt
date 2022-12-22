@@ -23,26 +23,58 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.ticket.service.permission
+package com.tencent.devops.environment.permission
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
+import org.jooq.DSLContext
 
-class RbacCertPermissionService constructor(
+/**
+ * 权限校验接口
+ */
+class MockEnvironmentPermissionService constructor(
+    private val dslContext: DSLContext,
+    private val envDao: EnvDao,
+    private val nodeDao: NodeDao,
     authResourceApi: AuthResourceApi,
     authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCertPermissionService(
+    environmentAuthServiceCode: EnvironmentAuthServiceCode
+) : AbstractEnvironmentPermissionService(
     authResourceApi = authResourceApi,
     authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
+    environmentAuthServiceCode = environmentAuthServiceCode
 ) {
 
-    override fun supplierForPermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            envDao.list(
+                dslContext = dslContext,
+                projectId = projectId
+            ).forEach {
+                fakeList.add(HashUtil.encodeLongId(it.envId))
+            }
+            fakeList
+        }
+    }
+
+    override fun supplierForNodeFakePermission(projectId: String): () -> MutableList<String> {
+        return {
+            val fakeList = mutableListOf<String>()
+            nodeDao.listNodes(
+                dslContext = dslContext,
+                projectId = projectId
+            ).forEach {
+                fakeList.add(HashUtil.encodeLongId(it.nodeId))
+            }
+            fakeList
+        }
     }
 }

@@ -31,7 +31,6 @@ package com.tencent.devops.ticket.service.permission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.TicketAuthServiceCode
-import com.tencent.devops.ticket.service.AbstractCertPermissionService
 
 class BluekingCertPermissionService constructor(
     authResourceApi: AuthResourceApi,

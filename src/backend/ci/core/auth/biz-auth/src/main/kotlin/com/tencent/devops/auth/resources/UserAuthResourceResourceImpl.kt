@@ -30,7 +30,8 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceResource
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Pagination
@@ -92,7 +93,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Result<List<GroupMemberInfoVo>> {
+    ): Result<List<IamGroupMemberInfoVo>> {
         return Result(
             permissionResourceService.listUserBelongGroup(
                 userId = userId,
@@ -155,14 +156,16 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         resourceType: String,
-        groupId: Int
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
         return Result(
             permissionResourceService.renewal(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
-                groupId = groupId
+                groupId = groupId,
+                memberRenewalDTO = memberRenewalDTO
             )
         )
     }

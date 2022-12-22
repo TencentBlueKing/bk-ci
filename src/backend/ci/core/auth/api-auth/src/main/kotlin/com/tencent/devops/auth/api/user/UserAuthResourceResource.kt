@@ -29,7 +29,8 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.GroupMemberInfoVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Pagination
@@ -55,7 +56,7 @@ import javax.ws.rs.core.MediaType
 interface UserAuthResourceResource {
 
     @GET
-    @Path("{resourceCode}/hasManagerPermission")
+    @Path("resource/{resourceCode}/hasManagerPermission")
     @ApiOperation("是否有资源管理操作的权限")
     fun hasManagerPermission(
         @ApiParam(name = "用户名", required = true)
@@ -73,7 +74,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("{resourceCode}/isEnablePermission")
+    @Path("resource/{resourceCode}/isEnablePermission")
     @ApiOperation("是否启用权限管理")
     fun isEnablePermission(
         @ApiParam("项目ID", required = true)
@@ -88,7 +89,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("{resourceCode}/listGroup")
+    @Path("resource/{resourceCode}/listGroup")
     @ApiOperation("获取用户组列表")
     fun listGroup(
         @ApiParam(name = "用户名", required = true)
@@ -106,7 +107,7 @@ interface UserAuthResourceResource {
     ): Result<List<IamGroupInfoVo>>
 
     @GET
-    @Path("{resourceCode}/groupMember")
+    @Path("resource/{resourceCode}/groupMember")
     @ApiOperation("获取用户所属组")
     fun listUserBelongGroup(
         @ApiParam(name = "用户名", required = true)
@@ -121,10 +122,10 @@ interface UserAuthResourceResource {
         @ApiParam("资源ID")
         @PathParam("resourceCode")
         resourceCode: String
-    ): Result<List<GroupMemberInfoVo>>
+    ): Result<List<IamGroupMemberInfoVo>>
 
     @PUT
-    @Path("{resourceCode}/enable")
+    @Path("resource/{resourceCode}/enable")
     @ApiOperation("开启权限管理")
     fun enable(
         @ApiParam(name = "用户名", required = true)
@@ -142,7 +143,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @PUT
-    @Path("{resourceCode}/disable")
+    @Path("resource/{resourceCode}/disable")
     @ApiOperation("关闭权限管理")
     fun disable(
         @ApiParam(name = "用户名", required = true)
@@ -160,7 +161,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("groupPolicies")
+    @Path("group/{groupId}/groupPolicies")
     @ApiOperation("获取组策略详情")
     fun getGroupPolicies(
         @ApiParam(name = "用户名", required = true)
@@ -173,12 +174,12 @@ interface UserAuthResourceResource {
         @PathParam("resourceType")
         resourceType: String,
         @ApiParam("用户组Id")
-        @QueryParam("groupId")
+        @PathParam("groupId")
         groupId: Int
     ): Result<List<String>>
 
     @PUT
-    @Path("renewal")
+    @Path("group/{groupId}/member/renewal")
     @ApiOperation("用户续期")
     fun renewal(
         @ApiParam(name = "用户名", required = true)
@@ -191,12 +192,13 @@ interface UserAuthResourceResource {
         @PathParam("resourceType")
         resourceType: String,
         @ApiParam("用户组Id")
-        @QueryParam("groupId")
-        groupId: Int
+        @PathParam("groupId")
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean>
 
     @DELETE
-    @Path("delete")
+    @Path("group/{groupId}/member/delete")
     @ApiOperation("用户退出")
     fun delete(
         @ApiParam(name = "用户名", required = true)
@@ -209,7 +211,7 @@ interface UserAuthResourceResource {
         @PathParam("resourceType")
         resourceType: String,
         @ApiParam("用户组Id")
-        @QueryParam("groupId")
+        @PathParam("groupId")
         groupId: Int
     ): Result<Boolean>
 
