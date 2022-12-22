@@ -161,7 +161,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("groups/{groupId}/groupPolicies")
+    @Path("group/{groupId}/groupPolicies")
     @ApiOperation("获取组策略详情")
     fun getGroupPolicies(
         @ApiParam(name = "用户名", required = true)
@@ -179,7 +179,7 @@ interface UserAuthResourceResource {
     ): Result<List<String>>
 
     @PUT
-    @Path("groups/{groupId}/member/renewal")
+    @Path("group/{groupId}/member/renewal")
     @ApiOperation("用户续期")
     fun renewal(
         @ApiParam(name = "用户名", required = true)
@@ -198,7 +198,7 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @DELETE
-    @Path("groups/{groupId}/member/delete")
+    @Path("group/{groupId}/member/delete")
     @ApiOperation("用户退出")
     fun delete(
         @ApiParam(name = "用户名", required = true)
