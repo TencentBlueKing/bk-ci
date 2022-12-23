@@ -28,7 +28,6 @@
 package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -103,6 +102,7 @@ class BuildRecordStageDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
             val max = dslContext.select(
                 STAGE_ID.`as`(KEY_STAGE_ID),
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)

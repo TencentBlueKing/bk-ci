@@ -214,7 +214,7 @@ class ContainerBuildRecordService(
                     )
                     buildContainerDao.getByContainerId(context, projectId, buildId, null, containerId)
                         ?.let { buildContainer ->
-                            val recordTasks = recordTaskDao.getLastestRecords(
+                            val recordTasks = recordTaskDao.getRecords(
                                 context, projectId, pipelineId, buildId, executeCount, containerId
                             )
                             val buildTaskMap = buildTaskDao.getByContainerId(context, projectId, buildId, containerId)
@@ -289,7 +289,7 @@ class ContainerBuildRecordService(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
             )
-            recordTaskDao.getLastestRecords(
+            recordTaskDao.getRecords(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount
             ).forEach { task ->

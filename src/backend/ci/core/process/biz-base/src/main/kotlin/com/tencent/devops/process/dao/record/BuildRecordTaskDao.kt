@@ -28,7 +28,6 @@
 package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
@@ -43,7 +42,6 @@ import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import kotlin.math.max
 
 @Repository
 class BuildRecordTaskDao {
@@ -98,6 +96,26 @@ class BuildRecordTaskDao {
         }
     }
 
+    fun getRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        containerId: String? = null
+    ): List<BuildRecordTask> {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(EXECUTE_COUNT.eq(executeCount))
+            containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
+            return dslContext.selectFrom(this)
+                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
     fun getLatestRecords(
         dslContext: DSLContext,
         projectId: String,
@@ -109,6 +127,7 @@ class BuildRecordTaskDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
+                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
             // 获取每个最大执行次数
             val max = dslContext.select(
                 TASK_ID.`as`(KEY_TASK_ID),

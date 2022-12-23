@@ -355,7 +355,7 @@ class StageBuildRecordService(
             var timeCost: BuildRecordTimeCost? = null
             if (buildStatus?.isFinish() == true) {
                 buildStageDao.get(dslContext, projectId, buildId, stageId)?.let { buildStage ->
-                    val recordContainers = recordContainerDao.getLatestRecords(
+                    val recordContainers = recordContainerDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, stageId
                     )
                     timeCost = BuildTimeCostUtils.generateStageTimeCost(

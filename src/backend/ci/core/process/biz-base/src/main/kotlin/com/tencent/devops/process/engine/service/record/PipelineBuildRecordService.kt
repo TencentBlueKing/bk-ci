@@ -160,7 +160,7 @@ class PipelineBuildRecordService @Autowired constructor(
         // 如果请求的executeCount异常则直接返回错误，防止数据错乱
         if (
             executeCount?.let {
-                request -> request < 1  || buildInfo.executeCount?.let { request > it } == true
+                request -> request < 1 || buildInfo.executeCount?.let { request > it } == true
             } == true
         ) {
             return null
