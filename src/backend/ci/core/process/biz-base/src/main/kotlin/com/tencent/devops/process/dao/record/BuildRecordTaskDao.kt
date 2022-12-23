@@ -36,10 +36,14 @@ import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskR
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
+import com.tencent.devops.process.pojo.KEY_TASK_ID
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import kotlin.math.max
 
 @Repository
 class BuildRecordTaskDao {
@@ -94,23 +98,51 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getRecords(
+    fun getLatestRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
-        containerId: String? = null
+        executeCount: Int
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineId))
-            conditions.add(BUILD_ID.eq(buildId))
-            conditions.add(EXECUTE_COUNT.eq(executeCount))
-            containerId?.let { conditions.add(CONTAINER_ID.eq(containerId)) }
-            return dslContext.selectFrom(this)
-                .where(conditions).orderBy(TASK_SEQ.asc()).fetch(mapper)
+            val conditions = BUILD_ID.eq(buildId)
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            // 获取每个最大执行次数
+            val max = dslContext.select(
+                TASK_ID.`as`(KEY_TASK_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(TASK_ID)
+            val result = dslContext.select(
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
+                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE, TIMESTAMPS
+            ).from(this).join(max).on(
+                TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(TASK_SEQ.asc())
+                .fetch()
+            return result.map { record ->
+                BuildRecordTask(
+                    buildId = record[BUILD_ID],
+                    projectId = record[PROJECT_ID],
+                    pipelineId = record[PIPELINE_ID],
+                    resourceVersion = record[RESOURCE_VERSION],
+                    stageId = record[STAGE_ID],
+                    containerId = record[CONTAINER_ID],
+                    taskId = record[TASK_ID],
+                    taskSeq = record[TASK_SEQ],
+                    executeCount = record[EXECUTE_COUNT],
+                    taskVar = JsonUtil.to(record[TASK_VAR], object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    classType = record[CLASS_TYPE],
+                    atomCode = record[ATOM_CODE],
+                    status = record[STATUS],
+                    originClassType = record[ORIGIN_CLASS_TYPE],
+                    timestamps = record[TIMESTAMPS]?.let {
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                    } ?: mapOf()
+                )
+            }
         }
     }
 
@@ -131,28 +163,6 @@ class BuildRecordTaskDao {
                         .and(TASK_ID.eq(taskId))
                         .and(EXECUTE_COUNT.eq(executeCount))
                 ).fetchOne(mapper)
-        }
-    }
-
-    fun getRecordTaskVar(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        taskId: String,
-        executeCount: Int
-    ): Map<String, Any>? {
-        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            return dslContext.select(TASK_VAR)
-                .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
-                        .and(PIPELINE_ID.eq(pipelineId))
-                        .and(TASK_ID.eq(taskId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetchOne(0, String::class.java)?.let {
-                    JsonUtil.getObjectMapper().readValue(it) as Map<String, Any>
-                }
         }
     }
 

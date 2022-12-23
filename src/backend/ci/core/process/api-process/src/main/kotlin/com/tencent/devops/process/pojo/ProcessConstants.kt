@@ -25,21 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.pojo.time
+package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("各项执行耗时")
-data class BuildRecordTimeCost(
-    @ApiModelProperty("系统耗时（由总耗时减去其他得出）", required = true)
-    var systemCost: Long = 0,
-    @ApiModelProperty("执行耗时", required = true)
-    var executeCost: Long = 0,
-    @ApiModelProperty("等待耗时", required = true)
-    var waitCost: Long = 0,
-    @ApiModelProperty("排队耗时（流水线并发、Stage下Job并发和Job互斥）", required = true)
-    var queueCost: Long = 0,
-    @ApiModelProperty("总耗时（结束时间-开始时间）", required = true)
-    var totalCost: Long = 0
-)
+const val KEY_STAGE_ID = "stageId"
+const val KEY_CONTAINER_ID = "containerId"
+const val KEY_TASK_ID = "taskId"
+const val KEY_EXECUTE_COUNT = "executeCount"

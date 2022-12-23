@@ -58,7 +58,6 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -116,9 +115,9 @@ class PipelineBuildRecordService @Autowired constructor(
     ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
         val context = transactionContext ?: dslContext
         return Triple(
-            recordStageDao.getRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordContainerDao.getRecords(context, projectId, pipelineId, buildId, executeCount, null),
-            recordTaskDao.getRecords(context, projectId, pipelineId, buildId, executeCount)
+            recordStageDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
+            recordContainerDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
+            recordTaskDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount)
         )
     }
 
@@ -429,7 +428,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
-            val recordStages = recordStageDao.getRecords(
+            val recordStages = recordStageDao.getLatestRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
             val modelVar = mutableMapOf<String, Any>()

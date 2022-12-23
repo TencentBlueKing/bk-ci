@@ -28,17 +28,18 @@
 package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordContainer
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordContainerRecord
+import com.tencent.devops.process.pojo.KEY_CONTAINER_ID
+import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -114,45 +115,51 @@ class BuildRecordContainerDao {
         }
     }
 
-    fun getRecords(
+    fun getLatestRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        stageId: String?
+        stageId: String? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(PROJECT_ID.eq(projectId))
-            conditions.add(PIPELINE_ID.eq(pipelineId))
-            conditions.add(BUILD_ID.eq(buildId))
-            conditions.add(EXECUTE_COUNT.eq(executeCount))
-            stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
-            return dslContext.selectFrom(this)
-                .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
-        }
-    }
-
-    fun getRecordContainerVar(
-        dslContext: DSLContext,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        containerId: String,
-        executeCount: Int
-    ): Map<String, Any>? {
-        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
-            return dslContext.select(CONTAINER_VAR)
-                .where(
-                    BUILD_ID.eq(buildId)
-                        .and(PROJECT_ID.eq(projectId))
-                        .and(PIPELINE_ID.eq(pipelineId))
-                        .and(CONTAINER_VAR.eq(containerId))
-                        .and(EXECUTE_COUNT.eq(executeCount))
-                ).fetchOne(0, String::class.java)?.let {
-                    JsonUtil.getObjectMapper().readValue(it) as Map<String, Any>
-                }
+            val conditions = BUILD_ID.eq(buildId)
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+            stageId?.let { conditions.and(STAGE_ID.eq(stageId)) }
+            // 获取每个最大执行次数
+            val max = dslContext.select(
+                CONTAINER_ID.`as`(KEY_CONTAINER_ID),
+                DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
+            ).from(this).where(conditions).groupBy(CONTAINER_ID)
+            val result = dslContext.select(
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
+                EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG, MATRIX_GROUP_ID, TIMESTAMPS
+            ).from(this).join(max).on(
+                CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
+                    .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
+            ).where(conditions).orderBy(CONTAINER_ID.asc())
+                .fetch()
+            return result.map { record ->
+                BuildRecordContainer(
+                    buildId = record[BUILD_ID],
+                    projectId = record[PROJECT_ID],
+                    pipelineId = record[PIPELINE_ID],
+                    resourceVersion = record[RESOURCE_VERSION],
+                    stageId = record[STAGE_ID],
+                    containerId = record[CONTAINER_ID],
+                    executeCount = record[EXECUTE_COUNT],
+                    status = record[STATUS],
+                    containerVar = JsonUtil.to(record[CONTAINER_VAR], object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    containerType = record[CONTAINER_TYPE],
+                    matrixGroupFlag = record[MATRIX_GROUP_FLAG],
+                    matrixGroupId = record[MATRIX_GROUP_ID],
+                    timestamps = record[TIMESTAMPS]?.let {
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                    } ?: mapOf()
+                )
+            }
         }
     }
 

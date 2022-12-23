@@ -40,7 +40,6 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -339,7 +338,7 @@ class StageBuildRecordService(
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val recordStages = recordStageDao.getRecords(
+            val recordStages = recordStageDao.getLatestRecords(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -356,7 +355,7 @@ class StageBuildRecordService(
             var timeCost: BuildRecordTimeCost? = null
             if (buildStatus?.isFinish() == true) {
                 buildStageDao.get(dslContext, projectId, buildId, stageId)?.let { buildStage ->
-                    val recordContainers = recordContainerDao.getRecords(
+                    val recordContainers = recordContainerDao.getLatestRecords(
                         context, projectId, pipelineId, buildId, executeCount, stageId
                     )
                     timeCost = BuildTimeCostUtils.generateStageTimeCost(

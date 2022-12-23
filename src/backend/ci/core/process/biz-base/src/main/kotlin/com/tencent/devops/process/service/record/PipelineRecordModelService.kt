@@ -79,7 +79,7 @@ class PipelineRecordModelService @Autowired constructor(
     ): Map<String, Any> {
         val recordModelMap = buildRecordModel.modelVar
         // 获取stage级别变量数据
-        val buildRecordStages = buildRecordStageDao.getRecords(
+        val buildRecordStages = buildRecordStageDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -87,21 +87,19 @@ class PipelineRecordModelService @Autowired constructor(
             executeCount = executeCount
         )
         // 获取job级别变量数据
-        val buildRecordContainers = buildRecordContainerDao.getRecords(
+        val buildRecordContainers = buildRecordContainerDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount,
-            stageId = null
+            executeCount = executeCount
         )
         // 获取所有task级别变量数据
-        val buildRecordTasks = buildRecordTaskDao.getRecords(
+        val buildRecordTasks = buildRecordTaskDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = null,
             executeCount = executeCount
         )
         val stages = mutableListOf<Map<String, Any>>()
