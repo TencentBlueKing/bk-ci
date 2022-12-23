@@ -28,7 +28,6 @@ import java.util.Arrays
 
 @Configuration
 @AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
-@Conditional(CommonAuthCondition::class)
 class CommonConfiguration {
     @Bean
     @ConditionalOnMissingBean
