@@ -24,7 +24,7 @@
 
 import Vue from 'vue'
 import Router from 'vue-router'
-import pipelines from './pipelines'
+import pipelines from './router'
 
 Vue.use(Router)
 

@@ -61,7 +61,7 @@ func Chmod(file string, perm os.FileMode) error {
 	if err == nil {
 		logs.Info("chmod %o %s ok!", perm, file)
 	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err)
+		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
 	}
 	return err
 }

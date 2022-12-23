@@ -29,13 +29,11 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
-import com.tencent.devops.model.metrics.tables.TErrorCodeInfo
 import com.tencent.devops.model.metrics.tables.TPipelineFailSummaryData
 import com.tencent.devops.model.metrics.tables.TPipelineOverviewData
 import com.tencent.devops.model.metrics.tables.TPipelineStageOverviewData
 import com.tencent.devops.model.metrics.tables.records.TAtomFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
-import com.tencent.devops.model.metrics.tables.records.TErrorCodeInfoRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineFailSummaryDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineOverviewDataRecord
 import com.tencent.devops.model.metrics.tables.records.TPipelineStageOverviewDataRecord
@@ -140,17 +138,6 @@ class MetricsDataQueryDao {
             return dslContext.selectFrom(this)
                 .where(conditions)
                 .fetchOne()
-        }
-    }
-
-    fun getErrorCodes(
-        dslContext: DSLContext,
-        errorCodes: List<Int>
-    ): Result<TErrorCodeInfoRecord>? {
-        with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
-            return dslContext.selectFrom(this)
-                .where(ERROR_CODE.`in`(errorCodes))
-                .fetch()
         }
     }
 }

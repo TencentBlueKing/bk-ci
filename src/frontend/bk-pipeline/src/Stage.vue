@@ -335,7 +335,7 @@
             }
             document.addEventListener('click', this.hideAddStage)
         },
-        beforeDestroyed () {
+        beforeDestroy () {
             window.removeEventListener('click', this.hideAddStage)
         },
         updated () {

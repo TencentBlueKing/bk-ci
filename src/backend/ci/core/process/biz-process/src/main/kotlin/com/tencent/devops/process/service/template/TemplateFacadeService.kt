@@ -182,6 +182,9 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
+    @Value("\${template.maxErrorReasonLength:200}")
+    private val maxErrorReasonLength: Int = 200
+
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
         checkPermission(projectId, userId)
@@ -1418,7 +1421,7 @@ class TemplateFacadeService @Autowired constructor(
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateUserTemplateComponentVisibleDept(
                     userId = userId,
-                    templateCode = templateId,
+                    templateCode = srcTemplateId,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
@@ -1521,8 +1524,8 @@ class TemplateFacadeService @Autowired constructor(
                 } catch (t: Throwable) {
                     logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
                     val message =
-                        if (!t.message.isNullOrBlank() && t.message!!.length > 36)
-                            t.message!!.substring(0, 36) + "......" else t.message
+                        if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
+                            t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                 }
             }

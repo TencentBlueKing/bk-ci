@@ -173,6 +173,7 @@
           display: block;
           margin-right: 10px;
           transition: all 0.3s ease;
+          flex-shrink: 0;
           &.open {
             transform: rotate(-180deg);
           }
