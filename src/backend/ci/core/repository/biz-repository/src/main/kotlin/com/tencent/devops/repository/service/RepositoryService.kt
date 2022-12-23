@@ -446,7 +446,7 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-            .contains("bkdevops-extension-service", true)
+                        .contains("bkdevops-extension-service", true)
         ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
@@ -478,7 +478,6 @@ class RepositoryService @Autowired constructor(
                 params = arrayOf(repository.getStartPrefix())
             )
         }
-
         if (hasAliasName(projectId, null, repository.aliasName)) {
             throw ErrorCodeException(
                 errorCode = RepositoryMessageCode.REPO_NAME_EXIST,
@@ -1005,26 +1004,26 @@ class RepositoryService @Autowired constructor(
         val gitRepoIds =
             repositoryRecordList.filter {
                 it.type == ScmType.CODE_GIT.name ||
-                    it.type == ScmType.CODE_TGIT.name
+                        it.type == ScmType.CODE_TGIT.name
             }.map { it.repositoryId }.toSet()
         val gitAuthMap =
             repositoryCodeGitDao.list(dslContext, gitRepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val gitlabRepoIds =
             repositoryRecordList.filter { it.type == ScmType.CODE_GITLAB.name }
-                .map { it.repositoryId }.toSet()
+                    .map { it.repositoryId }.toSet()
         val gitlabAuthMap =
             repositoryCodeGitLabDao.list(dslContext, gitlabRepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val svnRepoIds =
             repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }
-                .map { it.repositoryId }.toSet()
+                    .map { it.repositoryId }.toSet()
         val svnRepoRecords =
             repositoryCodeSvnDao.list(dslContext, svnRepoIds)
-                .map { it.repositoryId to it }.toMap()
+                    .map { it.repositoryId to it }.toMap()
 
         val p4RepoIds = repositoryRecordList.filter { it.type == ScmType.CODE_P4.name }
-            .map { it.repositoryId }.toSet()
+                .map { it.repositoryId }.toSet()
         val p4RepoAuthMap = repositoryCodeP4Dao.list(dslContext, p4RepoIds)?.map { it.repositoryId to it }?.toMap()
 
         val repositoryList = repositoryRecordList.map {
@@ -1705,6 +1704,7 @@ class RepositoryService @Autowired constructor(
             return false
         }
         val isGitOauth = repository is CodeGitRepository && repository.authType == RepoAuthType.OAUTH
+
         if (isGitOauth) {
             return false
         }
@@ -1765,7 +1765,7 @@ class RepositoryService @Autowired constructor(
             is CodeTGitRepository ->
                 Pair(repo.authType, ScmType.CODE_TGIT)
             is CodeGitlabRepository ->
-                Pair(RepoAuthType.HTTP, ScmType.CODE_GITLAB)
+                Pair(repo.authType, ScmType.CODE_GITLAB)
             else ->
                 return null
         }
