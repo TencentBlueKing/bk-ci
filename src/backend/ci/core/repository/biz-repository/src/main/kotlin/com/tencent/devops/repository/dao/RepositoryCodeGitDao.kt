@@ -46,7 +46,8 @@ class RepositoryCodeGitDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        authType: RepoAuthType?
+        authType: RepoAuthType?,
+        gitProjectId: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -58,7 +59,8 @@ class RepositoryCodeGitDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                AUTH_TYPE
+                AUTH_TYPE,
+                GIT_PROJECT_ID
             )
                 .values(
                     repositoryId,
@@ -67,7 +69,8 @@ class RepositoryCodeGitDao {
                     credentialId,
                     now,
                     now,
-                    authType?.name
+                    authType?.name,
+                    gitProjectId
                 ).execute()
         }
     }
