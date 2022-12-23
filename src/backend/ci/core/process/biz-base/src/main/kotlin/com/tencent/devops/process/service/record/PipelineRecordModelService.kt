@@ -39,7 +39,6 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -56,7 +55,9 @@ import org.springframework.stereotype.Service
 
 @Service
 class PipelineRecordModelService @Autowired constructor(
-    private val buildRecordService: PipelineBuildRecordService,
+    private val buildRecordStageDao: BuildRecordStageDao,
+    private val buildRecordContainerDao: BuildRecordContainerDao,
+    private val buildRecordTaskDao: BuildRecordTaskDao,
     private val pipelineResDao: PipelineResDao,
     private val dslContext: DSLContext
 ) {
@@ -78,8 +79,24 @@ class PipelineRecordModelService @Autowired constructor(
     ): Map<String, Any> {
         val recordModelMap = buildRecordModel.modelVar
         // 获取stage级别变量数据
-        val (buildRecordStages, buildRecordContainers, buildRecordTasks) = buildRecordService.batchGet(
-            transactionContext = dslContext,
+        val buildRecordStages = buildRecordStageDao.getLatestRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+        // 获取job级别变量数据
+        val buildRecordContainers = buildRecordContainerDao.getLatestRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount
+        )
+        // 获取所有task级别变量数据
+        val buildRecordTasks = buildRecordTaskDao.getLatestRecords(
+            dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
