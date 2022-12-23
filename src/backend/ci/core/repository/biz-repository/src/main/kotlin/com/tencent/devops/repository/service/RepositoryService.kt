@@ -1758,7 +1758,7 @@ class RepositoryService @Autowired constructor(
     }
 
     private fun getRepositoryType(repo: Repository): Pair<RepoAuthType?, ScmType>? {
-        //获取仓库对应的类型信息
+        // 获取仓库对应的类型信息
         return when (repo) {
             is CodeGitRepository ->
                 Pair(repo.authType, ScmType.CODE_GIT)
