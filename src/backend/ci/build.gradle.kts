@@ -1,5 +1,5 @@
 plugins {
-    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
+    id("com.tencent.devops.boot") version "0.0.6"
     detektCheck
 }
 
