@@ -50,6 +50,7 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
@@ -76,29 +77,38 @@ class RbacAuthAutoConfiguration {
     fun authPermissionApi() = RbacAuthPermissionApi()
 
     @Bean
+    @Primary
     fun bcsAuthServiceCode() = RbacBcsAuthServiceCode()
 
     @Bean
+    @Primary
     fun pipelineAuthServiceCode() = RbacPipelineAuthServiceCode()
 
     @Bean
+    @Primary
     fun codeAuthServiceCode() = RbacCodeAuthServiceCode()
 
     @Bean
+    @Primary
     fun projectAuthServiceCode() = RbacProjectAuthServiceCode()
 
     @Bean
+    @Primary
     fun environmentAuthServiceCode() = RbacEnvironmentAuthServiceCode()
 
     @Bean
+    @Primary
     fun repoAuthServiceCode() = RbacRepoAuthServiceCode()
 
     @Bean
+    @Primary
     fun ticketAuthServiceCode() = RbacTicketAuthServiceCode()
 
     @Bean
+    @Primary
     fun qualityAuthServiceCode() = RbacQualityAuthServiceCode()
 
     @Bean
+    @Primary
     fun artifactoryAuthServiceCode() = RbacArtifactoryAuthServiceCode()
 }

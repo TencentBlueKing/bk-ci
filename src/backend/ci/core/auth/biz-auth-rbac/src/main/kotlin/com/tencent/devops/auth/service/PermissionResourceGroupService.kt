@@ -29,15 +29,14 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthDefaultGroupDao
-import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.auth.service.iam.PermissionScopesService
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
@@ -50,16 +49,51 @@ class PermissionResourceGroupService(
     private val dslContext: DSLContext,
     private val authDefaultGroupDao: AuthDefaultGroupDao,
     private val iamV2ManagerService: V2ManagerService,
-    private val permissionScopesService: PermissionScopesService,
-    private val groupService: AuthGroupService
+    private val permissionScopesService: PermissionScopesService
 ) {
 
+    fun createGradeDefaultGroup(
+        gradeManagerId: Int,
+        userId: String,
+        projectCode: String,
+        projectName: String
+    ) {
+        val defaultGroups = authDefaultGroupDao.get(
+            dslContext = dslContext,
+            resourceType = AuthResourceType.PROJECT.value,
+            createMode = false
+        )
+        defaultGroups.filter {
+            it.groupCode != DefaultGroupType.MANAGER.value
+        }.forEach { defaultGroup ->
+            val name = IamGroupUtils.buildIamGroup(
+                projectName = projectName,
+                groupName = defaultGroup.groupName
+            )
+            val description = IamGroupUtils.buildDefaultDescription(
+                projectName = projectName,
+                groupName = name,
+                userId = userId
+            )
+            val managerRoleGroup = ManagerRoleGroup(name, description, false)
+            val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
+            val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
+            grantGradeManagerGroupPermission(
+                projectCode = projectCode,
+                projectName = projectName,
+                groupCode = defaultGroup.groupCode,
+                iamGroupId = iamGroupId
+            )
+            addGroupMember(userId = userId, iamGroupId = iamGroupId)
+        }
+    }
+
     /**
-     * 创建默认分组
+     * 创建二级管理员默认分组
      *
      * @param createMode false-创建资源时就创建默认分组,true-启用资源时才创建
      */
-    fun createDefaultGroup(
+    fun createSubsetManagerDefaultGroup(
         subsetManagerId: Int,
         userId: String,
         projectCode: String,
@@ -89,7 +123,7 @@ class PermissionResourceGroupService(
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateSubsetRoleGroup(subsetManagerId, managerRoleGroupDTO)
-            grantGroupPermission(
+            grantSubsetManagerGroupPermission(
                 projectCode = projectCode,
                 projectName = projectName,
                 resourceType = resourceType,
@@ -102,39 +136,7 @@ class PermissionResourceGroupService(
         }
     }
 
-    /**
-     * 将管理员组添加到本地用户组列表
-     */
-    private fun createLocalManagerGroup(
-        resourceType: String,
-        subsetManagerId: Int,
-        userId: String,
-        projectCode: String
-    ) {
-        val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 1
-        val managerDefaultGroup = authDefaultGroupDao.get(
-            dslContext = dslContext,
-            resourceType = resourceType,
-            groupCode = DefaultGroupType.MANAGER.value
-        )!!
-        iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId, pageInfoDTO).results.forEach { iamGroup ->
-            groupService.createGroup(
-                userId = userId,
-                projectCode = projectCode,
-                groupInfo = GroupDTO(
-                    groupCode = managerDefaultGroup.groupCode,
-                    groupType = true,
-                    groupName = iamGroup.name,
-                    displayName = managerDefaultGroup.groupName,
-                    relationId = iamGroup.id.toString()
-                )
-            )
-        }
-    }
-
-    fun grantGroupPermission(
+    fun grantSubsetManagerGroupPermission(
         projectCode: String,
         projectName: String,
         resourceType: String,
@@ -144,7 +146,7 @@ class PermissionResourceGroupService(
         iamGroupId: Int
     ) {
         val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildSubsetManagerGroupStrategyName(
+            strategyName = IamGroupUtils.buildGroupStrategyName(
                 resourceType = resourceType,
                 groupCode = groupCode
             ),
@@ -153,6 +155,25 @@ class PermissionResourceGroupService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName
+        )
+        authorizationScopes.forEach { authorizationScope ->
+            iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+        }
+    }
+
+    fun grantGradeManagerGroupPermission(
+        projectCode: String,
+        projectName: String,
+        groupCode: String,
+        iamGroupId: Int
+    ) {
+        val authorizationScopes = permissionScopesService.buildGradeManagerAuthorizationScopes(
+            strategyName = IamGroupUtils.buildGroupStrategyName(
+                resourceType = AuthResourceType.PROJECT.value,
+                groupCode = groupCode
+            ),
+            projectCode = projectCode,
+            projectName = projectName
         )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
