@@ -2,35 +2,40 @@
   <article class="group-wrapper">
     <!-- 管理员 -->
     <template v-if="hasPermission">
-      <div class="group-manage" v-if="true">
+      <div class="group-manage" v-if="!isEnablePermission">
         <group-aside
+          v-bind="$props"
           @choose-group="handleChooseGroup"
           @create-group="handleCreateGroup"
-        ></group-aside>
+          @update-enable="handelUpdateEnable"
+        >
+        </group-aside>
         <IAMIframe
           class="group-frame"
           :path="path"
         />
       </div>
       <!-- 未开启权限管理 -->
-      <not-open-manage v-else></not-open-manage>
+      <not-open-manage
+        v-else
+        v-bind="$props"
+      >
+      </not-open-manage>
     </template>
     <!-- 普通成员 -->
     <template v-else-if="!hasPermission">
-      <group-table></group-table>
+      <group-table v-bind="$props"></group-table>
     </template>
   </article>
 </template>
 
 <script lang="ts">
-import http from '@/http/api';
-import { useGroup } from '@/store/group.ts'
+// import http from '@/http/api';
 import groupAside from './group-aside.vue';
 import groupTable from './group-table.vue';
 import notOpenManage from './notOpen-manage.vue';
-import IAMIframe from '@/components/IAM-Iframe';
+import IAMIframe from '../../devops-manage/src/components/IAM-Iframe';
 export default {
-  name: 'UserGroup',
   components: {
     groupAside,
     groupTable,
@@ -38,39 +43,71 @@ export default {
     IAMIframe,
   },
   props: {
+    // 资源类型
     resourceType: {
       type: String,
-      default: 'pipeline',
+      default: '',
     },
+    // 资源ID
     resourceCode: {
       type: String,
       default: '',
     },
-    projectId: {
+    // 项目id => englishName
+    projectCode: {
       type: String,
       default: '',
     },
+    groupList: {
+      type: Array,
+      default: () => [],
+    },
+    memberGroupList: {
+      type: Array,
+      default: () => [],
+    },
+    hasPermission: {
+      type: Boolean,
+      default: true,
+    },
+    isEnablePermission: {
+      type: Boolean,
+      default: false,
+    },
+    IAMIframePath: {
+      type: String,
+      default: '',
+    },
+    openManage: {
+      type: Function,
+      default: () => {},
+    },
+    closeManage: {
+      type: Function,
+      default: () => {},
+    }
   },
   data() {
     return {
-      hasPermission: true,
-      path: 'user-group-detail/29918',
+      path: ''
     };
   },
   computed: {
 
   },
-  created() {
-    this.initStore();
+  watch: {
+    
+  },
+  async created() {
+    this.path = this.IAMIframePath;
     window.addEventListener('message', this.handleMessage);
-    this.fetchResourceManager();
   },
   beforeUnmount() {
     window.removeEventListener('message', this.handleMessage);
   },
   methods: {
-    handleChooseGroup() {
-      this.path = 'user-group-detail/10137';
+    handleChooseGroup(payload) {
+      this.path = `user-group-detail/${payload.id}`;
     },
     handleCreateGroup() {
       this.path = 'create-user-group';
@@ -88,23 +125,10 @@ export default {
         }
       }
     },
-    initStore() {
-      const store = useGroup(); 
-      store.setResourceType(this.resourceType);
-      store.setResourceCode(this.resourceCode);
+
+    handelUpdateEnable(payload) {
+      this.isEnablePermission = payload;
     },
-    /**
-     * 是否为资源的管理员
-     */
-    fetchResourceManager() {
-      http.fetchResourceManager({
-        id: '322956612c1049d9a4b2c803cc473555',
-        resourceType: 'pipeline',
-        resourceCode: 'p-39dca34a469d4691a70f4a6fdb90eb96'
-      }).then(res => {
-        console.log(res, 12312)
-      })
-    }
   },
 };
 </script>

@@ -178,6 +178,7 @@ onMounted(() => {
     display: flex;
     flex-direction: column;
     padding: 24px;
+    width: 100%;
     height: 100%;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;

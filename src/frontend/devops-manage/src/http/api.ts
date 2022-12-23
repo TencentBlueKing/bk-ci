@@ -80,50 +80,81 @@ export default {
   },
 
   /**
+   * 用户组-用户退出
+   */
+  signOutGroup(params: any) {
+    const { projectCode, resourceType, groupId } = params;
+    return http.delete(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/member/delete`) 
+  },
+
+  /**
+   * 用户组-用户续期
+   */
+  renewalGroup(params: any) {
+    const { projectCode, resourceType, groupId } = params;
+    return http.delete(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/member//renewal`) 
+  },
+
+  /**
    * 流水线/流水线组 开启用户组权限管理
    */
   async enableGroupPermission(params: any) {
-    const { id } = params;
-    return http.put(`${IAM_PERFIX}/${id}/enable`) 
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/enable`) 
   },
   /**
    * 流水线/流水线组 关闭用户组权限管理
    */
   async disableGroupPermission(params: any) {
-    const { id } = params;
-    return http.put(`${IAM_PERFIX}/${id}/disable`) 
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/disable`) 
   },
 
   /**
    * 获取是否为资源的管理员
    */
-  async fetchResourceManager(params: any) {
-    const { id } = params;
-    delete params.id;
-    return http.get(`${IAM_PERFIX}/${id}/isResourceManager`, params)
+  async fetchHasManagerPermission(params: any) {
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/hasManagerPermission`)
   },
 
   /**
-   * 获取资源关联的二级管理员用户组信息
+   * 是否启用权限管理
    */
-  async fetchUserGroups(params: any) {
-    const { id } = params;
-    return http.get(`${IAM_PERFIX}/${id}/subsetGroups`)
+  async fetchEnablePermission(params: any) {
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/isEnablePermission`)
   },
 
   /**
-   * 获取用户归属组信息（普通用户）
+   * 获取用户组列表
    */
-  async fetchUserBelongGroup(params: any) {
-    const { id } = params;
-    return http.get(`${IAM_PERFIX}/${id}/userBelongGroup`)
+  async fetchUserGroupList(params: any) {
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/listGroup`)
   },
 
   /**
-   * 获取组权限详情（策略详情）（普通用户）
+   * 获取用户所属组
+   */
+  async fetchGroupMember(params: any) {
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/groupMember`)
+  },
+
+  /**
+   * 获取组策略详情
    */
   async fetchGroupPolicies(params: any) {
-    const { id } = params;
-    return http.get(`${IAM_PERFIX}/${id}/groupPolicies`)
+    const { projectCode, resourceType, groupId } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/groupPolicies`)
+  },
+
+  /**
+   * 获取资源列表
+   */
+  async fetchResourceList(params: any) {
+    const { projectCode, resourceType } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/listResources`)
   },
 };
