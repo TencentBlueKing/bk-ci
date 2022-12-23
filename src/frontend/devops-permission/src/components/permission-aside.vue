@@ -1,30 +1,38 @@
 <script setup lang="ts">
 import { useI18n } from 'vue-i18n';
-import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+
 const { t } = useI18n();
+const router = useRouter();
+const route = useRoute();
 
 const menuList = [
   {
     name: t('我的权限'),
+    code: 'permission',
     icon: '',
   },
   {
     name: t('我的申请'),
+    code: 'apply',
     icon: '',
   },
   {
     name: t('我的审批'),
+    code: 'approval',
     icon: '',
   },
   {
     name: t('申请权限'),
+    code: 'apply-permission',
     icon: '',
   },
 ];
-const activeMenu = ref(t('我的权限'));
 
 const handleChangeMenu = (menu: any) => {
-  activeMenu.value = menu.name;
+  router.push({
+    name: menu.code,
+  });
 };
 </script>
 
@@ -37,7 +45,7 @@ const handleChangeMenu = (menu: any) => {
         @click="handleChangeMenu(menu)"
         :class="{
           'menu-item': true,
-          'active': activeMenu === menu.name
+          'active': route.name === menu.code
         }"
       >
         <bk-badge

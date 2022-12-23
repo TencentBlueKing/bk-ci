@@ -30,7 +30,8 @@ const goToUrl = (url) => {
           }"
           @click.native.stop="goToUrl(nav.url)"
         >
-          <span :class="{
+          <span
+            :class="{
               'nav-item': index === 0 && navs.length > 1,
             }"
           >{{ nav.name }}</span>
@@ -51,6 +52,7 @@ const goToUrl = (url) => {
 .header-wrapper {
   display: flex;
   flex-direction: column;
+  z-index: 1000;
 }
 .permission-header {
   height: 60px;

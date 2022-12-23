@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import PermissionHeader from '@/components/permission-header.vue';
-import PermissionAside from './permission-aside.vue';
+import PermissionAside from '@/components/permission-aside.vue';
 import { useI18n } from 'vue-i18n';
 import {
   ref,
@@ -17,6 +17,7 @@ const navs = ref([
   <section class="permission-home">
     <!-- 菜单栏 -->
     <permission-aside></permission-aside>
+    <router-view class="permission-main"></router-view>
   </section>
 </template>
 
@@ -24,5 +25,9 @@ const navs = ref([
   .permission-home {
     display: flex;
     flex: 1;
+  }
+  .permission-main {
+    flex: 1;
+    overflow: hidden;
   }
 </style>

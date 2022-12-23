@@ -13,7 +13,7 @@ module.exports = {
     main: {
       entry: './src/main',
       html: {
-        filename: 'frontend#manage#index.html',
+        filename: process.env.BK_HTML_NAME,
         template: './index.html',
       },
     },
