@@ -1690,6 +1690,7 @@ class RepositoryService @Autowired constructor(
             logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
             throw OperationException(checkResult.message)
         }
+
         // 返回token信息
         return token
     }
