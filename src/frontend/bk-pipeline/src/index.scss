@@ -111,6 +111,10 @@ span.skip-name {
     }
 }
 
+.un-exec-this-time {
+    opacity: .5;
+}
+
 .readonly {
     .stage-connector {
         background: $lineColor;

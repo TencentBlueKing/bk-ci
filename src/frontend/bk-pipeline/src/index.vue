@@ -7,9 +7,8 @@
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
-            :hide-skip-task="hideSkipTask"
             :is-exec-detail="isExecDetail"
-            :can-skip-element="canSkipElement"
+            :can-skip-element="!stage.isTrigger || canSkipElement"
             :has-finally-stage="hasFinallyStage"
             :stage-index="index"
             :user-name="userName"
@@ -31,8 +30,10 @@
     import Stage from './Stage'
     import {
         eventBus,
-        hashID
+        hashID,
+        isTriggerContainer
     } from './util'
+    
     import {
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
@@ -77,9 +78,9 @@
                 type: Boolean,
                 default: false
             },
-            hideSkipTask: {
-                type: Boolean,
-                default: false
+            currentExecCount: {
+                type: Number,
+                default: 1
             },
             isExecDetail: {
                 type: Boolean,
@@ -110,6 +111,19 @@
                 default: () => []
             }
         },
+        provide () {
+            return {
+                currentExecCount: this.currentExecCount,
+                isPreview: this.isPreview,
+                userName: this.userName,
+                matchRules: this.matchRules,
+                editable: this.editable,
+                isExecDetail: this.isExecDetail,
+                isLatestBuild: this.isLatestBuild,
+                canSkipElement: this.canSkipElement,
+                cancelUserId: this.cancelUserId
+            }
+        },
         data () {
             return {
                 DELETE_EVENT_NAME,
@@ -119,7 +133,10 @@
         computed: {
             computedStage: {
                 get () {
-                    return this.pipeline.stages
+                    return this.pipeline.stages.map(stage => ({
+                        ...stage,
+                        isTrigger: this.checkIsTriggerStage(stage)
+                    }))
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -188,6 +205,13 @@
                         this.$emit(eventName, ...args)
                     })
                 })
+            },
+            checkIsTriggerStage (stage) {
+                try {
+                    return isTriggerContainer(stage.containers[0])
+                } catch (e) {
+                    return false
+                }
             },
             updatePipeline (model, params) {
                 Object.assign(model, params)

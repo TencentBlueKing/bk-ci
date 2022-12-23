@@ -56,51 +56,19 @@
             stageLength: Number,
             containerLength: Number,
             stageDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
             isFinallyStage: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            hideSkipTask: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
                 type: Boolean,
                 default: false
             },
             handleChange: {
                 type: Function,
                 required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
+        inject: [
+            'isExecDetail',
+            'editable'
+        ],
         data () {
             return {
                 cruveHeight: 0

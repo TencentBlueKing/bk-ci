@@ -659,9 +659,10 @@
     "artifact": "制品",
     "addRemarkForBuild": "为本次构建添加一个备注",
     "triggerRepo": "触发库",
-    "hideSkipStep": "隐藏跳过的步骤",
+    "hideSkipStep": "隐藏未执行的步骤",
     "num": "第",
-    "times": "次"
+    "times": "次",
+    "copyTo": "复制至"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",

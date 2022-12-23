@@ -30,7 +30,7 @@
                 <span class="stage-title-name">{{ stageTitle }}</span>
             </span>
             <Logo v-if="isStageError" name="exclamation-triangle-shape" size="14" class="stage-entry-error-icon" />
-            <span @click.stop v-if="isShowCheckbox" class="check-total-stage">
+            <span @click.stop v-if="canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
             <span v-if="canStageRetry" @click.stop="triggerStageRetry" class="stage-single-retry">
@@ -67,9 +67,6 @@
                 :container-index="index"
                 :stage-length="stageLength"
                 :editable="editable"
-                :is-preview="isPreview"
-                :hide-skip-task="hideSkipTask"
-                :is-exec-detail="isExecDetail"
                 :can-skip-element="isShowCheckbox"
                 :handle-change="handleChange"
                 :stage-disabled="stageDisabled"
@@ -77,10 +74,6 @@
                 :container="container"
                 :is-finally-stage="isFinallyStage"
                 :stage="stage"
-                :user-name="userName"
-                :cancel-user-id="cancelUserId"
-                :is-latest-build="isLatestBuild"
-                :match-rules="matchRules"
                 @[COPY_EVENT_NAME]="handleCopyContainer"
                 @[DELETE_EVENT_NAME]="handleDeleteContainer"
             >
@@ -123,8 +116,7 @@
         getOuterHeight,
         hashID,
         randomString,
-        eventBus,
-        isTriggerContainer
+        eventBus
     } from './util'
     import {
         CLICK_EVENT_NAME,
@@ -157,48 +149,19 @@
             },
             stageIndex: Number,
             stageLength: Number,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            hideSkipTask: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             hasFinallyStage: Boolean,
             handleChange: {
                 type: Function,
                 required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
+        inject: [
+            'currentExecCount',
+            'userName',
+            'isExecDetail',
+            'editable',
+            'canSkipElement'
+        ],
         emits: [
             CLICK_EVENT_NAME,
             ADD_STAGE,
@@ -239,9 +202,6 @@
             isLastStage () {
                 return this.stageIndex === this.stageLength - 1
             },
-            isTriggerStage () {
-                return this.checkIsTriggerStage(this.stage)
-            },
             isFinallyStage () {
                 return this.stage.finally === true
             },
@@ -272,19 +232,17 @@
                         'is-final-stage': this.isFinallyStage,
                         'pipeline-drag': this.editable && !this.isTriggerStage,
                         readonly: !this.editable || this.stageDisabled,
-                        editable: this.editable
+                        editable: this.editable,
+                        'un-exec-this-time': this.isUnExecThisTime
                     }
                 ]
-            },
-            isShowCheckbox () {
-                return !this.isTriggerStage && this.canSkipElement
             },
             stageDisabled () {
                 return !!(this.stage.stageControlOption && this.stage.stageControlOption.enable === false)
             },
             computedContainer: {
                 get () {
-                    return this.containers.filter(container => !this.hideSkipTask || (this.hideSkipTask && container.status !== 'SKIP'))
+                    return this.containers
                 },
                 set (containers) {
                     let data = []
@@ -348,12 +306,15 @@
                     default:
                         return ''
                 }
+            },
+            isUnExecThisTime () {
+                return this.stage?.executeCount < this.currentExecCount
             }
         },
         watch: {
             'stage.runStage' (newVal) {
                 const { containers } = this.stage
-                if (this.stageDisabled || !this.isShowCheckbox) return
+                if (this.stageDisabled || !this.canSkipElement) return
                 containers.filter(container =>
                     (container.jobControlOption === undefined || container.jobControlOption.enable)
                 )
@@ -367,7 +328,7 @@
         },
         mounted () {
             this.updateHeight()
-            if (this.isShowCheckbox) {
+            if (this.canSkipElement) {
                 this.handleChange(this.stage, {
                     runStage: !this.stageDisabled
                 })
@@ -386,13 +347,6 @@
                     taskId: this.stage.id
                 })
             },
-            checkIsTriggerStage (stage) {
-                try {
-                    return isTriggerContainer(stage.containers[0])
-                } catch (e) {
-                    return false
-                }
-            },
 
             stageEntryClick () {
                 eventBus.$emit(CLICK_EVENT_NAME, {
@@ -410,11 +364,11 @@
                 const dragContext = event.draggedContext || {}
                 const element = dragContext.element || {}
                 const isTrigger = element['@type'] === 'trigger'
-
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
+                console.log('relatedelement', relatedelement)
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = this.checkIsTriggerStage(relatedelement)
+                const isTriggerStage = relatedelement.isTrigger
                 const isFinallyStage = relatedelement.finally === true
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinallyStage

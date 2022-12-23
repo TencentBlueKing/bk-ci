@@ -23,13 +23,8 @@
                 :atom-index="index"
                 :container-disabled="containerDisabled"
                 :is-waiting="isWaiting"
-                :cancel-user-id="cancelUserId"
-                :user-name="userName"
-                :editable="editable"
-                :can-skip-element="canSkipElement"
                 :is-last-atom="index === atomList.length - 1"
                 :prev-atom="index > 0 ? atomList[index - 1] : null"
-                :match-rules="matchRules"
                 @[COPY_EVENT_NAME]="handleCopy"
                 @[DELETE_EVENT_NAME]="handleDelete"
             />
@@ -69,6 +64,9 @@
             Logo,
             Atom
         },
+        inject: [
+            'editable'
+        ],
         mixins: [localeMixins],
         props: {
             stage: {
@@ -90,37 +88,9 @@
             containerGroupIndex: Number,
             containerStatus: String,
             containerDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            hideSkipTask: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             handleChange: {
                 type: Function,
                 required: true
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
         data () {
@@ -149,7 +119,7 @@
                             atom.atomCode = atom['@type']
                         }
                         return atom
-                    }).filter(atom => !this.hideSkipTask || (this.hideSkipTask && atom.status !== 'SKIP'))
+                    })
                 },
                 set (elements) {
                     this.handleChange(this.container, { elements })

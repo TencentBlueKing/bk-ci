@@ -64,6 +64,7 @@
                 <bk-pipeline
                     :editable="false"
                     is-exec-detail
+                    :current-exec-count="execDetail.executeCount"
                     :cancel-user-id="cancelUserId"
                     :pipeline="curPipeline"
                     v-bind="$attrs"

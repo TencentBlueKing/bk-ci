@@ -58,6 +58,7 @@
                             <i class="devops-icon icon-qrcode" />
                             <qrcode slot="content" :text="activeOutputDetail.shortUrl" :size="100" />
                         </bk-popover>
+                        <ext-menu :config="extMenuConf"></ext-menu>
                     </p>
                 </div>
                 <div
@@ -85,6 +86,16 @@
                 </div>
             </template>
         </section>
+        <bk-dialog
+            v-model="isCopyDialogShow"
+            :title="$t('details.copyTo')"
+            :close-icon="false"
+            :quick-close="false"
+            :loading="isCopying"
+            width="600"
+        >
+
+        </bk-dialog>
     </div>
 </template>
 
@@ -96,22 +107,34 @@
     import IframeReport from '@/components/Outputs/IframeReport'
     import { convertTime, convertFileSize } from '@/utils/util'
     import { extForFile, repoTypeMap } from '@/utils/pipelineConst'
+    import extMenu from '@/components/pipelineList/extMenu'
     
     export default {
         components: {
             ThirdPartyReport,
             IframeReport,
-            qrcode
+            qrcode,
+            extMenu
         },
         data () {
             return {
+                isCopyDialogShow: false,
+                isCopying: false,
                 currentTab: 'all',
                 reports: [],
                 artifacts: [],
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false
+                isLoading: false,
+                extMenuConf: {
+                    extMenu: [{
+                        text: this.$t('details.copyTo'),
+                        handler: () => {
+                            this.isCopyDialogShow = true
+                        }
+                    }]
+                }
             }
         },
         computed: {

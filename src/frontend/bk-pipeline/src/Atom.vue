@@ -174,6 +174,14 @@
 
     export default {
         name: 'atom',
+        inject: [
+            'currentExecCount',
+            'userName',
+            'matchRules',
+            'editable',
+            'canSkipElement',
+            'cancelUserId'
+        ],
         components: {
             StatusIcon,
             Logo,
@@ -208,24 +216,10 @@
                 requiured: true
             },
             isWaiting: Boolean,
-            editable: Boolean,
             containerDisabled: Boolean,
             isLastAtom: Boolean,
             prevAtom: {
                 type: Object
-            },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            canSkipElement: Boolean,
-            matchRules: {
-                type: Array,
-                default: () => []
             }
         },
         data () {
@@ -321,7 +315,8 @@
                     'is-intercept': this.isQualityCheckAtom,
                     'template-compare-atom': this.atom.templateModify,
                     'last-quality-atom': this.isLastQualityAtom,
-                    'quality-prev-atom': this.isPrevAtomQuality
+                    'quality-prev-atom': this.isPrevAtomQuality,
+                    'un-exec-this-time': this.isUnExecThisTime
                 }
             },
             svgAtomIcon () {
@@ -363,6 +358,9 @@
             },
             isExecuting () {
                 return this.atomStatus === STATUS_MAP.RUNNING && this.atom.startEpoch
+            },
+            isUnExecThisTime () {
+                return this.atom?.executeCount < this.currentExecCount
             }
         },
         watch: {
@@ -509,8 +507,8 @@
 </script>
 
 <style lang="scss">
-    @import "./conf";
-    .bk-pipeline .bk-pipeline-atom {
+@import "./conf";
+.bk-pipeline .bk-pipeline-atom {
     cursor: pointer;
     position: relative;
     display: flex;

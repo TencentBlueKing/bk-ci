@@ -1,5 +1,7 @@
 <template>
-    <div>
+    <div :class="{
+        'un-exec-this-time': isUnExecThisTime
+    }">
         <h3 :class="jobTitleCls"
             @click.stop="showContainerPanel"
         >
@@ -48,18 +50,11 @@
             v-if="showAtomList || !showMatrixFold"
             :stage="stage"
             :container="container"
-            :editable="editable"
-            :is-preview="isPreview"
-            :hide-skip-task="hideSkipTask"
-            :can-skip-element="canSkipElement"
             :stage-index="stageIndex"
             :handle-change="handleChange"
-            :cancel-user-id="cancelUserId"
-            :user-name="userName"
             :container-index="containerIndex"
             :container-group-index="containerGroupIndex"
             :container-status="containerStatus"
-            :match-rules="matchRules"
             :container-disabled="disabled"
         >
         </atom-list>
@@ -115,49 +110,24 @@
             containerLength: Number,
             stageDisabled: Boolean,
             disabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            hideSkipTask: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             handleChange: {
                 type: Function,
                 required: true
             },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
-            matchRules: {
-                type: Array,
-                default: () => []
-            },
             stageLength: Number,
             updateCruveConnectHeight: Function
         },
+        inject: [
+            'currentExecCount',
+            'userName',
+            'isLatestBuild',
+            'isExecDetail',
+            'isPreview',
+            'matchRules',
+            'editable',
+            'canSkipElement',
+            'cancelUserId'
+        ],
         emits: [
             DELETE_EVENT_NAME,
             COPY_EVENT_NAME
@@ -239,6 +209,9 @@
                 const { isLatestBuild, isExecDetail, container: { baseOS, status } } = this
                 const isshowDebugType = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE, PUBLIC_BCS_BUILD_TYPE].includes(this.buildResourceType)
                 return baseOS === 'LINUX' && isshowDebugType && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
+            },
+            isUnExecThisTime () {
+                return this.container?.executeCount < this.currentExecCount
             }
         },
         watch: {

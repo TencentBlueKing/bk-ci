@@ -1,5 +1,7 @@
 <template>
-    <div class="bk-pipeline-matrix-group">
+    <div :class="['bk-pipeline-matrix-group', {
+        'un-exec-this-time': isUnExecThisTime
+    }]">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
                 <Logo name="angle-down" size="12" :class="matrixToggleCls"></Logo>
@@ -28,7 +30,6 @@
             </Job>
         </section>
     </div>
-    
 </template>
 
 <script>
@@ -60,45 +61,16 @@
             containerIndex: Number,
             containerLength: Number,
             stageDisabled: Boolean,
-            editable: {
-                type: Boolean,
-                default: true
-            },
-            isExecDetail: {
-                type: Boolean,
-                default: false
-            },
-            isPreview: {
-                type: Boolean,
-                default: false
-            },
-            isLatestBuild: {
-                type: Boolean,
-                default: false
-            },
-            canSkipElement: {
-                type: Boolean,
-                default: false
-            },
             handleChange: {
                 type: Function,
                 required: true
             },
-            cancelUserId: {
-                type: String,
-                default: 'unknow'
-            },
-            userName: {
-                type: String,
-                default: 'unknow'
-            },
             stageLength: Number,
-            updateCruveConnectHeight: Function,
-            matchRules: {
-                type: Array,
-                default: () => []
-            }
+            updateCruveConnectHeight: Function
         },
+        inject: [
+            'currentExecCount'
+        ],
         data () {
             return {
                 isMatrixOpen: false
@@ -116,6 +88,9 @@
                 return {
                     'skip-name': this.disabled || this.matrix.status === STATUS_MAP.SKIP
                 }
+            },
+            isUnExecThisTime () {
+                return this.matrix?.executeCount < this.currentExecCount
             },
             matrixStatusDescCls () {
                 return {
