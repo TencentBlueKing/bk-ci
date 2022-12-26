@@ -42,6 +42,8 @@ data class BuildHistory(
     val userId: String,
     @ApiModelProperty("触发条件", required = true)
     val trigger: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
     @ApiModelProperty("构建号", required = true)
     val buildNum: Int?,
     @ApiModelProperty("编排文件版本号", required = true)
