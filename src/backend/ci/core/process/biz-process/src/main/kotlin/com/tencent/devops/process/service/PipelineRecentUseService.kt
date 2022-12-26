@@ -14,24 +14,28 @@ class PipelineRecentUseService @Autowired constructor(
 ) {
 
     fun listPipelineIds(userId: String, projectId: String): List<String> {
-        return redisOperation.listRange(getRedisKey(userId, projectId), 0, RECENT_USE_LIST_MAX) ?: emptyList()
+        return redisOperation.zrange(
+            getRedisKey(userId, projectId), 0, RECENT_USE_LIST_MAX - 1
+        )?.toList() ?: emptyList()
     }
 
     fun pushPipelineId(userId: String, projectId: String, pipelineId: String) {
         try {
             val redisKey = getRedisKey(userId, projectId)
-            redisOperation.leftPush(redisKey, pipelineId)
-            redisOperation.trim(redisKey, 0, RECENT_USE_LIST_MAX)
+            redisOperation.zadd(redisKey, pipelineId, score())
+            redisOperation.zremoveRange(redisKey, RECENT_USE_LIST_MAX, -1)
         } catch (e: Exception) {
             logger.warn("push pipeline id error", e)
         }
     }
+
+    private fun score() = (Long.MAX_VALUE - System.currentTimeMillis()).toDouble()
 
     private fun getRedisKey(userId: String, projectId: String) = "$RECENT_USE_KEY:$userId:$projectId"
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineRecentUseService::class.java)
         private const val RECENT_USE_KEY = "p:recent:use:pid"
-        private const val RECENT_USE_LIST_MAX = 30L - 1 // redis的end index是闭区间
+        private const val RECENT_USE_LIST_MAX = 30L
     }
 }
