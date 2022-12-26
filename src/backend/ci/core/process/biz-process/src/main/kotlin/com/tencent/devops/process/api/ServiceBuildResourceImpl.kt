@@ -566,12 +566,12 @@ class ServiceBuildResourceImpl @Autowired constructor(
     override fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
-        buildNum: String
+        buildNum: String,
+        channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         val history = pipelineBuildFacadeService.getSingleHistoryBuild(
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildNum = buildNum.toInt()
+            projectId, pipelineId,
+            buildNum.toInt(), channelCode ?: ChannelCode.BS
         )
         return Result(history)
     }

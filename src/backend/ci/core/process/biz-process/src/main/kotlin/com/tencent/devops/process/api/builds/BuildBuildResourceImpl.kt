@@ -48,25 +48,29 @@ class BuildBuildResourceImpl @Autowired constructor(
     override fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
-        buildNum: String
+        buildNum: String,
+        channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getSingleHistoryBuild(
                 projectId = projectId,
                 pipelineId = pipelineId,
-                buildNum = buildNum.toInt()
+                buildNum = buildNum.toInt(),
+                channelCode = channelCode ?: ChannelCode.BS
             )
         )
     }
 
     override fun getLatestSuccessBuild(
         projectId: String,
-        pipelineId: String
+        pipelineId: String,
+        channelCode: ChannelCode?
     ): Result<BuildHistory?> {
         return Result(
             data = pipelineBuildFacadeService.getLatestSuccessBuild(
                 projectId = projectId,
-                pipelineId = pipelineId
+                pipelineId = pipelineId,
+                channelCode = channelCode ?: ChannelCode.BS
             )
         )
     }

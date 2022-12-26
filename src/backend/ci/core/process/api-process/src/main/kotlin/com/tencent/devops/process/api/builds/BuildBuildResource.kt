@@ -64,7 +64,10 @@ interface BuildBuildResource {
         pipelineId: String,
         @ApiParam("流水线buildNum", required = true)
         @PathParam("buildNum")
-        buildNum: String
+        buildNum: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
     ): Result<BuildHistory?>
 
     @ApiOperation("获取流水线最近成功构建")
@@ -76,7 +79,10 @@ interface BuildBuildResource {
         projectId: String,
         @ApiParam("流水线ID", required = true)
         @PathParam("pipelineId")
-        pipelineId: String
+        pipelineId: String,
+        @ApiParam("渠道号，默认为BS", required = false)
+        @QueryParam("channelCode")
+        channelCode: ChannelCode?
     ): Result<BuildHistory?>
 
     @ApiOperation("获取构建详情")
