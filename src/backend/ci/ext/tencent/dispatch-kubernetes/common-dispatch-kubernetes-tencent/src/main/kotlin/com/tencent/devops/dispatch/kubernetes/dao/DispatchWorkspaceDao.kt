@@ -25,14 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.devcloud.dao
+package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.common.api.model.SQLLimit
-import com.tencent.devops.dispatch.devcloud.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchWorkspaceRecord
-import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field

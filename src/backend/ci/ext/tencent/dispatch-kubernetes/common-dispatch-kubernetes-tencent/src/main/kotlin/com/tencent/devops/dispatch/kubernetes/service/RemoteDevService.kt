@@ -27,20 +27,28 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
+import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class RemoteDevService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
+    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val containerServiceFactory: ContainerServiceFactory,
     private val remoteDevServiceFactory: RemoteDevServiceFactory
 ) {
@@ -50,16 +58,55 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): String {
-        val (workspaceId, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, workspaceReq)
+        val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, workspaceReq)
 
         val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            // 启动成功
             logger.info("$userId create workspace success.")
-            return workspaceId
+
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                dispatchWorkspaceDao.createWorkspace(
+                    userId = userId,
+                    workspace = workspaceReq,
+                    environmentUid = enviromentUid,
+                    status = EnvStatusEnum.Running,
+                    dslContext = context
+                )
+
+                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                    dslContext = context,
+                    workspaceName = workspaceReq.name,
+                    environmentUid = enviromentUid,
+                    operator = "admin",
+                    action = EnvironmentAction.CREATE
+                )
+            }
+
+            return workspaceReq.name
         } else {
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                dispatchWorkspaceDao.createWorkspace(
+                    userId = userId,
+                    workspace = workspaceReq,
+                    environmentUid = enviromentUid,
+                    status = EnvStatusEnum.Failed, // TODO 这里的task状态应该是跟workspace状态分开的
+                    dslContext = context
+                )
+
+                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
+                    dslContext = context,
+                    workspaceName = workspaceReq.name,
+                    environmentUid = enviromentUid,
+                    operator = "admin",
+                    action = EnvironmentAction.CREATE,
+                    actionMsg = failedMsg ?: ""
+                )
+            }
+
             throw BuildFailureException(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,

@@ -25,43 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.devcloud.dao
+package com.tencent.devops.dispatch.kubernetes.pojo
 
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspaceOpHis
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
+import com.fasterxml.jackson.annotation.JsonValue
 
-@Repository
-class DispatchWorkspaceOpHisDao {
+enum class EnvironmentAction(private val action: String) {
+    CREATE("create"),
+    START("start"),
+    STOP("stop"),
+    RECREATE("recreate"),
+    SCALE("scale"),
+    DELETE("delete");
 
-    fun createWorkspaceHistory(
-        dslContext: DSLContext,
-        workspaceName: String,
-        environmentUid: String,
-        operator: String,
-        action: EnvironmentAction,
-        actionMsg: String = ""
-    ) {
-        with(TDispatchWorkspaceOpHis.T_DISPATCH_WORKSPACE_OP_HIS) {
-            dslContext.insertInto(
-                this,
-                WORKSPACE_NAME,
-                ENVIRONMENT_UID,
-                OPERATOR,
-                ACTION,
-                ACTION_MSG,
-                CREATED_TIME
-            )
-                .values(
-                    workspaceName,
-                    environmentUid,
-                    operator,
-                    action.name,
-                    actionMsg,
-                    LocalDateTime.now()
-                ).execute()
-        }
+    @JsonValue
+    fun getValue(): String {
+        return action
     }
 }

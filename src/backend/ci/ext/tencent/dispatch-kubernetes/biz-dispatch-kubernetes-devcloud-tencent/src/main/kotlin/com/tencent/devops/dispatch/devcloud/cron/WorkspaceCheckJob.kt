@@ -3,10 +3,10 @@ package com.tencent.devops.dispatch.devcloud.cron
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
-import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceDao
-import com.tencent.devops.dispatch.devcloud.pojo.EnvStatusEnum
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired

@@ -1,5 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+
 data class EnvironmentStatus(
     val status: EnvStatusEnum,
     val phase: String,
@@ -13,13 +15,3 @@ data class EnvironmentStatus(
     val initContainerStatuses: ContainerStatus,
     val containerStatuses: ContainerStatus
 )
-
-enum class EnvStatusEnum {
-    Pending,
-    Running,
-    Succeeded,
-    Failed,
-    Stopped,
-    Unknow,
-    Deleted
-}

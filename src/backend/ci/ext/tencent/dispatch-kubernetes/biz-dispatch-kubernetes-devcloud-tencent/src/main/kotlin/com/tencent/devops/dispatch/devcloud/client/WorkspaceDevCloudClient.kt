@@ -7,9 +7,9 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp

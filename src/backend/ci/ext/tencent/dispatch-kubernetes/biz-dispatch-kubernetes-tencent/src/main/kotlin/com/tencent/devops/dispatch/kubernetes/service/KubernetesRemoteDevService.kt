@@ -37,7 +37,7 @@ import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("kubernetesRemoteService")
 class KubernetesRemoteDevService @Autowired constructor(
     private val kubernetesRemoteDevClient: KubernetesRemoteDevClient
 ) : RemoteDevInterface {

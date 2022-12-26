@@ -29,16 +29,16 @@ package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceDao
-import com.tencent.devops.dispatch.devcloud.dao.DispatchWorkspaceOpHisDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Container
-import com.tencent.devops.dispatch.devcloud.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
-import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
@@ -48,7 +48,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
-@Service
+@Service("devcloudContainerService")
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
