@@ -29,10 +29,13 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.ticket.api.ServiceCredentialResource
+import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,15 +54,41 @@ class CredentialService @Autowired constructor(
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)
-            .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
+                .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
         if (result.isNotOk() || result.data == null) {
             throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
         }
 
         val credential = result.data!!
         logger.info("Get the credential($credential)")
-        val list = ArrayList<String>()
+        return buildCredentialList(credential, pair)
+    }
 
+    /**
+     * 获取凭证基础信息
+     */
+    fun getCredentialInfo(projectId: String, repository: Repository): Pair<List<String>,CredentialType> {
+        val pair = DHUtil.initKey()
+        val encoder = Base64.getEncoder()
+        val result = client.get(ServiceCredentialResource::class)
+                .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
+        if (result.isNotOk() || result.data == null) {
+            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
+        }
+        val credential = result.data!!
+        logger.info("Get the credential($credential)")
+        val list = buildCredentialList(credential, pair)
+        return Pair(list,result.data!!.credentialType)
+    }
+
+    /**
+     * 构建凭证信息集合
+     */
+    private fun buildCredentialList(
+        credential: CredentialInfo,
+        pair: DHKeyPair
+    ): List<String> {
+        val list = ArrayList<String>()
         list.add(decode(credential.v1, credential.publicKey, pair.privateKey))
         if (!credential.v2.isNullOrEmpty()) {
             list.add(decode(credential.v2!!, credential.publicKey, pair.privateKey))

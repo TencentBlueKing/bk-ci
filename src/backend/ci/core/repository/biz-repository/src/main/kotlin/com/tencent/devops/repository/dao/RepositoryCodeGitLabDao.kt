@@ -46,7 +46,8 @@ class RepositoryCodeGitLabDao {
         projectName: String,
         userName: String,
         privateToken: String,
-        authType: RepoAuthType?
+        authType: RepoAuthType?,
+        gitProjectId: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
@@ -58,7 +59,8 @@ class RepositoryCodeGitLabDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                AUTH_TYPE
+                AUTH_TYPE,
+                GIT_PROJECT_ID
             )
                 .values(
                     repositoryId,
@@ -67,7 +69,8 @@ class RepositoryCodeGitLabDao {
                     privateToken,
                     now,
                     now,
-                    authType?.name
+                    authType?.name,
+                    gitProjectId
                 ).execute()
         }
     }
