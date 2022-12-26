@@ -5,7 +5,7 @@ import com.tencent.devops.artifactory.pojo.PipelineOutput
 import com.tencent.devops.artifactory.pojo.PipelineOutputSearchOption
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.PipelineOutputType
-import com.tencent.devops.artifactory.service.BkRepoPipelineOutputService
+import com.tencent.devops.artifactory.service.PipelineOutputService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.process.api.service.ServiceReportResource
 import com.tencent.devops.common.archive.pojo.ReportListDTO
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service
 class BkRepoPipelineOutputServiceImpl(
     private val client: Client,
     private val bkRepoArchiveFileServiceImpl: BkRepoArchiveFileServiceImpl
-) : BkRepoPipelineOutputService{
+) : PipelineOutputService{
     override fun search(
         userId: String,
         projectId: String,

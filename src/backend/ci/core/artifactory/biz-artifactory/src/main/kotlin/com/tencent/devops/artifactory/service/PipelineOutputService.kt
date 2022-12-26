@@ -3,7 +3,7 @@ package com.tencent.devops.artifactory.service
 import com.tencent.devops.artifactory.pojo.PipelineOutput
 import com.tencent.devops.artifactory.pojo.PipelineOutputSearchOption
 
-interface BkRepoPipelineOutputService {
+interface PipelineOutputService {
     fun search(
         userId: String,
         projectId: String,

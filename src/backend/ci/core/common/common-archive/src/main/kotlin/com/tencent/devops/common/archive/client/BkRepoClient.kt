@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
+import com.tencent.bkrepo.common.artifact.path.PathUtils
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryType
 import com.tencent.bkrepo.common.query.enums.OperationType
@@ -68,6 +69,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -1036,6 +1038,24 @@ class BkRepoClient constructor(
             "?packageKey=$packageKey&version=$version"
         val request = Request.Builder().url(url).header(BK_REPO_UID, userId).get().build()
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
+    }
+
+    fun listDir(userId: String, projectId: String, repoName: String, path: String?, name: String?): List<QueryNodeInfo> {
+        if (path.isNullOrBlank() && name.isNullOrBlank()) {
+            throw IllegalArgumentException()
+        }
+        val projectRule = Rule.QueryRule("projectId", projectId)
+        val repoRule = Rule.QueryRule("repoName", repoName)
+        val folderRule = Rule.QueryRule("folder", true)
+        val ruleList = mutableListOf<Rule>(projectRule, repoRule, folderRule)
+        if (!path.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("path", PathUtils.normalizePath(path)))
+        }
+        if (!name.isNullOrBlank()) {
+            ruleList.add(Rule.QueryRule("name", name, OperationType.MATCH))
+        }
+        val rule = Rule.NestedRule(ruleList, Rule.NestedRule.RelationType.AND)
+        return query(userId, projectId, rule, 1, 10000).records
     }
 
     private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
