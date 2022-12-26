@@ -1813,8 +1813,7 @@ class PipelineBuildFacadeService(
     fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
-        buildNum: Int,
-        channelCode: ChannelCode
+        buildNum: Int
     ): BuildHistory? {
         val statusSet = mutableSetOf<BuildStatus>()
         if (buildNum == -1) {
@@ -1838,8 +1837,7 @@ class PipelineBuildFacadeService(
 
     fun getLatestSuccessBuild(
         projectId: String,
-        pipelineId: String,
-        channelCode: ChannelCode
+        pipelineId: String
     ): BuildHistory? {
         val buildHistory = pipelineRuntimeService.getBuildHistoryByBuildNum(
             projectId = projectId,

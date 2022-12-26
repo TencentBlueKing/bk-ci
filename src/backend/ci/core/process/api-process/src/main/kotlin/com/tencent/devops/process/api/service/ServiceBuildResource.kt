@@ -659,10 +659,7 @@ interface ServiceBuildResource {
         pipelineId: String,
         @ApiParam("流水线buildNum", required = true)
         @PathParam("buildNum")
-        buildNum: String,
-        @ApiParam("渠道号，默认为BS", required = false)
-        @QueryParam("channelCode")
-        channelCode: ChannelCode?
+        buildNum: String
     ): Result<BuildHistory?>
 
     @ApiOperation("手动触发启动阶段")
