@@ -347,7 +347,7 @@ class UserPipelineResourceImpl @Autowired constructor(
             pipelineId = pipelineId,
             channelCode = ChannelCode.BS
         )
-        pipelineRecentUseService.pushPipelineId(userId, projectId, pipelineId)
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(pipeline)
     }
 

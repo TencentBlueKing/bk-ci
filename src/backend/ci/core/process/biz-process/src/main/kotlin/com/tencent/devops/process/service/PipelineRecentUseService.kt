@@ -19,7 +19,7 @@ class PipelineRecentUseService @Autowired constructor(
         )?.toList() ?: emptyList()
     }
 
-    fun pushPipelineId(userId: String, projectId: String, pipelineId: String) {
+    fun record(userId: String, projectId: String, pipelineId: String) {
         try {
             val redisKey = getRedisKey(userId, projectId)
             redisOperation.zadd(redisKey, pipelineId, score())

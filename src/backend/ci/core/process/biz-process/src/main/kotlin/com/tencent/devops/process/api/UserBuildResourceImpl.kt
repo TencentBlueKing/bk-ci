@@ -101,7 +101,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNo = buildNo,
             triggerReviewers = triggerReviewers
         )
-        pipelineRecentUseService.pushPipelineId(userId, projectId, pipelineId)
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(BuildId(manualStartup))
     }
 
@@ -262,7 +262,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildId = buildId,
             channelCode = ChannelCode.BS
         )
-        pipelineRecentUseService.pushPipelineId(userId, projectId, pipelineId)
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(buildDetail)
     }
 
@@ -374,6 +374,7 @@ class UserBuildResourceImpl @Autowired constructor(
             buildNoEnd = buildNoEnd,
             buildMsg = buildMsg
         )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(result)
     }
 
