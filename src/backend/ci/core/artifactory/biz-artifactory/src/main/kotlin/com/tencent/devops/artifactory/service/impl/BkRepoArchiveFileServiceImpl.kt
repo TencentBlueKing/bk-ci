@@ -41,6 +41,8 @@ import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PIPELINE
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.parseArtifactoryType
@@ -225,7 +227,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+            repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM, REPO_NAME_IMAGE),
             fileNames = listOf(),
             metadata = searchProps.props,
             page = page ?: 1,
