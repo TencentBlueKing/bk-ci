@@ -338,7 +338,7 @@ class StageBuildRecordService(
         var allStageStatus: List<BuildStageStatus>? = null
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val recordStages = recordStageDao.getLatestRecords(
+            val recordStages = recordStageDao.getRecords(
                 dslContext = context,
                 projectId = projectId,
                 pipelineId = pipelineId,

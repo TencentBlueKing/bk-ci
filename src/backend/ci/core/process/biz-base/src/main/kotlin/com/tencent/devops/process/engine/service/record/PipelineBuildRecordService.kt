@@ -428,7 +428,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
-            val recordStages = recordStageDao.getLatestRecords(
+            val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
             val modelVar = mutableMapOf<String, Any>()

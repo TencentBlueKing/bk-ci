@@ -33,10 +33,13 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
+import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_STAGE_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
@@ -88,6 +91,24 @@ class BuildRecordStageDao {
                     .and(EXECUTE_COUNT.eq(executeCount))
                     .and(STAGE_ID.eq(stageId))
             ).execute()
+        }
+    }
+
+    fun getRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): List<BuildRecordStage> {
+        with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(PIPELINE_ID.eq(pipelineId))
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(EXECUTE_COUNT.eq(executeCount))
+            return dslContext.selectFrom(this)
+                .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
         }
     }
 
