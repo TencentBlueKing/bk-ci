@@ -62,11 +62,11 @@ class DevcloudContainerService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(DevcloudContainerService::class.java)
     }
 
-    override val shutdownLockBaseKey = "dispatch_devcloud_shutdown_lock_"
+    override val shutdownLockBaseKey = "workspace_devcloud_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = "准备创建devcloud构建机...",
-        startContainerError = "启动devcloud构建容器失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
+        readyStartLog = "准备创建devcloud开发环境...",
+        startContainerError = "启动devcloud开发环境失败，请联系蓝盾助手反馈处理.\n容器构建异常请参考：",
         troubleShooting = "Devcloud构建异常，请联系蓝盾助手排查，异常信息 - "
     )
 

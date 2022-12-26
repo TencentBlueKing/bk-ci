@@ -29,21 +29,19 @@ package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Container
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.jooq.DSLContext
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,7 +51,6 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisUtils: RedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
@@ -68,50 +65,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             )
         ))
 
-        val taskResult = waitTaskFinish(userId, environmentOpRsp.taskUid)
-        if (taskResult.first == TaskStatusEnum.Success) {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                dispatchWorkspaceDao.createWorkspace(
-                    userId = userId,
-                    workspace = workspaceReq,
-                    environmentUid = environmentOpRsp.enviromentUid!!,
-                    status = EnvStatusEnum.Running,
-                    dslContext = context
-                )
-
-                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                    dslContext = context,
-                    workspaceName = workspaceReq.name,
-                    environmentUid = environmentOpRsp.enviromentUid,
-                    operator = "admin",
-                    action = EnvironmentAction.CREATE
-                )
-            }
-        } else {
-            dslContext.transaction { t ->
-                val context = DSL.using(t)
-                dispatchWorkspaceDao.createWorkspace(
-                    userId = userId,
-                    workspace = workspaceReq,
-                    environmentUid = environmentOpRsp.enviromentUid!!,
-                    status = EnvStatusEnum.Failed, // TODO 这里的task状态应该是跟workspace状态分开的
-                    dslContext = context
-                )
-
-                dispatchWorkspaceOpHisDao.createWorkspaceHistory(
-                    dslContext = context,
-                    workspaceName = workspaceReq.name,
-                    environmentUid = environmentOpRsp.enviromentUid,
-                    operator = "admin",
-                    action = EnvironmentAction.CREATE,
-                    actionMsg = taskResult.second
-                )
-            }
-        }
-
-
-        return Pair("", "")
+        return Pair(environmentOpRsp.enviromentUid ?: "", environmentOpRsp.taskUid)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): Boolean {
@@ -188,40 +142,6 @@ class DevCloudRemoteDevService @Autowired constructor(
     private fun getEnvironmentUid(workspaceName: String): String {
         val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
         return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
-    }
-
-    private fun waitTaskFinish(
-        userId: String,
-        taskUid: String
-    ): Triple<TaskStatusEnum, String, ErrorCodeEnum> {
-        // 将task放入缓存，等待回调
-        redisUtils.refreshTaskStatus(
-            userId = userId,
-            taskUid = taskUid,
-            taskStatus = TaskStatus(taskUid)
-        )
-
-        // 轮训十分钟
-        val startTime = System.currentTimeMillis()
-        loop@ while (true) {
-            if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
-                logger.error("Wait task: $taskUid finish timeout(10min)")
-                return Triple(TaskStatusEnum.Abort, "DevCloud任务超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
-            }
-            Thread.sleep(1 * 1000)
-            val taskStatus = redisUtils.getTaskStatus(taskUid)
-            if (taskStatus?.status != null && taskStatus.status == TaskStatusEnum.Success) {
-                when (taskStatus.status) {
-                    TaskStatusEnum.Success -> {
-                        return Triple(taskStatus.status!!, "", ErrorCodeEnum.CREATE_VM_ERROR)
-                    }
-                    TaskStatusEnum.Fail -> {
-                        return Triple(taskStatus.status!!, taskStatus.logs ?: "", ErrorCodeEnum.CREATE_VM_ERROR)
-                    }
-                }
-            }
-
-        }
     }
 
     companion object {
