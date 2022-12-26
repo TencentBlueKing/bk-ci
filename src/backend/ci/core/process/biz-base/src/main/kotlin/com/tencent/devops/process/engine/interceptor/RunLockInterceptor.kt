@@ -72,7 +72,8 @@ class RunLockInterceptor @Autowired constructor(
                 Response(BuildStatus.RUNNING)
             }
         } else if (runLockType == PipelineRunLockType.GROUP_LOCK) {
-            val concurrencyGroupRunningCount = concurrencyGroup?.let {
+            val concurrencyGroupNotNull = concurrencyGroup ?: pipelineId
+            val concurrencyGroupRunningCount = concurrencyGroupNotNull.let {
                 var size = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = it,
@@ -83,6 +84,7 @@ class RunLockInterceptor @Autowired constructor(
                 if (it == pipelineId) {
                     size += pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
                         projectId = projectId,
+                        pipelineId = pipelineId,
                         status = listOf(BuildStatus.RUNNING)
                     ).size
                 }

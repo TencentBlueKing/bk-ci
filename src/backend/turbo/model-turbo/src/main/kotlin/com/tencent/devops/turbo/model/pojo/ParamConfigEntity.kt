@@ -21,5 +21,9 @@ data class ParamConfigEntity(
     @Field("required")
     var required: Boolean? = false,
     @Field("tips")
-    var tips: String? = null
+    var tips: String? = null,
+    @Field("data_type")
+    var dataType: String? = null,
+    @Field("param_url")
+    var paramUrl: String? = null
 )

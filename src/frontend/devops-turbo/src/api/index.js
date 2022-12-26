@@ -74,3 +74,5 @@ export function getRecommendList () {
 export function getEngineDetail (engineCode) {
     return vue.$ajax.get(`${prefix}/turboEngineConfig/engineCode/${engineCode}`)
 }
+
+export const http = vue.$ajax
