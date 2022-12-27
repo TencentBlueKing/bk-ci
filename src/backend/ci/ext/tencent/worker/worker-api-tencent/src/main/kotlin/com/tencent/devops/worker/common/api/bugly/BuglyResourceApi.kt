@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
