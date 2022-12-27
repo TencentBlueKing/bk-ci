@@ -39,7 +39,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesResult
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

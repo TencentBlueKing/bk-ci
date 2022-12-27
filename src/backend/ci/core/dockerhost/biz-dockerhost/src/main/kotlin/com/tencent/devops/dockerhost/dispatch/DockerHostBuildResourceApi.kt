@@ -40,7 +40,6 @@ import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.SystemInfoUtil
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

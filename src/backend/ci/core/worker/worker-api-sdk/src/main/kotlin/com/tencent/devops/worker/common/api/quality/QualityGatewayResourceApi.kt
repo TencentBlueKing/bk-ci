@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.api.quality
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

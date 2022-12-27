@@ -33,22 +33,20 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.security.jwt.JwtManager
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.OkHttpClient.Builder
+import okhttp3.Request
+import okhttp3.RequestBody
+import okhttp3.Response
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.ConnectException
 import java.net.SocketTimeoutException
 import java.net.UnknownHostException
 import java.util.concurrent.TimeUnit
-import okhttp3.Request
-import okhttp3.RequestBody
-import okhttp3.Response
-import org.slf4j.LoggerFactory
 
 @Service
 class AuthHttpClientService @Autowired constructor(

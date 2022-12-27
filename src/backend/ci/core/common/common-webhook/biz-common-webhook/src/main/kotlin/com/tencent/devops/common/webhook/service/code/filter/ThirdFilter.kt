@@ -9,7 +9,6 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterBody
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterResult
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

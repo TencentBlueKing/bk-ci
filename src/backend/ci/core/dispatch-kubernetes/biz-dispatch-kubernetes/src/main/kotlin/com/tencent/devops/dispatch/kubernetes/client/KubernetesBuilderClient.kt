@@ -45,7 +45,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.StopBuilderParams
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
 import com.tencent.devops.dispatch.kubernetes.pojo.isRunning
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

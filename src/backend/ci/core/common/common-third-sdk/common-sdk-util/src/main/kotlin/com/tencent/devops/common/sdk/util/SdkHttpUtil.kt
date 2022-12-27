@@ -33,9 +33,7 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.enums.HttpStatus
 import com.tencent.devops.common.sdk.exception.SdkException
 import com.tencent.devops.common.sdk.exception.SdkNotFoundException
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request

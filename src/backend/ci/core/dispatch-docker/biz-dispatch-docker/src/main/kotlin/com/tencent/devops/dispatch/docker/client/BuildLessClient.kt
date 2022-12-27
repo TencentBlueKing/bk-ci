@@ -50,7 +50,6 @@ import com.tencent.devops.dispatch.docker.utils.RedisUtils
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.redis.RedisBuild
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext

@@ -49,12 +49,11 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import com.tencent.devops.scm.pojo.TapdWorkItem
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

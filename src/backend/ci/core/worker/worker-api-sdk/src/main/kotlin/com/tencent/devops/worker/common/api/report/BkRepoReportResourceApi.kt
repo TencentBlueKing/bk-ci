@@ -39,7 +39,6 @@ import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
 import com.tencent.devops.worker.common.utils.TaskUtil
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import java.io.File

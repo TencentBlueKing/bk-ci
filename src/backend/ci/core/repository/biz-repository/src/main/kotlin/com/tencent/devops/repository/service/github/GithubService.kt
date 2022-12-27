@@ -52,7 +52,6 @@ import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

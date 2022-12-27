@@ -38,7 +38,6 @@ import com.tencent.devops.dispatch.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatus
 import com.tencent.devops.dispatch.bcs.pojo.BcsResult
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
