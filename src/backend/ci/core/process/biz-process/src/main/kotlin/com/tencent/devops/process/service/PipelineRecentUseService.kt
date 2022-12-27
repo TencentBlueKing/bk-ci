@@ -14,9 +14,13 @@ class PipelineRecentUseService @Autowired constructor(
 ) {
 
     fun listPipelineIds(userId: String, projectId: String, noEmpty: Boolean = true): List<String> {
-        return redisOperation.zrange(
+        val pipelineIds = redisOperation.zrange(
             getRedisKey(userId, projectId), 0, RECENT_USE_LIST_MAX - 1
-        )?.toList() ?: (if (noEmpty) listOf("##NONE##") else emptyList())
+        )?.toList() ?: emptyList()
+        if (noEmpty && pipelineIds.isEmpty()) {
+            return listOf("##NONE##")
+        }
+        return pipelineIds
     }
 
     fun record(userId: String, projectId: String, pipelineId: String) {
