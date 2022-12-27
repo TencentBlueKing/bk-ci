@@ -51,7 +51,7 @@ const state = {
         {
             id: RECENT_USED_VIEW_ID,
             i18nKey: RECENT_USED_VIEW_ID,
-            icon: 'star-shape',
+            icon: 'time-circle-fill',
             hideMore: true
         },
         {

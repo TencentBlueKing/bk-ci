@@ -239,7 +239,7 @@
             currentPipelineCountDetail () {
                 const viewId = this.$route.params.viewId
                 const currentGroup = this.groupMap[viewId]
-                return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount
+                return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount ?? 0
             }
         },
         watch: {
