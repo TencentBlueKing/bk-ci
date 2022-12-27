@@ -1248,6 +1248,38 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getPublishedAtoms(
+        dslContext: DSLContext,
+        timeDescFlag: Boolean = true,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.select(ATOM_CODE)
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            if (timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc(), ID)
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc(), ID)
+            }
+            return baseStep.groupBy(ATOM_CODE)
+                .limit((page - 1) * pageSize, pageSize).fetchInto(String::class.java)
+        }
+    }
+
+    fun getPublishedAtomCount(
+        dslContext: DSLContext
+    ): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.select()
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .groupBy(ATOM_CODE)
+                .execute()
+        }
+    }
+
     fun getAtomRealVersion(
         dslContext: DSLContext,
         projectCode: String,
@@ -1289,4 +1321,6 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
         }
     }
+
+
 }
