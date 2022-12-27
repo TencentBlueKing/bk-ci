@@ -30,6 +30,7 @@ package com.tencent.devops.common.gcloud
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.param.ReqParam
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.gcloud.api.pojo.ActionParam
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.GcloudListResult
@@ -43,8 +44,6 @@ import com.tencent.devops.common.gcloud.api.pojo.history.PrePublishParam
 import com.tencent.devops.common.gcloud.api.pojo.history.QueryVersionParam
 import com.tencent.devops.common.gcloud.api.pojo.history.UploadUpdateFileParam
 import com.tencent.devops.common.gcloud.utils.GcloudUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request

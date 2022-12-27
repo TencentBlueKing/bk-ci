@@ -41,7 +41,6 @@ import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

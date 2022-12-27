@@ -30,7 +30,6 @@ package com.tencent.devops.worker.common.api.bugly
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody

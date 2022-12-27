@@ -39,7 +39,6 @@ import com.tencent.devops.support.model.approval.CreateEsbMoaCompleteParam
 import com.tencent.devops.support.model.approval.CreateEsbMoaWorkItem
 import com.tencent.devops.support.model.approval.CreateMoaApproveRequest
 import com.tencent.devops.support.model.approval.MoaWorkItemElement
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

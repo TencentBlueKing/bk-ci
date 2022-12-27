@@ -16,7 +16,6 @@ import com.tencent.devops.dockerhost.pojo.LeakScanResponse
 import com.tencent.devops.dockerhost.services.DockerHostImageScanService
 import com.tencent.devops.dockerhost.services.image.ImageHandlerContext
 import com.tencent.devops.dockerhost.utils.CommonUtils
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

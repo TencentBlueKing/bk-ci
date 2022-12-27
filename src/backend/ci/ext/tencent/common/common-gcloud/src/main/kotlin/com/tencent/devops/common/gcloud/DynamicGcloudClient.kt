@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.gcloud.api.pojo.ActionParam
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.GetUploadTaskParam
@@ -42,8 +43,6 @@ import com.tencent.devops.common.gcloud.api.pojo.dyn.DynDeleteVerParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynUpdateVerParam
 import com.tencent.devops.common.gcloud.utils.GcloudUtil.getRequestUriWithSignature
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request

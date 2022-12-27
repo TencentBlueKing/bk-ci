@@ -35,7 +35,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
 import com.tencent.devops.plugin.pojo.wetest.WetestReportResponse
 import com.tencent.devops.plugin.utils.CommonUtils
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -50,7 +49,6 @@ import java.net.URLEncoder
 import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import kotlin.Comparator
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set

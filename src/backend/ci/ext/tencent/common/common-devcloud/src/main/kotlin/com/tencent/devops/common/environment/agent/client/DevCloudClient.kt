@@ -47,9 +47,7 @@ import com.tencent.devops.common.environment.agent.pojo.devcloud.Params
 import com.tencent.devops.common.environment.agent.pojo.devcloud.TaskStatus
 import com.tencent.devops.common.environment.agent.pojo.devcloud.VolumeDetail
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

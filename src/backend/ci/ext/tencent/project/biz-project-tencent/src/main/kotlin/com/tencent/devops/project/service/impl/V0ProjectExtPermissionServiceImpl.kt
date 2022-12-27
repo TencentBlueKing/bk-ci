@@ -35,7 +35,6 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
