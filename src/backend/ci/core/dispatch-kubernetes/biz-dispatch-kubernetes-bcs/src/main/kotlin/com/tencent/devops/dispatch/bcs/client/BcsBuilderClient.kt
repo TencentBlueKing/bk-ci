@@ -47,7 +47,6 @@ import com.tencent.devops.dispatch.bcs.pojo.getCodeMessage
 import com.tencent.devops.dispatch.bcs.pojo.isRunning
 import com.tencent.devops.dispatch.bcs.pojo.resp.BcsTaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DispatchBuildImageReq
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

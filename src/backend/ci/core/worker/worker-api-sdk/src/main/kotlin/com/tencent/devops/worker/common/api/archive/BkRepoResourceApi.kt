@@ -59,7 +59,6 @@ import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils

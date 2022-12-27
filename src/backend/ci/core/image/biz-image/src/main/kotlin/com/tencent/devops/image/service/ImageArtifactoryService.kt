@@ -41,7 +41,6 @@ import com.tencent.devops.image.pojo.ImageItem
 import com.tencent.devops.image.pojo.ImageListResp
 import com.tencent.devops.image.pojo.ImagePageData
 import okhttp3.Credentials
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
