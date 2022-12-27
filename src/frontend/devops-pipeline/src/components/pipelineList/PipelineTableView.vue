@@ -185,6 +185,13 @@
                         @click="execPipeline(props.row)">
                         {{ $t(props.row.lock ? 'disabled' : 'exec') }}
                     </bk-button>
+                    <bk-button
+                        text
+                        theme="primary"
+                        class="pipeline-exec-btn"
+                        @click="collectHandler(props.row)">
+                        {{ $t(props.row.hasCollect ? 'uncollect' : 'collect') }}
+                    </bk-button>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
                 </template>
             </div>
@@ -228,7 +235,7 @@
                 selectionLength: 0,
                 pagination: {
                     current: this.$route.query.page ?? 1,
-                    limit: this.$route.query.pageSize ?? 20,
+                    limit: this.$route.query.pageSize ?? 50,
                     count: 0
                 },
                 visibleTagCountList: {}

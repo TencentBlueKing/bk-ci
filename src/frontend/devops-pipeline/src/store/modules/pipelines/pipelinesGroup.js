@@ -26,7 +26,8 @@ import {
     COLLECT_VIEW_ID_NAME,
     ALL_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID
+    UNCLASSIFIED_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID
 } from '@/store/constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects`
@@ -47,6 +48,12 @@ const state = {
         }
     ],
     hardViews: [
+        {
+            id: RECENT_USED_VIEW_ID,
+            i18nKey: RECENT_USED_VIEW_ID,
+            icon: 'star-shape',
+            hideMore: true
+        },
         {
             id: COLLECT_VIEW_ID,
             i18nKey: COLLECT_VIEW_ID_NAME,
@@ -153,10 +160,11 @@ const mutations = {
         tag.name = name
     },
     addCollectViewPipelineCount (state, count) {
-        state.hardViews[0].pipelineCount += count
+        state.hardViews[1].pipelineCount += count
         state.hardViews = [
             state.hardViews[0],
-            ...state.hardViews.slice(1)
+            state.hardViews[1],
+            ...state.hardViews.slice(2)
         ]
     },
     [UPDATE_PIPELINE_GROUP]: (state, { id, body }) => {
@@ -198,8 +206,9 @@ const actions = {
             }
 
             state.sumViews[0].pipelineCount = groupCounts.data.totalCount
-            state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
-            state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount
+            state.hardViews[0].pipelineCount = groupCounts.data.recentUseCount
+            state.hardViews[1].pipelineCount = groupCounts.data.myFavoriteCount
+            state.hardViews[2].pipelineCount = groupCounts.data.myPipelineCount
         } catch (error) {
             console.error(error)
         }

@@ -168,10 +168,6 @@ export default {
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
-                    text: (pipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),
-                    handler: this.collectHandler
-                },
-                {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
                 },
