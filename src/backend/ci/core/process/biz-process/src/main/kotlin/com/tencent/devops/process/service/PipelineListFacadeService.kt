@@ -501,10 +501,6 @@ class PipelineListFacadeService @Autowired constructor(
                 }
             } else if (viewId == PIPELINE_VIEW_RECENT_USE) { // 最近访问
                 pipelineIds.addAll(pipelineRecentUseService.listPipelineIds(userId, projectId))
-                // 避免过滤器为空的情况
-                if (pipelineIds.isEmpty()) {
-                    pipelineIds.add("##NONE##")
-                }
             }
             // 剔除掉filterByViewIds
             if (filterByViewIds != null) {
