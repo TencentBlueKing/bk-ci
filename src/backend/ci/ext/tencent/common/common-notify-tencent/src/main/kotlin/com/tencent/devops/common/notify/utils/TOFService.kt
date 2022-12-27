@@ -197,7 +197,7 @@ class TOFService @Autowired constructor(
             return null
         }
 
-        val signature = DesUtil.toHexString(signatureBytes).uppercase(Locale.getDefault())
+        val signature = DesUtil.toHexString(signatureBytes).toUpperCase()
         val headerMap = mutableMapOf<String, String>()
         headerMap.apply {
             put("appkey", tofAppKey)
