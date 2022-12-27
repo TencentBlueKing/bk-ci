@@ -120,6 +120,10 @@ export const repoTypeMap = {
     PIPELINE: 'details.pipelineRepo',
     IMAGE: 'details.imageRepo'
 }
+export const repoTypeNameMap = {
+    CUSTOM_DIR: 'custom',
+    PIPELINE: 'pipeline'
+}
 export const fileExtIconMap = {
     txt: ['.json', '.txt', '.md'],
     zip: ['.zip', '.tar', '.tar.gz', '.tgz', '.jar', '.gz'],

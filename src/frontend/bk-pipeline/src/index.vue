@@ -46,13 +46,15 @@
         ADD_STAGE,
         STAGE_CHECK,
         STAGE_RETRY,
-        DEBUG_CONTAINER
+        DEBUG_CONTAINER,
+        TOGGLE_POST_ACTION_VISIBLE
     } from './constants'
 
     const customEvents = [
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
         ATOM_REVIEW_EVENT_NAME,
+        TOGGLE_POST_ACTION_VISIBLE,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
         ATOM_QUALITY_CHECK_EVENT_NAME,
@@ -225,7 +227,8 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                const isTriggerStage = relatedelement.containers && relatedelement.containers[0]['@type'] === 'trigger'
+                
+                const isTriggerStage = this.checkIsTriggerStage(relatedelement)
                 const isRelatedFinally = relatedelement.finally === true
 
                 return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinally && !isRelatedFinally

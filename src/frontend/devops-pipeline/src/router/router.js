@@ -39,14 +39,21 @@ const atomManage = () => import(/* webpackChunkName: "atomManage" */'../views/li
 
 // 客户端流水线任务子页 - subpages
 const pipelinesEntry = () => import(/* webpackChunkName: "pipelinesEntry" */'../views/subpages')
+
 // 客户端流水线任务历史 - history
+const HistoryHeader = () => import(/* webpackChunkName: "pipelinesHistory" */'../components/PipelineHeader/HistoryHeader.vue')
 const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */'../views/subpages/history.vue')
 // 客户端流水线任务详情 - detail
 const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/ExecDetail.vue')
+const DetailHeader = () => import(/* webpackChunkName: "pipelinesDetail" */'../components/PipelineHeader/DetailHeader.vue')
+
 // 客户端流水线编辑 - edit
+
+const EditHeader = () => import(/* webpackChunkName: "pipelinesEdit" */'../components/PipelineHeader/EditHeader.vue')
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
 // 客户端流水线执行预览 - edit
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
+const PreviewHeader = () => import(/* webpackChunkName: "pipelinesPreview" */'../components/PipelineHeader/PreviewHeader.vue')
 // 插件前端task.json在线调试
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
 const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
@@ -181,9 +188,12 @@ const routes = [
                     },
                     {
                         // 详情
-                        path: 'detail/:buildNo/:type?',
+                        path: 'detail/:buildNo/:type?/:executeCount?',
                         name: 'pipelinesDetail',
-                        component: pipelinesDetail,
+                        components: {
+                            header: DetailHeader,
+                            default: pipelinesDetail
+                        },
                         meta: {
                             title: 'pipeline',
                             header: 'pipeline',
@@ -201,7 +211,10 @@ const routes = [
                         // 执行历史
                         path: 'history/:type?',
                         name: 'pipelinesHistory',
-                        component: pipelinesHistory,
+                        components: {
+                            header: HistoryHeader,
+                            default: pipelinesHistory
+                        },
                         meta: {
                             title: 'pipeline',
                             header: 'pipeline',
@@ -213,25 +226,31 @@ const routes = [
                         // 流水线编辑
                         path: 'edit/:tab?',
                         name: 'pipelinesEdit',
+                        components: {
+                            header: EditHeader,
+                            default: pipelinesEdit
+                        },
                         meta: {
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
-                        },
-                        component: pipelinesEdit
+                        }
                     },
                     {
                         // 流水线执行可选插件
                         path: 'preview',
                         name: 'pipelinesPreview',
+                        components: {
+                            header: PreviewHeader,
+                            default: pipelinesPreview
+                        },
                         meta: {
                             icon: 'pipeline',
                             title: 'pipeline',
                             header: 'pipeline',
                             to: 'PipelineManageList'
-                        },
-                        component: pipelinesPreview
+                        }
                     }
                 ]
             }

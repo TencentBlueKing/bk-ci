@@ -491,7 +491,7 @@
                     const res = await this.$store.dispatch('common/requestCopyArtifactory', {
                         projectId,
                         pipelineId,
-                        buildId: this.currentBuildId,
+                        buildNo: this.currentBuildId,
                         params
                     })
                     if (res) {

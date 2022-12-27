@@ -194,7 +194,7 @@
                 return this.isMiddleStage && this.editable && !this.isFirstStage
             },
             showDeleteStage () {
-                return this.editable && !this.isTriggerStage
+                return this.editable && !this.stage.isTrigger
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -206,7 +206,7 @@
                 return this.stage.finally === true
             },
             isMiddleStage () {
-                return !(this.isTriggerStage || this.isFinallyStage)
+                return !(this.stage.isTrigger || this.isFinallyStage)
             },
             stageTitle () {
                 return this.stage ? this.stage.name : 'stage'
@@ -230,10 +230,10 @@
                     'pipeline-stage',
                     {
                         'is-final-stage': this.isFinallyStage,
-                        'pipeline-drag': this.editable && !this.isTriggerStage,
+                        'pipeline-drag': this.editable && !this.stage.isTrigger,
                         readonly: !this.editable || this.stageDisabled,
                         editable: this.editable,
-                        'un-exec-this-time': this.isUnExecThisTime
+                        'un-exec-this-time': this.isExecDetail && this.isUnExecThisTime
                     }
                 ]
             },
@@ -366,7 +366,6 @@
                 const isTrigger = element['@type'] === 'trigger'
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
-                console.log('relatedelement', relatedelement)
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
                 const isTriggerStage = relatedelement.isTrigger
                 const isFinallyStage = relatedelement.finally === true
@@ -469,7 +468,7 @@
         position: relative;
         width: 280px;
         border-radius: 2px;
-        padding: 0 0 24px 0;
+        padding: 0;
         background: $stageBGColor;
         margin: 0 $StageMargin 0 0;
 
@@ -481,6 +480,7 @@
             height: 50px;
             align-items: center;
             min-width: 0;
+            font-size: 14px;
             background-color: #EFF5FF;
             border: 1px solid #D4E8FF;
             color: $primaryColor;
@@ -621,11 +621,12 @@
                 }
             }
         }
-
+        
+        $addConnectLeft: math.div($addBtnSize, 2) + 1;
         .add-connector {
             stroke-dasharray: 4,4;
             top: 7px;
-            left: math.div($addBtnSize, 2);
+            left: $addConnectLeft;
         }
 
         .append-stage {
@@ -653,7 +654,7 @@
         .add-menu {
             position: absolute;
             top: $addIconTop;
-            left: $addIconLeft;
+            left: $addIconLeft + 1;
             cursor: pointer;
             z-index: 3;
             .add-plus-icon {

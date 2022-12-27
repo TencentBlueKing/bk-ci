@@ -243,8 +243,14 @@ export const actions = {
             return response.data
         })
     },
-    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildId, params }) => {
-        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildId}/copyToCustom`, params).then(response => {
+    requestCustomFolder: async (_, { projectId, params }) => {
+        const res = await request.get(`${ARTIFACTORY_API_URL_PREFIX}/user/custom-repo/${projectId}/dir/tree`, {
+            params
+        })
+        return res.data
+    },
+    requestCopyArtifactory: async ({ commit }, { projectId, pipelineId, buildNo, params }) => {
+        return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/${pipelineId}/${buildNo}/copyToCustom`, params).then(response => {
             return response.data
         })
     },

@@ -1,6 +1,6 @@
 <template>
     <div :class="{
-        'un-exec-this-time': isUnExecThisTime
+        'un-exec-this-time': isExecDetail && isUnExecThisTime
     }">
         <h3 :class="jobTitleCls"
             @click.stop="showContainerPanel"

@@ -660,7 +660,14 @@
     "hideSkipStep": "隐藏未执行的步骤",
     "num": "第",
     "times": "次",
-    "copyTo": "Copy"
+    "copyTo": "Copy",
+    "copyArtifactTo": "将制品 <b>{0}</b> 复制到",
+    "serachCustomRepo": "搜索自定义仓库",
+    "copyToCustomSuc": "{0}已复制至自定义仓库{1}。",
+    "goDistFolder": "前往自定义仓库",
+    "paramDetail": "参数详情",
+    "execPreview": "调试预览",
+    "importPreview": "导入预览"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",

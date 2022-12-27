@@ -22,7 +22,15 @@
                         </p>
                     </bk-option>
                 </bk-select>
-                <span>{{$t('details.times')}}，{{statusLabel}}</span>
+                <span class="exec-status-label">
+                    {{$t('details.times')}}，{{statusLabel}}
+                    <span
+                        v-if="execDetail.status === 'CANCELED'"
+                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                        class="devops-icon icon-info-circle"
+                    >
+                    </span>
+                </span>
             </div>
             <ul class="pipeline-exec-timeline">
                 <li class="pipeline-exec-timeline-item" v-for="step in timeSteps" :key="step.title">
@@ -75,6 +83,7 @@
                     @atom-review="reviewAtom"
                     @atom-continue="handleContinue"
                     @atom-exec="handleExec"
+                    @toggle-post-action-visible="togglePostActionVisible"
                 />
             </div>
             <footer
@@ -204,7 +213,7 @@
             return {
                 showRetryStageDialog: false,
                 showLog: false,
-                executeCount: this.execDetail?.executeCount,
+                executeCount: this.$route.params.executeCount ?? this.execDetail?.executeCount ?? 1,
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
@@ -302,11 +311,10 @@
                         if (this.isSkip(stage.status)) return false
                         return stage.containers.filter(container => {
                             if (this.isSkip(container.status)) return false
-                            return container.elements.filter(element => this.isSkip(element.status))
+                            return container.elements.filter(element => !this.isSkip(element.status))
                         })
                     })
                     : this.execDetail?.model?.stages
-                console.log(stages)
                 return this.execDetail?.model
                     ? {
                         ...this.execDetail.model,
@@ -369,10 +377,17 @@
             }
         },
         watch: {
-            executeCounts (list) {
-                if (list.length > 0) {
-                    this.executeCount = list[0].id
+            'execDetail.executeCount': function (val) {
+                if (this.executeCount !== val) {
+                    this.executeCount = val ?? '1'
+                    this.handleExecuteCountChange(val)
                 }
+            },
+            executeCount (executeCount) {
+                this.requestPipelineExecDetail({
+                    ...this.routerParams,
+                    executeCount
+                })
             }
         },
         mounted () {
@@ -389,9 +404,6 @@
                 'togglePropertyPanel',
                 'toggleStageReviewPanel',
                 'requestPipelineExecDetail',
-                'setPipelineDetail',
-                'getInitLog',
-                'getAfterLog',
                 'pausePlugin'
             ]),
             ...mapActions('common', [
@@ -562,12 +574,32 @@
                     this.skipTask = false
                 }
             },
+            togglePostActionVisible ({ stageIndex, containerGroupIndex, containerIndex }) {
+                const stage = this.curPipeline.stages[stageIndex]
+                let container = stage.containers[containerIndex]
+                if (typeof containerGroupIndex !== 'undefined') {
+                    container = stage.containers[containerIndex].groupContainers[containerGroupIndex]
+                }
+                this.$set(container, 'hidePostAction', !container.hidePostAction)
+            },
             locateAtom (row, isLocate = true) {
                 try {
-                    const { stageId, jobId, taskId } = row
+                    const { stageId, containerId, taskId, matrixFlag } = row
                     const stage = this.curPipeline.stages.find(stage => stage.id === stageId)
-                    const container = stage.containers.find(container => container.id === jobId)
+                    let container
+                    if (matrixFlag) {
+                        container = stage.containers
+                            .filter(item => Array.isArray(item.groupContainers))
+                            .map(item => item.groupContainers)
+                            .flat()
+                            .find(matrix => matrix.id === containerId)
+                    } else {
+                        container = stage.containers.find(item => item.id === containerId)
+                    }
+                    
+                    console.log(container)
                     const element = container.elements.find(element => element.id === taskId)
+                    
                     this.$set(element, 'locateActive', isLocate)
                 } catch (e) {
                     console.log(e)
@@ -583,9 +615,12 @@
                 this.activeErrorAtom = row
             },
             handleExecuteCountChange (executeCount) {
-                this.requestPipelineExecDetail({
-                    ...this.routerParams,
-                    executeCount
+                this.$router.push({
+                    ...this.$route,
+                    params: {
+                        ...this.$route.params,
+                        executeCount
+                    }
                 })
             }
         }
@@ -614,6 +649,12 @@
                 width: 88px;
                 flex-shrink: 0;
                 margin: 0 8px;
+            }
+            .exec-status-label {
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-gap: 6px;
             }
         }
         .pipeline-exec-timeline {
@@ -701,7 +742,7 @@
         .exec-pipeline-ui-wrapper {
             flex: 1;
             overflow: auto;
-            padding: 0 24px;
+            padding: 0 24px 42px 24px;
         }
         .exec-errors-popup {
             width: 100%;

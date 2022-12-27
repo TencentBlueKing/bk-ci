@@ -40,6 +40,14 @@
                     <Logo class="atom-invalid-icon" name="exclamation-triangle-shape" />
                 </template>
             </span>
+            <span v-if="hasHookAtom" :style="`top: ${hookToggleTop}`" :class="{
+                'post-action-arrow': true,
+                [postActionStatus]: true,
+                'post-action-arrow-hide': container.hidePostAction
+            }" @click.stop="togglePostAction"
+            >
+                <logo class="toggle-post-action-icon" size="6" name="angle-down"></logo>
+            </span>
         </draggable>
     </section>
 </template>
@@ -55,6 +63,7 @@
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
         ATOM_ADD_EVENT_NAME,
+        TOGGLE_POST_ACTION_VISIBLE,
         STATUS_MAP
     } from './constants'
     export default {
@@ -107,23 +116,60 @@
             isInstanceEditable () {
                 return !this.editable && this.pipeline && this.pipeline.instanceFromTemplate
             },
+            hasHookAtom () {
+                return this.container.elements.some(this.isHookAtom)
+            },
+            hookToggleTop () {
+                const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
+                if (firstHookIndex > -1) {
+                    const atomHeight = 53
+                    const hookToggleSize = 7
+                    // TODO: more elegant
+                    return `${firstHookIndex * atomHeight - hookToggleSize}px`
+                }
+                return 0
+            },
             atomList: {
                 get () {
-                    return this.container.elements.map(atom => {
-                        atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
-                        if (atom.isReviewing) {
-                            const atomReviewer = this.getReviewUser(atom)
-                            atom.computedReviewers = atomReviewer
-                        }
-                        if (!atom.atomCode) {
-                            atom.atomCode = atom['@type']
-                        }
-                        return atom
-                    })
+                    return this.container.elements
+                        .filter(atom => !(this.container.hidePostAction && this.isHookAtom(atom)))
+                        .map(atom => {
+                            atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
+                            if (atom.isReviewing) {
+                                const atomReviewer = this.getReviewUser(atom)
+                                atom.computedReviewers = atomReviewer
+                            }
+                            if (!atom.atomCode) {
+                                atom.atomCode = atom['@type']
+                            }
+                            return atom
+                        })
                 },
                 set (elements) {
                     this.handleChange(this.container, { elements })
                 }
+            },
+            postActionStatus () {
+                if (this.hasHookAtom) {
+                    const postAtoms = this.container.elements.filter(this.isHookAtom)
+                    console.log(postAtoms)
+                    for (let i = 0; i < postAtoms.length; i++) {
+                        const atom = postAtoms[i]
+                        switch (atom.status) {
+                            case STATUS_MAP.FAILED:
+                            case STATUS_MAP.CANCELED:
+                                return atom.status
+                            case STATUS_MAP.SUCCEED:
+                                if (i === postAtoms.length - 1) {
+                                    return atom.status
+                                }
+                                break
+                            case STATUS_MAP.RUNNING:
+                                return atom.status
+                        }
+                    }
+                }
+                return ''
             },
             dragOptions () {
                 return {
@@ -136,6 +182,13 @@
             }
         },
         methods: {
+            isHookAtom (atom) {
+                try {
+                    return !!atom.additionalOptions?.elementPostInfo
+                } catch (error) {
+                    return false
+                }
+            },
             handleCopy ({ elementIndex, element }) {
                 this.container.elements.splice(elementIndex + 1, 0, element)
             },
@@ -180,6 +233,13 @@
                     atomIndex,
                     stageIndex,
                     containerIndex
+                })
+            },
+            togglePostAction () {
+                eventBus.$emit(TOGGLE_POST_ACTION_VISIBLE, {
+                    stageIndex: this.stageIndex,
+                    containerGroupIndex: this.containerGroupIndex,
+                    containerIndex: this.containerIndex
                 })
             }
             
@@ -243,6 +303,71 @@
             &:hover {
                 border-color: $primaryColor;
                 color: $primaryColor;
+            }
+        }
+        .post-action-arrow {
+            position: relativecd;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: absolute;
+            height: 14px;
+            width: 14px;
+            border: 1px solid $unexecColor;
+            color: $unexecColor;
+            border-radius: 50%;
+            background: white !important;
+            top: -7px;
+            left: 17px;
+            z-index: 3;
+            font-weight: bold;
+            .toggle-post-action-icon {
+                display: block;
+                transition: all .5s ease;
+            }
+            &.post-action-arrow-hide {
+                .toggle-post-action-icon {
+                    transform: rotate(180deg);
+                }
+            }
+            &::after {
+                content: '';
+                position: absolute;
+                width: 2px;
+                height: 6px;
+                background-color: $unexecColor;
+                left: 5px;
+                top: -6px;
+            }
+            
+            &.FAILED {
+                border-color: $dangerColor;
+                color: $dangerColor;
+                &::after {
+                    background-color: $dangerColor;
+                }
+            }
+            &.CANCELED {
+                border-color: $warningColor;
+                color: $warningColor;
+                &::after {
+                    background-color: $warningColor;
+                }
+            }
+
+            &.SUCCEED {
+                border-color: $successColor;
+                color: $successColor;
+                &::after {
+                    background-color: $successColor;
+                }
+            }
+            &.RUNNING {
+                border-color: $primaryColor;
+                color: $primaryColor;
+                &::after {
+                    background-color: $primaryColor;
+                }
             }
         }
     }

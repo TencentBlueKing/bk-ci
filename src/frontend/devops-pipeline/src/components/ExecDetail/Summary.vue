@@ -7,12 +7,14 @@
             }"></span>
             <aside class="exec-detail-summary-title">
                 <bk-tag type="stroke" :theme="statusTheme">
-                    {{statusLabel}}
-                    <span
-                        v-if="execDetail.status === 'CANCELED'"
-                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
-                        class="devops-icon icon-info"
-                    >
+                    <span class="exec-status-label">
+                        {{statusLabel}}
+                        <span
+                            v-if="execDetail.status === 'CANCELED'"
+                            v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                            class="devops-icon icon-info-circle"
+                        >
+                        </span>
                     </span>
                 </bk-tag>
                 <span class="exec-detail-summary-title-build-msg">
@@ -21,42 +23,44 @@
             </aside>
             <aside class="exec-detail-summary-trigger">
                 <img
+                    v-if="execDetail.triggerUserProfile"
                     class="exec-trigger-profile"
                 />
+                <logo class="exec-trigger-profile" name="default-user" size="24" />
                 <span v-if="execDetail.triggerUser">
                     {{$t('details.executorInfo', [execDetail.triggerUser, execDetail.trigger, execFormatStartTime])}}
                 </span>
             </aside>
         </div>
         <div class="exec-detail-summary-info">
-            <div class="exec-detail-summary-info-trigger-lib">
+            <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{$t('details.triggerRepo')}}</span>
-                <div class="exec-detail-summary-info-block-content">
-                    <span>
-                        <i class="devops-icon icon-info-circle" />
-                        Tencent/bk-ci
-                    </span>
-                    <span>
-                        <i class="devops-icon icon-info-circle" />
-                        feat_branch1
-                    </span>
-                    <span>
-                        <i class="devops-icon icon-info-circle" />
-                        a660c6l
-                    </span>
+                <div v-if="webhookInfos" class="exec-detail-summary-info-material-list">
+                    <div class="exec-material-row visible-material-row">
+                        <span v-for="item in webhookInfos" :key="item.key">
+                            <i class="devops-icon icon-info-circle" />
+                            <a v-if="item.key === 'webhookCommitId'" class="material-link" theme="primary" target="_blank" :href="execDetail.webhookInfo.webhookRepoUrl">
+                                {{ item.value.substring(0, 8) }}
+                            </a>
+                            <span class="material-span" v-else>{{ item.value }}</span>
+                        </span>
+                    </div>
                 </div>
+                <span class="no-exec-material" v-else>--</span>
             </div>
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{$t('editPage.material')}}</span>
                 <div
                     v-if="visibleMaterial"
-                    :class="{
-                        'exec-detail-summary-info-material-list': true
-                    }">
+                    class="exec-detail-summary-info-material-list"
+                >
                     <div class="exec-material-row visible-material-row">
                         <span v-for="field in materialInfos" :key="field">
-                            <i class="devops-icon icon-info-circle" />
-                            {{ visibleMaterial[0][field] }}
+                            <logo :name="field.icon" size="14" />
+                            <a v-if="field.key === 'newCommitId'" class="material-link" theme="primary" target="_blank" :href="visibleMaterial[0].url">
+                                {{ visibleMaterial[0][field.key].substring(0, 8) }}
+                            </a>
+                            <span class="material-span" v-else>{{ visibleMaterial[0][field.key] }}</span>
                         </span>
                         <span @mouseenter="showMoreMaterial">...</span>
                     </div>
@@ -66,9 +70,12 @@
                             class="exec-material-row"
                             :key="material.newCommitId"
                         >
-                            <span v-for="field in materialInfos" :key="field">
-                                <i class="devops-icon icon-info-circle" />
-                                {{ material[field] }}
+                            <span v-for="field in materialInfos" :key="field.key">
+                                <logo :name="field.icon" size="14" />
+                                <a v-if="field.key === 'newCommitId'" class="material-link" theme="primary" target="_blank" :href="material.url">
+                                    {{ material[field.key].substring(0, 8) }}
+                                </a>
+                                <span class="material-span" v-else>{{ material[field.key] }}</span>
                             </span>
                             <span class="exec-more-material">...</span>
                         </li>
@@ -119,8 +126,12 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import { convertMStoStringByRule } from '@/utils/util'
+    import Logo from '@/components/Logo'
+    import { convertMStoStringByRule, convertTime } from '@/utils/util'
     export default {
+        components: {
+            Logo
+        },
         props: {
             execDetail: {
                 type: Object,
@@ -136,6 +147,9 @@
             }
         },
         computed: {
+            execFormatStartTime () {
+                return convertTime(this.execDetail?.startTime)
+            },
             executeTime () {
                 return this.execDetail?.executeTime ? convertMStoStringByRule(this.execDetail?.executeTime) : '--'
             },
@@ -171,26 +185,37 @@
             },
             visibleMaterial () {
                 if (Array.isArray(this.execDetail?.material) && this.execDetail?.material.length > 0) {
-                    return [
-                        ...this.execDetail?.material,
-                        ...this.execDetail?.material,
-                        ...this.execDetail?.material
-                    ]
+                    return this.execDetail?.material
                 }
                 return null
             },
-            hiddenMaterial () {
-                if (Array.isArray(this.execDetail?.material) && this.execDetail?.material.length > 0) {
-                    return this.execDetail?.material.slice(0)
-                }
-                return []
-            },
             materialInfos () {
                 return [
-                    'aliasName',
-                    'branchName',
-                    'newCommitId'
+                    {
+                        key: 'aliasName',
+                        icon: 'codeGithubWebHookTrigger'
+                    },
+                    {
+                        key: 'branchName',
+                        icon: 'branch'
+                    },
+                    {
+                        key: 'newCommitId',
+                        icon: 'commit'
+                    }
                 ]
+            },
+            webhookInfos () {
+                return this.execDetail?.webhookInfo
+                ? [
+                        'webhookAliasName',
+                        'webhookBranch',
+                        'webhookCommitId'
+                    ].map(field => ({
+                        key: field,
+                        value: this.execDetail?.webhookInfo?.[field] ?? '--'
+                    }))
+                    : null
             }
         },
         watch: {
@@ -275,6 +300,13 @@
             margin: 0;
             overflow: hidden;
 
+            .exec-status-label {
+                display: grid;
+                align-items: center;
+                grid-auto-flow: column;
+                grid-gap: 6px;
+            }
+
             &-build-msg {
                 flex: 1;
                 margin: 0 24px 0 8px;
@@ -286,33 +318,26 @@
             display: flex;
             align-items: center;
             flex-shrink: 0;
+            font-size: 12px;
             .exec-trigger-profile {
                 width: 24px;
                 height: 24px;
                 border-radius: 12px;
+                margin-right: 6px;
+                color: #C4C6CC;
             }
         }
         &-info {
             display: grid;
             grid-auto-flow: column;
-            grid-template-columns: repeat(5, fit-content);
+            grid-template-columns: repeat(5, fit-content(30%));
             font-size: 12px;
             grid-gap: 100px;
+            
             > div {
                 display: flex;
                 flex-direction: column;
-                &.exec-detail-summary-info-trigger-lib {
-                    .exec-detail-summary-info-block-content {
-                        display: grid;
-                        grid-gap: 20px;
-                        align-items: center;
-                        grid-template-columns: repeat(3, fit-content(160px));
-                        > span {
-                            @include ellipsis();
-                        }
-                    }
-
-                }
+                
                 &.exec-detail-summary-info-material {
                     .no-exec-material {
                         display: flex;
@@ -347,6 +372,27 @@
 
                             }
                             > span {
+                                @include ellipsis();
+                                display: inline-flex;
+                                min-width: auto;
+                                align-items: center;
+                                > svg {
+                                    flex-shrink: 0;
+                                    margin-right: 6px;
+                                }
+                            }
+                            .material-link {
+                                color: $primaryColor;
+                            }
+                            .material-link,
+                            .material-span {
+                                @include ellipsis();
+                            }
+                            .material-link {
+                                color: $primaryColor;
+                            }
+                            .material-link,
+                            .material-span {
                                 @include ellipsis();
                             }
                             &:not(:first-child) {

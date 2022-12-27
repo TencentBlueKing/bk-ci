@@ -1,6 +1,6 @@
 <template>
     <div :class="['bk-pipeline-matrix-group', {
-        'un-exec-this-time': isUnExecThisTime
+        'un-exec-this-time': isExecDetail && isUnExecThisTime
     }]">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
@@ -69,7 +69,8 @@
             updateCruveConnectHeight: Function
         },
         inject: [
-            'currentExecCount'
+            'currentExecCount',
+            'isExecDetail'
         ],
         data () {
             return {
@@ -194,6 +195,9 @@
     }
     .matrix-body {
       margin-top: 12px;
+      > div {
+        margin-bottom: 34px;
+      }
     }
   }
 </style>

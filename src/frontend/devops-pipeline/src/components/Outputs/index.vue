@@ -54,11 +54,11 @@
                         >
                             {{btn.text}}
                         </bk-button>
-                        <bk-popover theme="light" placement="bottom-end" v-if="activeOutputDetail.isApp">
-                            <i class="devops-icon icon-qrcode" />
+                        <bk-popover style="font-size:0" theme="light" placement="bottom-end" v-if="activeOutputDetail.isApp">
+                            <i style="font-size: 16px" class="devops-icon icon-qrcode" />
                             <qrcode slot="content" :text="activeOutputDetail.shortUrl" :size="100" />
                         </bk-popover>
-                        <ext-menu :config="extMenuConf"></ext-menu>
+                        <ext-menu :data="activeOutputDetail" :config="artifactMoreActions"></ext-menu>
                     </p>
                 </div>
                 <div
@@ -86,35 +86,27 @@
                 </div>
             </template>
         </section>
-        <bk-dialog
-            v-model="isCopyDialogShow"
-            :title="$t('details.copyTo')"
-            :close-icon="false"
-            :quick-close="false"
-            :loading="isCopying"
-            width="600"
-        >
-
-        </bk-dialog>
+        <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
     </div>
 </template>
 
 <script>
-    // import Logo from '@/components/Logo'
+    import CopyToCustomRepoDialog from '@/components/Outputs/CopyToCustomRepoDialog'
     import qrcode from '@/components/devops/qrcode'
     import { mapActions } from 'vuex'
     import ThirdPartyReport from '@/components/Outputs/ThirdPartyReport'
     import IframeReport from '@/components/Outputs/IframeReport'
     import { convertTime, convertFileSize } from '@/utils/util'
-    import { extForFile, repoTypeMap } from '@/utils/pipelineConst'
-    import extMenu from '@/components/pipelineList/extMenu'
+    import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
+    import ExtMenu from '@/components/pipelineList/extMenu'
     
     export default {
         components: {
             ThirdPartyReport,
             IframeReport,
             qrcode,
-            extMenu
+            ExtMenu,
+            CopyToCustomRepoDialog
         },
         data () {
             return {
@@ -126,15 +118,7 @@
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
-                isLoading: false,
-                extMenuConf: {
-                    extMenu: [{
-                        text: this.$t('details.copyTo'),
-                        handler: () => {
-                            this.isCopyDialogShow = true
-                        }
-                    }]
-                }
+                isLoading: false
             }
         },
         computed: {
@@ -186,7 +170,13 @@
             btns () {
                 const defaultBtns = [{
                     text: this.$t('details.goRepo'),
-                    handler: () => {}
+                    handler: () => {
+                        console.log(this.activeOutput)
+                        const pos = this.activeOutput.fullPath.lastIndexOf('/')
+                        const fileName = this.activeOutput.fullPath.substring(0, pos)
+                        const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]
+                        window.open(`${WEB_URL_PREFIX}/bkrepo/${this.$route.params.projectId}/generic?repoName=${repoName}&path=${encodeURIComponent(`${fileName}/default`)}`, '_blank')
+                    }
                 }]
                 if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
                     switch (true) {
@@ -198,8 +188,13 @@
                             break
                     }
                 }
-                console.log(defaultBtns)
                 return defaultBtns
+            },
+            artifactMoreActions () {
+                return [{
+                    text: this.$t('details.copyTo'),
+                    handler: this.$refs?.copyToDialog.show
+                }]
             },
             infoBlocks () {
                 return [
@@ -509,7 +504,7 @@
                 }
             }
             .pipeline-exec-output-block {
-                padding: 16px 24px 0 24px;
+                padding: 16px 24px;
                 .pipeline-exec-output-block-title {
                     font-size: 14px;
                     border-bottom: 1px solid #DCDEE5;

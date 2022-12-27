@@ -77,7 +77,6 @@
     import stageReviewPanel from '@/components/StageReviewPanel'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
-    import { convertTime } from '@/utils/util'
     import Logo from '@/components/Logo'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
 
@@ -202,10 +201,6 @@
                 }
                 return null
             },
-
-            execFormatStartTime () {
-                return convertTime(this.execDetail?.startTime)
-            },
             getElementViewName () {
                 try {
                     const {
@@ -236,18 +231,6 @@
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
-            },
-            showRetryIcon () {
-                return this.execDetail && ['RUNNING', 'QUEUE', 'STAGE_SUCCESS'].indexOf(this.execDetail.status) < 0
-            },
-            executeCounts () {
-                return [{
-                    id: 1,
-                    name: 1
-                }, {
-                    id: 2,
-                    name: 2
-                }]
             }
         },
 
@@ -375,6 +358,7 @@
         height: 100%;
         display: flex;
         flex-direction: column;
+        border-top: 1px solid #DDE4EB;
         .exec-detail-main {
             padding: 16px 24px;
             background: #F5F7FA;

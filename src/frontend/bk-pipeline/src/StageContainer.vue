@@ -135,7 +135,7 @@
     @import "./conf";
     .devops-stage-container {
         text-align: left;
-        margin: 16px 20px 0 20px;
+        margin: 16px 20px 24px 20px;
         position: relative;
 
         // 实心圆点
@@ -163,7 +163,7 @@
 
         .connect-line {
             position: absolute;
-            top: math.div($itemHeight, 2) - 4;
+            top: 1px;
             stroke: $primaryColor;
             stroke-width: 1;
             fill: none;

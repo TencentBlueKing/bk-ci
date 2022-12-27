@@ -48,7 +48,6 @@ import {
     UPDATE_STAGE,
     SET_INSERT_STAGE_STATE,
     SET_PIPELINE,
-    SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
     SET_PIPELINE_EXEC_DETAIL,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -189,11 +188,8 @@ export default {
     
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
-            const response = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
-            commit(SET_BUILD_PARAM, {
-                buildParams: response.data,
-                buildId
-            })
+            const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
+            return data
         } catch (e) {
             rootCommit(commit, FETCH_ERROR, e)
         }

@@ -400,15 +400,12 @@
             async copyToCustom (artifactory) {
                 let message, theme
                 try {
-                    const { projectId, pipelineId, buildNo } = this.$route.params
                     const params = {
                         files: [artifactory.name],
                         copyAll: false
                     }
                     const res = await this.$store.dispatch('common/requestCopyArtifactory', {
-                        projectId,
-                        pipelineId,
-                        buildId: buildNo,
+                        ...this.$route.params,
                         params
                     })
                     if (res) {

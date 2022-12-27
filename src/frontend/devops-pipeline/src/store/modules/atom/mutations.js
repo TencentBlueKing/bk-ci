@@ -43,7 +43,6 @@ import {
     UPDATE_ATOM,
     SET_PIPELINE_EDITING,
     SET_PIPELINE,
-    SET_BUILD_PARAM,
     DELETE_ATOM_PROP,
     SET_PIPELINE_EXEC_DETAIL,
     SET_REMOTE_TRIGGER_TOKEN,
@@ -354,19 +353,14 @@ export default {
             editingElementPos
         })
     },
-    [SET_BUILD_PARAM]: (state, { buildParams, buildId }) => {
-        return Object.assign(state, {
-            buildParamsMap: {
-                ...state.buildParamsMap,
-                [buildId]: buildParams
-            }
-        })
-    },
     [DELETE_ATOM_PROP]: (state, { element, propKey }) => {
         delete element[propKey]
         return state
     },
     [SET_PIPELINE_EXEC_DETAIL]: (state, execDetail = null) => {
+        if (execDetail?.model?.stages) {
+            execDetail.model.stages = execDetail.model.stages.slice(1)
+        }
         Object.assign(state, {
             execDetail
         })
