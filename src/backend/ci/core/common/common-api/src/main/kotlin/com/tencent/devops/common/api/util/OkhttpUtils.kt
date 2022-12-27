@@ -31,11 +31,8 @@ import com.tencent.devops.common.api.constant.CommonMessageCode.ERROR_HTTP_RESPO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import okhttp3.ConnectionPool
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.HttpUrl
 import okhttp3.HttpUrl.Companion.toHttpUrl
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient

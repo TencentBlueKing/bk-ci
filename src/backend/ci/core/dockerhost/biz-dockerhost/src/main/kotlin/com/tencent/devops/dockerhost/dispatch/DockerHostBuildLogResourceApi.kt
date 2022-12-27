@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.dispatch.docker.pojo.FormatLog
 import com.tencent.devops.dispatch.docker.pojo.LogType
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory

@@ -32,7 +32,6 @@ import com.tencent.devops.notify.blueking.sdk.pojo.ApiReq
 import com.tencent.devops.notify.blueking.sdk.pojo.ApiResp
 import com.tencent.devops.notify.blueking.sdk.pojo.NotifyProperties
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_SEND_FAIL
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
