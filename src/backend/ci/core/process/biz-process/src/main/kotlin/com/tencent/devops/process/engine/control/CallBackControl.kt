@@ -60,7 +60,6 @@ import com.tencent.devops.process.pojo.ProjectPipelineCallBackHistory
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import io.github.resilience4j.circuitbreaker.CallNotPermittedException
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
