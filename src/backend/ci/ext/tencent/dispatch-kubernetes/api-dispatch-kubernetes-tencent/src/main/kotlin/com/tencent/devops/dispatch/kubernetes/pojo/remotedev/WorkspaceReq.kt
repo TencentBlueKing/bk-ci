@@ -15,6 +15,16 @@ data class WorkspaceReq(
     val devFilePath: String?,
     @ApiModelProperty("devfile")
     val devFile: Devfile,
+    @ApiModelProperty("代码库认证信息")
+    val oAuthToken: String,
     @ApiModelProperty("image")
-    val image: String = ""
+    val image: String = "",
+    @ApiModelProperty("imagePullCertificate")
+    val imagePullCertificate: ImagePullCertificate? = null
+)
+
+data class ImagePullCertificate(
+    val host: String? = null,
+    val username: String? = null,
+    val password: String? = null
 )

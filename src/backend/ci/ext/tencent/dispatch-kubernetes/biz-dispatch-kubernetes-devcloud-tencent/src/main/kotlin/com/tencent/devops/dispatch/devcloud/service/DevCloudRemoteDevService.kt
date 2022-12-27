@@ -27,19 +27,24 @@
 
 package com.tencent.devops.dispatch.devcloud.service
 
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
-import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.devcloud.pojo.Container
+import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
+import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
+import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
+import com.tencent.devops.dispatch.devcloud.pojo.Volume
+import com.tencent.devops.dispatch.devcloud.pojo.VolumeMount
+import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -54,14 +59,48 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
+        logger.info("User $userId create workspace: ${JsonUtil.toJson(workspaceReq)}")
+        val imagePullCertificateList = if (workspaceReq.imagePullCertificate != null) {
+            listOf(ImagePullCertificate(
+                host = workspaceReq.imagePullCertificate?.host,
+                username = workspaceReq.imagePullCertificate?.username,
+                password = workspaceReq.imagePullCertificate?.password
+            ))
+        } else {
+            emptyList()
+        }
+
         val environmentOpRsp = workspaceDevCloudClient.createWorkspace(userId, Environment(
             kind = "evn/v1",
             APIVersion = "",
             spec = EnvironmentSpec(
                 containers = listOf(Container(
-                    image = "",
-                    resource = ResourceRequirements(8, 32008)
-                ))
+                    image = workspaceReq.image ,
+                    resource = ResourceRequirements(8, 32008),
+                    volumeMounts = listOf(VolumeMount(
+                        name = "workspace",
+                        mountPath = "/data/landun/workspace"
+                    ))
+                )),
+                initContainers = Container(
+                    image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.0",
+                    resource = ResourceRequirements(8, 32008),
+                    volumeMounts = listOf(VolumeMount(
+                        name = "workspace",
+                        mountPath = "/data/landun/workspace"
+                    )),
+                    env = listOf(
+                        EnvVar("GIT_TOKEN", workspaceReq.oAuthToken),
+                        EnvVar("GIT_URL", workspaceReq.repositoryUrl)
+                    )
+                ),
+                imagePullCertificate = imagePullCertificateList,
+                volumes = Volume(
+                    name = "workspace",
+                    volumeSource = VolumeSource(
+                        dataDisk = DataDiskSource()
+                    )
+                )
             )
         ))
 
