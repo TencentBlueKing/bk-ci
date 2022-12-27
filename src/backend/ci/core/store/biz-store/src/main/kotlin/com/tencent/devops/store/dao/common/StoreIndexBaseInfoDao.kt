@@ -32,8 +32,10 @@ import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
 import com.tencent.devops.model.store.tables.TStoreIndexResult
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -143,6 +145,27 @@ class StoreIndexBaseInfoDao {
             dslContext.deleteFrom(this)
                 .where(ID.eq(indexId))
                 .execute()
+        }
+    }
+
+    fun batchCreateStoreIndexResult(dslContext: DSLContext, tStoreIndexResultRecords: List<TStoreIndexResultRecord>) {
+        with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
+            dslContext.batchInsert(tStoreIndexResultRecords).execute()
+        }
+    }
+
+    fun getStoreIndexBaseInfo(
+        dslContext: DSLContext,
+        indexOperationType: IndexOperationTypeEnum,
+        storeType: StoreTypeEnum,
+        indexCode: String
+    ): StoreIndexBaseInfo? {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            return dslContext.selectFrom(this)
+                .where(INDEX_CODE.eq(indexCode))
+                .and(OPERATION_TYPE.eq(indexOperationType.name))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne(0, StoreIndexBaseInfo::class.java)
         }
     }
 }

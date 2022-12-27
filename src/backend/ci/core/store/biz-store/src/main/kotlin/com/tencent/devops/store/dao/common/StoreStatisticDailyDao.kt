@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.model.store.tables.TStoreStatisticsDaily
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
 import com.tencent.devops.store.pojo.common.StoreDailyStatisticRequest
@@ -171,6 +172,25 @@ class StoreStatisticDailyDao {
             conditions.add(STATISTICS_TIME.ge(startTime))
             conditions.add(STATISTICS_TIME.le(endTime))
             return dslContext.selectFrom(this).where(conditions).orderBy(STATISTICS_TIME.asc()).fetch()
+        }
+    }
+
+    fun getAtomExecuteCountByCode(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        startTime: LocalDateTime,
+        endTime: LocalDateTime
+    ): Int {
+        with(TStoreStatisticsDaily.T_STORE_STATISTICS_DAILY) {
+            val conditions = mutableListOf<Condition>()
+            conditions.add(STORE_CODE.eq(storeCode))
+            conditions.add(STORE_TYPE.eq(storeType))
+            conditions.add(STATISTICS_TIME.ge(startTime))
+            conditions.add(STATISTICS_TIME.le(endTime))
+            return dslContext.select(sum(DAILY_SUCCESS_NUM) + sum(DAILY_FAIL_NUM))
+                .from(this)
+                .where(conditions).fetchOne(0, Int::class.java) ?: 0
         }
     }
 }
