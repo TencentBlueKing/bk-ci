@@ -51,7 +51,6 @@ import com.tencent.devops.common.wechatwork.model.response.UserIdNameResponse
 import com.tencent.devops.common.wechatwork.model.response.UserIdsConvertResponse
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
 import com.tencent.ops.common.wechatwork.WechatWorkConfiguration
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request

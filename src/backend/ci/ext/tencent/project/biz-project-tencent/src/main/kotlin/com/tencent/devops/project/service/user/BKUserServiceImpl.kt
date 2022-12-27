@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.user.UserVO
 import com.tencent.devops.project.service.UserService
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
