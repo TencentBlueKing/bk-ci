@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.remotedev.MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT
 import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_CREATE_STARTUP
@@ -44,10 +45,13 @@ import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
@@ -61,14 +65,14 @@ class RemoteDevMQConfiguration @Autowired constructor() {
     @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
     private val agentStartQueueMaxConcurrency: Int = 100
 
-/*    @Bean
+    @Bean
     @ConditionalOnMissingBean(RabbitAdmin::class)
     fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
         return RabbitAdmin(connectionFactory)
-    }*/
+    }
 
     @Bean
-    fun exchange(): DirectExchange {
+    fun remoteDevExchange(): DirectExchange {
         val directExchange = DirectExchange(EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, true, false)
         directExchange.isDelayed = true
         return directExchange
@@ -85,13 +89,13 @@ class RemoteDevMQConfiguration @Autowired constructor() {
     @Bean
     fun buildWorkspaceCreateQueueBind(
         @Autowired buildWorkspaceCreateStartQueue: Queue,
-        @Autowired exchange: DirectExchange
+        @Autowired remoteDevExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(buildWorkspaceCreateStartQueue).to(exchange).with(ROUTE_WORKSPACE_CREATE_STARTUP)
+        return BindingBuilder.bind(buildWorkspaceCreateStartQueue).to(remoteDevExchange).with(ROUTE_WORKSPACE_CREATE_STARTUP)
     }
 
- /*   @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)*/
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
     fun workspaceCreateListener(
@@ -124,15 +128,15 @@ class RemoteDevMQConfiguration @Autowired constructor() {
     @Bean
     fun buildWorkspaceOperateQueueBind(
         @Autowired buildWorkspaceOperateQueue: Queue,
-        @Autowired exchange: DirectExchange
+        @Autowired remoteDevExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(buildWorkspaceOperateQueue).to(exchange).with(ROUTE_WORKSPACE_OPERATE_STARTUP)
+        return BindingBuilder.bind(buildWorkspaceOperateQueue).to(remoteDevExchange).with(ROUTE_WORKSPACE_OPERATE_STARTUP)
     }
 
     @Bean
     fun workspaceOperateListener(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired buildWorkspaceOperateQueueBind: Queue,
+        @Autowired buildWorkspaceOperateQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
         @Autowired workspaceListener: WorkspaceListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
@@ -141,7 +145,7 @@ class RemoteDevMQConfiguration @Autowired constructor() {
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = buildWorkspaceOperateQueueBind,
+            queue = buildWorkspaceOperateQueue,
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
