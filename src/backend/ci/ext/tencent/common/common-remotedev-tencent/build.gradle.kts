@@ -27,4 +27,5 @@
 
 dependencies {
     api(project(":core:common:common-event"))
+    compileOnly("org.springframework.boot:spring-boot-starter-amqp")
 }

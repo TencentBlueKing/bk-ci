@@ -30,9 +30,9 @@ package com.tencent.devops.common.remotedev
 import com.tencent.devops.common.event.annotation.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class RemoteDevDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
 ) {
