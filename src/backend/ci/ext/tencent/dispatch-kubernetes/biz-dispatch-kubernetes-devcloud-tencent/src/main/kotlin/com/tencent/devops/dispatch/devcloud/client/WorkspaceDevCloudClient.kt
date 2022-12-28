@@ -3,8 +3,11 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.environment.agent.utils.ShaUtils
 import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
@@ -18,10 +21,13 @@ import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
+import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -32,6 +38,7 @@ import java.net.SocketTimeoutException
 @Component
 class WorkspaceDevCloudClient @Autowired constructor(
     private val dslContext: DSLContext,
+    private val commonService: CommonService,
     private val dispatchWorkspaceOpHisDao: DispatchWorkspaceOpHisDao
 ) {
     private val logger = LoggerFactory.getLogger(WorkspaceDevCloudClient::class.java)
@@ -42,33 +49,24 @@ class WorkspaceDevCloudClient @Autowired constructor(
     @Value("\${devCloud.token}")
     val devCloudToken: String = ""
 
-    @Value("\${devCloud.url}")
+    @Value("\${devCloud.apiUrl}")
     val devCloudUrl: String = ""
 
     @Value("\${devCloud.smartProxyToken}")
     val smartProxyToken: String = ""
-
-    @Value("\${devCloud.cpu}")
-    var cpu: Int = 32
-
-    @Value("\${devCloud.memory}")
-    var memory: String = "65535M"
 
     fun createWorkspace(userId: String, environment: Environment): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/create"
         val body = ObjectMapper().writeValueAsString(environment)
         logger.info("User $userId request url: $url, body: $body")
         val request = Request.Builder()
-            .url(url)
+            .url(commonService.getProxyUrl(url))
             .headers(
                 Headers.of(
-                    SmartProxyUtil.makeHeaders(
+                    makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        userId,
-                        smartProxyToken,
-                        "",
-                        ""
+                        userId
                     )
                 )
             )
@@ -120,16 +118,13 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val url = devCloudUrl + "/environment/{${environmentAction.getValue()}}"
         logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
         val request = Request.Builder()
-            .url(url)
+            .url(commonService.getProxyUrl(url))
             .headers(
                 Headers.of(
-                    SmartProxyUtil.makeHeaders(
+                    makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        userId,
-                        smartProxyToken,
-                        "",
-                        ""
+                        userId
                     )
                 )
             )
@@ -187,16 +182,13 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val url = devCloudUrl + "/environment/status"
         logger.info("User $userId get environment status: $url")
         val request = Request.Builder()
-            .url(url)
+            .url(commonService.getProxyUrl(url))
             .headers(
                 Headers.of(
-                    SmartProxyUtil.makeHeaders(
+                    makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        userId,
-                        smartProxyToken,
-                        "",
-                        ""
+                        userId
                     )
                 )
             )
@@ -260,16 +252,13 @@ class WorkspaceDevCloudClient @Autowired constructor(
         logger.info("User $userId get environment list: $url")
         val body = ObjectMapper().writeValueAsString(EnvironmentListReq(userId, 0, 0))
         val request = Request.Builder()
-            .url(url)
+            .url(commonService.getProxyUrl(url))
             .headers(
                 Headers.of(
-                    SmartProxyUtil.makeHeaders(
+                    makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        userId,
-                        smartProxyToken,
-                        "",
-                        ""
+                        userId
                     )
                 )
             )
@@ -331,16 +320,13 @@ class WorkspaceDevCloudClient @Autowired constructor(
     ): TaskStatusRsp {
         val url = "$devCloudUrl/task/status?uid=$taskUid"
         val request = Request.Builder()
-            .url(url)
+            .url(commonService.getProxyUrl(url))
             .headers(
                 Headers.of(
-                    SmartProxyUtil.makeHeaders(
+                    makeHeaders(
                         devCloudAppId,
                         devCloudToken,
-                        userId,
-                        smartProxyToken,
-                        "",
-                        ""
+                        userId
                     )
                 )
             )
@@ -437,6 +423,34 @@ class WorkspaceDevCloudClient @Autowired constructor(
             logger.error("Get dev cloud task error, taskId: $taskId", e)
             return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
         }
+    }
+
+    fun makeHeaders(
+        appId: String,
+        token: String,
+        userId: String
+    ): Map<String, String> {
+        val headerBuilder = mutableMapOf<String, String>()
+        headerBuilder["APPID"] = appId
+        val timestampMillis = System.currentTimeMillis().toString()
+        headerBuilder["X-Timestamp"] = timestampMillis
+        headerBuilder["X-Staffname"] = userId
+        val requestId = RandomStringUtils.randomAlphabetic(8)
+        headerBuilder["X-Reqeust-Id"] = requestId
+        val encKey = ShaUtils.sha256("$appId,$timestampMillis,$userId,$requestId,$token")
+        headerBuilder["Key"] = encKey
+
+/*        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        headerBuilder["TIMESTAMP"] = timestamp
+        val staffId = "mock"
+        headerBuilder["STAFFID"] = staffId
+        headerBuilder["X-EXT-DATA"] = ""
+        val seq = "mock"
+        headerBuilder["X-RIO-SEQ"] = seq
+        val signature = ShaUtils.sha256("$timestamp$proxyToken$seq,$staffId,$userId,$timestamp")
+        headerBuilder["SIGNATURE"] = signature.toUpperCase()*/
+
+        return headerBuilder
     }
 }
 data class TaskResult(
