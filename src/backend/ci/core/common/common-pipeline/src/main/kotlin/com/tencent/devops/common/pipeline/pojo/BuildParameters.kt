@@ -40,5 +40,7 @@ data class BuildParameters(
     @ApiModelProperty("元素值类型", required = false)
     val valueType: BuildFormPropertyType? = null,
     @ApiModelProperty("是否只读", required = false)
-    val readOnly: Boolean? = false
+    val readOnly: Boolean? = false,
+    @ApiModelProperty("描述", required = false)
+    var desc: String? = null
 )
