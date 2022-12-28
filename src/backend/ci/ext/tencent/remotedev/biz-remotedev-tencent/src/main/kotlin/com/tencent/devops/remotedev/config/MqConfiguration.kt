@@ -67,5 +67,5 @@ class MqConfiguration {
     }
 
     @Bean
-    fun remoteDevDispatcher(@Autowired rabbitTemplate: RabbitTemplate) = RemoteDevDispatcher(rabbitTemplate)
+    fun remoteDevDispatcher(rabbitTemplate: RabbitTemplate) = RemoteDevDispatcher(rabbitTemplate)
 }
