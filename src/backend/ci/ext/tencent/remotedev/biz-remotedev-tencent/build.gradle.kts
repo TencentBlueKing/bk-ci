@@ -36,7 +36,5 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db"))
 
-    api(project(":ext:tencent:common:common-remotedev-tencent"))
-
     testImplementation(project(":core:common:common-test"))
 }
