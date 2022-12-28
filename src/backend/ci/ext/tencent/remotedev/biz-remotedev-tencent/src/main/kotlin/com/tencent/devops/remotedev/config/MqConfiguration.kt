@@ -4,6 +4,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.MQ.ROUTE_WORKSPACE_UPDATE_FROM_K8S
+import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.remotedev.listener.RemoteDevUpdateListener
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
@@ -11,6 +12,7 @@ import org.springframework.amqp.core.DirectExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
@@ -63,4 +65,7 @@ class MqConfiguration {
             maxConcurrency = 50
         )
     }
+
+    @Bean
+    fun remoteDevDispatcher(@Autowired rabbitTemplate: RabbitTemplate) = RemoteDevDispatcher(rabbitTemplate)
 }
