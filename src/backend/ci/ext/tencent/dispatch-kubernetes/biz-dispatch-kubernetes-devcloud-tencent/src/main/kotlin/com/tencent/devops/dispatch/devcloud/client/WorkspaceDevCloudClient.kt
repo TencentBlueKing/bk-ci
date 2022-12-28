@@ -3,30 +3,26 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.environment.agent.utils.ShaUtils
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.devcloud.common.ErrorCodeEnum
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListReq
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentListRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRsp
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
+import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
+import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -51,9 +47,6 @@ class WorkspaceDevCloudClient @Autowired constructor(
 
     @Value("\${devCloud.apiUrl}")
     val devCloudUrl: String = ""
-
-    @Value("\${devCloud.smartProxyToken}")
-    val smartProxyToken: String = ""
 
     fun createWorkspace(userId: String, environment: Environment): EnvironmentOpRspData {
         val url = devCloudUrl + "/environment/create"
