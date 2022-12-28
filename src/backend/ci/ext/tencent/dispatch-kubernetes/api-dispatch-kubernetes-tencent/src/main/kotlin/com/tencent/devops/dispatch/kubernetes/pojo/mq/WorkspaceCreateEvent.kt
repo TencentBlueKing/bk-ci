@@ -41,6 +41,7 @@ data class WorkspaceCreateEvent(
     val branch: String,
     val devFilePath: String?,
     val devFile: Devfile,
+    val oAuthToken: String,
     val image: String = "",
     override val delayMills: Int = 0,
     override val retryTime: Int = 0

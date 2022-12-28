@@ -27,9 +27,6 @@
 
 package com.tencent.devops.common.remotedev
 
-import com.tencent.devops.common.event.annotation.Event
-
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
 open class WorkspaceEvent(
     open val userId: String,
     open val traceId: String,

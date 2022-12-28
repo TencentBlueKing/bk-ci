@@ -41,7 +41,7 @@ class RemoteDevDispatcher constructor(
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
-            logger.error("BKSystemErrorMonitor|StreamTriggerDispatcher|error:", e)
+            logger.error("BKSystemErrorMonitor|RemoteDevDispatcher|error:", e)
         }
     }
 
