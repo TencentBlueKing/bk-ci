@@ -95,7 +95,13 @@ class WeworkServiceImpl(
                 val mediaId = uploadMedia(mediaType, mediaInputStream, mediaName)
                 val requestBodies =
                     (toUser.map { getSendMessageRequest(mediaType = mediaType, mediaId = mediaId, toUser = it) } +
-                        toParty.map { getSendMessageRequest(mediaType = mediaType, mediaId = mediaId, toParty = it) })
+                            toParty.map {
+                                getSendMessageRequest(
+                                    mediaType = mediaType,
+                                    mediaId = mediaId,
+                                    toParty = it
+                                )
+                            })
                         .filter { it.isPresent }
                 doSendRequest(requestBodies)
             }.fold({
@@ -120,13 +126,13 @@ class WeworkServiceImpl(
                         textType = WeworkTextType.text
                     )
                 } +
-                    toParty.map {
-                        getSendMessageRequest(
-                            content = message,
-                            toUser = it,
-                            textType = WeworkTextType.text
-                        )
-                    }).filter { it.isPresent }
+                        toParty.map {
+                            getSendMessageRequest(
+                                content = message,
+                                toUser = it,
+                                textType = WeworkTextType.text
+                            )
+                        }).filter { it.isPresent }
                 doSendRequest(requestBodies)
             }.fold({
                 LOG.info("send message success, $weworkNotifyTextMessage")
@@ -186,6 +192,7 @@ class WeworkServiceImpl(
      *  非文本消息时，默认 mediaId 不为空
      *  文本消息时，默认 content 不为空
      */
+    @SuppressWarnings("ComplexMethod")
     private fun getSendMessageRequest(
         mediaType: WeworkMediaType? = null,
         mediaId: String? = null,
@@ -212,6 +219,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.image -> {
                     Optional.of<AbstractSendMessageRequest>(
                         ImageSendMessageRequest(
@@ -226,6 +234,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.video -> {
                     Optional.of<AbstractSendMessageRequest>(
                         VideoSendMessageRequest(
@@ -240,6 +249,7 @@ class WeworkServiceImpl(
                         )
                     )
                 }
+
                 WeworkMediaType.voice -> {
                     Optional.of<AbstractSendMessageRequest>(
                         VoiceSendMessageRequest(
@@ -270,6 +280,7 @@ class WeworkServiceImpl(
                         text = TextMessageContent(content)
                     )
                 )
+
                 WeworkTextType.markdown -> Optional.of<AbstractSendMessageRequest>(
                     MarkdownSendMessageRequest(
                         agentId = agentId,
@@ -303,6 +314,7 @@ class WeworkServiceImpl(
                     .map { it.joinToString(separator = "|") }
                 Pair(toUser, emptyList())
             }
+
             WeworkReceiverType.group -> {
                 val toParty = HashSet(this).chunked(maxGroupNum).map { it.joinToString(separator = "|") }
                 Pair(emptyList(), toParty)
@@ -364,7 +376,7 @@ class WeworkServiceImpl(
         OkhttpUtils.doGet(
             buildUrl(
                 "${weWorkConfiguration.apiUrl}/cgi-bin" +
-                    "/gettoken?corpId=${weWorkConfiguration.corpId}&corpSecret=${weWorkConfiguration.corpSecret}"
+                        "/gettoken?corpId=${weWorkConfiguration.corpId}&corpSecret=${weWorkConfiguration.corpSecret}"
             )
         ).use {
             val responseBody = it.body?.string() ?: "{}"
