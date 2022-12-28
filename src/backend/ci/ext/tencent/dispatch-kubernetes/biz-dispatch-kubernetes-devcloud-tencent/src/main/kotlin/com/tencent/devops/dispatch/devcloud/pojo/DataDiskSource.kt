@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
 data class DataDiskSource(
-    val type: String,
-    val sizeLimit: Int
+    val type: String? = null,
+    val sizeLimit: Int? = null
 )
