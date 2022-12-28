@@ -102,6 +102,7 @@ class StreamRepoTriggerAction(
     }
 
     override fun getChangeSet(): Set<String>? {
+        if (this.data.context.repoTrigger?.repoTriggerCred == null) return emptySet()
         return baseAction.getChangeSet()
     }
 
