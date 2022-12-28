@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.remotedev.MQ.EXCHANGE_WORKSPACE_UPDATE_FROM_K8S
 import com.tencent.devops.common.remotedev.MQ.QUEUE_WORKSPACE_UPDATE_FROM_K8S
@@ -16,11 +17,23 @@ import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
 class MqConfiguration {
+
+    @Bean
+    @ConditionalOnMissingBean(RabbitAdmin::class)
+    fun rabbitAdmin(
+        connectionFactory: ConnectionFactory
+    ): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
     fun remoteDevExchange(): DirectExchange {
