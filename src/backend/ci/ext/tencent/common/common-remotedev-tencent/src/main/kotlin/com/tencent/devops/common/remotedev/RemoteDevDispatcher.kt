@@ -30,9 +30,9 @@ package com.tencent.devops.common.remotedev
 import com.tencent.devops.common.event.annotation.Event
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.stereotype.Service
+import org.springframework.stereotype.Component
 
-@Service
+@Component
 class RemoteDevDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
 ) {
@@ -41,7 +41,7 @@ class RemoteDevDispatcher constructor(
             val eventType = event::class.java.annotations.find { s -> s is Event } as Event
             rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event)
         } catch (e: Throwable) {
-            logger.error("BKSystemErrorMonitor|StreamTriggerDispatcher|error:", e)
+            logger.error("BKSystemErrorMonitor|RemoteDevDispatcher|error:", e)
         }
     }
 

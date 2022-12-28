@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
@@ -14,7 +15,6 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
-import com.tencent.devops.remotedev.mq.RemoteDevDispatcher
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -118,7 +118,9 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
                 gitTransferService.getProjectList(
                     any(), any(), any(), any(), any(), any()
                 )
-            } throws RemoteServiceException(errorMessage = "ops! it's error!下游服务抛出了异常，并且返回了401", httpStatus = HTTP_401)
+            } throws RemoteServiceException(
+                errorMessage = "ops! it's error!下游服务抛出了异常，并且返回了401", httpStatus = HTTP_401
+            )
             Assertions.assertThrows(ErrorCodeException::class.java) {
                 self.getAuthorizedGitRepository(
                     userId = "user00", search = null, page = null, pageSize = null
