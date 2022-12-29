@@ -14,6 +14,7 @@
                         :pipeline="pipeline"
                         :remove-handler="removeHandler"
                         :exec-pipeline="execPipeline"
+                        :collect-pipeline="collectHandler"
                         :apply-permission="applyPermission"
                     >
                     </pipeline-card>

@@ -327,14 +327,6 @@
                 }
                 return Object.keys(clsObj).filter(key => clsObj[key]).join(' ')
             },
-            isDisabledPipeline (pipeline) {
-                return pipeline.lock || !pipeline.canManualStartup
-            },
-            disabledTips (pipeline) {
-                console.log(pipeline)
-                if (!this.isDisabledPipeline(pipeline)) return ''
-                return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
-            },
             checkSelecteable (row) {
                 return !row.delete
             },
@@ -388,11 +380,7 @@
                         count,
                         current: page
                     })
-                    this.pipelineList = records.map(item => ({
-                        ...item,
-                        disabled: this.isDisabledPipeline(item),
-                        tooltips: this.disabledTips(item)
-                    }))
+                    this.pipelineList = records
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)

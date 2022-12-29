@@ -27,12 +27,9 @@
                 <span
                     :class="{
                         'bk-pipeline-card-trigger-btn': true,
-                        'disabled': disabled
+                        'disabled': pipeline.disabled
                     }"
-                    v-bk-tooltips="{
-                        content: disabledTips,
-                        disabled: !disabled
-                    }"
+                    v-bk-tooltips="pipeline.tooltips"
                     @click.stop="exec"
                 >
                     <logo v-if="pipeline.lock" name="minus-circle"></logo>
@@ -41,6 +38,17 @@
                         name="play"
                     />
                 </span>
+                <bk-button
+                    text
+                    class="bk-pipeline-card-collect-btn"
+                    :theme="pipeline.hasCollect ? 'warning' : ''"
+                    @click="collectPipeline(pipeline)">
+                    <i :class="{
+                        'devops-icon': true,
+                        'icon-star': !pipeline.hasCollect,
+                        'icon-star-shape': pipeline.hasCollect
+                    }" />
+                </bk-button>
                 <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
             </aside>
         </header>
@@ -125,6 +133,10 @@
                 type: Function,
                 default: () => () => ({})
             },
+            collectPipeline: {
+                type: Function,
+                default: () => () => ({})
+            },
             applyPermission: {
                 type: Function,
                 default: () => () => ({})
@@ -140,20 +152,13 @@
             timeTag () {
                 return this.pipeline.progress || `${this.pipeline.latestBuildStartDate}(${this.pipeline.duration})`
             },
-            disabled () {
-                return !this.pipeline.canManualStartup || this.pipeline.lock
-            },
-            disabledTips () {
-                if (!this.disabled) return ''
-                return this.$t(this.pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
-            },
             viewNamesStr () {
                 return this.pipeline.viewNames.join(';')
             }
         },
         methods: {
             exec () {
-                if (this.disabled) return
+                if (this.pipeline.disabled) return
                 this.execPipeline(this.pipeline)
             }
         }
@@ -216,15 +221,18 @@
             .bk-pipeline-card-header-right-aside {
                 display: flex;
                 align-items: center;
-                .bk-pipeline-card-trigger-btn {
+                .bk-pipeline-card-trigger-btn,
+                .bk-pipeline-card-collect-btn {
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
+                    font-size: 16px;
+                    
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
                     }
-                    &:not(.disabled):hover {
+                    &.bk-pipeline-card-trigger-btn:not(.disabled):hover {
                         color: $primaryColor;
                     }
                 }

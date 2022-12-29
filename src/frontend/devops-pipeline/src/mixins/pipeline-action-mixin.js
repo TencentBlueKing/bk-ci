@@ -108,6 +108,8 @@ export default {
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
                         trigger: triggerType[item.trigger],
+                        disabled: this.isDisabledPipeline(item),
+                        tooltips: this.disabledTips(item),
                         historyRoute: {
                             name: 'pipelinesHistory',
                             params: {
@@ -152,6 +154,13 @@ export default {
                 return `${this.$t('history.tableMap.totalTime')}${duration}`
             }
             return '--'
+        },
+        isDisabledPipeline (pipeline) {
+            return pipeline.lock || !pipeline.canManualStartup
+        },
+        disabledTips (pipeline) {
+            if (!this.isDisabledPipeline(pipeline)) return { disabled: true }
+            return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
         },
         calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
@@ -210,8 +219,8 @@ export default {
                     ...pipeline,
                     isCollect
                 })
+                
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
-                this.pipelineMap[pipeline.pipelineId].pipelineActions = this.getPipelineActions(this.pipelineMap[pipeline.pipelineId])
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
                 this.$showTips({
