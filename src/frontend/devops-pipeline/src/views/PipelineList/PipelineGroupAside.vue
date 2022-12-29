@@ -176,7 +176,8 @@
         computed: {
             ...mapState('pipelines', [
                 'sumView',
-                'isManage'
+                'isManage',
+                'hardViews'
             ]),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
@@ -202,7 +203,7 @@
             },
             pipelineGroupTree () {
                 return [{
-                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length - 2})`,
+                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length - this.hardViews.length})`,
                     id: 'personalViewList',
                     show: this.showClassify.personalViewList,
                     tooltips: {
