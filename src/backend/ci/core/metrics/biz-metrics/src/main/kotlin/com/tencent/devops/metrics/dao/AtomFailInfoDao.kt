@@ -46,14 +46,16 @@ import com.tencent.devops.metrics.constant.Constants.BK_PIPELINE_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_PROJECT_ID
 import com.tencent.devops.metrics.constant.Constants.BK_START_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_START_USER
-import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
-import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import com.tencent.devops.metrics.pojo.`do`.AtomFailDetailInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomFailInfoQO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
+import com.tencent.devops.model.metrics.tables.TAtomFailDetailData
+import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
+import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record1
+import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.SelectJoinStep
@@ -214,6 +216,26 @@ class AtomFailInfoDao {
                 .where(conditions)
                 .groupBy(this.PIPELINE_ID, this.BUILD_NUM)
                 .execute().toLong()
+        }
+    }
+
+    fun limitAtomCodes(dslContext: DSLContext, offset: Int, limit: Int): List<String> {
+        with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
+            return dslContext.selectDistinct(ATOM_CODE)
+                .from(this)
+                .orderBy(ATOM_CODE)
+                .limit(limit).offset(offset)
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun getAtomErrorInfos(dslContext: DSLContext, atomCode: String): Result<Record3<Int, Int, String>> {
+        with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
+            return dslContext.select(ERROR_CODE, ERROR_TYPE, ERROR_MSG)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .groupBy(ERROR_CODE, ERROR_TYPE)
+                .fetch()
         }
     }
 }

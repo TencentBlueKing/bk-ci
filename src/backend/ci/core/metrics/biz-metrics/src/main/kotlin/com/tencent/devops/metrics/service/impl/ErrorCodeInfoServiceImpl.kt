@@ -28,19 +28,32 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
+import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
+import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
 import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
+import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
+import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val errorCodeInfoDao: ErrorCodeInfoDao
+    private val errorCodeInfoDao: ErrorCodeInfoDao,
+    private val atomFailInfoDao: AtomFailInfoDao,
+    private val metricsDataReportDao: MetricsDataReportDao,
+    private val client: Client
 ) : ErrorCodeInfoManageService {
 
     override fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO> {
@@ -69,4 +82,60 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun syncAtomErrorCodeRel(userId: String): Boolean {
+        var offset = 0
+        val limit = 10
+        Executors.newFixedThreadPool(5).submit {
+            do {
+                val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, offset, limit)
+                atomCodes.forEach { atomCode ->
+                    val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
+                    saveErrorCodeInfoPOs.forEach {
+                        try {
+                            metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.warn("fail to update errorCodeInfo:$it", ignored)
+                            metricsDataReportDao.updateErrorCodeInfo(
+                                dslContext = dslContext,
+                                atomCode = atomCode,
+                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                    errorType = it.errorType,
+                                    errorCode = it.errorCode,
+                                    errorMsg = it.errorMsg,
+                                    modifier = it.modifier,
+                                    updateTime = LocalDateTime.now()
+                                )
+                            )
+                        }
+                    }
+                }
+                offset += limit
+            } while (atomCodes.size < limit)
+        }
+        return true
+    }
+
+    private fun getAtomErrorInfos(userId: String, atomCode: String): List<SaveErrorCodeInfoPO> {
+        val saveErrorCodeInfoPOs = atomFailInfoDao.getAtomErrorInfos(dslContext, atomCode).map {
+            SaveErrorCodeInfoPO(
+                id = client.get(ServiceAllocIdResource::class)
+                    .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
+                errorCode = it.value1(),
+                errorType = it.value2(),
+                errorMsg = it.value3(),
+                creator = userId,
+                modifier = userId,
+                createTime = LocalDateTime.now(),
+                updateTime = LocalDateTime.now(),
+                atomCode = atomCode
+            )
+        }
+        return saveErrorCodeInfoPOs
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ErrorCodeInfoManageService::class.java)
+    }
+
 }
