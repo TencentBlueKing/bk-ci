@@ -48,7 +48,7 @@ class RemoteDevUpdateListener @Autowired constructor(
         logger.info("A message is received from dispatch k8s $event")
         redisOperation.set(
             key = WorkspaceService.REDIS_UPDATE_EVENT_PREFIX +
-                "${event.type.name.uppercase(Locale.getDefault())}:${event.traceId}",
+                "${event.type.name.toUpperCase()}:${event.traceId}",
             value = event.status.toString(),
             expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
         )
