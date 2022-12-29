@@ -174,17 +174,21 @@
                 <template
                     v-else
                 >
+                    
                     <bk-button
                         text
                         theme="primary"
                         class="pipeline-exec-btn"
-                        :disabled="props.row.lock || !props.row.canManualStartup"
-                        @click="execPipeline(props.row)">
-                        <i :class="{
-                            'devops-icon': true,
-                            'icon-play': !props.row.lock,
-                            'icon-displayable': props.row.lock
-                        }" />
+                        :disabled="props.row.disabled"
+                        @click="execPipeline(props.row)"
+                    >
+                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
+                            <logo v-if="props.row.lock" name="minus-circle"></logo>
+                            <logo
+                                v-else
+                                name="play"
+                            />
+                        </span>
                     </bk-button>
                     <bk-button
                         text
@@ -324,6 +328,14 @@
                 }
                 return Object.keys(clsObj).filter(key => clsObj[key]).join(' ')
             },
+            isDisabledPipeline (pipeline) {
+                return pipeline.lock || !pipeline.canManualStartup
+            },
+            disabledTips (pipeline) {
+                console.log(pipeline)
+                if (!this.isDisabledPipeline(pipeline)) return ''
+                return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
+            },
             checkSelecteable (row) {
                 return !row.delete
             },
@@ -377,7 +389,11 @@
                         count,
                         current: page
                     })
-                    this.pipelineList = records
+                    this.pipelineList = records.map(item => ({
+                        ...item,
+                        disabled: this.isDisabledPipeline(item),
+                        tooltips: this.disabledTips(item)
+                    }))
                     if (this.isAllPipelineView || this.isPatchView || this.isDeleteView) {
                         this.visibleTagCountList = {}
                         setTimeout(this.calcOverPos, 100)

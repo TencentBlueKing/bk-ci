@@ -291,7 +291,8 @@ export default {
                 }
             })
         },
-        execPipeline ({ pipelineId }) {
+        execPipeline ({ pipelineId, disabled }) {
+            if (disabled) return
             this.$router.push({
                 name: 'pipelinesPreview',
                 params: {

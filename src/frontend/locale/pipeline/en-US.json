@@ -1094,5 +1094,7 @@
   "deleteAlready": "Deleted",
   "removedPipelineError": "Failure to move out of the line",
   "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
-  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty"
+  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
+  "pipelineLockTips": "流水线已禁用执行；可前往基础设置中恢复",
+  "pipelineManualDisable": "该流水线未配置手动触发"
 }

@@ -1097,5 +1097,7 @@
   "deleteAlready": "流水线已删除",
   "removedPipelineError": "移除流水线失败",
   "groupNameTooLong": "流水线组名称长度不能超过16个字符",
-  "groupNameNotAllowEmpty": "流水线组名称不能为空"
+  "groupNameNotAllowEmpty": "流水线组名称不能为空",
+  "pipelineLockTips": "流水线已禁用执行；可前往基础设置中恢复",
+  "pipelineManualDisable": "该流水线未配置手动触发"
 }

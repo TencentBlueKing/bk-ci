@@ -112,9 +112,14 @@
                 display: flex;
                 align-items: center;
                 .pipeline-exec-btn {
+                    line-height: 1;
+                    height: auto;
                     width: 30px;
                     font-size: 16px;
                     text-align: left;
+                    .exec-btn-span {
+                        display: flex;
+                    }
                 }
                 .more-action-menu {
                     font-size: 0;
