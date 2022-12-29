@@ -263,6 +263,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForList().rightPop(getFinalKey(key, isDistinguishCluster))
     }
 
+    fun trim(key: String, start: Long, end: Long) {
+        redisTemplate.opsForList().trim(key, start, end)
+    }
+
     fun getRedisName(): String? {
         return redisName
     }

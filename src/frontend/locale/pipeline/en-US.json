@@ -1015,6 +1015,7 @@
   "visibleRange": "Visible range",
   "personalVis": "Personally visible",
   "projectVis": "Project Visible",
+  "recentUse": "Recent Used",
   "myCollect": "My Favorites",
   "myPipeline": "My Pipelines",
   "stickyTop": "Top",
@@ -1103,5 +1104,7 @@
   "deleteAlready": "Deleted",
   "removedPipelineError": "Failure to move out of the line",
   "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
-  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty"
+  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
+  "pipelineLockTips": "Execute is disabled; You can go to Basic Settings to restore it",
+  "pipelineManualDisable": "This pipeline is not configured for manual trigger"
 }

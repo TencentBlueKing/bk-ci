@@ -245,19 +245,9 @@
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <input
-                            type="text"
-                            class="bk-form-input atom-name-input"
-                            :placeholder="$t('store.请输入')"
-                            name="publisher"
-                            v-model="atomForm.publisher"
-                            v-validate="{
-                                required: true,
-                                max: 20
-                            }"
-                            :class="{ 'is-danger': errors.has('publisher') }"
-                        >
-                        <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
+                        <bk-select v-model="atomForm.publisher">
+                            <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                        </bk-select>
                     </div>
                 </div>
                 <div
@@ -528,7 +518,8 @@
                     envError: false,
                     releaseTypeError: false
                 },
-                versionMap: {}
+                versionMap: {},
+                publishersList: []
             }
         },
         computed: {
@@ -553,6 +544,9 @@
                     { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
                     { name }
                 ]
+            },
+            userName () {
+                return this.$store.state.user.username
             }
         },
         watch: {
@@ -583,6 +577,7 @@
         async created () {
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
+            await this.fetchPublishersList(this.atomForm.atomCode)
             this.requestAtomClassify()
         },
         methods: {
@@ -599,6 +594,18 @@
                 this.$router.push({
                     name: 'atomHome'
                 })
+            },
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             },
             async requestAtomlabels () {
                 try {

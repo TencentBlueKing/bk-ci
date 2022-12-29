@@ -271,7 +271,8 @@
                         this.goList()
                     } else {
                         this.$refs.pipelineBox?.requestList?.({
-                            page: 1
+                            page: 1,
+                            pageSize: 50
                         })
                     }
                     this.checkHasCreatePermission()
@@ -322,6 +323,11 @@
                             ...this.$route.params,
                             viewId
                         }
+                    })
+                } else {
+                    this.$refs.pipelineBox?.requestList?.({
+                        page: 1,
+                        pageSize: 50
                     })
                 }
             },

@@ -105,7 +105,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -736,7 +737,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         version: Int? = null,
         checkPermission: Boolean = true
     ): Model {
-
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,

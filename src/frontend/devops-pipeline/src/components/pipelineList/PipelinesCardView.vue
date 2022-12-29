@@ -49,7 +49,7 @@
             return {
                 isLoading: false,
                 isPatchOperate: false,
-                defaultPageSize: 32,
+                defaultPageSize: 50,
                 activePipeline: null
             }
         },
@@ -85,7 +85,6 @@
                     viewId: this.$route.params.viewId,
                     ...this.filterParams
                 })
-                console.log(res)
                 return res
             },
             refresh () {

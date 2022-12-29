@@ -26,7 +26,8 @@ import {
     COLLECT_VIEW_ID_NAME,
     ALL_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID
+    UNCLASSIFIED_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID
 } from '@/store/constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelineViews/projects`
@@ -38,23 +39,30 @@ const UPDATE_PIPELINE_GROUP = 'UPDATE_PIPELINE_GROUP'
 const state = {
     allPipelineGroup: [],
     tagGroupList: [],
-    sumViews: [
-        {
-            id: ALL_PIPELINE_VIEW_ID,
-            name: ALL_PIPELINE_VIEW_ID,
-            icon: 'group',
-            hideMore: true
-        }
-    ],
+    sumView: {
+        id: ALL_PIPELINE_VIEW_ID,
+        name: ALL_PIPELINE_VIEW_ID,
+        icon: 'group',
+        hideMore: true
+    },
     hardViews: [
         {
+            id: RECENT_USED_VIEW_ID,
+            countKey: 'recentUseCount',
+            i18nKey: RECENT_USED_VIEW_ID,
+            icon: 'time-circle-fill',
+            hideMore: true
+        },
+        {
             id: COLLECT_VIEW_ID,
+            countKey: 'myFavoriteCount',
             i18nKey: COLLECT_VIEW_ID_NAME,
             icon: 'star-shape',
             hideMore: true
         },
         {
             id: MY_PIPELINE_VIEW_ID,
+            countKey: 'myPipelineCount',
             i18nKey: MY_PIPELINE_VIEW_ID,
             icon: 'user-shape',
             hideMore: true
@@ -91,7 +99,7 @@ const getters = {
     fixedGroupIdSet: (state, getters) => new Set([
         UNCLASSIFIED_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID,
-        ...state.sumViews.map(view => view.id),
+        ...state.sumView.id,
         ...Object.keys(getters.hardViewsMap)
     ]),
     groupMap: (state, getters) => state.allPipelineGroup.reduce((acc, item) => {
@@ -153,10 +161,11 @@ const mutations = {
         tag.name = name
     },
     addCollectViewPipelineCount (state, count) {
-        state.hardViews[0].pipelineCount += count
+        state.hardViews[1].pipelineCount += count
         state.hardViews = [
             state.hardViews[0],
-            ...state.hardViews.slice(1)
+            state.hardViews[1],
+            ...state.hardViews.slice(2)
         ]
     },
     [UPDATE_PIPELINE_GROUP]: (state, { id, body }) => {
@@ -196,10 +205,12 @@ const actions = {
             if (viewId) {
                 await dispatch('requestGroupPipelineCount', { projectId, viewId })
             }
-
-            state.sumViews[0].pipelineCount = groupCounts.data.totalCount
-            state.hardViews[0].pipelineCount = groupCounts.data.myFavoriteCount
-            state.hardViews[1].pipelineCount = groupCounts.data.myPipelineCount
+            
+            state.sumView.pipelineCount = groupCounts.data.totalCount
+            state.hardViews = state.hardViews.map(hardView => ({
+                ...hardView,
+                pipelineCount: groupCounts.data[hardView.countKey]
+            }))
         } catch (error) {
             console.error(error)
         }
