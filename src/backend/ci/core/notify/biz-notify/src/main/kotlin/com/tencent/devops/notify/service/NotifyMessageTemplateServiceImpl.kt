@@ -112,13 +112,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             )
         }
         if (null != rtx) {
-            val notifyTypeScope = mutableListOf(NotifyType.RTX.name)
             if (common?.contains(NotifyType.WEWORK_GROUP.name) == true) {
-                notifyTypeScope.add(NotifyType.WEWORK_GROUP.name)
+                subTemplateList.add(
+                    SubNotifyMessageTemplate(
+                        notifyTypeScope = mutableListOf(NotifyType.WEWORK_GROUP.name),
+                        title = rtx.title,
+                        body = rtx.body,
+                        creator = rtx.creator,
+                        modifier = rtx.modifior,
+                        createTime = (rtx.createTime as LocalDateTime).timestampmilli(),
+                        updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
+                    )
+                )
             }
             subTemplateList.add(
                 SubNotifyMessageTemplate(
-                    notifyTypeScope = notifyTypeScope,
+                    notifyTypeScope = mutableListOf(NotifyType.RTX.name),
                     title = rtx.title,
                     body = rtx.body,
                     creator = rtx.creator,
