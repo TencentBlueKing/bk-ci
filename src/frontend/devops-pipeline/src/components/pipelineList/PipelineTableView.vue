@@ -183,14 +183,22 @@
                         class="pipeline-exec-btn"
                         :disabled="props.row.lock || !props.row.canManualStartup"
                         @click="execPipeline(props.row)">
-                        {{ $t(props.row.lock ? 'disabled' : 'exec') }}
+                        <i :class="{
+                            'devops-icon': true,
+                            'icon-play': !props.row.lock,
+                            'icon-displayable': props.row.lock
+                        }" />
                     </bk-button>
                     <bk-button
                         text
-                        theme="primary"
+                        theme="warning"
                         class="pipeline-exec-btn"
                         @click="collectHandler(props.row)">
-                        {{ $t(props.row.hasCollect ? 'uncollect' : 'collect') }}
+                        <i :class="{
+                            'devops-icon': true,
+                            'icon-star': !props.row.hasCollect,
+                            'icon-star-shape': props.row.hasCollect
+                        }" />
                     </bk-button>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
                 </template>

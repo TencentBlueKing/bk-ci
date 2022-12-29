@@ -205,7 +205,7 @@ const actions = {
             if (viewId) {
                 await dispatch('requestGroupPipelineCount', { projectId, viewId })
             }
-            debugger
+            
             state.sumView.pipelineCount = groupCounts.data.totalCount
             state.hardViews = state.hardViews.map(hardView => ({
                 ...hardView,

@@ -112,7 +112,8 @@
                 display: flex;
                 align-items: center;
                 .pipeline-exec-btn {
-                    width: 60px;
+                    width: 30px;
+                    font-size: 16px;
                     text-align: left;
                 }
                 .more-action-menu {
