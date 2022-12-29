@@ -42,5 +42,7 @@ data class BuildParameters(
     @ApiModelProperty("是否只读", required = false)
     val readOnly: Boolean? = false,
     @ApiModelProperty("描述", required = false)
-    var desc: String? = null
+    var desc: String? = null,
+    @ApiModelProperty("默认值", required = false)
+    var defaultValue: Any? = null
 )

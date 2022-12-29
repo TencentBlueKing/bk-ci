@@ -54,7 +54,8 @@ open class V2BuildParametersCompatibilityTransformer : BuildParametersCompatibil
                 value = value,
                 valueType = param.type,
                 readOnly = param.readOnly,
-                desc = param.desc
+                desc = param.desc,
+                defaultValue = param.defaultValue
             )
         }
 
