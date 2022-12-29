@@ -33,16 +33,20 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
-import java.io.InputStream
 import javax.validation.Valid
-import javax.ws.rs.*
+import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
@@ -65,7 +69,7 @@ interface UserStoreIndexManageResource {
 
     @ApiOperation("删除研发商店指标")
     @DELETE
-    @Path("/delete/{indexId}")
+    @Path("/indexIds/{indexId}/delete}")
     fun delete(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
@@ -84,7 +88,7 @@ interface UserStoreIndexManageResource {
         userId: String,
         @ApiParam("查询关键字", required = false)
         @QueryParam("keyWords")
-        keyWords: String?,
+        keyWords: String? = null,
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,

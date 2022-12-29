@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreHonorResource
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreHonorService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -62,6 +64,24 @@ class UserStoreHonorResourceImpl @Autowired constructor(
     }
 
     override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
-        return Result(storeHonorService.add(userId, addStoreHonorRequest))
+        return storeHonorService.add(userId, addStoreHonorRequest)
+    }
+
+    override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
+        return storeHonorService.getStoreHonor(userId, storeType, storeCode)
+    }
+
+    override fun installStoreHonor(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        honorId: String
+    ): Result<Boolean> {
+        return Result(storeHonorService.installStoreHonor(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            honorId = honorId
+        ))
     }
 }

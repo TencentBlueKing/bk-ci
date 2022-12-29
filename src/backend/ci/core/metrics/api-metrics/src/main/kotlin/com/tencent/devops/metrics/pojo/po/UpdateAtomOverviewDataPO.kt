@@ -50,6 +50,8 @@ data class UpdateAtomOverviewDataPO(
     var successExecuteCount: Long,
     @ApiModelProperty("失败执行次数")
     var failExecuteCount: Long,
+    @ApiModelProperty("失败合规次数")
+    val failComplianceCount: Long,
     @ApiModelProperty("修改人")
     var modifier: String,
     @ApiModelProperty("更新时间")

@@ -79,7 +79,9 @@ data class MarketItem(
     @ApiModelProperty("每日统计信息列表")
     val dailyStatisticList: List<StoreDailyStatistic>? = null,
     @ApiModelProperty("荣誉信息列表")
-    val honorInfoList: List<HonorInfo>? = null,
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null,
     @ApiModelProperty("最近执行次数")
     val recentExecuteNum: Int? = null
 )

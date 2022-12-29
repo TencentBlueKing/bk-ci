@@ -80,6 +80,6 @@ data class TemplateDetail(
     @ApiModelProperty("用户评论信息", required = true)
     val userCommentInfo: StoreUserCommentInfo,
     @ApiModelProperty("荣誉信息", required = false)
-    val honorInfo: List<HonorInfo>? = null
+    val honorInfos: List<HonorInfo>? = null
 
 )

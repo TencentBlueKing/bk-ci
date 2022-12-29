@@ -30,6 +30,8 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
+import com.tencent.devops.store.pojo.common.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 
 interface StoreIndexManageService {
@@ -39,4 +41,9 @@ interface StoreIndexManageService {
     fun delete(userId: String, indexId: String): Result<Boolean>
 
     fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
+
+    fun getStoreIndexInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<StoreIndexInfo>>
 }

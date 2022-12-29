@@ -168,4 +168,18 @@ class StoreIndexBaseInfoDao {
                 .fetchOne(0, StoreIndexBaseInfo::class.java)
         }
     }
+
+    fun getStoreIndexInfosByStoreCodes(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ) {
+        with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
+            val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
+            dslContext.select(
+                tStoreIndexBaseInfo.INDEX_CODE,
+
+            )
+        }
+    }
 }
