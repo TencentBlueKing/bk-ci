@@ -27,7 +27,8 @@ import {
     COLLECT_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID
+    UNCLASSIFIED_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID
 } from '@/store/constants'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -163,14 +164,11 @@ export default {
                 ALL_PIPELINE_VIEW_ID,
                 COLLECT_VIEW_ID,
                 MY_PIPELINE_VIEW_ID,
-                UNCLASSIFIED_PIPELINE_VIEW_ID
+                UNCLASSIFIED_PIPELINE_VIEW_ID,
+                RECENT_USED_VIEW_ID
             ].includes(this.$route.params.viewId)
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
-                {
-                    text: (pipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),
-                    handler: this.collectHandler
-                },
                 {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
@@ -293,7 +291,8 @@ export default {
                 }
             })
         },
-        execPipeline ({ pipelineId }) {
+        execPipeline ({ pipelineId, disabled }) {
+            if (disabled) return
             this.$router.push({
                 name: 'pipelinesPreview',
                 params: {

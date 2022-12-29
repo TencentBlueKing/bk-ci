@@ -145,7 +145,7 @@
             },
             disabledTips () {
                 if (!this.disabled) return ''
-                return this.$t(this.pipeline.lock ? '流水线已禁用执行；可前往基础设置中恢复' : '该流水线未配置手动触发')
+                return this.$t(this.pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
             },
             viewNamesStr () {
                 return this.pipeline.viewNames.join(';')
