@@ -5,7 +5,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Component
 @Component
 class WorkspaceCheckJob @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils,
+    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
     private val redisOperation: RedisOperation,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
@@ -38,10 +38,10 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
-                val sleepWorkspaceList = redisUtils.getSleepWorkspaceHeartbeats()
+                val sleepWorkspaceList = devcloudWorkspaceRedisUtils.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach {
                     stopInactiveWorkspace(it)
-                    redisUtils.deleteWorkspaceHeartbeat("admin", it)
+                    devcloudWorkspaceRedisUtils.deleteWorkspaceHeartbeat("admin", it)
 
                     // 发送mq事件通知remoteDev服务刷新工作空间状态
                     // TODO

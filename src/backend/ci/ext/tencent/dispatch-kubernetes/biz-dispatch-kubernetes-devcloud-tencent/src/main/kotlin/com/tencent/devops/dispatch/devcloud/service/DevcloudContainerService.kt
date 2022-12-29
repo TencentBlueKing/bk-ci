@@ -29,7 +29,7 @@ package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
@@ -55,7 +55,7 @@ import org.springframework.stereotype.Service
 class DevcloudContainerService @Autowired constructor(
     private val logsPrinter: LogsPrinter,
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils
+    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils
 ) : ContainerService {
 
     companion object {
@@ -105,7 +105,7 @@ class DevcloudContainerService @Autowired constructor(
 
     override fun waitTaskFinish(userId: String, taskId: String): DispatchBuildTaskStatus {
         // 将task放入缓存，等待回调
-        redisUtils.refreshTaskStatus(
+        devcloudWorkspaceRedisUtils.refreshTaskStatus(
             userId = userId,
             taskUid = taskId,
             taskStatus = TaskStatus(taskId)
@@ -119,7 +119,7 @@ class DevcloudContainerService @Autowired constructor(
                 return DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, "DevCloud任务超时（10min）")
             }
             Thread.sleep(1 * 1000)
-            val taskStatus = redisUtils.getTaskStatus(taskId)
+            val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
                 return if (taskStatus.status == TaskStatusEnum.Success) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)

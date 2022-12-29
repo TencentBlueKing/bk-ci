@@ -39,7 +39,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.devcloud.pojo.Volume
 import com.tencent.devops.dispatch.devcloud.pojo.VolumeMount
 import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
-import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
@@ -54,7 +54,7 @@ import org.springframework.stereotype.Service
 @Service("devcloudRemoteDevService")
 class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val redisUtils: RedisUtils,
+    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
@@ -169,12 +169,12 @@ class DevCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        redisUtils.refreshHeartbeat(userId, workspaceName)
+        devcloudWorkspaceRedisUtils.refreshHeartbeat(userId, workspaceName)
         return true
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        redisUtils.refreshTaskStatus("devcloud", taskStatus.uid, taskStatus)
+        devcloudWorkspaceRedisUtils.refreshTaskStatus("devcloud", taskStatus.uid, taskStatus)
         return true
     }
 

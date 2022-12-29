@@ -36,7 +36,7 @@ import org.springframework.stereotype.Component
 import java.util.stream.Collectors
 
 @Component
-class RedisUtils @Autowired constructor(
+class DevcloudWorkspaceRedisUtils @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
@@ -106,6 +106,6 @@ class RedisUtils @Autowired constructor(
     }
 
     companion object {
-        private val logger = LoggerFactory.getLogger(RedisUtils::class.java)
+        private val logger = LoggerFactory.getLogger(DevcloudWorkspaceRedisUtils::class.java)
     }
 }
