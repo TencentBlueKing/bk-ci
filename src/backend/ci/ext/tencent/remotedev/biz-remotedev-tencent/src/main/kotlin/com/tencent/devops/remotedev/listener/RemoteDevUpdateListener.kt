@@ -34,6 +34,7 @@ import com.tencent.devops.remotedev.service.WorkspaceService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Suppress("LongParameterList")
@@ -46,7 +47,8 @@ class RemoteDevUpdateListener @Autowired constructor(
     override fun execute(event: RemoteDevUpdateEvent) {
         logger.info("A message is received from dispatch k8s $event")
         redisOperation.set(
-            key = "${WorkspaceService.REDIS_UPDATE_EVENT_PREFIX}${event.type.name.toLowerCase()}:${event.traceId}",
+            key = WorkspaceService.REDIS_UPDATE_EVENT_PREFIX +
+                "${event.type.name.uppercase(Locale.getDefault())}:${event.traceId}",
             value = event.status.toString(),
             expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
         )
