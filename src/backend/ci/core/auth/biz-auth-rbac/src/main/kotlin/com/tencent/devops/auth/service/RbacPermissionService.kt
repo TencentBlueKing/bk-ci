@@ -33,11 +33,16 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.slf4j.LoggerFactory
 
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService
 ) : PermissionService {
+    companion object {
+        private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
+    }
+
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
         return true
     }
@@ -68,6 +73,10 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
+        logger.info(
+            "[rbac] getUserResourcesByActions : userId = $userId | actions = $action |" +
+                " projectCode = $projectCode | resourceType = $resourceType"
+        )
         val instanceList = if (resourceType == AuthResourceType.PROJECT.value) {
             authHelper.getInstanceList(userId, action, resourceType)
         } else {
@@ -92,6 +101,21 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        logger.info(
+            "[rbac] getUserResourcesByActions : userId = $userId | actions = $actions |" +
+                " projectCode = $projectCode | resourceType = $resourceType"
+        )
+        val result = mutableMapOf<AuthPermission, List<String>>()
+        actions.forEach {
+            val actionResourceList = getUserResourceByAction(
+                userId = userId,
+                action = it,
+                projectCode = projectCode,
+                resourceType = resourceType
+            )
+            val authPermission = it.substringAfterLast("_")
+            result[AuthPermission.get(authPermission)] = actionResourceList
+        }
+        return result
     }
 }
