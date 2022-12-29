@@ -85,7 +85,17 @@ class RbacAuthPermissionApi(
         permissions: Set<AuthPermission>,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val actions = mutableListOf<String>()
+        permissions.forEach {
+            actions.add(RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = it))
+        }
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            resourceType = resourceType.value,
+            projectCode = projectCode,
+            action = actions
+        ).data ?: emptyMap()
     }
 
     override fun getUserResourcesByPermissions(
@@ -111,5 +121,9 @@ class RbacAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): Boolean {
         return true
+    }
+
+    private fun buildAction(resourceType: String, permission: AuthPermission): String {
+        return "${resourceType}_${permission.value}"
     }
 }
