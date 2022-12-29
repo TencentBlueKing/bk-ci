@@ -27,23 +27,23 @@
 
 package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.common.web.annotation.BkField
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
-@ApiModel("荣誉信息")
-data class HonorInfo(
-    @ApiModelProperty("荣誉ID")
-    val honorId: String,
-    @ApiModelProperty("荣誉头衔")
-    @BkField(maxLength = 4)
-    val honorTitle: String,
-    @ApiModelProperty("荣誉名称")
-    @BkField(maxLength = 40)
-    val honorName: String,
-    @ApiModelProperty("是否佩戴")
-    val mountFlag: Boolean,
-    @ApiModelProperty("创建时间")
-    val createTime: LocalDateTime
+@ApiModel("研发商店指标信息")
+data class StoreIndexInfo(
+    @ApiModelProperty("指标代码", required = true)
+    val indexCode: String,
+    @ApiModelProperty("指标名称", required = true)
+    val indexName: String,
+    @ApiModelProperty("图标地址", required = true)
+    val iconUrl: String,
+    @ApiModelProperty("指标描述", required = true)
+    val description: String,
+    @ApiModelProperty("等级名称", required = true)
+    val indexLevelName: String,
+    @ApiModelProperty("图标CSS值", required = true)
+    val iconCssValue: String,
+    @ApiModelProperty("指标状态显示", required = true)
+    val hover: String
 )

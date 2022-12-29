@@ -60,7 +60,6 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
-import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
@@ -117,6 +116,7 @@ import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreHonorService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
@@ -160,7 +160,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
     lateinit var storeMemberDao: StoreMemberDao
 
     @Autowired
-    lateinit var storeHonorDao: StoreHonorDao
+    lateinit var storeHonorService: StoreHonorService
 
     @Autowired
     lateinit var storeProjectService: StoreProjectService
@@ -297,7 +297,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomIdSet.add(it[KEY_ID] as String)
             atomCodeSet.add(it[KEY_ATOM_CODE] as String)
         }
-        val atomHonorInfoMap = storeHonorDao.getHonorInfos(dslContext, StoreTypeEnum.ATOM, atomCodeSet.toList())
+        val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
         val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
         // 查询使用插件的流水线数量
         var atomPipelineCntMap: Map<String, Int>? = null

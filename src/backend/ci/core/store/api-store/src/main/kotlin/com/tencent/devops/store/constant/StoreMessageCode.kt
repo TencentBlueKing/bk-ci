@@ -94,8 +94,8 @@ object StoreMessageCode {
     // 研发商店：从[{0}]分支拉取插件配置文件[error.json]失败,请确认是否OAUTH授权、文件是否正确上传代码库等
     const val USER_REPOSITORY_ERROR_JSON_ERROR_CODE_EXIST_DUPLICATE = "2120036" // 研发商店：插件配置文件[error.json]errorCode字段数据重复，请检查{0}
     const val USER_REPOSITORY_ERROR_JSON_FIELD_IS_INVALID = "2120037" // 研发商店：插件配置文件[error.json]errorCode格式不正确，请检查
-    const val USER_ATOM_ICON_TYPE_IS_SVG = "2120034" // 研发商店：组件图标类型应为SVG
-    const val USER_ATOM_ICON_IS_SQUARE = "2120035" // 研发商店：组件图标形状应该为正方形
+    const val USER_STORE_ICON_TYPE_IS_SVG = "2120034" // 研发商店：组件图标类型应为SVG
+    const val USER_STORE_ICON_IS_SQUARE = "2120035" // 研发商店：组件图标形状应该为正方形
     const val UPLOAD_ICON_IS_TOO_LARGE = "2120013" // 研发商店：上传的icon文件不能超过{0}
 
     // 模板相关的错误提示

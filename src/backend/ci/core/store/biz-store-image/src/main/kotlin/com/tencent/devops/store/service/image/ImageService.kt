@@ -44,7 +44,11 @@ import com.tencent.devops.model.store.tables.records.TImageRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
-import com.tencent.devops.store.dao.common.*
+import com.tencent.devops.store.dao.common.CategoryDao
+import com.tencent.devops.store.dao.common.ClassifyDao
+import com.tencent.devops.store.dao.common.StoreHonorDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.image.Constants
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_CODE
 import com.tencent.devops.store.dao.image.Constants.KEY_IMAGE_FEATURE_PUBLIC_FLAG
@@ -101,6 +105,7 @@ import com.tencent.devops.store.pojo.image.response.MyImage
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreHonorService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -115,7 +120,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.Date
+import java.util.*
 import kotlin.math.ceil
 
 @Suppress("ALL")
@@ -148,6 +153,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var storeHonorDao: StoreHonorDao
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
     @Autowired
     lateinit var storeProjectRelDao: StoreProjectRelDao
     @Autowired
@@ -302,7 +309,7 @@ abstract class ImageService @Autowired constructor() {
             storeType = storeType.type.toByte(),
             storeCodeList = imageCodeList
         )
-        val imageHonorInfoMap = storeHonorDao.getHonorInfos(dslContext, storeType, imageCodeList)
+        val imageHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, imageCodeList)
 
         // 获取用户
         val memberData = storeMemberService.batchListMember(imageCodeList, storeType).data
@@ -848,7 +855,7 @@ abstract class ImageService @Autowired constructor() {
             storeCode = imageCode,
             storeType = StoreTypeEnum.IMAGE.type.toByte()
         )
-        val storeHonorInfos = storeHonorDao.getHonorInfosBycode(dslContext, StoreTypeEnum.IMAGE, imageCode)
+        val storeHonorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.IMAGE, imageCode)
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)

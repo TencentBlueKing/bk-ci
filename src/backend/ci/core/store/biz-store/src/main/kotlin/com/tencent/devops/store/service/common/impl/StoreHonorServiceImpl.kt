@@ -28,22 +28,24 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.model.store.tables.TStoreHonorInfo
+import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
-import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreHonorDao
-import com.tencent.devops.store.dao.template.TemplateCommonDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum.*
 import com.tencent.devops.store.service.common.StoreHonorService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -55,7 +57,8 @@ import java.time.LocalDateTime
 @Service
 class StoreHonorServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
-    private val storeHonorDao: StoreHonorDao
+    private val storeHonorDao: StoreHonorDao,
+    private val storeMemberDao: StoreMemberDao
 ) : StoreHonorService {
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
@@ -114,7 +117,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         storeHonorInfo.createTime = LocalDateTime.now()
         storeHonorInfo.updateTime = LocalDateTime.now()
         val tStoreHonorRelList = addStoreHonorRequest.storeCodes.split(",").map {
-            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext,it)!!
+            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)!!
             val tStoreHonorRelRecord = TStoreHonorRelRecord()
             tStoreHonorRelRecord.id = UUIDUtil.generate()
             tStoreHonorRelRecord.storeCode = it
@@ -133,6 +136,65 @@ class StoreHonorServiceImpl @Autowired constructor(
             storeHonorDao.batchCreateStoreHonorRel(context,tStoreHonorRelList)
         }
         return Result(true)
+    }
+
+    override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
+        return storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode)
+    }
+
+    override fun installStoreHonor(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        honorId: String
+    ): Boolean {
+
+        if (!storeMemberDao.isStoreMember(
+                dslContext = dslContext,
+                userId = userId,
+                storeType = storeType.type.toByte(),
+                storeCode = storeCode
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = CommonMessageCode.PERMISSION_DENIED,
+                params = arrayOf(storeCode)
+            )
+        }
+        storeHonorDao.installStoreHonor(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            honorId = honorId
+        )
+        return true
+    }
+
+    override fun getHonorInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<HonorInfo>> {
+        val records = storeHonorDao.getHonorInfosByStoreCodes(dslContext, storeType, storeCodes)
+        val storeHonorInfoMap = mutableMapOf<String, List<HonorInfo>>()
+        val tStoreHonorInfo = TStoreHonorInfo.T_STORE_HONOR_INFO
+        val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
+        records.forEach {
+            val storeCode = it.value1() as String
+            val honorInfo = HonorInfo(
+                honorId = it.get(tStoreHonorInfo.ID),
+                honorTitle = it.get(tStoreHonorInfo.HONOR_TITLE),
+                honorName = it.get(tStoreHonorInfo.HONOR_NAME),
+                mountFlag = it.get(tStoreHonorRel.MOUNT_FLAG),
+                createTime = it.get(tStoreHonorRel.CREATE_TIME)
+            )
+            if (storeHonorInfoMap[storeCode].isNullOrEmpty()) {
+                storeHonorInfoMap[storeCode] = listOf(honorInfo)
+            } else {
+                val honorInfos = storeHonorInfoMap[storeCode]!!.toMutableList()
+                honorInfos.add(honorInfo)
+            }
+        }
+        return  storeHonorInfoMap
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {

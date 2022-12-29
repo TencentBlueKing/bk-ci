@@ -29,6 +29,7 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.StoreIndexInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -103,5 +104,7 @@ data class AtomRespItem(
     @ApiModelProperty("是否已安装", required = false)
     val installed: Boolean? = null,
     @ApiModelProperty("荣誉信息", required = false)
-    val honorInfos: List<HonorInfo>? = null
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息列表")
+    val indexInfos: List<StoreIndexInfo>? = null
 )

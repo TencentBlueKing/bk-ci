@@ -37,7 +37,10 @@ import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record6
+import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreHonorDao {
@@ -83,7 +86,7 @@ class StoreHonorDao {
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             return dslContext.selectCount()
                 .from(this)
-                .where(HONOR_TITLE.`in`(honorTitle))
+                .where(HONOR_TITLE.eq(honorTitle))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
@@ -153,68 +156,66 @@ class StoreHonorDao {
         dslContext.executeInsert(storeHonorInfo)
     }
 
-    fun getHonorInfosBycode(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): List<HonorInfo> {
-        val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
-        with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
-            return dslContext.select(
-                tStoreHonorRel.STORE_CODE,
-                HONOR_TITLE,
-                HONOR_NAME,
-                tStoreHonorRel.MOUNT_FLAG
-            )
-                .from(this)
-                .join(tStoreHonorRel)
-                .on(ID.eq(tStoreHonorRel.HONOR_ID).and(STORE_TYPE.eq(tStoreHonorRel.STORE_TYPE)))
-                .where(STORE_TYPE.eq(storeType.type.toByte()).and(tStoreHonorRel.STORE_CODE.eq(storeCode)))
-                .fetchInto(HonorInfo::class.java)
-        }
-    }
-
-    fun getHonorInfos(
+    fun getHonorInfosByStoreCodes(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         storeCodes: List<String>
-    ): Map<String, List<HonorInfo>> {
+    ): Result<Record6<String, String, String, String, Boolean, LocalDateTime>> {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
-            val records = dslContext.select(
+
+            return dslContext.select(
+                ID,
                 tStoreHonorRel.STORE_CODE,
                 HONOR_TITLE,
                 HONOR_NAME,
-                tStoreHonorRel.MOUNT_FLAG
+                tStoreHonorRel.MOUNT_FLAG,
+                tStoreHonorRel.CREATE_TIME
             )
                 .from(this)
                 .join(tStoreHonorRel)
                 .on(ID.eq(tStoreHonorRel.HONOR_ID).and(STORE_TYPE.eq(tStoreHonorRel.STORE_TYPE)))
                 .where(STORE_TYPE.eq(storeType.type.toByte()).and(tStoreHonorRel.STORE_CODE.`in`(storeCodes)))
                 .fetch()
-            val storeHonorInfoMap = mutableMapOf<String, List<HonorInfo>>()
-            records.forEach {
-                val storeCode = it.value1() as String
-                if (storeHonorInfoMap[storeCode].isNullOrEmpty()) {
-                    storeHonorInfoMap[storeCode] = listOf(
-                        HonorInfo(
-                        it.value2(),
-                        it.value3(),
-                        it.value4()
-                    ))
-                } else {
-                    val honorInfos = storeHonorInfoMap[storeCode]!!.toMutableList()
-                    honorInfos.add(
-                        HonorInfo(
-                            it.value2(),
-                            it.value3(),
-                            it.value4()
-                        )
-                    )
-                }
+        }
+    }
 
-            }
-            return storeHonorInfoMap
+    fun getHonorByStoreCode(dslContext: DSLContext, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
+        val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
+        with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
+            return dslContext.select(
+                ID,
+                HONOR_TITLE,
+                HONOR_NAME,
+                tStoreHonorRel.MOUNT_FLAG,
+                tStoreHonorRel.CREATE_TIME
+            ).from(this).leftJoin(tStoreHonorRel)
+                .on(ID.eq(tStoreHonorRel.HONOR_ID).and(STORE_TYPE.eq(tStoreHonorRel.STORE_TYPE)))
+                .where(tStoreHonorRel.STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchInto(HonorInfo::class.java)
+        }
+    }
+
+    fun installStoreHonor(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        honorId: String
+    ){
+        with(TStoreHonorRel.T_STORE_HONOR_REL) {
+            dslContext.update(this)
+                .set(MOUNT_FLAG, false)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(MOUNT_FLAG.eq(true))
+                .execute()
+            dslContext.update(this)
+                .set(MOUNT_FLAG, true)
+                .where(STORE_CODE.eq(storeCode))
+                .and(STORE_TYPE.eq(storeType.type.toByte()))
+                .and(HONOR_ID.eq(honorId))
+                .execute()
         }
     }
 }

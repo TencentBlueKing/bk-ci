@@ -43,7 +43,8 @@ import com.tencent.devops.store.dao.common.StoreIndexBaseInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
+import com.tencent.devops.store.pojo.common.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
@@ -72,6 +73,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         //管理员权限校验
 
         val indexCode = storeIndexCreateRequest.indexCode
+        // 验证指标代码是否已存在
         val validateResult = validateAddStoreIndexCreateReq(storeIndexCreateRequest)
         if (validateResult != null) {
             logger.info("the validateResult is :$validateResult")
@@ -87,13 +89,12 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         tStoreIndexBaseInfoRecord.iconTips = storeIndexCreateRequest.iconTips
         tStoreIndexBaseInfoRecord.description = storeIndexCreateRequest.description
         tStoreIndexBaseInfoRecord.operationType = storeIndexCreateRequest.operationType.name
-        tStoreIndexBaseInfoRecord.atomCode = storeIndexCreateRequest.atomCode
         tStoreIndexBaseInfoRecord.executeTimeType = storeIndexCreateRequest.executeTimeType.name
         tStoreIndexBaseInfoRecord.creator = userId
         tStoreIndexBaseInfoRecord.modifier = userId
         tStoreIndexBaseInfoRecord.createTime = LocalDateTime.now()
         tStoreIndexBaseInfoRecord.updateTime = LocalDateTime.now()
-
+        // 创建指标等级
         val indexLevelInfoRecords = storeIndexCreateRequest.levelInfos.map {
             val tStoreIndexLevelInfo = TStoreIndexLevelInfoRecord()
             tStoreIndexLevelInfo.id = UUIDUtil.generate()
@@ -106,12 +107,11 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             tStoreIndexLevelInfo.updateTime = LocalDateTime.now()
             tStoreIndexLevelInfo
         }
-        dslContext.transaction { t ->
-            val context = DSL.using(t)
-            storeIndexBaseInfoDao.createStoreIndexBaseInfo(context, tStoreIndexBaseInfoRecord)
-            storeIndexBaseInfoDao.batchCreateStoreIndexLevelInfo(context, indexLevelInfoRecords)
-        }
-        if (storeIndexCreateRequest.executeTimeType == IndexExecuteTimeTypeEnum.INDEX_CHANGE) {
+        storeIndexBaseInfoDao.batchCreateStoreIndexLevelInfo(dslContext, indexLevelInfoRecords)
+        // 如果运算类型为插件则需要初始化流水线
+        if (storeIndexCreateRequest.operationType == IndexOperationTypeEnum.ATOM) {
+            tStoreIndexBaseInfoRecord.atomCode = storeIndexCreateRequest.atomCode
+            storeIndexBaseInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
             storeIndexPipelineService.initStoreIndexPipeline(
                 userId = userId,
                 storeIndexPipelineInitRequest = StoreIndexPipelineInitRequest(
@@ -121,6 +121,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     storeType = storeIndexCreateRequest.storeType
                 )
             )
+        } else {
+            storeIndexBaseInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
         }
         return Result(true)
     }
@@ -192,6 +194,13 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             pageSize = pageSize,
             records = records
         )
+    }
+
+    override fun getStoreIndexInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<StoreIndexInfo>> {
+        TODO("Not yet implemented")
     }
 
     private fun validateAddStoreIndexCreateReq(

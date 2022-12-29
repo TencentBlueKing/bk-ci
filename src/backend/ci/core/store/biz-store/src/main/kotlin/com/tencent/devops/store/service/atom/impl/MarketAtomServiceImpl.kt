@@ -76,7 +76,11 @@ import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomEnvInfoDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
-import com.tencent.devops.store.dao.common.*
+import com.tencent.devops.store.dao.common.StoreBuildInfoDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
+import com.tencent.devops.store.dao.common.StoreHonorDao
+import com.tencent.devops.store.dao.common.StoreMemberDao
+import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
 import com.tencent.devops.store.pojo.atom.AtomOutput
 import com.tencent.devops.store.pojo.atom.AtomPostInfo
@@ -116,6 +120,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
+import com.tencent.devops.store.service.common.StoreHonorService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -127,7 +132,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.Calendar
+import java.util.*
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -176,6 +181,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeHonorDao: StoreHonorDao
+
+    @Autowired
+    lateinit var storeHonorService: StoreHonorService
 
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
@@ -291,7 +299,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeType = storeType.type.toByte(),
                 storeCodeList = atomCodeList
             )
-            val atomHonorInfoMap = storeHonorDao.getHonorInfos(dslContext, storeType, atomCodeList)
+            val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -354,7 +362,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                        honorInfoList = atomHonorInfos
+                        honorInfos = atomHonorInfos
                     )
                 )
             }
@@ -812,7 +820,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                    honorInfos = storeHonorDao.getHonorInfosBycode(dslContext, StoreTypeEnum.ATOM, atomCode)
+                    honorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }

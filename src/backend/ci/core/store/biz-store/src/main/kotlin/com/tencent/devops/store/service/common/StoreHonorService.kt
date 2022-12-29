@@ -30,8 +30,10 @@ package com.tencent.devops.store.service.common
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 interface StoreHonorService {
 
@@ -45,4 +47,19 @@ interface StoreHonorService {
     fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Boolean
 
     fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean>
+
+    fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo>
+
+    fun installStoreHonor(
+        userId: String,
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        honorId: String
+    ): Boolean
+
+    fun getHonorInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<HonorInfo>>
+
 }

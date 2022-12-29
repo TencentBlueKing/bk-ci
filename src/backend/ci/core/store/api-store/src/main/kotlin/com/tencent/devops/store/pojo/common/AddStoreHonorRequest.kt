@@ -42,7 +42,6 @@ data class AddStoreHonorRequest(
     val honorName: String,
     @ApiModelProperty("组件范畴", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("组件代码，使用逗号分隔", required = true)
-    @BkField(minLength = 1 ,maxLength = 1204)
-    val storeCodes: String
+    @ApiModelProperty("组件代码列表", required = true)
+    val storeCodes: List<String>
 )
