@@ -1,6 +1,7 @@
 package com.tencent.devops.process.service
 
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.dao.PipelineRecentUseDao
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -10,13 +11,12 @@ import org.springframework.stereotype.Service
  */
 @Service
 class PipelineRecentUseService @Autowired constructor(
-    private val redisOperation: RedisOperation
+    private val pipelineRecentUseDao: PipelineRecentUseDao,
+    private val dslContext: DSLContext
 ) {
 
     fun listPipelineIds(userId: String, projectId: String, noEmpty: Boolean = true): List<String> {
-        val pipelineIds = redisOperation.zrange(
-            getRedisKey(userId, projectId), 0, RECENT_USE_LIST_MAX - 1
-        )?.toList() ?: emptyList()
+        val pipelineIds = pipelineRecentUseDao.listRecentPipelineIds(dslContext, projectId, userId, RECENT_USE_LIST_MAX)
         if (noEmpty && pipelineIds.isEmpty()) {
             return listOf("##NONE##")
         }
@@ -24,22 +24,10 @@ class PipelineRecentUseService @Autowired constructor(
     }
 
     fun record(userId: String, projectId: String, pipelineId: String) {
-        try {
-            val redisKey = getRedisKey(userId, projectId)
-            redisOperation.zadd(redisKey, pipelineId, score())
-            redisOperation.zremoveRange(redisKey, RECENT_USE_LIST_MAX, -1)
-        } catch (e: Exception) {
-            logger.warn("push pipeline id error", e)
-        }
+        pipelineRecentUseDao.add(dslContext, projectId, userId, pipelineId)
     }
 
-    private fun score() = (Long.MAX_VALUE - System.currentTimeMillis()).toDouble()
-
-    private fun getRedisKey(userId: String, projectId: String) = "$RECENT_USE_KEY:$userId:$projectId"
-
     companion object {
-        private val logger = LoggerFactory.getLogger(PipelineRecentUseService::class.java)
-        private const val RECENT_USE_KEY = "p:recent:use:pid"
-        private const val RECENT_USE_LIST_MAX = 30L
+        private const val RECENT_USE_LIST_MAX = 30
     }
 }
