@@ -93,8 +93,8 @@ class RbacAuthConfiguration {
     @Bean
     fun tokenService(
         iamConfiguration: IamConfiguration,
-        httpClientService: HttpClientService
-    ) = TokenServiceImpl(iamConfiguration, httpClientService)
+        apigwHttpClientServiceImpl: HttpClientService
+    ) = TokenServiceImpl(iamConfiguration, apigwHttpClientServiceImpl)
 
     @Bean
     fun authHelper(
