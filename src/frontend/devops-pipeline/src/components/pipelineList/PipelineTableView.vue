@@ -152,7 +152,6 @@
                     v-if="isDeleteView"
                     text
                     theme="primary"
-                    class="pipeline-exec-btn"
                     @click="handleRestore(props.row)">
                     {{ $t('restore.restore') }}
                 </bk-button>
@@ -160,7 +159,6 @@
                     v-else-if="props.row.delete"
                     text
                     theme="primary"
-                    class="pipeline-exec-btn"
                     :disabled="!isManage"
                     @click="removeHandler(props.row)"
                 >
@@ -170,7 +168,6 @@
                     v-else-if="!props.row.hasPermission"
                     outline
                     theme="primary"
-                    class="pipeline-exec-btn"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
