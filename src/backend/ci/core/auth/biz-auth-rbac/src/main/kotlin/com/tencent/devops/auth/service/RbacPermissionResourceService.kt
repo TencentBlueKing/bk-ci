@@ -195,7 +195,10 @@ class RbacPermissionResourceService(
                     )
                 )
                 val expiredAt = result.expiredAt * 1000
-                val expiredTime = DateTimeUtil.formatMilliTime(expiredAt)
+                val expiredTime = DateTimeUtil.formatMilliTime(
+                    time = expiredAt,
+                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                )
                 val status = if (System.currentTimeMillis() >= expiredAt) {
                     GroupMemberStatus.EXPIRED.name
                 } else {
@@ -254,6 +257,11 @@ class RbacPermissionResourceService(
             throw PermissionForbiddenException(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
+        }
+        // 已经启用的不需要再启用
+        if (resourceInfo.enable) {
+            logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
+            return true
         }
         permissionResourceGroupService.createSubsetManagerDefaultGroup(
             subsetManagerId = resourceInfo.relationId.toInt(),

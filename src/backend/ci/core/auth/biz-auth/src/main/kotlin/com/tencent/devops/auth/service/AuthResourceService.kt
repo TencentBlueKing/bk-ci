@@ -130,4 +130,15 @@ class AuthResourceService @Autowired constructor(
         )?.map { resourceList.add(authResourceDao.convert(it)) }
         return resourceList
     }
+
+    fun listByProjectAndType(
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
+        return authResourceDao.listByProjectAndType(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType
+        )
+    }
 }

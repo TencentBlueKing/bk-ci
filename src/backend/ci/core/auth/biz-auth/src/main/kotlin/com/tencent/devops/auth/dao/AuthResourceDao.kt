@@ -148,6 +148,19 @@ class AuthResourceDao {
         }
     }
 
+    fun listByProjectAndType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.select(RESOURCE_CODE)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetch(0, String::class.java)
+        }
+    }
+
     fun convert(recode: TAuthResourceRecord): AuthResourceInfo {
         with(recode) {
             return AuthResourceInfo(
