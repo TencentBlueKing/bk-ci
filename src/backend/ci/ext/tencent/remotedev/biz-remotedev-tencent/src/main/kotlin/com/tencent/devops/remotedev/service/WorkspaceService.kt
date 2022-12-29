@@ -226,7 +226,7 @@ class WorkspaceService @Autowired constructor(
                 branch = workspace.branch,
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
-                oAuthToken = gitTransferService.getAndCheckOauthToken(userId).accessToken
+                oauth = gitTransferService.getAndCheckOauthToken(userId).accessToken
             )
         )
 //        kotlin.runCatching {

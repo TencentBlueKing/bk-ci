@@ -40,7 +40,7 @@ data class WorkspaceCreateEvent(
     val repositoryUrl: String,
     val branch: String,
     val devFilePath: String?,
-    val oAuthToken: String,
+    val oauth: String,
     val image: String = "",
     val devFile: Devfile,
     override val delayMills: Int = 0,

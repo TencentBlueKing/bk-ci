@@ -27,13 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.listener
 
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
@@ -64,7 +60,7 @@ class WorkspaceListener @Autowired constructor(
                     branch = event.branch,
                     devFilePath = event.devFilePath,
                     devFile = event.devFile,
-                    oAuthToken = event.oAuthToken,
+                    oAuthToken = event.oauth,
                     image = event.image
                 )
             )
