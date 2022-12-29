@@ -27,6 +27,5 @@
 
 dependencies {
     api(project(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs"))
-    api(project(":ext:tencent:common:common-devcloud"))
     api(project(":ext:tencent:dispatch-kubernetes:common-dispatch-kubernetes-tencent"))
 }
