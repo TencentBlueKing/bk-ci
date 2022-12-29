@@ -28,9 +28,16 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 
-class RbacAuthPermissionApi : AuthPermissionApi {
+class RbacAuthPermissionApi(
+    private val client: Client,
+    val tokenService: ClientTokenService
+) : AuthPermissionApi {
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -61,7 +68,13 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String> {
-        return emptyList()
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value
+        ).data ?: emptyList()
     }
 
     override fun getUserResourcesByPermissions(

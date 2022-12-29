@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.auth
 
-import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
@@ -43,7 +42,6 @@ import com.tencent.devops.common.auth.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.RbacTicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -74,7 +72,10 @@ class RbacAuthAutoConfiguration {
     fun authProjectApi() = RbacAuthProjectApi()
 
     @Bean
-    fun authPermissionApi() = RbacAuthPermissionApi()
+    fun authPermissionApi(
+        client: Client,
+        tokenService: ClientTokenService
+    ) = RbacAuthPermissionApi(client = client, tokenService = tokenService)
 
     @Bean
     @Primary
