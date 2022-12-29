@@ -99,6 +99,7 @@ import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_FAVORITE_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_LIST_PIPELINES
 import com.tencent.devops.process.utils.PIPELINE_VIEW_MY_PIPELINES
+import com.tencent.devops.process.utils.PIPELINE_VIEW_RECENT_USE
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
 import com.tencent.devops.quality.api.v2.pojo.response.QualityPipeline
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -131,7 +132,8 @@ class PipelineListFacadeService @Autowired constructor(
     private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineFavorDao: PipelineFavorDao,
-    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao
+    private val pipelineLabelPipelineDao: PipelineLabelPipelineDao,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -481,9 +483,10 @@ class PipelineListFacadeService @Autowired constructor(
                 PIPELINE_VIEW_MY_PIPELINES,
                 PIPELINE_VIEW_ALL_PIPELINES,
                 PIPELINE_VIEW_MY_LIST_PIPELINES,
-                PIPELINE_VIEW_UNCLASSIFIED
+                PIPELINE_VIEW_UNCLASSIFIED,
+                PIPELINE_VIEW_RECENT_USE
             )
-            val includeDelete = showDelete && !viewIdList.contains(viewId)
+            val includeDelete = showDelete && (PIPELINE_VIEW_RECENT_USE == viewId || !viewIdList.contains(viewId))
 
             if (!viewIdList.contains(viewId)) { // 已分组的视图
                 pipelineIds.addAll(pipelineViewGroupService.listPipelineIdsByViewId(projectId, viewId))
@@ -496,6 +499,8 @@ class PipelineListFacadeService @Autowired constructor(
                 if (pipelineIds.isEmpty()) {
                     pipelineIds.add("##NONE##")
                 }
+            } else if (viewId == PIPELINE_VIEW_RECENT_USE) { // 最近访问
+                pipelineIds.addAll(pipelineRecentUseService.listPipelineIds(userId, projectId))
             }
             // 剔除掉filterByViewIds
             if (filterByViewIds != null) {
@@ -704,6 +709,7 @@ class PipelineListFacadeService @Autowired constructor(
             userId = userId, projectId = projectId, permission = AuthPermission.LIST
         )
         val favorPipelines = pipelineGroupService.getFavorPipelines(userId = userId, projectId = projectId)
+        val recentUsePipelines = pipelineRecentUseService.listPipelineIds(userId, projectId)
         val totalCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
             dslContext = dslContext,
             projectId = projectId,
@@ -734,8 +740,19 @@ class PipelineListFacadeService @Autowired constructor(
             includeDelete = false,
             userId = userId
         ).toInt()
+        val recentUseCount = pipelineBuildSummaryDao.listPipelineInfoBuildSummaryCount(
+            dslContext = dslContext,
+            projectId = projectId,
+            channelCode = ChannelCode.BS,
+            authPipelines = authPipelines,
+            favorPipelines = favorPipelines,
+            viewId = PIPELINE_VIEW_RECENT_USE,
+            includeDelete = false,
+            userId = userId,
+            pipelineIds = recentUsePipelines
+        ).toInt()
         val recycleCount = pipelineInfoDao.countDeletePipeline(dslContext, projectId, deletedPipelineStoreDays.toLong())
-        return PipelineCount(totalCount, myFavoriteCount, myPipelineCount, recycleCount)
+        return PipelineCount(totalCount, myFavoriteCount, myPipelineCount, recycleCount, recentUseCount)
     }
 
     private fun handlePipelineQueryList(
