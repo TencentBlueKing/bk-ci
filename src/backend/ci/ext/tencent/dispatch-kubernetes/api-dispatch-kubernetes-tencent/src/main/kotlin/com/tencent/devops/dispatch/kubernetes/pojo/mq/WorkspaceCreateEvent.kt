@@ -32,7 +32,7 @@ import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 
-@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.QUEUE_WORKSPACE_CREATE_STARTUP)
+@Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_CREATE_STARTUP)
 data class WorkspaceCreateEvent(
     override val userId: String,
     override val traceId: String,
