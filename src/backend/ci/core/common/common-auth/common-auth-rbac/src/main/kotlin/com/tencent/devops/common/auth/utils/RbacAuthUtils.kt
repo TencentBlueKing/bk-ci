@@ -62,9 +62,4 @@ object RbacAuthUtils {
             else -> AuthResourceType.get(resourceTypeStr)
         }
     }
-
-    /**
-     * 得到二级管理员用户组策略名
-     */
-    fun getSubsetStrategyName(resourceType: String, subsetGroupType: String) = "${resourceType}_$subsetGroupType"
 }
