@@ -195,8 +195,23 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         return redisTemplate.opsForSet().scan(getFinalKey(key, isDistinguishCluster), options)
     }
 
-    fun zadd(key: String, values: String, score: Double, isDistinguishCluster: Boolean? = false): Boolean? {
-        return redisTemplate.opsForZSet().add(getFinalKey(key, isDistinguishCluster), values, score)
+    fun zadd(
+        key: String,
+        values: String, score: Double,
+        expiredInSecond: Long? = null,
+        expired: Boolean? = true,
+        isDistinguishCluster: Boolean? = false
+    ): Boolean? {
+        val finalKey = getFinalKey(key, isDistinguishCluster)
+        val result = redisTemplate.opsForZSet().add(finalKey, values, score)
+        if (expired == true) {
+            var timeout = expiredInSecond ?: maxExpireTime
+            if (timeout <= 0) { // #5901 不合法值清理，设置默认为超时时间，防止出错。
+                timeout = maxExpireTime
+            }
+            redisTemplate.expire(finalKey, timeout, TimeUnit.SECONDS)
+        }
+        return result
     }
 
     fun zremove(key: String, values: String, isDistinguishCluster: Boolean? = false): Long? {
