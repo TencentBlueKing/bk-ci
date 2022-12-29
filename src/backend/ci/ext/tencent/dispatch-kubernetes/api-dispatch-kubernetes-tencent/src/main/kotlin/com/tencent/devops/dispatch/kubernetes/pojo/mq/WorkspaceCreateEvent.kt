@@ -40,9 +40,9 @@ data class WorkspaceCreateEvent(
     val repositoryUrl: String,
     val branch: String,
     val devFilePath: String?,
-    val devFile: Devfile,
     val oAuthToken: String,
     val image: String = "",
+    val devFile: Devfile,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)
