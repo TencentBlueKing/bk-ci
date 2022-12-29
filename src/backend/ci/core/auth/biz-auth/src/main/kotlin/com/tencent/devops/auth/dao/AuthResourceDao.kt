@@ -154,7 +154,7 @@ class AuthResourceDao {
         resourceType: String
     ): List<String> {
         return with(TAuthResource.T_AUTH_RESOURCE) {
-            dslContext.select(RESOURCE_CODE)
+            dslContext.select(RESOURCE_CODE).from(this)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .fetch(0, String::class.java)
