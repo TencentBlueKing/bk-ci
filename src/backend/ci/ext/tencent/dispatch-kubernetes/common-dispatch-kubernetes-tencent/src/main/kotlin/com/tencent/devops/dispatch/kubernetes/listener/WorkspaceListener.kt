@@ -60,7 +60,7 @@ class WorkspaceListener @Autowired constructor(
                     branch = event.branch,
                     devFilePath = event.devFilePath,
                     devFile = event.devFile,
-                    oAuthToken = event.oauth,
+                    oAuthToken = event.gitOAuth ?: "",
                     image = event.image
                 )
             )

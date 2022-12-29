@@ -42,7 +42,7 @@ class RemoteDevServiceFactory @Autowired constructor(
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
         return SpringContextUtil.getBean(
             RemoteDevInterface::class.java,
-            DockerRoutingType.KUBERNETES.name.toLowerCase() + "RemoteDevService"
+            dockerRoutingType.name.toLowerCase() + "RemoteDevService"
         )
     }
 }
