@@ -197,7 +197,8 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
 
     fun zadd(
         key: String,
-        values: String, score: Double,
+        values: String,
+        score: Double,
         expiredInSecond: Long? = null,
         expired: Boolean? = true,
         isDistinguishCluster: Boolean? = false
