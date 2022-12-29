@@ -234,8 +234,8 @@
                 pipelineList: [],
                 selectionLength: 0,
                 pagination: {
-                    current: this.$route.query.page ?? 1,
-                    limit: this.$route.query.pageSize ?? 50,
+                    current: parseInt(this.$route.query.page ?? 1),
+                    limit: parseInt(this.$route.query.pageSize ?? 50),
                     count: 0
                 },
                 visibleTagCountList: {}

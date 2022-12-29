@@ -2,15 +2,15 @@
     <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
-                <div v-for="item in sumViews" :key="item.id" :class="{
+                <div :class="{
                     'pipeline-group-item': true,
-                    active: $route.params.viewId === item.id
-                }" @click="switchViewId(item.id)">
-                    <logo class="pipeline-group-item-icon" size="12" :name="item.icon" />
+                    active: $route.params.viewId === sumView.id
+                }" @click="switchViewId(sumView.id)">
+                    <logo class="pipeline-group-item-icon" size="12" :name="sumView.icon" />
                     <span class="pipeline-group-item-name">
-                        {{$t(item.name)}}
+                        {{$t(sumView.name)}}
                     </span>
-                    <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
+                    <span v-if="sumView.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{sumView.pipelineCount}}</span>
                 </div>
             </header>
             <article class="pipeline-group-container">
@@ -175,7 +175,7 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'sumViews',
+                'sumView',
                 'isManage'
             ]),
             ...mapGetters('pipelines', [
