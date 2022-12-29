@@ -174,10 +174,9 @@
                 <template
                     v-else
                 >
-                    
                     <bk-button
                         text
-                        theme="primary"
+                        theme=""
                         class="pipeline-exec-btn"
                         :disabled="props.row.disabled"
                         @click="execPipeline(props.row)"
@@ -192,8 +191,8 @@
                     </bk-button>
                     <bk-button
                         text
-                        theme="warning"
-                        class="pipeline-exec-btn"
+                        :theme="props.row.hasCollect ? 'warning' : ''"
+                        class="pipeline-collect-btn"
                         @click="collectHandler(props.row)">
                         <i :class="{
                             'devops-icon': true,
