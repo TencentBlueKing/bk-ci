@@ -1,8 +1,8 @@
 package com.tencent.devops.auth.api.user
 
-import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplicationInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
@@ -48,7 +48,7 @@ interface UserAuthApplyResource {
         resourceType: String
     ): Result<List<ActionInfoVo>>
 
-    @GET
+    @POST
     @Path("{projectId}/listGroups/")
     @ApiOperation("展示用户组列表")
     fun listGroups(
@@ -58,33 +58,8 @@ interface UserAuthApplyResource {
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("分级管理员是否继承查询二级管理员的用户组", required = false)
-        @QueryParam("inherit")
-        inherit: Boolean? = true,
-        @ApiParam("操作id筛选", required = false)
-        @QueryParam("actionId")
-        actionId: String?,
-        @ApiParam("资源类型筛选", required = false)
-        @QueryParam("resourceType")
-        resourceType: String?,
-        @ApiParam("资源实例筛选", required = false)
-        @QueryParam("resourceCode")
-        resourceCode: String?,
-        @ApiParam("资源实例筛选", required = false)
-        @QueryParam("bkIamPath")
-        bkIamPath: String?,
-        @ApiParam("用户组名称", required = false)
-        @QueryParam("name")
-        name: String?,
-        @ApiParam("用户组描述", required = false)
-        @QueryParam("description")
-        description: String?,
-        @ApiParam("page", required = false)
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("pageSize", required = false)
-        @QueryParam("pageSize")
-        pageSize: Int,
+        @ApiParam("搜索用户组实体", required = true)
+        searchGroupInfo: SearchGroupInfo
     ): Result<V2ManagerRoleGroupVO>
 
     @POST

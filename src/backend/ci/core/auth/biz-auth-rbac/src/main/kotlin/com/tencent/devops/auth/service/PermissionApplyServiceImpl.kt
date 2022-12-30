@@ -12,6 +12,7 @@ import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
+import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
@@ -22,6 +23,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
@@ -34,6 +36,8 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val v2ManagerService: V2ManagerService,
     val client: Client
 ) : PermissionApplyService {
+    @Value("\${auth.iamSystem:}")
+    val systemId = ""
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(24, TimeUnit.HOURS)
@@ -76,32 +80,35 @@ class PermissionApplyServiceImpl @Autowired constructor(
     override fun listGroups(
         userId: String,
         projectId: String,
-        inherit: Boolean?,
-        actionId: String?,
-        resourceType: String?,
-        resourceCode: String?,
-        bkIamPath: String?,
-        name: String?,
-        description: String?,
-        page: Int,
-        pageSize: Int
+        searchGroupInfo: SearchGroupInfo
     ): V2ManagerRoleGroupVO {
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data
+        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+            params = arrayOf(projectId),
+            defaultMessage = "权限系统：项目[$projectId]不存在"
+        )
         val searchGroupDTO = SearchGroupDTO
             .builder()
-            .inherit(inherit)
-            .actionId(actionId)
-            .resourceTypeSystemId("bk_ci_rbac")
-            .resourceTypeId(resourceType)
-            .resourceId(resourceCode)
-            .bkIamPath(bkIamPath)
-            .name(name)
-            .description(description)
+            .inherit(searchGroupInfo.inherit)
+            .actionId(searchGroupInfo.actionId)
+            .resourceTypeSystemId(systemId)
+            .resourceTypeId(searchGroupInfo.resourceType)
+            .resourceId(searchGroupInfo.resourceCode)
+            .bkIamPath(searchGroupInfo.bkIamPath)
+            .name(searchGroupInfo.name)
+            .description(searchGroupInfo.description)
             .build()
         val v2PageInfoDTO = V2PageInfoDTO()
-        v2PageInfoDTO.pageSize = pageSize
-        v2PageInfoDTO.page = page
-        return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo!!.relationId, searchGroupDTO, v2PageInfoDTO)
+        v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
+        v2PageInfoDTO.page = searchGroupInfo.page
+        try {
+            return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
+                defaultMessage = "权限系统：获取用户组失败！"
+            )
+        }
     }
 
     override fun applyToJoinGroup(userId: String, applicationInfo: ApplicationInfo): Boolean {
