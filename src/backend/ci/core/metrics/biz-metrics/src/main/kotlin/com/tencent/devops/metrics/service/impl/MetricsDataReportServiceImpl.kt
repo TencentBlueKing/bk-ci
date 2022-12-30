@@ -54,6 +54,8 @@ import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.utils.ErrorCodeInfoCacheUtil
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -355,6 +357,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val taskSuccessFlag = taskMetricsData.successFlag
         val atomCode = taskMetricsData.atomCode
         val errorCode = taskMetricsData.errorCode
+        val isComplianceErrorCode = isComplianceErrorCode(atomCode, "$errorCode")
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
@@ -376,7 +379,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     successExecuteCount = existSaveAtomOverviewDataPO.successExecuteCount,
                     failExecuteCount = existSaveAtomOverviewDataPO.failExecuteCount,
                     modifier = startUser,
-                    updateTime = currentTime
+                    updateTime = currentTime,
+                    failComplianceCount = existSaveAtomOverviewDataPO.failComplianceCount
                 )
             } else {
                 null
@@ -393,6 +397,10 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 ?: atomOverviewDataRecord?.successExecuteCount ?: 0L
             val originFailExecuteCount = existUpdateAtomOverviewDataPO?.failExecuteCount
                 ?: atomOverviewDataRecord?.failExecuteCount ?: 0L
+            val originFailComplianceCount = existUpdateAtomOverviewDataPO?.failComplianceCount
+                ?: atomOverviewDataRecord?.failComplianceCount ?: 0L
+            val currentFailComplianceCount = if (isComplianceErrorCode) originFailComplianceCount + 1
+            else originFailComplianceCount
             val currentTotalExecuteCount = originTotalExecuteCount + 1
             val currentTotalCostTime = originAvgCostTime * originTotalExecuteCount + taskMetricsData.costTime
             val currentAvgCostTime = currentTotalCostTime.toDouble().div(currentTotalExecuteCount).roundToLong()
@@ -418,6 +426,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                 existUpdateAtomOverviewDataPO.failExecuteCount = currentFailExecuteCount
                 existUpdateAtomOverviewDataPO.modifier = startUser
                 existUpdateAtomOverviewDataPO.updateTime = currentTime
+                existUpdateAtomOverviewDataPO.failComplianceCount = currentFailComplianceCount
             } else {
                 updateAtomOverviewDataPOs.add(
                     UpdateAtomOverviewDataPO(
@@ -430,7 +439,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         successExecuteCount = currentSuccessExecuteCount,
                         failExecuteCount = currentFailExecuteCount,
                         modifier = startUser,
-                        updateTime = currentTime
+                        updateTime = currentTime,
+                        failComplianceCount = currentFailComplianceCount
                     )
                 )
             }
@@ -457,7 +467,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                     totalExecuteCount = 1,
                     successExecuteCount = if (taskSuccessFlag) 1 else 0,
                     failExecuteCount = if (taskSuccessFlag) 0 else 1,
-                    failComplianceCount = ,
+                    failComplianceCount = if (isComplianceErrorCode) 1 else 0,
                     statisticsTime = DateTimeUtil.stringToLocalDateTime(
                         dateTimeStr = buildEndPipelineMetricsData.statisticsTime,
                         formatStr = YYYY_MM_DD
@@ -815,5 +825,25 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
     }
 
-    fun
+    private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
+        if (errorCode.length != 6) return false
+        val errorCodePrefix = errorCode.substring(0, 3)
+        when {
+            errorCodePrefix == "8" ->{
+                return client.get(ServiceAtomResource::class).isComplianceErrorCode(
+                    atomCode,
+                    StoreTypeEnum.ATOM,
+                    errorCode.toInt()
+                ).data!!
+            }
+            errorCodePrefix.startsWith("100") ->{
+                return true
+            }
+            errorCodePrefix.toInt() in 101..599 ->{
+                return true
+            }
+            else -> return false
+        }
+
+    }
 }

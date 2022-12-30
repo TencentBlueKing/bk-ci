@@ -60,6 +60,7 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
 import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.common.ReasonRelDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomBaseInfoUpdateRequest
@@ -126,6 +127,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -158,6 +160,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
+
+    @Autowired
+    lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
 
     @Autowired
     lateinit var storeHonorService: StoreHonorService
@@ -195,6 +200,12 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .maximumSize(2000)
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, Map<String, String>>()
+
+    @Value("\${store.defaultAtomErrorCodeLength:6}")
+    private var defaultAtomErrorCodeLength: Int = 6
+
+    @Value("\${store.defaultAtomErrorCodePrefix:8}")
+    private lateinit var defaultAtomErrorCodePrefix: String
 
     /**
      * 获取插件列表
@@ -1178,5 +1189,24 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
+    }
+
+    override fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: String
+    ): Boolean {
+        // 校验code码是否符合插件自定义错误码规范
+        if (
+            errorCode.length != defaultAtomErrorCodeLength || (!errorCode.startsWith(defaultAtomErrorCodePrefix))
+        ) {
+            return false
+        }
+        return storeErrorCodeInfoDao.getAtomErrorCode(
+            dslContext = dslContext,
+            storeCode = storeCode,
+            storeType = storeType,
+            errorCode = errorCode.toInt()
+        ).isNotEmpty
     }
 }

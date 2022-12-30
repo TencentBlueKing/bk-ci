@@ -37,8 +37,9 @@ import com.tencent.devops.store.pojo.atom.AtomUpdateRequest
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
-import com.tencent.devops.store.pojo.common.VersionInfo
 import com.tencent.devops.store.pojo.common.UnInstallReq
+import com.tencent.devops.store.pojo.common.VersionInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
 /**
  * 插件业务逻辑类
@@ -211,4 +212,10 @@ interface AtomService {
      * @return 插件默认版本号
      */
     fun getAtomDefaultValidVersion(projectCode: String, atomCode: String): Result<VersionInfo?>
+
+    fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: String
+    ): Boolean
 }
