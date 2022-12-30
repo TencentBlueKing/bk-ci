@@ -87,6 +87,7 @@ object AuthMessageCode {
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121505" // 权限系统: 申请加入用户组失败
     const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121506" // 权限系统: 获取用户组权限信息失败
+    const val GET_IAM_GROUP_FAIL = "2121507" // 权限系统: 获取用户组失败
 
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121601" // 用户{0}没有管理员权限
 }
