@@ -29,14 +29,14 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordTaskRecord
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_TASK_ID
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
@@ -44,6 +44,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("LongParameterList")
 class BuildRecordTaskDao {
 
     fun batchSave(dslContext: DSLContext, records: List<BuildRecordTask>) {
@@ -152,7 +153,9 @@ class BuildRecordTaskDao {
                     taskId = record[TASK_ID],
                     taskSeq = record[TASK_SEQ],
                     executeCount = record[EXECUTE_COUNT],
-                    taskVar = JsonUtil.to(record[TASK_VAR], object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    taskVar = JsonUtil.to(
+                        record[TASK_VAR], object : TypeReference<MutableMap<String, Any>>() {}
+                    ),
                     classType = record[CLASS_TYPE],
                     atomCode = record[ATOM_CODE],
                     status = record[STATUS],

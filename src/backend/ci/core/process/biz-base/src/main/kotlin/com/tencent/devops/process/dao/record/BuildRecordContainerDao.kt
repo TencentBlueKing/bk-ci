@@ -171,7 +171,9 @@ class BuildRecordContainerDao {
                     containerId = record[CONTAINER_ID],
                     executeCount = record[EXECUTE_COUNT],
                     status = record[STATUS],
-                    containerVar = JsonUtil.to(record[CONTAINER_VAR], object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    containerVar = JsonUtil.to(
+                        record[CONTAINER_VAR], object : TypeReference<MutableMap<String, Any>>() {}
+                    ),
                     containerType = record[CONTAINER_TYPE],
                     matrixGroupFlag = record[MATRIX_GROUP_FLAG],
                     matrixGroupId = record[MATRIX_GROUP_ID],

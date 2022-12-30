@@ -29,17 +29,18 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
 
 @Repository
+@Suppress("LongParameterList")
 class BuildRecordModelDao {
 
     fun createRecord(dslContext: DSLContext, record: BuildRecordModel) {

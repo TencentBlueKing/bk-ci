@@ -33,12 +33,10 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordStage
-import com.tencent.devops.model.process.tables.TPipelineBuildRecordTask
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordStageRecord
 import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.KEY_STAGE_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
@@ -130,7 +128,7 @@ class BuildRecordStageDao {
             ).from(this).where(conditions).groupBy(STAGE_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION,
-                STAGE_ID, SEQ, EXECUTE_COUNT, STATUS, TIMESTAMPS
+                STAGE_ID, SEQ, EXECUTE_COUNT, STATUS, STAGE_VAR, TIMESTAMPS
             ).from(this).join(max).on(
                 STAGE_ID.eq(max.field(KEY_STAGE_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -146,7 +144,9 @@ class BuildRecordStageDao {
                     stageSeq = record[SEQ],
                     executeCount = record[EXECUTE_COUNT],
                     status = record[STATUS],
-                    stageVar = JsonUtil.to(record[STAGE_ID], object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    stageVar = JsonUtil.to(
+                        record[STAGE_VAR], object : TypeReference<MutableMap<String, Any>>() {}
+                    ),
                     timestamps = record[TIMESTAMPS]?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
