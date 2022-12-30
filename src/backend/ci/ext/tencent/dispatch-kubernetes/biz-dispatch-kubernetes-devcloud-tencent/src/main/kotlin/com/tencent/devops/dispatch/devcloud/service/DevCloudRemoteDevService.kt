@@ -75,7 +75,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             APIVersion = "",
             spec = EnvironmentSpec(
                 containers = listOf(Container(
-                    image = workspaceReq.image ,
+                    image = workspaceReq.devFile.image?.publicImage ?: "" ,
                     resource = ResourceRequirements(8, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",

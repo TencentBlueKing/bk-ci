@@ -80,7 +80,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentOpRsp.code) {
+                if (0 == environmentOpRsp.code) {
                     return environmentOpRsp.data
                 } else {
                     throw BuildFailureException(
@@ -136,7 +136,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentOpRsp.code) {
+                if (0 == environmentOpRsp.code) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
@@ -205,7 +205,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentStatusRsp.code) {
+                if (0 == environmentStatusRsp.code) {
                     return environmentStatusRsp.data
                 } else {
                     throw BuildFailureException(
@@ -275,7 +275,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentListRsp.code) {
+                if (0 == environmentListRsp.code) {
                     return environmentListRsp.data
                 } else {
                     throw BuildFailureException(
