@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -111,4 +112,19 @@ interface ServiceAtomResource {
         @PathParam("atomCode")
         atomCode: String
     ): Result<AtomClassifyInfo?>
+
+    @ApiOperation("判断错误码是否合规")
+    @POST
+    @Path("/codes/{storeCode}/errorCode/compliance")
+    fun isComplianceErrorCode(
+        @ApiParam("标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("用户ID", required = true)
+        @QueryParam("errorCode")
+        errorCode: Int
+    ): Result<Boolean>
 }

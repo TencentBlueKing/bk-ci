@@ -33,6 +33,7 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomPropService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
@@ -69,5 +70,15 @@ class ServiceAtomResourceImpl @Autowired constructor(
 
     override fun getAtomClassifyInfo(atomCode: String): Result<AtomClassifyInfo?> {
         return atomClassifyService.getAtomClassifyInfo(atomCode)
+    }
+
+    override fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: Int
+    ): Result<Boolean> {
+        return Result(
+            atomService.isComplianceErrorCode(storeCode, storeType, "$errorCode")
+        )
     }
 }
