@@ -70,19 +70,19 @@ class DevcloudContainerService @Autowired constructor(
         troubleShooting = "Devcloud构建异常，请联系蓝盾助手排查，异常信息 - "
     )
 
-    @Value("\${devcloud.resources.builder.cpu}")
+    @Value("\${devCloud.resources.builder.cpu}")
     override var cpu: Double = 32.0
 
-    @Value("\${devcloud.resources.builder.memory}")
+    @Value("\${devCloud.resources.builder.memory}")
     override var memory: String = "65535"
 
-    @Value("\${devcloud.resources.builder.disk}")
+    @Value("\${devCloud.resources.builder.disk}")
     override var disk: String = "500"
 
-    @Value("\${devcloud.entrypoint}")
+    @Value("\${devCloud.entrypoint}")
     override val entrypoint: String = "kubernetes_init.sh"
 
-    @Value("\${devcloud.sleepEntrypoint}")
+    @Value("\${devCloud.sleepEntrypoint}")
     override val sleepEntrypoint: String = "sleep.sh"
 
     override val helpUrl: String? = ""
@@ -124,7 +124,7 @@ class DevcloudContainerService @Autowired constructor(
                 return if (taskStatus.status == TaskStatusEnum.Success) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
                 } else {
-                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs)
+                    DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())
                 }
             }
         }

@@ -82,7 +82,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                         mountPath = "/data/landun/workspace"
                     ))
                 )),
-                initContainers = Container(
+                initContainers = listOf(Container(
                     image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.0",
                     resource = ResourceRequirements(8, 32008),
                     volumeMounts = listOf(VolumeMount(
@@ -93,18 +93,18 @@ class DevCloudRemoteDevService @Autowired constructor(
                         EnvVar("GIT_TOKEN", workspaceReq.oAuthToken),
                         EnvVar("GIT_URL", workspaceReq.repositoryUrl)
                     )
-                ),
+                )),
                 imagePullCertificate = imagePullCertificateList,
-                volumes = Volume(
+                volumes = listOf(Volume(
                     name = "workspace",
                     volumeSource = VolumeSource(
                         dataDisk = DataDiskSource()
                     )
-                )
+                ))
             )
         ))
 
-        return Pair(environmentOpRsp.enviromentUid ?: "", environmentOpRsp.taskUid)
+        return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): Boolean {

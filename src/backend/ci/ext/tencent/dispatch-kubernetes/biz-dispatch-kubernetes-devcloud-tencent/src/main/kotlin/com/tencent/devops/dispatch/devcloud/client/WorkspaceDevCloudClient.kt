@@ -407,7 +407,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     TaskStatusEnum.Fail -> {
                         val resultDisplay = taskResponse.data.logs
                         logger.error("Task: $taskId failed, taskResponse: $taskResponse")
-                        TaskResult(isFinish = true, success = false, msg = resultDisplay ?: "")
+                        TaskResult(isFinish = true, success = false, msg = resultDisplay.toString() ?: "")
                     }
                     else -> TaskResult(isFinish = false, success = false, msg = "")
                 }

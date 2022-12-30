@@ -6,7 +6,7 @@ data class TaskStatus(
     val updatedAt: String? = null,
     val status: TaskStatusEnum? = null,
     val statuscode: Int? = null,
-    val logs: String? = null
+    val logs: List<String> = emptyList()
 )
 
 enum class TaskStatusEnum {
