@@ -23,7 +23,15 @@ data class DevfileImage(
     @ApiModelProperty("定义公共镜像")
     val publicImage: String?,
     @ApiModelProperty("定义用户镜像")
-    val file: String?
+    val file: String?,
+    @ApiModelProperty("imagePullCertificate")
+    val imagePullCertificate: ImagePullCertificate? = null
+)
+
+data class ImagePullCertificate(
+    val host: String? = null,
+    val username: String? = null,
+    val password: String? = null
 )
 
 data class DevfileCommands(

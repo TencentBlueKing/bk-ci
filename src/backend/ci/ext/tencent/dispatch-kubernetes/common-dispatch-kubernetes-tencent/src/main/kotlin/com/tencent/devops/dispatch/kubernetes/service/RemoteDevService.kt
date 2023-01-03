@@ -35,6 +35,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
@@ -57,8 +58,8 @@ class RemoteDevService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
     }
 
-    fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): String {
-        val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, workspaceReq)
+    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): String {
+        val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, event)
 
         val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
@@ -70,7 +71,7 @@ class RemoteDevService @Autowired constructor(
                 val context = DSL.using(t)
                 dispatchWorkspaceDao.createWorkspace(
                     userId = userId,
-                    workspace = workspaceReq,
+                    event = event,
                     environmentUid = enviromentUid,
                     status = EnvStatusEnum.Running,
                     dslContext = context
@@ -78,20 +79,20 @@ class RemoteDevService @Autowired constructor(
 
                 dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                     dslContext = context,
-                    workspaceName = workspaceReq.name,
+                    workspaceName = event.workspaceName,
                     environmentUid = enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE
                 )
             }
 
-            return workspaceReq.name
+            return event.workspaceName
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 dispatchWorkspaceDao.createWorkspace(
                     userId = userId,
-                    workspace = workspaceReq,
+                    event = event,
                     environmentUid = enviromentUid,
                     status = EnvStatusEnum.Failed, // TODO 这里的task状态应该是跟workspace状态分开的
                     dslContext = context
@@ -99,7 +100,7 @@ class RemoteDevService @Autowired constructor(
 
                 dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                     dslContext = context,
-                    workspaceName = workspaceReq.name,
+                    workspaceName = event.workspaceName,
                     environmentUid = enviromentUid,
                     operator = "admin",
                     action = EnvironmentAction.CREATE,
