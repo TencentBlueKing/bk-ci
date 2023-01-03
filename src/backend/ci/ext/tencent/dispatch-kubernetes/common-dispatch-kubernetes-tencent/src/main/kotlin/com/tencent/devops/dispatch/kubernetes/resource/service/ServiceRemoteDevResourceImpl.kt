@@ -30,6 +30,8 @@ package com.tencent.devops.dispatch.kubernetes.resource.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +41,24 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ServiceRemoteDevResource {
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Result<String> {
-        return Result(remoteDevService.createWorkspace(userId, workspaceReq))
+        return Result(remoteDevService.createWorkspace(userId, WorkspaceCreateEvent(
+            userId = userId,
+            traceId = "",
+            workspaceName = workspaceReq.name,
+            repositoryUrl = workspaceReq.repositoryUrl,
+            branch = workspaceReq.branch,
+            devFilePath = workspaceReq.devFilePath,
+            devFile = Devfile(
+                version = "",
+                envs = null,
+                image = null,
+                vscode = null,
+                ports = null,
+                commands = null
+            ),
+            gitOAuth = "",
+            sshKeys = emptyList()
+        )))
     }
 
     override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {

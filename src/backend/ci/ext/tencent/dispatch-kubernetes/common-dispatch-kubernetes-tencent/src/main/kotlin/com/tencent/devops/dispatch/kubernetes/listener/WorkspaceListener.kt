@@ -53,16 +53,7 @@ class WorkspaceListener @Autowired constructor(
             logger.info("Start to handle workspace create ($event)")
             remoteDevService.createWorkspace(
                 userId = event.userId,
-                workspaceReq = WorkspaceReq(
-                    workspaceId = 0L,
-                    name = event.workspaceName,
-                    repositoryUrl = event.repositoryUrl,
-                    branch = event.branch,
-                    devFilePath = event.devFilePath,
-                    devFile = event.devFile,
-                    oAuthToken = event.gitOAuth ?: "",
-                    image = event.image
-                )
+                event = event
             )
 
             status = true

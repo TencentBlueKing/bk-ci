@@ -46,6 +46,7 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -60,13 +61,13 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
 
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
-        logger.info("User $userId create workspace: ${JsonUtil.toJson(workspaceReq)}")
-        val imagePullCertificateList = if (workspaceReq.imagePullCertificate != null) {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
+        logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
+        val imagePullCertificateList = if (event.devFile.image?.imagePullCertificate != null) {
             listOf(ImagePullCertificate(
-                host = workspaceReq.imagePullCertificate?.host,
-                username = workspaceReq.imagePullCertificate?.username,
-                password = workspaceReq.imagePullCertificate?.password
+                host = event.devFile.image?.imagePullCertificate?.host,
+                username = event.devFile.image?.imagePullCertificate?.username,
+                password = event.devFile.image?.imagePullCertificate?.password
             ))
         } else {
             emptyList()
@@ -77,7 +78,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             APIVersion = "",
             metadata = ObjectMeta(
                 labels = mapOf(
-                    "bkci.dispatch.kubenetes.remoting/workspaceID" to workspaceReq.name,
+                    "bkci.dispatch.kubenetes.remoting/workspaceID" to event.workspaceName,
                     "bkci.dispatch.kubenetes.remoting/core" to "workspace",
                     "bkci.dispatch.kubenetes.remoting/owner" to userId
                 ),
@@ -87,8 +88,8 @@ class DevCloudRemoteDevService @Autowired constructor(
             ),
             spec = EnvironmentSpec(
                 containers = listOf(Container(
-                    name = workspaceReq.name,
-                    image = workspaceReq.devFile.image?.publicImage ?: "" ,
+                    name = event.workspaceName,
+                    image = event.devFile.image?.publicImage ?: "" ,
                     resource = ResourceRequirements(8000, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",
@@ -106,7 +107,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                     )
                 )),
                 initContainers = listOf(Container(
-                    name = workspaceReq.name + "-init",
+                    name = event.workspaceName + "-init",
                     image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.0",
                     resource = ResourceRequirements(8000, 32008),
                     volumeMounts = listOf(VolumeMount(
@@ -114,8 +115,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                         mountPath = WORKSPACE_PATH
                     )),
                     env = listOf(
-                        EnvVar("GIT_TOKEN", workspaceReq.oAuthToken),
-                        EnvVar("GIT_URL", workspaceReq.repositoryUrl)
+                        EnvVar("GIT_TOKEN", event.gitOAuth),
+                        EnvVar("GIT_URL", event.repositoryUrl)
                     )
                 )),
                 imagePullCertificate = imagePullCertificateList,

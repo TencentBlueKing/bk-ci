@@ -22,9 +22,3 @@ data class WorkspaceReq(
     @ApiModelProperty("imagePullCertificate")
     val imagePullCertificate: ImagePullCertificate? = null
 )
-
-data class ImagePullCertificate(
-    val host: String? = null,
-    val username: String? = null,
-    val password: String? = null
-)

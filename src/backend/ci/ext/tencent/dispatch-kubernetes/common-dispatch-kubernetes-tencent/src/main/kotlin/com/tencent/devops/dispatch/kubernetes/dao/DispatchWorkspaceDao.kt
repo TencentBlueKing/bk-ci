@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.dao
 
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchWorkspaceRecord
@@ -45,7 +46,7 @@ class DispatchWorkspaceDao {
 
     fun createWorkspace(
         userId: String,
-        workspace: WorkspaceReq,
+        event: WorkspaceCreateEvent,
         environmentUid: String,
         status: EnvStatusEnum,
         dslContext: DSLContext
@@ -63,11 +64,11 @@ class DispatchWorkspaceDao {
             )
                 .values(
                     "",
-                    workspace.name,
+                    event.workspaceName,
                     environmentUid,
-                    workspace.repositoryUrl,
-                    workspace.branch,
-                    workspace.image,
+                    event.repositoryUrl,
+                    event.branch,
+                    event.image,
                     status.ordinal
                 )
                 .returning(ID)

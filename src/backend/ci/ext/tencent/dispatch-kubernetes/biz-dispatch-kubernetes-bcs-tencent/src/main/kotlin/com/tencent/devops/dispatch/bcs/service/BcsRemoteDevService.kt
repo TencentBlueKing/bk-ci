@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.bcs.service
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,7 +39,7 @@ import org.springframework.stereotype.Service
 class BcsRemoteDevService @Autowired constructor(
     private val commonConfig: CommonConfig
 ) : RemoteDevInterface {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
+    override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         TODO("Not yet implemented")
     }
 
