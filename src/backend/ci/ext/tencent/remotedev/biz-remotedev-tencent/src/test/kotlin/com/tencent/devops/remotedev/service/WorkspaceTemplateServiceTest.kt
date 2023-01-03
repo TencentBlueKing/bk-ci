@@ -140,11 +140,11 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
                 )
             } returns dslContext.mockResult(T_WORKSPACE_TEMPLATE, tWorkspaceTemplateRecord)
 
-                self.getWorkspaceTemplateList(
-                    userId = "user00"
-                ).let {
-                    Assertions.assertTrue(it.isNotEmpty())
-                }
+            self.getWorkspaceTemplateList(
+                   userId = "user00"
+              ).let {
+                   Assertions.assertTrue(it.isNotEmpty())
+              }
         }
 
     }
