@@ -433,7 +433,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         try {
             // 是否需要toset
-            val projects = getProjectFromAuth(userId, accessToken)
+            val projects = getProjectFromAuth(userId, accessToken).toSet()
             if (projects.isEmpty() && !unApproved) {
                 return emptyList()
             }
@@ -441,7 +441,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (projects.isNotEmpty()) {
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
-                    englishNameList = projects,
+                    englishNameList = projects.toList(),
                     offset = null,
                     limit = null,
                     searchName = null,
@@ -451,7 +451,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved!!) {
+            if (unApproved) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId
