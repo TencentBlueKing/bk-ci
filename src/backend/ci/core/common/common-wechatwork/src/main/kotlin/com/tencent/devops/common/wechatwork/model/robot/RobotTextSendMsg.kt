@@ -25,11 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model.robot
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.wechatwork.model.enums.MsgType
+
+data class RobotTextSendMsg(
+    @JsonProperty("msgtype")
+    val msgType: String = MsgType.text.name,
+    @JsonProperty("chatid")
+    val chatId: String,
+    val text: MsgInfo
+)

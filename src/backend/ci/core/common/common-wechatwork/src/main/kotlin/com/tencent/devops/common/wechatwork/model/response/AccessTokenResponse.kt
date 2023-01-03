@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model.response
+
+data class AccessTokenResponse(
+    val errcode: Int,
+    val errmsg: String,
+    val access_token: String,
+    val expires_in: Int
+)

@@ -26,10 +26,7 @@
  */
 
 dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
+    api(project(":core:common:common-web"))
+    api("org.dom4j:dom4j")
+    api("commons-codec:commons-codec")
 }

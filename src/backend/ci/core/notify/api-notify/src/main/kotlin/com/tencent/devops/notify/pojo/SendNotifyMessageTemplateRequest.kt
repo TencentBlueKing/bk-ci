@@ -45,7 +45,7 @@ data class SendNotifyMessageTemplateRequest(
     val cc: MutableSet<String>? = null,
     @ApiModelProperty("消息内容", required = false)
     val bcc: MutableSet<String>? = null,
-    @ApiModelProperty("是否以markdown格式发送通知内容，为true时，会指向md格式的模板", required = false)
+    @ApiModelProperty("是否以markdown格式发送通知内容, 目前仅企业微信群支持markdown", required = false)
     val markdownContent: Boolean? = false,
     @ApiModelProperty("回调内容", required = false)
     val callbackData: Map<String, String>? = null

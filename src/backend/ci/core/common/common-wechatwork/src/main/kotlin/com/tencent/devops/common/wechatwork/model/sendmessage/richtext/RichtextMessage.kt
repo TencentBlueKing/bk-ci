@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
+package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
+
+data class RichtextMessage(
+    val receiver: Receiver = Receiver(),
+    val rich_text: List<RichtextContent> = listOf(RichtextText())
+) {
+    val msgtype: String = "rich_text"
 }
