@@ -371,6 +371,7 @@ class ProjectDao {
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
             if (!needApproval) {
+                // todo 只有rbac集群并且需要审批的，才不立即落库 可授权人员范围和是否私密项目，得去判断是否是RBAC集群打过来的
                 update.set(SUBJECTSCOPES, subjectScopesStr)
                 authSecrecy?.let { update.set(IS_AUTH_SECRECY, authSecrecy) }
             }
@@ -542,7 +543,7 @@ class ProjectDao {
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(IS_AUTH_SECRECY.eq(false))
                 .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
-                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%$projectName%")) }
+                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}")) }
                 .limit(limit)
                 .offset(offset)
                 .fetch()
