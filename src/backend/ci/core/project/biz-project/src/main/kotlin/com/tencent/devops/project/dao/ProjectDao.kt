@@ -543,7 +543,7 @@ class ProjectDao {
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(IS_AUTH_SECRECY.eq(false))
                 .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
-                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}")) }
+                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
                 .limit(limit)
                 .offset(offset)
                 .fetch()
