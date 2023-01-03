@@ -38,6 +38,16 @@ import com.tencent.devops.model.store.tables.TStoreHonorInfo
 import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
+import com.tencent.devops.store.constant.StoreConstants.STORE_CREATE_TIME
+import com.tencent.devops.store.constant.StoreConstants.STORE_CREATOR
+import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_ID
+import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_NAME
+import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_TITLE
+import com.tencent.devops.store.constant.StoreConstants.STORE_MODIFIER
+import com.tencent.devops.store.constant.StoreConstants.STORE_NAME
+import com.tencent.devops.store.constant.StoreConstants.STORE_TYPE
+import com.tencent.devops.store.constant.StoreConstants.STORE_UPDATE_TIME
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -64,17 +74,30 @@ class StoreHonorServiceImpl @Autowired constructor(
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreHonorManageInfo> {
         // 权限校验
 
-
+        val records = storeHonorDao.list(
+            dslContext = dslContext,
+            keyWords = keyWords,
+            page = page,
+            pageSize = pageSize
+        )
         return Page(
             count = storeHonorDao.count(dslContext, keyWords),
             page = page,
             pageSize = pageSize,
-            records = storeHonorDao.list(
-                dslContext = dslContext,
-                keyWords = keyWords,
-                page = page,
-                pageSize = pageSize
-            )
+            records = records.map {
+                StoreHonorManageInfo(
+                    storeCode = it[STORE_CODE] as String,
+                    storeName = it[STORE_NAME] as String,
+                    storeType = it[STORE_TYPE] as StoreTypeEnum,
+                    honorId = it[STORE_HONOR_ID] as String,
+                    honorTitle = it[STORE_HONOR_TITLE] as String,
+                    honorName = it[STORE_HONOR_NAME] as String,
+                    creator = it[STORE_CREATOR] as String,
+                    modifier = it[STORE_MODIFIER] as String,
+                    createTime = it[STORE_CREATE_TIME] as LocalDateTime,
+                    updateTime = it[STORE_UPDATE_TIME] as LocalDateTime
+                )
+            }
         )
     }
 

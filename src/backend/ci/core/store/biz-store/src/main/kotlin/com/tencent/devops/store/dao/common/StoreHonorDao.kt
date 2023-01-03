@@ -32,11 +32,11 @@ import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record10
 import org.jooq.Record6
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -96,7 +96,7 @@ class StoreHonorDao {
         keyWords: String?,
         page: Int,
         pageSize: Int
-    ): List<StoreHonorManageInfo> {
+    ): Result<Record10<String, String, String, String, String, Byte, String, String, LocalDateTime, LocalDateTime>> {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             val condition = mutableListOf<Condition>()
@@ -122,7 +122,7 @@ class StoreHonorDao {
                 .on(ID.eq(tStoreHonorRel.HONOR_ID).and(STORE_TYPE.eq(tStoreHonorRel.STORE_TYPE)))
                 .where(condition)
                 .limit(pageSize).offset((page - 1) * pageSize)
-                .fetchInto(StoreHonorManageInfo::class.java)
+                .fetch()
         }
     }
 
