@@ -28,9 +28,16 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 
-class RbacAuthPermissionApi : AuthPermissionApi {
+class RbacAuthPermissionApi(
+    private val client: Client,
+    val tokenService: ClientTokenService
+) : AuthPermissionApi {
     override fun validateUserResourcePermission(
         user: String,
         serviceCode: AuthServiceCode,
@@ -38,7 +45,13 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        return true
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            projectCode = projectCode,
+            resourceCode = resourceType.value
+        ).data!!
     }
 
     override fun validateUserResourcePermission(
@@ -50,7 +63,15 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         permission: AuthPermission,
         relationResourceType: AuthResourceType?
     ): Boolean {
-        return true
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            resourceType = resourceType.value,
+            projectCode = projectCode,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resourceCode = resourceCode,
+            relationResourceType = relationResourceType?.value
+        ).data!!
     }
 
     override fun getUserResourceByPermission(
@@ -61,7 +82,13 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         permission: AuthPermission,
         supplier: (() -> List<String>)?
     ): List<String> {
-        return emptyList()
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resourceType = resourceType.value
+        ).data ?: emptyList()
     }
 
     override fun getUserResourcesByPermissions(
@@ -72,7 +99,22 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         permissions: Set<AuthPermission>,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val actions = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
+        val permissionResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            resourceType = resourceType.value,
+            projectCode = projectCode,
+            action = actions
+        ).data ?: emptyMap()
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        permissionResourcesMap.forEach { (key, value) ->
+            resultMap[key] = value
+            if (key == AuthPermission.VIEW && permissions.contains(AuthPermission.LIST)) {
+                resultMap[AuthPermission.LIST] = value
+            }
+        }
+        return resultMap
     }
 
     override fun getUserResourcesByPermissions(
@@ -84,7 +126,14 @@ class RbacAuthPermissionApi : AuthPermissionApi {
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val actions = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            resourceType = resourceType.value,
+            projectCode = scopeId,
+            action = actions
+        ).data ?: emptyMap()
     }
 
     override fun addResourcePermissionForUsers(

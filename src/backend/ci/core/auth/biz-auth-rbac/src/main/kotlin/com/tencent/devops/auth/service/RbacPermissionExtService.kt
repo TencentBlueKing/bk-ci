@@ -56,4 +56,32 @@ class RbacPermissionExtService(
             resourceName = resourceName
         )
     }
+
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean {
+        logger.info("resourceModifyRelation $projectCode $resourceCode $resourceName $resourceType")
+        return permissionResourceService.resourceModifyRelation(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName
+        )
+    }
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        logger.info("resourceDeleteRelation $projectCode $resourceCode $resourceType")
+        return permissionResourceService.resourceDeleteRelation(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
 }

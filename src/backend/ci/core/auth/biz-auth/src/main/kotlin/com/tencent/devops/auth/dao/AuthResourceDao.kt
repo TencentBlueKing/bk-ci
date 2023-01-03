@@ -76,6 +76,40 @@ class AuthResourceDao {
         }
     }
 
+    fun update(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Int {
+        val now = LocalDateTime.now()
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.update(this)
+                .set(RESOURCE_NAME, resourceName)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.delete(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .execute()
+        }
+    }
+
     fun get(
         dslContext: DSLContext,
         projectCode: String,
@@ -145,6 +179,19 @@ class AuthResourceDao {
                 .limit(limit)
                 .offset(offset)
                 .fetch()
+        }
+    }
+
+    fun listByProjectAndType(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.select(RESOURCE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetch(0, String::class.java)
         }
     }
 

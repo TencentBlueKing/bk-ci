@@ -166,7 +166,42 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
-            ))
+            )
+        )
+    }
+
+    override fun resourceModifyRelation(
+        token: String,
+        type: String?,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Result<Boolean> {
+        return Result(
+            permissionExtService.resourceModifyRelation(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        )
+    }
+
+    override fun resourceDeleteRelation(
+        token: String,
+        type: String?,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Result<Boolean> {
+        return Result(
+            permissionExtService.resourceDeleteRelation(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        )
     }
 
     override fun grantInstancePermission(

@@ -66,6 +66,35 @@ class AuthResourceService @Autowired constructor(
         )
     }
 
+    @SuppressWarnings("LongParameterList")
+    fun update(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Int {
+        return authResourceDao.update(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName
+        )
+    }
+
+    fun delete(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        authResourceDao.delete(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+    }
+
     fun get(
         projectCode: String,
         resourceType: String,
@@ -129,5 +158,16 @@ class AuthResourceService @Autowired constructor(
             offset = sqlLimit.offset
         )?.map { resourceList.add(authResourceDao.convert(it)) }
         return resourceList
+    }
+
+    fun listByProjectAndType(
+        projectCode: String,
+        resourceType: String
+    ): List<String> {
+        return authResourceDao.listByProjectAndType(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType
+        )
     }
 }

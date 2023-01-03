@@ -28,8 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -432,8 +430,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val startEpoch = System.currentTimeMillis()
         var success = false
         try {
-            //todo 修改拉取策略，只拉取拥有查看权限的项目  v3保留
-            val projects = getProjectFromAuth(userId, accessToken)
+            // 是否需要toset
+            val projects = getProjectFromAuth(userId, accessToken).toSet()
             if (projects.isEmpty() && !unApproved) {
                 return emptyList()
             }
@@ -441,7 +439,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (projects.isNotEmpty()) {
                 projectDao.listByEnglishName(
                     dslContext = dslContext,
-                    englishNameList = projects,
+                    englishNameList = projects.toList(),
                     offset = null,
                     limit = null,
                     searchName = null,
@@ -451,7 +449,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
             }
             // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved!!) {
+            if (unApproved) {
                 projectDao.listUnapprovedByUserId(
                     dslContext = dslContext,
                     userId = userId

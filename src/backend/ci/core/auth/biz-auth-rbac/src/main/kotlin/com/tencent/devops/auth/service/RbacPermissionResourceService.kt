@@ -31,42 +31,36 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.AuthDefaultGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.utils.IamGroupUtils
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.ProjectVO
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
     private val client: Client,
-    private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val dslContext: DSLContext,
-    private val authDefaultGroupDao: AuthDefaultGroupDao,
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val permissionSubsetManagerService: PermissionSubsetManagerService
 ) : PermissionResourceService {
 
     companion object {
@@ -81,65 +75,91 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
-        val managerDefaultGroup = authDefaultGroupDao.get(
-            dslContext = dslContext,
-            resourceType = resourceType,
-            groupCode = DefaultGroupType.MANAGER.value
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
-            params = arrayOf(DefaultGroupType.MANAGER.value),
-            defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
-        )
-        val name = IamGroupUtils.buildSubsetManagerGroupName(
-            resourceName = resourceName,
-            groupName = managerDefaultGroup.groupName
-        )
-        val description = IamGroupUtils.buildSubsetManagerDescription(
-            resourceName = resourceName,
-            userId = userId
-        )
-        val projectInfo = getProjectInfo(projectCode)
-        val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildSubsetManagerGroupStrategyName(
+        val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
+            permissionGradeManagerService.createGradeManager(
+                userId = userId,
+                projectCode = projectCode,
+                projectName = resourceName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        } else {
+            // 获取项目管理的权限资源
+            val resourceInfo = getResourceInfo(
+                projectId = projectCode,
                 resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
-            ),
-            projectCode = projectCode,
-            projectName = projectInfo.projectName,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName
-        )
-        val createSubsetManagerDTO = CreateSubsetManagerDTO.builder()
-            .name(name)
-            .description(description)
-            .members(listOf(userId))
-            .authorizationScopes(authorizationScopes)
-            .inheritSubjectScope(true)
-            .subjectScopes(listOf())
-            .syncPerm(true)
-            .build()
-        val subsetManagerId = iamV2ManagerService.createSubsetManager(
-            projectInfo.relationId!!,
-            createSubsetManagerDTO
-        )
+                resourceCode = projectCode
+            )
+            permissionSubsetManagerService.createSubsetManager(
+                gradeManagerId = resourceInfo.relationId,
+                userId = userId,
+                projectCode = projectCode,
+                projectName = resourceInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        }
         authResourceService.create(
             userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
-            relationId = subsetManagerId.toString()
+            relationId = managerId.toString()
         )
-        permissionResourceGroupService.createDefaultGroup(
-            subsetManagerId = subsetManagerId,
-            userId = userId,
+        return true
+    }
+
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean {
+        val resourceInfo = getResourceInfo(
+            projectId = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            permissionGradeManagerService.modifyGradeManager(
+                gradeManagerId = resourceInfo.relationId,
+                projectCode = projectCode,
+                projectName = resourceName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        } else {
+            permissionSubsetManagerService.modifySubsetManager(
+                subsetManagerId = resourceInfo.relationId,
+                projectCode = projectCode,
+                projectName = resourceInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        }
+        authResourceService.update(
             projectCode = projectCode,
-            projectName = projectInfo.projectName,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
-            createMode = false
+        )
+        return true
+    }
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        authResourceService.delete(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
         return true
     }
@@ -191,20 +211,11 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 10
-        val iamGroupInfoList =
-            iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
-        return iamGroupInfoList.results.map {
-            IamGroupInfoVo(
-                id = it.id,
-                name = it.name,
-                displayName = IamGroupUtils.getSubsetManagerGroupDisplayName(it.name),
-                userCount = it.userCount,
-                departmentCount = it.departmentCount
-            )
-        }.sortedBy { it.id }
+        return if (resourceType == AuthResourceType.PROJECT.value) {
+            permissionGradeManagerService.listGroup(resourceInfo.relationId)
+        } else {
+            permissionSubsetManagerService.listGroup(resourceInfo.relationId)
+        }
     }
 
     override fun listUserBelongGroup(
@@ -236,7 +247,10 @@ class RbacPermissionResourceService(
                     )
                 )
                 val expiredAt = result.expiredAt * 1000
-                val expiredTime = DateTimeUtil.formatMilliTime(expiredAt)
+                val expiredTime = DateTimeUtil.formatMilliTime(
+                    time = expiredAt,
+                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                )
                 val status = if (System.currentTimeMillis() >= expiredAt) {
                     GroupMemberStatus.EXPIRED.name
                 } else {
@@ -296,7 +310,12 @@ class RbacPermissionResourceService(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         }
-        permissionResourceGroupService.createDefaultGroup(
+        // 已经启用的不需要再启用
+        if (resourceInfo.enable) {
+            logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
+            return true
+        }
+        permissionResourceGroupService.createSubsetManagerDefaultGroup(
             subsetManagerId = resourceInfo.relationId.toInt(),
             userId = userId,
             projectCode = projectId,
@@ -360,7 +379,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun delete(
+    override fun deleteGroup(
         userId: String,
         projectId: String,
         resourceType: String,

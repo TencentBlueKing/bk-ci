@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.auth
 
-import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
 import com.tencent.devops.common.auth.api.RbacAuthPermissionApi
 import com.tencent.devops.common.auth.api.RbacAuthProjectApi
 import com.tencent.devops.common.auth.api.RbacAuthTokenApi
@@ -43,13 +42,13 @@ import com.tencent.devops.common.auth.code.RbacRepoAuthServiceCode
 import com.tencent.devops.common.auth.code.RbacTicketAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.context.annotation.Primary
 import org.springframework.core.Ordered
 
 @Suppress("ALL")
@@ -73,32 +72,44 @@ class RbacAuthAutoConfiguration {
     fun authProjectApi() = RbacAuthProjectApi()
 
     @Bean
-    fun authPermissionApi() = RbacAuthPermissionApi()
+    fun authPermissionApi(
+        client: Client,
+        tokenService: ClientTokenService
+    ) = RbacAuthPermissionApi(client = client, tokenService = tokenService)
 
     @Bean
+    @Primary
     fun bcsAuthServiceCode() = RbacBcsAuthServiceCode()
 
     @Bean
+    @Primary
     fun pipelineAuthServiceCode() = RbacPipelineAuthServiceCode()
 
     @Bean
+    @Primary
     fun codeAuthServiceCode() = RbacCodeAuthServiceCode()
 
     @Bean
+    @Primary
     fun projectAuthServiceCode() = RbacProjectAuthServiceCode()
 
     @Bean
+    @Primary
     fun environmentAuthServiceCode() = RbacEnvironmentAuthServiceCode()
 
     @Bean
+    @Primary
     fun repoAuthServiceCode() = RbacRepoAuthServiceCode()
 
     @Bean
+    @Primary
     fun ticketAuthServiceCode() = RbacTicketAuthServiceCode()
 
     @Bean
+    @Primary
     fun qualityAuthServiceCode() = RbacQualityAuthServiceCode()
 
     @Bean
+    @Primary
     fun artifactoryAuthServiceCode() = RbacArtifactoryAuthServiceCode()
 }
