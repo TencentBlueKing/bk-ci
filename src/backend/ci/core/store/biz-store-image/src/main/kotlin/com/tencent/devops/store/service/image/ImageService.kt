@@ -860,7 +860,7 @@ abstract class ImageService @Autowired constructor() {
             storeCode = imageCode,
             storeType = StoreTypeEnum.IMAGE.type.toByte()
         )
-        val storeHonorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.IMAGE, imageCode)
+        val storeHonorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.IMAGE, imageCode)
         val storeIndexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.IMAGE, imageCode)
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)

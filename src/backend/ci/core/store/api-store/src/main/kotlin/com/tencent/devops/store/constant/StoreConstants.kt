@@ -49,4 +49,6 @@ object StoreConstants {
     const val STORE_MODIFIER = "MODIFIER"
     const val STORE_CREATE_TIME = "CREATE_TIME"
     const val STORE_UPDATE_TIME = "UPDATE_TIME"
+    const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
+    const val CREATE_TIME = "CREATE_TIME"
 }

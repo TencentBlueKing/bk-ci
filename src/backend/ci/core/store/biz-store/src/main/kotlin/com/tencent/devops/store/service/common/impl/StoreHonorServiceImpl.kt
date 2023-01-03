@@ -38,10 +38,12 @@ import com.tencent.devops.model.store.tables.TStoreHonorInfo
 import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.constant.StoreConstants.CREATE_TIME
 import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_CREATE_TIME
 import com.tencent.devops.store.constant.StoreConstants.STORE_CREATOR
 import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_ID
+import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_MOUNT_FLAG
 import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_NAME
 import com.tencent.devops.store.constant.StoreConstants.STORE_HONOR_TITLE
 import com.tencent.devops.store.constant.StoreConstants.STORE_MODIFIER
@@ -162,7 +164,15 @@ class StoreHonorServiceImpl @Autowired constructor(
     }
 
     override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
-        return storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode)
+        return storeHonorDao.getHonorByStoreCode(dslContext, storeType, storeCode).map {
+            HonorInfo(
+                honorTitle = it[STORE_HONOR_TITLE] as String,
+                honorName = it[STORE_HONOR_NAME] as String,
+                honorId = it[STORE_HONOR_ID] as String,
+                mountFlag = it[STORE_HONOR_MOUNT_FLAG] as Boolean,
+                createTime = it[CREATE_TIME] as LocalDateTime
+            )
+        }
     }
 
     override fun installStoreHonor(

@@ -827,7 +827,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                    honorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.ATOM, atomCode)
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }
