@@ -126,17 +126,20 @@ class StoreIndexCronService constructor(
                     )
                     val atomSlaIndexValue =
                         (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
+                    val result = if (atomSlaIndexValue > 99.9) "达标" else "不达标"
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
                         storeIndexBaseInfo.id,
-                        if (atomSlaIndexValue > 99.9) "达标" else "不达标"
+                        result
                     )
+                    val elementValue = String.format("%.2f", atomSlaIndexValue)
                     val tStoreIndexResultRecord = TStoreIndexResultRecord()
                     tStoreIndexResultRecord.id = UUIDUtil.generate()
                     tStoreIndexResultRecord.storeCode = atomCode
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexResultRecord.indexId = storeIndexBaseInfo.id
                     tStoreIndexResultRecord.indexCode = indexCode
+                    tStoreIndexResultRecord.iconTips = "插件SLA : $elementValue%($result)"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecords.add(tStoreIndexResultRecord)
                     val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
@@ -145,7 +148,7 @@ class StoreIndexCronService constructor(
                     tStoreIndexElementDetailRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfo.id
                     tStoreIndexElementDetailRecord.elementName = "atomSlaIndex"
-                    tStoreIndexElementDetailRecord.elementValue = String.format("%.2f", atomSlaIndexValue)
+                    tStoreIndexElementDetailRecord.elementValue = elementValue
                     tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
                 }
                 storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
