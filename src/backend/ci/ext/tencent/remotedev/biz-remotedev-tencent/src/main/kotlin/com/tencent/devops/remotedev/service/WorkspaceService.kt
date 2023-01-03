@@ -69,6 +69,7 @@ import com.tencent.devops.remotedev.service.redis.RedisWaiting4K8s
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -228,7 +229,8 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId).accessToken,
-                sshKeys = sshService.getSshPublicKeysList(setOf(userId)).map { it.publicKey }
+                sshKeys = sshService.getSshPublicKeysList(setOf(userId))
+                    .map { Base64Util.encode(it.publicKey.toByteArray()) }
             )
         )
 //        kotlin.runCatching {
@@ -334,7 +336,7 @@ class WorkspaceService @Autowired constructor(
                             dslContext,
                             workspaceId
                         ).toSet()
-                    ).map { it.publicKey },
+                    ).map { Base64Util.encode(it.publicKey.toByteArray()) },
                     workspaceName = workspace.name
                 )
             )
