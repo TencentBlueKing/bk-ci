@@ -228,7 +228,7 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId).accessToken,
-                sshKeys = sshService.getSshPublicKeysList(setOf(userId)).map { it.publicKey }
+                sshKeys = sshService.getSshPublicKeys4Ws(setOf(userId))
             )
         )
 //        kotlin.runCatching {
@@ -329,12 +329,12 @@ class WorkspaceService @Autowired constructor(
                     userId = userId,
                     traceId = bizId,
                     type = UpdateEventType.START,
-                    sshKeys = sshService.getSshPublicKeysList(
+                    sshKeys = sshService.getSshPublicKeys4Ws(
                         workspaceDao.fetchWorkspaceUser(
                             dslContext,
                             workspaceId
                         ).toSet()
-                    ).map { it.publicKey },
+                    ),
                     workspaceName = workspace.name
                 )
             )
