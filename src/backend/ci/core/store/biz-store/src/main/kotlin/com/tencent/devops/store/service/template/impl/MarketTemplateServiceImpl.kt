@@ -131,8 +131,6 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
     @Autowired
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
-    lateinit var storeHonorDao: StoreHonorDao
-    @Autowired
     lateinit var templateCategoryService: TemplateCategoryService
     @Autowired
     lateinit var templateLabelService: TemplateLabelService
@@ -498,7 +496,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE.type.toByte()
         )
-        val templateHonorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.TEMPLATE, templateCode)
+        val templateHonorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.TEMPLATE, templateCode)
         val templateIndexInfos =
             storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.TEMPLATE, templateCode)
         // 查找范畴列表

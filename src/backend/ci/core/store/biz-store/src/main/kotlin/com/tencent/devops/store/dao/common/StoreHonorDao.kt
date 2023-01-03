@@ -31,12 +31,12 @@ import com.tencent.devops.model.store.tables.TStoreHonorInfo
 import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
-import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record10
+import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -180,7 +180,11 @@ class StoreHonorDao {
         }
     }
 
-    fun getHonorByStoreCode(dslContext: DSLContext, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
+    fun getHonorByStoreCode(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): Result<Record5<String, String, String, Boolean, LocalDateTime>> {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             return dslContext.select(
@@ -193,7 +197,7 @@ class StoreHonorDao {
                 .on(ID.eq(tStoreHonorRel.HONOR_ID).and(STORE_TYPE.eq(tStoreHonorRel.STORE_TYPE)))
                 .where(tStoreHonorRel.STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .fetchInto(HonorInfo::class.java)
+                .fetch()
         }
     }
 
