@@ -86,16 +86,12 @@ class RbacPermissionResourceService(
             )
         } else {
             // 获取项目管理的权限资源
-            val resourceInfo = getResourceInfo(
-                projectId = projectCode,
-                resourceType = resourceType,
-                resourceCode = projectCode
-            )
+            val projectInfo = getProjectInfo(projectCode = projectCode)
             permissionSubsetManagerService.createSubsetManager(
-                gradeManagerId = resourceInfo.relationId,
+                gradeManagerId = projectInfo.relationId!!,
                 userId = userId,
                 projectCode = projectCode,
-                projectName = resourceInfo.resourceName,
+                projectName = projectInfo.projectName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
