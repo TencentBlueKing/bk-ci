@@ -31,6 +31,7 @@ import com.tencent.devops.model.store.tables.TStoreHonorInfo
 import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
+import com.tencent.devops.store.constant.StoreConstants
 import com.tencent.devops.store.pojo.common.StoreHonorRel
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -188,7 +189,7 @@ class StoreHonorDao {
         val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
             return dslContext.select(
-                ID,
+                ID.`as`(StoreConstants.STORE_HONOR_ID),
                 HONOR_TITLE,
                 HONOR_NAME,
                 tStoreHonorRel.MOUNT_FLAG,
