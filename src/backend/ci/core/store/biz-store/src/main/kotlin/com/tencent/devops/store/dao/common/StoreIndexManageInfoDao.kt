@@ -120,7 +120,24 @@ class StoreIndexManageInfoDao {
             keyWords?.let {
                 condition.add(INDEX_NAME.like("%$it%"))
             }
-            return dslContext.select()
+            return dslContext.select(
+                ID,
+                INDEX_CODE,
+                INDEX_NAME,
+                ICON_URL,
+                DESCRIPTION,
+                OPERATION_TYPE,
+                ATOM_CODE,
+                ATOM_VERSION,
+                FINISH_TASK_NUM,
+                TOTAL_TASK_NUM,
+                EXECUTE_TIME_TYPE,
+                STORE_TYPE,
+                CREATOR,
+                MODIFIER,
+                UPDATE_TIME,
+                CREATE_TIME
+            )
                 .from(this)
                 .where(condition)
                 .limit(pageSize).offset((page - 1) * pageSize)
