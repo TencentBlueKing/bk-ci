@@ -342,7 +342,12 @@ class PipelineContainerService @Autowired constructor(
                         status = null,
                         timestamps = mapOf(),
                         // 对矩阵产生的插件特殊表示类型
-                        taskVar = mutableMapOf("@type" to MatrixStatusElement.classType)
+                        taskVar = mutableMapOf(
+                            "@type" to MatrixStatusElement.classType,
+                            MatrixStatusElement::originClassType.name to atomElement.getClassType(),
+                            MatrixStatusElement::originAtomCode.name to atomElement.getAtomCode(),
+                            MatrixStatusElement::originTaskAtom.name to atomElement.getTaskAtom()
+                        )
                     )
                 )
             }
