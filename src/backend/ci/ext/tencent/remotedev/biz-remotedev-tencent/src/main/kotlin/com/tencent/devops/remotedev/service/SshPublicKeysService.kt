@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -87,6 +88,14 @@ class SshPublicKeysService @Autowired constructor(
             )
         }
         return result
+    }
+
+    fun getSshPublicKeys4Ws(
+        userIds: Set<String>
+    ): String {
+        val res = mapOf<String, List<String>>(
+            "keys" to getSshPublicKeysList(userIds).map { Base64Util.encode(it.publicKey.toByteArray()) })
+        return JsonUtil.toJson(res, false)
     }
 
     // 校验用户是否存在
