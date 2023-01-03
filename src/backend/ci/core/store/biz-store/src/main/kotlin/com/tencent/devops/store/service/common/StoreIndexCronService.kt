@@ -42,7 +42,6 @@ import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.common.impl.StoreIndexManageServiceImpl
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -179,7 +178,7 @@ class StoreIndexCronService constructor(
 
 
     companion object {
-        private val logger = LoggerFactory.getLogger(StoreIndexManageServiceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(StoreIndexCronService::class.java)
         private const val DEFAULT_PAGE_SIZE = 10
     }
 }
