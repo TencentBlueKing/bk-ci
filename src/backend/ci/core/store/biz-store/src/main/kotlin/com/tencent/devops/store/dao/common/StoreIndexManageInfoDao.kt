@@ -191,7 +191,25 @@ class StoreIndexManageInfoDao {
         indexCode: String
     ): StoreIndexBaseInfo? {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
-            return dslContext.selectFrom(this)
+            return dslContext.select(
+                ID,
+                INDEX_CODE,
+                INDEX_NAME,
+                ICON_URL,
+                DESCRIPTION,
+                OPERATION_TYPE,
+                ATOM_CODE,
+                ATOM_VERSION,
+                FINISH_TASK_NUM,
+                TOTAL_TASK_NUM,
+                EXECUTE_TIME_TYPE,
+                STORE_TYPE,
+                CREATOR,
+                MODIFIER,
+                UPDATE_TIME,
+                CREATE_TIME
+            )
+                .from(this)
                 .where(INDEX_CODE.eq(indexCode))
                 .and(OPERATION_TYPE.eq(indexOperationType.name))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
