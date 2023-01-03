@@ -43,6 +43,7 @@ data class WorkspaceCreateEvent(
     val gitOAuth: String? = "",
     val image: String = "",
     val devFile: Devfile,
+    val sshKeys: List<String>,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

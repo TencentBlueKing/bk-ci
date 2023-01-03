@@ -32,9 +32,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.SshPublicKeysDao
-import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.pojo.SshPublicKey
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -70,14 +68,16 @@ class SshPublicKeysService @Autowired constructor(
 
     // 获取工作空间模板
     fun getSshPublicKeysList(
-        userId: String
+        userIds: Set<String>
     ): List<SshPublicKey> {
-        logger.info("SshPublicKeysService|getSshPublicKeysList|userId|${userId}")
-        checkCommonUser(userId)
+        logger.info("SshPublicKeysService|getSshPublicKeysList|userId|${userIds}")
+        userIds.forEach {
+            checkCommonUser(it)
+        }
         val result = mutableListOf<SshPublicKey>()
         sshPublicKeysDao.queryUserSshKeys(
             dslContext = dslContext,
-            user = userId
+            users = userIds
         ).forEach {
             result.add(
                 SshPublicKey(

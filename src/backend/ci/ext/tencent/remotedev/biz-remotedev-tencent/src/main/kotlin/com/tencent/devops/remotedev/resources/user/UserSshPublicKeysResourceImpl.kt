@@ -44,7 +44,7 @@ class UserSshPublicKeysResourceImpl @Autowired constructor(
 
 ) : UserSshPublicKeysResource {
     override fun getUserPublicKeysList(userId: String): Result<List<SshPublicKey>> {
-        return Result(sshPublicKeysService.getSshPublicKeysList(userId) ?: emptyList())
+        return Result(sshPublicKeysService.getSshPublicKeysList(setOf(userId)) ?: emptyList())
     }
 
     override fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Result<Boolean> {
