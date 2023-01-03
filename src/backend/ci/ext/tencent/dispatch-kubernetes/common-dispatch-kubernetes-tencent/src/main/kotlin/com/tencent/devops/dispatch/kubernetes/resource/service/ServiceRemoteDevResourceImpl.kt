@@ -57,7 +57,7 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
                 commands = null
             ),
             gitOAuth = "",
-            sshKeys = emptyList()
+            sshKeys = ""
         )))
     }
 
