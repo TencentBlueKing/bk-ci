@@ -293,7 +293,7 @@ class UpdateStateForStageCmdFinally(
             }
             val allStageStatus = stageBuildDetailService.updateStageStatus(
                 projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
-                buildStatus = commandContext.buildStatus
+                buildStatus = commandContext.buildStatus, executeCount = commandContext.executeCount
             )
             stageBuildRecordService.updateStageStatus(
                 projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
