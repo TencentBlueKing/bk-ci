@@ -32,6 +32,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val workspaceSharedDao: WorkspaceSharedDao = mockk()
     private val gitTransferService: GitTransferService = mockk()
     private val permissionService: PermissionService = mockk()
+    private val sshService: SshPublicKeysService = mockk()
     private val dispatcher: RemoteDevDispatcher = mockk()
     private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
 
@@ -45,6 +46,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             workspaceSharedDao = workspaceSharedDao,
             gitTransferService = gitTransferService,
             permissionService = permissionService,
+            sshService = sshService,
             client = client,
             dispatcher = dispatcher
         ),
