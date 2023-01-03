@@ -25,11 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model
+
+import com.fasterxml.jackson.annotation.JsonProperty
+
+data class SendInfo(
+    val receiver: ReceiverItem,
+    @JsonProperty("msgtype")
+    val messageType: String,
+    val markdown: TextItem?,
+    val text: TextItem?,
+    @JsonProperty("rich_text")
+    val richText: List<RichTextItem>?
+)
+
+data class ReceiverItem(
+    val type: String,
+    val id: String
+)
+
+data class TextItem(
+    val content: String
+)
+
+data class RichTextItem(
+    val type: String,
+    val text: TextItem?,
+    val link: LinkItem?
+)
+
+data class LinkItem(
+    val type: String,
+    val text: String,
+    val key: String
+)
+
+data class CreateChatItem(
+    val name: String,
+    @JsonProperty("userlist")
+    val userList: List<String>
+)

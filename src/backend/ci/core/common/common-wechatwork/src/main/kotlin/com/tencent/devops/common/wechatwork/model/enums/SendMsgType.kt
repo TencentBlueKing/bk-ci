@@ -25,11 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
+package com.tencent.devops.common.wechatwork.model.enums
+
+enum class SendMsgType(private val type: String) {
+    text("text"),
+    image("image"),
+    file("file"),
+    rich_text("rich_text")
 }

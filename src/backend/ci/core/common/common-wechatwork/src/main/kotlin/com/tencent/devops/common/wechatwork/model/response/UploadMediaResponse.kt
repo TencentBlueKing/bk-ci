@@ -25,11 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model.response
+
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
+
+data class UploadMediaResponse(
+    @JsonProperty("errcode")
+    val errCode: Int,
+    @JsonProperty("errmsg")
+    val errMsg: String,
+    val type: UploadMediaType,
+    @JsonProperty("media_id")
+    val mediaId: String,
+    @JsonProperty("created_at")
+    val createdAt: String
+)

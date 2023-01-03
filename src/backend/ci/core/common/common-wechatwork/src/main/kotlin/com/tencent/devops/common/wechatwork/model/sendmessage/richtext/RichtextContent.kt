@@ -25,11 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+
+import com.fasterxml.jackson.annotation.JsonSubTypes
+import com.tencent.devops.common.wechatwork.model.enums.RichtextContentType
+
+@JsonSubTypes(
+    JsonSubTypes.Type(value = RichtextText::class, name = "text"),
+    JsonSubTypes.Type(value = RichtextMentioned::class, name = "mentioned"),
+    JsonSubTypes.Type(value = RichtextClick::class, name = "click"),
+    JsonSubTypes.Type(value = RichtextView::class, name = "view")
+)
+open class RichtextContent(
+    val type: RichtextContentType
+)

@@ -77,6 +77,7 @@ include(":core:common:common-auth:common-auth-api")
 include(":core:common:common-auth:common-auth-mock")
 include(":core:common:common-auth:common-auth-blueking")
 include(":core:common:common-auth:common-auth-v3")
+include(":core:common:common-wechatwork")
 
 include(":core:common:common-notify")
 include(":core:common:common-websocket")
