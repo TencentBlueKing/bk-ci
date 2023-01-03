@@ -90,6 +90,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         val email = notifyMessageTemplateDao.getEmailNotifyMessageTemplate(dslContext, templateId)
         val wechat = notifyMessageTemplateDao.getWechatNotifyMessageTemplate(dslContext, templateId)
         val rtx = notifyMessageTemplateDao.getRtxNotifyMessageTemplate(dslContext, templateId)
+        val common = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(
+            dslContext = dslContext,
+            templateId = templateId
+        )
+        logger.info("common template notify type is $common")
         val subTemplateList = mutableListOf<SubNotifyMessageTemplate>()
         if (null != email) {
             subTemplateList.add(
@@ -107,9 +112,22 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             )
         }
         if (null != rtx) {
+            if (common?.contains(NotifyType.WEWORK_GROUP.name) == true) {
+                subTemplateList.add(
+                    SubNotifyMessageTemplate(
+                        notifyTypeScope = mutableListOf(NotifyType.WEWORK_GROUP.name),
+                        title = rtx.title,
+                        body = rtx.body,
+                        creator = rtx.creator,
+                        modifier = rtx.modifior,
+                        createTime = (rtx.createTime as LocalDateTime).timestampmilli(),
+                        updateTime = (rtx.updateTime as LocalDateTime).timestampmilli()
+                    )
+                )
+            }
             subTemplateList.add(
                 SubNotifyMessageTemplate(
-                    notifyTypeScope = listOf(NotifyType.RTX.name),
+                    notifyTypeScope = mutableListOf(NotifyType.RTX.name),
                     title = rtx.title,
                     body = rtx.body,
                     creator = rtx.creator,
@@ -232,6 +250,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             }
             if (it.notifyTypeScope.contains(NotifyType.WECHAT.name)) {
                 notifyTypeScopeSet.add(NotifyType.WECHAT.name)
+            }
+            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
+                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
             }
             if (it.notifyTypeScope.contains(NotifyType.EMAIL.name)) {
                 if (it.emailType == null || it.bodyFormat == null) {
@@ -371,6 +392,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     data = false
                 )
             }
+
+            if (it.notifyTypeScope.contains(NotifyType.WEWORK_GROUP.name)) {
+                notifyTypeScopeSet.add(NotifyType.WEWORK_GROUP.name)
+            }
         }
 
         if (!updateOtherNotifyMessageTemplate(notifyMessageTemplateRequest, notifyTypeScopeSet)) {
@@ -482,10 +507,9 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val record = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(context, templateId)
-            logger.info("获取消息类型：${record?.get("NOTIFY_TYPE_SCOPE") as String}")
-            val notifyTypeStr = record["NOTIFY_TYPE_SCOPE"] as String
+            logger.info("获取消息类型：$record")
             val existsNotifyType =
-                JsonUtil.getObjectMapper().readValue(notifyTypeStr, List::class.java) as ArrayList<String>
+                JsonUtil.getObjectMapper().readValue(record, List::class.java) as ArrayList<String>
             logger.info("删除消息模板子表信息：$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}")
             when (notifyType) {
                 NotifyType.EMAIL.name -> {
@@ -555,7 +579,7 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 // 替换标题里的动态参数
                 val title = replaceContentParams(request.titleParams, emailTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, emailTplRecord.body)
+                val body = replaceContentEmailParams(request.bodyParams, emailTplRecord.body)
                 sendEmailNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
                     sendNotifyMessageTemplateRequest = request,
@@ -800,9 +824,19 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
 
     protected fun replaceContentParams(params: Map<String, String>?, content: String): String {
         var content1 = content
-        params?.forEach { paramName, paramValue ->
+        params?.forEach { (paramName, paramValue) ->
             content1 = content1.replace("\${$paramName}", paramValue).replace("#{$paramName}", paramValue)
                 .replace("{{$paramName}}", paramValue)
+        }
+        return content1
+    }
+
+    protected fun replaceContentEmailParams(params: Map<String, String>?, content: String): String {
+        var content1 = content
+        params?.forEach { (paramName, paramValue) ->
+            val replaceValue = paramValue.replace("\n", "<br>")
+            content1 = content1.replace("\${$paramName}", replaceValue).replace("#{$paramName}", replaceValue)
+                .replace("{{$paramName}}", replaceValue)
         }
         return content1
     }

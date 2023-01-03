@@ -41,7 +41,6 @@ import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record1
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -81,13 +80,13 @@ class NotifyMessageTemplateDao {
         }
     }
 
-    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): Record1<String>? {
+    fun getCommonNotifyMessageTemplatesNotifyType(dslContext: DSLContext, templateId: String): String? {
         with(TCommonNotifyMessageTemplate.T_COMMON_NOTIFY_MESSAGE_TEMPLATE) {
             val baseStep = dslContext.select(NOTIFY_TYPE_SCOPE)
                 .from(this)
                 .where(ID.eq(templateId))
 
-            return baseStep.fetchOne()
+            return baseStep.fetchOne(NOTIFY_TYPE_SCOPE)
         }
     }
 
