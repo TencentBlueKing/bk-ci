@@ -182,4 +182,3 @@ class DependOnControlTest {
         Assertions.assertEquals(BuildStatus.FAILED, dependOnControl.dependOnJobStatus(container = mockJob))
     }
 }
-
