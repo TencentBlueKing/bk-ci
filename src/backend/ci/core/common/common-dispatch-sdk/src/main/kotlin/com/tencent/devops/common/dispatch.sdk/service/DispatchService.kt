@@ -39,6 +39,10 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_ID
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_SECRET_KEY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_PROJECT_ID
 import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -88,6 +92,13 @@ class DispatchService constructor(
     fun buildDispatchMessage(event: PipelineAgentStartupEvent): DispatchMessage {
         logger.info("[${event.buildId}] Start build with gateway - ($gateway)")
         val secretInfo = setRedisAuth(event)
+
+        val customBuildEnv = event.customBuildEnv?.toMutableMap() ?: mutableMapOf()
+        customBuildEnv[ENV_KEY_BUILD_ID] = event.buildId
+        customBuildEnv[ENV_KEY_PROJECT_ID] = event.projectId
+        customBuildEnv[ENV_KEY_AGENT_ID] = secretInfo.hashId
+        customBuildEnv[ENV_KEY_AGENT_SECRET_KEY] = secretInfo.secretKey
+
         return DispatchMessage(
             id = secretInfo.hashId,
             secretKey = secretInfo.secretKey,
@@ -108,7 +119,7 @@ class DispatchService constructor(
             containerType = event.containerType,
             stageId = event.stageId,
             dispatchType = event.dispatchType,
-            customBuildEnv = event.customBuildEnv,
+            customBuildEnv = customBuildEnv,
             dockerRoutingType = event.dockerRoutingType
         )
     }
