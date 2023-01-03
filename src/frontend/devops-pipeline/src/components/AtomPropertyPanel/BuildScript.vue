@@ -251,7 +251,7 @@
                         instanceId,
                         projectId: this.projectId
                     }],
-                    applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=${this.projectId}&service_code=pipeline&role_manager=pipeline:${this.pipelineId}`
+                    applyPermissionUrl: this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.manager)
                 })
             },
             updatePipelineToTurbo (pipeline) {

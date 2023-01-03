@@ -30,6 +30,7 @@ package com.tencent.devops.experience.resources.service
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.constant.ExperienceConstant
@@ -38,6 +39,7 @@ import com.tencent.devops.experience.pojo.ExperienceInfoForBuild
 import com.tencent.devops.experience.pojo.ExperienceJumpInfo
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.ExperienceUpdate
+import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
@@ -50,13 +52,14 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceExperienceResourceImpl @Autowired constructor(
     private val experienceService: ExperienceService,
     private val experienceBaseService: ExperienceBaseService,
-    private val experienceDownloadService: ExperienceDownloadService
+    private val experienceDownloadService: ExperienceDownloadService,
+    private val client: Client
 ) : ServiceExperienceResource {
 
-    override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<Boolean> {
+    override fun create(userId: String, projectId: String, experience: ExperienceServiceCreate): Result<String> {
         checkParam(userId, projectId)
-        experienceService.serviceCreate(userId, projectId, experience)
-        return Result(true)
+        val experienceCreateResp = experienceService.serviceCreate(userId, projectId, experience, Source.OPENAPI)
+        return Result(experienceCreateResp.experienceHashId)
     }
 
     override fun count(projectIds: Set<String>?, expired: Boolean?): Result<Map<String, Int>> {
@@ -134,6 +137,15 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
         }
+        // TODO 暂时不校验 , 否则外部用户无法下载构件
+//        if (userId != null && client.get(ServiceProjectResource::class)
+//                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
+//        ) {
+//            throw ErrorCodeException(
+//                defaultMessage = "用户没有项目权限",
+//                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION
+//            )
+//        }
     }
 
     companion object {

@@ -363,8 +363,10 @@ func (o *operator) getFederationTotalNum(url string, ist config.InstanceType) (F
 
 func (o *operator) getFederationResource(clusterID string) ([]*op.NodeInfo, error) {
 	nodeInfoList := make([]*op.NodeInfo, 0, 1000)
-	ns := o.conf.BcsNamespace
-	url := fmt.Sprintf(bcsAPIFederatedURI, o.conf.BcsAPIPool.GetAddress(), clusterID, ns)
+	if o.conf.BcsNamespace == "" {
+		return nil, fmt.Errorf("crm: get federation resource request failed clusterID(%s): namespace is nil", clusterID)
+	}
+	url := fmt.Sprintf(bcsAPIFederatedURI, o.conf.BcsAPIPool.GetAddress(), clusterID, o.conf.BcsNamespace)
 	for _, ist := range o.conf.InstanceType {
 		result, err := o.getFederationTotalNum(url, ist)
 		if err != nil {
@@ -379,8 +381,8 @@ func (o *operator) getFederationResource(clusterID string) ([]*op.NodeInfo, erro
 		}
 		totalIst := float64(result.Data.Total)
 		nodeInfoList = append(nodeInfoList, &op.NodeInfo{
-			IP:       clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
-			Hostname: clusterID + "-" + ns + "-" + ist.Platform + "-" + ist.Group,
+			IP:       clusterID + "-" + o.conf.BcsNamespace + "-" + ist.Platform + "-" + ist.Group,
+			Hostname: clusterID + "-" + o.conf.BcsNamespace + "-" + ist.Platform + "-" + ist.Group,
 			DiskLeft: totalIst,
 			MemLeft:  totalIst * ist.MemPerInstance,
 			CPULeft:  totalIst * ist.CPUPerInstance,
@@ -399,12 +401,14 @@ func (o *operator) getServerStatus(clusterID, namespace, name string) (*op.Servi
 	info := &op.ServiceInfo{}
 
 	if err := o.getDeployments(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("k8s-operator: get server status, get deployments failed: %v", err)
+		blog.Errorf("k8s-operator: get server status, get deployments clusterID(%s) namespace(%s) failed: %v",
+			clusterID, namespace, err)
 		return nil, err
 	}
 
 	if err := o.getPods(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("k8s-operator: get server status, get pods failed: %v", err)
+		blog.Errorf("k8s-operator: get server status, get pods clusterID(%s) namespace(%s) failed: %v",
+			clusterID, namespace, err)
 		return nil, err
 	}
 
@@ -712,10 +716,12 @@ func (o *operator) getClientSetFromCache(clusterID string) (*clusterClientSet, b
 
 func (o *operator) generateClient(clusterID string) (*clusterClientSet, error) {
 	address := o.conf.BcsAPIPool.GetAddress()
+	var host string
 	if o.conf.EnableBCSApiGw {
-		EnableBCSApiGw = "1"
+		host = fmt.Sprintf(bcsAPIGWK8SBaseURI, address, clusterID)
+	} else {
+		host = fmt.Sprintf(bcsAPIK8SBaseURI, address, clusterID)
 	}
-	host := fmt.Sprintf(getBcsK8SBaseURL(), address, clusterID)
 
 	blog.Infof("k8s-operator: try generate client with host(%s) token(%s)", host, o.conf.BcsAPIToken)
 	// get client set by real api-server address

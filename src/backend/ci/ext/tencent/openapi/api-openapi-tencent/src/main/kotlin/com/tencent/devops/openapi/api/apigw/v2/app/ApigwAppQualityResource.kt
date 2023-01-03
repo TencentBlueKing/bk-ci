@@ -66,7 +66,7 @@ interface ApigwAppQualityResource {
         @ApiParam(value = "事业群ID", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_BG_ID)
         bgId: String,
-        @ApiParam("项目ID", required = true)
+        @ApiParam("项目ID(项目英文名)", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("流水线ID", required = true)

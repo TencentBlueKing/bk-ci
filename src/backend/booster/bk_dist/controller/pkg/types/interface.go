@@ -152,7 +152,8 @@ type ResourceMgr interface {
 	SendStats(brief bool) error
 
 	// send stats and reset after sent, if brief true, then will not send the job stats
-	SendAndResetStats(brief bool, t int64) error
+	// !! this will call m.work.Lock() , to avoid dead lock
+	SendAndResetStats(brief bool, resapplytimes []int64) error
 
 	// get resource status
 	GetStatus() *v2.RespTaskInfo

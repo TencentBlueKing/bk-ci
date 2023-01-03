@@ -32,6 +32,7 @@ import java.util.Random
 
 object StringUtil {
     private const val BASE = "abcdefghijklmnopqrstuvwxyz"
+    private val symbolNeedEncode = listOf('#', '【', '】')
 
     fun random(length: Int): String {
         val random = Random()
@@ -45,7 +46,7 @@ object StringUtil {
     fun chineseUrlEncode(url: String): String {
         var resultURL = ""
         url.toList().forEach {
-            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]")) || it == '#') {
+            resultURL += if (it.toString().matches(Regex("[\u4e00-\u9fa5]")) || symbolNeedEncode.contains(it)) {
                 URLEncoder.encode(it.toString(), "UTF-8")
             } else {
                 it

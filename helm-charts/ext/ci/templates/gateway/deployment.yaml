@@ -82,4 +82,30 @@ spec:
                   apiVersion: v1
                   fieldPath: metadata.name
           workingDir: /usr/local/openresty/nginx/
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 10s && /usr/local/openresty/nginx/sbin/nginx -s quit
+          livenessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "[ -f /usr/local/openresty/nginx/run/nginx.pid ] && ps -A | grep nginx"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /nginx_status
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+      terminationGracePeriodSeconds: 40
 {{- end -}}

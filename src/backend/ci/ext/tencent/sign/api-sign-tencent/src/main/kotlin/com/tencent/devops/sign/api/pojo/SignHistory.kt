@@ -30,7 +30,7 @@ package com.tencent.devops.sign.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("IPA包签名信息")
+@ApiModel("SignHistory-IPA包签名信息")
 data class SignHistory(
     @ApiModelProperty("签名ID", required = true)
     val resignId: String,

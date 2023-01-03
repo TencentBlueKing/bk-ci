@@ -51,6 +51,14 @@ default_value_dict = {
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
     'bkCiRepositoryGithubServer':'repository',
+    'bkCiDockerRoutingType':'KUBERNETES',
+    'bkCiDockerJobQuotaEnable':'false',
+    'bkCiBcsCpu':'8.0',
+    'bkCiBcsMemory':'16048',
+    'bkCiKubernetesCpu':'8',
+    'bkCiKubernetesMemory':'16048',
+    'bkCiKubernetesHost': 'http://kubernetes-manager',
+    'bkCiKubernetesToken': 'landun'
 }
 
 if os.path.isfile(default_value_json):
@@ -79,7 +87,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
     '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}',
-    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}'
+    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}',
+    '__BK_CI_PRIVATE_URL__': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}'
 }
 
 # 读取变量映射
