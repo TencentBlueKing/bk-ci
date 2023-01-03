@@ -234,7 +234,7 @@ public class WXBizMsgCrypt {
 		String encrypt = encrypt(getRandomStr(), replyMsg);
 
 		// 生成安全签名
-		if (timeStamp.equals("")) {
+		if ("".equals(timeStamp)) {
 			timeStamp = Long.toString(System.currentTimeMillis());
 		}
 
