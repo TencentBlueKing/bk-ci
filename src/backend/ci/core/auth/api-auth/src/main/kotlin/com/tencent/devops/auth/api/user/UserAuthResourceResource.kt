@@ -200,7 +200,7 @@ interface UserAuthResourceResource {
     @DELETE
     @Path("group/{groupId}/member/delete")
     @ApiOperation("用户退出")
-    fun delete(
+    fun deleteGroup(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

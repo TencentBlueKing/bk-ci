@@ -85,4 +85,17 @@ class BkPermissionExtServiceImpl @Autowired constructor(
         }
         return createResult
     }
+
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) = true
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) = true
 }

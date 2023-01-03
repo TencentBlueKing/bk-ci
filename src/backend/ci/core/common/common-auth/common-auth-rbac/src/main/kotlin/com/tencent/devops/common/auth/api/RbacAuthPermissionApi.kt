@@ -45,7 +45,13 @@ class RbacAuthPermissionApi(
         projectCode: String,
         permission: AuthPermission
     ): Boolean {
-        return true
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            projectCode = projectCode,
+            resourceCode = resourceType.value
+        ).data!!
     }
 
     override fun validateUserResourcePermission(
@@ -57,7 +63,15 @@ class RbacAuthPermissionApi(
         permission: AuthPermission,
         relationResourceType: AuthResourceType?
     ): Boolean {
-        return true
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            resourceType = resourceType.value,
+            projectCode = projectCode,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resourceCode = resourceCode,
+            relationResourceType = relationResourceType?.value
+        ).data!!
     }
 
     override fun getUserResourceByPermission(
@@ -73,7 +87,7 @@ class RbacAuthPermissionApi(
             userId = user,
             projectCode = projectCode,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
-            resourceType = AuthResourceType.TICKET_CREDENTIAL.value
+            resourceType = resourceType.value
         ).data ?: emptyList()
     }
 
@@ -96,7 +110,7 @@ class RbacAuthPermissionApi(
         val resultMap = mutableMapOf<AuthPermission, List<String>>()
         permissionResourcesMap.forEach { (key, value) ->
             resultMap[key] = value
-            if (key == AuthPermission.VIEW) {
+            if (key == AuthPermission.VIEW && permissions.contains(AuthPermission.LIST)) {
                 resultMap[AuthPermission.LIST] = value
             }
         }
@@ -112,7 +126,14 @@ class RbacAuthPermissionApi(
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)?
     ): Map<AuthPermission, List<String>> {
-        return emptyMap()
+        val actions = RbacAuthUtils.buildActionList(authPermissions = permissions, authResourceType = resourceType)
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            resourceType = resourceType.value,
+            projectCode = scopeId,
+            action = actions
+        ).data ?: emptyMap()
     }
 
     override fun addResourcePermissionForUsers(
@@ -126,9 +147,5 @@ class RbacAuthPermissionApi(
         supplier: (() -> List<String>)?
     ): Boolean {
         return true
-    }
-
-    private fun buildAction(resourceType: String, permission: AuthPermission): String {
-        return "${resourceType}_${permission.value}"
     }
 }

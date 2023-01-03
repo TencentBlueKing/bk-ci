@@ -37,9 +37,11 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
@@ -50,6 +52,7 @@ import javax.ws.rs.core.MediaType
 @Path("/open/service/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@SuppressWarnings("LongParameterList")
 interface ServicePermissionAuthResource {
 
     @GET
@@ -225,6 +228,49 @@ interface ServicePermissionAuthResource {
         @QueryParam("resourceName")
         @ApiParam("资源名称")
         resourceName: String
+    ): Result<Boolean>
+
+    @Path("/projects/{projectCode}/modify/relation")
+    @PUT
+    fun resourceModifyRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源Code")
+        resourceCode: String,
+        @QueryParam("resourceName")
+        @ApiParam("资源名称")
+        resourceName: String
+    ): Result<Boolean>
+
+    @Path("/projects/{projectCode}/delete/relation")
+    @DELETE
+    fun resourceDeleteRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源Code")
+        resourceCode: String
     ): Result<Boolean>
 
     @Path("/projects/{projectCode}/grant")
