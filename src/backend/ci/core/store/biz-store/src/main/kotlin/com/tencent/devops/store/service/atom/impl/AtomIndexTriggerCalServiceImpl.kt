@@ -36,7 +36,7 @@ import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.store.dao.common.StoreIndexBaseInfoDao
+import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.KEY_INDEX_CODE
@@ -56,7 +56,7 @@ import java.util.concurrent.Executors
 class AtomIndexTriggerCalServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val client: Client,
-    private val storeIndexBaseInfoDao: StoreIndexBaseInfoDao,
+    private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val storePipelineRelDao: StorePipelineRelDao
 ) : AtomIndexTriggerCalService {
@@ -90,7 +90,7 @@ class AtomIndexTriggerCalServiceImpl @Autowired constructor(
         version: String
     ) {
         // 查询该插件关联的指标数据
-        val indexCodes = storeIndexBaseInfoDao.getIndexCodesByAtomCode(
+        val indexCodes = storeIndexManageInfoDao.getIndexCodesByAtomCode(
             dslContext = dslContext,
             storeType = StoreTypeEnum.ATOM,
             atomCode = atomCode,

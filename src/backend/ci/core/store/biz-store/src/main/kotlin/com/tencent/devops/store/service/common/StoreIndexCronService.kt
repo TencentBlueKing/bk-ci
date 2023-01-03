@@ -31,14 +31,17 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.model.store.tables.records.TStoreStatisticsDailyRecord
+import com.tencent.devops.store.constant.StoreConstants.DELETE_STORE_INDEX_RESULT_KEY
+import com.tencent.devops.store.constant.StoreConstants.DELETE_STORE_INDEX_RESULT_LOCK_KEY
+import com.tencent.devops.store.constant.StoreConstants.STORE_DAILY_FAIL_DETAIL
 import com.tencent.devops.store.dao.atom.AtomDao
-import com.tencent.devops.store.dao.common.StoreIndexBaseInfoDao
+import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.service.atom.impl.MarketAtomStatisticServiceImpl
 import com.tencent.devops.store.service.common.impl.StoreIndexManageServiceImpl
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -51,7 +54,7 @@ import java.time.LocalDateTime
 class StoreIndexCronService constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
-    private val storeIndexBaseInfoDao: StoreIndexBaseInfoDao,
+    private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val atomDao: AtomDao,
     private val storeStatisticDailyDao: StoreStatisticDailyDao
 ) {
@@ -62,12 +65,12 @@ class StoreIndexCronService constructor(
      */
     @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun deleteStoreIndexResult() {
-        val lock = RedisLock(redisOperation, "deleteStoreIndexResul", 60L)
+        val lock = RedisLock(redisOperation, DELETE_STORE_INDEX_RESULT_LOCK_KEY, 60L)
         try {
             lock.lock()
-            redisOperation.getSetMembers("deleteStoreIndexResultKey")?.forEach {
+            redisOperation.getSetMembers(DELETE_STORE_INDEX_RESULT_KEY)?.forEach {
                 logger.info("expired indexId is: {}", it)
-                storeIndexBaseInfoDao.deleteStoreIndexResulById(dslContext, it)
+                storeIndexManageInfoDao.deleteStoreIndexResulById(dslContext, it)
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to offline index: {}", ignored)
@@ -82,7 +85,7 @@ class StoreIndexCronService constructor(
      */
     fun computeAtomSlaIndexData() {
         val indexCode = "atomSlaIndex"
-        val storeIndexBaseInfo = storeIndexBaseInfoDao.getStoreIndexBaseInfo(
+        val storeIndexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfo(
             dslContext = dslContext,
             storeType = StoreTypeEnum.ATOM,
             indexOperationType = IndexOperationTypeEnum.PLATFORM,
@@ -104,6 +107,7 @@ class StoreIndexCronService constructor(
                     pageSize = DEFAULT_PAGE_SIZE
                 )
                 val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
+                val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
                 atomCodes.forEach { atomCode ->
                     val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
                         dslContext = dslContext,
@@ -122,17 +126,30 @@ class StoreIndexCronService constructor(
                     )
                     val atomSlaIndexValue =
                         (1 - (atomTotalComponentFailCount.toDouble() / atomExecuteCountByCode.toDouble())) * 100
+                    val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
+                        dslContext,
+                        storeIndexBaseInfo.id,
+                        if (atomSlaIndexValue > 99.9) "达标" else "不达标"
+                    )
                     val tStoreIndexResultRecord = TStoreIndexResultRecord()
                     tStoreIndexResultRecord.id = UUIDUtil.generate()
                     tStoreIndexResultRecord.storeCode = atomCode
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexResultRecord.indexId = storeIndexBaseInfo.indexCode
-                    tStoreIndexResultRecord.indexName = storeIndexBaseInfo.indexName
-                    tStoreIndexResultRecord.indexValue = String.format("%.2f", atomSlaIndexValue)
-                    tStoreIndexResultRecord.indexLevelName = if (atomSlaIndexValue > 99.9) "合格" else "不合格"
+                    tStoreIndexResultRecord.indexId = storeIndexBaseInfo.id
+                    tStoreIndexResultRecord.indexCode = indexCode
+                    tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecords.add(tStoreIndexResultRecord)
+                    val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
+                    tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
+                    tStoreIndexElementDetailRecord.storeCode = atomCode
+                    tStoreIndexElementDetailRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
+                    tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfo.id
+                    tStoreIndexElementDetailRecord.elementName = "atomSlaIndex"
+                    tStoreIndexElementDetailRecord.elementValue = String.format("%.2f", atomSlaIndexValue)
+                    tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
                 }
-                storeIndexBaseInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
+                storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
+                storeIndexManageInfoDao.batchCreateStoreIndexElementDetail(dslContext, tStoreIndexElementDetailRecords)
                 // 记录计算进度
                 val progress = page * DEFAULT_PAGE_SIZE / getPublishedAtomCount.toDouble() * 100
                 redisOperation.sadd(indexCode, String.format("%.2f", progress))
@@ -149,9 +166,7 @@ class StoreIndexCronService constructor(
     private fun atomTotalComponentFailCount(dailyStatisticRecordList: Result<TStoreStatisticsDailyRecord>?): Int {
         var atomTotalThirdFailNum = 0
         dailyStatisticRecordList?.forEach { it ->
-            val dailyFailDetail = JsonUtil.toMap(it.get("DAILY_FAIL_DETAIL") as String)
-
-
+            val dailyFailDetail = JsonUtil.toMap(it.get(STORE_DAILY_FAIL_DETAIL) as String)
             dailyFailDetail["totalComponentFailNum"]?.let { totalComponentFailNum ->
                 atomTotalThirdFailNum += totalComponentFailNum as Int
             }

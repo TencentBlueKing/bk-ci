@@ -28,9 +28,11 @@
 package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
+import com.tencent.devops.model.store.tables.TStoreIndexElementDetail
 import com.tencent.devops.model.store.tables.TStoreIndexLevelInfo
 import com.tencent.devops.model.store.tables.TStoreIndexResult
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
@@ -39,10 +41,12 @@ import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record8
+import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class StoreIndexBaseInfoDao {
+class StoreIndexManageInfoDao {
 
     fun getIndexCodesByAtomCode(
         dslContext: DSLContext,
@@ -154,6 +158,15 @@ class StoreIndexBaseInfoDao {
         }
     }
 
+    fun batchCreateStoreIndexElementDetail(
+        dslContext: DSLContext,
+        tStoreIndexElementDetailRecords: List<TStoreIndexElementDetailRecord>
+    ) {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            dslContext.batchInsert(tStoreIndexElementDetailRecords).execute()
+        }
+    }
+
     fun getStoreIndexBaseInfo(
         dslContext: DSLContext,
         indexOperationType: IndexOperationTypeEnum,
@@ -173,13 +186,37 @@ class StoreIndexBaseInfoDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         storeCodes: List<String>
-    ) {
+    ): Result<Record8<String, String, String, String, String, String, String, String>> {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
             val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
-            dslContext.select(
+            val tStoreIndexLevelInfo = TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO
+            return dslContext.select(
+                this.STORE_CODE,
                 tStoreIndexBaseInfo.INDEX_CODE,
+                tStoreIndexBaseInfo.INDEX_NAME,
+                tStoreIndexBaseInfo.ICON_URL,
+                tStoreIndexBaseInfo.DESCRIPTION,
+                this.ICON_TIPS,
+                tStoreIndexLevelInfo.LEVEL_NAME,
+                tStoreIndexLevelInfo.ICON_CSS_VALUE,
+            ).from(this)
+                .leftJoin(tStoreIndexBaseInfo)
+                .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))
+                .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID))
+                .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .fetch()
+        }
+    }
 
-            )
+    fun getStoreIndexLevelInfo(
+        dslContext: DSLContext,
+        indexId: String,
+        levelName: String
+    ): TStoreIndexLevelInfoRecord? {
+        with(TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO) {
+            return dslContext.selectFrom(this)
+                .where(INDEX_ID.eq(indexId).and(LEVEL_NAME.eq(levelName)))
+                .fetchOne()
         }
     }
 }

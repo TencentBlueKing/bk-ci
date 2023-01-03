@@ -25,25 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.constant
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+object StoreConstants {
 
-@ApiModel("研发商店指标信息")
-data class StoreIndexInfo(
-    @ApiModelProperty("指标代码", required = true)
-    val indexCode: String,
-    @ApiModelProperty("指标名称", required = true)
-    val indexName: String,
-    @ApiModelProperty("图标地址", required = true)
-    val iconUrl: String,
-    @ApiModelProperty("指标描述", required = true)
-    val description: String,
-    @ApiModelProperty("等级名称", required = true)
-    val indexLevelName: String,
-    @ApiModelProperty("等级图标CSS值", required = true)
-    val iconColor: String,
-    @ApiModelProperty("指标状态显示", required = true)
-    val hover: String
-)
+    const val STORE_INDEX_CODE = "INDEX_CODE"
+    const val STORE_INDEX_NAME = "INDEX_NAME"
+    const val STORE_INDEX_ICON_URL = "ICON_URL"
+    const val STORE_INDEX_DESCRIPTION = "DESCRIPTION"
+    const val STORE_INDEX_ICON_TIPS = "ICON_TIPS"
+    const val STORE_INDEX_LEVEL_NAME = "LEVEL_NAME"
+    const val STORE_INDEX_ICON_CSS_VALUE = "ICON_CSS_VALUE"
+    const val STORE_CODE = "STORE_CODE"
+    const val STORE_DAILY_FAIL_DETAIL = "DAILY_FAIL_DETAIL"
+    const val DELETE_STORE_INDEX_RESULT_LOCK_KEY = "DELETE_STORE_INDEX_RESULT_LOCK"
+    const val DELETE_STORE_INDEX_RESULT_KEY = "DELETE_STORE_INDEX_RESULT"
+}

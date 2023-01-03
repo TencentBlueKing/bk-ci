@@ -116,7 +116,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         storeHonorInfo.modifier = userId
         storeHonorInfo.createTime = LocalDateTime.now()
         storeHonorInfo.updateTime = LocalDateTime.now()
-        val tStoreHonorRelList = addStoreHonorRequest.storeCodes.split(",").map {
+        val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
             val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)!!
             val tStoreHonorRelRecord = TStoreHonorRelRecord()
             tStoreHonorRelRecord.id = UUIDUtil.generate()

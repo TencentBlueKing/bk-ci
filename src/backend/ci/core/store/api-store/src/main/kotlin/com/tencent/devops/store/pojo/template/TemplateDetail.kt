@@ -30,6 +30,7 @@ package com.tencent.devops.store.pojo.template
 import com.tencent.devops.store.pojo.common.Category
 import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
+import com.tencent.devops.store.pojo.common.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -80,6 +81,7 @@ data class TemplateDetail(
     @ApiModelProperty("用户评论信息", required = true)
     val userCommentInfo: StoreUserCommentInfo,
     @ApiModelProperty("荣誉信息", required = false)
-    val honorInfos: List<HonorInfo>? = null
-
+    val honorInfos: List<HonorInfo>? = null,
+    @ApiModelProperty("指标信息", required = false)
+    val indexInfos: List<StoreIndexInfo>? = null
 )

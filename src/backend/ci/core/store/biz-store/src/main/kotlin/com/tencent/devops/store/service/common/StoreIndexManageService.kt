@@ -46,4 +46,9 @@ interface StoreIndexManageService {
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<StoreIndexInfo>>
+
+    fun getStoreIndexInfosByStoreCode(
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): List<StoreIndexInfo>
 }

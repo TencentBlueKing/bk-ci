@@ -39,7 +39,15 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.store.dao.common.StoreIndexBaseInfoDao
+import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_CODE
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_DESCRIPTION
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_CSS_VALUE
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_TIPS
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_URL
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_LEVEL_NAME
+import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_NAME
+import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
@@ -63,7 +71,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val storeIndexPipelineService: StoreIndexPipelineService,
     private val storePipelineRelDao: StorePipelineRelDao,
-    private val storeIndexBaseInfoDao: StoreIndexBaseInfoDao,
+    private val storeIndexManageInfoDao: StoreIndexManageInfoDao,
     private val storeProjectRelDao: StoreProjectRelDao,
     private val client: Client,
     private val redisOperation: RedisOperation
@@ -86,7 +94,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         tStoreIndexBaseInfoRecord.indexCode = indexCode
         tStoreIndexBaseInfoRecord.indexName = storeIndexCreateRequest.indexName
         tStoreIndexBaseInfoRecord.iconUrl = storeIndexCreateRequest.iconUrl
-        tStoreIndexBaseInfoRecord.iconTips = storeIndexCreateRequest.iconTips
         tStoreIndexBaseInfoRecord.description = storeIndexCreateRequest.description
         tStoreIndexBaseInfoRecord.operationType = storeIndexCreateRequest.operationType.name
         tStoreIndexBaseInfoRecord.executeTimeType = storeIndexCreateRequest.executeTimeType.name
@@ -99,7 +106,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val tStoreIndexLevelInfo = TStoreIndexLevelInfoRecord()
             tStoreIndexLevelInfo.id = UUIDUtil.generate()
             tStoreIndexLevelInfo.levelName = it.levelName
-            tStoreIndexLevelInfo.iconCssVaule = it.iconCssValue
+            tStoreIndexLevelInfo.iconCssValue = it.iconCssValue
             tStoreIndexLevelInfo.indexId = storeIndexBaseInfoId
             tStoreIndexLevelInfo.creator = userId
             tStoreIndexLevelInfo.modifier = userId
@@ -107,11 +114,11 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             tStoreIndexLevelInfo.updateTime = LocalDateTime.now()
             tStoreIndexLevelInfo
         }
-        storeIndexBaseInfoDao.batchCreateStoreIndexLevelInfo(dslContext, indexLevelInfoRecords)
+        storeIndexManageInfoDao.batchCreateStoreIndexLevelInfo(dslContext, indexLevelInfoRecords)
         // 如果运算类型为插件则需要初始化流水线
         if (storeIndexCreateRequest.operationType == IndexOperationTypeEnum.ATOM) {
             tStoreIndexBaseInfoRecord.atomCode = storeIndexCreateRequest.atomCode
-            storeIndexBaseInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
+            storeIndexManageInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
             storeIndexPipelineService.initStoreIndexPipeline(
                 userId = userId,
                 storeIndexPipelineInitRequest = StoreIndexPipelineInitRequest(
@@ -122,7 +129,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                 )
             )
         } else {
-            storeIndexBaseInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
+            storeIndexManageInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
         }
         return Result(true)
     }
@@ -130,7 +137,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     override fun delete(userId: String, indexId: String): Result<Boolean> {
         //管理员权限校验
 
-        val indexBaseInfo = storeIndexBaseInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
+        val indexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
         val atomCode = indexBaseInfo.atomCode
         val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
             dslContext = dslContext,
@@ -164,8 +171,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         }
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            storeIndexBaseInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
-            storeIndexBaseInfoDao.deleteTStoreIndexBaseInfo(context, indexId)
+            storeIndexManageInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
+            storeIndexManageInfoDao.deleteTStoreIndexBaseInfo(context, indexId)
         }
         // 考虑到数据量的问题，使用定时任务处理存量数据
         redisOperation.sadd("deleteStoreIndexResultKey", indexId)
@@ -177,8 +184,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         //管理员权限校验
 
 
-        val count = storeIndexBaseInfoDao.count(dslContext, keyWords)
-        val records = storeIndexBaseInfoDao.list(dslContext, keyWords, page, pageSize)
+        val count = storeIndexManageInfoDao.count(dslContext, keyWords)
+        val records = storeIndexManageInfoDao.list(dslContext, keyWords, page, pageSize)
         // 计算任务插件通过Redis实时上报计算进度
         records.forEach {
             val totalTaskNum = redisOperation.get("${it.indexCode}_totalTaskNum")
@@ -200,7 +207,34 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<StoreIndexInfo>> {
-        TODO("Not yet implemented")
+        val storeIndexInfosMap = mutableMapOf<String, List<StoreIndexInfo>>()
+        val storeIndexInfosRecords =
+            storeIndexManageInfoDao.getStoreIndexInfosByStoreCodes(dslContext, storeType, storeCodes)
+        storeIndexInfosRecords.forEach {
+            val storeCode = it[STORE_CODE] as String
+            val storeIndexInfos =
+                storeIndexInfosMap[storeCode]?.toMutableList() ?: emptyList<StoreIndexInfo>().toMutableList()
+            storeIndexInfos.add(
+                StoreIndexInfo(
+                    indexCode = it[STORE_INDEX_CODE] as String,
+                    indexName = it[STORE_INDEX_NAME] as String,
+                    iconUrl = it[STORE_INDEX_ICON_URL] as String,
+                    description = it[STORE_INDEX_DESCRIPTION] as String,
+                    indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
+                    iconColor = it[STORE_INDEX_ICON_CSS_VALUE] as String,
+                    hover = it[STORE_INDEX_ICON_TIPS] as String
+                )
+            )
+            storeIndexInfosMap[storeCode] = storeIndexInfos
+        }
+        return storeIndexInfosMap
+    }
+
+    override fun getStoreIndexInfosByStoreCode(
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): List<StoreIndexInfo> {
+        return getStoreIndexInfosByStoreCodes(storeType, listOf(storeCode))[storeCode]!!
     }
 
     private fun validateAddStoreIndexCreateReq(
@@ -209,7 +243,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         val indexCode = storeIndexCreateRequest.indexCode
         // 判断插件代码是否存在
         val codeCount =
-            storeIndexBaseInfoDao.getStoreIndexBaseInfoByCode(dslContext, storeIndexCreateRequest.storeType, indexCode)
+            storeIndexManageInfoDao.getStoreIndexBaseInfoByCode(dslContext, storeIndexCreateRequest.storeType, indexCode)
         if (codeCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
@@ -220,7 +254,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         val indexName = storeIndexCreateRequest.indexName
         // 判断插件名称是否存在
         val nameCount =
-            storeIndexBaseInfoDao.getStoreIndexBaseInfoByName(dslContext, storeIndexCreateRequest.storeType, indexName)
+            storeIndexManageInfoDao.getStoreIndexBaseInfoByName(dslContext, storeIndexCreateRequest.storeType, indexName)
         if (nameCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(

@@ -48,8 +48,6 @@ data class StoreIndexBaseInfo(
     val indexName: String,
     @ApiModelProperty("图标地址", required = true)
     val iconUrl: String,
-    @ApiModelProperty("hover图标提示", required = true)
-    val iconTips: String,
     @ApiModelProperty("指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,
