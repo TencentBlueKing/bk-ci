@@ -170,14 +170,14 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun delete(
+    override fun deleteGroup(
         userId: String,
         projectId: String,
         resourceType: String,
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.delete(
+            permissionResourceService.deleteGroup(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,

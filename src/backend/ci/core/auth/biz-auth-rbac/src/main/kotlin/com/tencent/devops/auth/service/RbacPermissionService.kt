@@ -28,6 +28,8 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -37,14 +39,16 @@ import org.slf4j.LoggerFactory
 
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
-    private val authResourceService: AuthResourceService
+    private val authResourceService: AuthResourceService,
+    private val iamConfiguration: IamConfiguration
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
     }
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
-        return true
+        logger.info("[rbac] validateUserActionPermission :  userId = $userId | action = $action")
+        return authHelper.isAllowed(userId, action)
     }
 
     override fun validateUserResourcePermission(
@@ -53,7 +57,14 @@ class RbacPermissionService constructor(
         projectCode: String,
         resourceType: String?
     ): Boolean {
-        return true
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            relationResourceType = null
+        )
     }
 
     override fun validateUserResourcePermissionByRelation(
@@ -64,7 +75,29 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        return true
+        val instanceDTO = InstanceDTO()
+        instanceDTO.system = iamConfiguration.systemId
+        // 若不关注操作资源实例，则必须关注是否在项目下
+        if (resourceCode == "*") {
+            instanceDTO.id = projectCode
+            instanceDTO.type = AuthResourceType.PROJECT.value
+        } else {
+            instanceDTO.id = resourceCode
+            instanceDTO.type = resourceType
+
+            // 因除项目外的所有资源都需关联项目, 需要拼接策略path供sdk计算
+            val path = PathInfoDTO()
+            path.type = AuthResourceType.PROJECT.value
+            path.id = projectCode
+            instanceDTO.path = path
+        }
+        // 有可能出现提供的resourceCode是关联项目资源的code,需将type类型调整为对应的关联资源。
+        if (relationResourceType != null) {
+            instanceDTO.type = relationResourceType
+        }
+
+        logger.info("[rbac] validateUserResourcePermission : instanceDTO = $instanceDTO")
+        return authHelper.isAllowed(userId, action, instanceDTO)
     }
 
     override fun getUserResourceByAction(

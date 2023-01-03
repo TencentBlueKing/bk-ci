@@ -65,6 +65,16 @@ class RbacResourceApi(
         user: String,
         resourceList: List<ResourceRegisterInfo>
     ) {
+        resourceList.forEach { resourceRegisterInfo ->
+            client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+                token = tokenService.getSystemToken(null)!!,
+                userId = user,
+                resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+                resourceCode = resourceRegisterInfo.resourceCode,
+                resourceName = resourceRegisterInfo.resourceName,
+                projectCode = projectCode
+            )
+        }
     }
 
     override fun createGrantResource(
@@ -93,6 +103,13 @@ class RbacResourceApi(
         resourceCode: String,
         resourceName: String
     ) {
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenService.getSystemToken(null)!!,
+            resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+            resourceCode = resourceCode,
+            resourceName = resourceName,
+            projectCode = projectCode
+        )
     }
 
     override fun deleteResource(
@@ -101,6 +118,12 @@ class RbacResourceApi(
         projectCode: String,
         resourceCode: String
     ) {
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(null)!!,
+            resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+            resourceCode = resourceCode,
+            projectCode = projectCode
+        )
     }
 
     override fun createResource(

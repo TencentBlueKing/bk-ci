@@ -98,7 +98,7 @@ class RbacPermissionResourceService(
                 projectName = resourceInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName,
+                resourceName = resourceName
             )
         }
         authResourceService.create(
@@ -108,6 +108,58 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceName,
             relationId = managerId.toString()
+        )
+        return true
+    }
+
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean {
+        val resourceInfo = getResourceInfo(
+            projectId = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            permissionGradeManagerService.modifyGradeManager(
+                gradeManagerId = resourceInfo.relationId,
+                projectCode = projectCode,
+                projectName = resourceName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        } else {
+            permissionSubsetManagerService.modifySubsetManager(
+                subsetManagerId = resourceInfo.relationId,
+                projectCode = projectCode,
+                projectName = resourceInfo.resourceName,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
+            )
+        }
+        authResourceService.update(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName,
+        )
+        return true
+    }
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        authResourceService.delete(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
         return true
     }
@@ -327,7 +379,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun delete(
+    override fun deleteGroup(
         userId: String,
         projectId: String,
         resourceType: String,
