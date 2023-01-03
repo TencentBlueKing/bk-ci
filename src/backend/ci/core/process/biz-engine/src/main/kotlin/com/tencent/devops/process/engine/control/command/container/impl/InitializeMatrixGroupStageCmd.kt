@@ -546,6 +546,7 @@ class InitializeMatrixGroupStageCmd(
                     matrixGroupFlag = false,
                     matrixGroupId = matrixGroupId,
                     containerVar = mutableMapOf(
+                        "@type" to modelContainer.getClassType(),
                         Container::name.name to modelContainer.name
                     ),
                     status = null,
