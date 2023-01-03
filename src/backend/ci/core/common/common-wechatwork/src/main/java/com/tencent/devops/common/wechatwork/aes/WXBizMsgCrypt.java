@@ -70,7 +70,7 @@ public class WXBizMsgCrypt {
 	 * @param token 企业微信后台，开发者设置的token
 	 * @param encodingAesKey 企业微信后台，开发者设置的EncodingAESKey
 	 * @param corpId 企业的corpid
-	 * 
+	 *
 	 * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
 	 */
 	public WXBizMsgCrypt(String token, String encodingAesKey, String corpId) throws AesException {
@@ -117,7 +117,7 @@ public class WXBizMsgCrypt {
 
 	/**
 	 * 对明文进行加密.
-	 * 
+	 *
 	 * @param text 需要加密的明文
 	 * @return 加密后base64编码的字符串
 	 * @throws AesException aes加密失败
@@ -164,7 +164,7 @@ public class WXBizMsgCrypt {
 
 	/**
 	 * 对密文进行解密.
-	 * 
+	 *
 	 * @param text 需要解密的密文
 	 * @return 解密得到的明文
 	 * @throws AesException aes解密失败
@@ -221,11 +221,11 @@ public class WXBizMsgCrypt {
 	 * 	<li>生成安全签名</li>
 	 * 	<li>将消息密文和安全签名打包成xml格式</li>
 	 * </ol>
-	 * 
+	 *
 	 * @param replyMsg 企业微信待回复用户的消息，xml格式的字符串
 	 * @param timeStamp 时间戳，可以自己生成，也可以用URL参数的timestamp
 	 * @param nonce 随机串，可以自己生成，也可以用URL参数的nonce
-	 * 
+	 *
 	 * @return 加密后的可以直接回复用户的密文，包括msg_signature, timestamp, nonce, encrypt的xml格式的字符串
 	 * @throws AesException 执行失败，请查看该异常的错误码和具体的错误信息
 	 */
@@ -234,7 +234,7 @@ public class WXBizMsgCrypt {
 		String encrypt = encrypt(getRandomStr(), replyMsg);
 
 		// 生成安全签名
-		if (timeStamp == "") {
+		if (timeStamp.equals("")) {
 			timeStamp = Long.toString(System.currentTimeMillis());
 		}
 
