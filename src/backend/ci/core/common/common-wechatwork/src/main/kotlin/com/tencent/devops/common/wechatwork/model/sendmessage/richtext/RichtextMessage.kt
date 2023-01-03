@@ -32,7 +32,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 data class RichtextMessage(
     val receiver: Receiver = Receiver(),
     @JsonProperty("rich_text")
-    val richText: List<RichtextContent> = listOf(RichtextText())
-) {
+    val richText: List<RichtextContent> = listOf(RichtextText()),
+    @JsonProperty("msgtype")
     val msgType: String = "rich_text"
-}
+)
