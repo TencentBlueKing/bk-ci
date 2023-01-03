@@ -1,7 +1,5 @@
 package com.tencent.devops.prebuild.service
 
-import com.nhaarman.mockito_kotlin.times
-import com.nhaarman.mockito_kotlin.verify
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
@@ -16,6 +14,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.yaml.v2.models.PreScriptBuildYaml
+import io.mockk.verify
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertFalse
 import org.junit.jupiter.api.Assertions.assertNotNull
@@ -122,17 +121,19 @@ class PreBuildV2ServiceTest : ServiceBaseTest() {
     fun testStartBuild_success() {
         val resp = preBuildV2Service.startBuild(userId, anyString(), startUpReq, agentInfo)
         assertEquals(BUILD_ID, resp.id)
-        verify(prebuildProjectDao, times(1)).createOrUpdate(
-            any()!!,
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString(),
-            anyString()
-        )
+        verify(exactly = 1) {
+            prebuildProjectDao.createOrUpdate(
+                any()!!,
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString(),
+                anyString()
+            )
+        }
     }
 
     @Test
