@@ -87,8 +87,9 @@ class DevCloudRemoteDevService @Autowired constructor(
             ),
             spec = EnvironmentSpec(
                 containers = listOf(Container(
+                    name = workspaceReq.name,
                     image = workspaceReq.devFile.image?.publicImage ?: "" ,
-                    resource = ResourceRequirements(8, 32008),
+                    resource = ResourceRequirements(8000, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",
                         mountPath = WORKSPACE_PATH
@@ -105,8 +106,9 @@ class DevCloudRemoteDevService @Autowired constructor(
                     )
                 )),
                 initContainers = listOf(Container(
+                    name = workspaceReq.name + "-init",
                     image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.0",
-                    resource = ResourceRequirements(8, 32008),
+                    resource = ResourceRequirements(8000, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",
                         mountPath = WORKSPACE_PATH
