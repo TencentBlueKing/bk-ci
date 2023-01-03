@@ -34,8 +34,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.service.utils.SpringContextUtil
-import com.tencent.devops.model.store.tables.TStoreHonorInfo
-import com.tencent.devops.model.store.tables.TStoreHonorRel
 import com.tencent.devops.model.store.tables.records.TStoreHonorInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreHonorRelRecord
 import com.tencent.devops.store.constant.StoreConstants.CREATE_TIME
@@ -207,18 +205,17 @@ class StoreHonorServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<HonorInfo>> {
+        logger.info("getHonorInfosByStoreCodes storeCodes is {$storeCodes}")
         val records = storeHonorDao.getHonorInfosByStoreCodes(dslContext, storeType, storeCodes)
         val storeHonorInfoMap = mutableMapOf<String, List<HonorInfo>>()
-        val tStoreHonorInfo = TStoreHonorInfo.T_STORE_HONOR_INFO
-        val tStoreHonorRel = TStoreHonorRel.T_STORE_HONOR_REL
         records.forEach {
-            val storeCode = it.value1() as String
+            val storeCode = it[STORE_CODE] as String
             val honorInfo = HonorInfo(
-                honorId = it.get(tStoreHonorInfo.ID),
-                honorTitle = it.get(tStoreHonorInfo.HONOR_TITLE),
-                honorName = it.get(tStoreHonorInfo.HONOR_NAME),
-                mountFlag = it.get(tStoreHonorRel.MOUNT_FLAG),
-                createTime = it.get(tStoreHonorRel.CREATE_TIME)
+                honorId = it[STORE_HONOR_ID] as String,
+                honorTitle = it[STORE_HONOR_TITLE] as String,
+                honorName = it[STORE_HONOR_NAME] as String,
+                mountFlag = it[STORE_HONOR_MOUNT_FLAG] as Boolean,
+                createTime = it[CREATE_TIME] as LocalDateTime
             )
             if (storeHonorInfoMap[storeCode].isNullOrEmpty()) {
                 storeHonorInfoMap[storeCode] = listOf(honorInfo)
