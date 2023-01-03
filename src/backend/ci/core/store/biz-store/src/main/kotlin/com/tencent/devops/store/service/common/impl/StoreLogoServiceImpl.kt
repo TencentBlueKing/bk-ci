@@ -249,7 +249,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val maxFileSize = maxUploadIconSize.toLong()
         if (contentLength > maxFileSize) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.UPLOAD_LOGO_IS_TOO_LARGE,
+                StoreMessageCode.UPLOAD_ICON_IS_TOO_LARGE,
                 arrayOf((maxFileSize / 1048576).toString() + "M")
             )
         }
