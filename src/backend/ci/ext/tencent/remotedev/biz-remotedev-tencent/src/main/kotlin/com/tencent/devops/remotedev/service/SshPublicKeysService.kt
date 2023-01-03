@@ -50,7 +50,7 @@ class SshPublicKeysService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(SshPublicKeysService::class.java)
     }
 
-    // 新增模板
+    // 新增SSH公钥
     fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Boolean {
         logger.info(
             "SshPublicKeysService|addSshPublicKey|userId" +
@@ -66,7 +66,7 @@ class SshPublicKeysService @Autowired constructor(
         return true
     }
 
-    // 获取工作空间模板
+    // 获取用户的SSH公钥列表
     fun getSshPublicKeysList(
         userIds: Set<String>
     ): List<SshPublicKey> {
