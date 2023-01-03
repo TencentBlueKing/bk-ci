@@ -76,7 +76,7 @@ class ImageCommonDao : AbstractStoreCommonDao() {
         return with(TImage.T_IMAGE) {
             dslContext.select(IMAGE_NAME)
                 .from(this)
-                .where(IMAGE_CODE.eq(storeCode))
+                .where(IMAGE_CODE.eq(storeCode).and(LATEST_FLAG.eq(true)))
                 .fetchOne(0, String::class.java)
         }
     }
