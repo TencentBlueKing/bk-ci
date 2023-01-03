@@ -33,11 +33,11 @@ class SshPublicKeysDao {
     // 获取当前用户的所有 ssh keys
     fun queryUserSshKeys(
         dslContext: DSLContext,
-        user: String
+        users: Set<String>
     ): Result<TSshPublicKeysRecord> {
         with(TSshPublicKeys.T_SSH_PUBLIC_KEYS) {
             return dslContext.selectFrom(this)
-                .where(USER.eq(user))
+                .where(USER.`in`(users))
                 .fetch()
         }
     }
