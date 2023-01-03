@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.ops.common.wechatwork
+package com.tencent.devops.common.wechatwork
 
 data class WechatWorkConfiguration(
     val corpId: String? = null,

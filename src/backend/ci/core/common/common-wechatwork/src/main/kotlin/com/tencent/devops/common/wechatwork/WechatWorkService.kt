@@ -55,7 +55,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextC
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
-import com.tencent.ops.common.wechatwork.WechatWorkConfiguration
 import okhttp3.MediaType
 import okhttp3.MultipartBody
 import okhttp3.Request
@@ -161,14 +160,15 @@ class WechatWorkService @Autowired constructor(
     /*
     * 获取调用接口时使用的access_token，有效事件为7200秒（2小时），这里做7000秒的失效
     * */
+    @Suppress("ComplexCondition")
     fun getAccessToken(): String? {
         if (accessToken == "" || accessToken == null || timeOutStamp == null || between(
                 timeOutStamp,
                 LocalDateTime.now()
             ).toMillis() > 7000 * 1000
         ) {
-            val accessTokenURL =
-                wechatWorkApiURL + "/cgi-bin/gettoken?corpid=${wechatWorkConfiguration.corpId}&corpsecret=${wechatWorkConfiguration.secret}"
+            val accessTokenURL = wechatWorkApiURL + "/cgi-bin/gettoken?" +
+                "corpid=${wechatWorkConfiguration.corpId}&corpsecret=${wechatWorkConfiguration.secret}"
             val accessTokenRequest = Request.Builder()
                 .url(accessTokenURL)
                 .get()
@@ -181,11 +181,11 @@ class WechatWorkService @Autowired constructor(
                 }
 //                var accessTokenResponse = mapper.readValue(responseContent,AccessTokenResponse::class.java)
                 val accessTokenResponse = mapper.readValue<AccessTokenResponse>(responseContent)
-                if (accessTokenResponse.errcode == 0) {
-                    accessToken = accessTokenResponse.access_token
+                if (accessTokenResponse.errCode == 0) {
+                    accessToken = accessTokenResponse.accessToken
                     timeOutStamp = LocalDateTime.now()
                 } else {
-                    throw RuntimeException("Fail to get wechat-work access_token：${accessTokenResponse.errmsg}")
+                    throw RuntimeException("Fail to get wechat-work access_token：${accessTokenResponse.errMsg}")
                 }
             }
         }
@@ -337,7 +337,8 @@ class WechatWorkService @Autowired constructor(
                         content = text
                     ),
                     link = null
-                ), RichTextItem(
+                ),
+                RichTextItem(
                     type = "link",
                     link = LinkItem(
                         type = "click",
@@ -363,14 +364,6 @@ class WechatWorkService @Autowired constructor(
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
         }
-    }
-
-    /*
-    * 拉起新的群,企业微信咨询群
-    * */
-    fun createChat(title: String, userName: String): String {
-        val userNameList = listOf("brandonliu", "zanyzhao", userName)
-        return createChatByUserNames(title, userNameList)
     }
 
     /*
@@ -498,7 +491,7 @@ class WechatWorkService @Autowired constructor(
                 throw RuntimeException("Fail to send media to yqwx. $responseContent")
             }
             val uploadMediaResponse = mapper.readValue<UploadMediaResponse>(responseContent)
-            if (uploadMediaResponse.errcode == 0) {
+            if (uploadMediaResponse.errCode == 0) {
                 return uploadMediaResponse
             } else {
                 throw RuntimeException("send media to yqwx's response is error. $responseContent")
@@ -525,8 +518,8 @@ class WechatWorkService @Autowired constructor(
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
             val userIdsConvertResponse = mapper.readValue<UserIdsConvertResponse>(responseContent)
-            if (userIdsConvertResponse.errcode == 0) {
-                userNameList.addAll(userIdsConvertResponse.user_list)
+            if (userIdsConvertResponse.errCode == 0) {
+                userNameList.addAll(userIdsConvertResponse.userList)
             }
         }
         return userNameList

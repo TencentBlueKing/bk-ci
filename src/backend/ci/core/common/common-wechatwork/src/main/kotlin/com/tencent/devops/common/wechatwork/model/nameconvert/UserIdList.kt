@@ -27,6 +27,9 @@
 
 package com.tencent.devops.common.wechatwork.model.nameconvert
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class UserIdList(
-    val userid_list: List<String> = listOf("")
+    @JsonProperty("userid_list")
+    val useridList: List<String> = listOf("")
 )

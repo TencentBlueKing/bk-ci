@@ -27,12 +27,17 @@
 
 package com.tencent.devops.common.wechatwork.model.response
 
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
 
 data class UploadMediaResponse(
-    val errcode: Int,
-    val errmsg: String,
+    @JsonProperty("errcode")
+    val errCode: Int,
+    @JsonProperty("errmsg")
+    val errMsg: String,
     val type: UploadMediaType,
-    val media_id: String,
-    val created_at: String
+    @JsonProperty("media_id")
+    val mediaId: String,
+    @JsonProperty("created_at")
+    val createdAt: String
 )

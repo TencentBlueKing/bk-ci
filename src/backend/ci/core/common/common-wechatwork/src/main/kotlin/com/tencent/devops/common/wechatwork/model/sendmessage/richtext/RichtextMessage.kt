@@ -26,11 +26,14 @@
  */
 
 package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
+
+import com.fasterxml.jackson.annotation.JsonProperty
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 
 data class RichtextMessage(
     val receiver: Receiver = Receiver(),
-    val rich_text: List<RichtextContent> = listOf(RichtextText())
+    @JsonProperty("rich_text")
+    val richText: List<RichtextContent> = listOf(RichtextText())
 ) {
-    val msgtype: String = "rich_text"
+    val msgType: String = "rich_text"
 }

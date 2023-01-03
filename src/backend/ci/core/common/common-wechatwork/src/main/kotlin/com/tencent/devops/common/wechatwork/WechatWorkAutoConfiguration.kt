@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.wechatwork
 
-import com.tencent.ops.common.wechatwork.WechatWorkConfiguration
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication

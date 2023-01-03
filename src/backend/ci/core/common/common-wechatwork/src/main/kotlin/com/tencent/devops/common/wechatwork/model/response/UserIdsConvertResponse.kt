@@ -27,8 +27,13 @@
 
 package com.tencent.devops.common.wechatwork.model.response
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class UserIdsConvertResponse(
-    val errcode: Int,
-    val errmsg: String,
-    val user_list: List<UserIdNameResponse>
+    @JsonProperty("errcode")
+    val errCode: Int,
+    @JsonProperty("errmsg")
+    val errMsg: String,
+    @JsonProperty("user_list")
+    val userList: List<UserIdNameResponse>
 )

@@ -27,9 +27,15 @@
 
 package com.tencent.devops.common.wechatwork.model.response
 
+import com.fasterxml.jackson.annotation.JsonProperty
+
 data class AccessTokenResponse(
-    val errcode: Int,
-    val errmsg: String,
-    val access_token: String,
-    val expires_in: Int
+    @JsonProperty("errcode")
+    val errCode: Int,
+    @JsonProperty("errmsg")
+    val errMsg: String,
+    @JsonProperty("access_token")
+    val accessToken: String,
+    @JsonProperty("expires_in")
+    val expiresIn: Int
 )
