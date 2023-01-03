@@ -133,6 +133,7 @@ class RbacAuthConfiguration {
     @Primary
     fun rbacPermissionService(
         authHelper: AuthHelper,
-        authResourceService: AuthResourceService
-    ) = RbacPermissionService(authHelper, authResourceService)
+        authResourceService: AuthResourceService,
+        iamConfiguration: IamConfiguration
+    ) = RbacPermissionService(authHelper, authResourceService, iamConfiguration)
 }
