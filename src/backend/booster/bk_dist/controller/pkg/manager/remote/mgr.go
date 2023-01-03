@@ -13,6 +13,7 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -398,6 +399,20 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 
 	dcSDK.StatsTimeNow(&req.Stats.RemoteWorkEndTime)
 	if err != nil {
+		for _, w := range m.resource.worker {
+			if !w.host.Equal(req.Server) {
+				continue
+			}
+			if strings.Contains(err.Error(), "connection") {
+				if w.lastHeartBeatTime.Add(2 * time.Minute).Before(time.Now()) {
+					m.resource.disableWorker(req.Server)
+					blog.Errorf("remote: server(%s) in work(%s) is disconected since (%s), "+
+						"make it disabled", req.Server.Server, m.work.ID(), w.lastHeartBeatTime.String())
+				}
+			} else {
+				w.lastHeartBeatTime = time.Now()
+			}
+		}
 		blog.Errorf("remote: execute remote task for work(%s) from pid(%d) to server(%s), "+
 			"remote execute failed: %v", m.work.ID(), req.Pid, req.Server.Server, err)
 		return nil, err

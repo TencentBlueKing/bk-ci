@@ -14,6 +14,7 @@ import (
 	"context"
 	"runtime"
 	"sync"
+	"time"
 
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
@@ -43,9 +44,10 @@ func newResource(hl []*dcProtocol.Host) *resource {
 		}
 
 		wl = append(wl, &worker{
-			host:          h,
-			totalSlots:    h.Jobs,
-			occupiedSlots: 0,
+			host:              h,
+			totalSlots:        h.Jobs,
+			occupiedSlots:     0,
+			lastHeartBeatTime: time.Now(),
 		})
 		total += h.Jobs
 	}
@@ -431,10 +433,11 @@ func (wr *resource) putSlot(msg lockWorkerMessage) {
 // worker describe the worker information includes the host details and the slots status
 // and it is the caller's responsibility to ensure the lock.
 type worker struct {
-	disabled      bool
-	host          *dcProtocol.Host
-	totalSlots    int
-	occupiedSlots int
+	disabled          bool
+	host              *dcProtocol.Host
+	totalSlots        int
+	occupiedSlots     int
+	lastHeartBeatTime time.Time
 }
 
 func (wr *worker) occupySlot() error {
