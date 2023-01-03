@@ -33,22 +33,11 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.NotifyType
-import com.tencent.devops.common.notify.utils.NotifyUtils.WEWORK_GROUP_KEY
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
-import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
-import com.tencent.devops.common.wechatwork.model.robot.RobotMarkdownSendMsg
-import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
-import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
@@ -71,7 +60,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.regex.Pattern
 
 @Primary
 @Service
@@ -95,12 +83,13 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     emailService = emailService,
     rtxService = rtxService,
     wechatService = wechatService,
-    weworkService = weworkService
+    weworkService = weworkService,
+    wechatWorkService = wechatWorkService,
+    wechatWorkRobotService = wechatWorkRobotService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(TXNotifyMessageTemplateServiceImpl::class.java)
-        private const val chatPatten = "^[A-Za-z0-9_-]+\$" // 数字和字母组成的群chatId正则表达式
     }
 
     override fun sendOtherSpecialNotifyMessage(
@@ -119,91 +108,6 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                 logger.info("send wework msg: $templateId")
                 sendMoaNotifyMessage(request, templateId)
             }
-        }
-
-        if (sendAllNotify || request.notifyType?.contains(NotifyType.WEWORK_GROUP.name) == true) {
-            if (!notifyTypeScope.contains("WEWORK_GROUP")) {
-                logger.warn(
-                    "COMMON_NOTIFY_MESSAGE_TEMPLATE_NOT_FOUND|If needed, add on the OP" +
-                        "|type=WEWORK_GROUP|template=${request.templateCode}"
-                )
-            } else {
-                logger.info("send WEWORK_GROUP msg: $templateId")
-                sendWeworkGroupNotifyMessage(request, templateId)
-            }
-        }
-    }
-
-    private fun sendWeworkGroupNotifyMessage(
-        request: SendNotifyMessageTemplateRequest,
-        commonTemplateId: String
-    ) {
-        val groups = request.bodyParams?.get(WEWORK_GROUP_KEY)?.split(",")
-        if (groups.isNullOrEmpty()) {
-            logger.info("wework group is empty, so return.")
-            return
-        }
-        // WEWORK_GROUP和RTX 取相同的模板即可
-        val weworkTplRecord =
-            notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
-                dslContext = dslContext,
-                commonTemplateId = commonTemplateId
-            )!!
-        val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
-        // 替换内容里的动态参数
-        val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
-
-        val content = title + "\n\n" + body
-
-        groups.forEach {
-            if (it.startsWith("ww")) { // 应用号逻辑
-                sendByApp(chatId = it, content = content, markerDownFlag = request.markdownContent ?: false)
-            } else if (Pattern.matches(chatPatten, it)) { // 机器人逻辑
-                sendByRobot(chatId = it, content = content, markerDownFlag = request.markdownContent ?: false)
-            }
-        }
-    }
-
-    private fun sendByRobot(
-        chatId: String,
-        content: String,
-        markerDownFlag: Boolean
-    ) {
-        logger.info("send group msg by robot: $chatId, $content")
-        val msg: Any = if (markerDownFlag) {
-            RobotMarkdownSendMsg(
-                chatId = chatId,
-                markdown = MsgInfo(
-                    content = content
-                )
-            )
-        } else {
-            RobotTextSendMsg(
-                chatId = chatId,
-                text = MsgInfo(
-                    content = content
-                )
-            )
-        }
-        wechatWorkRobotService.send(JsonUtil.toJson(msg, false))
-    }
-
-    private fun sendByApp(
-        chatId: String,
-        content: String,
-        markerDownFlag: Boolean
-    ) {
-        logger.info("send group msg by app: $chatId")
-        if (markerDownFlag) {
-            wechatWorkService.sendMarkdownGroup(content!!.replace("\\n", "\n"), chatId)
-        } else {
-            val receiver = Receiver(ReceiverType.group, chatId)
-            val richTextContentList = mutableListOf<RichtextContent>()
-            richTextContentList.add(
-                RichtextText(RichtextTextText(content))
-            )
-            val richTextMessage = RichtextMessage(receiver, richTextContentList)
-            wechatWorkService.sendRichText(richTextMessage)
         }
     }
 
