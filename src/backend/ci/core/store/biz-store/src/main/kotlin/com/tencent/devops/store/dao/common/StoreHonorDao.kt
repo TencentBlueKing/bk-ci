@@ -166,7 +166,7 @@ class StoreHonorDao {
         with(TStoreHonorInfo.T_STORE_HONOR_INFO) {
 
             return dslContext.select(
-                ID,
+                ID.`as`(StoreConstants.STORE_HONOR_ID),
                 tStoreHonorRel.STORE_CODE,
                 HONOR_TITLE,
                 HONOR_NAME,
