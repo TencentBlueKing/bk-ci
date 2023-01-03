@@ -106,6 +106,7 @@ import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -120,7 +121,7 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.cloud.context.config.annotation.RefreshScope
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Date
 import kotlin.math.ceil
 
 @Suppress("ALL")
@@ -153,6 +154,8 @@ abstract class ImageService @Autowired constructor() {
     lateinit var storeMemberDao: StoreMemberDao
     @Autowired
     lateinit var storeHonorDao: StoreHonorDao
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
     @Autowired
     lateinit var storeHonorService: StoreHonorService
     @Autowired
@@ -310,7 +313,7 @@ abstract class ImageService @Autowired constructor() {
             storeCodeList = imageCodeList
         )
         val imageHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, imageCodeList)
-
+        val imageIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, imageCodeList)
         // 获取用户
         val memberData = storeMemberService.batchListMember(imageCodeList, storeType).data
 
@@ -326,6 +329,7 @@ abstract class ImageService @Autowired constructor() {
             val visibleList = imageVisibleData?.get(imageCode)
             val statistic = imageStatisticData[imageCode]
             val honorInfos = imageHonorInfoMap[imageCode]
+            val indexInfos = imageIndexInfosMap[imageCode]
             val members = memberData?.get(imageCode)
 
             val installFlag = storeCommonService.generateInstallFlag(
@@ -362,7 +366,8 @@ abstract class ImageService @Autowired constructor() {
                     createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                     updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     installedFlag = null,
-                    honorInfos = honorInfos
+                    honorInfos = honorInfos,
+                    indexInfos = indexInfos
                 )
             )
         }
@@ -856,6 +861,7 @@ abstract class ImageService @Autowired constructor() {
             storeType = StoreTypeEnum.IMAGE.type.toByte()
         )
         val storeHonorInfos = storeHonorDao.getHonorByStoreCode(dslContext, StoreTypeEnum.IMAGE, imageCode)
+        val storeIndexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.IMAGE, imageCode)
         val classifyRecord = classifyService.getClassify(imageRecord.classifyId).data
         val imageFeatureRecord = imageFeatureDao.getImageFeature(dslContext, imageRecord.imageCode)
         val imageVersionLog = imageVersionLogDao.getLatestImageVersionLogByImageId(dslContext, imageId)?.get(0)
@@ -959,7 +965,8 @@ abstract class ImageService @Autowired constructor() {
             modifier = imageVersionLog?.modifier,
             createTime = (imageVersionLog?.createTime ?: imageRecord.createTime).timestampmilli(),
             updateTime = (imageVersionLog?.updateTime ?: imageRecord.updateTime).timestampmilli(),
-            honorInfos = storeHonorInfos
+            honorInfos = storeHonorInfos,
+            indexInfos = storeIndexInfos
         )
     }
 

@@ -121,6 +121,7 @@ import com.tencent.devops.store.service.common.StoreCommentService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
@@ -132,7 +133,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import java.time.LocalDateTime
-import java.util.*
+import java.util.Calendar
 import java.util.concurrent.Callable
 import java.util.concurrent.Executors
 import java.util.concurrent.Future
@@ -184,6 +185,9 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
 
     @Autowired
     lateinit var storeTotalStatisticService: StoreTotalStatisticService
@@ -300,6 +304,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 storeCodeList = atomCodeList
             )
             val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, atomCodeList)
+            val atomIndexInfosMap = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, atomCodeList)
             // 获取用户
             val memberData = atomMemberService.batchListMember(atomCodeList, storeType).data
 
@@ -315,6 +320,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 val visibleList = atomVisibleData?.get(atomCode)
                 val statistic = atomStatisticData[atomCode]
                 val atomHonorInfos = atomHonorInfoMap[atomCode]
+                val atomIndexInfos = atomIndexInfosMap[atomCode]
                 val members = memberData?.get(atomCode)
                 val defaultFlag = it[tAtom.DEFAULT_FLAG] as Boolean
                 val flag = storeCommonService.generateInstallFlag(defaultFlag = defaultFlag,
@@ -362,7 +368,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                        honorInfos = atomHonorInfos
+                        honorInfos = atomHonorInfos,
+                        indexInfos = atomIndexInfos
                     )
                 )
             }

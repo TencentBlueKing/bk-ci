@@ -118,6 +118,7 @@ import com.tencent.devops.store.service.atom.action.AtomDecorateFactory
 import com.tencent.devops.store.service.common.ClassifyService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreHonorService
+import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.utils.StoreUtils
@@ -166,6 +167,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
 
     @Autowired
     lateinit var storeHonorService: StoreHonorService
+
+    @Autowired
+    lateinit var storeIndexManageService: StoreIndexManageService
 
     @Autowired
     lateinit var storeProjectService: StoreProjectService
@@ -309,6 +313,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             atomCodeSet.add(it[KEY_ATOM_CODE] as String)
         }
         val atomHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
+        val atomIndexInfosMap =
+            storeIndexManageService.getStoreIndexInfosByStoreCodes(StoreTypeEnum.ATOM, atomCodeSet.toList())
         val atomLabelInfoMap = atomLabelService.getLabelsByAtomIds(atomIdSet)
         // 查询使用插件的流水线数量
         var atomPipelineCntMap: Map<String, Int>? = null
@@ -341,6 +347,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val classType = it[KEY_CLASS_TYPE] as String
             val serviceScopeStr = it[KEY_SERVICE_SCOPE] as? String
             val honorInfos = atomHonorInfoMap[atomCode]
+            val indexInfos = atomIndexInfosMap[atomCode]
             val serviceScopeList = if (!serviceScopeStr.isNullOrBlank()) {
                 JsonUtil.getObjectMapper().readValue(serviceScopeStr, List::class.java) as List<String>
             } else listOf()
@@ -403,7 +410,8 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 labelList = atomLabelInfoMap?.get(it[KEY_ID] as String),
                 installFlag = installFlag,
                 installed = if (queryProjectAtomFlag) true else installedAtomList?.contains(atomCode),
-                honorInfos = honorInfos
+                honorInfos = honorInfos,
+                indexInfos = indexInfos
             )
             dataList.add(pipelineAtomRespItem)
         }

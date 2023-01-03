@@ -242,7 +242,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         // 校验文件类型是否满足上传文件类型的要求
         if (fileType != "svg") {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_ICON_TYPE_IS_SVG
+                StoreMessageCode.USER_STORE_ICON_TYPE_IS_SVG
             )
         }
         // 校验上传文件大小是否超出限制
@@ -261,7 +261,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val height = img.height
         if (width != height) {
             return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_ATOM_ICON_IS_SQUARE
+                StoreMessageCode.USER_STORE_ICON_IS_SQUARE
             )
         }
         ImageIO.write(img, fileType, output)
