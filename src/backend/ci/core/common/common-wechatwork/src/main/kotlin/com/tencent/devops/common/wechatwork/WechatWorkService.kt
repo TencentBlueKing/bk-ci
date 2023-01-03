@@ -299,7 +299,7 @@ class WechatWorkService @Autowired constructor(
     * */
     fun sendRichText(richtextMessage: RichtextMessage): Boolean {
         val accessToken = getAccessToken()
-        val jsonString = objectMapper.writeValueAsString(richtextMessage)
+        val jsonString = JsonUtil.toJson(richtextMessage, false)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
