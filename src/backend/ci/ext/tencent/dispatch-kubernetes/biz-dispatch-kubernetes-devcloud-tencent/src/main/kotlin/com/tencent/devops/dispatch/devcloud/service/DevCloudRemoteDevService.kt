@@ -83,7 +83,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                     "bkci.dispatch.kubenetes.remoting/owner" to userId
                 ),
                 annotations = mapOf(
-                    "bkci.dispatch.kubenetes.remoting/sshPublicKeys" to ""
+                    "bkci.dispatch.kubenetes.remoting/sshPublicKeys" to event.sshKeys
                 )
             ),
             spec = EnvironmentSpec(
