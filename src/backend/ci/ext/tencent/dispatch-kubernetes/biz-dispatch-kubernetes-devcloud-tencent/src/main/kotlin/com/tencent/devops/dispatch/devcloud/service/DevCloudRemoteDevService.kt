@@ -35,6 +35,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
+import com.tencent.devops.dispatch.devcloud.pojo.ObjectMeta
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.devcloud.pojo.Volume
 import com.tencent.devops.dispatch.devcloud.pojo.VolumeMount
@@ -58,6 +59,7 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
+
     override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(workspaceReq)}")
         val imagePullCertificateList = if (workspaceReq.imagePullCertificate != null) {
@@ -73,21 +75,41 @@ class DevCloudRemoteDevService @Autowired constructor(
         val environmentOpRsp = workspaceDevCloudClient.createWorkspace(userId, Environment(
             kind = "evn/v1",
             APIVersion = "",
+            metadata = ObjectMeta(
+                labels = mapOf(
+                    "bkci.dispatch.kubenetes.remoting/workspaceID" to workspaceReq.name,
+                    "bkci.dispatch.kubenetes.remoting/core" to "workspace",
+                    "bkci.dispatch.kubenetes.remoting/owner" to userId
+                ),
+                annotations = mapOf(
+                    "bkci.dispatch.kubenetes.remoting/sshPublicKeys" to ""
+                )
+            ),
             spec = EnvironmentSpec(
                 containers = listOf(Container(
                     image = workspaceReq.devFile.image?.publicImage ?: "" ,
                     resource = ResourceRequirements(8, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",
-                        mountPath = "/data/landun/workspace"
-                    ))
+                        mountPath = WORKSPACE_PATH
+                    )),
+                    env = listOf(
+                        EnvVar("DEVOPS_REMOTING_IDE_PORT", ""),
+                        EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
+                        EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", ""),
+                        EnvVar("DEVOPS_REMOTING_GIT_USERNAME", ""),
+                        EnvVar("DEVOPS_REMOTING_GIT_EMAIL", ""),
+                        EnvVar("DEVOPS_REMOTING_YAML_NAME", ""),
+                        EnvVar("DEVOPS_REMOTING_DEBUG_ENABLE", "true"),
+                        EnvVar("DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE", "true"),
+                    )
                 )),
                 initContainers = listOf(Container(
                     image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.0",
                     resource = ResourceRequirements(8, 32008),
                     volumeMounts = listOf(VolumeMount(
                         name = "workspace",
-                        mountPath = "/data/landun/workspace"
+                        mountPath = WORKSPACE_PATH
                     )),
                     env = listOf(
                         EnvVar("GIT_TOKEN", workspaceReq.oAuthToken),
@@ -185,5 +207,7 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudRemoteDevService::class.java)
+
+        private const val WORKSPACE_PATH = "/data/landun/workspace"
     }
 }

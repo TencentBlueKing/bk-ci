@@ -1,10 +1,10 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
 data class ObjectMeta(
-    val name: String,
-    val uid: String,
-    val resourceVersion: String,
-    val generation: Long,
+    val name: String? = null,
+    val uid: String? = null,
+    val resourceVersion: String? = null,
+    val generation: Long = 0L,
     val labels: Map<String, String>,
     val annotations: Map<String, String>
 )
