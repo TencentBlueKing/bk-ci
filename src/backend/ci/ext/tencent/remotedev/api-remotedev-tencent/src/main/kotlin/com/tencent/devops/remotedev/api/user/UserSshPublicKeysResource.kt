@@ -44,7 +44,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_WORKSPACE_TEMPLATE"], description = "用户-工作空间模板")
+@Api(tags = ["USER_WORKSPACE"], description = "用户SSH公钥")
 @Path("/user/sshkey")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
