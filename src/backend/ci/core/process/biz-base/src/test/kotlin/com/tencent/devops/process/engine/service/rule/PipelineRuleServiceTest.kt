@@ -27,19 +27,19 @@
 
 package com.tencent.devops.process.engine.service.rule
 
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineRuleDao
+import io.mockk.mockk
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class PipelineRuleServiceTest {
 
-    private val dslContext: DSLContext = mock()
-    private val pipelineRuleDao: PipelineRuleDao = mock()
-    private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val dslContext: DSLContext = mockk()
+    private val pipelineRuleDao: PipelineRuleDao = mockk()
+    private val redisOperation: RedisOperation = RedisOperation(mockk())
 
     private val pipelineRuleService = PipelineRuleService(
         dslContext = dslContext,
