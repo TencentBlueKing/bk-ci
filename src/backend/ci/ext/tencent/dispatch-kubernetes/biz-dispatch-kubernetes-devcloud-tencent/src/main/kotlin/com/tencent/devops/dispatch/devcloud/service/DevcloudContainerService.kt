@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
@@ -121,6 +122,7 @@ class DevcloudContainerService @Autowired constructor(
             Thread.sleep(1 * 1000)
             val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
+                logger.info("Loop task status: ${JsonUtil.toJson(taskStatus)}")
                 return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
                 } else {
