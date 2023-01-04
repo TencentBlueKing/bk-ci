@@ -257,13 +257,13 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val output = file.outputStream()
         val img = ImageIO.read(inputStream)
         // 判断上传的Icon是否为正方形规格
-        val width = img.width
-        val height = img.height
-        if (width != height) {
-            return MessageCodeUtil.generateResponseDataObject(
-                StoreMessageCode.USER_STORE_ICON_IS_SQUARE
-            )
-        }
+//        val width = img.width
+//        val height = img.height
+//        if (width != height) {
+//            return MessageCodeUtil.generateResponseDataObject(
+//                StoreMessageCode.USER_STORE_ICON_IS_SQUARE
+//            )
+//        }
         ImageIO.write(img, fileType, output)
         val iconUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreIcon iconUrl is:$iconUrl")

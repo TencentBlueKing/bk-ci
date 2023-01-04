@@ -236,7 +236,8 @@ class StoreIndexManageInfoDao {
             ).from(this)
                 .leftJoin(tStoreIndexBaseInfo)
                 .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))
-                .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID))
+                .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID)
+                    .and(LEVEL_ID.eq(tStoreIndexLevelInfo.ID)))
                 .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
                 .fetch()
         }
