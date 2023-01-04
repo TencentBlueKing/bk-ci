@@ -136,6 +136,16 @@ abstract class AbstractCredentialPermissionService constructor(
         )
     }
 
+    override fun modifyResource(userId: String, projectId: String, credentialId: String) {
+        authResourceApi.modifyResource(
+            serviceCode = ticketAuthServiceCode,
+            resourceType = CredentialResourceType,
+            projectCode = projectId,
+            resourceCode = credentialId,
+            resourceName = credentialId
+        )
+    }
+
     override fun deleteResource(projectId: String, credentialId: String) {
         authResourceApi.deleteResource(
             serviceCode = ticketAuthServiceCode,
