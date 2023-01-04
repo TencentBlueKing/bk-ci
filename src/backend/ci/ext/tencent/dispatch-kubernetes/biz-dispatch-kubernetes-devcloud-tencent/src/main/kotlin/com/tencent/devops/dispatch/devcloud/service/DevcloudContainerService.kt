@@ -121,7 +121,7 @@ class DevcloudContainerService @Autowired constructor(
             Thread.sleep(1 * 1000)
             val taskStatus = devcloudWorkspaceRedisUtils.getTaskStatus(taskId)
             if (taskStatus?.status != null) {
-                return if (taskStatus.status == TaskStatusEnum.Success) {
+                return if (taskStatus.status == TaskStatusEnum.successed) {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.SUCCEEDED, null)
                 } else {
                     DispatchBuildTaskStatus(DispatchBuildTaskStatusEnum.FAILED, taskStatus.logs.toString())

@@ -369,7 +369,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
         loop@ while (true) {
             if (System.currentTimeMillis() - startTime > 10 * 60 * 1000) {
                 logger.error("Wait task: $taskId finish timeout(10min)")
-                return Triple(TaskStatusEnum.Abort, "创建环境超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
+                return Triple(TaskStatusEnum.abort, "创建环境超时（10min）", ErrorCodeEnum.CREATE_VM_ERROR)
             }
             Thread.sleep(1 * 1000)
             val (isFinish, success, msg, errorCodeEnum) = getTaskResult(
@@ -379,9 +379,9 @@ class WorkspaceDevCloudClient @Autowired constructor(
             return when {
                 !isFinish -> continue@loop
                 !success -> {
-                    Triple(TaskStatusEnum.Fail, msg, errorCodeEnum)
+                    Triple(TaskStatusEnum.failed, msg, errorCodeEnum)
                 }
-                else -> Triple(TaskStatusEnum.Success, msg, errorCodeEnum)
+                else -> Triple(TaskStatusEnum.successed, msg, errorCodeEnum)
             }
         }
     }
@@ -400,11 +400,11 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 TaskResult(isFinish = true, success = false, msg = msg)
             } else {
                 when (taskResponse.data.status) {
-                    TaskStatusEnum.Success -> {
+                    TaskStatusEnum.successed -> {
                         logger.info("Task: $taskId success taskResponse: $taskResponse")
                         TaskResult(isFinish = true, success = true, msg = "")
                     }
-                    TaskStatusEnum.Fail -> {
+                    TaskStatusEnum.failed -> {
                         val resultDisplay = taskResponse.data.logs
                         logger.error("Task: $taskId failed, taskResponse: $taskResponse")
                         TaskResult(isFinish = true, success = false, msg = resultDisplay.toString() ?: "")
