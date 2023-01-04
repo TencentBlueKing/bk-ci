@@ -120,6 +120,7 @@ class PermissionGradeManagerService @Autowired constructor(
         val updateManagerDTO = UpdateManagerDTO.builder()
             .name(name)
             .members(gradeManagerDetail.members)
+            .description(gradeManagerDetail.description)
             .authorizationScopes(authorizationScopes)
             .subjectScopes(listOf(ManagerScopes("*", "*")))
             .syncPerm(true)
