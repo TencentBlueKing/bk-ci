@@ -54,7 +54,8 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
                 image = null,
                 vscode = null,
                 ports = null,
-                commands = null
+                commands = null,
+                gitEmail = null
             ),
             gitOAuth = "",
             sshKeys = ""
