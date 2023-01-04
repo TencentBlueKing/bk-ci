@@ -66,7 +66,7 @@
             scale: 83%;
             &.is-big {
                 scale: 100%;
-                bottom: 3%;
+                bottom: 6%;
             }
         }
     }

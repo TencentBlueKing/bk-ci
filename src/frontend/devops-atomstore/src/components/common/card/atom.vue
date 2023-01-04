@@ -108,6 +108,7 @@
             font-size: 12px;
             font-weight: normal;
             color: $fontGray;
+            display: flex;
             span:nth-child(1) {
                 display: inline-block;
                 width: 60%;

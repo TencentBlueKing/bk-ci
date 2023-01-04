@@ -64,7 +64,7 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     type: 'asset/resource'
                 },
                 {
-                    test: /\.(png|jpe?g|gif|svg|webp|woff2?|eot|ttf|otf)(\?.*)?$/,
+                    test: /\.(jpe?g|gif|svg|webp|woff2?|eot|ttf|otf)(\?.*)?$/,
                     type: 'asset',
                     parser: {
                         dataUrlCondition: {
@@ -74,8 +74,11 @@ module.exports = ({ entry, publicPath, dist, port = 8080, argv, env }) => {
                     generator: {
                         filename: '[name].[contenthash].[ext]'
                     }
+                },
+                {
+                    test: /\.png$/,
+                    type: 'asset/resource'
                 }
-                
             ]
         },
         plugins: [

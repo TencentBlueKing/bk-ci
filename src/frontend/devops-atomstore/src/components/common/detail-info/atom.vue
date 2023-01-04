@@ -11,7 +11,7 @@
                     :class="{ 'not-recommend': detail.recommendFlag === false }"
                     :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''"
                 >{{detail.name}}</span>
-                <honer-tag :detail="detail" :max-num="2"></honer-tag>
+                <honer-tag :detail="detail" :max-num="2" class="ml16"></honer-tag>
                 <img
                     v-for="indexInfo in detail.indexInfos"
                     :key="indexInfo.indexCode"
@@ -541,6 +541,9 @@
     }
     .mb16 {
         margin-bottom: 16px;
+    }
+    .mr8 {
+        margin-right: 8px;
     }
     ::v-deep .is-error .big-select {
         border: 1px solid $dangerColor;

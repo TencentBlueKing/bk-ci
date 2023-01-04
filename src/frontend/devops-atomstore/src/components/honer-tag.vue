@@ -5,14 +5,18 @@
             :key="renderHoner.honorId"
             class="honer-tag"
         >
-            <img class="tag-image" :src="HonerLeftImage">
+            <img class="tag-image" src="../images/honer-left.png">
             <span class="tag-txt">
                 <span class="tag-txt-main">{{ renderHoner.honorTitle }}</span>
-                <img class="tag-txt-image" :src="HonerCenterImage">
+                <img class="tag-txt-image" src="../images/honer-center.png">
             </span>
-            <img class="tag-image" :src="HonerRightImage">
+            <img class="tag-image" src="../images/honer-right.png">
         </span>
-        <span v-if="honorInfos.length > maxNum" class="honer-num">
+        <span
+            v-if="honorInfos.length > +maxNum"
+            v-bk-tooltips="honorTooltips"
+            class="honer-num"
+        >
             +{{ honorInfos.length - maxNum }}
         </span>
         <span class="honer-gap" v-if="renderHoners.length && indexInfos.length"></span>
@@ -20,22 +24,10 @@
 </template>
 
 <script>
-    import HonerLeftImage from '../images/honer-left.png'
-    import HonerCenterImage from '../images/honer-center.png'
-    import HonerRightImage from '../images/honer-right.png'
-
     export default {
         props: {
             detail: Object,
             maxNum: Number
-        },
-
-        data () {
-            return {
-                HonerLeftImage,
-                HonerCenterImage,
-                HonerRightImage
-            }
         },
 
         computed: {
@@ -49,6 +41,17 @@
 
             renderHoners () {
                 return this.honorInfos.slice(0, this.maxNum)
+            },
+
+            honorTooltips () {
+                return {
+                    theme: 'light',
+                    allowHTML: true,
+                    content: this.honorInfos.reduce((acc, cur) => {
+                        acc += `<section class="honor-gap"><span class="honor-title">${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
+                        return acc
+                    }, '')
+                }
             }
         }
     }
@@ -65,6 +68,8 @@
         }
         .tag-txt {
             line-height: 16px;
+            height: 16px;
+            display: inline-flex;
             position: relative;
         }
         .tag-txt-main {
@@ -89,6 +94,9 @@
         .honer-num {
             color: #FF9C01;
             margin-right: 8px;
+            font-size: 12px;
+            font-weight: normal;
+            cursor: pointer;
         }
         .honer-gap {
             display: inline-block;
@@ -96,6 +104,22 @@
             height: 16px;
             margin-right: 16px;
             background: #DCDEE5;
+        }
+    }
+</style>
+<style lang="scss">
+    .honor-title {
+        display: inline-block;
+        padding: 1px 4px;
+        background: #F0F1F5;
+        margin-right: 4px;
+        width: 60px;
+        text-align: center;
+    }
+    .honor-gap {
+        margin-top: 4px;
+        &:last-child {
+            margin-bottom: 4px;
         }
     }
 </style>

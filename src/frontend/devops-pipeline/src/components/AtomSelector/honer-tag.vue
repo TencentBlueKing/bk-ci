@@ -12,10 +12,14 @@
             </span>
             <img class="tag-image" src="../../images/honer-right.png">
         </span>
-        <span v-if="honorInfos.length > maxNum" class="honer-num">
+        <span
+            v-if="honorInfos.length > +maxNum"
+            v-bk-tooltips="honorTooltips"
+            class="honer-num"
+        >
             +{{ honorInfos.length - maxNum }}
         </span>
-        <span class="honer-gap" v-if="renderHoners.length"></span>
+        <span class="honer-gap" v-if="renderHoners.length && indexInfos.length"></span>
     </section>
 </template>
 
@@ -31,8 +35,23 @@
                 return this.detail?.honorInfos || []
             },
 
+            indexInfos () {
+                return this.detail?.indexInfos || []
+            },
+
             renderHoners () {
                 return this.honorInfos.slice(0, this.maxNum)
+            },
+
+            honorTooltips () {
+                return {
+                    theme: 'light',
+                    allowHTML: true,
+                    content: this.honorInfos.reduce((acc, cur) => {
+                        acc += `<section class="honor-gap"><span class="honor-title">${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
+                        return acc
+                    }, '')
+                }
             }
         }
     }
@@ -41,15 +60,16 @@
 <style lang="scss" scoped>
     .honer-tags {
         display: flex;
-        justify-content: center;
         align-items: center;
         .honer-tag {
             display: flex;
             align-items: center;
-            margin-right: 4px;
+            margin-right: 8px;
         }
         .tag-txt {
             line-height: 16px;
+            height: 16px;
+            display: inline-flex;
             position: relative;
         }
         .tag-txt-main {
@@ -74,13 +94,32 @@
         .honer-num {
             color: #FF9C01;
             margin-right: 8px;
+            font-size: 12px;
+            font-weight: normal;
+            cursor: pointer;
         }
         .honer-gap {
             display: inline-block;
             width: 1px;
             height: 16px;
-            margin-right: 8px;
+            margin-right: 16px;
             background: #DCDEE5;
+        }
+    }
+</style>
+<style lang="scss">
+    .honor-title {
+        display: inline-block;
+        padding: 1px 4px;
+        background: #F0F1F5;
+        margin-right: 4px;
+        width: 60px;
+        text-align: center;
+    }
+    .honor-gap {
+        margin-top: 4px;
+        &:last-child {
+            margin-bottom: 4px;
         }
     }
 </style>
