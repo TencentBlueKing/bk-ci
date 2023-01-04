@@ -62,6 +62,7 @@ import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreIndexPipelineService
+import org.apache.commons.lang3.StringEscapeUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -225,7 +226,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     description = it[STORE_INDEX_DESCRIPTION] as String,
                     indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
                     iconColor = it[STORE_INDEX_ICON_CSS_VALUE] as String,
-                    hover = it[STORE_INDEX_ICON_TIPS].toString().replace("\\","")
+                    hover = StringEscapeUtils.unescapeHtml4(it[STORE_INDEX_ICON_TIPS].toString())
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
