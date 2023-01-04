@@ -169,6 +169,8 @@ class TxV3CredentialPermissionServiceImpl @Autowired constructor(
         return
     }
 
+    override fun modifyResource(userId: String, projectId: String, credentialId: String) = Unit
+
     override fun deleteResource(projectId: String, credentialId: String) {
         return
     }
