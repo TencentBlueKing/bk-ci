@@ -28,5 +28,7 @@ data class PreDevfile(
     @ApiModelProperty("配置需要监听的端口信息")
     val ports: List<DevfilePorts>?,
     @ApiModelProperty("用来指定工作空间声明周期命令")
-    val commands: DevfileCommands?
+    val commands: DevfileCommands?,
+    @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
+    val gitEmail: String?
 )

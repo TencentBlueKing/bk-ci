@@ -47,7 +47,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -64,16 +64,20 @@ class DevCloudRemoteDevService @Autowired constructor(
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.image?.imagePullCertificate != null) {
-            listOf(ImagePullCertificate(
-                host = event.devFile.image?.imagePullCertificate?.host,
-                username = event.devFile.image?.imagePullCertificate?.username,
-                password = event.devFile.image?.imagePullCertificate?.password
-            ))
+            listOf(
+                ImagePullCertificate(
+                    host = event.devFile.image?.imagePullCertificate?.host,
+                    username = event.devFile.image?.imagePullCertificate?.username,
+                    password = event.devFile.image?.imagePullCertificate?.password
+                )
+            )
         } else {
             emptyList()
         }
 
-        val environmentOpRsp = workspaceDevCloudClient.createWorkspace(userId, Environment(
+        val environmentOpRsp = workspaceDevCloudClient.createWorkspace(
+            userId,
+                Environment(
             kind = "evn/v1",
             APIVersion = "",
             metadata = ObjectMeta(
@@ -87,47 +91,61 @@ class DevCloudRemoteDevService @Autowired constructor(
                 )
             ),
             spec = EnvironmentSpec(
-                containers = listOf(Container(
-                    name = event.workspaceName,
-                    image = event.devFile.image?.publicImage ?: "" ,
-                    resource = ResourceRequirements(2000, 4096),
-                    volumeMounts = listOf(VolumeMount(
-                        name = "workspace",
-                        mountPath = WORKSPACE_PATH
-                    )),
-                    env = listOf(
-                        EnvVar("DEVOPS_REMOTING_IDE_PORT", ""),
-                        EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
-                        EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", ""),
-                        EnvVar("DEVOPS_REMOTING_GIT_USERNAME", ""),
-                        EnvVar("DEVOPS_REMOTING_GIT_EMAIL", ""),
-                        EnvVar("DEVOPS_REMOTING_YAML_NAME", ""),
-                        EnvVar("DEVOPS_REMOTING_DEBUG_ENABLE", "true"),
-                        EnvVar("DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE", "true"),
+                containers = listOf(
+                    Container(
+                        name = event.workspaceName,
+                        image = event.devFile.image?.publicImage ?: "",
+                        resource = ResourceRequirements(2000, 4096),
+                        volumeMounts = listOf(
+                            VolumeMount(
+                                name = "workspace",
+                                mountPath = WORKSPACE_PATH
+                            )
+                        ),
+                        env = listOf(
+                            EnvVar("DEVOPS_REMOTING_IDE_PORT", ""),
+                            EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
+                            EnvVar(
+                                "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH",
+                                GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
+                            ),
+                            EnvVar("DEVOPS_REMOTING_GIT_USERNAME", userId),
+                            EnvVar("DEVOPS_REMOTING_GIT_EMAIL", event.devFile.gitEmail ?: ""),
+                            EnvVar("DEVOPS_REMOTING_YAML_NAME", event.devFilePath),
+                            EnvVar("DEVOPS_REMOTING_DEBUG_ENABLE", "true"),
+                            EnvVar("DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE", "true"),
+                        )
                     )
-                )),
-                initContainers = listOf(Container(
-                    name = event.workspaceName + "-init",
-                    image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.1",
-                    resource = ResourceRequirements(2000, 4096),
-                    volumeMounts = listOf(VolumeMount(
-                        name = "workspace",
-                        mountPath = WORKSPACE_PATH
-                    )),
-                    env = listOf(
-                        EnvVar("GIT_TOKEN", event.gitOAuth),
-                        EnvVar("GIT_URL", event.repositoryUrl)
+                ),
+                initContainers = listOf(
+                    Container(
+                        name = event.workspaceName + "-init",
+                        image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.1",
+                        resource = ResourceRequirements(2000, 4096),
+                        volumeMounts = listOf(
+                            VolumeMount(
+                                name = "workspace",
+                                mountPath = WORKSPACE_PATH
+                            )
+                        ),
+                        env = listOf(
+                            EnvVar("GIT_TOKEN", event.gitOAuth),
+                            EnvVar("GIT_URL", event.repositoryUrl)
+                        )
                     )
-                )),
+                ),
                 imagePullCertificate = imagePullCertificateList,
-                volumes = listOf(Volume(
-                    name = "workspace",
-                    volumeSource = VolumeSource(
-                        dataDisk = DataDiskSource()
+                volumes = listOf(
+                    Volume(
+                        name = "workspace",
+                        volumeSource = VolumeSource(
+                            dataDisk = DataDiskSource()
+                        )
                     )
-                ))
+                )
             )
-        ))
+        )
+        )
 
         return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }

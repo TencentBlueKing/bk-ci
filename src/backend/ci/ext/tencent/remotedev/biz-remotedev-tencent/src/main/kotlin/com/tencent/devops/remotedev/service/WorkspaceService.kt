@@ -163,7 +163,7 @@ class WorkspaceService @Autowired constructor(
 
         val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
         val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
-        val yaml = if (workspaceCreate.useOfficialDevfile == false) {
+        val yaml = if (workspaceCreate.useOfficialDevfile != true) {
             kotlin.runCatching {
                 gitTransferService.getFileContent(
                     userId = userId,
@@ -715,7 +715,7 @@ class WorkspaceService @Autowired constructor(
                 path = Constansts.devFileDirectoryName, // 根目录
                 ref = branch,
                 recursive = false // 不递归
-            )
+            ).map { Constansts.devFileDirectoryName + "/" + it }
         }
     }
 

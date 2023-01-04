@@ -26,7 +26,11 @@ object DevfileUtil {
                 is String -> DevfileImage(publicImage = preDevfile.image, file = null)
                 is Map<*, *> -> {
                     JsonUtil.anyTo(preDevfile.image, object : TypeReference<DevfileImage>() {}).let {
-                        DevfileImage(publicImage = null, file = it.file)
+                        DevfileImage(
+                            publicImage = it.publicImage,
+                            file = it.file,
+                            imagePullCertificate = it.imagePullCertificate
+                        )
                     }
                 }
                 else -> throw ParamBlankException("devfile parse image error")
@@ -46,7 +50,8 @@ object DevfileUtil {
                 image = devfileImage,
                 vscode = vscode,
                 ports = ports,
-                commands = commands
+                commands = commands,
+                gitEmail = gitEmail
             )
         }
     }
