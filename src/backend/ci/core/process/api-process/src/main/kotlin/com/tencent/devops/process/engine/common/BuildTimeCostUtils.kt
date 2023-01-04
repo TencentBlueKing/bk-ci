@@ -91,7 +91,7 @@ object BuildTimeCostUtils {
         var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
         containerPairs.forEach { record ->
             val containerTimeLine = JsonUtil.anyTo(
-                record.containerVar[BuildRecordTimeLine::class.java.name] ?: return@forEach,
+                record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
                 object : TypeReference<BuildRecordTimeLine>() {}
             )
             // 执行时间取并集
