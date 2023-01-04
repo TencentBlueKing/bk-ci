@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
