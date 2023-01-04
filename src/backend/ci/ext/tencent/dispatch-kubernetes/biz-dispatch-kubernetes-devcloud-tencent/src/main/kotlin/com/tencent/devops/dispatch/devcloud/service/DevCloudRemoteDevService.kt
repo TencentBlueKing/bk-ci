@@ -107,7 +107,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                             EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
                             EnvVar(
                                 "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH",
-                                GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
+                                WORKSPACE_PATH + "/" +
+                                    GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
                             ),
                             EnvVar("DEVOPS_REMOTING_GIT_USERNAME", userId),
                             EnvVar("DEVOPS_REMOTING_GIT_EMAIL", event.devFile.gitEmail ?: ""),
