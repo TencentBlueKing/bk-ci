@@ -319,7 +319,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = task.stageId,
-                        jobId = task.containerId,
+                        containerId = task.containerId,
                         taskId = task.taskId,
                         taskName = task.taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
@@ -343,7 +343,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = stage.stageId,
-                        jobId = "",
+                        containerId = "",
                         taskId = "",
                         taskName = "",
                         atomCode = "",
