@@ -255,7 +255,6 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         }
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         val output = file.outputStream()
-        val img = ImageIO.read(inputStream)
         // 判断上传的Icon是否为正方形规格
 //        val width = img.width
 //        val height = img.height
@@ -264,7 +263,24 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
 //                StoreMessageCode.USER_STORE_ICON_IS_SQUARE
 //            )
 //        }
-        ImageIO.write(img, fileType, output)
+        val buffer = ByteArray(1024)
+        var len: Int
+        try {
+            while (true) {
+                len = inputStream.read(buffer)
+                if (len > -1) {
+                    output.write(buffer, 0, len)
+                } else {
+                    break
+                }
+            }
+            output.flush()
+        } catch (ignored: Throwable) {
+            logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
+            return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        } finally {
+            output.close()
+        }
         val iconUrl = uploadStoreLogo(userId, file).data
         logger.info("uploadStoreIcon iconUrl is:$iconUrl")
         return Result(iconUrl)
