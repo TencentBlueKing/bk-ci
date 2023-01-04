@@ -124,8 +124,6 @@ class StreamCredentialPermissionServiceImpl @Autowired constructor(
         return
     }
 
-    override fun modifyResource(userId: String, projectId: String, credentialId: String) = Unit
-
     private fun getAllCredentialsByProject(projectId: String): List<String> {
         val idList = mutableListOf<String>()
         val count = credentialDao.countByProject(dslContext, projectId)
