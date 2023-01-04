@@ -23,6 +23,7 @@ import (
 	dcUtil "github.com/Tencent/bk-ci/src/booster/bk_dist/common/util"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/monitor/types"
 	"github.com/Tencent/bk-ci/src/booster/common/blog"
+	"github.com/shirou/gopsutil/process"
 )
 
 const (
@@ -30,6 +31,8 @@ const (
 	DevOPSProcessTreeKillKey = "DEVOPS_DONT_KILL_PROCESS_TREE"
 
 	DefautInterval = 20000
+
+	BlockSecondsWhenRecover = 120
 
 	MacroKillTree = "${BK_KILL_TREE}"
 )
@@ -117,33 +120,54 @@ func (m *Monitor) runRule(r types.Rule) {
 
 	if len(r.RecoverCmds) > 0 {
 		if v, ok := r.RecoverCmds[string(outmsg)]; ok {
-			for _, c := range v {
-				blog.Infof("monitor: ready run recover cmd:[%s]", c)
-				exitcode, outmsg, errmsg, err = m.runCommand(c)
-				if exitcode != 0 {
-					blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
-					return
-				}
-				blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
-					c, exitcode, outmsg, errmsg, err)
-			}
+			// for _, c := range v {
+			// 	blog.Infof("monitor: ready run recover cmd:[%s]", c)
+			// 	exitcode, outmsg, errmsg, err = m.runCommand(c)
+			// 	if exitcode != 0 {
+			// 		blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
+			// 		return
+			// 	}
+			// 	blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+			// 		c, exitcode, outmsg, errmsg, err)
+			// }
+			go m.runRecoverCommands(v)
+			blog.Infof("monitor: ready sleep %d second to wait execute recover commands", BlockSecondsWhenRecover)
+			time.Sleep(BlockSecondsWhenRecover * time.Second)
 		} else {
 			trimkey := strings.Trim(string(outmsg), "\r\n \t")
 			if trimkey != string(outmsg) {
 				if v, ok := r.RecoverCmds[trimkey]; ok {
-					for _, c := range v {
-						blog.Infof("monitor: ready run recover cmd:[%s]", c)
-						exitcode, outmsg, errmsg, err = m.runCommand(c)
-						if exitcode != 0 {
-							blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
-							return
-						}
-						blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
-							c, exitcode, outmsg, errmsg, err)
-					}
+					// for _, c := range v {
+					// 	blog.Infof("monitor: ready run recover cmd:[%s]", c)
+					// 	exitcode, outmsg, errmsg, err = m.runCommand(c)
+					// 	if exitcode != 0 {
+					// 		blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
+					// 		return
+					// 	}
+					// 	blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+					// 		c, exitcode, outmsg, errmsg, err)
+					// }
+					go m.runRecoverCommands(v)
+					blog.Infof("monitor: ready sleep %d second to wait execute recover commands", BlockSecondsWhenRecover)
+					time.Sleep(BlockSecondsWhenRecover * time.Second)
 				}
 			}
 		}
+	}
+}
+
+func (m *Monitor) runRecoverCommands(cmds []string) {
+	blog.Infof("monitor: ready run recover cmds:%+v", cmds)
+
+	for _, c := range cmds {
+		blog.Infof("monitor: ready run recover cmd:[%s]", c)
+		exitcode, outmsg, errmsg, err := m.runCommand(c)
+		if exitcode != 0 {
+			blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
+			return
+		}
+		blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+			c, exitcode, outmsg, errmsg, err)
 	}
 }
 
@@ -169,16 +193,61 @@ func (m *Monitor) killTree(c string) (int, []byte, []byte, error) {
 
 	if len(procs) == 0 {
 		blog.Infof("monitor: not found any process with name:%s", args[1])
+		return 0, []byte(""), []byte(""), nil
 	}
 
+	// 如果是 bk-dist-monitor 自己拉起来的，还需要主动释放下，避免留下脏进程
+	proc1 := []*process.Process{}
 	for _, v := range procs {
+		newp, err := m.searchRootProc(v)
+		if err == nil {
+			proc1 = append(proc1, newp)
+		} else {
+			proc1 = append(proc1, v)
+		}
+	}
+
+	for _, v := range proc1 {
 		name, _ := v.Name()
 		blog.Infof("monitor: ready kill process %s %d", name, int32(v.Pid))
 		KillChildren(v)
-		_ = v.Kill()
+		err := KillProcess(v)
+		if err != nil {
+			blog.Infof("monitor: kill process %s %d failed with err:%v", name, int32(v.Pid), err)
+		}
 	}
 
 	return 0, []byte(""), []byte(""), nil
+}
+
+// 如果有祖先进程是 bk-dist-monitor 自己拉起来的，则返回该祖先，否则返回自己
+func (m *Monitor) searchRootProc(p *process.Process) (*process.Process, error) {
+	selfpid := os.Getpid()
+	newp := p
+	ppid, err := newp.Ppid()
+	if err != nil {
+		blog.Infof("monitor: get parent pid with error:%v", err)
+		return p, err
+	}
+
+	for {
+		if ppid == int32(selfpid) {
+			return newp, nil
+		}
+
+		newp, err = process.NewProcess(ppid)
+		if err != nil {
+			blog.Infof("monitor: get parent process with pid:%d with error:%v", ppid, err)
+			return p, err
+		}
+
+		ppid, err = newp.Ppid()
+		if err != nil {
+			blog.Infof("monitor: get parent pid with error:%v", err)
+			return p, err
+		}
+	}
+
 }
 
 func (m *Monitor) initRules() error {
