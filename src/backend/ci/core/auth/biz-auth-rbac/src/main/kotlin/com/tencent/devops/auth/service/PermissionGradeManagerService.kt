@@ -31,6 +31,7 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
@@ -50,6 +51,7 @@ class PermissionGradeManagerService @Autowired constructor(
     /**
      * 创建分级管理员
      */
+    @SuppressWarnings("LongParameterList")
     fun createGradeManager(
         userId: String,
         projectCode: String,
@@ -90,6 +92,39 @@ class PermissionGradeManagerService @Autowired constructor(
             projectName = projectName
         )
         return gradeManagerId
+    }
+
+    /**
+     * 修改分级管理员
+     */
+    fun modifyGradeManager(
+        gradeManagerId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        val name = IamGroupUtils.buildGradeManagerName(
+            projectName = resourceName,
+        )
+        val authorizationScopes = permissionScopesService.buildGradeManagerAuthorizationScopes(
+            strategyName = IamGroupUtils.buildGroupStrategyName(
+                resourceType = resourceType,
+                groupCode = DefaultGroupType.MANAGER.value
+            ),
+            projectCode = projectCode,
+            projectName = projectName
+        )
+        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+        val updateManagerDTO = UpdateManagerDTO.builder()
+            .name(name)
+            .members(gradeManagerDetail.members)
+            .authorizationScopes(authorizationScopes)
+            .subjectScopes(listOf(ManagerScopes("*", "*")))
+            .syncPerm(true)
+            .build()
+        iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
     }
 
     fun listGroup(

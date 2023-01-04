@@ -204,6 +204,8 @@ class CredentialPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun modifyResource(userId: String, projectId: String, credentialId: String) = Unit
+
     override fun deleteResource(projectId: String, credentialId: String) {
         authResourceApi.deleteResource(
             serviceCode = ticketAuthServiceCode,

@@ -30,18 +30,18 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
 
 /**
  * 权限资源操作
  */
-@SuppressWarnings("LongParameterList")
+@SuppressWarnings("LongParameterList", "TooManyFunctions")
 interface PermissionResourceService {
 
     /**
-     * 创建二级管理员
+     * 资源关联权限中心
      */
     fun resourceCreateRelation(
         userId: String,
@@ -49,6 +49,25 @@ interface PermissionResourceService {
         resourceType: String,
         resourceCode: String,
         resourceName: String
+    ): Boolean
+
+    /**
+     * 修改权限中心资源
+     */
+    fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    /**
+     * 删除权限中心资源
+     */
+    fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
     ): Boolean
 
     /**
@@ -130,7 +149,7 @@ interface PermissionResourceService {
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean
 
-    fun delete(
+    fun deleteGroup(
         userId: String,
         projectId: String,
         resourceType: String,

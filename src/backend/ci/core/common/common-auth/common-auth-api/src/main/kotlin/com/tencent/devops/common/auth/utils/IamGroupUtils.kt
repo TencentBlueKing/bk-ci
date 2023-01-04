@@ -99,6 +99,14 @@ object IamGroupUtils {
     }
 
     /**
+     * 构建二级管理员描述
+     */
+    fun buildSubsetManagerUpdateDescription(resourceName: String, userId: String): String {
+        return "$resourceName 二级管理员, 由$userId 修改于" +
+            DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
+    }
+
+    /**
      * 构建二级管理员用户组描述
      */
     fun buildSubsetManagerGroupDescription(resourceName: String, groupName: String, userId: String): String {

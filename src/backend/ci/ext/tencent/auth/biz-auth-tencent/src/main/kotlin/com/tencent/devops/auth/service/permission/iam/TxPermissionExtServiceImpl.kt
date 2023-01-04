@@ -83,6 +83,19 @@ class TxPermissionExtServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) = true
+
+    override fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) = true
+
     companion object {
         val logger = LoggerFactory.getLogger(TxPermissionExtServiceImpl::class.java)
     }

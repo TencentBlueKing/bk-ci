@@ -35,4 +35,17 @@ interface PermissionExtService {
         resourceCode: String,
         resourceName: String
     ): Boolean
+
+    fun resourceModifyRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): Boolean
+
+    fun resourceDeleteRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
 }

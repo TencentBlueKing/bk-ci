@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthDefaultGroupDao
@@ -53,6 +54,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     /**
      * 创建二级管理员
      */
+    @SuppressWarnings("LongParameterList")
     fun createSubsetManager(
         gradeManagerId: String,
         userId: String,
@@ -114,6 +116,54 @@ class PermissionSubsetManagerService @Autowired constructor(
             createMode = false
         )
         return subsetManagerId
+    }
+
+    @SuppressWarnings("LongParameterList")
+    fun modifySubsetManager(
+        subsetManagerId: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ) {
+        val managerDefaultGroup = authDefaultGroupDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "权限系统：资源类型${resourceType}关联的默认组${DefaultGroupType.MAINTAINER.value}不存在"
+        )
+        val name = IamGroupUtils.buildSubsetManagerGroupName(
+            resourceName = resourceName,
+            groupName = managerDefaultGroup.groupName
+        )
+        val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
+            strategyName = IamGroupUtils.buildGroupStrategyName(
+                resourceType = resourceType,
+                groupCode = DefaultGroupType.MANAGER.value
+            ),
+            projectCode = projectCode,
+            projectName = projectName,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            resourceName = resourceName
+        )
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(subsetManagerId.toInt())
+        val updateSubsetManagerDTO = UpdateSubsetManagerDTO.builder()
+            .name(name)
+            .members(subsetManagerDetail.members)
+            .authorizationScopes(authorizationScopes)
+            .inheritSubjectScope(true)
+            .subjectScopes(listOf())
+            .syncPerm(true)
+            .build()
+        iamV2ManagerService.updateSubsetManager(
+            subsetManagerId.toInt(),
+            updateSubsetManagerDTO
+        )
     }
 
     fun listGroup(
