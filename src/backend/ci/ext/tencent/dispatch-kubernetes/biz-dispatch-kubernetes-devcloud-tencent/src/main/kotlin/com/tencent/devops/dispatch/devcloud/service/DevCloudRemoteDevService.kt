@@ -103,7 +103,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                             )
                         ),
                         env = listOf(
-                            EnvVar("DEVOPS_REMOTING_IDE_PORT", ""),
+                            EnvVar("DEVOPS_REMOTING_IDE_PORT", "23000"),
                             EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
                             EnvVar(
                                 "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH",
