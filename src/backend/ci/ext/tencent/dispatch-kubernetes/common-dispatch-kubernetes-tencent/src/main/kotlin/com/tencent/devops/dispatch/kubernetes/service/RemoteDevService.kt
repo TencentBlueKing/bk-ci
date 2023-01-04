@@ -118,23 +118,23 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("").startWorkspace(userId, workspaceName)
+        return remoteDevServiceFactory.load("test-sawyer2").startWorkspace(userId, workspaceName)
     }
 
     fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("").stopWorkspace(userId, workspaceName)
+        return remoteDevServiceFactory.load("test-sawyer2").stopWorkspace(userId, workspaceName)
     }
 
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("").deleteWorkspace(userId, workspaceName)
+        return remoteDevServiceFactory.load("test-sawyer2").deleteWorkspace(userId, workspaceName)
     }
 
     fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
-        return remoteDevServiceFactory.load("").getWorkspaceUrl(userId, workspaceName)
+        return remoteDevServiceFactory.load("test-sawyer2").getWorkspaceUrl(userId, workspaceName)
     }
 
     fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("").workspaceHeartbeat(userId, workspaceName)
+        return remoteDevServiceFactory.load("test-sawyer2").workspaceHeartbeat(userId, workspaceName)
     }
 
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
