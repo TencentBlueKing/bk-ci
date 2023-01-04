@@ -25,36 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.common
 
-import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.service.common.StoreIndexManageService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface StoreIndexManageService {
+@RestResource
+class BuildStoreIndexInfoResourceImpl @Autowired constructor(
+    private val storeIndexManageService: StoreIndexManageService
+) : BuildStoreIndexInfoResource {
 
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
-
-    fun delete(userId: String, indexId: String): Result<Boolean>
-
-    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
-
-    fun getStoreIndexInfosByStoreCodes(
-        storeType: StoreTypeEnum,
-        storeCodes: List<String>
-    ): Map<String, List<StoreIndexInfo>>
-
-    fun getStoreIndexInfosByStoreCode(
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): List<StoreIndexInfo>
-
-    fun createIndexComputeDetail(
+    override fun createIndexComputeDetail(
         userId: String,
         createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
-    ): Result<Boolean>
+    ): Result<Boolean> {
+        return storeIndexManageService.createIndexComputeDetail(userId, createIndexComputeDetailRequest)
+    }
 }

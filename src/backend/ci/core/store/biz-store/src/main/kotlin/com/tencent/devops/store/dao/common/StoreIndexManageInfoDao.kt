@@ -153,6 +153,14 @@ class StoreIndexManageInfoDao {
         }
     }
 
+    fun deleteStoreIndexElementById(dslContext: DSLContext, indexId: String) {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_ID.eq(indexId))
+                .execute()
+        }
+    }
+
     fun deleteTStoreIndexLevelInfo(dslContext: DSLContext, indexId: String) {
         with(TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO) {
             dslContext.deleteFrom(this)
@@ -172,15 +180,6 @@ class StoreIndexManageInfoDao {
     fun batchCreateStoreIndexResult(dslContext: DSLContext, tStoreIndexResultRecords: List<TStoreIndexResultRecord>) {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
             dslContext.batchInsert(tStoreIndexResultRecords).execute()
-        }
-    }
-
-    fun batchCreateStoreIndexElementDetail(
-        dslContext: DSLContext,
-        tStoreIndexElementDetailRecords: List<TStoreIndexElementDetailRecord>
-    ) {
-        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
-            dslContext.batchInsert(tStoreIndexElementDetailRecords).execute()
         }
     }
 
@@ -252,6 +251,46 @@ class StoreIndexManageInfoDao {
             return dslContext.selectFrom(this)
                 .where(INDEX_ID.eq(indexId).and(LEVEL_NAME.eq(levelName)))
                 .fetchOne()
+        }
+    }
+
+    fun batchCreateElementDetail(
+        dslContext: DSLContext,
+        tStoreIndexElementDetailRecords: List<TStoreIndexElementDetailRecord>
+    ) {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            dslContext.batch(tStoreIndexElementDetailRecords.map {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    STORE_CODE,
+                    STORE_TYPE,
+                    INDEX_ID,
+                    INDEX_CODE,
+                    ELEMENT_NAME,
+                    ELEMENT_VALUE,
+                    REMARK,
+                    CREATOR,
+                    MODIFIER,
+                    UPDATE_TIME,
+                    CREATE_TIME
+                ).values(
+                    it.id,
+                    it.storeCode,
+                    it.storeType,
+                    it.indexId,
+                    it.indexCode,
+                    it.elementName,
+                    it.elementValue,
+                    it.remark,
+                    it.creator,
+                    it.modifier,
+                    it.updateTime,
+                    it.createTime
+                ).onDuplicateKeyUpdate()
+                    .set(ELEMENT_VALUE, it.elementValue)
+                    .set(REMARK, it.remark)
+            }).execute()
         }
     }
 }

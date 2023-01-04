@@ -37,7 +37,9 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
+import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_CODE
@@ -55,6 +57,7 @@ import com.tencent.devops.store.pojo.common.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
@@ -237,11 +240,53 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return getStoreIndexInfosByStoreCodes(storeType, listOf(storeCode))[storeCode]!!
     }
 
+    override fun createIndexComputeDetail(
+        userId: String,
+        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
+    ): Result<Boolean> {
+        val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
+            dslContext,
+            createIndexComputeDetailRequest.indexId,
+            createIndexComputeDetailRequest.LevelName
+        )?.id
+        val tStoreIndexResultRecord = TStoreIndexResultRecord()
+        tStoreIndexResultRecord.id = UUIDUtil.generate()
+        tStoreIndexResultRecord.indexId = createIndexComputeDetailRequest.indexId
+        tStoreIndexResultRecord.indexCode = createIndexComputeDetailRequest.indexCode
+        tStoreIndexResultRecord.storeCode = createIndexComputeDetailRequest.storeCode
+        tStoreIndexResultRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
+        tStoreIndexResultRecord.iconTips = createIndexComputeDetailRequest.iconTips
+        tStoreIndexResultRecord.levelId = levelId
+        tStoreIndexResultRecord.creator = userId
+        tStoreIndexResultRecord.modifier = userId
+        tStoreIndexResultRecord.updateTime = LocalDateTime.now()
+        tStoreIndexResultRecord.createTime = LocalDateTime.now()
+        storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, listOf(tStoreIndexResultRecord))
+        val tStoreIndexElementDetailRecords = createIndexComputeDetailRequest.elementInfos.map {
+            val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
+            tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
+            tStoreIndexElementDetailRecord.storeCode = createIndexComputeDetailRequest.storeCode
+            tStoreIndexElementDetailRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
+            tStoreIndexElementDetailRecord.indexId = createIndexComputeDetailRequest.indexId
+            tStoreIndexElementDetailRecord.indexCode = createIndexComputeDetailRequest.indexCode
+            tStoreIndexElementDetailRecord.elementName = it.elementName
+            tStoreIndexElementDetailRecord.elementValue = it.elementValue
+            tStoreIndexElementDetailRecord.remark = it.remark
+            tStoreIndexElementDetailRecord.creator = userId
+            tStoreIndexElementDetailRecord.modifier = userId
+            tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
+            tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
+            tStoreIndexElementDetailRecord
+        }
+        storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
+        return Result(true)
+    }
+
     private fun validateAddStoreIndexCreateReq(
         storeIndexCreateRequest: StoreIndexCreateRequest
     ): Result<Boolean>? {
         val indexCode = storeIndexCreateRequest.indexCode
-        // 判断插件代码是否存在
+        // 判断指标代码是否存在
         val codeCount =
             storeIndexManageInfoDao.getStoreIndexBaseInfoByCode(dslContext, storeIndexCreateRequest.storeType, indexCode)
         if (codeCount > 0) {
@@ -252,7 +297,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             )
         }
         val indexName = storeIndexCreateRequest.indexName
-        // 判断插件名称是否存在
+        // 判断指标名称是否存在
         val nameCount =
             storeIndexManageInfoDao.getStoreIndexBaseInfoByName(dslContext, storeIndexCreateRequest.storeType, indexName)
         if (nameCount > 0) {
