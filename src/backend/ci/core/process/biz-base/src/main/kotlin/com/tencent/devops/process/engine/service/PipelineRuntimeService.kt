@@ -1185,7 +1185,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = mapOf()
+            status = startBuildStatus.name, timestamps = mapOf(),
+            queueTime = LocalDateTime.now().timestampmilli(), startTime = null, endTime = null
         )
 
         if (updateExistsTask.isNotEmpty()) {
@@ -1362,7 +1363,7 @@ class PipelineRuntimeService @Autowired constructor(
             newBuildStatus = newBuildStatus,
             errorInfoList = listOf(
                 ErrorInfo(
-                    stageId = "", jobId = "",
+                    stageId = "", containerId = "",
                     taskId = "", taskName = "", atomCode = "",
                     errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()

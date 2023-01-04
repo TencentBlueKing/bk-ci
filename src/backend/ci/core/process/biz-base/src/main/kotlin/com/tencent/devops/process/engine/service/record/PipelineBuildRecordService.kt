@@ -269,14 +269,14 @@ class PipelineBuildRecordService @Autowired constructor(
             userId = buildInfo.startUser ?: "",
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
-            queueTime = buildInfo.queueTime,
-            startTime = buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
-            endTime = buildInfo.endTime,
+            queueTime = buildRecordPipeline?.queueTime ?: buildInfo.queueTime,
+            startTime = buildRecordPipeline?.startTime ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
+            endTime = buildRecordPipeline?.endTime ?: buildInfo.endTime,
             status = buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline?.cancelUser,
+            cancelUserId = buildRecordPipeline?.cancelUser ?: pipelineBuildDetailService.getBuildCancelUser(projectId, buildId),
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
@@ -437,7 +437,8 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
-                recordModel.modelVar.plus(modelVar), null, null
+                recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
+                null, null
             )
         }
 
@@ -460,6 +461,8 @@ class PipelineBuildRecordService @Autowired constructor(
         executeCount: Int,
         modelVar: Map<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
@@ -478,6 +481,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount, cancelUser = null,
                 modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
+                startTime = startTime, endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }

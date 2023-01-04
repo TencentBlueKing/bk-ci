@@ -29,6 +29,7 @@ package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
@@ -38,6 +39,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -70,6 +72,8 @@ class BuildRecordModelDao {
         executeCount: Int,
         buildStatus: BuildStatus?,
         modelVar: Map<String, Any>,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         cancelUser: String?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
@@ -78,6 +82,8 @@ class BuildRecordModelDao {
                 .set(MODEL_VAR, JsonUtil.toJson(modelVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
+            startTime?.let { update.set(START_TIME, startTime) }
+            endTime?.let { update.set(END_TIME, endTime) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
             update.where(
                 BUILD_ID.eq(buildId)
@@ -149,7 +155,12 @@ class BuildRecordModelDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    modelVar = JsonUtil.to(modelVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
+                    modelVar = JsonUtil.to(
+                        modelVar, object : TypeReference<Map<String, Any>>() {}
+                    ).toMutableMap(),
+                    queueTime = queueTime.timestampmilli(),
+                    startTime = startTime.timestampmilli(),
+                    endTime = endTime.timestampmilli(),
                     startUser = startUser,
                     startType = startType,
                     status = status,

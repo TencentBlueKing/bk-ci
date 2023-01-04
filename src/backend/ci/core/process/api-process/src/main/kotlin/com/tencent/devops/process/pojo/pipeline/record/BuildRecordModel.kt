@@ -48,6 +48,12 @@ data class BuildRecordModel(
     val executeCount: Int,
     @ApiModelProperty("执行变量", required = true)
     val modelVar: MutableMap<String, Any>,
+    @ApiModelProperty("触发时间", required = false)
+    val queueTime: Long,
+    @ApiModelProperty("开始时间", required = true)
+    val startTime: Long?,
+    @ApiModelProperty("结束时间", required = true)
+    val endTime: Long?,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)
