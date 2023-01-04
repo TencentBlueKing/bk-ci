@@ -6,13 +6,18 @@
             <honer-tag :detail="atom" :max-num="1"></honer-tag>
             <img
                 v-for="indexInfo in atom.indexInfos"
+                v-bk-tooltips="{
+                    allowHTML: true,
+                    content: indexInfo.hover
+                }"
                 :key="indexInfo.indexCode"
                 :src="indexInfo.iconUrl"
                 :style="{
                     color: indexInfo.iconColor,
                     height: '16px',
                     width: '16px',
-                    marginRight: '8px'
+                    marginRight: '8px',
+                    cursor: 'pointer'
                 }"
             >
         </h5>

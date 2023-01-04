@@ -14,13 +14,18 @@
                 <honer-tag :detail="detail" :max-num="2" class="ml16"></honer-tag>
                 <img
                     v-for="indexInfo in detail.indexInfos"
+                    v-bk-tooltips="{
+                        allowHTML: true,
+                        content: indexInfo.hover
+                    }"
                     :key="indexInfo.indexCode"
                     :src="indexInfo.iconUrl"
                     :style="{
                         color: indexInfo.iconColor,
                         height: '16px',
                         width: '16px',
-                        marginRight: '8px'
+                        marginRight: '8px',
+                        cursor: 'pointer'
                     }"
                 >
                 <section class="num-wraper ml16">

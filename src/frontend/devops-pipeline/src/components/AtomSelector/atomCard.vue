@@ -9,17 +9,22 @@
         </div>
         <div class="atom-info-content">
             <p class="atom-name">
-                <span :class="atomNameCls" :title="atomNameTitle">{{ atom.name }}</span>
+                <span :class="[atomNameCls, 'mr16']" :title="atomNameTitle">{{ atom.name }}</span>
                 <honer-tag :detail="atom" :max-num="2" />
                 <img
                     v-for="indexInfo in atom.indexInfos"
+                    v-bk-tooltips="{
+                        allowHTML: true,
+                        content: indexInfo.hover
+                    }"
                     :key="indexInfo.indexCode"
                     :src="indexInfo.iconUrl"
                     :style="{
                         color: indexInfo.iconColor,
                         height: '16px',
                         width: '16px',
-                        marginRight: '8px'
+                        marginRight: '8px',
+                        cursor: 'pointer'
                     }"
                 >
             </p>
@@ -273,5 +278,8 @@
     }
     .ml3 {
         margin-left: 3px;
+    }
+    .mr16 {
+        margin-right: 16px;
     }
 </style>
