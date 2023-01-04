@@ -78,7 +78,6 @@ import com.tencent.devops.store.dao.atom.MarketAtomFeatureDao
 import com.tencent.devops.store.dao.atom.MarketAtomVersionLogDao
 import com.tencent.devops.store.dao.common.StoreBuildInfoDao
 import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
-import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.pojo.atom.AtomDevLanguage
@@ -179,9 +178,6 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
 
     @Autowired
     lateinit var storeErrorCodeInfoDao: StoreErrorCodeInfoDao
-
-    @Autowired
-    lateinit var storeHonorDao: StoreHonorDao
 
     @Autowired
     lateinit var storeHonorService: StoreHonorService
@@ -827,7 +823,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     yamlFlag = true,
                     editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
-                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode)
+                    honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
+                    indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
                 )
             )
         }
