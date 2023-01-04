@@ -73,6 +73,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             emptyList()
         }
 
+        val gitRepoName = event.repositoryUrl
         val environmentOpRsp = workspaceDevCloudClient.createWorkspace(userId, Environment(
             kind = "evn/v1",
             APIVersion = "",
@@ -96,10 +97,10 @@ class DevCloudRemoteDevService @Autowired constructor(
                         mountPath = WORKSPACE_PATH
                     )),
                     env = listOf(
-                        EnvVar("DEVOPS_REMOTING_IDE_PORT", ""),
+                        EnvVar("DEVOPS_REMOTING_IDE_PORT", "23000"),
                         EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
                         EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", ""),
-                        EnvVar("DEVOPS_REMOTING_GIT_USERNAME", ""),
+                        EnvVar("DEVOPS_REMOTING_GIT_USERNAME", userId),
                         EnvVar("DEVOPS_REMOTING_GIT_EMAIL", ""),
                         EnvVar("DEVOPS_REMOTING_YAML_NAME", ""),
                         EnvVar("DEVOPS_REMOTING_DEBUG_ENABLE", "true"),
