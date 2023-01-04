@@ -159,13 +159,13 @@ object ProcessMessageCode {
     const val ERROR_STAGE_IS_NOT_PAUSED = "2101108" // 构建中Stage[{0}]未处于等待把关状态
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
     const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
-    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
+    const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101105" // 触发不在审核状态中
+    const val ERROR_RECORD_PARSE_FAILED = "2101111" // 解析构建记录出错
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
 
     // 构建时错误
-    const val ERROR_BUILD_TASK_BCS_PARAM_BCSAPPINSTID = "2101111" // bcsAppInstId is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_CATEGORY = "2101112" // category is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_BCSINSTNUM = "2101113" // bcsInstNum is not init
     const val ERROR_BUILD_TASK_BCS_PARAM_INSTVERSIONID = "2101114" // instVersionId is not init
@@ -247,9 +247,6 @@ object ProcessMessageCode {
     const val BUILD_WORKER_DEAD_ERROR = "2101318"
     // 构建机Agent详情链接
     const val BUILD_AGENT_DETAIL_LINK_ERROR = "2101319"
-
-    // 人工审核插件编辑时输入参数错误
-    const val ERROR_PARAM_MANUALREVIEW = "2101105"
 
     // 标签与标签组错误21014开头
     const val ERROR_GROUP_COUNT_EXCEEDS_LIMIT = "2101401" // 一个项目标签组不能超过10个

@@ -27,20 +27,20 @@
 
 package com.tencent.devops.process.dao.record
 
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.model.process.tables.TPipelineBuildRecordModel
 import com.tencent.devops.model.process.tables.records.TPipelineBuildRecordModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import org.jooq.DSLContext
 import org.jooq.RecordMapper
-import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.time.LocalDateTime
 
 @Repository
+@Suppress("LongParameterList")
 class BuildRecordModelDao {
 
     fun createRecord(dslContext: DSLContext, record: BuildRecordModel) {
@@ -67,31 +67,41 @@ class BuildRecordModelDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int?,
-        buildStatus: BuildStatus,
+        executeCount: Int,
+        buildStatus: BuildStatus?,
         modelVar: Map<String, Any>,
         cancelUser: String?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
-        timestamps: List<BuildRecordTimeStamp>?
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
             val update = dslContext.update(this)
-                .set(STATUS, buildStatus.name)
                 .set(MODEL_VAR, JsonUtil.toJson(modelVar, false))
+            buildStatus?.let { update.set(STATUS, buildStatus.name) }
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
-            val exeCount = executeCount ?: dslContext.select(DSL.max(EXECUTE_COUNT)).where(
-                BUILD_ID.eq(buildId)
-                    .and(PROJECT_ID.eq(projectId))
-                    .and(PIPELINE_ID.eq(pipelineId))
-            ).fetchAny()?.value1()!!
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
                     .and(PIPELINE_ID.eq(pipelineId))
-                    .and(EXECUTE_COUNT.eq(exeCount))
+                    .and(EXECUTE_COUNT.eq(executeCount))
             ).execute()
+        }
+    }
+
+    fun updateStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        buildStatus: BuildStatus,
+        executeCount: Int
+    ) {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            dslContext.update(this).set(STATUS, buildStatus.name)
+                .where(
+                    PROJECT_ID.eq(projectId)
+                        .and(BUILD_ID.eq(buildId))
+                        .and(EXECUTE_COUNT.eq(executeCount))
+                ).execute()
         }
     }
 
@@ -113,6 +123,22 @@ class BuildRecordModelDao {
         }
     }
 
+    fun getRecordStartUserList(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): List<String> {
+        with(TPipelineBuildRecordModel.T_PIPELINE_BUILD_RECORD_MODEL) {
+            return dslContext.select(START_USER).from(this)
+                .where(
+                    BUILD_ID.eq(buildId)
+                        .and(PROJECT_ID.eq(projectId))
+                        .and(PIPELINE_ID.eq(pipelineId))
+                ).orderBy(EXECUTE_COUNT.desc()).fetch(START_USER)
+        }
+    }
+
     class BuildRecordPipelineJooqMapper : RecordMapper<TPipelineBuildRecordModelRecord, BuildRecordModel> {
         override fun map(record: TPipelineBuildRecordModelRecord?): BuildRecordModel? {
             return record?.run {
@@ -123,14 +149,14 @@ class BuildRecordModelDao {
                     resourceVersion = resourceVersion,
                     executeCount = executeCount,
                     buildNum = buildNum,
-                    modelVar = JsonUtil.getObjectMapper().readValue(modelVar) as MutableMap<String, Any>,
+                    modelVar = JsonUtil.to(modelVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     startUser = startUser,
                     startType = startType,
                     status = status,
                     cancelUser = cancelUser,
                     timestamps = timestamps?.let {
-                        JsonUtil.getObjectMapper().readValue(it) as List<BuildRecordTimeStamp>
-                    } ?: emptyList()
+                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+                    } ?: mapOf()
                 )
             }
         }

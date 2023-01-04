@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.record
 
 import com.tencent.devops.common.api.constant.INIT_VERSION
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
@@ -42,8 +43,8 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
-import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
@@ -74,10 +75,6 @@ class TaskBuildRecordService(
     redisOperation = redisOperation
 ) {
 
-//    fun batchUpdate(transactionContext: DSLContext?, taskList: List<BuildRecordTask>) {
-//        return buildRecordTaskDao.batchUpdate(transactionContext ?: dslContext, taskList)
-//    }
-
     fun updateTaskStatus(
         projectId: String,
         pipelineId: String,
@@ -87,25 +84,27 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
-        operation: String
+        operation: String,
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = operation
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = buildStatus,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                timestamps = timestamps
             )
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskPause(
         projectId: String,
         pipelineId: String,
@@ -119,14 +118,19 @@ class TaskBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskPause#$taskId"
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.PAUSE,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                timestamps = mapOf(
+                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
+                        LocalDateTime.now().timestampmilli(), null
+                    )
+                )
             )
         }
     }
@@ -211,6 +215,15 @@ class TaskBuildRecordService(
                     )
                 }
 
+                // TODO #7983 即将废除的旧数据兼容
+                if (taskVar[Element::startEpoch.name] == null) { // 自动重试，startEpoch 不会为null，所以不需要查redis来确认
+                    taskVar[Element::startEpoch.name] = System.currentTimeMillis()
+                }
+                taskVar.remove(Element::elapsed.name)
+                taskVar.remove(Element::errorType.name)
+                taskVar.remove(Element::errorCode.name)
+                taskVar.remove(Element::errorMsg.name)
+
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -226,7 +239,7 @@ class TaskBuildRecordService(
         }
     }
 
-    // TODO 暂时保留和detail一致的方法，后续简化为updateTaskStatus
+    // TODO #7983 暂时保留和detail一致的方法，后续简化为updateTaskStatus
     fun taskCancel(
         projectId: String,
         pipelineId: String,
@@ -241,7 +254,7 @@ class TaskBuildRecordService(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = cancelUser, operation = "taskCancel#$taskId"
         ) {
-            updateTaskByMap(
+            updateTaskRecord(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -348,7 +361,7 @@ class TaskBuildRecordService(
             buildStatus = BuildStatus.QUEUE,
             operation = "updateElementWhenPauseContinue#$taskId"
         )
-        // TODO 重写同container下的插件input
+        // TODO #7983 重写同container下的插件input
         updateTaskStatus(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -358,33 +371,34 @@ class TaskBuildRecordService(
             taskId = taskId,
             executeCount = executeCount,
             buildStatus = BuildStatus.QUEUE,
-            operation = "updateElementWhenPauseContinue#$taskId"
+            operation = "updateElementWhenPauseContinue#$taskId",
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                    BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+            )
         )
     }
 
-    fun updateTaskByMap(
+    fun updateTaskRecord(
         projectId: String,
         pipelineId: String,
         buildId: String,
         taskId: String,
         executeCount: Int,
         taskVar: Map<String, Any>,
-        buildStatus: BuildStatus,
-        startTime: LocalDateTime? = null,
-        endTime: LocalDateTime? = null,
-        timestamps: List<BuildRecordTimeStamp>? = null,
-        timeCost: BuildRecordTimeCost? = null
+        buildStatus: BuildStatus?,
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            val recordVar = recordTaskDao.getRecordTaskVar(
+            val recordTask = recordTaskDao.getRecord(
                 dslContext = transactionContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId,
                 executeCount = executeCount
-            )?.toMutableMap() ?: run {
+            ) ?: run {
                 logger.warn(
                     "ENGINE|$buildId|updateTaskByMap| get task($taskId) record failed."
                 )
@@ -397,9 +411,9 @@ class TaskBuildRecordService(
                 buildId = buildId,
                 taskId = taskId,
                 executeCount = executeCount,
-                taskVar = recordVar.plus(taskVar),
+                taskVar = recordTask.taskVar.plus(taskVar),
                 buildStatus = buildStatus,
-                timestamps = timestamps
+                timestamps = timestamps?.let { mergeTimestamps(timestamps, recordTask.timestamps) }
             )
         }
     }

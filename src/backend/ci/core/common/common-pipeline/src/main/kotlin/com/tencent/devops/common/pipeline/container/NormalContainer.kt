@@ -47,10 +47,13 @@ data class NormalContainer(
     @ApiModelProperty("容器状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var status: String? = null,
     @ApiModelProperty("系统运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var startEpoch: Long? = null,
     @ApiModelProperty("系统耗时（开机时间）", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var systemElapsed: Long? = null,
     @ApiModelProperty("插件执行耗时", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     override var elementElapsed: Long? = null,
     @ApiModelProperty("允许可跳过", required = false)
     @Deprecated(message = "do not use", replaceWith = ReplaceWith("JobControlOption.runCondition"))

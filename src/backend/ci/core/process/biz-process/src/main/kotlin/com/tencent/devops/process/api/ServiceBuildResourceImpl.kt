@@ -302,7 +302,7 @@ class ServiceBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
+        executeCount: Int?,
         channelCode: ChannelCode
     ): Result<ModelRecord> {
         checkParam(projectId, pipelineId)

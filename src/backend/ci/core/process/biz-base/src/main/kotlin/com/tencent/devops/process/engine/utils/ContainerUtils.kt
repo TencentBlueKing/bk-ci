@@ -66,11 +66,10 @@ object ContainerUtils {
         }
     }
 
-    fun getMutexFixedContainerName(containerName: String) {
+    fun getMutexFixedContainerName(containerName: String) =
         if (containerName.startsWith(mutexPrefix)) {
             containerName.substring(mutexPrefix.length)
-        }
-    }
+        } else containerName
 
     fun setMutexWaitName(container: Container) {
         if (container.name.startsWith(mutexPrefix)) {

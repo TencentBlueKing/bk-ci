@@ -26,13 +26,26 @@
  */
 package com.tencent.devops.common.pipeline.pojo.time
 
-enum class BuildTimestampType {
-    STAGE_CHECK_IN_WAITING,
-    STAGE_CHECK_OUT_WAITING,
-    JOB_MUTEX_WAITING,
-    JOB_CONTAINER_STARTUP,
-    JOB_CONTAINER_SHUTDOWN,
-    TASK_ATOM_LOADING,
-    TASK_REVIEW_WAITING,
-    UNKNOWN;
+import io.swagger.annotations.ApiModel
+
+@ApiModel("构建详情记录-时间戳类型（勿随意删除）")
+enum class BuildTimestampType(val action: String) {
+    BUILD_REVIEW_WAITING("流水线触发审核等待"),
+    BUILD_CONCURRENCY_QUEUE("流水线并发排队"),
+    STAGE_CHECK_IN_WAITING("stage准入等待"),
+    STAGE_CHECK_OUT_WAITING("stage准出等待"),
+    JOB_MUTEX_QUEUE("job互斥并发排队"),
+    JOB_THIRD_PARTY_QUEUE("job第三方构建机资源排队"),
+    JOB_CONTAINER_STARTUP("job构建机启动（包含了第三方构建机资源等待）"),
+    JOB_CONTAINER_SHUTDOWN("job构建机关闭"),
+    TASK_REVIEW_PAUSE_WAITING("task等待（包括插件暂停、人工审核、质量红线审核）");
+
+    /*使插件处于等待的类型*/
+    fun taskCheckWait() = this == TASK_REVIEW_PAUSE_WAITING
+
+    /*使container处于排队的类型*/
+    fun containerCheckQueue() = this == JOB_MUTEX_QUEUE || this == JOB_THIRD_PARTY_QUEUE
+
+    /*使stage处于等待的类型*/
+    fun stageCheckWait() = this == STAGE_CHECK_IN_WAITING || this == STAGE_CHECK_OUT_WAITING
 }

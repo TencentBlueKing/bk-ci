@@ -28,6 +28,7 @@
 package com.tencent.devops.process.pojo.pipeline.record
 
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -62,5 +63,5 @@ data class BuildRecordTask(
     @ApiModelProperty("分裂前原类型标识", required = false)
     var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
     @ApiModelProperty("业务时间戳集合", required = true)
-    var timestamps: List<BuildRecordTimeStamp>
+    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

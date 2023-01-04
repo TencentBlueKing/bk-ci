@@ -253,9 +253,9 @@ interface UserBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int
+        executeCount: Int?
     ): Result<ModelRecord>
 
     @ApiOperation("获取构建详情")

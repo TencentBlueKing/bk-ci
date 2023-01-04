@@ -30,6 +30,7 @@ package com.tencent.devops.process.pojo.pipeline
 import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
+import com.tencent.devops.process.pojo.code.WebhookInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -77,14 +78,16 @@ data class ModelRecord(
     var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("触发审核人列表", required = false)
     val triggerReviewers: List<String>? = null,
-    @ApiModelProperty("查询的执行次数", required = false)
-    val executeCount: Int? = 1,
+    @ApiModelProperty("当前查询的执行次数", required = false)
+    val executeCount: Int,
+    @ApiModelProperty("历史重试执行人列表（有序）", required = true)
+    val startUserList: List<String>,
     @ApiModelProperty("构建信息", required = false)
     var buildMsg: String?,
     @ApiModelProperty("原材料", required = false)
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("备注", required = false)
     val remark: String?,
-    @ApiModelProperty("代码库触发信息", required = false)
-    val repositoryTriggerInfo: RepositoryTriggerInfo?
+    @ApiModelProperty("触发信息（包括代码库等）", required = false)
+    val webhookInfo: WebhookInfo?
 )

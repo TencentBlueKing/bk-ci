@@ -46,8 +46,10 @@ data class Stage(
     @ApiModelProperty("阶段状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var status: String? = null,
     @ApiModelProperty("阶段启动时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     var startEpoch: Long? = null,
     @ApiModelProperty("容器运行时间", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    @Deprecated("即将被timeCost代替")
     var elapsed: Long? = null,
     @ApiModelProperty("用户自定义环境变量", required = false)
     val customBuildEnv: Map<String, String>? = null,
@@ -63,6 +65,8 @@ data class Stage(
     var checkIn: StagePauseCheck? = null, // stage准入配置
     @ApiModelProperty("stage准出配置", required = false)
     var checkOut: StagePauseCheck? = null, // stage准出配置
+    @ApiModelProperty("步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
+    var executeCount: Int? = 1,
     @ApiModelProperty("各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
 ) {

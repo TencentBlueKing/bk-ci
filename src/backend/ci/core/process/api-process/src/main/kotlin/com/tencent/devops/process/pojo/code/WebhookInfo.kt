@@ -30,9 +30,13 @@ package com.tencent.devops.process.pojo.code
 import io.swagger.annotations.ApiModelProperty
 
 data class WebhookInfo(
+    @ApiModelProperty("代码库类型", required = true)
+    val codeType: String?, // CodeType.name
+    @ApiModelProperty("代码库完整名称", required = true)
+    val nameWithNamespace: String?,
     @ApiModelProperty("仓库url链接", required = false)
     val webhookRepoUrl: String?,
-    @ApiModelProperty("分支名", required = false)
+    @ApiModelProperty("分支名（目标分支）", required = false)
     val webhookBranch: String?,
     @ApiModelProperty("webhook类型", required = false)
     val webhookType: String?,
@@ -42,6 +46,8 @@ data class WebhookInfo(
     val webhookMessage: String?,
     @ApiModelProperty("提交信息id", required = false)
     val webhookCommitId: String?,
+    @ApiModelProperty("参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
+    val refId: String?,
     @ApiModelProperty("合并后commitId", required = false)
     // 合并后commitId
     val webhookMergeCommitSha: String?,

@@ -176,7 +176,12 @@ class BuildEndControl @Autowired constructor(
 
         // 更新buildNo
         if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            setBuildNoWhenBuildSuccess(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                retryFlag = buildInfo.executeCount?.let { it > 1 } == true
+            )
         }
 
         // 设置状态
@@ -191,7 +196,8 @@ class BuildEndControl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             buildStatus = buildStatus,
-            errorMsg = errorMsg
+            errorMsg = errorMsg,
+            executeCount = buildInfo.executeCount ?: 1
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
@@ -243,7 +249,12 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
+    private fun setBuildNoWhenBuildSuccess(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        retryFlag: Boolean
+    ) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
@@ -253,28 +264,29 @@ class BuildEndControl @Autowired constructor(
             val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId, buildId)
+                updateBuildNoInfo(projectId, pipelineId, buildId, retryFlag)
             } finally {
                 buildNoLock.unlock()
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String, retryFlag: Boolean) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
-        if (buildNo != null && pipelineRuntimeService.getBuildInfo(projectId, buildId)?.retryFlag != true) {
-            pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
-            // 更新历史表的推荐版本号
-            val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
-            val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
-            if (recommendVersionPrefix != null) {
-                pipelineRuntimeService.updateRecommendVersion(
-                    projectId = projectId,
-                    buildId = buildId,
-                    recommendVersion = "$recommendVersionPrefix.$buildNo"
-                )
-            }
+        if (buildNo == null || retryFlag) {
+            return
+        }
+        pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
+        // 更新历史表的推荐版本号
+        val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
+        val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
+        if (recommendVersionPrefix != null) {
+            pipelineRuntimeService.updateRecommendVersion(
+                projectId = projectId,
+                buildId = buildId,
+                recommendVersion = "$recommendVersionPrefix.$buildNo"
+            )
         }
     }
 

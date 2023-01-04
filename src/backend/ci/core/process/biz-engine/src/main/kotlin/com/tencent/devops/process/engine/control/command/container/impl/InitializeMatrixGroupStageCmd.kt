@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ExecuteException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -473,7 +474,11 @@ class InitializeMatrixGroupStageCmd(
                 pipelineContainerService.batchSave(transactionContext, buildContainerList)
                 pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 recordContainer?.let {
-                    saveBuildRecord(transactionContext, buildContainerList, it, recordTaskList, matrixGroupId)
+                    saveBuildRecord(
+                        transactionContext = transactionContext, modelContainer = modelContainer,
+                        buildContainerList = buildContainerList, recordContainer = it,
+                        recordTaskList = recordTaskList, matrixGroupId = matrixGroupId
+                    )
                 }
             }
         } finally {
@@ -520,6 +525,7 @@ class InitializeMatrixGroupStageCmd(
 
     private fun saveBuildRecord(
         transactionContext: DSLContext,
+        modelContainer: Container,
         buildContainerList: MutableList<PipelineBuildContainer>,
         recordContainer: BuildRecordContainer,
         recordTaskList: List<BuildRecordTask>,
@@ -539,9 +545,12 @@ class InitializeMatrixGroupStageCmd(
                     executeCount = it.executeCount,
                     matrixGroupFlag = false,
                     matrixGroupId = matrixGroupId,
-                    containerVar = mutableMapOf(),
+                    containerVar = mutableMapOf(
+                        "@type" to modelContainer.getClassType(),
+                        Container::name.name to modelContainer.name
+                    ),
                     status = null,
-                    timestamps = emptyList()
+                    timestamps = mapOf()
                 )
             },
             recordTaskList

@@ -27,16 +27,21 @@
 
 package com.tencent.devops.common.pipeline.enums
 
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建详情记录-作业容器")
+@ApiModel("构建详情记录-事件时间戳")
 data class BuildRecordTimeStamp(
-    @ApiModelProperty("记录时间戳", required = true)
-    val timestampType: BuildTimestampType, // 枚举待评估
     @ApiModelProperty("开始时间", required = true)
-    val startTime: Long,
+    val startTime: Long?,
     @ApiModelProperty("结束时间", required = true)
     val endTime: Long?
-)
+) {
+    fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)
+
+    fun insert2TimeLine(timeline: MutableList<Pair<Long, Long>>) {
+        if (startTime != null && endTime != null) {
+            timeline.add(Pair(startTime, endTime))
+        }
+    }
+}

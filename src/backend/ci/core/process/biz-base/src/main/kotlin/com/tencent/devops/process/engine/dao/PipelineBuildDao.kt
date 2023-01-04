@@ -46,7 +46,6 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.process.pojo.code.WebhookInfo
-import com.tencent.devops.process.pojo.pipeline.RepositoryTriggerInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
@@ -99,7 +98,6 @@ class PipelineBuildDao {
                     PIPELINE_ID,
                     PARENT_BUILD_ID,
                     PARENT_TASK_ID,
-                    START_TIME,
                     START_USER,
                     TRIGGER_USER,
                     STATUS,
@@ -122,7 +120,6 @@ class PipelineBuildDao {
                     pipelineId,
                     parentBuildId,
                     parentTaskId,
-                    LocalDateTime.now(),
                     startUser,
                     triggerUser,
                     status.ordinal,
@@ -334,14 +331,14 @@ class PipelineBuildDao {
         projectId: String,
         buildId: String,
         startTime: LocalDateTime? = null,
-        retry: Boolean = false
+        executeCount: Int = 1
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
-            if (!retry) {
+            if (executeCount == 1) {
                 update.set(START_TIME, startTime)
             }
-            update.set(IS_RETRY, retry)
+            update.set(EXECUTE_COUNT, executeCount)
             update.setNull(ERROR_INFO)
             update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }
@@ -516,7 +513,7 @@ class PipelineBuildDao {
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
-                retryFlag = t.isRetry,
+                executeCount = t.executeCount,
                 executeTime = t.executeTime ?: 0,
                 concurrencyGroup = t.concurrencyGroup,
                 webhookInfo = t.webhookInfo?.let { JsonUtil.to(t.webhookInfo, WebhookInfo::class.java) },
@@ -527,10 +524,7 @@ class PipelineBuildDao {
                 material = t.material?.let {
                     JsonUtil.getObjectMapper().readValue(it) as List<PipelineBuildMaterial>
                 },
-                remark = t.remark,
-                repositoryTriggerInfo = t.repoTriggerInfo?.let {
-                    JsonUtil.to(t.webhookInfo, RepositoryTriggerInfo::class.java)
-                }
+                remark = t.remark
             )
         }
     }

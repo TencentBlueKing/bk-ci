@@ -25,39 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline.record
+package com.tencent.devops.common.pipeline.pojo.time
 
-import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
-import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("构建详情记录-插件任务")
-data class BuildRecordContainer(
-    @ApiModelProperty("构建ID", required = true)
-    val buildId: String,
-    @ApiModelProperty("项目ID", required = true)
-    val projectId: String,
-    @ApiModelProperty("流水线ID", required = true)
-    val pipelineId: String,
-    @ApiModelProperty("编排版本号", required = true)
-    val resourceVersion: Int,
-    @ApiModelProperty("步骤ID", required = true)
-    val stageId: String,
-    @ApiModelProperty("作业容器ID", required = true)
-    val containerId: String,
-    @ApiModelProperty("执行次数", required = true)
-    val executeCount: Int,
-    @ApiModelProperty("执行变量", required = true)
-    val containerVar: MutableMap<String, Any>,
-    @ApiModelProperty("作业容器类型", required = true)
-    val containerType: String,
-    @ApiModelProperty("构建状态", required = false)
-    var status: String?,
-    @ApiModelProperty("是否为构建矩阵组", required = false)
-    val matrixGroupFlag: Boolean? = null,
-    @ApiModelProperty("所在矩阵组ID", required = false)
-    val matrixGroupId: String? = null,
-    @ApiModelProperty("业务时间戳集合", required = true)
-    var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+@ApiModel("各项执行耗时时刻")
+data class BuildRecordTimeLine(
+    @ApiModelProperty("执行耗时时刻，计算结果需成对", required = false)
+    var executeCostMoments: MutableList<Pair<Long, Long>> = mutableListOf(),
+    @ApiModelProperty("等待耗时时刻，计算结果需成对", required = false)
+    var waitCostMoments: MutableList<Pair<Long, Long>> = mutableListOf(),
+    @ApiModelProperty("排队耗时（流水线并发和Job互斥）时刻，计算结果需成对", required = false)
+    var queueCostMoments: MutableList<Pair<Long, Long>> = mutableListOf()
 )

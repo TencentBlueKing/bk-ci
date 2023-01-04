@@ -27,15 +27,19 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
@@ -54,7 +58,8 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
-import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
@@ -71,12 +76,12 @@ import java.util.concurrent.TimeUnit
 @Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
 @Service
 class PipelineBuildRecordService @Autowired constructor(
+    private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val dslContext: DSLContext,
     private val pipelineBuildDao: PipelineBuildDao,
-    private val buildStageDao: PipelineBuildStageDao,
     private val recordModelDao: BuildRecordModelDao,
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
@@ -101,6 +106,21 @@ class PipelineBuildRecordService @Autowired constructor(
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
     }
 
+    fun batchGet(
+        transactionContext: DSLContext?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
+        val context = transactionContext ?: dslContext
+        return Triple(
+            recordStageDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
+            recordContainerDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
+            recordTaskDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount)
+        )
+    }
+
     fun batchSave(
         transactionContext: DSLContext?,
         model: BuildRecordModel,
@@ -122,47 +142,63 @@ class PipelineBuildRecordService @Autowired constructor(
     }
 
     /**
-     * 查询ModelDetail
-     * @param projectId: 项目Id
-     * @param buildId: 构建Id
+     * 查询ModelRecord
+     * @param buildInfo: 构建信息
+     * @param executeCount: 查询的执行次数
      * @param refreshStatus: 是否刷新状态
      */
     fun get(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int,
+        buildInfo: BuildInfo,
+        executeCount: Int?,
         refreshStatus: Boolean = true
     ): ModelRecord? {
+        // 直接取构建记录数据，防止接口传错
+        val projectId = buildInfo.projectId
+        val pipelineId = buildInfo.pipelineId
+        val buildId = buildInfo.buildId
 
-        val buildInfo = pipelineBuildDao.convert(
-            pipelineBuildDao.getBuildInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                buildId = buildId
-            )
-        ) ?: return null
+        // 如果请求的executeCount异常则直接返回错误，防止数据错乱
+        if (
+            executeCount?.let {
+                request -> request < 1 || buildInfo.executeCount?.let { request > it } == true
+            } == true
+        ) {
+            return null
+        }
 
-        // 获取流水线级别变量数据
+        // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
+        var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
         val buildRecordPipeline = recordModelDao.getRecord(
-            dslContext = dslContext,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            buildId = buildId,
-            executeCount = executeCount
-        ) ?: return null
-
-        val recordMap = recordModelService.generateFieldRecordModelMap(
-            projectId, pipelineId, buildId, executeCount, buildRecordPipeline
+            dslContext, projectId, pipelineId, buildId, fixedExecuteCount
         )
-        val resourceStr = pipelineResDao.getVersionModelString(
-            dslContext, projectId, pipelineId, buildInfo.version
-        ) ?: return null
 
-        val model = ModelUtils.generatePipelineBuildModel(
-            baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr),
-            modelFieldRecordMap = recordMap
-        )
+        // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
+        val model = executeCount?.let {
+            val resourceStr = pipelineResDao.getVersionModelString(
+                dslContext, projectId, pipelineId, buildInfo.version
+            )
+            try {
+                val recordMap = recordModelService.generateFieldRecordModelMap(
+                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline!!
+                )
+                ModelUtils.generatePipelineBuildModel(
+                    baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr!!),
+                    modelFieldRecordMap = recordMap
+                )
+            } catch (t: Throwable) {
+                logger.warn("RECORD|parse record($buildId)-$executeCount with error: ", t)
+                // 遇到解析问题直接返回最新记录，表现为前端无法切换
+                fixedExecuteCount = buildInfo.executeCount ?: executeCount
+                null
+            }
+        } ?: run {
+            // TODO #7983 临时填充流水线级的timeCost
+            val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
+            buildRecordPipeline?.modelVar?.get(Model::timeCost.name)?.let {
+                detail.timeCost = JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
+            }
+            detail
+        }
 
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(
             projectId, buildInfo.pipelineId
@@ -200,7 +236,17 @@ class PipelineBuildRecordService @Autowired constructor(
             stage.containers.forEach { container ->
                 container.containerHashId = container.containerHashId ?: container.containerId
                 container.containerId = container.id
+                var elementElapsed = 0L
+                container.elements.forEach { element ->
+                    element.timeCost?.executeCost?.let {
+                        element.elapsed = it
+                        elementElapsed += it
+                    }
+                }
+                container.elementElapsed = container.elementElapsed ?: elementElapsed
+                container.systemElapsed = container.systemElapsed ?: container.timeCost?.systemCost
             }
+            stage.elapsed = stage.elapsed ?: stage.timeCost?.totalCost
         }
         val triggerReviewers = pipelineTriggerReviewDao.getTriggerReviewers(
             dslContext = dslContext,
@@ -208,6 +254,14 @@ class PipelineBuildRecordService @Autowired constructor(
             pipelineId = pipelineInfo.pipelineId,
             buildId = buildId
         )
+
+        val startUserList = recordModelDao.getRecordStartUserList(
+            dslContext = dslContext,
+            pipelineId = pipelineInfo.pipelineId,
+            projectId = projectId,
+            buildId = buildId
+        )
+
         return ModelRecord(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
@@ -222,7 +276,7 @@ class PipelineBuildRecordService @Autowired constructor(
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline.cancelUser ?: "",
+            cancelUserId = buildRecordPipeline?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
@@ -230,15 +284,16 @@ class PipelineBuildRecordService @Autowired constructor(
             executeTime = buildInfo.executeTime,
             errorInfoList = buildInfo.errorInfoList,
             triggerReviewers = triggerReviewers,
-            executeCount = executeCount,
+            executeCount = fixedExecuteCount,
+            startUserList = startUserList,
             buildMsg = buildInfo.buildMsg,
             material = buildInfo.material,
             remark = buildInfo.remark,
-            repositoryTriggerInfo = buildInfo.repositoryTriggerInfo
+            webhookInfo = buildInfo.webhookInfo
         )
     }
 
-    // TODO 代替detail能力
+    // TODO #7983 代替detail能力
     fun updateModel(projectId: String, buildId: String, model: Model) {
 //        buildDetailDao.update(
 //            dslContext = dslContext,
@@ -257,7 +312,7 @@ class PipelineBuildRecordService @Autowired constructor(
         buildStatus: BuildStatus,
         cancelUser: String
     ) {
-        // TODO 修正所有Record状态，自行获取最新executeCount
+        // TODO #7983 修正所有Record状态，自行获取最新executeCount
         logger.info("Cancel the build $buildId by $cancelUser")
 //        update(
 //            projectId = projectId, buildId = buildId,
@@ -363,7 +418,7 @@ class PipelineBuildRecordService @Autowired constructor(
             }
             val buildInfo = pipelineBuildDao.convert(
                 pipelineBuildDao.getBuildInfo(
-                    dslContext = dslContext,
+                    dslContext = context,
                     projectId = projectId,
                     buildId = buildId
                 )
@@ -376,19 +431,13 @@ class PipelineBuildRecordService @Autowired constructor(
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
-            val buildStageMap = buildStageDao.getByBuildId(
-                dslContext = context, projectId = projectId, buildId = buildId
-            ).associateBy { it.stageId }
-            val stagePairs = recordStages.map { stage ->
-                stage to buildStageMap[stage.stageId]
-            }
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
-                buildInfo, stagePairs
+                buildInfo, recordStages
             )
             recordModelDao.updateRecord(
-                context, projectId, pipelineId, buildId, null, buildStatus,
-                recordModel.modelVar.plus(modelVar), null, null, LocalDateTime.now(), null
+                context, projectId, pipelineId, buildId, executeCount, buildStatus,
+                recordModel.modelVar.plus(modelVar), null, null
             )
         }
 
@@ -402,6 +451,36 @@ class PipelineBuildRecordService @Autowired constructor(
             buildId = buildId,
             cancelUser = cancelUserId
         )
+    }
+
+    fun updateModelRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        modelVar: Map<String, Any>,
+        buildStatus: BuildStatus?,
+        timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
+    ) {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
+            ) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|updateModelByMap| get record failed."
+                )
+                return@transaction
+            }
+
+            recordModelDao.updateRecord(
+                dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount, cancelUser = null,
+                modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
+                timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
+            )
+        }
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {

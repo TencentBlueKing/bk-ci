@@ -68,7 +68,7 @@ open class BaseBuildDetailService constructor(
 
     companion object {
         private const val ExpiredTimeInSeconds: Long = 10
-        const val STATUS_STAGE = "stage-1"
+        const val TRIGGER_STAGE = "stage-1"
     }
 
     fun getBuildModel(projectId: String, buildId: String): Model? {
@@ -178,7 +178,7 @@ open class BaseBuildDetailService constructor(
                     stageTagMap.getOrDefault(_it, "null")
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (it.id == STATUS_STAGE) {
+                showMsg = if (it.id == TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )

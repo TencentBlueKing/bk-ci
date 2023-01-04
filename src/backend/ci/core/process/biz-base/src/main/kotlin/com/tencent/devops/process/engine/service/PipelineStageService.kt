@@ -173,7 +173,7 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage) {
+    fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage, inOrOut: Boolean) {
         with(buildStage) {
             val allStageStatus = stageBuildDetailService.stageCheckQuality(
                 projectId = projectId, buildId = buildId, stageId = stageId,
@@ -183,7 +183,7 @@ class PipelineStageService @Autowired constructor(
             stageBuildRecordService.stageCheckQuality(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
-                controlOption = controlOption!!,
+                controlOption = controlOption!!, inOrOut = inOrOut,
                 checkIn = checkIn, checkOut = checkOut
             )
             dslContext.transaction { configuration ->
@@ -257,7 +257,7 @@ class PipelineStageService @Autowired constructor(
         }
     }
 
-    fun startStage(
+    fun stageManualStart(
         userId: String,
         buildStage: PipelineBuildStage,
         reviewRequest: StageReviewRequest?
@@ -301,7 +301,7 @@ class PipelineStageService @Autowired constructor(
                     projectId = projectId, buildId = buildId, stageId = stageId,
                     controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
                 )
-                stageBuildRecordService.stageStart(
+                stageBuildRecordService.stageManualStart(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                     stageId = stageId, executeCount = executeCount,
                     controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut

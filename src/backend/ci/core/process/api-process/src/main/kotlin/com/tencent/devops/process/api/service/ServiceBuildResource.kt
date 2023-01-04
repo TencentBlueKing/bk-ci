@@ -368,9 +368,9 @@ interface ServiceBuildResource {
         @ApiParam("构建ID", required = true)
         @PathParam("buildId")
         buildId: String,
-        @ApiParam("构建ID", required = true)
+        @ApiParam("执行次数", required = false)
         @QueryParam("executeCount")
-        executeCount: Int,
+        executeCount: Int?,
         @ApiParam("渠道号，默认为BS", required = false)
         @QueryParam("channelCode")
         channelCode: ChannelCode

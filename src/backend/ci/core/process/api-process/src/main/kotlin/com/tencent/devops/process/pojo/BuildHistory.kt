@@ -91,5 +91,7 @@ data class BuildHistory(
     @ApiModelProperty("更新时间", required = false)
     val updateTime: Long? = null,
     @ApiModelProperty("并发时,设定的group", required = false)
-    var concurrencyGroup: String? = null
+    var concurrencyGroup: String? = null,
+    @ApiModelProperty("构建执行次数（重试次数-1）", required = false)
+    val executeCount: Int?
 )

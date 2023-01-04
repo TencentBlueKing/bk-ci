@@ -46,8 +46,11 @@ interface Container {
     var name: String
     var elements: List<Element>
     var status: String?
+    @Deprecated(message = "即将被timeCost代替")
     var startEpoch: Long?
+    @Deprecated(message = "即将被timeCost代替")
     var systemElapsed: Long? // 系统耗时（开机时间）
+    @Deprecated(message = "即将被timeCost代替")
     var elementElapsed: Long? // 插件执行耗时
     var canRetry: Boolean? // 当前job是否能重试
     var containerId: String? // container 流水线唯一ID，同seq id

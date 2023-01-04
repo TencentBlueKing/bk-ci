@@ -27,16 +27,20 @@
 
 package com.tencent.devops.process.engine.service.record
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.BUILD_CANCELED
 import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -50,11 +54,9 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
-@Suppress("LongParameterList", "MagicNumber")
-@Service
-class BaseBuildRecordService(
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount")
+open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
@@ -111,13 +113,12 @@ class BaseBuildRecordService(
                 modelVar = emptyMap(), // 暂时没有变量，保留修改可能
                 cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
-                startTime = null,
-                endTime = null,
                 timestamps = null
             )
 
             watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
+            // TODO #7983 暂时不在record进行推送，避免和detail重复
+//            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
@@ -143,7 +144,7 @@ class BaseBuildRecordService(
         }
     }
 
-    protected fun pipelineDetailChangeEvent(
+    private fun pipelineDetailChangeEvent(
         projectId: String,
         pipelineId: String,
         buildId: String,
@@ -169,8 +170,9 @@ class BaseBuildRecordService(
         errorMsg: String? = null,
         cancelUser: String? = null
     ): List<BuildStageStatus> {
-        val stageTagMap: Map<String, String>
-            by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
+        val stageTagMap: Map<String, String> by lazy {
+            stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName }
+        }
         // 更新Stage状态至BuildHistory
         val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
             Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
@@ -188,14 +190,15 @@ class BaseBuildRecordService(
                 stageId = it.stageId,
                 name = it.stageVar[Stage::name.name]?.toString() ?: it.stageId,
                 status = it.status,
-                startEpoch = it.stageVar[Stage::startEpoch.name].toString().toLong(),
-                elapsed = it.stageVar[Stage::elapsed.name].toString().toLong(),
+                startEpoch = it.stageVar[Stage::startEpoch.name]?.toString()?.toLong(),
+                elapsed = it.stageVar[Stage::elapsed.name]?.toString()?.toLong(),
                 timeCost = timeCost,
-                tag = (it.stageVar[Stage::tag.name] as List<String>).map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
+                tag = it.stageVar[Stage::tag.name]?.let { tags ->
+                    JsonUtil.anyTo(tags, object : TypeReference<List<String>>() {})
+                        .map { tag -> stageTagMap.getOrDefault(tag, "null") }
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (it.stageId == StageBuildRecordService.STATUS_STAGE) {
+                showMsg = if (it.stageId == StageBuildRecordService.TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
@@ -203,8 +206,30 @@ class BaseBuildRecordService(
     }
 
     companion object {
-        fun refreshOperation(f: () -> Int): Int = f()
         private const val ExpiredTimeInSeconds: Long = 10
         private val logger = LoggerFactory.getLogger(BaseBuildRecordService::class.java)
+
+        fun mergeTimestamps(
+            newTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>,
+            oldTimestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
+        ): MutableMap<BuildTimestampType, BuildRecordTimeStamp> {
+            // 针对各时间戳的开始结束时间分别写入，避免覆盖
+            val result = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+            result.putAll(oldTimestamps)
+            newTimestamps.forEach { (type, new) ->
+                val old = oldTimestamps[type]
+                result[type] = if (old != null) {
+                    // 如果时间戳已存在，则将新的值覆盖旧的值
+                    BuildRecordTimeStamp(
+                        startTime = new.startTime ?: old.startTime,
+                        endTime = new.endTime ?: old.endTime
+                    )
+                } else {
+                    // 如果时间戳不存在，则直接新增
+                    new
+                }
+            }
+            return result
+        }
     }
 }

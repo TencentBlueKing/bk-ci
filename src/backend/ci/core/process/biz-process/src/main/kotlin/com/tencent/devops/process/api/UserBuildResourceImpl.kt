@@ -272,7 +272,7 @@ class UserBuildResourceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int?
     ): Result<ModelRecord> {
         checkParam(userId, projectId, pipelineId)
         if (buildId.isBlank()) {

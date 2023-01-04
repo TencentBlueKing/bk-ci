@@ -31,13 +31,16 @@ import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -46,6 +49,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -54,6 +58,7 @@ import com.tencent.devops.process.utils.PROJECT_NAME_CHINESE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
+import java.time.LocalDateTime
 import java.util.Date
 
 /**
@@ -64,6 +69,7 @@ import java.util.Date
 class ManualReviewTaskAtom(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
@@ -92,6 +98,17 @@ class ManualReviewTaskAtom(
             logger.warn("[$buildId]|taskId=$taskId|Review user is empty")
             return AtomResponse(BuildStatus.FAILED)
         }
+        val reviewUsersList = reviewUsers.split(",")
+
+        taskBuildRecordService.updateTaskRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+            taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
+            timestamps = mapOf(
+                BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
+        )
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人
         buildLogPrinter.addYellowLine(
@@ -126,7 +143,7 @@ class ManualReviewTaskAtom(
                 notifyTemplateEnum = PipelineNotifyTemplateEnum.PIPELINE_MANUAL_REVIEW_ATOM_NOTIFY_TEMPLATE.name,
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
-                receivers = reviewUsers.split(","),
+                receivers = reviewUsersList,
                 notifyType = checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
                     "content" to notifyTitle

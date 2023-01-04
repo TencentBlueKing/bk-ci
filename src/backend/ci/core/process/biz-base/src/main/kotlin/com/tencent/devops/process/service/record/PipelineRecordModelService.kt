@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.record
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.EXECUTE_COUNT
 import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.STATUS
@@ -78,7 +79,7 @@ class PipelineRecordModelService @Autowired constructor(
     ): Map<String, Any> {
         val recordModelMap = buildRecordModel.modelVar
         // 获取stage级别变量数据
-        val buildRecordStages = buildRecordStageDao.getRecords(
+        val buildRecordStages = buildRecordStageDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
@@ -86,21 +87,19 @@ class PipelineRecordModelService @Autowired constructor(
             executeCount = executeCount
         )
         // 获取job级别变量数据
-        val buildRecordContainers = buildRecordContainerDao.getRecords(
+        val buildRecordContainers = buildRecordContainerDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount,
-            stageId = null
+            executeCount = executeCount
         )
         // 获取所有task级别变量数据
-        val buildRecordTasks = buildRecordTaskDao.getRecords(
+        val buildRecordTasks = buildRecordTaskDao.getLatestRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            containerId = null,
             executeCount = executeCount
         )
         val stages = mutableListOf<Map<String, Any>>()
@@ -126,6 +125,7 @@ class PipelineRecordModelService @Autowired constructor(
             val stageId = buildRecordStage.stageId
             stageVarMap[ID] = stageId
             stageVarMap[STATUS] = buildRecordStage.status ?: ""
+            stageVarMap[EXECUTE_COUNT] = buildRecordStage.executeCount
             handleStageRecordContainer(
                 buildRecordContainers = buildRecordContainers,
                 stageId = stageId,
@@ -155,6 +155,7 @@ class PipelineRecordModelService @Autowired constructor(
             val containerId = stageRecordContainer.containerId
             containerVarMap[ID] = containerId
             containerVarMap[STATUS] = stageRecordContainer.status ?: ""
+            containerVarMap[EXECUTE_COUNT] = stageRecordContainer.executeCount
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
@@ -172,6 +173,7 @@ class PipelineRecordModelService @Autowired constructor(
                     val containerBaseModelMap = containerBaseMap.toMutableMap()
                     matrixContainerVarMap[ID] = matrixContainerId
                     matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
+                    matrixContainerVarMap[EXECUTE_COUNT] = matrixRecordContainer.executeCount
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
@@ -208,6 +210,7 @@ class PipelineRecordModelService @Autowired constructor(
             val taskId = containerRecordTask.taskId
             taskVarMap[ID] = taskId
             taskVarMap[STATUS] = containerRecordTask.status ?: ""
+            taskVarMap[EXECUTE_COUNT] = containerRecordTask.executeCount
             containerBaseMap?.let {
                 // 生成矩阵task的变量模型
                 val taskBaseMap = (it[KEY_ELEMENTS] as List<Map<String, Any>>)[index].toMutableMap()

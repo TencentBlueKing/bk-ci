@@ -25,21 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.pojo.pipeline
+package com.tencent.devops.process.pojo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("构建模型-ID")
-data class RepositoryTriggerInfo(
-    @ApiModelProperty("代码库类型", required = true)
-    val codeType: String, // CodeType.name
-    @ApiModelProperty("代码库完整名称", required = true)
-    val nameWithNamespace: String,
-    @ApiModelProperty("源分支", required = true)
-    val sourceBranch: String?,
-    @ApiModelProperty("目标分支", required = true)
-    val targetBranch: String?,
-    @ApiModelProperty("参考信息(commit_id,mr_id,tag,issue_id,review_id,note_id等)", required = true)
-    val refId: String?
-)
+const val KEY_STAGE_ID = "stageId"
+const val KEY_CONTAINER_ID = "containerId"
+const val KEY_TASK_ID = "taskId"
+const val KEY_EXECUTE_COUNT = "executeCount"

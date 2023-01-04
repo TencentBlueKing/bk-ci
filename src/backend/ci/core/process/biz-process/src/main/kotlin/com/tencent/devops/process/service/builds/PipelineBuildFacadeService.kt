@@ -82,7 +82,6 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
-import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -139,7 +138,6 @@ class PipelineBuildFacadeService(
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
     private val buildRecordService: PipelineBuildRecordService,
-    private val containerRecordService: ContainerBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
@@ -922,10 +920,11 @@ class PipelineBuildFacadeService(
                 params = arrayOf(userId)
             )
         }
+        val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
-            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId)
+            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
         } else {
-            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId)
+            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
         }
         return true
     }
@@ -1026,7 +1025,7 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                pipelineStageService.startStage(
+                pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
                     reviewRequest = reviewRequest
@@ -1307,11 +1306,46 @@ class PipelineBuildFacadeService(
     }
 
     fun getBuildRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?,
+        channelCode: ChannelCode
+    ): ModelRecord {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = projectId,
+            buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在",
+            params = arrayOf(buildId)
+        )
+        if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}查找失败，请核对参数",
+                params = arrayOf(buildId)
+            )
+        }
+        return buildRecordService.get(
+            buildInfo = buildInfo,
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在第${executeCount}次执行",
+            params = arrayOf(buildId)
+        )
+    }
+
+    fun getBuildRecord(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int,
+        executeCount: Int?,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
     ): ModelRecord {
@@ -1326,16 +1360,12 @@ class PipelineBuildFacadeService(
             )
         }
 
-        return buildRecordService.get(
+        return getBuildRecord(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
-            executeCount = executeCount
-        ) ?: throw ErrorCodeException(
-            statusCode = Response.Status.NOT_FOUND.statusCode,
-            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-            defaultMessage = "构建任务${buildId}不存在",
-            params = arrayOf(buildId)
+            executeCount = executeCount,
+            channelCode = channelCode
         )
     }
 
