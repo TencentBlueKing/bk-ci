@@ -222,6 +222,7 @@ class StoreHonorServiceImpl @Autowired constructor(
             } else {
                 val honorInfos = storeHonorInfoMap[storeCode]!!.toMutableList()
                 honorInfos.add(honorInfo)
+                storeHonorInfoMap[storeCode] = honorInfos
             }
         }
         return  storeHonorInfoMap
