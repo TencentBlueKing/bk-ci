@@ -25,36 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.pojo.common.index
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface StoreIndexManageService {
-
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
-
-    fun delete(userId: String, indexId: String): Result<Boolean>
-
-    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
-
-    fun getStoreIndexInfosByStoreCodes(
-        storeType: StoreTypeEnum,
-        storeCodes: List<String>
-    ): Map<String, List<StoreIndexInfo>>
-
-    fun getStoreIndexInfosByStoreCode(
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): List<StoreIndexInfo>
-
-    fun createIndexComputeDetail(
-        userId: String,
-        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
-    ): Result<Boolean>
-}
+@ApiModel("新增指标要素请求报文体")
+data class CreateIndexComputeDetailRequest(
+    @ApiModelProperty("组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("指标id", required = true)
+    val indexId: String,
+    @ApiModelProperty("图标提示信息", required = true)
+    val iconTips: String,
+    @ApiModelProperty("等级名称", required = true)
+    val LevelName: String,
+    @ApiModelProperty("指标代码", required = true)
+    @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
+    val indexCode: String,
+    @ApiModelProperty("指标要素列表", required = true)
+    val elementInfos: List<StoreIndexElementInfo>
+)

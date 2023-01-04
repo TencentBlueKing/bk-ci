@@ -27,6 +27,7 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.bkrepo.repository.constant.SYSTEM_USER
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisLock
@@ -70,6 +71,7 @@ class StoreIndexCronService constructor(
             redisOperation.getSetMembers(DELETE_STORE_INDEX_RESULT_KEY)?.forEach {
                 logger.info("expired indexId is: {}", it)
                 storeIndexManageInfoDao.deleteStoreIndexResulById(dslContext, it)
+                storeIndexManageInfoDao.deleteStoreIndexElementById(dslContext, it)
             }
         } catch (ignored: Throwable) {
             logger.warn("Fail to offline index: {}", ignored)
@@ -146,12 +148,17 @@ class StoreIndexCronService constructor(
                     tStoreIndexElementDetailRecord.storeCode = atomCode
                     tStoreIndexElementDetailRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfo.id
-                    tStoreIndexElementDetailRecord.elementName = "atomSlaIndex"
+                    tStoreIndexElementDetailRecord.indexCode = indexCode
+                    tStoreIndexElementDetailRecord.elementName = indexCode
                     tStoreIndexElementDetailRecord.elementValue = elementValue
+                    tStoreIndexElementDetailRecord.creator = SYSTEM_USER
+                    tStoreIndexElementDetailRecord.modifier = SYSTEM_USER
+                    tStoreIndexElementDetailRecord.createTime = LocalDateTime.now()
+                    tStoreIndexElementDetailRecord.updateTime = LocalDateTime.now()
                     tStoreIndexElementDetailRecords.add(tStoreIndexElementDetailRecord)
                 }
                 storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
-                storeIndexManageInfoDao.batchCreateStoreIndexElementDetail(dslContext, tStoreIndexElementDetailRecords)
+                storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
                 // 记录计算进度
                 val progress = page * DEFAULT_PAGE_SIZE / getPublishedAtomCount.toDouble() * 100
                 redisOperation.sadd(indexCode, String.format("%.2f", progress))

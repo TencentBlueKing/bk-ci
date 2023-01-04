@@ -25,36 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.pojo.common.index
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface StoreIndexManageService {
-
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
-
-    fun delete(userId: String, indexId: String): Result<Boolean>
-
-    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
-
-    fun getStoreIndexInfosByStoreCodes(
-        storeType: StoreTypeEnum,
-        storeCodes: List<String>
-    ): Map<String, List<StoreIndexInfo>>
-
-    fun getStoreIndexInfosByStoreCode(
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): List<StoreIndexInfo>
-
-    fun createIndexComputeDetail(
-        userId: String,
-        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
-    ): Result<Boolean>
-}
+@ApiModel("组件指标要素信息")
+data class StoreIndexElementInfo(
+    @ApiModelProperty("指标要素名称", required = true)
+    val elementName: String,
+    @ApiModelProperty("指标要素值", required = true)
+    val elementValue: String,
+    @ApiModelProperty("备注", required = false)
+    val remark: String? = null
+)

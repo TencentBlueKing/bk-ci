@@ -25,36 +25,38 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.validation.Valid
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface StoreIndexManageService {
+@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
+@Path("/build/store/index")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildStoreIndexInfoResource {
 
-    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
-
-    fun delete(userId: String, indexId: String): Result<Boolean>
-
-    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
-
-    fun getStoreIndexInfosByStoreCodes(
-        storeType: StoreTypeEnum,
-        storeCodes: List<String>
-    ): Map<String, List<StoreIndexInfo>>
-
-    fun getStoreIndexInfosByStoreCode(
-        storeType: StoreTypeEnum,
-        storeCode: String
-    ): List<StoreIndexInfo>
-
+    @ApiOperation("添加组件指标计算详情")
+    @POST
+    @Path("/element/detail/add")
     fun createIndexComputeDetail(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
+        @ApiParam("指标要素请求报文体", required = true)
+        @Valid
+        storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
     ): Result<Boolean>
 }
+
