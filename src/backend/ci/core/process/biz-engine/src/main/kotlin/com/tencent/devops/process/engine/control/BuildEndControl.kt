@@ -51,6 +51,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -320,6 +321,7 @@ class BuildEndControl @Autowired constructor(
                     ErrorInfo(
                         stageId = task.stageId,
                         containerId = task.containerId,
+                        matrixFlag = VMUtils.isMatrixContainerId(task.containerId),
                         taskId = task.taskId,
                         taskName = task.taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
