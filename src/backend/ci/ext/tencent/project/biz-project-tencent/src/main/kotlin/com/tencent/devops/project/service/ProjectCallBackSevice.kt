@@ -71,7 +71,6 @@ class ProjectCallBackSevice @Autowired constructor(
     private val verifyItsmTokenUrl: String = ""
 
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
-        logger.info("走到dev-rbac分支的代码来了！！！！")
         val sn = itsmCallBackInfo.sn
         // 校验token
         // checkItsmToken(itsmCallBackInfo.token, sn)
