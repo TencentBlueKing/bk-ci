@@ -225,11 +225,12 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     description = it[STORE_INDEX_DESCRIPTION] as String,
                     indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
                     iconColor = it[STORE_INDEX_ICON_CSS_VALUE] as String,
-                    hover = it[STORE_INDEX_ICON_TIPS].toString()
+                    hover = it[STORE_INDEX_ICON_TIPS].toString().replace("\\","")
                 )
             )
             storeIndexInfosMap[storeCode] = storeIndexInfos
         }
+
         return storeIndexInfosMap
     }
 
