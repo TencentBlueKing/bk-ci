@@ -87,12 +87,6 @@ interface CredentialPermissionService {
         authGroupList: List<BkAuthGroup>? = null
     )
 
-    fun modifyResource(
-        userId: String,
-        projectId: String,
-        credentialId: String
-    )
-
     fun deleteResource(
         projectId: String,
         credentialId: String

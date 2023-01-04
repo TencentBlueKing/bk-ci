@@ -155,6 +155,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         val updateSubsetManagerDTO = UpdateSubsetManagerDTO.builder()
             .name(name)
             .members(subsetManagerDetail.members)
+            .description(subsetManagerDetail.description)
             .authorizationScopes(authorizationScopes)
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
