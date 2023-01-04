@@ -138,6 +138,6 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        return remoteDevServiceFactory.load("").workspaceTaskCallback(taskStatus)
+        return remoteDevServiceFactory.load("test-sawyer2").workspaceTaskCallback(taskStatus)
     }
 }
