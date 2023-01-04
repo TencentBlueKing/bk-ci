@@ -10,9 +10,9 @@ data class TaskStatus(
 )
 
 enum class TaskStatusEnum {
-    Pending,
-    Running,
-    Success,
-    Fail,
-    Abort
+    waiting,
+    running,
+    successed,
+    failed,
+    abort
 }
