@@ -3,7 +3,7 @@
         <section class="img-wrapper">
             <img class="img-self" :src="detail.logoUrl">
             <template v-if="recentHoner">
-                <img class="honer-self" src="../images/honer.png">
+                <img class="honer-self" :src="HonerImage">
                 <span
                     :class="{
                         'honer-txt': true,
@@ -16,10 +16,18 @@
 </template>
 
 <script>
+    import HonerImage from '../images/honer.png'
+
     export default {
         props: {
             detail: Object,
             isBig: Boolean
+        },
+
+        data () {
+            return {
+                HonerImage
+            }
         },
 
         computed: {
@@ -66,7 +74,7 @@
             scale: 83%;
             &.is-big {
                 scale: 100%;
-                bottom: 3%;
+                bottom: 6%;
             }
         }
     }
