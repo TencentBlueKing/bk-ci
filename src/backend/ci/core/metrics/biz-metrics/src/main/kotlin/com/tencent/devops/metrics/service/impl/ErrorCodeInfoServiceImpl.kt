@@ -137,5 +137,4 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(ErrorCodeInfoManageService::class.java)
     }
-
 }
