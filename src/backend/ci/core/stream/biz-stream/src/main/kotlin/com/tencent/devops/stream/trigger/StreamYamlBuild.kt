@@ -499,6 +499,10 @@ class StreamYamlBuild @Autowired constructor(
                 job.runsOn.poolName = getEnvName(action, job.runsOn.poolName, yaml.resource?.pools)
             }
         }
+        // 替换finally中的构建机
+        yaml.finally?.forEach { fina ->
+            fina.runsOn.poolName = getEnvName(action, fina.runsOn.poolName, yaml.resource?.pools)
+        }
         return yaml
     }
 
