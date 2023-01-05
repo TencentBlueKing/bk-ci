@@ -89,14 +89,14 @@ class StoreIndexCronService constructor(
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
-        val storeIndexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfo(
+        val storeIndexBaseInfoId = storeIndexManageInfoDao.getStoreIndexBaseInfo(
             dslContext = dslContext,
             storeType = StoreTypeEnum.ATOM,
             indexOperationType = IndexOperationTypeEnum.PLATFORM,
             indexCode = indexCode
         )
-        logger.debug("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfo")
-        if (storeIndexBaseInfo == null) {
+        logger.debug("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfoId")
+        if (storeIndexBaseInfoId.isNullOrBlank()) {
             return
         }
         val getPublishedAtomCount = atomDao.getPublishedAtomCount(dslContext)
@@ -137,7 +137,7 @@ class StoreIndexCronService constructor(
                     val result = if (atomSlaIndexValue > 99.9) "达标" else "不达标"
                     val indexLevelInfo = storeIndexManageInfoDao.getStoreIndexLevelInfo(
                         dslContext,
-                        storeIndexBaseInfo.id,
+                        storeIndexBaseInfoId,
                         result
                     )
                     val elementValue = String.format("%.2f", atomSlaIndexValue)
@@ -145,7 +145,7 @@ class StoreIndexCronService constructor(
                     tStoreIndexResultRecord.id = UUIDUtil.generate()
                     tStoreIndexResultRecord.storeCode = atomCode
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexResultRecord.indexId = storeIndexBaseInfo.id
+                    tStoreIndexResultRecord.indexId = storeIndexBaseInfoId
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.iconTips =
                         "<span style=\"line-height: 18px\"><span>插件SLA : $elementValue%($result);</span>"
@@ -155,7 +155,7 @@ class StoreIndexCronService constructor(
                     tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
                     tStoreIndexElementDetailRecord.storeCode = atomCode
                     tStoreIndexElementDetailRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
-                    tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfo.id
+                    tStoreIndexElementDetailRecord.indexId = storeIndexBaseInfoId
                     tStoreIndexElementDetailRecord.indexCode = indexCode
                     tStoreIndexElementDetailRecord.elementName = indexCode
                     tStoreIndexElementDetailRecord.elementValue = elementValue
