@@ -188,31 +188,14 @@ class StoreIndexManageInfoDao {
         indexOperationType: IndexOperationTypeEnum,
         storeType: StoreTypeEnum,
         indexCode: String
-    ): StoreIndexBaseInfo? {
+    ): TStoreIndexBaseInfoRecord? {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
-            return dslContext.select(
-                ID,
-                INDEX_CODE,
-                INDEX_NAME,
-                ICON_URL,
-                DESCRIPTION,
-                OPERATION_TYPE,
-                ATOM_CODE,
-                ATOM_VERSION,
-                FINISH_TASK_NUM,
-                TOTAL_TASK_NUM,
-                EXECUTE_TIME_TYPE,
-                STORE_TYPE,
-                CREATOR,
-                MODIFIER,
-                UPDATE_TIME,
-                CREATE_TIME
-            )
+            return dslContext.select()
                 .from(this)
                 .where(INDEX_CODE.eq(indexCode))
                 .and(OPERATION_TYPE.eq(indexOperationType.name))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .fetchOne(0, StoreIndexBaseInfo::class.java)
+                .fetchOne(0, TStoreIndexBaseInfoRecord::class.java)
         }
     }
 
