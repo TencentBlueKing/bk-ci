@@ -75,6 +75,9 @@ class DevCloudRemoteDevService @Autowired constructor(
             emptyList()
         }
 
+        val gitRepoRootPath = WORKSPACE_PATH + "/" +
+            GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
+
         val environmentOpRsp = workspaceDevCloudClient.createWorkspace(
             userId,
                 Environment(
@@ -96,6 +99,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                         name = event.workspaceName,
                         image = event.devFile.image?.publicImage ?: "",
                         resource = ResourceRequirements(2000, 4096),
+                        workingDir = gitRepoRootPath,
                         volumeMounts = listOf(
                             VolumeMount(
                                 name = "workspace",
@@ -105,11 +109,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                         env = listOf(
                             EnvVar("DEVOPS_REMOTING_IDE_PORT", "23000"),
                             EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
-                            EnvVar(
-                                "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH",
-                                WORKSPACE_PATH + "/" +
-                                    GitUtils.getDomainAndRepoName(event.repositoryUrl).second.split("/").last()
-                            ),
+                            EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", gitRepoRootPath),
                             EnvVar("DEVOPS_REMOTING_GIT_USERNAME", userId),
                             EnvVar("DEVOPS_REMOTING_GIT_EMAIL", event.devFile.gitEmail ?: ""),
                             EnvVar("DEVOPS_REMOTING_YAML_NAME", event.devFilePath),
