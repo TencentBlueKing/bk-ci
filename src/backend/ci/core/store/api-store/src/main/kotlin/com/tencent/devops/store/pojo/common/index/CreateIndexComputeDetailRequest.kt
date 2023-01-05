@@ -39,8 +39,6 @@ data class CreateIndexComputeDetailRequest(
     val storeCode: String,
     @ApiModelProperty("store组件类型", required = true)
     val storeType: StoreTypeEnum,
-    @ApiModelProperty("指标id", required = true)
-    val indexId: String,
     @ApiModelProperty("图标提示信息", required = true)
     val iconTips: String,
     @ApiModelProperty("等级名称", required = true)
