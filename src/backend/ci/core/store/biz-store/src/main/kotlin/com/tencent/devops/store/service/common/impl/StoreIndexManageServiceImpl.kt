@@ -289,6 +289,25 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return Result(true)
     }
 
+    override fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>> {
+        return Result(storeIndexManageInfoDao.getStoreCodeByElementValue(dslContext, indexCode, elementName))
+    }
+
+    override fun deleteStoreIndexResultByStoreCode(
+        userId: String,
+        indexCode: String,
+        storeCodes: List<String>
+    ): Result<Boolean> {
+        // 权限校验
+
+        dslContext.transaction {  configuration ->
+            val context = DSL.using(configuration)
+            storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(dslContext, indexCode, storeCodes)
+            storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(dslContext, indexCode, storeCodes)
+        }
+        return Result(true)
+    }
+
     private fun validateAddStoreIndexCreateReq(
         storeIndexCreateRequest: StoreIndexCreateRequest
     ): Result<Boolean>? {
