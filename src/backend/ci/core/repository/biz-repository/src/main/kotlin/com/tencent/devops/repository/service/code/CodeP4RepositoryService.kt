@@ -92,7 +92,7 @@ class CodeP4RepositoryService @Autowired constructor(
         repository: CodeP4Repository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_P4.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }

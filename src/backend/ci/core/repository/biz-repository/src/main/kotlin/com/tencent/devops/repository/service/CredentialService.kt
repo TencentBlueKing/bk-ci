@@ -67,7 +67,7 @@ class CredentialService @Autowired constructor(
     /**
      * 获取凭证基础信息
      */
-    fun getCredentialInfo(projectId: String, repository: Repository): Pair<List<String>,CredentialType> {
+    fun getCredentialInfo(projectId: String, repository: Repository): Pair<List<String>, CredentialType> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)
@@ -78,7 +78,7 @@ class CredentialService @Autowired constructor(
         val credential = result.data!!
         logger.info("Get the credential($credential)")
         val list = buildCredentialList(credential, pair)
-        return Pair(list,result.data!!.credentialType)
+        return Pair(list, result.data!!.credentialType)
     }
 
     /**

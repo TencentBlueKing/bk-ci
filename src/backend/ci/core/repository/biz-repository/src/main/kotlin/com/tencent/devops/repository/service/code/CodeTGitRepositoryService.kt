@@ -98,7 +98,7 @@ class CodeTGitRepositoryService @Autowired constructor(
         repository: CodeTGitRepository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
         }
@@ -120,7 +120,6 @@ class CodeTGitRepositoryService @Autowired constructor(
                 authType = repository.authType
             )
         }
-
     }
 
     override fun compose(repository: TRepositoryRecord): CodeTGitRepository {

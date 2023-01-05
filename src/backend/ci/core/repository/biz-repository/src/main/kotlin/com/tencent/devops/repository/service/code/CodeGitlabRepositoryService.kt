@@ -103,7 +103,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         repository: CodeGitlabRepository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_GITLAB.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
         }
@@ -125,7 +125,6 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 credentialId = repository.credentialId
             )
         }
-
     }
 
     override fun compose(repository: TRepositoryRecord): CodeGitlabRepository {
@@ -140,7 +139,6 @@ class CodeGitlabRepositoryService @Autowired constructor(
             repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId)
         )
     }
-
 
     override fun getToken(credentialList: List<String>, repository: CodeGitlabRepository): String {
         var token: String = StringUtils.EMPTY

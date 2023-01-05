@@ -2387,7 +2387,7 @@ class GitService @Autowired constructor(
         } else {
             GitUtils.getGitApiUrl(gitConfig.tGitApiUrl, repoUrl)
         }
-        val url = StringBuilder("${apiUrl}/projects/$encodeId")
+        val url = StringBuilder("$apiUrl/projects/$encodeId")
         setToken(tokenType, url, token)
         if (StringUtils.hasLength(url)) {
             try {
@@ -2428,7 +2428,7 @@ class GitService @Autowired constructor(
         } else {
             GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl)
         }
-        val url = StringBuilder("${apiUrl}/projects/$encodeId")
+        val url = StringBuilder("$apiUrl/projects/$encodeId")
         setToken(tokenType, url, token)
         if (StringUtils.hasLength(url)) {
             try {

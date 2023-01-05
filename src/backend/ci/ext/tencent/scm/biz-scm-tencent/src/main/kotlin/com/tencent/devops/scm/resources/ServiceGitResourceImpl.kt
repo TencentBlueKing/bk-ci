@@ -777,7 +777,7 @@ class ServiceGitResourceImpl @Autowired constructor(
         return gitService.getGitLabProjectInfo(
             id = gitProjectId,
             token = token,
-            tokenType =tokenType,
+            tokenType = tokenType,
             repoUrl = repoUrl
         )
     }

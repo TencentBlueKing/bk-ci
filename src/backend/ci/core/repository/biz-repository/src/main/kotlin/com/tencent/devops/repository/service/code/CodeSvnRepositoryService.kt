@@ -88,7 +88,6 @@ class CodeSvnRepositoryService @Autowired constructor(
             )
         }
         return repositoryId
-
     }
 
     override fun edit(
@@ -98,7 +97,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         repository: CodeSvnRepository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_SVN.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_INVALID))
         }

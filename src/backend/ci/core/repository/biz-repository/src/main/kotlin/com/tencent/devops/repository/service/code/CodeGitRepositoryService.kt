@@ -81,7 +81,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 type = ScmType.CODE_GIT
             )
             var accessToken = StringUtils.EMPTY
-            //OAUTH授权需获取accessToken
+            // OAUTH授权需获取accessToken
             if (repository.authType == RepoAuthType.OAUTH) {
                 accessToken = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: StringUtils.EMPTY
             }
@@ -108,7 +108,7 @@ class CodeGitRepositoryService @Autowired constructor(
         repository: CodeGitRepository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_GIT.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_INVALID))
         }
@@ -130,7 +130,6 @@ class CodeGitRepositoryService @Autowired constructor(
                 authType = repository.authType
             )
         }
-
     }
 
     override fun compose(repository: TRepositoryRecord): CodeGitRepository {

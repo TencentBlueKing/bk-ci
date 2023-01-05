@@ -85,7 +85,7 @@ interface CodeRepositoryService<T> {
         val gitAuthMap = authMap[ScmType.CODE_GIT.name]
         val gitRepo = gitAuthMap?.get(repository.repositoryId)
         val gitAuthType = gitRepo?.get(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT.AUTH_TYPE) ?: RepoAuthType.SSH.name
-        //OAUTH取用户名，反之取凭证ID
+        // OAUTH取用户名，反之取凭证ID
         val gitAuthIdentity = if (gitAuthType == RepoAuthType.OAUTH.name) {
             gitRepo?.get(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT.USER_NAME)
         } else {
@@ -97,13 +97,13 @@ interface CodeRepositoryService<T> {
     /**
      * 是否需要检查Token
      */
-    fun needCheckToken(repository: T): Boolean;
+    fun needCheckToken(repository: T): Boolean
 
     /**
      * 检查Token
      */
     fun checkToken(projectId: String, repository: T): String {
-        var token = StringUtils.EMPTY;
+        var token = StringUtils.EMPTY
         if (needCheckToken(repository)) {
             val credentialInfo: Pair<List<String>, CredentialType> =
                 getCredentialInfo(projectId = projectId, repository = repository)
