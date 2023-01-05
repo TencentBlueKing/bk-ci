@@ -179,7 +179,38 @@ class StoreIndexManageInfoDao {
 
     fun batchCreateStoreIndexResult(dslContext: DSLContext, tStoreIndexResultRecords: List<TStoreIndexResultRecord>) {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
-            dslContext.batchInsert(tStoreIndexResultRecords).execute()
+            dslContext.batch(tStoreIndexResultRecords.map {
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    STORE_CODE,
+                    STORE_TYPE,
+                    INDEX_ID,
+                    INDEX_CODE,
+                    ICON_TIPS,
+                    LEVEL_ID,
+                    CREATOR,
+                    MODIFIER,
+                    UPDATE_TIME,
+                    CREATE_TIME
+                ).values(
+                    it.id,
+                    it.storeCode,
+                    it.storeType,
+                    it.indexId,
+                    it.indexCode,
+                    it.iconTips,
+                    it.levelId,
+                    it.creator,
+                    it.modifier,
+                    it.updateTime,
+                    it.createTime
+                ).onDuplicateKeyUpdate()
+                    .set(ICON_TIPS, it.iconTips)
+                    .set(LEVEL_ID, it.levelId)
+                    .set(MODIFIER, it.modifier)
+                    .set(UPDATE_TIME, it.updateTime)
+            }).execute()
         }
     }
 
