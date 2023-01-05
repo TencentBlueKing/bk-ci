@@ -65,6 +65,7 @@ class StoreIndexCronService constructor(
      */
     @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun deleteStoreIndexResult() {
+        logger.info("deleteStoreIndexResult cron starts")
         val lock = RedisLock(redisOperation, DELETE_STORE_INDEX_RESULT_LOCK_KEY, 60L)
         try {
             lock.lock()
@@ -86,6 +87,7 @@ class StoreIndexCronService constructor(
      */
     @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun computeAtomSlaIndexData() {
+        logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
         val storeIndexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfo(
             dslContext = dslContext,
