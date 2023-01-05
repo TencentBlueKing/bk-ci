@@ -1886,4 +1886,62 @@ class GitService @Autowired constructor(
             )
         )
     }
+
+    override fun getTGitProjectInfo(
+        id: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        repoUrl: String
+    ): Result<GitProjectInfo?> {
+        logger.info("getTGitProjectInfo id is:$id,tokenType is:$tokenType")
+        // 如果id为NAMESPACE_PATH则需要encode
+        val encodeId = URLEncoder.encode(id, "utf-8")
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.tGitApiUrl, repoUrl)
+        val url = StringBuilder("${apiUrl}/projects/$encodeId")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body!!.string()
+            logger.info("TGitProjectInfo response>> $data")
+            if (!it.isSuccessful) {
+                logger.warn(
+                    "getTGitProjectInfo not successful |code=${it.code}|message=${it.message}|body=$data"
+                )
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
+            return Result(JsonUtil.to(data, GitProjectInfo::class.java))
+        }
+    }
+
+    override fun getGitLabProjectInfo(
+        id: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        repoUrl: String
+    ): Result<GitProjectInfo?> {
+        logger.info("getGitLabProjectInfo id is:$id,tokenType is:$tokenType")
+        // 如果id为NAMESPACE_PATH则需要encode
+        val encodeId = URLEncoder.encode(id, "utf-8")
+        val apiUrl = GitUtils.getGitApiUrl(gitConfig.gitlabApiUrl, repoUrl)
+        val url = StringBuilder("${apiUrl}/projects/$encodeId")
+        setToken(tokenType, url, token)
+        val request = Request.Builder()
+                .url(url.toString())
+                .get()
+                .build()
+        OkhttpUtils.doHttp(request).use {
+            val data = it.body!!.string()
+            logger.info("GitLabProjectInfo response>> $data")
+            if (!it.isSuccessful) {
+                logger.warn(
+                    "getGitLabProjectInfo not successful |code=${it.code}|message=${it.message}|body=$data"
+                )
+                return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+            }
+            return Result(JsonUtil.to(data, GitProjectInfo::class.java))
+        }
+    }
 }

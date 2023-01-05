@@ -253,7 +253,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         logger.info("the repo is:$repo")
         // 根据仓库授权类型匹配Token类型
         val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-        val gitProjectInfo = gitService.getGitProjectInfo(id = repo.projectName, token = token, tokenType = tokenType)
+        val gitProjectInfo = gitService.getGitLabProjectInfo(id = repo.projectName, token = token, tokenType = tokenType, repoUrl = repo.url)
         logger.info("the gitProjectInfo is:$gitProjectInfo")
         return gitProjectInfo.data?.id ?: -1
     }

@@ -39,6 +39,7 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.CredentialService
+import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -60,7 +61,8 @@ class CodeGitRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val credentialService: CredentialService,
     private val scmService: IScmService,
-    private val gitService: IGitService
+    private val gitService: IGitService,
+    private val gitOauthService: IGitOauthService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -78,8 +80,14 @@ class CodeGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT
             )
+            var accessToken = StringUtils.EMPTY
+            //OAUTH授权需获取accessToken
+            if (repository.authType == RepoAuthType.OAUTH) {
+                accessToken = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: StringUtils.EMPTY
+            }
             // Git项目ID
-            val gitProjectId = getGitProjectId(repo = repository, token = token).toString()
+            val gitProjectId =
+                getGitProjectId(repo = repository, token = StringUtils.defaultIfBlank(accessToken, token)).toString()
             repositoryCodeGitDao.create(
                 dslContext = dslContext,
                 repositoryId = repositoryId,
