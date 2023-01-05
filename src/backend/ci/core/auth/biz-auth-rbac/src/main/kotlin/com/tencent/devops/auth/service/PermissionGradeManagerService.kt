@@ -97,6 +97,7 @@ class PermissionGradeManagerService @Autowired constructor(
     /**
      * 修改分级管理员
      */
+    @SuppressWarnings("LongParameterList")
     fun modifyGradeManager(
         gradeManagerId: String,
         projectCode: String,
@@ -126,6 +127,10 @@ class PermissionGradeManagerService @Autowired constructor(
             .syncPerm(true)
             .build()
         iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
+    }
+
+    fun deleteGradeManager(gradeManagerId: String) {
+        iamV2ManagerService.deleteManagerV2(gradeManagerId)
     }
 
     fun listGroup(
