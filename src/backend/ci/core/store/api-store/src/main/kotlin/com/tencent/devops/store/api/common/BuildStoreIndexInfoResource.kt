@@ -35,10 +35,14 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.validation.Valid
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
@@ -57,6 +61,32 @@ interface BuildStoreIndexInfoResource {
         @ApiParam("指标要素请求报文体", required = true)
         @Valid
         storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
+    ): Result<Boolean>
+
+    @ApiOperation("根据组织名称获取组织维护的插件列表")
+    @GET
+    @Path("/element/value/get")
+    fun getCertifiedPlugins(
+        @ApiParam("指标代码", required = true)
+        @QueryParam("indexCode")
+        indexCode: String,
+        @ApiParam("指标要素名称", required = true)
+        @QueryParam("elementName")
+        elementName: String
+    ): Result<List<String>>
+
+    @ApiOperation("根据组件代码删除指标结果")
+    @DELETE
+    @Path("/indexCodes/{indexCode}/result/delete")
+    fun deleteStoreIndexResultByStoreCode(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("指标代码", required = true)
+        @PathParam("indexCode")
+        indexCode: String,
+        @ApiParam("组件代码列表", required = true)
+        storeCodes: List<String>
     ): Result<Boolean>
 }
 

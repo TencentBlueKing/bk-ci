@@ -57,4 +57,12 @@ interface StoreIndexManageService {
         userId: String,
         createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
     ): Result<Boolean>
+
+    fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>>
+
+    fun deleteStoreIndexResultByStoreCode(
+        userId: String,
+        indexCode: String,
+        storeCodes: List<String>
+    ): Result<Boolean>
 }

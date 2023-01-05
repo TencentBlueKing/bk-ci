@@ -45,4 +45,19 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return storeIndexManageService.createIndexComputeDetail(userId, createIndexComputeDetailRequest)
     }
+
+    override fun getCertifiedPlugins(
+        indexCode: String,
+        elementName: String
+    ): Result<List<String>> {
+        return storeIndexManageService.getStoreCodeByElementValue(indexCode, elementName)
+    }
+
+    override fun deleteStoreIndexResultByStoreCode(
+        userId: String,
+        indexCode: String,
+        storeCodes: List<String>
+    ): Result<Boolean> {
+        return storeIndexManageService.deleteStoreIndexResultByStoreCode(userId, indexCode, storeCodes)
+    }
 }

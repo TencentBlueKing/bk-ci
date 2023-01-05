@@ -269,6 +269,38 @@ class StoreIndexManageInfoDao {
         }
     }
 
+    fun getStoreCodeByElementValue(dslContext: DSLContext, indexCode: String, elementName: String): List<String> {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            return dslContext.select(ELEMENT_VALUE).from(this)
+                .where(INDEX_CODE.eq(indexCode).and(ELEMENT_NAME.eq(elementName)))
+                .fetchInto(String::class.java)
+        }
+    }
+
+    fun deleteStoreIndexResultByStoreCode(
+        dslContext: DSLContext,
+        indexCode: String,
+        storeCodes: List<String>
+    ) {
+        with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
+                .execute()
+        }
+    }
+
+    fun deleteStoreIndexElementDetailByStoreCode(
+        dslContext: DSLContext,
+        indexCode: String,
+        storeCodes: List<String>
+    ) {
+        with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
+            dslContext.deleteFrom(this)
+                .where(INDEX_CODE.eq(indexCode).and(STORE_CODE.`in`(storeCodes)))
+                .execute()
+        }
+    }
+
     fun batchCreateElementDetail(
         dslContext: DSLContext,
         tStoreIndexElementDetailRecords: List<TStoreIndexElementDetailRecord>
