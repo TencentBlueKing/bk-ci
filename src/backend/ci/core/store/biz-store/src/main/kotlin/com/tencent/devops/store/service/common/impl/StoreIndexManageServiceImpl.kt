@@ -245,14 +245,20 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         userId: String,
         createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
     ): Result<Boolean> {
+        val indexId = storeIndexManageInfoDao.getStoreIndexBaseInfo(
+            dslContext = dslContext,
+            storeType = StoreTypeEnum.ATOM,
+            indexOperationType = IndexOperationTypeEnum.PLATFORM,
+            indexCode = createIndexComputeDetailRequest.indexCode
+        ) ?: return Result(false)
         val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
             dslContext,
-            createIndexComputeDetailRequest.indexId,
+            indexId,
             createIndexComputeDetailRequest.LevelName
         )?.id
         val tStoreIndexResultRecord = TStoreIndexResultRecord()
         tStoreIndexResultRecord.id = UUIDUtil.generate()
-        tStoreIndexResultRecord.indexId = createIndexComputeDetailRequest.indexId
+        tStoreIndexResultRecord.indexId = indexId
         tStoreIndexResultRecord.indexCode = createIndexComputeDetailRequest.indexCode
         tStoreIndexResultRecord.storeCode = createIndexComputeDetailRequest.storeCode
         tStoreIndexResultRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
@@ -268,7 +274,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             tStoreIndexElementDetailRecord.id = UUIDUtil.generate()
             tStoreIndexElementDetailRecord.storeCode = createIndexComputeDetailRequest.storeCode
             tStoreIndexElementDetailRecord.storeType = createIndexComputeDetailRequest.storeType.type.toByte()
-            tStoreIndexElementDetailRecord.indexId = createIndexComputeDetailRequest.indexId
+            tStoreIndexElementDetailRecord.indexId = indexId
             tStoreIndexElementDetailRecord.indexCode = createIndexComputeDetailRequest.indexCode
             tStoreIndexElementDetailRecord.elementName = it.elementName
             tStoreIndexElementDetailRecord.elementValue = it.elementValue
