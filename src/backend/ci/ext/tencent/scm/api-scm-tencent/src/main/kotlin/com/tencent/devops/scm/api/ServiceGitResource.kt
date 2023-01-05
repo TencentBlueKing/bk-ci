@@ -1093,4 +1093,40 @@ interface ServiceGitResource {
         @QueryParam("iid")
         iid: Long
     ): Result<List<TapdWorkItem>>
+
+    @ApiOperation("获取外网工蜂指定项目详细信息")
+    @GET
+    @Path("/getTGitProjectInfo")
+    fun getTGitProjectInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "仓库url")
+        @QueryParam("repoUrl")
+        repoUrl: String
+    ): Result<GitProjectInfo?>
+
+    @ApiOperation("获取Gitlab指定项目详细信息")
+    @GET
+    @Path("/getGitLabProjectInfo")
+    fun getGitLabProjectInfo(
+        @ApiParam(value = "token")
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @ApiParam(value = "gitProjectId")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "仓库url")
+        @QueryParam("repoUrl")
+        repoUrl: String
+    ): Result<GitProjectInfo?>
 }

@@ -753,4 +753,32 @@ class ServiceGitResourceImpl @Autowired constructor(
             iid = iid
         )
     }
+
+    override fun getTGitProjectInfo(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        repoUrl: String
+    ): Result<GitProjectInfo?> {
+        return gitService.getTGitProjectInfo(
+            id = gitProjectId,
+            token = token,
+            tokenType = tokenType,
+            repoUrl = repoUrl
+        )
+    }
+
+    override fun getGitLabProjectInfo(
+        token: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        repoUrl: String
+    ): Result<GitProjectInfo?> {
+        return gitService.getGitLabProjectInfo(
+            id = gitProjectId,
+            token = token,
+            tokenType =tokenType,
+            repoUrl = repoUrl
+        )
+    }
 }
