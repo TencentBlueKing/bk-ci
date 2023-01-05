@@ -141,7 +141,7 @@ class StoreIndexCronService constructor(
                         storeIndexBaseInfoId,
                         result
                     )
-                    val elementValue = String.format("%.2f", atomSlaIndexValue)
+                    val elementValue = if (atomSlaIndexValue > 0) String.format("%.2f", atomSlaIndexValue) else "0.0"
                     val tStoreIndexResultRecord = TStoreIndexResultRecord()
                     tStoreIndexResultRecord.id = UUIDUtil.generate()
                     tStoreIndexResultRecord.storeCode = atomCode
