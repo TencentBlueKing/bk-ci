@@ -151,7 +151,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceCode = resourceCode,
             resourceName = resourceName
         )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(subsetManagerId.toInt())
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(subsetManagerId)
         val updateSubsetManagerDTO = UpdateSubsetManagerDTO.builder()
             .name(name)
             .members(subsetManagerDetail.members)
@@ -162,9 +162,13 @@ class PermissionSubsetManagerService @Autowired constructor(
             .syncPerm(true)
             .build()
         iamV2ManagerService.updateSubsetManager(
-            subsetManagerId.toInt(),
+            subsetManagerId,
             updateSubsetManagerDTO
         )
+    }
+
+    fun deleteSubsetManager(subsetManagerId: String) {
+        iamV2ManagerService.deleteSubsetManager(subsetManagerId)
     }
 
     fun listGroup(
