@@ -95,11 +95,12 @@ class StoreIndexCronService constructor(
             indexOperationType = IndexOperationTypeEnum.PLATFORM,
             indexCode = indexCode
         )
-        logger.debug("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfoId")
+        logger.info("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfoId")
         if (storeIndexBaseInfoId.isNullOrBlank()) {
             return
         }
-        val getPublishedAtomCount = atomDao.getPublishedAtomCount(dslContext)
+        val totalTaskNum = atomDao.getPublishedAtomCount(dslContext)
+        var finishTaskNum = 0
         val lock = RedisLock(redisOperation, "computeAtomSlaIndexData", 60L)
         try {
             lock.lock()
@@ -168,8 +169,7 @@ class StoreIndexCronService constructor(
                 storeIndexManageInfoDao.batchCreateStoreIndexResult(dslContext, tStoreIndexResultRecords)
                 storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
                 // 记录计算进度
-                val progress = page * DEFAULT_PAGE_SIZE / getPublishedAtomCount.toDouble() * 100
-                redisOperation.sadd(indexCode, String.format("%.2f", progress))
+                finishTaskNum += atomCodes.size
                 page++
             } while (atomCodes.size == DEFAULT_PAGE_SIZE)
             logger.info("end computeAtomSlaIndexData!!")
