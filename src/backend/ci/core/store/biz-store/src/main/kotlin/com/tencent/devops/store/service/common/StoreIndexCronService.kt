@@ -80,7 +80,7 @@ class StoreIndexCronService constructor(
         }
     }
 
-    @Scheduled(cron = "0 40 10 ? * *")
+    @Scheduled(cron = "0 15 11 * * ?")
     /**
      * 计算插件SLA指标数据
      */
