@@ -85,6 +85,7 @@
     import Logo from '../Logo/index.vue'
     import NavBox from '../NavBox/index.vue'
     import eventBus from '../../utils/eventBus'
+    import { mapDocumnetTitle } from '@/utils/constants'
 
     @Component({
         name: 'nav-menu',
@@ -165,34 +166,10 @@
 
         getDocumentTitle (linkNew) {
             const title = linkNew.split('/')[1]
-            const titlesMap = {
-                pipeline: this.$t('documentTitlePipeline'),
-                codelib: this.$t('documentTitleCodelib'),
-                artifactory: this.$t('documentTitleArtifactory'),
-                codecc: this.$t('documentTitleCodecc'),
-                experience: this.$t('documentTitleExperience'),
-                turbo: this.$t('documentTitleTurbo'),
-                repo: this.$t('documentTitleRepo'),
-                preci: this.$t('documentTitlePreci'),
-                stream: this.$t('documentTitleStream'),
-                wetest: this.$t('documentTitleWetest'),
-                quality: this.$t('documentTitleQuality'),
-                xinghai: this.$t('documentTitleXinghai'),
-                bcs: this.$t('documentTitleBcs'),
-                job: this.$t('documentTitleJob'),
-                environment: this.$t('documentTitleEnvironment'),
-                vs: this.$t('documentTitleVs'),
-                apk: this.$t('documentTitleApk'),
-                monitor: this.$t('documentTitleMonitor'),
-                perm: this.$t('documentTitlePerm'),
-                ticket: this.$t('documentTitleTicket'),
-                store: this.$t('documentTitleStore'),
-                metrics: this.$t('documentTitleMetrics')
-            }
-            return titlesMap[title]
+            return this.$t(mapDocumnetTitle(title)) as string
         }
 
-        gotoPage ({ link_new: linkNew }) {
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
@@ -201,7 +178,8 @@
                 eventBus.$emit('goHome')
                 return
             }
-            this.$router.push(destUrl)
+            
+            (newWindow && newWindowUrl) ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
             document.title = this.getDocumentTitle(linkNew)
         }
 
