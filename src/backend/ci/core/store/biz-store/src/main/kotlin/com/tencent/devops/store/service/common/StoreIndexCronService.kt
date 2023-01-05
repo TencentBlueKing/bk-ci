@@ -94,7 +94,11 @@ class StoreIndexCronService constructor(
             storeType = StoreTypeEnum.ATOM,
             indexOperationType = IndexOperationTypeEnum.PLATFORM,
             indexCode = indexCode
-        ) ?: return
+        )
+        logger.debug("computeAtomSlaIndexData storeIndexBaseInfo is $storeIndexBaseInfo")
+        if (storeIndexBaseInfo == null) {
+            return
+        }
         val getPublishedAtomCount = atomDao.getPublishedAtomCount(dslContext)
         val lock = RedisLock(redisOperation, "computeAtomSlaIndexData", 60L)
         try {
