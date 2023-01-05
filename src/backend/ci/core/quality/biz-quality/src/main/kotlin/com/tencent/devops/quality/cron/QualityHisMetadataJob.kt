@@ -66,6 +66,7 @@ class QualityHisMetadataJob @Autowired constructor(
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
         if (!cleanEnable) {
+            logger.info("quality daily clean disabled.")
             return
         }
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
