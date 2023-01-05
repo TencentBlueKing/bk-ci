@@ -54,7 +54,7 @@ open class TencentAgentUrlServiceImpl constructor(
         // 2、公司devnet区域有的Linux/Mac构建机无法访问 https协议 的域名, 等解决。。。
         return if (agentRecord.os == OS.WINDOWS.name) {
             val wUrl = gw.replace(".oa.", ".woa.")
-            "https://$wUrl/external/agents/$agentHashId/agent?arch=\${ARCH}"
+            "https://$wUrl/external/agents/$agentHashId/agent"
         } else {
             "http://$gw/external/agents/$agentHashId/agent?arch=\${ARCH}"
         }
