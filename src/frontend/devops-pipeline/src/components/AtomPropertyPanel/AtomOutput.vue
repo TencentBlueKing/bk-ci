@@ -11,14 +11,14 @@
                     <bk-popover placement="top">
                         <i class="bk-icon icon-info-circle"></i>
                         <div slot="content" style="white-space: pre-wrap; font-size: 12px; max-width: 500px;">
-                            <div>{{ outputNamespaceDesc }}</div>
+                            <div>{{ $t("editPage.namespaceTips") }}</div>
                         </div>
                     </bk-popover>
                     <i class="bk-icon icon-edit edit-namespace" @click="editNamespace"></i>
                 </label>
                 <div class="bk-form-content">
                     <bk-alert type="warning" :closable="true" style="margin-bottom: 8px;">
-                        <div slot="title">{{ namespaceTips }}</div>
+                        <div slot="title"><span v-html="namespaceTips"></span></div>
                     </bk-alert>
                     <vuex-input v-if="showEditNamespace" name="namespace" v-validate.initial="{ varRule: true }" :handle-change="handleUpdateAtomOutputNameSpace" :value="namespace" />
                     <p v-if="errors.has('namespace')" class="bk-form-help is-danger">{{errors.first('namespace')}}</p>
@@ -29,7 +29,7 @@
                 <p v-for="(output, key) in outputProps" :key="key">
                     {{ namespace ? `${namespace}_` : '' }}{{ key }}
                     <bk-popover placement="right">
-                        <i class="bk-icon icon-info-circle" />
+                        <i class="devops-icon icon-info-circle" />
                         <div slot="content">
                             {{ output.description }}
                         </div>
@@ -53,12 +53,13 @@
         mixins: [atomMixin, validMixins],
         data () {
             return {
-                showEditNamespace: false,
-                namespaceTips: '即将下线，请使用Step ID来设置插件字段的命名空间，通过上下文方式访问',
-                outputNamespaceDesc: '用于解决流水线下，相同插件有多个实例时，输出字段使用冲突的问题。\n当没有冲突时，无需添加命名空间。\n当修改了命名空间后，后续使用到对应字段的地方也需要同步修改'
+                showEditNamespace: false
             }
         },
         computed: {
+            namespaceTips () {
+                return `即将下线，请使用Step ID来设置插件字段的命名空间，通过<a style="color: #3c96ff" target="_blank" href="${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=691153587#Stream%E8%A1%A8%E8%BE%BE%E5%BC%8F%E3%80%81%E4%B8%8A%E4%B8%8B%E6%96%87%E3%80%81%E5%87%BD%E6%95%B0-jobs">上下文</a>方式访问`
+            },
             outputProps () {
                 try {
                     return this.atomPropsModel.output

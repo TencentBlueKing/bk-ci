@@ -35,8 +35,7 @@ export default {
 
     getDownloadLogFromArtifactory ({ projectId, pipelineId, buildId, tag, executeCount }) {
         return api.get(`${ARTIFACTORY_PREFIX}/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
-            const data = res.data || {}
-            return data.url || ''
+            return res.url || ''
         })
     },
 
@@ -166,7 +165,7 @@ export default {
 
     resizeTerm (resizeUrl, params) {
         const protocol = document.location.protocol || 'http:'
-        return api.post(`${protocol}//${DEVNET_HOST}/${resizeUrl}`, params).then(res => {
+        return api.post(`${protocol}//${PROXY_URL_PREFIX}/${resizeUrl}`, params).then(res => {
             return res && res.Id
         })
     },

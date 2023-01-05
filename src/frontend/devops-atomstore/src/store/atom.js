@@ -18,7 +18,6 @@
  */
 
 const prefix = 'store/api'
-const repositoryPrefix = 'repository/api'
 const projectPrefix = 'project/api'
 const supportPrefix = 'support/api'
 const Vue = window.Vue
@@ -178,13 +177,6 @@ export const actions = {
     },
 
     /**
-     * git OAuth授权
-     */
-    checkIsOAuth ({ commit }, { type, atomCode }) {
-        return vue.$ajax.get(`${repositoryPrefix}/user/git/isOauth?redirectUrlType=${type}&atomCode=${atomCode}`)
-    },
-
-    /**
      * 新增流水线插件
      */
     createNewAtom ({ commit }, { params }) {
@@ -271,8 +263,8 @@ export const actions = {
     /**
      * 重新构建
      */
-    rebuild ({ commit }, { atomId, projectId }) {
-        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`)
+    rebuild ({ commit }, { atomId, projectId, initProject, fieldCheckConfirmFlag }) {
+        return vue.$ajax.put(`${prefix}/user/market/desk/atom/release/rebuild/${atomId}?projectId=${projectId}`, { fieldCheckConfirmFlag }, { headers: { 'X-DEVOPS-PROJECT-ID': initProject } })
     },
 
     /**
@@ -390,5 +382,9 @@ export const actions = {
     // 获取开发语言
     getDevelopLanguage () {
         return vue.$ajax.get(`${prefix}/user/market/desk/atom/language`)
+    },
+    // 获取发布者列表
+    getPublishersList ({ commit }, { atomCode }) {
+        return vue.$ajax.get(`${prefix}/user/market/publishers/get?storeType=ATOM&storeCode=${atomCode}`)
     }
 }

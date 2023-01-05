@@ -1,6 +1,6 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
         <hgroup class="detail-info-group">
             <h3 class="title-with-img">
                 <span :class="{ 'not-recommend': detail.recommendFlag === false }" :title="detail.recommendFlag === false ? $t('store.该插件不推荐使用') : ''">{{detail.name}}</span>
@@ -8,7 +8,11 @@
                     <canvas class="atom-chart" v-if="detail.dailyStatisticList && detail.dailyStatisticList.length" width="64" height="18"></canvas>
                     <icon v-else class="chart-empty" name="empty" size="16" v-bk-tooltips="{ content: $t('store.最近七天暂无执行') }" />
                 </div>
-                <template v-if="userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
+                <h5 :title="isPublicTitle" @click="goToCode" :class="{ 'not-public': !isPublic }" v-if="!isEnterprise">
+                    <icon class="detail-img" name="gray-git-code" size="14" />
+                    <span class="approve-msg">{{ isPublic ? $t('store.源码') : $t('store.未开源') }}</span>
+                </h5>
+                <template v-if="!isEnterprise && userInfo.type !== 'ADMIN' && detail.htmlTemplateVersion !== '1.0'">
                     <h5 :title="approveTip" :class="[{ 'not-public': approveMsg !== $t('store.协作') }]" @click="cooperation">
                         <icon class="detail-img" name="cooperation" size="16" />
                         <span class="approve-msg">{{approveMsg}}</span>
@@ -104,6 +108,7 @@
     import commentRate from '../comment-rate'
     import formTips from '@/components/common/formTips/index'
     import api from '@/api'
+    import { DEFAULT_LOGO_URL } from '@/utils'
 
     export default {
         components: {
@@ -130,6 +135,7 @@
 
         data () {
             return {
+                defaultUrl: DEFAULT_LOGO_URL,
                 showCooperDialog: false,
                 user: window.userInfo.username,
                 cooperData: {
@@ -152,6 +158,15 @@
                 const fixWidth = 17 * integer
                 const rateWidth = 14 * (this.detail.score - integer)
                 return `${fixWidth + rateWidth}px`
+            },
+
+            isPublic () {
+                return this.detail.visibilityLevel === 'LOGIN_PUBLIC'
+            },
+
+            isPublicTitle () {
+                if (this.isPublic) return this.$t('store.点击查看源码')
+                else return this.$t('store.未开源')
             },
 
             approveMsg () {
@@ -178,6 +193,10 @@
                 if (this.detail.defaultFlag) info.des = `${this.$t('store.通用流水线插件，所有项目默认可用，无需安装')}`
                 if (!this.detail.flag) info.des = `${this.$t('store.你没有该流水线插件的安装权限，请联系流水线插件发布者')}`
                 return info
+            },
+
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         },
 
@@ -332,6 +351,10 @@
                     }
                 })
                 return jobList
+            },
+
+            goToCode () {
+                if (this.isPublic) window.open(this.detail.codeSrc, '_blank')
             },
 
             goToInstall () {

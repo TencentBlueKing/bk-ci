@@ -17,6 +17,8 @@
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
+import zyPipelineRoute from './zhiyan'
+
 const pipelines = () => import(/* webpackChunkName: "pipelines" */'../views')
 
 const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/list')
@@ -45,11 +47,15 @@ const pipelinesHistory = () => import(/* webpackChunkName: "pipelinesHistory" */
 const pipelinesDetail = () => import(/* webpackChunkName: "pipelinesDetail" */'../views/subpages/exec_detail.vue')
 // 客户端流水线编辑 - edit
 const pipelinesEdit = () => import(/* webpackChunkName: "pipelinesEdit" */'../views/subpages/edit.vue')
-// 客户端流水线执行预览 - edit
+// 客户端流水线执行预览 - preview
 const pipelinesPreview = () => import(/* webpackChunkName: "pipelinesPreview" */'../views/subpages/preview.vue')
+// docker console
+const pipelinesDocker = () => import(/* webpackChunkName: "pipelinesDocker" */'../views/subpages/docker_console.vue')
 // 插件前端task.json在线调试
 const atomDebug = () => import(/* webpackChunkName: "atomDebug" */'../views/atomDebug.vue')
 const ImportPipelineEdit = () => import(/* webpackChunkName: "atomDebug" */'../views/list/ImportPipelineEdit.vue')
+
+// const moocPipelinePage = () => import(/* webpackChunkName: "moocPipelinePage" */'../views/list/mooc.vue')
 
 const routes = [
     {
@@ -139,6 +145,12 @@ const routes = [
                         component: templateInstanceCreate
                     }
                 ]
+            },
+            {
+                // docker console
+                path: 'dockerConsole',
+                name: 'pipelinesDocker',
+                component: pipelinesDocker
             },
             {
                 path: 'atomDebug',
@@ -236,6 +248,11 @@ const routes = [
                 ]
             }
         ]
+    },
+    {
+        path: '/pipeline/zhiyan/:projectId',
+        component: pipelines,
+        children: zyPipelineRoute
     }
 ]
 

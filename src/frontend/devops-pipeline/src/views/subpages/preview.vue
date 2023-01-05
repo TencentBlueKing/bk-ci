@@ -202,7 +202,7 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.executor))
                 } finally {
                     this.isLoading = false
                 }

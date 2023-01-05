@@ -167,7 +167,7 @@
             return {
                 showContent: false,
                 descTemplate: '',
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/start-new-template.md`,
+                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008944`,
                 sortList: [],
                 labelList: [],
                 categoryList: [],
@@ -528,7 +528,7 @@
                 .bk-tooltip {
                     margin-top: 10px;
                     margin-left: 10px;
-                    color: $fontLigtherColor;
+                    color: $fontLighterColor;
                     p {
                         max-width: 400px;
                         text-align: left;

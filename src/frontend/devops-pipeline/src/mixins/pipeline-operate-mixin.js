@@ -18,10 +18,11 @@
  */
 
 import { mapActions, mapGetters, mapState } from 'vuex'
+import cookie from 'js-cookie'
 import {
     HttpError
 } from '@/utils/util'
-import { PROCESS_API_URL_PREFIX, AUTH_URL_PREFIX } from '../store/constants'
+import { PROCESS_API_URL_PREFIX } from '../store/constants'
 
 export default {
     computed: {
@@ -37,12 +38,14 @@ export default {
             'curProject'
         ]),
         ...mapState('pipelines', [
-            'pipelineSetting'
+            'pipelineSetting',
+            'pipelineAuthority'
         ]),
         ...mapState('atom', [
             'pipeline',
             'executeStatus',
-            'saveStatus'
+            'saveStatus',
+            'authSettingEditing'
         ]),
         isTemplatePipeline () {
             return this.curPipeline && this.curPipeline.instanceFromTemplate
@@ -53,16 +56,17 @@ export default {
             requestExecPipeline: 'requestExecPipeline',
             requestToggleCollect: 'requestToggleCollect',
             updatePipelineSetting: 'updatePipelineSetting',
+            setPipelineSetting: 'setPipelineSetting',
             requestTerminatePipeline: 'requestTerminatePipeline',
             requestRetryPipeline: 'requestRetryPipeline',
             searchPipelineList: 'searchPipelineList',
-            requestPipelineDetail: 'requestPipelineDetail',
-            setPipelineSetting: 'setPipelineSetting'
+            requestPipelineDetail: 'requestPipelineDetail'
         }),
         ...mapActions('atom', [
             'setPipelineEditing',
             'setExecuteStatus',
             'setSaveStatus',
+            'setAuthEditing',
             'setPipeline',
             'updateContainer'
         ]),
@@ -136,11 +140,11 @@ export default {
                     actionId: this.$permissionActionMap.execute,
                     resourceId: this.$permissionResourceMap.pipeline,
                     instanceId: [{
-                        id: target.pipelineId,
+                        id: pipelineId,
                         name: target.pipelineName
                     }],
                     projectId
-                }])
+                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
             } finally {
                 feConfig.buttonAllow.terminatePipeline = true
             }
@@ -187,7 +191,7 @@ export default {
                         name: this.curPipeline.pipelineName
                     }],
                     projectId
-                }])
+                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
             } finally {
                 message && this.$showTips({
                     message,
@@ -230,6 +234,25 @@ export default {
                 console.warn(e)
                 return setting
             }
+        },
+        savePipelineAuthority () {
+            const { role, policy } = this.pipelineAuthority
+            const longProjectId = this.curProject && this.curProject.projectId ? this.curProject.projectId : ''
+            const { pipelineId } = this.$route.params
+            const data = {
+                project_id: longProjectId,
+                resource_type_code: 'pipeline',
+                resource_code: pipelineId,
+                role: role.map(item => {
+                    item.group_list = item.selected
+                    return item
+                }),
+                policy: policy.map(item => {
+                    item.group_list = item.selected
+                    return item
+                })
+            }
+            return this.$ajax.put('/backend/api/perm/service/pipeline/mgr_resource/permission/', data, { headers: { 'X-CSRFToken': cookie.get('paas_perm_csrftoken') } })
         },
         getPipelineSetting () {
             const { pipelineSetting } = this
@@ -288,7 +311,7 @@ export default {
                         name: this.curPipeline.pipelineName
                     }],
                     projectId
-                }])
+                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.executor))
             } finally {
                 message && this.$showTips({
                     message,
@@ -324,7 +347,7 @@ export default {
                         name: this.curPipeline.pipelineName
                     }],
                     projectId: this.$route.params.projectId
-                }])
+                }], this.getPermUrlByRole(this.$route.params.projectId, this.curPipeline.pipelineId, this.roleMap.executor))
             } finally {
                 message && this.$showTips({
                     message,
@@ -371,12 +394,16 @@ export default {
             try {
                 this.setSaveStatus(true)
                 const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
-                const responses = await saveAction()
+                const responses = await Promise.all([
+                    saveAction(),
+                    ...(this.authSettingEditing ? [this.savePipelineAuthority()] : [])
+                ])
 
-                if (responses.code === 403) {
-                    throw new HttpError(403, responses.message)
+                if (responses.some(res => res.code === 403)) {
+                    throw new HttpError(403)
                 }
                 this.setPipelineEditing(false)
+                this.setAuthEditing(false)
                 this.$showTips({
                     message: this.$t('saveSuc'),
                     theme: 'success'
@@ -404,7 +431,7 @@ export default {
                         name: this.pipeline.name
                     }],
                     projectId
-                }])
+                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.manager))
                 return {
                     code: e.code,
                     message: e.message
@@ -437,7 +464,7 @@ export default {
                         name: this.pipeline ? this.pipeline.name : ''
                     }],
                     projectId
-                }])
+                }], this.getPermUrlByRole(projectId, pipelineId, this.roleMap.manager))
             }
         },
         updateCurPipelineByKeyValue (key, value) {
@@ -449,34 +476,33 @@ export default {
         changeProject () {
             this.$toggleProjectMenu(true)
         },
-
-        async toApplyPermission (actionId, pipeline) {
-            try {
-                const { projectId } = this.$route.params
-                const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
-                    actionId,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: projectId,
-                        type: this.$permissionResourceTypeMap.PROJECT
-                    }, {
-                        type: this.$permissionResourceTypeMap.PIPELINE_DEFAULT,
-                        ...pipeline
-                    }]
-                }])
-                window.open(redirectUrl, '_blank')
-                this.$bkInfo({
-                    title: this.$t('permissionRefreshtitle'),
-                    subTitle: this.$t('permissionRefreshSubtitle'),
-                    okText: this.$t('permissionRefreshOkText'),
-                    cancelText: this.$t('close'),
-                    confirmFn: () => {
-                        location.reload()
-                    }
-                })
-            } catch (e) {
-                console.error(e)
-            }
+        async toApplyPermission (role) {
+            const { projectId, pipelineId } = this.$route.params
+            this.tencentPermission(this.getPermUrlByRole(projectId, pipelineId, role))
+            // try {
+            //     const { projectId } = this.$route.params
+            //     const redirectUrl = await this.$ajax.post(`${AUTH_URL_PREFIX}/user/auth/permissionUrl`, [{
+            //         actionId,
+            //         resourceId: this.$permissionResourceMap.pipeline,
+            //         instanceId: [{
+            //             id: projectId,
+            //             type: this.$permissionResourceTypeMap.PROJECT
+            //         }, pipeline]
+            //     }])
+            //     console.log('redirectUrl', redirectUrl)
+            //     window.open(redirectUrl, '_blank')
+            //     this.$bkInfo({
+            //         title: this.$t('permissionRefreshtitle'),
+            //         subTitle: this.$t('permissionRefreshSubtitle'),
+            //         okText: this.$t('permissionRefreshOkText'),
+            //         cancelText: this.$t('close'),
+            //         confirmFn: () => {
+            //             location.reload()
+            //         }
+            //     })
+            // } catch (e) {
+            //     console.error(e)
+            // }
         },
         formatParams (pipeline) {
             const params = pipeline.stages[0].containers[0].params
@@ -489,6 +515,12 @@ export default {
                 newParam: {
                     params: paramList
                 }
+            })
+        },
+        handleError (err) {
+            this.$showTips({
+                message: err.message,
+                theme: 'error'
             })
         }
     }

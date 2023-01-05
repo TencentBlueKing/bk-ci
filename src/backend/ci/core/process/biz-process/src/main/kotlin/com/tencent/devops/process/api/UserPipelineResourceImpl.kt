@@ -67,6 +67,7 @@ import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.PipelineInfoFacadeService
 import com.tencent.devops.process.service.PipelineListFacadeService
+import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.PipelineRemoteAuthService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.label.PipelineGroupService
@@ -86,7 +87,8 @@ class UserPipelineResourceImpl @Autowired constructor(
     private val pipelineInfoFacadeService: PipelineInfoFacadeService,
     private val auditService: AuditService,
     private val pipelineVersionFacadeService: PipelineVersionFacadeService,
-    private val pipelineRuleService: PipelineRuleService
+    private val pipelineRuleService: PipelineRuleService,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) : UserPipelineResource {
 
     override fun hasCreatePermission(userId: String, projectId: String): Result<Boolean> {
@@ -339,14 +341,14 @@ class UserPipelineResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, pipelineId: String): Result<Model> {
         checkParam(userId, projectId)
-        return Result(
-            pipelineInfoFacadeService.getPipeline(
-                userId = userId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                channelCode = ChannelCode.BS
-            )
+        val pipeline = pipelineInfoFacadeService.getPipeline(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            channelCode = ChannelCode.BS
         )
+        pipelineRecentUseService.record(userId, projectId, pipelineId)
+        return Result(pipeline)
     }
 
     override fun getVersion(userId: String, projectId: String, pipelineId: String, version: Int): Result<Model> {

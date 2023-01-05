@@ -18,7 +18,7 @@
                     <span class="detail-label">{{ $t('store.分类') }}：</span>
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
-                <li class="detail-item">
+                <li class="detail-item" v-if="isEnterprise">
                     <span class="detail-label">{{ $t('store.适用机器类型') }}：</span>
                     <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
                         <span v-if="detail.jobType === 'AGENT'">（
@@ -28,7 +28,21 @@
                         </span>
                     </div>
                 </li>
-                <li class="detail-item">
+                <li class="detail-item" v-else>
+                    <span class="detail-label">{{ $t('store.适用Job类型') }}：</span>
+                    <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
+                        <span v-if="detail.jobType === 'AGENT'">（
+                            <i class="devops-icon icon-linux-view" v-if="detail.os.indexOf('LINUX') !== -1"></i>
+                            <i class="devops-icon icon-windows" v-if="detail.os.indexOf('WINDOWS') !== -1"></i>
+                            <i class="devops-icon icon-macos" v-if="detail.os.indexOf('MACOS') !== -1"></i>）
+                        </span>
+                    </div>
+                </li>
+                <li class="detail-item" v-if="!isEnterprise">
+                    <span class="detail-label">{{ $t('store.是否开源') }}：</span>
+                    <span>{{ detail.visibilityLevel | levelFilter }}</span>
+                </li>
+                <li class="detail-item" v-if="isEnterprise">
                     <span class="detail-label">{{ $t('store.发布包') }}：</span>
                     <span>{{ detail.pkgName || '--' }}</span>
                 </li>
@@ -64,6 +78,14 @@
     import defaultPic from '../../../../images/defaultPic.svg'
 
     export default {
+        filters: {
+            levelFilter (val = 'LOGIN_PUBLIC') {
+                const bkLocale = window.devops || {}
+                if (val === 'LOGIN_PUBLIC') return bkLocale.$t('store.是')
+                else return bkLocale.$t('store.否')
+            }
+        },
+
         components: {
             labelList
         },
@@ -83,6 +105,12 @@
                     AGENT: this.$t('store.编译环境'),
                     AGENT_LESS: this.$t('store.无编译环境')
                 }
+            }
+        },
+
+        computed: {
+            isEnterprise () {
+                return VERSION_TYPE === 'ee'
             }
         }
     }

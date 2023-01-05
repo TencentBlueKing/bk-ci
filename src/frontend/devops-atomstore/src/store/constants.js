@@ -20,6 +20,7 @@
 export const UPDATE_CURRENT_ATOM = 'UPDATE_CURRENT_ATOM'
 export const UPDATE_CURRENT_TEMPLATE = 'UPDATE_CURRENT_TEMPLATE'
 export const UPDATE_CURRENT_IMAGE = 'UPDATE_CURRENT_IMAGE'
+export const UPDATE_CURRENT_SERVICE = 'UPDATE_CURRENT_SERVICE'
 export const UPDATE_CURRENT_LIST = 'UPDATE_CURRENT_LIST'
 export const UPDATE_MARKET_QUERY = 'UPDATE_MARKET_QUERY'
 export const UPDATE_MARKET_DETAIL = 'UPDATE_MARKET_DETAIL'
@@ -37,7 +38,9 @@ export const atomStatusMap = {
     RELEASED: 'store.已发布',
     GROUNDING_SUSPENSION: 'store.上架中止',
     UNDERCARRIAGING: 'store.下架中',
-    UNDERCARRIAGED: 'store.已下架'
+    UNDERCARRIAGED: 'store.已下架',
+    CODECCING: 'store.代码检查中',
+    CODECC_FAIL: 'store.代码检查失败'
 }
 export const templateStatusList = {
     INIT: 'store.初始化',
@@ -56,6 +59,23 @@ export const imageStatusList = {
     TESTING: 'store.测试中',
     AUDITING: 'store.审核中',
     AUDIT_REJECT: 'store.审核驳回',
+    RELEASED: 'store.已发布',
+    GROUNDING_SUSPENSION: 'store.上架中止',
+    UNDERCARRIAGING: 'store.下架中',
+    UNDERCARRIAGED: 'store.已下架'
+}
+
+export const serviceStatusMap = {
+    INIT: 'store.初始化',
+    COMMITTING: 'store.提交中',
+    BUILDING: 'store.构建中',
+    BUILD_FAIL: 'store.构建失败',
+    TESTING: 'store.测试中',
+    EDIT: 'store.填写相关信息中',
+    AUDITING: 'store.审核中',
+    AUDIT_REJECT: 'store.审核驳回',
+    RELEASE_DEPLOYING: 'store.正式发布部署中',
+    RELEASE_DEPLOY_FAIL: 'store.正式发布部署失败',
     RELEASED: 'store.已发布',
     GROUNDING_SUSPENSION: 'store.上架中止',
     UNDERCARRIAGING: 'store.下架中',

@@ -2,15 +2,15 @@
     <aside v-bkloading="{ isLoading }" class="pipeline-group-aside">
         <div class="pipeline-group-aside-main">
             <header class="pipeline-group-aside-header">
-                <div v-for="item in sumViews" :key="item.id" :class="{
+                <div :class="{
                     'pipeline-group-item': true,
-                    active: $route.params.viewId === item.id
-                }" @click="switchViewId(item.id)">
-                    <logo class="pipeline-group-item-icon" size="12" :name="item.icon" />
+                    active: $route.params.viewId === sumView.id
+                }" @click="switchViewId(sumView.id)">
+                    <logo class="pipeline-group-item-icon" size="12" :name="sumView.icon" />
                     <span class="pipeline-group-item-name">
-                        {{$t(item.name)}}
+                        {{$t(sumView.name)}}
                     </span>
-                    <span v-if="item.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{item.pipelineCount}}</span>
+                    <span v-if="sumView.pipelineCount" class="pipeline-group-item-sum group-header-sum">{{sumView.pipelineCount}}</span>
                 </div>
             </header>
             <article class="pipeline-group-container">
@@ -175,8 +175,9 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'sumViews',
-                'isManage'
+                'sumView',
+                'isManage',
+                'hardViews'
             ]),
             ...mapGetters('pipelines', [
                 'pipelineGroupDict',
@@ -202,13 +203,13 @@
             },
             pipelineGroupTree () {
                 return [{
-                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length - 2})`,
+                    title: `${this.$t('personalViewList')}(${this.pipelineGroupDict.personalViewList.length - this.hardViews.length})`,
                     id: 'personalViewList',
                     show: this.showClassify.personalViewList,
                     tooltips: {
                         disalbed: true
                     },
-                    stickyTop: '50px',
+                    stickyTop: '66px',
                     children: this.pipelineGroupDict.personalViewList.map((view) => ({
                         ...view,
                         icon: view.icon ?? 'pipelineGroup',
@@ -222,7 +223,7 @@
                     projected: true,
                     disabled: !this.isManage,
                     tooltips: this.projectedGroupDisableTips,
-                    stickyTop: '90px',
+                    stickyTop: '106px',
                     children: this.pipelineGroupDict.projectViewList.map((view) => ({
                         ...view,
                         icon: view.id === UNCLASSIFIED_PIPELINE_VIEW_ID ? 'unGroup' : 'pipelineGroup',
@@ -239,7 +240,7 @@
             currentPipelineCountDetail () {
                 const viewId = this.$route.params.viewId
                 const currentGroup = this.groupMap[viewId]
-                return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount
+                return currentGroup?.pipelineCountDetail ?? currentGroup.pipelineCount ?? 0
             }
         },
         watch: {
@@ -493,7 +494,7 @@
         flex-direction: column;
         width: 280px;
         background: white;
-        padding: 16px 0 0 0;
+        padding: 0;
         border-right: 1px solid #DCDEE5;
         .pipeline-group-item-icon {
             display: inline-flex;
@@ -501,12 +502,18 @@
             color: #C4C6CC;
 
         }
+        .pipeline-group-aside-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: overlay;
+        }
         .pipeline-group-aside-header {
             border-bottom: 1px solid #DCDEE5;
             box-sizing: content-box;
             position: sticky;
             top: 0;
-            padding-bottom: 10px;
+            padding: 16px 0 10px 0;
             z-index: 2;
             background: white;
             >.pipeline-group-item {
@@ -525,7 +532,6 @@
             position: sticky;
             margin: 0;
             background: white;
-            top: 50px;
             z-index: 1;
 
             .pipeline-group-header-name {
@@ -544,13 +550,7 @@
                 border-bottom: 1px solid #DCDEE5;
             }
         }
-        .pipeline-group-aside-main {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            overflow: auto;
-            overflow: overlay;
-        }
+        
         .recycle-pipeline-group-footer {
             display: flex;
             align-items: center;

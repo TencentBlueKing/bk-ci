@@ -9,24 +9,23 @@ const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
     'zh-cn': '中文',
-    'cn': '中文',
+    cn: '中文',
     'en-US': 'English',
     'en-us': 'English',
-    'en': 'English',
-    'us': 'English'
+    en: 'English',
+    us: 'English'
 }
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
-    'cn': 'zh-CN',
+    cn: 'zh-CN',
     'en-US': 'en-US',
     'en-us': 'en-US',
-    'en': 'en-US',
-    'us': 'en-US'
+    en: 'en-US',
+    us: 'en-US'
 }
 
-const domainMatch = location.hostname.match(/([^.]+\.)?([^\.]+\..+)/)
-const BK_CI_DOMAIN = domainMatch.length > 2 ? domainMatch[2] : location.hostname
+const BK_CI_DOMAIN = 'devops.woa.com'
 
 function getLsLocale () {
     try {
@@ -40,14 +39,15 @@ function getLsLocale () {
 function setLsLocale (locale) {
     const formateLocale = localeAliasMap[locale] === 'zh-CN' ? 'zh-cn' : 'en'
     if (typeof cookies.set === 'function') {
-        cookies.remove(LS_KEY, { domain: BK_CI_DOMAIN, path: '/' })
-        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/' })
+        cookies.remove(LS_KEY, { domain: 'woa.com' }) // remove oa language cookie
+        cookies.set(LS_KEY, formateLocale, { domain: BK_CI_DOMAIN, path: '/', expires: 365 })
     }
 }
 
 export default (r) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
+    
     const initLocale = getLsLocale()
     // export localeList
     const i18n = new VueI18n({
@@ -72,7 +72,7 @@ export default (r) => {
             
             i18n.setLocaleMessage(locale, {
                 ...i18n.messages[locale],
-                [ module ]: messages
+                [module]: messages
             })
             loadedModule[localeModuleId] = true
         })

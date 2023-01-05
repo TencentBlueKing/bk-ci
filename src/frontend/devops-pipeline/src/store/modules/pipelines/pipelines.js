@@ -27,7 +27,13 @@ import {
 
 // import axios from 'axios'
 // const CancelToken = axios.CancelToken
-import { PIPELINE_SETTING_MUTATION, UPDATE_PIPELINE_SETTING_MUNTATION, RESET_PIPELINE_SETTING_MUNTATION, PIPELINE_AUTHORITY_MUTATION } from './constants'
+import {
+    PIPELINE_SETTING_MUTATION,
+    UPDATE_PIPELINE_SETTING_MUNTATION,
+    PROJECT_GROUP_USERS_MUTATION,
+    RESET_PIPELINE_SETTING_MUNTATION,
+    PIPELINE_AUTHORITY_MUTATION
+} from './constants'
 
 const prefix = `/${PROCESS_API_URL_PREFIX}/user/pipelines/`
 const backpre = `${BACKEND_API_URL_PREFIX}/api`
@@ -43,6 +49,7 @@ const state = {
     allPipelineList: [],
     hasCreatePermission: false,
     pipelineSetting: {},
+    projectGroupAndUsers: [],
     pipelineAuthority: {},
     pipelineActionState: {
         activePipeline: null,
@@ -83,6 +90,11 @@ const mutations = {
     [RESET_PIPELINE_SETTING_MUNTATION]: (state, payload) => {
         return Object.assign(state, {
             pipelineSetting: {}
+        })
+    },
+    [PROJECT_GROUP_USERS_MUTATION]: (state, { projectGroupAndUsers }) => {
+        return Object.assign(state, {
+            projectGroupAndUsers
         })
     },
     [PIPELINE_SETTING_MUTATION]: (state, { pipelineSetting }) => {
@@ -257,6 +269,19 @@ const actions = {
             const response = await ajax.get(`/${PROCESS_API_URL_PREFIX}/user/setting/get?pipelineId=${pipelineId}&projectId=${projectId}`)
             commit(PIPELINE_SETTING_MUTATION, {
                 pipelineSetting: response.data
+            })
+        } catch (e) {
+            if (e.code === 403) {
+                e.message = ''
+            }
+            rootCommit(commit, FETCH_ERROR, e)
+        }
+    },
+    requestProjectGroupAndUsers: async ({ commit }, { projectId }) => {
+        try {
+            const response = await ajax.get(`/experience/api/user/groups/${projectId}/projectGroupAndUsers`)
+            commit(PROJECT_GROUP_USERS_MUTATION, {
+                projectGroupAndUsers: response.data
             })
         } catch (e) {
             if (e.code === 403) {

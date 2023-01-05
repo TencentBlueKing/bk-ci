@@ -57,3 +57,4 @@ window.mainComponent = new Vue({
     components: { App },
     template: '<App/>'
 })
+console.log(window.mainComponent, 6676)

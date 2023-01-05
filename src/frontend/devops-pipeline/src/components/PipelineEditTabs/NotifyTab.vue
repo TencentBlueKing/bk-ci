@@ -12,6 +12,7 @@
         props: {
             successSubscription: Object,
             failSubscription: Object,
+            projectGroupAndUsers: Array,
             updateSubscription: Function
         },
         computed: {
@@ -22,6 +23,7 @@
                     component: 'NotifySetting',
                     componentProps: {
                         subscription: this.successSubscription,
+                        projectGroupAndUsers: this.projectGroupAndUsers,
                         updateSubscription: this.getUpdateFn(this.successSubscription)
                     }
                 }, {
@@ -30,6 +32,7 @@
                     component: 'NotifySetting',
                     componentProps: {
                         subscription: this.failSubscription,
+                        projectGroupAndUsers: this.projectGroupAndUsers,
                         updateSubscription: this.getUpdateFn(this.failSubscription)
                     }
                 }]

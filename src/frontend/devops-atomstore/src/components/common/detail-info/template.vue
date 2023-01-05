@@ -1,6 +1,6 @@
 <template>
     <section class="detail-title">
-        <img class="detail-pic atom-logo" :src="detail.logoUrl">
+        <img class="detail-pic atom-logo" :src="detail.logoUrl || defaultUrl">
         <hgroup class="detail-info-group">
             <h3>{{detail.name}}</h3>
             <h5 class="detail-info">
@@ -46,6 +46,7 @@
 
 <script>
     import commentRate from '../comment-rate'
+    import { DEFAULT_LOGO_URL } from '@/utils'
 
     export default {
         components: {
@@ -62,6 +63,12 @@
 
         props: {
             detail: Object
+        },
+
+        data () {
+            return {
+                defaultUrl: DEFAULT_LOGO_URL
+            }
         },
 
         computed: {

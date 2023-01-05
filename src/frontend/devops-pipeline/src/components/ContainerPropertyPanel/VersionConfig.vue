@@ -14,7 +14,7 @@
                     <span>
                         {{ $t('preview.introVersion') }}
                         <bk-popover placement="right" :max-width="200">
-                            <i style="display:block;" class="bk-icon icon-info-circle"></i>
+                            <i style="display:block;" class="devops-icon icon-info-circle"></i>
                             <div slot="content" style="white-space: pre-wrap;">
                                 <div> {{ $t('editPage.introVersionTips') }} </div>
                             </div>
@@ -143,10 +143,7 @@
             ]),
             isDefaultDiff ({ key, value }) {
                 const param = this.params.find(param => param.id === key)
-                if (param && typeof param.defaultValue === 'boolean') {
-                    param.defaultValue = String(param.defaultValue)
-                }
-                return param && key ? param.defaultValue !== value : false
+                return param && key ? String(param.defaultValue) !== String(value) : false
             },
             getVersionById (id) {
                 return this.versions.find(v => v.id === id) || {}

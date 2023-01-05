@@ -6,7 +6,11 @@
             <bk-button theme="primary" class="create-env-btn" @click="toCreateNode">{{ $t('environment.create') }}</bk-button>
         </div>
         <div class="create-node-row" v-else>
-            <bk-button theme="primary" class="import-node-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+            <template v-if="isExtendTx">
+                <bk-button theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
+                <bk-button theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
+            </template>
+            <bk-button theme="primary" class="import-node-btn" v-else @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
         </div>
     </div>
 </template>
@@ -21,19 +25,6 @@
             emptyInfo: Object,
             toCreateNode: Function,
             toImportNode: Function
-        },
-        data () {
-            return {
-                isDropdownShow: false
-            }
-        },
-        methods: {
-            dropdownShow () {
-                this.isDropdownShow = true
-            },
-            dropdownHide () {
-                this.isDropdownShow = false
-            }
         }
     }
 </script>
@@ -57,21 +48,12 @@
 
         .create-node-row {
             margin-top: 28px;
-
-            .bk-button {
-                width: 120px;
-            }
-
-            .create-node-btn {
-                margin-right: 4px;
-            }
+            display: flex;
+            align-items: center;
+            justify-content: center;
 
             .create-env-btn {
                 margin-left: 4px;
-            }
-
-            .import-node-btn {
-                width: 100px;
             }
         }
     }

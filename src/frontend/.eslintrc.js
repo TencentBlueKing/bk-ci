@@ -45,15 +45,21 @@ module.exports = {
         'vue'
     ],
     globals: {
-        DOCS_URL_PREFIX: true,
-        LOGIN_SERVICE_URL: true,
-        WEB_URL_PREFIX: true,
-        BUILD_ENV: true,
-        PROXY_URL_PREFIX: true,
-        API_URL_PREFIX: true,
-        BADGE_URL_PREFIX: true,
-        PERM_URL_PREFIX: false,
-        X_DEVOPS_PROJECT_ID: false
+        'BADGE_URL_PREFIX': true,
+        'DOCS_URL_PREFIX': true,
+        'IWIKI_DOCS_URL': true,
+        'LOGIN_SERVICE_URL': true,
+        'WEB_URL_PREFIX': true,
+        'BUILD_ENV': true,
+        'PROXY_URL_PREFIX': true,
+        'API_URL_PREFIX': true,
+        'USER_IMG_URL': true,
+        'OPEN_URL': true,
+        'OIED_URL': true,
+        'JOB_URL': true,
+        'VERSION_TYPE': false,
+        'X_DEVOPS_PROJECT_ID': false,
+        'PERM_URL_PREFIX': false
     },
     // add your custom rules hered
     rules: {

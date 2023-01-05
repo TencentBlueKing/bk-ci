@@ -36,7 +36,9 @@
         />
         <meta charset="utf-8" />
         <title>流水线</title>
-
+        <script>
+            this.globalThis || (this.globalThis = this);
+        </script>
         <script>
             var ajax = new XMLHttpRequest();
             ajax.open(
@@ -45,7 +47,7 @@
                 true
             );
             ajax.send();
-            ajax.onload = function (e) {
+            ajax.onload = function(e) {
                 var div = document.createElement("div");
                 div.setAttribute(
                     "style",
@@ -67,8 +69,9 @@
             var X_DEVOPS_PROJECT_ID = "X-DEVOPS-PROJECT-ID";
             var API_URL_PREFIX = "/ms";
             var WEB_URL_PREFIX = "/console";
+            var PERM_URL_PREFIX = "__BK_PAAS_PUBLIC_URL__/o/bk_iam_app"; // EE PERM URL PREFIX
             var DOCS_URL_PREFIX = "__BK_CI_DOCS_URL__";
-            var BADGE_URL_PREFIX = "__BK_CI_BADGE_URL__";
+            var IWIKI_DOCS_URL = "__IWIKI_DOCS_URL__";
         </script>
     </body>
 </html>

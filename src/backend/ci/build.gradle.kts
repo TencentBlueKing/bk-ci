@@ -14,6 +14,11 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
+    // Docker镜像构建
+    if (name.startsWith("boot-") && System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+        pluginManager.apply("task-docker-build")
+    }
+
     // TODO bkrepo依赖到 , 后续加到framework后可以删掉
     repositories {
         maven(url = "https://repo.spring.io/milestone")
@@ -26,7 +31,6 @@ allprojects {
             dependency("org.mockito:mockito-all:${Versions.Mockito}")
             dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
-            dependency("org.bouncycastle:bcpkix-jdk15on:${Versions.BouncyCastle}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
             dependency("com.networknt:json-schema-validator:${Versions.YamlSchema}")
@@ -56,6 +60,7 @@ allprojects {
             dependency("org.apache.pulsar:pulsar-client:${Versions.Pulsar}")
             dependency("com.github.oshi:oshi-core:${Versions.Oshi}")
             dependency("com.tencent.devops.leaf:leaf-boot-starter:${Versions.Leaf}")
+            dependency("com.github.xingePush:xinge:${Versions.Xinge}")
             dependency("org.reflections:reflections:${Versions.reflections}")
             dependency("org.dom4j:dom4j:${Versions.Dom4j}")
             dependency("org.apache.commons:commons-compress:${Versions.Compress}")

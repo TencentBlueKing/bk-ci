@@ -143,7 +143,7 @@
                 this.handleBaseInfoChange('labels', labels)
             },
             handleGoDocumentInfo () {
-                window.open(`${DOCS_URL_PREFIX}/Services/Pipeline/pipeline-edit-guide/alias-buildno.md`)
+                window.open('https://docs.bkci.net/services/pipelines/pipeline-edit/alias-buildno')
             }
         }
     }
@@ -184,10 +184,6 @@
             font-size: 12px;
             .image-url {
                 margin: 7px 0
-            }
-            label {
-                margin: 8px 0 0 0;
-                display: block;
             }
             .badge-item {
                 display: flex;

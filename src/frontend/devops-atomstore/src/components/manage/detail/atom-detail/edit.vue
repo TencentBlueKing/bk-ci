@@ -29,10 +29,20 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
+            <template v-if="userInfo.isProjectAdmin && VERSION_TYPE !== 'ee'">
+                <bk-form-item :label="$t('store.是否开源')" property="visibilityLevel">
+                    <bk-radio-group v-model="formData.visibilityLevel" class="radio-group">
+                        <bk-radio :disabled="entry.disable" :title="entry.title" :value="entry.value" v-for="(entry, key) in isOpenSource" :key="key" @click.native="formData.privateReason = ''">{{entry.label}}</bk-radio>
+                    </bk-radio-group>
+                </bk-form-item>
+                <bk-form-item v-if="formData.visibilityLevel === 'PRIVATE'" :label="$t('store.不开源原因')" :rules="[requireRule($t('store.不开源原因'))]" :required="true" property="privateReason" error-display-type="normal">
+                    <bk-input type="textarea" v-model="formData.privateReason"></bk-input>
+                </bk-form-item>
+            </template>
             <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.简介')), numMax(70)]" :required="true" property="summary" :desc="$t('store.展示在插件市场以及流水线选择插件页面。')" error-display-type="normal">
                 <bk-input v-model="formData.summary" :placeholder="$t('store.插件一句话简介，不超过70个字符')"></bk-input>
             </bk-form-item>
-            <bk-form-item :label="$t('store.描述')"
+            <bk-form-item :label="$t('store.详细描述')"
                 property="description"
                 :desc="`${$t('store.atomRemark')}<br>${$t('store.展示在插件市场查看插件详情界面，帮助用户快速了解插件和解决遇到的问题。')}`">
                 <mavon-editor class="remark-input"
@@ -46,7 +56,9 @@
                 />
             </bk-form-item>
             <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
-                <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
+                <bk-select v-model="formData.publisher">
+                    <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                </bk-select>
             </bk-form-item>
             <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
                 <select-logo :form="formData" type="ATOM" :is-err="false" ref="logoUrlError"></select-logo>
@@ -69,6 +81,7 @@
         },
 
         props: {
+            userInfo: Object,
             detail: Object
         },
         
@@ -86,7 +99,19 @@
                     validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-]+$/.test(val)),
                     message: this.$t('store.由汉字、英文字母、数字、连字符(-)组成，长度小于20个字符'),
                     trigger: 'blur'
-                }
+                },
+                isOpenSource: [
+                    { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
+                    { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
+                ],
+                hasChange: false,
+                publishersList: []
+            }
+        },
+
+        computed: {
+            userName () {
+                return this.$store.state.user.username
             }
         },
 
@@ -101,7 +126,7 @@
 
         created () {
             this.hackData()
-            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true)]).finally(() => {
+            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true), this.fetchPublishersList(this.detail.atomCode)]).finally(() => {
                 this.isLoading = false
             })
         },
@@ -131,11 +156,11 @@
             save () {
                 this.$refs.atomEdit.validate().then(() => {
                     this.isSaving = true
-                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason } = this.formData
+                    const { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason, visibilityLevel } = this.formData
                     this.formData.labelList = this.labelList.filter((label) => (this.formData.labelIdList.includes(label.id)))
                     const putData = {
                         atomCode: this.detail.atomCode,
-                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason }
+                        data: { name, classifyCode, summary, description, logoUrl, iconData, publisher, labelIdList, privateReason, visibilityLevel }
                     }
                     this.$store.dispatch('store/modifyAtomDetail', putData).then(() => {
                         this.$store.dispatch('store/clearDetail')
@@ -198,6 +223,19 @@
                     })
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
+            },
+
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             }
         }
     }

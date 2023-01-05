@@ -12,5 +12,7 @@ data class PipelineCount(
     @ApiModelProperty("我的流水线的个数", required = true)
     var myPipelineCount: Int,
     @ApiModelProperty("回收站流水线的个数", required = true)
-    var recycleCount: Int
+    var recycleCount: Int,
+    @ApiModelProperty("最近使用的流水线的个数", required = true)
+    val recentUseCount: Int
 )
