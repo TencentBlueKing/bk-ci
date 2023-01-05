@@ -2402,11 +2402,11 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body!!.string()
+            val data = it.body()!!.string()
             logger.info("TGitProjectInfo response>> $data")
             if (!it.isSuccessful) {
                 logger.warn(
-                    "getTGitProjectInfo not successful |code=${it.code}|message=${it.message}|body=$data"
+                    "getTGitProjectInfo not successful |code=${it.code()}|message=${it.message()}|body=$data"
                 )
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
@@ -2443,11 +2443,11 @@ class GitService @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use {
-            val data = it.body!!.string()
+            val data = it.body()!!.string()
             logger.info("GitLabProjectInfo response>> $data")
             if (!it.isSuccessful) {
                 logger.warn(
-                    "getGitLabProjectInfo not successful |code=${it.code}|message=${it.message}|body=$data"
+                    "getGitLabProjectInfo not successful |code=${it.code()}|message=${it.message()}|body=$data"
                 )
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             }
