@@ -60,14 +60,11 @@
         }
         .honer-txt {
             position: absolute;
-            bottom: -2px;
+            bottom: -3px;
             color: #FFFFFF;
             font-size: 12px;
             scale: 83%;
-            &.is-big {
-                scale: 100%;
-                bottom: 6%;
-            }
+            line-height: 12px;
         }
     }
 </style>

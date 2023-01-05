@@ -47,6 +47,7 @@
                 return {
                     theme: 'light',
                     allowHTML: true,
+                    zIndex: 10000,
                     content: this.honorInfos.reduce((acc, cur) => {
                         acc += `<section class="honor-gap"><span class="honor-title">${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
                         return acc

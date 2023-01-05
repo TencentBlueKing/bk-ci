@@ -15,6 +15,7 @@
                     v-for="indexInfo in atom.indexInfos"
                     v-bk-tooltips="{
                         allowHTML: true,
+                        zIndex: 10000,
                         content: indexInfo.hover
                     }"
                     :key="indexInfo.indexCode"
