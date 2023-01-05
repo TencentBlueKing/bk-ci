@@ -2389,14 +2389,6 @@ class GitService @Autowired constructor(
         }
         val url = StringBuilder("$apiUrl/projects/$encodeId")
         setToken(tokenType, url, token)
-        if (StringUtils.hasLength(url)) {
-            try {
-                val urlEncrypt = url.substring(0, url.length - token.length + 3)
-                logger.info("getTGitProjectInfo url [$urlEncrypt]")
-            } catch (e: Exception) {
-                logger.error("encrypted url unsuccess", e)
-            }
-        }
         val request = Request.Builder()
                 .url(url.toString())
                 .get()
@@ -2430,14 +2422,6 @@ class GitService @Autowired constructor(
         }
         val url = StringBuilder("$apiUrl/projects/$encodeId")
         setToken(tokenType, url, token)
-        if (StringUtils.hasLength(url)) {
-            try {
-                val urlEncrypt = url.substring(0, url.length - token.length + 3)
-                logger.info("getGitLabProjectInfo url [$urlEncrypt]")
-            } catch (e: Exception) {
-                logger.error("encrypted url unsuccess", e)
-            }
-        }
         val request = Request.Builder()
                 .url(url.toString())
                 .get()
