@@ -140,7 +140,8 @@ class StoreIndexCronService constructor(
                     tStoreIndexResultRecord.storeType = StoreTypeEnum.ATOM.type.toByte()
                     tStoreIndexResultRecord.indexId = storeIndexBaseInfo.id
                     tStoreIndexResultRecord.indexCode = indexCode
-                    tStoreIndexResultRecord.iconTips = "插件SLA : $elementValue%($result)"
+                    tStoreIndexResultRecord.iconTips =
+                        "<span style=\"line-height: 18px\"><span>插件SLA : $elementValue%($result);</span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecords.add(tStoreIndexResultRecord)
                     val tStoreIndexElementDetailRecord = TStoreIndexElementDetailRecord()
