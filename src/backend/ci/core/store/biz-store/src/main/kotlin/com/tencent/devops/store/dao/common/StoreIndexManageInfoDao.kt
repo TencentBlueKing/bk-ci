@@ -188,14 +188,14 @@ class StoreIndexManageInfoDao {
         indexOperationType: IndexOperationTypeEnum,
         storeType: StoreTypeEnum,
         indexCode: String
-    ): TStoreIndexBaseInfoRecord? {
+    ): String? {
         with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
-            return dslContext.select()
+            return dslContext.select(ID)
                 .from(this)
                 .where(INDEX_CODE.eq(indexCode))
                 .and(OPERATION_TYPE.eq(indexOperationType.name))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .fetchOne(0, TStoreIndexBaseInfoRecord::class.java)
+                .fetchOne(0, String::class.java)
         }
     }
 
