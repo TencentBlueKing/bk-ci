@@ -1,6 +1,6 @@
 <template>
     <div class="codelib-content" v-bkloading="{ isLoading, title: $t('codelib.laodingTitle') }">
-        <template v-if="!hasCodelibs">
+        <template v-if="hasCodelibs">
             <link-code-lib v-if="codelibs.hasCreatePermission" :create-codelib="createCodelib"></link-code-lib>
             <bk-button theme="primary" v-else @click.stop="goCreatePermission">
                 <i class="devops-icon icon-plus"></i>
