@@ -276,7 +276,8 @@ class PipelineBuildRecordService @Autowired constructor(
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline?.cancelUser ?: pipelineBuildDetailService.getBuildCancelUser(projectId, buildId),
+            cancelUserId = buildRecordPipeline?.cancelUser
+                ?: pipelineBuildDetailService.getBuildCancelUser(projectId, buildId),
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
