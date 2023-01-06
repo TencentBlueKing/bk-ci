@@ -40,6 +40,7 @@ object CommonCredentialUtils {
 
     private val logger = LoggerFactory.getLogger(CommonCredentialUtils::class.java)
 
+    @Suppress("ComplexMethod")
     fun getCredential(
         client: Client,
         projectId: String,
