@@ -57,7 +57,7 @@
                                     {{ row.projectName.substr(0, 1) }}
                                 </span>
                                 <div class="info">
-                                    <bk-button text>{{ row.projectName }}</bk-button>
+                                    <bk-button text @click="goToProjectManage(row)">{{ row.projectName }}</bk-button>
                                 </div>
                             </div>
                         </template>
@@ -256,6 +256,12 @@
             limitChange (limit) {
                 this.pagination.current = 1
                 this.pagination.limit = limit
+            },
+
+            goToProjectManage (row) {
+                const { origin } = window.location
+                const { englishName } = row
+                window.open(`${origin}/console/manage/${englishName}/show`, '_blank')
             }
         }
     })
