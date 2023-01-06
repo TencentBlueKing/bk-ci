@@ -61,6 +61,8 @@ data class Model(
     var tips: String? = null,
     @ApiModelProperty("流水线事件回调", required = false)
     var events: Map<String, PipelineCallbackEvent>? = emptyMap(),
+    @ApiModelProperty("静态流水线组", required = false)
+    var staticViews: List<String> = emptyList(),
     @ApiModelProperty("各项耗时", required = true)
     var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
 ) {
@@ -111,6 +113,7 @@ data class Model(
                             jobId = container.jobId
                         )
                     }
+
                     is NormalContainer -> {
                         NormalContainer(
                             containerId = container.containerId,
@@ -130,6 +133,7 @@ data class Model(
                             jobId = container.jobId
                         )
                     }
+
                     else -> {
                         container
                     }

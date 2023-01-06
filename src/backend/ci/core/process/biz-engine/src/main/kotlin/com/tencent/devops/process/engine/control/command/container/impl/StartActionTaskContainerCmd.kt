@@ -204,7 +204,8 @@ class StartActionTaskContainerCmd(
                     containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status, fastKill)
                 } else {
                     continueWhenFailure = true
-                    if (needTerminate || t.status.isCancel()) { // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
+                    if (needTerminate || t.status.isCancel() || t.status.isTerminate()) {
+                        // #4301 强制终止的标志为失败，不管是不是设置了失败继续[P0]
                         containerContext.buildStatus = BuildStatusSwitcher.jobStatusMaker.forceFinish(t.status)
                     }
                 }

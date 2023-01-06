@@ -81,6 +81,25 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
         }
     }
 
+    fun setIfAbsent(
+        key: String,
+        value: String,
+        expiredInSecond: Long? = null,
+        expired: Boolean? = true,
+        isDistinguishCluster: Boolean? = false
+    ): Boolean {
+        val finalKey = getFinalKey(key, isDistinguishCluster)
+        return if (expired == false) {
+            redisTemplate.opsForValue().setIfAbsent(finalKey, value) ?: false
+        } else {
+            var timeout = expiredInSecond ?: maxExpireTime
+            if (timeout <= 0) { // #5901 不合法值清理，设置默认为超时时间，防止出错。
+                timeout = maxExpireTime
+            }
+            redisTemplate.opsForValue().setIfAbsent(finalKey, value, timeout, TimeUnit.SECONDS) ?: false
+        }
+    }
+
     fun delete(key: String, isDistinguishCluster: Boolean? = false) {
         redisTemplate.delete(getFinalKey(key, isDistinguishCluster))
     }
@@ -242,6 +261,10 @@ class RedisOperation(private val redisTemplate: RedisTemplate<String, String>, p
 
     fun rightPop(key: String, isDistinguishCluster: Boolean? = false): String? {
         return redisTemplate.opsForList().rightPop(getFinalKey(key, isDistinguishCluster))
+    }
+
+    fun trim(key: String, start: Long, end: Long) {
+        redisTemplate.opsForList().trim(key, start, end)
     }
 
     fun getRedisName(): String? {

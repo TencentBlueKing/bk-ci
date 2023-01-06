@@ -160,6 +160,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         val heartBeatInfo = thirdPartyAgentHeartbeatUtils.getNewHeartbeat(agentRecord.projectId, agentRecord.id)
         val lastHeartbeatTime = heartBeatInfo?.heartbeatTime
         val parallelTaskCount = (agentRecord.parallelTaskCount ?: "").toString()
+        val dockerParallelTaskCount = (agentRecord.dockerParallelTaskCount ?: "").toString()
         val agentHostInfo = try {
             if (needHeartbeatInfo) {
                 AgentHostInfo(nCpus = "0", memTotal = "0", diskTotal = "0")
@@ -187,6 +188,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             agentInstallPath = agentRecord.agentInstallPath ?: "",
             maxParallelTaskCount = MAX_PARALLEL_TASK_COUNT,
             parallelTaskCount = parallelTaskCount,
+            dockerParallelTaskCount = dockerParallelTaskCount,
             startedUser = agentRecord.startedUser ?: "",
             agentUrl = agentUrlService.genAgentUrl(agentRecord),
             agentScript = agentUrlService.genAgentInstallScript(agentRecord),
@@ -641,7 +643,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -673,7 +676,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(agentRecord.secretKey),
                 createUser = agentRecord.createdUser,
                 createTime = agentRecord.createdTime.timestamp(),
-                parallelTaskCount = agentRecord.parallelTaskCount
+                parallelTaskCount = agentRecord.parallelTaskCount,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount
             )
         )
     }
@@ -884,7 +888,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 secretKey = SecurityUtil.decrypt(it.secretKey),
                 createUser = it.createdUser,
                 createTime = it.createdTime.timestamp(),
-                parallelTaskCount = it.parallelTaskCount
+                parallelTaskCount = it.parallelTaskCount,
+                dockerParallelTaskCount = it.dockerParallelTaskCount
             )
         }.plus(sharedThridPartyAgentList)
     }
@@ -1105,7 +1110,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     AgentStatus = AgentStatus.DELETE.name,
                     ParallelTaskCount = -1,
                     envs = mapOf(),
-                    props = mapOf()
+                    props = mapOf(),
+                    dockerParallelTaskCount = -1
                 )
             }
 
@@ -1149,7 +1155,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     AgentProps(
                         arch = newHeartbeatInfo.props!!.arch,
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
-                        userProps = oldUserProps
+                        userProps = oldUserProps,
+                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo
                     ),
                     false
                 )
@@ -1157,6 +1164,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     agentRecord.agentProps = props
                     agentChanged = true
                 }
+            }
+            if (newHeartbeatInfo.dockerParallelTaskCount != null && agentRecord.dockerParallelTaskCount == null) {
+                agentRecord.dockerParallelTaskCount = newHeartbeatInfo.dockerParallelTaskCount
+                agentChanged = true
             }
             if (agentChanged) {
                 thirdPartyAgentDao.saveAgent(context, agentRecord)
@@ -1210,7 +1221,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                                 AgentStatus = AgentStatus.DELETE.name,
                                 ParallelTaskCount = -1,
                                 envs = mapOf(),
-                                props = mapOf()
+                                props = mapOf(),
+                                dockerParallelTaskCount = -1
                             )
                         }
                         if (nodeRecord.nodeIp != newHeartbeatInfo.agentIp ||
@@ -1245,7 +1257,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 },
                 gateway = agentRecord.gateway,
                 fileGateway = agentRecord.fileGateway,
-                props = oldUserProps
+                props = oldUserProps,
+                dockerParallelTaskCount = agentRecord.dockerParallelTaskCount ?: 0
             )
         }
     }

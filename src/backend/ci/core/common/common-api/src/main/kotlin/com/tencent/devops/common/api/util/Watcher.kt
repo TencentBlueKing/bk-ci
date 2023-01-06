@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.api.util
 
+import org.slf4j.LoggerFactory
 import org.springframework.util.StopWatch
 
 /**
@@ -75,5 +76,23 @@ class Watcher(id: String = "") : StopWatch(id) {
             } catch (ignored: IllegalStateException) {
             }
         }
+    }
+
+    /**
+     * 监听action耗时 , 会忽略异常
+     */
+    fun safeAround(taskName: String, action: () -> Unit) {
+        try {
+            this.start(taskName)
+            action()
+        } catch (e: Exception) {
+            logger.warn("$id , $taskName", e)
+        } finally {
+            this.stop()
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(Watcher::class.java)
     }
 }

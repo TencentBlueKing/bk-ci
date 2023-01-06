@@ -67,6 +67,7 @@ class ProcessDataClearService @Autowired constructor(
             processDataClearDao.deleteTemplatePipelineByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deletePipelineBuildSummaryByPipelineId(context, projectId, pipelineId)
             processDataClearDao.deletePipelineTemplateAcrossInfo(context, projectId, pipelineId)
+            processDataClearDao.deletePipelineViewGroup(context, projectId, pipelineId)
             // 添加删除记录，插入要实现幂等
             processDao.addPipelineDataClear(
                 dslContext = context,

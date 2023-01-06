@@ -63,6 +63,8 @@ import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
 import com.tencent.devops.process.jmx.pipeline.PipelineBean
 import com.tencent.devops.process.permission.PipelinePermissionService
+import com.tencent.devops.process.pojo.PipelineCopy
+import com.tencent.devops.process.pojo.classify.PipelineViewBulkAdd
 import com.tencent.devops.process.pojo.pipeline.DeletePipelineResult
 import com.tencent.devops.process.pojo.pipeline.DeployPipelineResult
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
@@ -70,6 +72,7 @@ import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.process.service.label.PipelineGroupService
 import com.tencent.devops.process.service.pipeline.PipelineSettingFacadeService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import com.tencent.devops.process.template.service.TemplateService
 import com.tencent.devops.store.api.template.ServiceTemplateResource
 import org.jooq.DSLContext
@@ -93,6 +96,7 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val pipelineSettingFacadeService: PipelineSettingFacadeService,
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelinePermissionService: PipelinePermissionService,
     private val stageTagService: StageTagService,
     private val templateService: TemplateService,
@@ -101,7 +105,8 @@ class PipelineInfoFacadeService @Autowired constructor(
     private val processJmxApi: ProcessJmxApi,
     private val client: Client,
     private val pipelineInfoDao: PipelineInfoDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val pipelineRecentUseService: PipelineRecentUseService
 ) {
 
     @Value("\${process.deletedPipelineStoreDays:30}")
@@ -365,11 +370,24 @@ class PipelineInfoFacadeService @Autowired constructor(
                     }
                     watcher.stop()
                 }
+
+                // 添加标签
                 pipelineGroupService.addPipelineLabel(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
                     labelIds = model.labels
+                )
+
+                // 添加到静态分组
+                val bulkAdd = PipelineViewBulkAdd(pipelineIds = listOf(pipelineId), viewIds = model.staticViews)
+                pipelineViewGroupService.bulkAdd(userId, projectId, bulkAdd)
+
+                // 添加到动态分组
+                pipelineViewGroupService.updateGroupAfterPipelineCreate(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    userId = userId
                 )
 
                 success = true
@@ -460,12 +478,10 @@ class PipelineInfoFacadeService @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        name: String,
-        desc: String?,
+        pipelineCopy: PipelineCopy,
         channelCode: ChannelCode,
         checkPermission: Boolean = true
     ): String {
-
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
@@ -515,7 +531,13 @@ class PipelineInfoFacadeService @Autowired constructor(
                 defaultMessage = "指定要复制的流水线-模型不存在"
             )
         try {
-            val copyMode = Model(name, desc ?: model.desc, model.stages)
+            val copyMode = Model(
+                name = pipelineCopy.name,
+                desc = pipelineCopy.desc ?: model.desc,
+                stages = model.stages,
+                staticViews = pipelineCopy.staticViews,
+                labels = pipelineCopy.labels
+            )
             modelCheckPlugin.clearUpModel(copyMode)
             val newPipelineId = createPipeline(userId, projectId, copyMode, channelCode)
             val settingInfo = pipelineSettingFacadeService.getSettingInfo(projectId, pipelineId)
@@ -525,13 +547,14 @@ class PipelineInfoFacadeService @Autowired constructor(
                     oldSetting = settingInfo,
                     projectId = projectId,
                     newPipelineId = newPipelineId,
-                    pipelineName = name
+                    pipelineName = pipelineCopy.name
                 )
                 // 复制setting到新流水线
                 pipelineSettingFacadeService.saveSetting(
                     userId = userId,
                     setting = newSetting,
-                    dispatchPipelineUpdateEvent = false
+                    dispatchPipelineUpdateEvent = false,
+                    updateLabels = false
                 )
             }
             return newPipelineId
@@ -714,7 +737,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         version: Int? = null,
         checkPermission: Boolean = true
     ): Model {
-
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
@@ -808,8 +830,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (checkPermission) {
                 watcher.start("perm_v_perm")
                 pipelinePermissionService.validPipelinePermission(
-                    userId = userId, projectId = projectId, pipelineId = pipelineId,
-                    permission = AuthPermission.DELETE, message = "用户($userId)无权限在工程($projectId)下删除流水线($pipelineId)"
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    permission = AuthPermission.DELETE,
+                    message = "用户($userId)无权限在工程($projectId)下删除流水线($pipelineId)"
                 )
                 watcher.stop()
             }
