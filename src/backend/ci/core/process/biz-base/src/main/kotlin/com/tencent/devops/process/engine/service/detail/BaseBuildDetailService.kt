@@ -76,6 +76,10 @@ open class BaseBuildDetailService constructor(
         return JsonUtil.to(record.model, Model::class.java)
     }
 
+    fun getBuildCancelUser(projectId: String, buildId: String): String? {
+        return buildDetailDao.getBuildCancelUser(dslContext, projectId, buildId)
+    }
+
     @Suppress("LongParameterList")
     protected fun update(
         projectId: String,

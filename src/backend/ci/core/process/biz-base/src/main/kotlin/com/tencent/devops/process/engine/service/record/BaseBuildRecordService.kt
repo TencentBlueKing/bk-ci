@@ -111,6 +111,8 @@ open class BaseBuildRecordService(
                 executeCount = executeCount,
                 buildStatus = finalStatus,
                 modelVar = emptyMap(), // 暂时没有变量，保留修改可能
+                startTime = null,
+                endTime = null,
                 cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
                 timestamps = null

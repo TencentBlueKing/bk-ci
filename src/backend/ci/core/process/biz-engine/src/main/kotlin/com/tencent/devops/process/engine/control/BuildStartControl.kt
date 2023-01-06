@@ -449,7 +449,8 @@ class BuildStartControl @Autowired constructor(
             timestamps = mapOf(
                 BuildTimestampType.BUILD_CONCURRENCY_QUEUE to
                     BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
-            )
+            ),
+            startTime = LocalDateTime.now(), endTime = null
         )
         stageRecordService.updateStageRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,

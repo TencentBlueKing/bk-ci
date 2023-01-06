@@ -976,10 +976,12 @@ class PipelineContainerService @Autowired constructor(
                 atomElement.executeCount = context.executeCount
 //                taskBuildRecords.add(
 //                    BuildRecordTask(
-//                        buildId = context.buildId, projectId = context.projectId, pipelineId = context.pipelineId,
-//                        resourceVersion = resourceVersion, stageId = stage.id!!, containerId = container.containerId!!,
-//                        taskId = atomElement.id!!, taskSeq = index + 1, executeCount = context.executeCount,
-//                        taskVar = mutableMapOf(), classType = atomElement.getClassType(), atomCode = atomElement.getAtomCode(),
+//                        buildId = context.buildId, projectId = context.projectId,
+//                        pipelineId = context.pipelineId, resourceVersion = resourceVersion,
+//                        stageId = stage.id!!, containerId = container.containerId!!,
+//                        taskId = atomElement.id!!, taskSeq = index + 1,
+//                        executeCount = context.executeCount, taskVar = mutableMapOf(),
+//                        classType = atomElement.getClassType(), atomCode = atomElement.getAtomCode(),
 //                        status = BuildStatus.SUCCEED.name, timestamps = mapOf(), originClassType = null
 //                    )
 //                )

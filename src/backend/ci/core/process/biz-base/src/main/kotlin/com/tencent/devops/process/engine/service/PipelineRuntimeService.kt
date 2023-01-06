@@ -44,6 +44,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCast
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -1206,7 +1207,8 @@ class PipelineRuntimeService @Autowired constructor(
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
             cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = mapOf()
+            status = startBuildStatus.name, timestamps = mapOf(),
+            queueTime = LocalDateTime.now().timestampmilli(), startTime = null, endTime = null
         )
 
         if (updateExistsTask.isNotEmpty()) {
@@ -1267,13 +1269,18 @@ class PipelineRuntimeService @Autowired constructor(
         resourceVersion: Int
     ) {
         buildContainers.forEach {
+            val containerVar = mutableMapOf<String, Any>()
+            it.containerHashId?.let { hashId ->
+                containerVar[Container::containerHashId.name] = hashId
+            }
             containerBuildRecords.add(
                 BuildRecordContainer(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
                     containerType = it.containerType, executeCount = it.executeCount,
                     matrixGroupFlag = it.matrixGroupFlag, matrixGroupId = it.matrixGroupId,
-                    containerVar = mutableMapOf(), status = it.status.name, timestamps = mapOf()
+                    status = it.status.name, timestamps = mapOf(),
+                    containerVar = containerVar
                 )
             )
         }
@@ -1378,7 +1385,7 @@ class PipelineRuntimeService @Autowired constructor(
             newBuildStatus = newBuildStatus,
             errorInfoList = listOf(
                 ErrorInfo(
-                    stageId = "", jobId = "",
+                    stageId = "", containerId = "",
                     taskId = "", taskName = "", atomCode = "",
                     errorType = ErrorType.USER.num, errorMsg = "Rejected by $userId in trigger review.",
                     errorCode = ProcessMessageCode.ERROR_TRIGGER_REVIEW_ABORT.toInt()

@@ -226,7 +226,7 @@ class ContainerBuildRecordService(
                                 buildContainer, recordContainer, buildTaskPairs
                             )
                             containerVar[Container::timeCost.name] = cost
-                            containerVar[BuildRecordTimeLine::class.java.name] = timeLine
+                            containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
                         }
                 }
                 recordContainerDao.updateRecord(

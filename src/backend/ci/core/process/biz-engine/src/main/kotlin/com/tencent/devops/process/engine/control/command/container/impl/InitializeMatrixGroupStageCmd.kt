@@ -531,6 +531,13 @@ class InitializeMatrixGroupStageCmd(
         recordTaskList: List<BuildRecordTask>,
         matrixGroupId: String
     ) {
+        val containerVar = mutableMapOf<String, Any>(
+            "@type" to modelContainer.getClassType(),
+            Container::name.name to modelContainer.name
+        )
+        modelContainer.containerHashId?.let {
+            containerVar[Container::containerHashId.name] = it
+        }
         containerBuildRecordService.batchSave(
             transactionContext,
             buildContainerList.map {
@@ -545,10 +552,7 @@ class InitializeMatrixGroupStageCmd(
                     executeCount = it.executeCount,
                     matrixGroupFlag = false,
                     matrixGroupId = matrixGroupId,
-                    containerVar = mutableMapOf(
-                        "@type" to modelContainer.getClassType(),
-                        Container::name.name to modelContainer.name
-                    ),
+                    containerVar = containerVar,
                     status = null,
                     timestamps = mapOf()
                 )

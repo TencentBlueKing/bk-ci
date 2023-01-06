@@ -45,7 +45,9 @@ class PipelineVarUtilTest {
 
     @Test
     fun fillOldVarWithType() {
-        val timestamps = JsonUtil.toJson(mapOf(BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(null, null)))
+        val timestamps = JsonUtil.toJson(
+            mapOf(BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(null, null))
+        )
         val map = JsonUtil.to(timestamps, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp >>() {})
         println(map)
         val vars = mutableMapOf(
