@@ -181,10 +181,18 @@ class PipelineViewDao {
         }
     }
 
-    fun list(dslContext: DSLContext, projectId: String): Result<TPipelineViewRecord> {
+    fun list(
+        dslContext: DSLContext,
+        projectId: String,
+        viewName: String? = null,
+        limit: Int? = null,
+        offset: Int? = null
+    ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
+                .let { if (viewName != null) it.and(NAME.eq(viewName)) else it }
+                .let { if (limit != null && offset != null) it.limit(limit).offset(offset) else it }
                 .fetch()
         }
     }
@@ -229,13 +237,13 @@ class PipelineViewDao {
 
     fun list(
         dslContext: DSLContext,
-        projectId: String,
+        projectId: String? = null,
         viewIds: Set<Long>
     ): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(ID.`in`(viewIds))
-                .and(PROJECT_ID.eq(projectId))
+                .let { if (projectId == null) it else it.and(PROJECT_ID.eq(projectId)) }
                 .orderBy(CREATE_TIME.desc())
                 .fetch()
         }
