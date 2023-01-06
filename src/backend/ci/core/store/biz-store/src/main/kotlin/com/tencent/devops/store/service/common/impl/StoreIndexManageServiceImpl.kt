@@ -238,7 +238,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         storeType: StoreTypeEnum,
         storeCode: String
     ): List<StoreIndexInfo> {
-        return getStoreIndexInfosByStoreCodes(storeType, listOf(storeCode))[storeCode]!!
+        return getStoreIndexInfosByStoreCodes(storeType, listOf(storeCode))[storeCode] ?: emptyList()
     }
 
     override fun createIndexComputeDetail(
