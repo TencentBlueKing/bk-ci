@@ -33,6 +33,7 @@ dependencies {
     api(project(":core:common:common-service"))
     api(project(":ext:tencent:auth:sdk-auth-tencent"))
     api(project(":core:auth:api-auth"))
+    api(project(":core:common:common-auth:common-auth-rbac"))
     api("com.fasterxml.jackson.core:jackson-databind")
     api("com.fasterxml.jackson.core:jackson-core")
     api("com.fasterxml.jackson.core:jackson-annotations")
