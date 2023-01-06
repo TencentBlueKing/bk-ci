@@ -14,7 +14,7 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.0.9",
+        "@blueking/log": "2.0.10",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "@vue/composition-api": "^1.6.1",
         "axios": "^0.27.2",
