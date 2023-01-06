@@ -219,12 +219,12 @@ class AtomFailInfoDao {
         }
     }
 
-    fun limitAtomCodes(dslContext: DSLContext, offset: Int, limit: Int): List<String> {
+    fun limitAtomCodes(dslContext: DSLContext, projectIds: List<String>): List<String> {
         with(TAtomFailSummaryData.T_ATOM_FAIL_SUMMARY_DATA) {
             return dslContext.selectDistinct(ATOM_CODE)
                 .from(this)
+                .where(PROJECT_ID.`in`(projectIds))
                 .orderBy(ATOM_CODE)
-                .limit(limit).offset(offset)
                 .fetchInto(String::class.java)
         }
     }

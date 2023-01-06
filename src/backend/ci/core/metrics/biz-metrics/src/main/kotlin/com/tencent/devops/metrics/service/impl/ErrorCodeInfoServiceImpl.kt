@@ -39,6 +39,7 @@ import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
 import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -84,34 +85,44 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncAtomErrorCodeRel(userId: String): Boolean {
-        var offset = 0
-        val limit = 10
-        Executors.newFixedThreadPool(5).submit {
-            do {
-                val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, offset, limit)
-                atomCodes.forEach { atomCode ->
-                    val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
-                    saveErrorCodeInfoPOs.forEach {
-                        try {
-                            metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.warn("fail to update errorCodeInfo:$it", ignored)
-                            metricsDataReportDao.updateErrorCodeInfo(
-                                dslContext = dslContext,
-                                atomCode = atomCode,
-                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                    errorType = it.errorType,
-                                    errorCode = it.errorCode,
-                                    errorMsg = it.errorMsg,
-                                    modifier = it.modifier,
-                                    updateTime = LocalDateTime.now()
+        Executors.newFixedThreadPool(1).submit {
+            logger.info("begin syncAtomErrorCodeRel")
+            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+            val pipelineLabelSyncsNumber = 10
+            if (projectMinId != null && projectMaxId != null) {
+                do {
+                    val projectIds = client.get(ServiceProjectResource::class)
+                        .getProjectListById(
+                            minId = projectMinId,
+                            maxId = projectMinId + pipelineLabelSyncsNumber
+                        ).data?.map { it.englishName }
+                    val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
+                    atomCodes.forEach { atomCode ->
+                        val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
+                        saveErrorCodeInfoPOs.forEach {
+                            try {
+                                metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
+                            } catch (ignored: DuplicateKeyException) {
+                                logger.warn("fail to update errorCodeInfo:$it", ignored)
+                                metricsDataReportDao.updateErrorCodeInfo(
+                                    dslContext = dslContext,
+                                    atomCode = atomCode,
+                                    updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                        errorType = it.errorType,
+                                        errorCode = it.errorCode,
+                                        errorMsg = it.errorMsg,
+                                        modifier = it.modifier,
+                                        updateTime = LocalDateTime.now()
+                                    )
                                 )
-                            )
+                            }
                         }
                     }
-                }
-                offset += limit
-            } while (atomCodes.size < limit)
+                    projectMinId += (pipelineLabelSyncsNumber + 1)
+                } while (projectMinId <= projectMaxId)
+                logger.info("end syncAtomErrorCodeRel")
+            }
         }
         return true
     }

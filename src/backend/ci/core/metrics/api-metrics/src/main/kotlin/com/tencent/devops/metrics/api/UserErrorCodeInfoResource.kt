@@ -40,10 +40,10 @@ import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.QueryParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER__ERRORCODE_INFOS"], description = "插件-错误码信息")
@@ -62,7 +62,7 @@ interface UserErrorCodeInfoResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("错误类型,使用逗号进行分隔", required = true)
+        @ApiParam("关联插件Code", required = true)
         @PathParam("atomCode")
         atomCode: String,
         @ApiParam("错误类型,使用逗号进行分隔", required = false)
