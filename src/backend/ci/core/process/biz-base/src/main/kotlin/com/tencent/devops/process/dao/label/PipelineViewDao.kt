@@ -191,7 +191,7 @@ class PipelineViewDao {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
-                .let { if (viewName != null) it.and(NAME.eq(viewName)) else it }
+                .let { if (viewName.isNullOrEmpty()) it else it.and(NAME.like("%$viewName%")) }
                 .let { if (limit != null && offset != null) it.limit(limit).offset(offset) else it }
                 .fetch()
         }
