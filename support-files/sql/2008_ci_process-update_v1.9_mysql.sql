@@ -116,6 +116,14 @@ BEGIN
         ALTER TABLE T_PIPELINE_VIEW ADD COLUMN `VIEW_TYPE` int NOT NULL DEFAULT '1' COMMENT '1:动态流水线组 , 2:静态流水线组';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_PIPELINE_BUILD_HISTORY'
+                        AND COLUMN_NAME = 'EXECUTE_COUNT') THEN
+        ALTER TABLE T_PIPELINE_BUILD_HISTORY ADD COLUMN `EXECUTE_COUNT` int(11) DEFAULT NULL COMMENT '执行次数';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
