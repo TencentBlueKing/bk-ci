@@ -29,8 +29,10 @@ package com.tencent.devops.stream.util
 
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import org.slf4j.LoggerFactory
 
 object RetryUtils {
+    private val logger = LoggerFactory.getLogger(RetryUtils::class.java)
 
     @Throws(ClientException::class)
     fun <T> clientRetry(retryTime: Int = 5, retryPeriodMills: Long = 500, action: () -> T): T {
@@ -50,6 +52,7 @@ object RetryUtils {
             if (retryTime - 1 < 0) {
                 throw e
             }
+            logger.info("Remote service return 429 and message:${e.message}")
             // 固定延迟1s
             Thread.sleep(1000)
             clientRetry(action = action, retryTime = retryTime - 1)
