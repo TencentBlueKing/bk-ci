@@ -48,8 +48,15 @@ class QualityBuildHisJob @Autowired constructor(
     @Value("\${quality.buildHis.clean.timeGap:15}")
     var cleanTimeGapDay: Long = 12
 
+    @Value("\${quality.buildHis.clean.enable:#{false}}")
+    val cleanEnable: Boolean = false
+
     @Scheduled(cron = "0 0 6 * * ?")
     fun clean() {
+        if (!cleanEnable) {
+            logger.info("quality buildHis daily clean disabled.")
+            return
+        }
         val key = this::class.java.name + "#" + Thread.currentThread().stackTrace[1].methodName
         val lock = RedisLock(redisOperation, key, 3600L)
         try {
