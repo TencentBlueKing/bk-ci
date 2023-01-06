@@ -63,7 +63,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "ComplexMethod")
 @Service
 class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,

@@ -73,7 +73,7 @@ import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
 
-@Suppress("LongParameterList", "ComplexMethod", "ReturnCount")
+@Suppress("LongParameterList", "ComplexMethod", "ReturnCount", "NestedBlockDepth")
 @Service
 class PipelineBuildRecordService @Autowired constructor(
     private val pipelineBuildDetailService: PipelineBuildDetailService,
@@ -410,7 +410,9 @@ class PipelineBuildRecordService @Autowired constructor(
         var allStageStatus: List<BuildStageStatus> = emptyList()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            val recordModel = recordModelDao.getRecord(dslContext, projectId, pipelineId, buildId, executeCount) ?: run {
+            val recordModel = recordModelDao.getRecord(
+                dslContext, projectId, pipelineId, buildId, executeCount
+            ) ?: run {
                 logger.warn(
                     "ENGINE|$buildId|buildEnd| get model($buildId) record failed."
                 )
