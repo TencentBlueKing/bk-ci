@@ -25,60 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.dao
+package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.model.project.tables.TUserLocale
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.project.dao.UserLocaleDao
+import com.tencent.devops.project.service.UserLocaleService
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@Repository
-class UserLocaleDao {
-
-    fun add(dslContext: DSLContext, userId: String, locale: String) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.insertInto(
-                this,
-                USER_ID,
-                LOCALE,
-            )
-                .values(
-                    userId,
-                    locale
-                ).onDuplicateKeyUpdate()
-                .set(LOCALE, locale)
-                .execute()
-        }
+@Service
+class UserLocaleServiceImpl @Autowired constructor(
+    private val userLocaleDao: UserLocaleDao,
+    private val redisOperation: RedisOperation
+) : UserLocaleService {
+    override fun addUserLocale(userId: String, locale: String): Boolean {
+        TODO("Not yet implemented")
     }
 
-    fun update(
-        dslContext: DSLContext,
-        userId: String,
-        locale: String
-    ) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.update(this)
-                .set(LOCALE, locale)
-                .where(USER_ID.eq(userId))
-                .execute()
-        }
+    override fun deleteUserLocale(userId: String): Boolean {
+        TODO("Not yet implemented")
     }
 
-    fun delete(dslContext: DSLContext, userId: String) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.deleteFrom(this)
-                .where(USER_ID.eq(userId))
-                .execute()
-        }
+    override fun updateUserLocale(userId: String, locale: String): Boolean {
+        TODO("Not yet implemented")
     }
 
-    fun getLocaleByUserId(
-        dslContext: DSLContext,
-        userId: String
-    ): String? {
-        with(TUserLocale.T_USER_LOCALE) {
-            return dslContext.select(LOCALE).from(this)
-                .where(USER_ID.eq(userId))
-                .fetchOne(0, String::class.java)
-        }
+    override fun getUserLocale(userId: String): String {
+        TODO("Not yet implemented")
     }
 }

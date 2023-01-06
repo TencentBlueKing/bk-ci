@@ -25,60 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.dao
+package com.tencent.devops.project.service
 
-import com.tencent.devops.model.project.tables.TUserLocale
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+interface UserLocaleService {
 
-@Repository
-class UserLocaleDao {
+    /**
+     * 添加用户国际化信息
+     * @param userId 用户ID
+     * @param locale 国际化信息
+     * @return 布尔值
+     */
+    fun addUserLocale(userId: String, locale: String): Boolean
 
-    fun add(dslContext: DSLContext, userId: String, locale: String) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.insertInto(
-                this,
-                USER_ID,
-                LOCALE,
-            )
-                .values(
-                    userId,
-                    locale
-                ).onDuplicateKeyUpdate()
-                .set(LOCALE, locale)
-                .execute()
-        }
-    }
+    /**
+     * 删除用户国际化信息
+     * @param userId 用户ID
+     * @return 布尔值
+     */
+    fun deleteUserLocale(userId: String): Boolean
 
-    fun update(
-        dslContext: DSLContext,
-        userId: String,
-        locale: String
-    ) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.update(this)
-                .set(LOCALE, locale)
-                .where(USER_ID.eq(userId))
-                .execute()
-        }
-    }
+    /**
+     * 更新用户国际化信息
+     * @param userId 用户ID
+     * @param locale 国际化信息
+     * @return 布尔值
+     */
+    fun updateUserLocale(userId: String, locale: String): Boolean
 
-    fun delete(dslContext: DSLContext, userId: String) {
-        with(TUserLocale.T_USER_LOCALE) {
-            dslContext.deleteFrom(this)
-                .where(USER_ID.eq(userId))
-                .execute()
-        }
-    }
-
-    fun getLocaleByUserId(
-        dslContext: DSLContext,
-        userId: String
-    ): String? {
-        with(TUserLocale.T_USER_LOCALE) {
-            return dslContext.select(LOCALE).from(this)
-                .where(USER_ID.eq(userId))
-                .fetchOne(0, String::class.java)
-        }
-    }
+    /**
+     * 根据用户ID查找用户国际化信息
+     * @param userId 用户ID
+     * @return 用户国际化信息
+     */
+    fun getUserLocale(userId: String): String
 }
