@@ -307,7 +307,7 @@ class GithubService @Autowired constructor(
             val code = response.code()
             val message = response.message()
             val body = response.body()?.string() ?: ""
-            if(logger.isDebugEnabled){
+            if (logger.isDebugEnabled) {
                 logger.debug("getBody operation($operation). response code($code) message($message) body($body)")
             }
             if (!response.isSuccessful) {
@@ -322,7 +322,7 @@ class GithubService @Autowired constructor(
             val code = response.code()
             val message = response.message()
             val body = response.body()?.string() ?: ""
-            if(logger.isDebugEnabled){
+            if (logger.isDebugEnabled) {
                 logger.debug("callMethod operation($operation). response code($code) message($message) body($body)")
             }
             if (!response.isSuccessful) {
