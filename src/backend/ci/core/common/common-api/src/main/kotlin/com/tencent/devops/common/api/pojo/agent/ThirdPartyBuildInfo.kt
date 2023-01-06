@@ -41,3 +41,13 @@ data class ThirdPartyBuildInfo(
     @ApiModelProperty("工作空间")
     val workspace: String
 )
+
+@ApiModel("第三方构建Docker信息")
+data class ThirdPartyDockerBuildInfo(
+    @ApiModelProperty("项目id")
+    val projectId: String,
+    @ApiModelProperty("构建id")
+    val buildId: String,
+    @ApiModelProperty("构建机编排序号")
+    val vmSeqId: String
+)

@@ -49,6 +49,7 @@ import com.tencent.devops.model.process.tables.TPipelineResourceVersion
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TPipelineSettingVersion
 import com.tencent.devops.model.process.tables.TPipelineTimer
+import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.TPipelineWebhook
 import com.tencent.devops.model.process.tables.TPipelineWebhookBuildParameter
 import com.tencent.devops.model.process.tables.TReport
@@ -305,6 +306,15 @@ class ProcessDataClearDao {
             dslContext.deleteFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(BUILD_ID.eq(buildId))
+                .execute()
+        }
+    }
+
+    fun deletePipelineViewGroup(dslContext: DSLContext, projectId: String, pipelineId: String) {
+        with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

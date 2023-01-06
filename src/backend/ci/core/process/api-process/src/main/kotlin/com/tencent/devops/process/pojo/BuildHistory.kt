@@ -46,9 +46,9 @@ data class BuildHistory(
     val buildNum: Int?,
     @ApiModelProperty("编排文件版本号", required = true)
     val pipelineVersion: Int,
-    @ApiModelProperty("开始时间", required = true)
+    @ApiModelProperty("流水线的执行开始时间", required = true)
     val startTime: Long,
-    @ApiModelProperty("结束时间", required = true)
+    @ApiModelProperty("流水线的执行结束时间", required = true)
     val endTime: Long?,
     @ApiModelProperty("状态", required = true)
     val status: String,
@@ -88,7 +88,7 @@ data class BuildHistory(
     var buildMsg: String?,
     @ApiModelProperty("自定义构建版本号", required = false)
     val buildNumAlias: String? = null,
-    @ApiModelProperty("更新时间", required = false)
+    @ApiModelProperty("流水线编排的最后更新时间", required = false)
     val updateTime: Long? = null,
     @ApiModelProperty("并发时,设定的group", required = false)
     var concurrencyGroup: String? = null,

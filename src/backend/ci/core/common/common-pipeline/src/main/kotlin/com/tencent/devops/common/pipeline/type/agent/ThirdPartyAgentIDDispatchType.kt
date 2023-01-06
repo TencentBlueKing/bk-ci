@@ -35,7 +35,9 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 data class ThirdPartyAgentIDDispatchType(
     @JsonProperty("value") var displayName: String,
     var workspace: String?,
-    val agentType: AgentType = AgentType.NAME
+    val agentType: AgentType = AgentType.NAME,
+    // 第三方构建机用docker作为构建机
+    val dockerInfo: ThirdPartyAgentDockerInfo?
 ) : DispatchType(
     displayName
 ) {

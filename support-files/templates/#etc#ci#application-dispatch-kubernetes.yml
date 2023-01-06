@@ -21,8 +21,8 @@ dispatch:
 kubernetes:
   apiUrl: __BK_CI_KUBERNETES_HOST__
   token: __BK_CI_KUBERNETES_TOKEN__
-  entrypoint: /data/landun/config/init.sh
-  sleepEntrypoint: /data/landun/config/sleep.sh
+  entrypoint: /data/devops/config/init.sh
+  sleepEntrypoint: /data/devops/config/sleep.sh
   resources:
     builder:
       cpu: __BK_CI_KUBERNETES_CPU__
