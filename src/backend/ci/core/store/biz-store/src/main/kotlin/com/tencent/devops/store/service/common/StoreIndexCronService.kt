@@ -81,11 +81,10 @@ class StoreIndexCronService constructor(
         }
     }
 
-//    @Scheduled(cron = "0 15 11 * * ?")
     /**
      * 计算插件SLA指标数据
      */
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0 1 * * ?")
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
