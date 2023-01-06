@@ -47,24 +47,6 @@ BEGIN
         ADD COLUMN `ATOM_CODE` varchar(64) DEFAULT NULL COMMENT '关联插件代码';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                              FROM information_schema.COLUMNS
-                              WHERE TABLE_SCHEMA = db
-                                AND TABLE_NAME = 'T_ERROR_CODE_INFO'
-                                AND UNIQUE KEY = 'T_ERROR_CODE_INFO_UN') THEN
-    ALTER TABLE `T_ERROR_CODE_INFO`
-        DROP KEY T_ERROR_CODE_INFO_UN;
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                          FROM information_schema.COLUMNS
-                          WHERE TABLE_SCHEMA = db
-                            AND TABLE_NAME = 'T_ERROR_CODE_INFO'
-                            AND UNIQUE KEY = 'T_ERROR_CODE_INFO_UN') THEN
-    ALTER TABLE `T_ERROR_CODE_INFO`
-        ADD CONSTRAINT T_ERROR_CODE_INFO_UN UNIQUE KEY (ERROR_TYPE,ERROR_CODE,ATOM_CODE);
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
