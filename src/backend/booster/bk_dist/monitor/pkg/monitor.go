@@ -32,7 +32,7 @@ const (
 
 	DefautInterval = 20000
 
-	BlockSecondsWhenRecover = 120
+	BlockSecondsWhenRecover = 240
 
 	MacroKillTree = "${BK_KILL_TREE}"
 )

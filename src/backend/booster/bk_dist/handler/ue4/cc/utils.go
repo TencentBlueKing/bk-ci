@@ -271,6 +271,7 @@ func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, s
 		}
 	}
 
+	firstinclude := true
 	for i := range args {
 		if strings.HasPrefix(args[i], "-MF") {
 			if len(args[i]) > 3 {
@@ -300,6 +301,7 @@ func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, s
 			objectfile = args[i]
 			blog.Infof("cc: got objectfile file:%s", objectfile)
 		} else if strings.HasPrefix(args[i], "-include-pch") {
+			firstinclude = false
 			if len(args[i]) > 12 {
 				pchfile = args[i][12:]
 				continue
@@ -311,6 +313,15 @@ func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, s
 				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
 			}
 			pchfile = args[i]
+		} else if firstinclude && strings.HasPrefix(args[i], "-include") {
+			firstinclude = false
+			i++
+			if i >= len(args) {
+				blog.Warnf("cc: scan args: no output file found after -include")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			pchfile = args[i] + ".gch"
+			blog.Infof("cc: ready check gch file of %s", pchfile)
 		}
 	}
 
@@ -328,6 +339,9 @@ func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, s
 
 	if pchfile != "" && !filepath.IsAbs(pchfile) {
 		pchfile, _ = filepath.Abs(filepath.Join(workdir, pchfile))
+		if !dcFile.Stat(pchfile).Exist() {
+			pchfile = ""
+		}
 	}
 
 	return responseFile, args, showinclude, sourcedependfile, objectfile, pchfile, nil
@@ -823,7 +837,7 @@ func scanArgs(args []string) (*ccArgs, error) {
 			r.inputFile = arg
 			continue
 		} else {
-			blog.Infof("cc: arg[%s] is not source file", arg)
+			blog.Debugf("cc: arg[%s] is not source file", arg)
 		}
 
 		// if this file is end with .o, it must be the output file.
