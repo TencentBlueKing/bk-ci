@@ -45,7 +45,7 @@ class QualityBuildHisJob @Autowired constructor(
 
     private val logger = LoggerFactory.getLogger(QualityBuildHisJob::class.java)
 
-    @Value("\${quality.build.his.clean.timeGap:15}")
+    @Value("\${quality.buildHis.clean.timeGap:15}")
     var cleanTimeGapDay: Long = 12
 
     @Scheduled(cron = "0 0 6 * * ?")
