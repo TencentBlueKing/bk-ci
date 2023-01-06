@@ -162,7 +162,7 @@ class PipelineRecordModelService @Autowired constructor(
                 val stageBaseMap = (pipelineBaseMap!![KEY_STAGES] as List<Map<String, Any>>).first { it[ID] == stageId }
                 val containerBaseMap = (stageBaseMap[KEY_CONTAINERS] as List<Map<String, Any>>).first {
                     it[ID] == containerId
-                }.toMutableMap()
+                }
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers = stageRecordContainers.filter { it.matrixGroupId == containerId }
                 val groupContainers = mutableListOf<Map<String, Any>>()
@@ -170,6 +170,7 @@ class PipelineRecordModelService @Autowired constructor(
                     // 生成矩阵job的变量模型
                     var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
+                    val containerBaseModelMap = containerBaseMap.toMutableMap()
                     matrixContainerVarMap[ID] = matrixContainerId
                     matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
                     matrixContainerVarMap[EXECUTE_COUNT] = matrixRecordContainer.executeCount
@@ -177,11 +178,14 @@ class PipelineRecordModelService @Autowired constructor(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
                         containerVarMap = matrixContainerVarMap,
-                        containerBaseMap = containerBaseMap
+                        containerBaseMap = containerBaseModelMap
                     )
-                    containerBaseMap.remove(KEY_MATRIX_CONTROL_OPTION)
-                    containerBaseMap.remove(KEY_GROUP_CONTAINERS)
-                    matrixContainerVarMap = ModelUtils.generateBuildModelDetail(containerBaseMap, matrixContainerVarMap)
+                    containerBaseModelMap.remove(KEY_MATRIX_CONTROL_OPTION)
+                    containerBaseModelMap.remove(KEY_GROUP_CONTAINERS)
+                    matrixContainerVarMap = ModelUtils.generateBuildModelDetail(
+                        baseModelMap = containerBaseModelMap,
+                        modelFieldRecordMap = matrixContainerVarMap
+                    )
                     groupContainers.add(matrixContainerVarMap)
                 }
                 containerVarMap[KEY_GROUP_CONTAINERS] = groupContainers
