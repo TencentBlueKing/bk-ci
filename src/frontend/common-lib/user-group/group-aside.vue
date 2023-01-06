@@ -1,124 +1,129 @@
 <template>
-  <article class="group-aside">
-    <section class="group-list">
-      <div
-        :class="{ 'group-item': true, 'group-active': activeTab === group.name }"
-        v-for="(group, index) in groupList"
-        :key="index"
-        @click="handleChangeTab(group)">
-        <span class="group-name">{{ group.name }}</span>
-        <span class="user-num">
-          <i class="manage-icon manage-icon-user-shape"></i>
-          {{ group.user }}
-        </span>
-        <span class="group-num">
-          <i class="manage-icon manage-icon-user-shape"></i>
-          {{ group.group }}
-        </span>
-        <bk-popover
-          v-if="resourceType === 'project'"
-          class="group-more-option"
-          placement="bottom"
-          theme="dot-menu light"
-          :arrow="false"
-          offset="15"
-          :distance="0">
-          <i class="more-icon manage-icon manage-icon-more-fill"></i>
-          <template #content>
-            <bk-button
-              class="btn"
-              :disabled="[1, 2].includes(group.id)"
-              text
-              @click="handleDeleteGroup(group)">
-              {{ $t('删除') }}
-            </bk-button>
-          </template>
-        </bk-popover>
-      </div>
-      <div class="line-split" />
-      <div
-        :class="{ 'group-item': true, 'group-active': activeTab === '' }"
-        @click="handleCreateGroup">
-        <span class="add-group-btn">
-          <i class="manage-icon manage-icon-add-fill add-icon"></i>
-          {{ $t('新建用户组') }}
-        </span>
-      </div>
-    </section>
-    <div class="close-btn">
-      <bk-button @click="handleCloseManage">{{ $t('关闭权限管理') }}</bk-button>
-    </div>
-  </article>
+    <article class="group-aside">
+        <section class="group-list">
+            <div
+                :class="{ 'group-item': true, 'group-active': activeTab === group.name }"
+                v-for="(group, index) in groupList"
+                :key="index"
+                @click="handleChangeTab(group)">
+                <span class="group-name">{{ group.name }}</span>
+                <span class="user-num">
+                    <i class="manage-icon manage-icon-user-shape"></i>
+                    {{ group.user }}
+                </span>
+                <span class="group-num">
+                    <i class="manage-icon manage-icon-user-shape"></i>
+                    {{ group.group }}
+                </span>
+                <bk-popover
+                    v-if="resourceType === 'project'"
+                    class="group-more-option"
+                    placement="bottom"
+                    theme="dot-menu light"
+                    :arrow="false"
+                    offset="15"
+                    :distance="0">
+                    <i class="more-icon manage-icon manage-icon-more-fill"></i>
+                    <template #content>
+                        <bk-button
+                            class="btn"
+                            :disabled="[1, 2].includes(group.id)"
+                            text
+                            @click="handleDeleteGroup(group)">
+                            {{ $t('删除') }}
+                        </bk-button>
+                    </template>
+                </bk-popover>
+            </div>
+            <div class="line-split" />
+            <div
+                :class="{ 'group-item': true, 'group-active': activeTab === '' }"
+                @click="handleCreateGroup">
+                <span class="add-group-btn">
+                    <i class="manage-icon manage-icon-add-fill add-icon"></i>
+                    {{ $t('新建用户组') }}
+                </span>
+            </div>
+        </section>
+        <div class="close-btn">
+            <bk-button @click="handleShowDeleteGroup">{{ $t('关闭权限管理') }}</bk-button>
+        </div>
+        <bk-dialog
+            :is-show="deleteObj.isShow"
+            :title="$t('是否删除用户组', [deleteObj.group.name])"
+            theme="danger"
+            quick-close
+            @closed="handleHiddenDeleteGroup"
+            @confirm="handleDeleteGroup"
+        >
+        </bk-dialog>
+    </article>
 </template>
 
-<script lang="ts">
-import { InfoBox, Message } from 'bkui-vue';
-import { useI18n } from 'vue-i18n';
-
-export default {
-  name: 'GroupAside',
-  emits: ['create-group', 'choose-group'],
-  props: {
-    // 资源类型
-    resourceType: {
-      type: String,
-      default: '',
-    },
-    // 资源ID
-    resourceCode: {
-      type: String,
-      default: '',
-    },
-    // 项目id => englishName
-    projectCode: {
-      type: String,
-      default: '',
-    },
-    groupList: {
-      type: Array,
-      default: () => [],
-    },
-    deleteGroup: {
-      type: Function,
-      default: () => {},
-    },
-    closeManage: {
-      type: Function,
-      default: () => {},
-    },
-  },
-  data() {
-    return {
-      activeTab: '管理员',
-    };
-  },
-  mounted() {
-  },
-  methods: {
-    handleDeleteGroup(group: any) {
-      InfoBox({
-        title: this.$t('是否删除用户组', [group.name]),
-        contentAlign: 'center',
-        headerAlign: 'center',
-        footerAlign: 'center',
-        onConfirm() {
-          this.deleteGroup();
+<script>
+    export default {
+        name: 'GroupAside',
+        emits: ['create-group', 'choose-group', 'delete-group'],
+        props: {
+            // 资源类型
+            resourceType: {
+                type: String,
+                default: ''
+            },
+            // 资源ID
+            resourceCode: {
+                type: String,
+                default: ''
+            },
+            // 项目id => englishName
+            projectCode: {
+                type: String,
+                default: ''
+            },
+            groupList: {
+                type: Array,
+                default: () => []
+            },
+            closeManage: {
+                type: Function,
+                default: () => {}
+            }
         },
-      });
-    },
-    handleChangeTab(group: any) {
-      this.activeTab = group.name;
-      this.$emit('choose-group', group);
-    },
-    handleCreateGroup() {
-      this.activeTab = '';
-      this.$emit('create-group');
-    },
-    handleCloseManage() {
-      this.closeManage();
-    },
-  },
-};
+        data () {
+            return {
+                activeTab: '管理员',
+                deleteObj: {
+                    group: {},
+                    isShow: false
+                }
+            }
+        },
+        methods: {
+            handleShowDeleteGroup (group) {
+                this.deleteObj.group = group
+                this.deleteObj.isShow = true
+            },
+            handleHiddenDeleteGroup () {
+                this.deleteObj.isShow = false
+                this.deleteObj.group = {}
+            },
+            handleDeleteGroup () {
+                this.$emit('delete-group', this.deleteObj.group)
+                this.handleHiddenDeleteGroup()
+            },
+            handleChangeTab (group) {
+                this.activeTab = group.name
+                this.$emit('choose-group', group)
+            },
+            handleCreateGroup () {
+                this.activeTab = ''
+                this.$emit('create-group')
+            },
+            handleCloseManage () {
+                this.closeManage()
+            }
+        }
+    }
 </script>
 
 <style lang="postcss" scoped>
@@ -228,4 +233,3 @@ export default {
     text-align: center;
   }
 </style>
-

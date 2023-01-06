@@ -1,136 +1,142 @@
 <template>
-  <article class="group-wrapper">
-    <!-- 管理员 -->
-    <template v-if="hasPermission">
-      <div class="group-manage" v-if="!isEnablePermission">
-        <group-aside
-          v-bind="$props"
-          @choose-group="handleChooseGroup"
-          @create-group="handleCreateGroup"
-          @update-enable="handelUpdateEnable"
-        >
-        </group-aside>
-        <IAMIframe
-          class="group-frame"
-          :path="path"
-        />
-      </div>
-      <!-- 未开启权限管理 -->
-      <not-open-manage
-        v-else
-        v-bind="$props"
-      >
-      </not-open-manage>
-    </template>
-    <!-- 普通成员 -->
-    <template v-else-if="!hasPermission">
-      <group-table v-bind="$props"></group-table>
-    </template>
-  </article>
+    <article class="group-wrapper">
+        <!-- 管理员 -->
+        <template v-if="hasPermission">
+            <div
+                v-if="!isEnablePermission"
+                class="group-manage"
+            >
+                <group-aside
+                    v-bind="$props"
+                    @choose-group="handleChooseGroup"
+                    @create-group="handleCreateGroup"
+                    @delete-group="handleDeleteGroup"
+                    @update-enable="handelUpdateEnable"
+                />
+                <iam-iframe
+                    class="group-frame"
+                    :path="path"
+                />
+            </div>
+            <!-- 普通成员 -->
+            <group-table v-else v-bind="$props" />
+        </template>
+        <!-- 未开启权限管理 -->
+        <not-open-manage v-else v-bind="$props" />
+    </article>
 </template>
 
-<script lang="ts">
-// import http from '@/http/api';
-import groupAside from './group-aside.vue';
-import groupTable from './group-table.vue';
-import notOpenManage from './notOpen-manage.vue';
-import IAMIframe from '../../devops-manage/src/components/IAM-Iframe';
-export default {
-  components: {
-    groupAside,
-    groupTable,
-    notOpenManage,
-    IAMIframe,
-  },
-  props: {
-    // 资源类型
-    resourceType: {
-      type: String,
-      default: '',
-    },
-    // 资源ID
-    resourceCode: {
-      type: String,
-      default: '',
-    },
-    // 项目id => englishName
-    projectCode: {
-      type: String,
-      default: '',
-    },
-    groupList: {
-      type: Array,
-      default: () => [],
-    },
-    memberGroupList: {
-      type: Array,
-      default: () => [],
-    },
-    hasPermission: {
-      type: Boolean,
-      default: true,
-    },
-    isEnablePermission: {
-      type: Boolean,
-      default: false,
-    },
-    IAMIframePath: {
-      type: String,
-      default: '',
-    },
-    openManage: {
-      type: Function,
-      default: () => {},
-    },
-    closeManage: {
-      type: Function,
-      default: () => {},
-    }
-  },
-  data() {
-    return {
-      path: ''
-    };
-  },
-  computed: {
+<script>
+    import GroupAside from './group-aside.vue'
+    import GroupTable from './group-table.vue'
+    import NotOpenManage from './not-open-manage.vue'
+    import IamIframe from './iam-Iframe.vue'
 
-  },
-  watch: {
-    
-  },
-  async created() {
-    this.path = this.IAMIframePath;
-    window.addEventListener('message', this.handleMessage);
-  },
-  beforeUnmount() {
-    window.removeEventListener('message', this.handleMessage);
-  },
-  methods: {
-    handleChooseGroup(payload) {
-      this.path = `user-group-detail/${payload.id}`;
-    },
-    handleCreateGroup() {
-      this.path = 'create-user-group';
-    },
-    handleMessage(event: any) {
-      const { data } = event;
-      if (data.type === 'IAM') {
-        switch (data.code) {
-          case 'cancel':
-            this.handleChooseGroup();
-            break;
-          case 'success':
-            this.handleChooseGroup();
-            break;
+    export default {
+        components: {
+            GroupAside,
+            GroupTable,
+            NotOpenManage,
+            IamIframe
+        },
+
+        props: {
+            // 资源类型
+            resourceType: {
+                type: String,
+                default: ''
+            },
+            // 资源ID
+            resourceCode: {
+                type: String,
+                default: ''
+            },
+            // 项目id => englishName
+            projectCode: {
+                type: String,
+                default: ''
+            },
+            groupList: {
+                type: Array,
+                default: () => []
+            },
+            memberGroupList: {
+                type: Array,
+                default: () => []
+            },
+            hasPermission: {
+                type: Boolean,
+                default: true
+            },
+            isEnablePermission: {
+                type: Boolean,
+                default: false
+            },
+            iamIframePath: {
+                type: String,
+                default: ''
+            },
+            openManage: {
+                type: Function,
+                default: () => {}
+            },
+            closeManage: {
+                type: Function,
+                default: () => {}
+            }
+        },
+
+        data () {
+            return {
+                path: ''
+            }
+        },
+
+        async created () {
+            this.path = this.iamIframePath
+            window.addEventListener('message', this.handleMessage)
+        },
+
+        beforeDestroy () {
+            window.removeEventListener('message', this.handleMessage)
+        },
+
+        beforeUnmount () {
+            window.removeEventListener('message', this.handleMessage)
+        },
+
+        methods: {
+            handleChooseGroup (payload) {
+                this.path = `user-group-detail/${payload.id}`
+            },
+
+            handleCreateGroup () {
+                this.path = 'create-user-group'
+            },
+
+            handleMessage (event) {
+                const { data } = event
+                if (data.type === 'IAM') {
+                    switch (data.code) {
+                        case 'cancel':
+                            this.handleChooseGroup()
+                            break
+                        case 'success':
+                            this.handleChooseGroup()
+                            break
+                    }
+                }
+            },
+
+            handleDeleteGroup (group) {
+                this.$emit('delete-group', group)
+            },
+
+            handelUpdateEnable (payload) {
+                this.isEnablePermission = payload
+            }
         }
-      }
-    },
-
-    handelUpdateEnable(payload) {
-      this.isEnablePermission = payload;
-    },
-  },
-};
+    }
 </script>
 
 <style lang="postcss" scoped>

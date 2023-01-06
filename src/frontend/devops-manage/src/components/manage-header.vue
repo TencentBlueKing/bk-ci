@@ -6,6 +6,10 @@ const { t } = useI18n();
 defineProps<{
   name: string
 }>();
+
+const goToManage = () => {
+  window.open('/console/pm', '_blank');
+};
 </script>
 
 <template>
@@ -16,7 +20,8 @@ defineProps<{
         separator="/"
       >
         <bk-breadcrumb-item
-          :to="{ name: 'list' }"
+          to="#"
+          @click.native.stop="goToManage"
         >
           {{ t('项目管理') }}
           <template #separator>
