@@ -59,7 +59,7 @@ data class StagePauseCheck(
     @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
     var markdownContent: Boolean? = false, // 是否以markdown格式发送审核说明
     @ApiModelProperty("发送的通知类型", required = false)
-    var notifyType: MutableList<String>? = mutableListOf("WEWORK_GROUP", "RTX"), // 通知类型[企业微信消息通知、企业微信群消息]
+    var notifyType: MutableList<String>? = mutableListOf("RTX"), // 通知类型[企业微信群消息]
     @ApiModelProperty("企业微信群id", required = false)
     var notifyGroup: MutableList<String>? = null
 ) {
