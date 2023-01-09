@@ -67,7 +67,7 @@ class RemoteDevService @Autowired constructor(
             userId = userId,
             event = event,
             environmentUid = enviromentUid,
-            status = EnvStatusEnum.Running,
+            status = EnvStatusEnum.running,
             dslContext = dslContext
         )
 
@@ -80,7 +80,7 @@ class RemoteDevService @Autowired constructor(
             val workspaceInfo = remoteDevServiceFactory.load("test-sawyer2")
                 .getWorkspaceInfo(userId, event.workspaceName)
 
-            if (workspaceInfo.status != EnvStatusEnum.Running) {
+            if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
                     ErrorCodeEnum.START_VM_ERROR.errorType,
                     ErrorCodeEnum.START_VM_ERROR.errorCode,
@@ -93,7 +93,7 @@ class RemoteDevService @Autowired constructor(
                 val context = DSL.using(t)
                 dispatchWorkspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = EnvStatusEnum.Running,
+                    status = EnvStatusEnum.running,
                     dslContext = context
                 )
 
@@ -115,7 +115,7 @@ class RemoteDevService @Autowired constructor(
                 val context = DSL.using(t)
                 dispatchWorkspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
-                    status = EnvStatusEnum.Failed,
+                    status = EnvStatusEnum.failed,
                     dslContext = context
                 )
 

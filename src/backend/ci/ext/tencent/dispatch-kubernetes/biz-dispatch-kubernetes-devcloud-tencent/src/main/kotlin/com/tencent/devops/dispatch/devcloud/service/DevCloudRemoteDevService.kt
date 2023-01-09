@@ -164,7 +164,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
             workspaceName = workspaceName,
-            status = EnvStatusEnum.Running,
+            status = EnvStatusEnum.running,
             dslContext = dslContext
         )
 
@@ -183,7 +183,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
             workspaceName = workspaceName,
-            status = EnvStatusEnum.Stopped,
+            status = EnvStatusEnum.stopped,
             dslContext = dslContext
         )
 
@@ -202,7 +202,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         // 更新db状态
         dispatchWorkspaceDao.updateWorkspaceStatus(
             workspaceName = workspaceName,
-            status = EnvStatusEnum.Deleted,
+            status = EnvStatusEnum.deleted,
             dslContext = dslContext
         )
 

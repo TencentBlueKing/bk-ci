@@ -89,7 +89,7 @@ class WorkspaceCheckJob @Autowired constructor(
             environmentUid = dispatchWorkspaceRecord.environmentUid
         )
 
-        if (environmentStatus.status == EnvStatusEnum.Running) {
+        if (environmentStatus.status == EnvStatusEnum.running) {
             workspaceDevCloudClient.operatorWorkspace(
                 userId = "admin",
                 environmentUid = dispatchWorkspaceRecord.environmentUid,

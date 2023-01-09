@@ -28,11 +28,11 @@
 package com.tencent.devops.dispatch.kubernetes.pojo
 
 enum class EnvStatusEnum {
-    Pending,
-    Running,
-    Succeeded,
-    Failed,
-    Stopped,
-    Unknow,
-    Deleted
+    pending,
+    running,
+    succeeded,
+    failed,
+    stopped,
+    unknow,
+    deleted
 }
