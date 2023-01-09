@@ -40,6 +40,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,8 +48,9 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserWorkspaceResourceImpl @Autowired constructor(
-    val gitTransferService: GitTransferService,
-    val workspaceService: WorkspaceService
+    private val gitTransferService: GitTransferService,
+    private val workspaceService: WorkspaceService,
+    private val redisHeartBeat: RedisHeartBeat
 ) : UserWorkspaceResource {
 
     override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<WorkspaceResponse> {
@@ -156,5 +158,10 @@ class UserWorkspaceResourceImpl @Autowired constructor(
             redirectUrl = redirectUrl,
             refreshToken = refreshToken
         )
+    }
+
+    override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
+        redisHeartBeat.refreshHeartbeat(workspaceName)
+        return Result(true)
     }
 }
