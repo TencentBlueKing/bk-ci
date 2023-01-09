@@ -505,7 +505,7 @@ class GitRequestEventBuildDao {
         buildIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val temp = DSL.select(ID).from(this)
+            val temp = DSL.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!pipelineId.isNullOrBlank()) {
@@ -546,17 +546,14 @@ class GitRequestEventBuildDao {
                 temp.and(BUILD_ID.`in`(buildIds))
             }
             return if (!commitMsg.isNullOrBlank()) {
-                dslContext.selectFrom(this).where(
+                val ids = DSL.select(ID).from(temp).where(
                     COMMIT_MESSAGE.like("%$commitMsg%")
-                ).unionAll(
-                    DSL.selectFrom(this).where(
-                        ID.`in`(temp)
-                    )
+                )
+                dslContext.selectFrom(this).where(
+                    ID.`in`(ids)
                 )
             } else {
-                dslContext.selectFrom(this).where(
-                    ID.`in`(temp)
-                )
+                temp
             }.orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
