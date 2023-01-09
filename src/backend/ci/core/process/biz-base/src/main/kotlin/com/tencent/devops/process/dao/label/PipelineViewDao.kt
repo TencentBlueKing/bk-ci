@@ -189,22 +189,6 @@ class PipelineViewDao {
         }
     }
 
-    fun listByPage(
-        dslContext: DSLContext,
-        projectId: String,
-        viewName: String? = null,
-        limit: Int,
-        offset: Int
-    ): Result<TPipelineViewRecord> {
-        with(TPipelineView.T_PIPELINE_VIEW) {
-            return dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-                .let { if (viewName != null) it.and(NAME.like("$viewName")) else it }
-                .offset(offset).limit(limit)
-                .fetch()
-        }
-    }
-
     fun list(dslContext: DSLContext, projectId: String, isProject: Boolean): Result<TPipelineViewRecord> {
         with(TPipelineView.T_PIPELINE_VIEW) {
             return dslContext.selectFrom(this)
@@ -257,6 +241,22 @@ class PipelineViewDao {
         }
     }
 
+    fun listByPage(
+        dslContext: DSLContext,
+        projectId: String,
+        viewName: String? = null,
+        limit: Int,
+        offset: Int
+    ): Result<TPipelineViewRecord> {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .let { if (viewName != null) it.and(NAME.like("%$viewName%")) else it }
+                .offset(offset).limit(limit)
+                .fetch()
+        }
+    }
+
     fun listProjectOrUser(
         dslContext: DSLContext,
         projectId: String,
@@ -294,4 +294,5 @@ class PipelineViewDao {
                 .fetchOne()
         }
     }
+
 }
