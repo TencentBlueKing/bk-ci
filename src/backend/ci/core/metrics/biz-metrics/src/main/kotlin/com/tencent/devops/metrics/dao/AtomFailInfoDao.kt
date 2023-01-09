@@ -233,7 +233,6 @@ class AtomFailInfoDao {
             return dslContext.select(ERROR_CODE, ERROR_TYPE, ERROR_MSG)
                 .from(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .groupBy(ERROR_CODE, ERROR_TYPE)
                 .fetch()
         }
     }
