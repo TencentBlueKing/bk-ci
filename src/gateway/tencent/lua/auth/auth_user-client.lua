@@ -42,7 +42,7 @@ if ms_timestamp ~= nil and ms_signature ~= nil and ms_staffid ~= nil and ms_staf
     if absTime < 180 then
         local token = config.mobileSiteToken
         local input = ms_timestamp .. token .. ms_x_rio_seq .. "," .. ms_staffid .. "," .. ms_staffname .. "," ..
-                          ms_x_ext_data .. timestamp
+                          ms_x_ext_data .. ms_timestamp
         local resty_sha256 = require "resty.sha256"
         local resty_str = require "resty.string"
         local sha256 = resty_sha256:new()
