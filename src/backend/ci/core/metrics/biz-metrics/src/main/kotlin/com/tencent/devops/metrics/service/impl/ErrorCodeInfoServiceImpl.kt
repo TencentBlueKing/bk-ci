@@ -113,7 +113,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         atomCode = e[BK_ATOM_CODE] as String
                     )
                 }
-                logger.info("syncAtomErrorCodeRel saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
                 saveErrorCodeInfoPOs.forEach {
                     try {
                         metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
