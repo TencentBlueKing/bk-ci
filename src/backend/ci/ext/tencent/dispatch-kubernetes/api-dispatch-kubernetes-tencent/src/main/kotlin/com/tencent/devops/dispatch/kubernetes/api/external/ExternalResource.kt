@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import io.swagger.annotations.Api
@@ -37,6 +38,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXTERNAL_DISPATCH_KUBERNETES"], description = "External-dispatch-kubernetes")
@@ -51,5 +53,20 @@ interface ExternalResource {
     fun workspaceTaskCallback(
         @ApiParam(value = "回调信息", required = true)
         taskStatus: TaskStatus
+    ): Result<Boolean>
+
+    @ApiOperation("提供给devopsremoting上报工作空间心跳")
+    @POST
+    @Path("/workspace/heartbeat")
+    fun workspaceHeartbeat(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String
     ): Result<Boolean>
 }

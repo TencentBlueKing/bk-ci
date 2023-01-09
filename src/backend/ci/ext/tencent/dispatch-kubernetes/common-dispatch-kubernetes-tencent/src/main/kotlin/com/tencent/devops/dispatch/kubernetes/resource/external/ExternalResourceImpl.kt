@@ -28,20 +28,46 @@
 package com.tencent.devops.dispatch.kubernetes.resource.external
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.Proto3Timestamp
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import java.time.Duration
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ExternalResource {
 
+    @Value("\${remoteDev.callBackSignSecret:}")
+    private val signSecret: String = ""
+    companion object {
+        private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
+    }
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Result<Boolean> {
         return Result(remoteDevService.workspaceTaskCallback(taskStatus))
     }
+
+    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
+        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
+        logger.info("signature($signature) and generate signature ($genSignature)")
+        if (!ShaUtils.isEqual(signature, genSignature)) {
+            logger.warn("signature($signature) and generate signature ($genSignature) not match")
+            return Result("Forbidden request", false)
+        }
+        // 时间戳计算超过一分钟就丢弃
+        return Result(remoteDevService.workspaceHeartbeat("", workspaceName))
+    }
+
 }
