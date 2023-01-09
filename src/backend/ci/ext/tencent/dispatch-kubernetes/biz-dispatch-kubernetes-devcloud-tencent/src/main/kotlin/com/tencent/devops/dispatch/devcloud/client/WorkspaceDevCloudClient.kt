@@ -110,7 +110,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
         workspaceName: String,
         environmentAction: EnvironmentAction
     ): EnvironmentOpRspData {
-        val url = devCloudUrl + "/environment/{${environmentAction.getValue()}}"
+        val url = devCloudUrl + "/environment/${environmentAction.getValue()}"
         logger.info("User $userId request url: $url, enviromentUid: $environmentUid")
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
