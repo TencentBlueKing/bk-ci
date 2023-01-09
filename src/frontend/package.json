@@ -39,6 +39,7 @@
   },
   "workspaces": {
     "packages": [
+      "bk-pipeline",
       "devops-codelib",
       "devops-environment",
       "devops-atomstore",
