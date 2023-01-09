@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.service.impl
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.metrics.constant.Constants
+import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
@@ -96,27 +97,39 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
                     ).data?.map { it.englishName }
-                val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
-                atomCodes.forEach { atomCode ->
-                    val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
-                    logger.info("syncAtomErrorCodeRel saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
-                    saveErrorCodeInfoPOs.forEach {
-                        try {
-                            metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                        } catch (ignored: DuplicateKeyException) {
-                            logger.info("fail to update errorCodeInfo:$it", ignored)
-                            metricsDataReportDao.updateErrorCodeInfo(
-                                dslContext = dslContext,
-                                atomCode = atomCode,
-                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                    errorType = it.errorType,
-                                    errorCode = it.errorCode,
-                                    errorMsg = it.errorMsg,
-                                    modifier = it.modifier,
-                                    updateTime = LocalDateTime.now()
-                                )
+                val errorCodeInfos =
+                    atomFailInfoDao.getAtomErrorInfos(dslContext, projectIds ?: emptyList())
+                val saveErrorCodeInfoPOs = errorCodeInfos.map { e ->
+                    SaveErrorCodeInfoPO(
+                        id = client.get(ServiceAllocIdResource::class)
+                            .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
+                        errorCode = e[Constants.BK_ERROR_CODE] as Int,
+                        errorType = e[Constants.BK_ERROR_TYPE] as Int,
+                        errorMsg = e[Constants.BK_ERROR_MSG] as String,
+                        creator = userId,
+                        modifier = userId,
+                        createTime = LocalDateTime.now(),
+                        updateTime = LocalDateTime.now(),
+                        atomCode = e[BK_ATOM_CODE] as String
+                    )
+                }
+                logger.info("syncAtomErrorCodeRel saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
+                saveErrorCodeInfoPOs.forEach {
+                    try {
+                        metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
+                    } catch (ignored: DuplicateKeyException) {
+                        logger.info("fail to update errorCodeInfo:$it", ignored)
+                        metricsDataReportDao.updateErrorCodeInfo(
+                            dslContext = dslContext,
+                            atomCode = it.atomCode!!,
+                            updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                errorType = it.errorType,
+                                errorCode = it.errorCode,
+                                errorMsg = it.errorMsg,
+                                modifier = it.modifier,
+                                updateTime = LocalDateTime.now()
                             )
-                        }
+                        )
                     }
                 }
                 projectMinId += (syncsNumber + 1)
@@ -124,24 +137,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             logger.info("end syncAtomErrorCodeRel.")
         }
         return true
-    }
-
-    private fun getAtomErrorInfos(userId: String, atomCode: String): List<SaveErrorCodeInfoPO> {
-        val saveErrorCodeInfoPOs = atomFailInfoDao.getAtomErrorInfos(dslContext, atomCode).map {
-            SaveErrorCodeInfoPO(
-                id = client.get(ServiceAllocIdResource::class)
-                    .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
-                errorCode = it[Constants.BK_ERROR_CODE] as Int,
-                errorType = it[Constants.BK_ERROR_TYPE] as Int,
-                errorMsg = it[Constants.BK_ERROR_MSG] as String,
-                creator = userId,
-                modifier = userId,
-                createTime = LocalDateTime.now(),
-                updateTime = LocalDateTime.now(),
-                atomCode = atomCode
-            )
-        }
-        return saveErrorCodeInfoPOs
     }
 
     companion object {

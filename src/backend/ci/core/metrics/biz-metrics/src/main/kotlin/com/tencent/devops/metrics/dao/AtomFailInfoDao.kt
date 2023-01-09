@@ -228,12 +228,12 @@ class AtomFailInfoDao {
         }
     }
 
-    fun getAtomErrorInfos(dslContext: DSLContext, atomCode: String): Result<Record> {
+    fun getAtomErrorInfos(dslContext: DSLContext, projectIds: List<String>): Result<Record> {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
             return dslContext.select()
                 .from(this)
-                .where(ATOM_CODE.eq(atomCode))
-                .groupBy(ERROR_CODE, ERROR_TYPE)
+                .where(PROJECT_ID.`in`(projectIds))
+                .groupBy(ATOM_CODE, ERROR_CODE, ERROR_TYPE)
                 .fetch()
         }
     }
