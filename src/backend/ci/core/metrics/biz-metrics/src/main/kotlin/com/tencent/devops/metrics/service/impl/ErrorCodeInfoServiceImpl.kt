@@ -99,11 +99,11 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         ).data?.map { it.englishName }
                     logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
                     val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
-                    logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes")
+                    logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes .")
                     atomCodes.forEach { atomCode ->
                         val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
                         logger.info("syncAtomErrorCodeRel atomCode:$atomCode|" +
-                                "saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
+                                "saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs .")
                         saveErrorCodeInfoPOs.forEach {
                             try {
                                 metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
@@ -125,10 +125,10 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                     }
                     projectMinId += (syncsNumber + 1)
                 } while (projectMinId <= projectMaxId)
-                logger.info("end syncAtomErrorCodeRel")
+                logger.info("end syncAtomErrorCodeRel.")
             }
+            logger.info("end syncAtomErrorCodeRel.")
         }
-        logger.info("end syncAtomErrorCodeRel.")
         return true
     }
 
