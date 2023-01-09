@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.Proto3Timestamp
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
@@ -58,8 +59,8 @@ class ExternalResourceImpl @Autowired constructor(
         return Result(remoteDevService.workspaceTaskCallback(taskStatus))
     }
 
-    override fun workspaceHeartbeat(signature: String, workspaceName: String): Result<Boolean> {
-        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), workspaceName.toByteArray())
+    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
+        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
         logger.info("signature($signature) and generate signature ($genSignature)")
         if (!ShaUtils.isEqual(signature, genSignature)) {
             logger.warn("signature($signature) and generate signature ($genSignature) not match")

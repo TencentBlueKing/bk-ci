@@ -55,7 +55,7 @@ interface ExternalResource {
         taskStatus: TaskStatus
     ): Result<Boolean>
 
-    @ApiOperation("external接口：提供给devopsremoting上报工作空间心跳")
+    @ApiOperation("提供给devopsremoting上报工作空间心跳")
     @POST
     @Path("/workspace/heartbeat")
     fun workspaceHeartbeat(
@@ -64,6 +64,9 @@ interface ExternalResource {
         signature: String,
         @ApiParam(value = "工作空间ID", required = true)
         @QueryParam("workspaceName")
-        workspaceName: String
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("workspaceName")
+        timestamp: String
     ): Result<Boolean>
 }
