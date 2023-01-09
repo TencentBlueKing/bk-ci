@@ -33,11 +33,14 @@ import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.process.dao.label.PipelineViewDao
+import com.tencent.devops.process.dao.label.PipelineViewGroupDao
+import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +52,8 @@ class AuthPipelineService @Autowired constructor(
     val authTokenApi: AuthTokenApi,
     val pipelineListFacadeService: PipelineListFacadeService,
     val pipelineViewDao: PipelineViewDao,
+    val pipelineViewGroupDao: PipelineViewGroupDao,
+    val pipelineInfoDao: PipelineInfoDao,
     val dslContext: DSLContext
 ) {
     fun pipelineInfo(
@@ -59,32 +64,52 @@ class AuthPipelineService @Autowired constructor(
         logger.info("iam流水线回调信息:$callBackInfo")
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val projectId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
-        // todo 得区别父类的资源是 流水线组还是项目
-        // todo 必须得传递项目id过来，仅仅传递流水线组id，不能查询
+        val parentResourceType = callBackInfo.filter.parent?.type ?: ""
+        val parentId = callBackInfo.filter.parent?.id ?: "" // FETCH_INSTANCE_INFO场景下iam不会传parentId
         when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                return getPipeline(
-                    projectId = projectId,
-                    offset = page.offset.toInt(),
-                    limit = page.limit.toInt(),
-                    token = token,
-                    returnPipelineId = returnPipelineId!!
-                )
+                return if (parentResourceType == AuthResourceType.PROJECT.value) {
+                    getPipelineUnderProject(
+                        projectId = parentId,
+                        offset = page.offset.toInt(),
+                        limit = page.limit.toInt(),
+                        token = token,
+                        returnPipelineId = returnPipelineId!!
+                    )
+                } else {
+                    getPipelineUnderGroup(
+                        viewId = parentId.toLong(),
+                        offset = page.offset.toInt(),
+                        limit = page.limit.toInt(),
+                        token = token,
+                        returnPipelineId = returnPipelineId!!
+                    )
+                }
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 return getPipelineInfo(ids, token, returnPipelineId!!)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                return searchPipeline(
-                    projectId = projectId,
-                    keyword = callBackInfo.filter.keyword,
-                    limit = page.limit.toInt(),
-                    offset = page.offset.toInt(),
-                    token = token,
-                    returnPipelineId = returnPipelineId!!
-                )
+                return if (parentResourceType == AuthResourceType.PROJECT.value) {
+                    searchPipelineUnderProject(
+                        projectId = parentId,
+                        keyword = callBackInfo.filter.keyword,
+                        limit = page.limit.toInt(),
+                        offset = page.offset.toInt(),
+                        token = token,
+                        returnPipelineId = returnPipelineId!!
+                    )
+                } else {
+                    searchPipelineUnderGroup(
+                        viewId = parentId,
+                        keyword = callBackInfo.filter.keyword,
+                        limit = page.limit.toInt(),
+                        offset = page.offset.toInt(),
+                        token = token,
+                        returnPipelineId = returnPipelineId!!
+                    )
+                }
             }
             else -> {}
         }
@@ -126,7 +151,7 @@ class AuthPipelineService @Autowired constructor(
         return null
     }
 
-    private fun searchPipeline(
+    private fun searchPipelineUnderProject(
         projectId: String,
         keyword: String,
         limit: Int,
@@ -162,7 +187,53 @@ class AuthPipelineService @Autowired constructor(
         return result.buildSearchInstanceResult(entityInfo, pipelineInfos.count)
     }
 
-    private fun getPipeline(
+    private fun searchPipelineUnderGroup(
+        viewId: String,
+        keyword: String,
+        limit: Int,
+        offset: Int,
+        token: String,
+        returnPipelineId: Boolean
+    ): SearchInstanceInfo {
+        authTokenApi.checkToken(token)
+        val pipelineViewGroupInfos = pipelineViewGroupDao.listByViewId(
+            dslContext = dslContext,
+            viewId = viewId.toLong(),
+            limit = limit,
+            offset = offset
+        )
+        val result = SearchInstanceInfo()
+        if (pipelineViewGroupInfos.isEmpty()) {
+            logger.info("$viewId 流水线组下无流水线")
+            return result.buildSearchInstanceFailResult()
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        val pipelineIds = pipelineViewGroupInfos.map { it.pipelineId }.toSet()
+        val pipelineInfos = pipelineInfoDao.searchByProject(
+            dslContext = dslContext,
+            pipelineName = keyword,
+            pipelineIds = pipelineIds,
+            limit = limit,
+            offset = offset
+        )
+        if (!pipelineInfos.isNullOrEmpty()) {
+            pipelineInfos.map {
+                val entityId = if (returnPipelineId) {
+                    it.pipelineId
+                } else {
+                    it.id?.toString() ?: "0"
+                }
+                val entity = InstanceInfoDTO()
+                entity.id = entityId
+                entity.displayName = it.pipelineName
+                entityInfo.add(entity)
+            }
+        }
+        logger.info("entityInfo $entityInfo, count ${pipelineInfos?.size}")
+        return result.buildSearchInstanceResult(entityInfo, pipelineInfos?.size!!.toLong())
+    }
+
+    private fun getPipelineUnderProject(
         projectId: String,
         offset: Int,
         limit: Int,
@@ -196,6 +267,48 @@ class AuthPipelineService @Autowired constructor(
         return result.buildListInstanceResult(entityInfo, pipelineInfos.count)
     }
 
+    private fun getPipelineUnderGroup(
+        viewId: Long,
+        offset: Int,
+        limit: Int,
+        token: String,
+        returnPipelineId: Boolean
+    ): ListInstanceResponseDTO {
+        authTokenApi.checkToken(token)
+        val pipelineViews = pipelineViewGroupDao.list(
+            dslContext = dslContext,
+            viewId = viewId,
+            limit = limit,
+            offset = offset
+        )
+        val result = ListInstanceInfo()
+        if (pipelineViews.isEmpty()) {
+            logger.info("$viewId 流水线组下无流水线")
+            return result.buildListInstanceFailResult()
+        }
+        val entityInfo = mutableListOf<InstanceInfoDTO>()
+        pipelineViews.map {
+            val pipelineInfo = pipelineInfoDao.getPipelineInfo(
+                dslContext = dslContext,
+                projectId = it.projectId,
+                pipelineId = it.pipelineId
+            )
+            if (pipelineInfo != null) {
+                val entityId = if (returnPipelineId) {
+                    pipelineInfo.pipelineId
+                } else {
+                    pipelineInfo.id?.toString() ?: "0"
+                }
+                val entity = InstanceInfoDTO()
+                entity.id = entityId
+                entity.displayName = pipelineInfo.pipelineName
+                entityInfo.add(entity)
+            }
+        }
+        logger.info("entityInfo $entityInfo, count ${entityInfo.size}")
+        return result.buildListInstanceResult(entityInfo, entityInfo.size.toLong())
+    }
+
     private fun getPipelineGroup(
         projectId: String,
         offset: Int,
@@ -203,7 +316,7 @@ class AuthPipelineService @Autowired constructor(
         token: String
     ): ListInstanceResponseDTO {
         authTokenApi.checkToken(token)
-        val pipelineGroupList = pipelineViewDao.list(
+        val pipelineGroupList = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
             limit = limit,
@@ -302,7 +415,7 @@ class AuthPipelineService @Autowired constructor(
         token: String,
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
-        val pipelineGroupInfo = pipelineViewDao.list(
+        val pipelineGroupInfo = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
             viewName = keyword,
