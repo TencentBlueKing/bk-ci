@@ -211,7 +211,8 @@ class WorkspaceDao {
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        workspaceId: Long? = null
+        workspaceId: Long? = null,
+        workspaceName: String? = null
     ): TWorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId, workspaceId)
@@ -245,7 +246,8 @@ class WorkspaceDao {
 
     fun mixCondition(
         userId: String? = null,
-        workspaceId: Long? = null
+        workspaceId: Long? = null,
+        workspaceName: String? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
@@ -254,6 +256,9 @@ class WorkspaceDao {
             }
             if (workspaceId != null) {
                 condition.add(ID.eq(workspaceId))
+            }
+            if (!workspaceName.isNullOrBlank()) {
+                condition.add(NAME.eq(workspaceName))
             }
         }
         return condition

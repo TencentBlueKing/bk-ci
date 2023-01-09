@@ -4,5 +4,6 @@ enum class UpdateEventType {
     CREATE,
     START,
     STOP,
-    DELETE
+    DELETE,
+    HEART_BEAT_STOP
 }

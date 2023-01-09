@@ -44,7 +44,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -287,16 +286,10 @@ class WorkspaceService @Autowired constructor(
                     )
                 }
 
-                // 获取远程登录url
-                val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
-                    userId,
-                    ws.name
-                ).data
-
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
-                    environmentUid = it.environmentUid,
-                    environmentHost = it.environmentHost
+                    environmentUid = it.environmentUid ?: "",
+                    environmentHost = it.environmentHost ?: ""
                 )
             } else {
                 // 创建失败
@@ -401,8 +394,8 @@ class WorkspaceService @Autowired constructor(
                     }
                     return WorkspaceResponse(
                         workspaceName = workspace.name,
-                        environmentUid = it.environmentUid,
-                        environmentHost = it.environmentHost
+                        environmentUid = it.environmentUid ?: "",
+                        environmentHost = it.environmentHost ?: ""
                     )
                 } else {
                     // 启动失败
@@ -476,7 +469,9 @@ class WorkspaceService @Autowired constructor(
                         if (lastHistory != null) {
                             workspaceDao.updateWorkspaceUsageTime(
                                 workspaceId = workspaceId,
-                                usageTime = Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds.toInt(),
+                                usageTime = Duration.between(
+                                    lastHistory.startTime, LocalDateTime.now()
+                                ).seconds.toInt(),
                                 dslContext = transactionContext,
                             )
                             workspaceHistoryDao.updateWorkspaceHistory(
@@ -744,6 +739,65 @@ class WorkspaceService @Autowired constructor(
                 ref = branch,
                 recursive = false // 不递归
             ).map { Constansts.devFileDirectoryName + "/" + it }
+        }
+    }
+
+    fun heartBeatStop(workSpaceName: String) {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workSpaceName)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workSpaceName not find")
+        // 校验状态
+        val status = WorkspaceStatus.values()[workspace.status]
+        if (status.isSleeping()) {
+            logger.info("$workspace has been stopped, return error.")
+            throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
+        }
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY:stopWorkspace:${workspace.id}",
+            expiredTimeInSeconds
+        ).lock().use {
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspace.id,
+                    operator = "system",
+                    action = WorkspaceAction.SLEEP,
+                    actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+                )
+
+                val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspace.id
+                )
+                if (lastHistory != null) {
+                    workspaceDao.updateWorkspaceUsageTime(
+                        workspaceId = workspace.id,
+                        usageTime = Duration.between(
+                            lastHistory.startTime, LocalDateTime.now()
+                        ).seconds.toInt(),
+                        dslContext = transactionContext,
+                    )
+                    workspaceHistoryDao.updateWorkspaceHistory(
+                        dslContext = transactionContext,
+                        id = lastHistory.id,
+                        stopUserId = "system"
+                    )
+                } else {
+                    logger.error("${workspace.id} get last history info null")
+                }
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceId = workspace.id,
+                    operator = "system",
+                    action = WorkspaceAction.SLEEP,
+                    actionMessage = String.format(
+                        getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                        status.name,
+                        WorkspaceStatus.SLEEP.name
+                    )
+                )
+            }
         }
     }
 

@@ -1,15 +1,13 @@
-package com.tencent.devops.dispatch.devcloud.cron
+package com.tencent.devops.remotedev.cron
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
-import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
-import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
-import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -19,10 +17,8 @@ import org.springframework.stereotype.Component
 @Component
 class WorkspaceCheckJob @Autowired constructor(
     private val dslContext: DSLContext,
-    private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
+    private val redisHeartBeat: RedisHeartBeat,
     private val redisOperation: RedisOperation,
-    private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceDevCloudClient: WorkspaceDevCloudClient,
     private val remoteDevDispatcher: RemoteDevDispatcher
 ) {
 
@@ -42,10 +38,10 @@ class WorkspaceCheckJob @Autowired constructor(
             val lockSuccess = redisLock.tryLock()
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
-                val sleepWorkspaceList = devcloudWorkspaceRedisUtils.getSleepWorkspaceHeartbeats()
+                val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach {
                     stopInactiveWorkspace(it)
-                    devcloudWorkspaceRedisUtils.deleteWorkspaceHeartbeat("admin", it)
+                    redisHeartBeat.deleteWorkspaceHeartbeat("admin", it)
 
                     // 发送mq事件通知remoteDev服务刷新工作空间状态
                     remoteDevDispatcher.dispatch(
@@ -85,30 +81,6 @@ class WorkspaceCheckJob @Autowired constructor(
         }
     }
 
-    private fun stopInactiveWorkspace(
-        workspaceName: String
-    ) {
-        val dispatchWorkspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
-        if (dispatchWorkspaceRecord == null) {
-            logger.info("$workspaceName no workspace record.")
-            return
-        }
-
-        // 查询devcloud env状态
-        val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(
-            userId = "admin",
-            environmentUid = dispatchWorkspaceRecord.environmentUid
-        )
-
-        if (environmentStatus.status == EnvStatusEnum.running) {
-            workspaceDevCloudClient.operatorWorkspace(
-                userId = "admin",
-                environmentUid = dispatchWorkspaceRecord.environmentUid,
-                workspaceName = workspaceName,
-                environmentAction = EnvironmentAction.STOP
-            )
-        }
-    }
 
     private fun clearNoUseIdleWorkspace() {
         // 超过7天空闲的容器，直接删了

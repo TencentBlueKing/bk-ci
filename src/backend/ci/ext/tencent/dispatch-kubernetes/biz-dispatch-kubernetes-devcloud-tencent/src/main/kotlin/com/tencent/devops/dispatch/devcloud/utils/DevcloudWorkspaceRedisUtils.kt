@@ -41,42 +41,6 @@ class DevcloudWorkspaceRedisUtils @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
 
-    fun refreshHeartbeat(
-        userId: String,
-        workspaceName: String
-    ) {
-        logger.info("User $userId hset(${heartbeatKey()}) $workspaceName")
-        redisOperation.hset(
-            key = heartbeatKey(),
-            hashKey = workspaceName,
-            values = System.currentTimeMillis().toString()
-        )
-    }
-
-    fun deleteWorkspaceHeartbeat(userId: String, workspaceName: String) {
-        logger.info("User $userId hdelete(${heartbeatKey()}) $workspaceName")
-        redisOperation.hdelete(heartbeatKey(), workspaceName)
-    }
-
-    fun getWorkspaceHeartbeatList(): MutableMap<String, String> {
-        return redisOperation.hentries(heartbeatKey()) ?: mutableMapOf()
-    }
-
-    fun getSleepWorkspaceHeartbeats(): List<String> {
-        val values = redisOperation.hvalues(heartbeatKey())
-
-        val sleepValues = values?.stream()?.filter {
-            val elapse = System.currentTimeMillis() - it.toLong()
-            elapse > 1800000
-        }?.collect(Collectors.toList()) ?: emptyList()
-
-        return sleepValues
-    }
-
-    private fun heartbeatKey(): String {
-        return "dispatchkubernetes:workspace_heartbeat"
-    }
-
     /*-------------------------*/
     fun refreshTaskStatus(userId: String, taskUid: String, taskStatus: TaskStatus) {
         logger.info("User $userId hset(${taskStatusKey()}) $taskUid")
