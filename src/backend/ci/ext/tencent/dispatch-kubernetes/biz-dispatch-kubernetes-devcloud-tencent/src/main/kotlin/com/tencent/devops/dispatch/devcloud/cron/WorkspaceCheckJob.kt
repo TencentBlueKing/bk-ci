@@ -86,7 +86,7 @@ class WorkspaceCheckJob @Autowired constructor(
         // 查询devcloud env状态
         val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(
             userId = "admin",
-            enviromentUid = dispatchWorkspaceRecord.environmentUid
+            environmentUid = dispatchWorkspaceRecord.environmentUid
         )
 
         if (environmentStatus.status == EnvStatusEnum.Running) {

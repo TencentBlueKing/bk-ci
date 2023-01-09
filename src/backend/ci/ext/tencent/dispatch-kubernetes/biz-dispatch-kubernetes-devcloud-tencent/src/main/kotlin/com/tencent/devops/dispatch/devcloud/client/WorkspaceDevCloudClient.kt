@@ -3,6 +3,7 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -15,6 +16,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentOpRspData
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatus
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentStatusRsp
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatusRsp
+import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
@@ -121,7 +123,12 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     )
                 )
             )
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), environmentUid))
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    JsonUtil.toJson(UidReq(environmentUid))
+                )
+            )
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
@@ -169,7 +176,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
 
     fun getWorkspaceStatus(
         userId: String,
-        enviromentUid: String,
+        environmentUid: String,
         retryTime: Int = 3
     ): EnvironmentStatus {
         val url = devCloudUrl + "/environment/status"
@@ -185,16 +192,21 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     )
                 )
             )
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), enviromentUid))
+            .post(
+                RequestBody.create(
+                    MediaType.parse("application/json; charset=utf-8"),
+                    JsonUtil.toJson(UidReq(environmentUid))
+                )
+            )
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 val responseContent = response.body()!!.string()
-                logger.info("User $userId get environment status $enviromentUid response: $responseContent")
+                logger.info("User $userId get environment status $environmentUid response: $responseContent")
                 if (!response.isSuccessful) {
                     if (retryTime > 0) {
                         val retryTimeLocal = retryTime - 1
-                        return getWorkspaceStatus(userId, enviromentUid, retryTimeLocal)
+                        return getWorkspaceStatus(userId, environmentUid, retryTimeLocal)
                     }
                     throw BuildFailureException(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
@@ -223,7 +235,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     "User $userId get environment status SocketTimeoutException. " +
                         "retry: $retryTime"
                 )
-                return getWorkspaceStatus(userId, enviromentUid, retryTime - 1)
+                return getWorkspaceStatus(userId, environmentUid, retryTime - 1)
             } else {
                 logger.error("User $userId get environment status failed.", e)
                 throw BuildFailureException(
