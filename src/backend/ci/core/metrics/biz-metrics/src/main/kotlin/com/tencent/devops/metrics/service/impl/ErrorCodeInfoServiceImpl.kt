@@ -89,18 +89,19 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
             val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-            val pipelineLabelSyncsNumber = 10
+            val syncsNumber = 10
             if (projectMinId != null && projectMaxId != null) {
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(
                             minId = projectMinId,
-                            maxId = projectMinId + pipelineLabelSyncsNumber
+                            maxId = projectMinId + syncsNumber
                         ).data?.map { it.englishName }
                     val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
-                    logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes")
                     atomCodes.forEach { atomCode ->
                         val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
+                        logger.info("syncAtomErrorCodeRel atomCode:$atomCode|" +
+                                "saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
                         saveErrorCodeInfoPOs.forEach {
                             try {
                                 metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
@@ -120,7 +121,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                             }
                         }
                     }
-                    projectMinId += (pipelineLabelSyncsNumber + 1)
+                    projectMinId += (syncsNumber + 1)
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncAtomErrorCodeRel")
             }
