@@ -85,9 +85,9 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncAtomErrorCodeRel(userId: String): Boolean {
+        var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+        val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
         Executors.newFixedThreadPool(1).submit {
-            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
             val syncsNumber = 10
             if (projectMinId != null && projectMaxId != null) {
@@ -127,8 +127,8 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncAtomErrorCodeRel.")
             }
-            logger.info("end syncAtomErrorCodeRel.")
         }
+        logger.info("end syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
         return true
     }
 
