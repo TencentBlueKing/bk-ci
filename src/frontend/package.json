@@ -39,7 +39,6 @@
   },
   "workspaces": {
     "packages": [
-      "bk-pipeline",
       "devops-codelib",
       "devops-environment",
       "devops-atomstore",
@@ -50,9 +49,12 @@
       "devops-nav",
       "devops-turbo",
       "devops-stream",
-      "devops-metrics"
+      "devops-metrics",
+      "bk-pipeline"
     ],
     "nohoist": [
+      "bkui-pipeline",
+      "bkui-pipeline/**",
       "devops-stream",
       "devops-stream/**",
       "devops-metrics",
