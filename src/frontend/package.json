@@ -49,10 +49,13 @@
       "devops-nav",
       "devops-turbo",
       "devops-stream",
-      "devops-metrics",
-      "bk-pipeline"
+      "devops-metrics"
     ],
     "nohoist": [
+      "bk-pipeline",
+      "bk-pipeline/**",
+      "devops-stream",
+      "devops-stream/**",
       "devops-metrics",
       "devops-metrics/**"
     ]
@@ -63,6 +66,7 @@
     "core-js": "3.26.0",
     "css-loader": "6.0.0",
     "cross-env": "^7.0.3",
+    "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
     "uuid": "^8.3.2",
