@@ -34,8 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 data class WorkspaceResponse(
     @ApiModelProperty("工作空间名称")
     val workspaceName: String,
-    @ApiModelProperty("构建环境ID")
-    val environmentUid: String,
-    @ApiModelProperty("构建环境HOST")
-    val environmentHost: String
+    @ApiModelProperty("工作空间HOST")
+    val workspaceHost: String
 )

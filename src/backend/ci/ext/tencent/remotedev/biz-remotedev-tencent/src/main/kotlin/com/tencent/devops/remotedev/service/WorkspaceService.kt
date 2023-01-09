@@ -278,8 +278,7 @@ class WorkspaceService @Autowired constructor(
 
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
-                    environmentUid = it.environmentUid ?: "",
-                    environmentHost = it.environmentHost ?: ""
+                    workspaceHost = it.environmentHost ?: ""
                 )
             } else {
                 // 创建失败
@@ -375,8 +374,7 @@ class WorkspaceService @Autowired constructor(
                     }
                     return WorkspaceResponse(
                         workspaceName = workspace.name,
-                        environmentUid = it.environmentUid ?: "",
-                        environmentHost = it.environmentHost ?: ""
+                        workspaceHost = it.environmentHost ?: ""
                     )
                 } else {
                     // 启动失败
