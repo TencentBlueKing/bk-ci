@@ -12,7 +12,7 @@ data class EnvironmentStatus(
     val EnvironmentIP: String,
     val clusterId: String,
     val namespace: String,
-    val startTime: Proto3Timestamp,
+    val startTime: String,
     val initContainerStatuses: ContainerStatus,
     val containerStatuses: ContainerStatus
 )

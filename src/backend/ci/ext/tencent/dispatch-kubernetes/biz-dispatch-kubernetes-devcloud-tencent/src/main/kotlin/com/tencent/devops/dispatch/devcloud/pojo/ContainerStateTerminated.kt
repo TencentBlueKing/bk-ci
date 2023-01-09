@@ -7,7 +7,7 @@ data class ContainerStateTerminated(
     val signal: Int,
     val reason: String,
     val message: String,
-    val startedAt: Proto3Timestamp,
-    val finishedAt: Proto3Timestamp,
+    val startedAt: String,
+    val finishedAt: String,
     val containerID: String,
 )
