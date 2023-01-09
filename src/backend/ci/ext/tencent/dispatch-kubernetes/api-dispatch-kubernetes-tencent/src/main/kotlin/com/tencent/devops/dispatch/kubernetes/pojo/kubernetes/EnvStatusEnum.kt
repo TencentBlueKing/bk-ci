@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.kubernetes.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
 enum class EnvStatusEnum {
     pending,

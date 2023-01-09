@@ -1,7 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.Proto3Timestamp
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 
 data class EnvironmentStatus(
     val status: EnvStatusEnum,

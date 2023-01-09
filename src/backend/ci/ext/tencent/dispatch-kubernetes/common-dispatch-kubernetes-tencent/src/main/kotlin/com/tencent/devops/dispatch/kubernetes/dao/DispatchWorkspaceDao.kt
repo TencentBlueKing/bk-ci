@@ -27,9 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspace
 import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchWorkspaceRecord
 import org.jooq.DSLContext

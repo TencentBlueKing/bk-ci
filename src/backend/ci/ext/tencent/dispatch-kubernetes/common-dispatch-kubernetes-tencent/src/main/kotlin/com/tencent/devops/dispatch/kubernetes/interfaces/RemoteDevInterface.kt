@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
-import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 
 /**

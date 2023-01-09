@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import io.swagger.annotations.Api
@@ -111,4 +112,16 @@ interface ServiceRemoteDevResource {
         @PathParam("workspaceName")
         workspaceName: String
     ): Result<String?>
+
+    @ApiOperation("获取远程工作空间连接")
+    @GET
+    @Path("/workspaces/{workspaceName}/info")
+    fun getWorkspaceInfo(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("工作空间唯一name", required = false)
+        @PathParam("workspaceName")
+        workspaceName: String
+    ): Result<WorkspaceInfo>
 }

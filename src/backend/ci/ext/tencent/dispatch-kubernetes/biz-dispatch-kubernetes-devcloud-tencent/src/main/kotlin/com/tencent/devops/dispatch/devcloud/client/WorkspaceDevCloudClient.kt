@@ -20,7 +20,7 @@ import com.tencent.devops.dispatch.devcloud.pojo.UidReq
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceOpHisDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import okhttp3.Headers
 import okhttp3.MediaType
 import okhttp3.Request

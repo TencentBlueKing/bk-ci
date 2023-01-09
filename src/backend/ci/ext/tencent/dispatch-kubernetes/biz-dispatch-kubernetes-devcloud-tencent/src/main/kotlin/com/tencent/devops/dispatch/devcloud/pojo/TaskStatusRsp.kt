@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 
 data class TaskStatusRsp(
     val data: TaskStatus,
