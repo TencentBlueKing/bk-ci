@@ -68,7 +68,7 @@
     "@icon-cool/bk-icon-devops": "^0.1.13",
     "@types/webpack-env": "^1.15.2",
     "axios": "^0.27.2",
-    "bk-magic-vue": "2.4.17-beta.5",
+    "bk-magic-vue": "2.4.15-beta.21",
     "bluebird": "^3.5.1",
     "js-cookie": "^3.0.1",
     "vue": "2.6.12",
