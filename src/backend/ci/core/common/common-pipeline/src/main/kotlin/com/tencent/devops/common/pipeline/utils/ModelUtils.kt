@@ -42,10 +42,7 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 
-/**
- *
- * @version 1.0
- */
+@Suppress(    "ComplexMethod")
 object ModelUtils {
 
     /**

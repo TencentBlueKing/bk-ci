@@ -55,7 +55,7 @@ import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount")
+@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "ComplexMethod")
 open class BaseBuildRecordService(
     private val dslContext: DSLContext,
     private val buildRecordModelDao: BuildRecordModelDao,

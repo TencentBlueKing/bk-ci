@@ -55,7 +55,14 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "MagicNumber", "ReturnCount", "TooManyFunctions", "ComplexCondition")
+@Suppress(
+    "LongParameterList",
+    "MagicNumber",
+    "ReturnCount",
+    "TooManyFunctions",
+    "ComplexCondition",
+    "ComplexMethod"
+)
 @Service
 class TaskBuildRecordService(
     private val buildVariableService: BuildVariableService,
