@@ -46,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 @Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
@@ -87,48 +86,46 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     override fun syncAtomErrorCodeRel(userId: String): Boolean {
         var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
         val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-        Executors.newFixedThreadPool(1).submit {
-            logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-            val syncsNumber = 10
-            if (projectMinId != null && projectMaxId != null) {
-                do {
-                    val projectIds = client.get(ServiceProjectResource::class)
-                        .getProjectListById(
-                            minId = projectMinId,
-                            maxId = projectMinId + syncsNumber
-                        ).data?.map { it.englishName }
-                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds" +
-                            "atomCodes:${atomFailInfoDao.limitAtomCodes(dslContext, projectIds!!).map { it.value1() }}")
-                    val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
+        logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
+        val syncsNumber = 10
+        if (projectMinId != null && projectMaxId != null) {
+            do {
+                val projectIds = client.get(ServiceProjectResource::class)
+                    .getProjectListById(
+                        minId = projectMinId,
+                        maxId = projectMinId + syncsNumber
+                    ).data?.map { it.englishName }
+                logger.info("syncAtomErrorCodeRel projectIds:$projectIds" +
+                        "atomCodes:${atomFailInfoDao.limitAtomCodes(dslContext, projectIds!!).map { it.value1() }}")
+                val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
                     .map { it.value1() }
-                    logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes .")
-                    atomCodes.forEach { atomCode ->
-                        val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
-                        logger.info("syncAtomErrorCodeRel atomCode:$atomCode|" +
-                                "saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs .")
-                        saveErrorCodeInfoPOs.forEach {
-                            try {
-                                metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                            } catch (ignored: DuplicateKeyException) {
-                                logger.info("fail to update errorCodeInfo:$it", ignored)
-                                metricsDataReportDao.updateErrorCodeInfo(
-                                    dslContext = dslContext,
-                                    atomCode = atomCode,
-                                    updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                        errorType = it.errorType,
-                                        errorCode = it.errorCode,
-                                        errorMsg = it.errorMsg,
-                                        modifier = it.modifier,
-                                        updateTime = LocalDateTime.now()
-                                    )
+                logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes .")
+                atomCodes.forEach { atomCode ->
+                    val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
+                    logger.info("syncAtomErrorCodeRel atomCode:$atomCode|" +
+                            "saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs .")
+                    saveErrorCodeInfoPOs.forEach {
+                        try {
+                            metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.info("fail to update errorCodeInfo:$it", ignored)
+                            metricsDataReportDao.updateErrorCodeInfo(
+                                dslContext = dslContext,
+                                atomCode = atomCode,
+                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                    errorType = it.errorType,
+                                    errorCode = it.errorCode,
+                                    errorMsg = it.errorMsg,
+                                    modifier = it.modifier,
+                                    updateTime = LocalDateTime.now()
                                 )
-                            }
+                            )
                         }
                     }
-                    projectMinId += (syncsNumber + 1)
-                } while (projectMinId <= projectMaxId)
-                logger.info("end syncAtomErrorCodeRel.")
-            }
+                }
+                projectMinId += (syncsNumber + 1)
+            } while (projectMinId <= projectMaxId)
+            logger.info("end syncAtomErrorCodeRel.")
         }
         logger.info("end syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
         return true
