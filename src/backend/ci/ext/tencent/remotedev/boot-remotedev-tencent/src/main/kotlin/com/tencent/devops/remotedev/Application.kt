@@ -30,8 +30,10 @@ package com.tencent.devops.remotedev
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
+import org.springframework.scheduling.annotation.EnableScheduling
 
 @MicroService
+@EnableScheduling
 @ComponentScan("com.tencent.devops.remotedev")
 class Application
 

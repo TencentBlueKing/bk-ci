@@ -246,4 +246,16 @@ interface UserWorkspaceResource {
         @QueryParam("refreshToken")
         refreshToken: Boolean? = true
     ): Result<AuthorizeResult>
+
+    @ApiOperation("工作空间心跳请求")
+    @POST
+    @Path("/heartbeat")
+    fun workspaceHeartbeat(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "执行次数", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
+    ): Result<Boolean>
 }

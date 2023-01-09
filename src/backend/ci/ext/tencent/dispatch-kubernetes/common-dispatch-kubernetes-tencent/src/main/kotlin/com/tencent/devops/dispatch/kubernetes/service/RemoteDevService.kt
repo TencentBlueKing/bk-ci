@@ -158,10 +158,6 @@ class RemoteDevService @Autowired constructor(
         return remoteDevServiceFactory.load("test-sawyer2").getWorkspaceInfo(userId, workspaceName)
     }
 
-    fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("test-sawyer2").workspaceHeartbeat(userId, workspaceName)
-    }
-
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         return remoteDevServiceFactory.load("test-sawyer2").workspaceTaskCallback(taskStatus)
     }
