@@ -32,6 +32,7 @@ import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitlabRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -92,16 +93,21 @@ class RepositoryCodeGitLabDao {
         repositoryId: Long,
         projectName: String,
         userName: String,
-        credentialId: String
+        credentialId: String,
+        gitProjectId: String
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
-            dslContext.update(this)
+            val updateSetStep = dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
-                .where(REPOSITORY_ID.eq(repositoryId))
+
+            if (StringUtils.isNotBlank(gitProjectId)) {
+                updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+            }
+            updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }

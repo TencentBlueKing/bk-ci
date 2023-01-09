@@ -35,14 +35,15 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
+import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -50,14 +51,20 @@ import org.springframework.stereotype.Component
 class CodeGithubRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
     private val repositoryGithubDao: RepositoryGithubDao,
-    private val dslContext: DSLContext,
-    private val scmService: IScmService
+    private val dslContext: DSLContext
 ) : CodeRepositoryService<GithubRepository> {
     override fun repositoryType(): String {
         return GithubRepository::class.java.name
     }
 
-    override fun create(projectId: String, userId: String, token: String, repository: GithubRepository): Long {
+    override fun create(projectId: String, userId: String, repository: GithubRepository): Long {
+        // Github无需检查凭证信息
+        checkCredentialInfo(
+            repoCredentialInfo = EmptyCredentialInfo(
+                token = StringUtils.EMPTY
+            ),
+            repository = repository
+        )
         var repositoryId: Long = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -81,7 +88,7 @@ class CodeGithubRepositoryService @Autowired constructor(
         repository: GithubRepository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.GITHUB.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID))
         }
@@ -110,22 +117,43 @@ class CodeGithubRepositoryService @Autowired constructor(
         )
     }
 
-    override fun getAuth(
-        authMap: Map<String, Map<Long, Record>>,
-        repository: TRepositoryRecord
-    ): Pair<String, String?> {
-        return Pair(RepoAuthType.OAUTH.name, repository.userId)
+    /**
+     * 检查凭证信息
+     */
+    private fun checkCredentialInfo(repoCredentialInfo: RepoCredentialInfo, repository: GithubRepository) {
+        if (needCheckToken(repository)) {
+            val checkResult: TokenCheckResult = checkToken(
+                repoCredentialInfo = repoCredentialInfo,
+                repository = repository
+            )
+            if (!checkResult.result) {
+                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+                throw OperationException(checkResult.message)
+            }
+        }
     }
 
-    override fun needCheckToken(repository: GithubRepository): Boolean {
+    fun needCheckToken(repository: GithubRepository): Boolean {
         return false
     }
 
-    override fun checkToken(
-        credentialList: List<String>,
-        repository: GithubRepository,
-        credentialType: CredentialType
+    fun checkToken(
+        repoCredentialInfo: RepoCredentialInfo,
+        repository: GithubRepository
     ): TokenCheckResult {
         return TokenCheckResult(true, "OK")
+    }
+
+    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+        return repositoryGithubDao.list(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds.toSet()
+        )?.associateBy({ it -> it.repositoryId }, {
+            RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = it.userName)
+        }) ?: mapOf()
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeGithubRepositoryService::class.java)
     }
 }

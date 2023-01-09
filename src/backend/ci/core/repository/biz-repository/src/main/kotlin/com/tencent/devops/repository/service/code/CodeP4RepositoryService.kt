@@ -31,22 +31,22 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.repository.tables.TRepositoryCodeP4
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeP4Dao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -62,8 +62,9 @@ class CodeP4RepositoryService @Autowired constructor(
         return CodeP4Repository::class.java.name
     }
 
-    override fun create(projectId: String, userId: String, token: String, repository: CodeP4Repository): Long {
-        var repositoryId: Long = 0L
+    override fun create(projectId: String, userId: String, repository: CodeP4Repository): Long {
+        checkCredentialInfo(projectId = projectId, repository = repository)
+        var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryId = repositoryDao.create(
@@ -92,10 +93,11 @@ class CodeP4RepositoryService @Autowired constructor(
         repository: CodeP4Repository,
         record: TRepositoryRecord
     ) {
-        //提交的参数与数据库中类型不匹配
+        // 提交的参数与数据库中类型不匹配
         if (!StringUtils.equals(record.type, ScmType.CODE_P4.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }
+        checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -128,79 +130,60 @@ class CodeP4RepositoryService @Autowired constructor(
         )
     }
 
-    fun getUsername(credentialList: List<String>): String {
-        val username = credentialList[0]
-        if (username.isEmpty()) {
-            throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+    /**
+     * 检查凭证信息
+     */
+    private fun checkCredentialInfo(projectId: String, repository: CodeP4Repository): RepoCredentialInfo {
+        return if (needCheckToken(repository)) {
+            // 凭证信息
+            val repoCredentialInfo: RepoCredentialInfo = credentialService.getCredentialInfo(
+                projectId = projectId,
+                repository = repository
             )
+            val checkResult: TokenCheckResult = checkToken(
+                repoCredentialInfo = repoCredentialInfo,
+                repository = repository
+            )
+            if (!checkResult.result) {
+                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+                throw OperationException(checkResult.message)
+            }
+            repoCredentialInfo
+        } else {
+            EmptyCredentialInfo()
         }
-        return username
     }
 
-    fun getPassword(credentialList: List<String>): String {
-        if (credentialList.size < 2) {
-            throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
-            )
-        }
-        val password = credentialList[1]
-        if (password.isEmpty()) {
-            throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
-            )
-        }
-        return password
-    }
-
-    override fun checkToken(
-        credentialList: List<String>,
-        repository: CodeP4Repository,
-        credentialType: CredentialType
+    fun checkToken(
+        repoCredentialInfo: RepoCredentialInfo,
+        repository: CodeP4Repository
     ): TokenCheckResult {
-        val username = getUsername(credentialList = credentialList)
-        val password = getPassword(credentialList = credentialList)
         return scmService.checkUsernameAndPassword(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
             type = ScmType.CODE_P4,
-            username = username,
-            password = password,
+            username = repoCredentialInfo.username,
+            password = repoCredentialInfo.password,
             token = StringUtils.EMPTY,
             region = null,
-            repoUsername = username
+            repoUsername = repoCredentialInfo.username
         )
     }
 
-    override fun getAuthMap(
-        repositoryRecordList: Result<TRepositoryRecord>
-    ): Map<Long, Record> {
-        val p4RepoAuthMap: MutableMap<Long, Record> = HashMap()
-        val p4RepoIds = repositoryRecordList.filter { it.type == ScmType.CODE_P4.name }
-                .map { it.repositoryId }.toSet()
-        repositoryCodeP4Dao.list(dslContext, p4RepoIds)?.forEach { p4RepoAuthMap.put(it.repositoryId, it) }
-        return p4RepoAuthMap
+    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+        return repositoryCodeP4Dao.list(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds.toSet()
+        )?.associateBy({ it -> it.repositoryId }, {
+            RepoAuthInfo(RepoAuthType.HTTP.name, it.credentialId)
+        }) ?: mapOf()
     }
 
-    override fun getAuth(
-        authMap: Map<String, Map<Long, Record>>,
-        repository: TRepositoryRecord
-    ): Pair<String, String?> {
-        val p4AuthMap = authMap[ScmType.CODE_P4.name]
-        return Pair(
-            RepoAuthType.HTTP.name,
-            p4AuthMap?.get(repository.repositoryId)?.get(TRepositoryCodeP4.T_REPOSITORY_CODE_P4.CREDENTIAL_ID)
-        )
-    }
-
-    override fun needCheckToken(repository: CodeP4Repository): Boolean {
+    fun needCheckToken(repository: CodeP4Repository): Boolean {
         return true
     }
 
-    override fun getCredentialInfo(
-        projectId: String,
-        repository: CodeP4Repository
-    ): Pair<List<String>, CredentialType> {
-        return credentialService.getCredentialInfo(projectId = projectId, repository = repository)
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeP4RepositoryService::class.java)
     }
 }
