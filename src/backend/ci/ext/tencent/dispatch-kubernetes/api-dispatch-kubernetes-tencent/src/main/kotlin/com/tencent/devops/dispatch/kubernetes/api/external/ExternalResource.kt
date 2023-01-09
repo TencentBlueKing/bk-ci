@@ -66,7 +66,7 @@ interface ExternalResource {
         @QueryParam("workspaceName")
         workspaceName: String,
         @ApiParam(value = "时间戳", required = true)
-        @QueryParam("workspaceName")
+        @QueryParam("timestamp")
         timestamp: String
     ): Result<Boolean>
 }
