@@ -54,7 +54,6 @@ import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.Record1
 import org.jooq.Record4
 import org.jooq.Result
