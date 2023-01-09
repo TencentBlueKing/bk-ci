@@ -213,11 +213,6 @@ class DevCloudRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        devcloudWorkspaceRedisUtils.refreshHeartbeat(userId, workspaceName)
-        return true
-    }
-
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         devcloudWorkspaceRedisUtils.refreshTaskStatus("devcloud", taskStatus.uid, taskStatus)
         return true

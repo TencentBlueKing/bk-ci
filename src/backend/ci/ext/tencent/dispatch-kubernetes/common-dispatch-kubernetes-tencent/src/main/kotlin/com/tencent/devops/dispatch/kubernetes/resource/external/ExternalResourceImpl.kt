@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.kubernetes.resource.external
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
@@ -44,22 +43,12 @@ class ExternalResourceImpl @Autowired constructor(
 
     @Value("\${remoteDev.callBackSignSecret:}")
     private val signSecret: String = ""
+
     companion object {
         private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
     }
+
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Result<Boolean> {
         return Result(remoteDevService.workspaceTaskCallback(taskStatus))
     }
-
-    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
-        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
-        logger.info("signature($signature) and generate signature ($genSignature)")
-        if (!ShaUtils.isEqual(signature, genSignature)) {
-            logger.warn("signature($signature) and generate signature ($genSignature) not match")
-            return Result("Forbidden request", false)
-        }
-        // 时间戳计算超过一分钟就丢弃
-        return Result(remoteDevService.workspaceHeartbeat("", workspaceName))
-    }
-
 }

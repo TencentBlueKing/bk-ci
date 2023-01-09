@@ -28,48 +28,31 @@
 package com.tencent.devops.remotedev.resources.external
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
-import com.tencent.devops.remotedev.pojo.RemoteDevCallBack
-import com.tencent.devops.remotedev.service.CallBackService
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
-    val callBackService: CallBackService
+    private val redisHeartBeat: RedisHeartBeat
 ) : ExternalResource {
 
     @Value("\${remoteDev.callBackSignSecret:}")
     private val signSecret: String = ""
 
-    override fun callback(signature: String, body: String): Result<Boolean> {
-        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), body.toByteArray())
+    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
+        val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
         logger.info("signature($signature) and generate signature ($genSignature)")
         if (!ShaUtils.isEqual(signature, genSignature)) {
             logger.warn("signature($signature) and generate signature ($genSignature) not match")
             return Result("Forbidden request", false)
         }
-        val load = kotlin.runCatching { JsonUtil.to<RemoteDevCallBack>(body) }.onFailure {
-            logger.warn("body parse error|${it.message}|$body")
-            return Result("Body illegal", false)
-        }.getOrThrow()
-        val eventTime = LocalDateTime.ofInstant(
-            Instant.ofEpochSecond(load.timestamp),
-            ZoneId.systemDefault()
-        )
-        // 时间戳计算超过一分钟就丢弃
-        if (Duration.between(LocalDateTime.now(), eventTime).toMinutes() > 1) {
-            return Result("Timestamp expired", false)
-        }
-        return Result(callBackService.callback(load))
+        redisHeartBeat.refreshHeartbeat(workspaceName)
+        return Result(true)
     }
 
     companion object {

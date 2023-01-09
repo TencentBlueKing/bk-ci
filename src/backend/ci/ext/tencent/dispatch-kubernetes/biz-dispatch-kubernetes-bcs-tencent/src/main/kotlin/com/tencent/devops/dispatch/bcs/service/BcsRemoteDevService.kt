@@ -59,10 +59,6 @@ class BcsRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         TODO("Not yet implemented")
     }

@@ -46,6 +46,7 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
+import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
@@ -234,19 +235,6 @@ class WorkspaceService @Autowired constructor(
                 sshKeys = sshService.getSshPublicKeys4Ws(setOf(userId))
             )
         )
-//        kotlin.runCatching {
-//            client.get(ServiceRemoteDevResource::class).createWorkspace(
-//                userId,
-//                WorkspaceReq(
-//                    workspaceId = workspaceId,
-//                    name = workspace.name,
-//                    repositoryUrl = workspace.repositoryUrl,
-//                    branch = workspace.branch,
-//                    devFilePath = workspace.devFilePath,
-//                    devFile = devfile
-//                )
-//            ).data!!
-//        }
 
         RedisWaiting4K8s(
             redisOperation,
@@ -340,15 +328,6 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspace.name
                 )
             )
-//            val res = kotlin.runCatching {
-//                client.get(ServiceRemoteDevResource::class).startWorkspace(
-//                    userId,
-//                    workspace.name
-//                ).data ?: false
-//            }.getOrElse {
-//                logger.error("start workspace error |${it.message}", it)
-//                false
-//            }
 
             RedisWaiting4K8s(
                 redisOperation,
@@ -459,41 +438,7 @@ class WorkspaceService @Autowired constructor(
                 objectMapper = objectMapper
             ).waiting().let {
                 if (it != null) {
-                    dslContext.transaction { configuration ->
-                        val transactionContext = DSL.using(configuration)
-                        workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
-                        val lastHistory = workspaceHistoryDao.fetchAnyHistory(
-                            dslContext = transactionContext,
-                            workspaceId = workspaceId
-                        )
-                        if (lastHistory != null) {
-                            workspaceDao.updateWorkspaceUsageTime(
-                                workspaceId = workspaceId,
-                                usageTime = Duration.between(
-                                    lastHistory.startTime, LocalDateTime.now()
-                                ).seconds.toInt(),
-                                dslContext = transactionContext,
-                            )
-                            workspaceHistoryDao.updateWorkspaceHistory(
-                                dslContext = transactionContext,
-                                id = lastHistory.id,
-                                stopUserId = userId
-                            )
-                        } else {
-                            logger.error("$workspaceId get last history info null")
-                        }
-                        workspaceOpHistoryDao.createWorkspaceHistory(
-                            dslContext = transactionContext,
-                            workspaceId = workspaceId,
-                            operator = userId,
-                            action = WorkspaceAction.SLEEP,
-                            actionMessage = String.format(
-                                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                                status.name,
-                                WorkspaceStatus.SLEEP.name
-                            )
-                        )
-                    }
+                    doStopWS(userId, status, workspaceId)
                     return true
                 } else {
                     return false
@@ -534,15 +479,6 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspace.name
                 )
             )
-//            val res = kotlin.runCatching {
-//                client.get(ServiceRemoteDevResource::class).deleteWorkspace(
-//                    userId,
-//                    workspace.name
-//                ).data ?: false
-//            }.getOrElse {
-//                logger.error("stop workspace error |${it.message}", it)
-//                false
-//            }
 
             RedisWaiting4K8s(
                 redisOperation,
@@ -550,21 +486,7 @@ class WorkspaceService @Autowired constructor(
                 objectMapper = objectMapper
             ).waiting().let {
                 if (it != null) {
-                    dslContext.transaction { configuration ->
-                        val transactionContext = DSL.using(configuration)
-                        workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
-                        workspaceOpHistoryDao.createWorkspaceHistory(
-                            dslContext = transactionContext,
-                            workspaceId = workspaceId,
-                            operator = userId,
-                            action = WorkspaceAction.DELETE,
-                            actionMessage = String.format(
-                                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                                status.name,
-                                WorkspaceStatus.DELETED.name
-                            )
-                        )
-                    }
+                    doDeleteWS(userId, status, workspaceId)
                     return true
                 } else {
                     return false
@@ -742,8 +664,8 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun heartBeatStop(workSpaceName: String) {
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workSpaceName)
+    fun heartBeatStopWS(workSpaceName: String) {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workSpaceName)
             ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workSpaceName not find")
         // 校验状态
         val status = WorkspaceStatus.values()[workspace.status]
@@ -756,48 +678,145 @@ class WorkspaceService @Autowired constructor(
             "$REDIS_CALL_LIMIT_KEY:stopWorkspace:${workspace.id}",
             expiredTimeInSeconds
         ).lock().use {
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspace.id,
-                    operator = "system",
-                    action = WorkspaceAction.SLEEP,
-                    actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
-                )
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspace.id,
+                operator = "system",
+                action = WorkspaceAction.SLEEP,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
+            )
 
-                val lastHistory = workspaceHistoryDao.fetchAnyHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspace.id
+            val bizId = MDC.get(TraceTag.BIZID)
+
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = "system",
+                    traceId = bizId,
+                    type = UpdateEventType.STOP,
+                    workspaceName = workspace.name
                 )
-                if (lastHistory != null) {
-                    workspaceDao.updateWorkspaceUsageTime(
-                        workspaceId = workspace.id,
-                        usageTime = Duration.between(
-                            lastHistory.startTime, LocalDateTime.now()
-                        ).seconds.toInt(),
-                        dslContext = transactionContext,
-                    )
-                    workspaceHistoryDao.updateWorkspaceHistory(
-                        dslContext = transactionContext,
-                        id = lastHistory.id,
-                        stopUserId = "system"
-                    )
-                } else {
-                    logger.error("${workspace.id} get last history info null")
+            )
+
+            RedisWaiting4K8s(
+                redisOperation,
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
+                objectMapper = objectMapper
+            ).waiting().let {
+                if (it != null) {
+                    doStopWS("system", status, workspace.id)
                 }
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceId = workspace.id,
-                    operator = "system",
-                    action = WorkspaceAction.SLEEP,
-                    actionMessage = String.format(
-                        getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                        status.name,
-                        WorkspaceStatus.SLEEP.name
-                    )
-                )
             }
+        }
+    }
+
+    // 获取已休眠(status:3)且过期14天的工作空间
+    fun deleteInactivityWorkspace() {
+        logger.info("getTimeOutInactivityWorkspace")
+        workspaceDao.getTimeOutInactivityWorkspace(
+            Constansts.timeoutDays, dslContext
+        )?.forEach {
+            heartBeatDeleteWS(it)
+        }
+    }
+
+    fun heartBeatDeleteWS(workspace: TWorkspaceRecord): Boolean {
+        logger.info("heart beat delete workspace ${workspace.id}")
+        // 校验状态
+        val status = WorkspaceStatus.values()[workspace.status]
+        if (status.isDeleted()) {
+            logger.info("$workspace has been deleted, return error.")
+            throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
+        }
+        RedisCallLimit(
+            redisOperation,
+            "$REDIS_CALL_LIMIT_KEY:deleteWorkspace:${workspace.id}",
+            expiredTimeInSeconds
+        ).lock().use {
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceId = workspace.id,
+                operator = "system",
+                action = WorkspaceAction.DELETE,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
+            )
+            val bizId = MDC.get(TraceTag.BIZID)
+            dispatcher.dispatch(
+                WorkspaceOperateEvent(
+                    userId = "system",
+                    traceId = bizId,
+                    type = UpdateEventType.DELETE,
+                    workspaceName = workspace.name
+                )
+            )
+            RedisWaiting4K8s(
+                redisOperation,
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
+                objectMapper = objectMapper
+            ).waiting().let {
+                if (it != null) {
+                    doDeleteWS("system", status, workspace.id)
+                    return true
+                } else {
+                    return false
+                }
+            }
+        }
+    }
+
+    private fun doDeleteWS(operator: String, beforeStatus: WorkspaceStatus, workspaceId: Long) {
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = transactionContext,
+                workspaceId = workspaceId,
+                operator = operator,
+                action = WorkspaceAction.DELETE,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    beforeStatus.name,
+                    WorkspaceStatus.DELETED.name
+                )
+            )
+        }
+    }
+
+    private fun doStopWS(operator: String, beforeStatus: WorkspaceStatus, workspaceId: Long) {
+
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+
+            val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                dslContext = transactionContext,
+                workspaceId = workspaceId
+            )
+            if (lastHistory != null) {
+                workspaceDao.updateWorkspaceUsageTime(
+                    workspaceId = workspaceId,
+                    usageTime = Duration.between(
+                        lastHistory.startTime, LocalDateTime.now()
+                    ).seconds.toInt(),
+                    dslContext = transactionContext,
+                )
+                workspaceHistoryDao.updateWorkspaceHistory(
+                    dslContext = transactionContext,
+                    id = lastHistory.id,
+                    stopUserId = operator
+                )
+            } else {
+                logger.error("$workspaceId get last history info null")
+            }
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = transactionContext,
+                workspaceId = workspaceId,
+                operator = operator,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    beforeStatus.name,
+                    WorkspaceStatus.SLEEP.name
+                )
+            )
         }
     }
 
@@ -823,16 +842,6 @@ class WorkspaceService @Autowired constructor(
         redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
             key.default
         }
-
-    // 获取已休眠(status:3)且过期14天的工作空间
-    fun getTimeOutInactivityWorkspace(
-        userId: String
-    ): List<String> {
-        logger.info("$userId getTimeOutInactivityWorkspace")
-        return workspaceDao.getTimeOutInactivityWorkspace(
-            Constansts.timeoutDays, dslContext
-        )?.map { it.name } ?: emptyList()
-    }
 
     private inline fun Boolean.onSuccess(action: () -> Unit): Boolean {
         if (this != null) action()

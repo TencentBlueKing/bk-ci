@@ -36,6 +36,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXTERNAL_REMOTE_DEV"], description = "External-remoteDev")
@@ -43,14 +44,18 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
-
-    @ApiOperation("Github仓库提交")
+    @ApiOperation("提供给devopsremoting上报工作空间心跳")
     @POST
-    @Path("/callback")
-    fun callback(
+    @Path("/workspace/heartbeat")
+    fun workspaceHeartbeat(
         @ApiParam(value = "secretKey签名(sha256)", required = true)
         @HeaderParam("X-Signature")
         signature: String,
-        body: String
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String
     ): Result<Boolean>
 }

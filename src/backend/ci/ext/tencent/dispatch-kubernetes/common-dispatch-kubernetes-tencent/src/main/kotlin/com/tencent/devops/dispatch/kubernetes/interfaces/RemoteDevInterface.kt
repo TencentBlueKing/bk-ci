@@ -64,11 +64,6 @@ interface RemoteDevInterface {
     fun getWorkspaceUrl(userId: String, workspaceName: String): String?
 
     /**
-     * 工作空间心跳上报
-     */
-    fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean
-
-    /**
      * 工作空间task任务回调
      */
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean

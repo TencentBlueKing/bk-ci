@@ -28,11 +28,9 @@
 package com.tencent.devops.remotedev.listener
 
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.WorkspaceService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -48,15 +46,12 @@ class RemoteDevUpdateListener @Autowired constructor(
 
     override fun execute(event: RemoteDevUpdateEvent) {
         logger.info("A message is received from dispatch k8s $event")
-        when (event.type) {
-            UpdateEventType.HEART_BEAT_STOP -> {}
-            else -> redisOperation.set(
-                key = WorkspaceService.REDIS_UPDATE_EVENT_PREFIX +
-                    "${event.type.name.toUpperCase()}:${event.traceId}",
-                value = JsonUtil.toJson(event),
-                expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
-            )
-        }
+        redisOperation.set(
+            key = WorkspaceService.REDIS_UPDATE_EVENT_PREFIX +
+                "${event.type.name.toUpperCase()}:${event.traceId}",
+            value = JsonUtil.toJson(event),
+            expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
+        )
     }
 
     companion object {

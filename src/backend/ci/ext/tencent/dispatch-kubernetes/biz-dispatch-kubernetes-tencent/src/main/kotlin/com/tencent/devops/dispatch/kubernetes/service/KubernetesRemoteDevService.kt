@@ -77,10 +77,6 @@ class KubernetesRemoteDevService @Autowired constructor(
         return kubernetesRemoteDevClient.getWorkspaceUrl(userId, workspaceName)
     }
 
-    override fun workspaceHeartbeat(userId: String, workspaceName: String): Boolean {
-        TODO("Not yet implemented")
-    }
-
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
         TODO("Not yet implemented")
     }
