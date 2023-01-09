@@ -44,7 +44,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
@@ -193,7 +192,7 @@ class WorkspaceService @Autowired constructor(
         }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
 
         val bizId = MDC.get(TraceTag.BIZID)
-        val workspaceName = "$userId-${UUIDUtil.generate().takeLast(10)}"
+        val workspaceName = generateWorkspaceName(userId)
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
@@ -774,13 +773,12 @@ class WorkspaceService @Autowired constructor(
         )?.map { it.name } ?: emptyList()
     }
 
-    private inline fun Boolean.onSuccess(action: () -> Unit): Boolean {
-        if (this != null) action()
-        return this
-    }
-
-    private inline fun Boolean.onFailure(action: () -> Unit): Boolean {
-        if (!this) action()
-        return this
+    private fun generateWorkspaceName(userId: String): String {
+        val subUserId = if (userId.length > 14) {
+            userId.substring(0 until 14)
+        } else {
+            userId
+        }
+        return "${subUserId.replace("_", "-")}${UUIDUtil.generate().takeLast(16)}-"
     }
 }
