@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.resource.service
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
@@ -77,5 +78,9 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): Result<String?> {
         return Result(remoteDevService.getWorkspaceUrl(userId, workspaceName))
+    }
+
+    override fun getWorkspaceInfo(userId: String, workspaceName: String): Result<WorkspaceInfo> {
+        return Result(remoteDevService.getWorkspaceInfo(userId, workspaceName))
     }
 }

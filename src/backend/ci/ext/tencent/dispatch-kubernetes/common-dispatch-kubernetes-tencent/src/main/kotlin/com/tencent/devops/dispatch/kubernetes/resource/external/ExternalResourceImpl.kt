@@ -28,22 +28,14 @@
 package com.tencent.devops.dispatch.kubernetes.resource.external
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
-import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.Proto3Timestamp
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import java.time.Duration
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(

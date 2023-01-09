@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.service.redis
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import org.slf4j.LoggerFactory
@@ -52,7 +53,7 @@ open class RedisWaiting4K8s(
             if (result != null) {
                 redisOperation.delete(lockKey)
                 logger.info("RedisWaiting4K8s get $lockKey for $result")
-                return objectMapper.readValue(result, RemoteDevUpdateEvent::class.java)
+                return JsonUtil.to(result, RemoteDevUpdateEvent::class.java)
             }
             Thread.sleep(1000)
         }

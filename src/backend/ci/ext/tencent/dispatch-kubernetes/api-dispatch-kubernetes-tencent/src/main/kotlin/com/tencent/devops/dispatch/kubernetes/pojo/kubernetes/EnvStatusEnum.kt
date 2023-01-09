@@ -25,38 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service
+package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
-import com.tencent.devops.remotedev.common.exception.RepeatRequestException
-import com.tencent.devops.remotedev.pojo.RemoteDevCallBack
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
-
-@Service
-class CallBackService @Autowired constructor(
-    private val workspaceService: WorkspaceService
-) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CallBackService::class.java)
-    }
-
-    fun callback(body: RemoteDevCallBack): Boolean {
-        logger.info("remote dev receive callback|${body.requestId}|${body.userId}|${body.event}|${body.ext}")
-
-        return true
-    }
-
-    private fun <T> retry(
-        retryCount: Int = 5,
-        action: () -> T
-    ): T {
-        return kotlin.runCatching { action() }.getOrElse {
-            if (it is RepeatRequestException && retryCount > 0) {
-                Thread.sleep(1000)
-                retry(retryCount - 1, action)
-            } else throw it
-        }
-    }
+enum class EnvStatusEnum {
+    pending,
+    running,
+    succeeded,
+    failed,
+    stopped,
+    unknow,
+    deleted
 }

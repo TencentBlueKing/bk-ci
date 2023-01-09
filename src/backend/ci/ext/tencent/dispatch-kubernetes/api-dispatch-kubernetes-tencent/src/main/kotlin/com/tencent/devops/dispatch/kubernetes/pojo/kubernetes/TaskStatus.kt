@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.kubernetes.pojo.devcloud
+package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
 data class TaskStatus(
     val uid: String,

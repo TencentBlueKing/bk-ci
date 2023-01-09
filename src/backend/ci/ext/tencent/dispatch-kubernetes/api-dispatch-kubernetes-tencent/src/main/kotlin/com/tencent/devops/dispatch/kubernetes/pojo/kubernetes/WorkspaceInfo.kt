@@ -1,4 +1,4 @@
-package com.tencent.devops.dispatch.kubernetes.pojo
+package com.tencent.devops.dispatch.kubernetes.pojo.kubernetes
 
 data class WorkspaceInfo(
     val status: EnvStatusEnum,

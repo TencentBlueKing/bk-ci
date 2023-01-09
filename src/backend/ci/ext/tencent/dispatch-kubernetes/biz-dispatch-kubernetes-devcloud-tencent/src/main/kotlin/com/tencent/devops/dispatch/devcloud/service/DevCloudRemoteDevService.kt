@@ -43,10 +43,10 @@ import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext

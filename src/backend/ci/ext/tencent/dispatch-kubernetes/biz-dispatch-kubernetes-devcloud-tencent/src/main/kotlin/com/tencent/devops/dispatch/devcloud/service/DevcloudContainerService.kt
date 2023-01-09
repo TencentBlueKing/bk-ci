@@ -43,8 +43,8 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBu
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.debug.DispatchBuilderDebugStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatusEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory

@@ -1,7 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.pojo
 
 data class ContainerState(
-    val waiting: ContainerStateWaiting,
-    val running: ContainerStateRunning,
-    val terminated: ContainerStateTerminated
+    val waiting: ContainerStateWaiting? = null,
+    val running: ContainerStateRunning? = null,
+    val terminated: ContainerStateTerminated? = null
 )

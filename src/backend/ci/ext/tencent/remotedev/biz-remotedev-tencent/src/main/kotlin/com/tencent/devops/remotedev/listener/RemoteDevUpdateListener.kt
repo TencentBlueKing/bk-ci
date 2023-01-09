@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.listener
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.event.listener.Listener
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
@@ -51,7 +53,7 @@ class RemoteDevUpdateListener @Autowired constructor(
             else -> redisOperation.set(
                 key = WorkspaceService.REDIS_UPDATE_EVENT_PREFIX +
                     "${event.type.name.toUpperCase()}:${event.traceId}",
-                value = event.status.toString(),
+                value = JsonUtil.toJson(event),
                 expiredInSecond = TimeUnit.MINUTES.toSeconds(1)
             )
         }

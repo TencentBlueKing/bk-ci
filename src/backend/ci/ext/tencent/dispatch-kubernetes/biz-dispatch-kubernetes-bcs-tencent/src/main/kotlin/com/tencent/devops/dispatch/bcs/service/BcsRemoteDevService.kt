@@ -29,10 +29,9 @@ package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
-import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
