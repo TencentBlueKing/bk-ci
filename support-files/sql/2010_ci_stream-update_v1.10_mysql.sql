@@ -58,6 +58,16 @@ ALTER TABLE `T_GIT_REQUEST_EVENT`
 
 END IF;
 
+IF NOT EXISTS(SELECT 1
+                  FROM information_schema.statistics
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_GIT_USER_MESSAGE'
+                    AND INDEX_NAME = 'ID_WITH_TYPE') THEN
+ALTER TABLE `T_GIT_USER_MESSAGE`
+    ADD KEY ID_WITH_TYPE(PROJECT_ID, MESSAGE_TYPE, ID);
+
+END IF;
+
 COMMIT;
 END <CI_UBF>
 DELIMITER ;
