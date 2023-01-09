@@ -91,6 +91,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
             val syncsNumber = 10
             if (projectMinId != null && projectMaxId != null) {
+                logger.info("syncAtomErrorCodeRel begin")
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(
@@ -127,6 +128,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 logger.info("end syncAtomErrorCodeRel")
             }
         }
+        logger.info("end syncAtomErrorCodeRel.")
         return true
     }
 
