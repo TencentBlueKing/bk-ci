@@ -31,8 +31,8 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.stream.tables.TGitUserMessage
 import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
 import com.tencent.devops.stream.pojo.message.UserMessageType
+import org.jooq.Condition
 import org.jooq.DSLContext
-import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -74,26 +74,28 @@ class StreamUserMessageDao {
         projectId: String,
         messageType: UserMessageType?,
         haveRead: Boolean?,
+        messageId: String?,
         offset: Int,
         limit: Int
     ): List<TGitUserMessageRecord>? {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val select = if (userId != null) {
-                selectMessage(
-                    dslContext = dslContext,
-                    userId = userId,
-                    messageType = messageType,
-                    haveRead = haveRead
-                )
-            } else {
-                selectMessage(
-                    dslContext = dslContext,
-                    projectId = projectId,
-                    messageType = messageType,
-                    haveRead = haveRead
-                )
+            val conditions = mutableListOf<Condition>()
+            if (!userId.isNullOrBlank()) {
+                conditions.add(USER_ID.eq(userId))
             }
-            return select.orderBy(ID.desc())
+            if (projectId.isNotBlank()) {
+                conditions.add(PROJECT_ID.eq(projectId))
+            }
+            if (messageType != null) {
+                conditions.add(MESSAGE_TYPE.eq(messageType.name))
+            }
+            if (haveRead != null) {
+                conditions.add(HAVE_READ.eq(haveRead))
+            }
+            if (messageId != null) {
+                conditions.add(MESSAGE_ID.eq(messageId))
+            }
+            return dslContext.selectFrom(this).where(conditions).orderBy(ID.desc())
                 .limit(limit).offset(offset)
                 .fetch()
         }
@@ -104,24 +106,17 @@ class StreamUserMessageDao {
         userId: String?,
         projectId: String,
         messageType: UserMessageType?,
+        messageId: String?,
         haveRead: Boolean?
     ): Int {
-        val select = if (userId != null) {
-            selectMessageCount(
-                dslContext = dslContext,
-                userId = userId,
-                messageType = messageType,
-                haveRead = haveRead
-            )
-        } else {
-            selectMessageCount(
-                dslContext = dslContext,
-                projectId = projectId,
-                messageType = messageType,
-                haveRead = haveRead
-            )
-        }
-        return select
+        return selectMessageCount(
+            dslContext = dslContext,
+            userId = userId,
+            projectId = projectId,
+            messageType = messageType,
+            messageId = messageId,
+            haveRead = haveRead
+        )
     }
 
     fun readMessage(
@@ -174,6 +169,7 @@ class StreamUserMessageDao {
                 dslContext = dslContext,
                 userId = userId,
                 messageType = null,
+                messageId = null,
                 haveRead = false
             )
         } else {
@@ -181,6 +177,7 @@ class StreamUserMessageDao {
                 dslContext = dslContext,
                 projectId = projectId,
                 messageType = null,
+                messageId = null,
                 haveRead = false
             )
         }
@@ -192,15 +189,15 @@ class StreamUserMessageDao {
         projectId: String,
         userId: String?,
         messageId: String
-    ): Boolean {
+    ): TGitUserMessageRecord? {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectCount().from(this)
+            val dsl = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
             if (userId != null) {
                 dsl.and(USER_ID.eq(userId))
             }
             return dsl.and(MESSAGE_ID.eq(messageId))
-                .fetchOne(0, Int::class.java)!! > 0
+                .fetchAny()
         }
     }
 
@@ -215,8 +212,8 @@ class StreamUserMessageDao {
             dslContext.update(this)
                 .set(MESSAGE_TYPE, messageType.name)
                 .where(PROJECT_ID.eq(projectId))
+                .and(USER_ID.eq(userId))
                 .and(MESSAGE_ID.eq(messageId))
-                .and(MESSAGE_TYPE.eq(messageType.name))
                 .execute()
         }
     }
@@ -236,29 +233,11 @@ class StreamUserMessageDao {
         }
     }
 
-    private fun selectMessage(
-        dslContext: DSLContext,
-        projectId: String,
-        messageType: UserMessageType?,
-        haveRead: Boolean?
-    ): SelectConditionStep<TGitUserMessageRecord> {
-        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectFrom(this)
-                .where(PROJECT_ID.eq(projectId))
-            if (messageType != null) {
-                dsl.and(MESSAGE_TYPE.eq(messageType.name))
-            }
-            if (haveRead != null) {
-                dsl.and(HAVE_READ.eq(haveRead))
-            }
-            return dsl
-        }
-    }
-
     private fun selectMessageCount(
         dslContext: DSLContext,
         projectId: String,
         messageType: UserMessageType?,
+        messageId: String?,
         haveRead: Boolean?
     ): Int {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
@@ -270,53 +249,39 @@ class StreamUserMessageDao {
             if (haveRead != null) {
                 dsl.and(HAVE_READ.eq(haveRead))
             }
+            if (messageId != null) {
+                dsl.and(MESSAGE_ID.eq(messageId))
+            }
             return dsl.fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    private fun selectMessage(
-        dslContext: DSLContext,
-        userId: String,
-        projectId: String? = null,
-        messageType: UserMessageType?,
-        haveRead: Boolean?
-    ): SelectConditionStep<TGitUserMessageRecord> {
-        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectFrom(this)
-                .where(USER_ID.eq(userId))
-            if (!projectId.isNullOrBlank()) {
-                dsl.and(PROJECT_ID.eq(projectId))
-            }
-            if (messageType != null) {
-                dsl.and(MESSAGE_TYPE.eq(messageType.name))
-            }
-            if (haveRead != null) {
-                dsl.and(HAVE_READ.eq(haveRead))
-            }
-            return dsl
         }
     }
 
     private fun selectMessageCount(
         dslContext: DSLContext,
-        userId: String,
+        userId: String?,
         projectId: String? = null,
         messageType: UserMessageType?,
+        messageId: String?,
         haveRead: Boolean?
     ): Int {
         with(TGitUserMessage.T_GIT_USER_MESSAGE) {
-            val dsl = dslContext.selectCount().from(this)
-                .where(USER_ID.eq(userId))
+            val conditions = mutableListOf<Condition>()
+            if (!userId.isNullOrBlank()) {
+                conditions.add(USER_ID.eq(userId))
+            }
             if (!projectId.isNullOrBlank()) {
-                dsl.and(PROJECT_ID.eq(projectId))
+                conditions.add(PROJECT_ID.eq(projectId))
             }
             if (messageType != null) {
-                dsl.and(MESSAGE_TYPE.eq(messageType.name))
+                conditions.add(MESSAGE_TYPE.eq(messageType.name))
             }
             if (haveRead != null) {
-                dsl.and(HAVE_READ.eq(haveRead))
+                conditions.add(HAVE_READ.eq(haveRead))
             }
-            return dsl.fetchOne(0, Int::class.java)!!
+            if (messageId != null) {
+                conditions.add(MESSAGE_ID.eq(messageId))
+            }
+            return dslContext.selectCount().from(this).where(conditions).fetchOne(0, Int::class.java)!!
         }
     }
 }

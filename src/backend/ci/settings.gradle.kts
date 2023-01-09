@@ -30,7 +30,6 @@ rootProject.name = "bk-ci-backend"
 // 适用于project的plugins
 pluginManagement {
     repositories {
-        mavenLocal()
         if (System.getenv("GITHUB_WORKFLOW") == null) { // 普通环境
             maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
             maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
@@ -45,6 +44,7 @@ pluginManagement {
             mavenCentral()
             gradlePluginPortal()
         }
+        mavenLocal()
     }
 }
 
@@ -73,6 +73,7 @@ include(":core:common:common-stream")
 include(":core:common:common-expression")
 include(":core:common:common-test")
 include(":core:common:common-auth")
+include(":core:common:common-kubernetes")
 include(":core:common:common-auth:common-auth-api")
 include(":core:common:common-auth:common-auth-mock")
 include(":core:common:common-auth:common-auth-blueking")
@@ -230,6 +231,7 @@ include(":core:dispatch-kubernetes")
 include(":core:dispatch-kubernetes:api-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:biz-dispatch-kubernetes-bcs")
+include(":core:dispatch-kubernetes:biz-dispatch-kubernetes-sample")
 include(":core:dispatch-kubernetes:model-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:boot-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:common-dispatch-kubernetes")

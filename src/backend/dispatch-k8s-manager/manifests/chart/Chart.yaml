@@ -2,8 +2,8 @@ apiVersion: v2
 name: kubernetes-manager
 description: A Helm chart for BlueKing CI Kubernetes Manager
 type: application
-version: 0.0.30
-appVersion: 0.0.27
+version: 0.0.36
+appVersion: 0.0.31
 home: https://github.com/Tencent/bk-ci
 
 dependencies:

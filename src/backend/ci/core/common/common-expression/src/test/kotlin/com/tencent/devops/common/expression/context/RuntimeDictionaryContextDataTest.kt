@@ -64,7 +64,7 @@ internal class RuntimeDictionaryContextDataTest {
     )
     fun contextExpressionParseTest(expAndExpect: String) {
         val (exp, expect) = expAndExpect.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
         Assertions.assertEquals(
             if (expect == "true" || expect == "false") {
                 expect.toBoolean()

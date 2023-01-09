@@ -9,23 +9,24 @@ import com.tencent.devops.repository.pojo.Repository
 object EventCacheUtil {
 
     private val eventThreadLocalCache =
-        ThreadLocal<MutableMap<String/* repository alias name*/, EventRepositoryCache>>()
+        ThreadLocal<MutableMap<String/* projectId_repository alias name*/, EventRepositoryCache>>()
 
     fun initEventCache() = eventThreadLocalCache.set(mutableMapOf())
 
-    fun getEventCache(repo: Repository): EventRepositoryCache? = eventThreadLocalCache.get()?.get(repo.aliasName)
+    fun getEventCache(projectId: String, repo: Repository): EventRepositoryCache? =
+        eventThreadLocalCache.get()?.get("${projectId}_${repo.aliasName}")
 
-    fun putIfAbsentEventCache(repo: Repository, eventCache: EventRepositoryCache) =
-        eventThreadLocalCache.get()?.putIfAbsent(repo.aliasName, eventCache)
+    fun putIfAbsentEventCache(projectId: String, repo: Repository, eventCache: EventRepositoryCache) =
+        eventThreadLocalCache.get()?.putIfAbsent("${projectId}_${repo.aliasName}", eventCache)
 
     /**
      * 如果不存在,则初始化空的仓库缓存
      */
-    fun getOrInitRepoCache(repo: Repository): EventRepositoryCache? {
+    fun getOrInitRepoCache(projectId: String, repo: Repository): EventRepositoryCache? {
         return eventThreadLocalCache.get()?.let {
-            getEventCache(repo) ?: run {
+            getEventCache(projectId, repo) ?: run {
                 val repoCache = EventRepositoryCache()
-                eventThreadLocalCache.get()[repo.aliasName] = repoCache
+                eventThreadLocalCache.get()["${projectId}_${repo.aliasName}"] = repoCache
                 repoCache
             }
         }

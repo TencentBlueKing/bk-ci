@@ -72,7 +72,9 @@ object GitActionCommon {
                 )
             }
             EventCacheUtil.putIfAbsentEventCache(
-                repository, eventRepoCache
+                projectId = action.data.setting.projectCode ?: "",
+                repo = repository,
+                eventCache = eventRepoCache
             )
             val isMatch = if (needMatch) {
                 matcher.isMatch(

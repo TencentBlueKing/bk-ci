@@ -29,6 +29,7 @@ package com.tencent.devops.stream.resources.user
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.stream.api.user.UserStreamLogResource
@@ -108,7 +109,11 @@ class UserStreamLogResourceImpl @Autowired constructor(
     ): Response {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(buildId)
-        permissionService.checkStreamPermission(userId, projectId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return streamLogService.downloadLogs(
             userId = userId,
             gitProjectId = gitProjectId,

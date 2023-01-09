@@ -158,7 +158,7 @@ func (m *manager) GetTaskRank(taskID string) (int, error) {
 
 	rank, err := qg.GetQueue(tb.Client.QueueName).Rank(taskID)
 	if err != nil {
-		blog.Errorf("manager: try getting task rank, get task(%s) rank from engine(%s) queue(%s) failed: %v",
+		blog.Warnf("manager: try getting task rank, get task(%s) rank from engine(%s) queue(%s) failed: %v",
 			taskID, tb.Client.EngineName, tb.Client.QueueName, err)
 		return -1, err
 	}
@@ -630,6 +630,15 @@ func (m *manager) generateTaskID(egn engine.Engine, projectID string) (string, e
 func generateTaskID(egnName string, projectID string) string {
 	return fmt.Sprintf(
 		taskIDFormat, egnName, projectID, time.Now().Unix(), strings.ToLower(util.RandomString(taskIDRandomLength)))
+}
+
+//IsOldTaskType check if the task id type is old
+func IsOldTaskType(id string) bool {
+	idx := strings.LastIndex(id, "-")
+	if idx == len(id)-taskIDRandomLength-1 { //old task Id
+		return true
+	}
+	return false
 }
 
 func ip2long(ipStr string) (uint32, error) {

@@ -16,7 +16,8 @@ import (
 const ApiPrefix = "/api"
 
 var NoAuthUrls = []string{
-	builderPrefix + builderDebugUrl,
+	// TODO: 等完善鉴权机制后放开，否则可能有安全问题
+	// builderPrefix + builderDebugUrl,
 }
 
 var Trans ut.Translator
@@ -28,20 +29,6 @@ var Trans ut.Translator
 func InitApis(r *gin.Engine, handlers ...gin.HandlerFunc) {
 	if config.Envs.IsDebug {
 		r.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
-	// kubernetes的探针
-	health := r.Group("/management/health")
-	{
-		health.GET("livenessState", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"status": "ok",
-			})
-		})
-		health.GET("readinessState", func(c *gin.Context) {
-			c.JSON(200, gin.H{
-				"status": "ok",
-			})
-		})
 	}
 
 	// 只给api接口添加中间件

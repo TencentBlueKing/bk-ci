@@ -86,6 +86,10 @@ service:
   serviceType: NodePort
   # 部署的service的annotations:
   serviceAnnotations:
+  # 部署的service对外暴露的端口
+  port: 80
+  # nodeport模式下nodeport的端口
+  nodePort: 30004
 
 # kubernetesManager Deployment
 kubernetesManager:
@@ -116,10 +120,9 @@ kubernetesManager:
     targetCPU: 80
     targetMemory: 80
   # 使用的镜像
-  image: bkci/kubernetes-manager:0.0.27
+  image: bkci/kubernetes-manager:0.0.31
   # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
   builderNamespace:
-  # dataSourceName mysql链接配置
   redis:
     db: 0
   gateway:
@@ -138,12 +141,21 @@ kubernetesManager:
       server:
       username:
       password:
-
+  apiserver:
+    auth:
+      # 针对蓝盾流水线访问的超级权限token
+      apiToken:
+        key: Devops-Token
+        value: landun
+      rsaPrivateKey: |
+  volumeMount:
+      # 流水线构建工作空间和agent日志在容器内的挂载点
+      dataPath: /data/devops/workspace
+      logPath: /data/devops/logs
 dockerInit:
   # 是否使用当前chart的 dockerinit.sh
   useDockerInit: true
 
-  
 kubeConfig:
   # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
   useKubeConfig: false

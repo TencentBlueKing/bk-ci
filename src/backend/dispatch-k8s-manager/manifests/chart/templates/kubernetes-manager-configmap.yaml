@@ -41,10 +41,6 @@ data:
       url: {{ .Values.kubernetesManager.gateway.url }}
     
     dispatch:
-      # 针对蓝盾流水线访问的超级权限token
-      apiToken:
-        key: Devops-Token
-        value: landun
       # 调度需要使用到的label，确定构建机唯一性
       label: bkci.dispatch.kubenetes/core
       # 通过k8s watch来观察构建机状态
@@ -84,9 +80,9 @@ data:
         cfs:
           path: /data/cfs
       volumeMount:
-        dataPath: /data/landun/workspace
-        logPath: /data/logs
-        builderConfigMapPath: /data/landun/config
+        dataPath: {{ .Values.kubernetesManager.volumeMount.dataPath }}
+        logPath: {{ .Values.kubernetesManager.volumeMount.logPath }}
+        builderConfigMapPath: /data/devops/config
         cfs:
           path: /data/bkdevops/apps
           readOnly: true
@@ -104,9 +100,18 @@ data:
         username: {{ .Values.kubernetesManager.buildAndPushImage.username }}
         password: {{ .Values.kubernetesManager.buildAndPushImage.password }}
 
+    apiserver:
+      auth:
+        # 针对蓝盾流水线访问的超级权限token
+        apiToken:
+          key: {{ .Values.kubernetesManager.apiserver.auth.apiToken.key }}
+          value: {{ .Values.kubernetesManager.apiserver.auth.apiToken.value }}
+        rsaPrivateKey: |
+          {{- .Values.kubernetesManager.apiserver.auth.rsaPrivateKey | nindent 10 }}
+
   {{ if .Values.kubeConfig.useKubeConfig -}}
   kubeConfig.yaml: |
-    {{ .Values.kubeConfig.content | nindent 4 }}
+    {{- .Values.kubeConfig.content | nindent 4 }}
   {{- end -}}
 {{- end -}}
 {{- end -}}

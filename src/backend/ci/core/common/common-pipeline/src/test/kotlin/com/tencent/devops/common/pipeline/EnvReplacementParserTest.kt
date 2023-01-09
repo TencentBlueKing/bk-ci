@@ -323,7 +323,7 @@ internal class EnvReplacementParserTest {
                 "echo envs.env_c=c, env_c=\$env_c\n" +
                 "echo envs.env_d=d, env_d=\$env_d\n" +
                 "echo envs.env_e=e, env_e=\$env_e\n" +
-                "echo envs.a=\${{ envs.a }}, a=\$a\n" +
+                "echo envs.a=, a=\$a\n" +
                 "echo settings.sensitive.password=\${{ settings.sensitive.password }}\n" +
                 "echo ::set-output name=a::i am a at step_1",
             onlyExpression = true
@@ -447,6 +447,48 @@ internal class EnvReplacementParserTest {
         )
         Assertions.assertEquals("echo \${{ ci.xyz == 'zzzz' }}", EnvReplacementParser.parse(command10, data, true))
         Assertions.assertEquals("echo true", EnvReplacementParser.parse(command11, data, true))
+    }
+
+    @Test
+    fun parseExpressionTestData1() {
+        val command1 = """
+let variables = {
+  "is_lint": ${'$'}{{ variables.is_lint }},
+  "is_build": ${'$'}{{ variables.is_build }}
+}
+// 如果没有设置相关变量
+for (const key in variables) {
+  variables[key] = variables[key].trim()
+  if (variables[key].includes("${'$'}{{")) variables[key] = ""
+  if (variables[key] == "none") variables[key] = ""
+}
+
+console.log("全局配置", variables)
+let branch = ${'$'}{{ ci.branch }}
+let branch1 = ${'$'}{{ ci.branch1 }}
+let branchs = branch.split("/")"""
+        val data = mapOf(
+            "variables.is_lint" to "true",
+            "variables.is_build" to "false",
+            "ci.branch" to "master"
+        )
+        val result = """
+let variables = {
+  "is_lint": true,
+  "is_build": false
+}
+// 如果没有设置相关变量
+for (const key in variables) {
+  variables[key] = variables[key].trim()
+  if (variables[key].includes("${'$'}{{")) variables[key] = ""
+  if (variables[key] == "none") variables[key] = ""
+}
+
+console.log("全局配置", variables)
+let branch = master
+let branch1 = 
+let branchs = branch.split("/")"""
+        Assertions.assertEquals(result, EnvReplacementParser.parse(command1, data, true))
     }
 
     private fun parseAndEquals(

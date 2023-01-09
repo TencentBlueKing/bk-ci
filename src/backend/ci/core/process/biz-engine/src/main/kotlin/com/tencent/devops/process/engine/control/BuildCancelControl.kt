@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -59,6 +60,7 @@ import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.service.BuildVariableService
+import com.tencent.devops.process.util.TaskUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -176,7 +178,7 @@ class BuildCancelControl @Autowired constructor(
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildFinishEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 userId = event.userId,
@@ -190,7 +192,7 @@ class BuildCancelControl @Autowired constructor(
         // #3138 buildCancel支持finallyStage
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildStageEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = event.userId,
@@ -289,6 +291,10 @@ class BuildCancelControl @Autowired constructor(
                 containerBuildStatus != BuildStatus.RUNNING || // 运行中的返回Stage流程进行闭环处理
                 dependOnControl.dependOnJobStatus(pipelineContainer) != BuildStatus.SUCCEED // 非运行中的判断是否有依赖
             ) {
+                // 删除redis中取消构建操作标识
+                redisOperation.delete(BuildUtils.getCancelActionBuildKey(buildId))
+                redisOperation.delete(TaskUtils.getCancelTaskIdRedisKey(buildId, containerId, false))
+                // 更新job状态
                 val switchedStatus = BuildStatusSwitcher.jobStatusMaker.cancel(containerBuildStatus)
                 pipelineContainerService.updateContainerStatus(
                     projectId = projectId,

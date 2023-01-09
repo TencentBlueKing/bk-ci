@@ -41,6 +41,7 @@ import com.tencent.devops.common.api.constant.TYPE
 import com.tencent.devops.common.api.constant.URL
 import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -80,10 +81,12 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.archive.ArtifactoryBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
+import com.tencent.devops.worker.common.api.atom.StoreSdkApi
 import com.tencent.devops.worker.common.api.quality.QualityGatewaySDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.expression.SpecialFunctions
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
@@ -108,6 +111,8 @@ import java.nio.file.Paths
 open class MarketAtomTask : ITask() {
 
     private val atomApi = ApiFactory.create(AtomArchiveSDKApi::class)
+
+    private val storeApi = ApiFactory.create(StoreSdkApi::class)
 
     private val outputFile = "output.json"
 
@@ -404,7 +409,9 @@ open class MarketAtomTask : ITask() {
                         value = JsonUtil.toJson(value),
                         contextMap = variables,
                         onlyExpression = true,
-                        contextPair = customReplacement
+                        contextPair = customReplacement,
+                        functions = SpecialFunctions.functions,
+                        output = SpecialFunctions.output
                     )
                 }
             } else {
@@ -652,15 +659,27 @@ open class MarketAtomTask : ITask() {
         if (monitorData != null) {
             addMonitorData(monitorData)
         }
-        // 添加插件对接平台错误码信息
+        // 校验插件对接平台错误码信息失败
         val platformCode = atomResult?.platformCode
         if (!platformCode.isNullOrBlank()) {
-            addPlatformCode(platformCode)
-            atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
-        }
-        val platformErrorCode = atomResult?.platformErrorCode
-        if (platformErrorCode != null) {
-            addPlatformErrorCode(platformErrorCode)
+            var isPlatformCodeRegistered = false
+            try {
+                isPlatformCodeRegistered = storeApi.isPlatformCodeRegistered(platformCode).data ?: false
+            } catch (e: RemoteServiceException) {
+                logger.warn("Failed to verify the error code information of the atom " +
+                        "docking platformm $platformCode | ${e.errorMessage}")
+            }
+            if (isPlatformCodeRegistered) {
+                addPlatformCode(platformCode)
+                atomApi.addAtomDockingPlatforms(atomCode, setOf(platformCode))
+                val platformErrorCode = atomResult.platformErrorCode
+                if (platformErrorCode != null) {
+                    addPlatformErrorCode(platformErrorCode)
+                }
+            } else {
+                logger.warn("PlatformCode:$platformCode has not been registered and failed to enter " +
+                        "the library. Please contact Devops-helper to register first")
+            }
         }
         deletePluginFile(atomTmpSpace)
         val success: Boolean

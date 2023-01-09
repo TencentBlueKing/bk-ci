@@ -127,6 +127,22 @@ func (m *Monitor) runRule(r types.Rule) {
 				blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
 					c, exitcode, outmsg, errmsg, err)
 			}
+		} else {
+			trimkey := strings.Trim(string(outmsg), "\r\n \t")
+			if trimkey != string(outmsg) {
+				if v, ok := r.RecoverCmds[trimkey]; ok {
+					for _, c := range v {
+						blog.Infof("monitor: ready run recover cmd:[%s]", c)
+						exitcode, outmsg, errmsg, err = m.runCommand(c)
+						if exitcode != 0 {
+							blog.Errorf("monitor: failed to execute cmd:[%s] with exit code:%d, err:%v", c, exitcode, err)
+							return
+						}
+						blog.Infof("monitor: succeed to execute cmd:[%s] with exit code:%d,output:%s,errmsg:%s, err:%v",
+							c, exitcode, outmsg, errmsg, err)
+					}
+				}
+			}
 		}
 	}
 }

@@ -29,13 +29,15 @@ package com.tencent.devops.common.expression.expression.sdk
 
 import com.tencent.devops.common.expression.expression.EvaluationOptions
 import com.tencent.devops.common.expression.expression.EvaluationResult
+import com.tencent.devops.common.expression.expression.ExpressionOutput
 import com.tencent.devops.common.expression.expression.ITraceWriter
 
 class EvaluationContext(
     val trace: ITraceWriter?,
     val state: Any?,
     ops: EvaluationOptions?,
-    val node: ExpressionNode?
+    val node: ExpressionNode?,
+    val expressionOutput: ExpressionOutput?
 ) {
     val options: EvaluationOptions = EvaluationOptions(ops)
     val memory: EvaluationMemory

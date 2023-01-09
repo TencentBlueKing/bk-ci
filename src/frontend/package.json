@@ -4,6 +4,7 @@
   "devDependencies": {
     "@commitlint/cli": "^9.1.1",
     "@commitlint/config-conventional": "^16.2.4",
+    "@typescript-eslint/parser": "^1.9.0",
     "chalk": "^4.0.0",
     "gulp": "^4.0.2",
     "gulp-rename": "^1.4.0",
@@ -15,9 +16,8 @@
     "ora": "^3.4.0",
     "svg-sprite-loader": "^6.0.9",
     "typescript": "3.4.5",
-    "@typescript-eslint/parser": "^1.9.0",
     "webpack-bundle-analyzer": "^4.4.2",
-    "webpack-cli": "^4.9.0",
+    "webpack-cli": "^4.10.0",
     "webpack-dev-server": "^4.3.1"
   },
   "resolutions": {
@@ -55,6 +55,10 @@
       "bk-pipeline"
     ],
     "nohoist": [
+      "bkui-pipeline",
+      "bkui-pipeline/**",
+      "devops-stream",
+      "devops-stream/**",
       "devops-metrics",
       "devops-metrics/**",
       "devops-manage",
@@ -64,12 +68,15 @@
     ]
   },
   "dependencies": {
+    "@webpack-cli/serve": "^1.7.0",
     "babel-plugin-istanbul": "6.1.1",
     "core-js": "3.26.0",
     "css-loader": "6.0.0",
     "cross-env": "^7.0.3",
+    "eslint": "^7.3.1",
     "eslint-plugin-vue": "6.2.2",
     "glob-parent": "5.1.2",
-    "uuid": "^8.3.2"
+    "uuid": "^8.3.2",
+    "vue-eslint-parser": "^9.0.2"
   }
 }

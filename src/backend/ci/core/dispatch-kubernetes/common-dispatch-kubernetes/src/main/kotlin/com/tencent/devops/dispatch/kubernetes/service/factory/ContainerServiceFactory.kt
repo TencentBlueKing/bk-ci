@@ -40,6 +40,7 @@ class ContainerServiceFactory @Autowired constructor(
 
     fun load(projectId: String): ContainerService {
         val dockerRoutingType = dockerRoutingSdkService.getDockerRoutingType(projectId)
+
         return SpringContextUtil.getBean(
             ContainerService::class.java,
             dockerRoutingType.name.toLowerCase() + "ContainerService"

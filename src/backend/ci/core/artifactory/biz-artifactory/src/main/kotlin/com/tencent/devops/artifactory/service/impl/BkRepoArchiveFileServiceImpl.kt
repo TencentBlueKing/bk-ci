@@ -99,7 +99,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileChannelType: FileChannelTypeEnum,
         logo: Boolean?
     ): String {
-        val destPath = filePath ?: DefaultPathUtils.randomFileName()
+        val pathSplit = file.name.split('.')
+        val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
         val metadata = mutableMapOf<String, String>()
         metadata["shaContent"] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
@@ -457,7 +458,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Page<FileInfo> {
         val data = bkRepoClient.listFilePage(
             userId = userId,
@@ -467,7 +469,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             includeFolders = includeFolder ?: true,
             deep = deep ?: false,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = pageSize ?: 20,
+            modifiedTimeDesc = modifiedTimeDesc ?: false
         )
         val fileInfoList = data.records.map { it.toFileInfo() }
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)

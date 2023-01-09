@@ -14,21 +14,23 @@ dispatch:
   jobQuota:
     systemAlertReceiver:
     enable: false
+  # 默认的构建容器集群类型：VM, KUBERNETES, BCS
+  defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
 
 # kubernetes-dispatch集群配置
 kubernetes:
   apiUrl: __BK_CI_KUBERNETES_HOST__
   token: __BK_CI_KUBERNETES_TOKEN__
-  entrypoint: /data/landun/config/init.sh
-  sleepEntrypoint: /data/landun/config/sleep.sh
+  entrypoint: /data/devops/config/init.sh
+  sleepEntrypoint: /data/devops/config/sleep.sh
   resources:
     builder:
-      cpu: 8
-      memory: 16048
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
       disk: 100
     job:
-      cpu: 8
-      memory: 16048
+      cpu: __BK_CI_KUBERNETES_CPU__
+      memory: __BK_CI_KUBERNETES_MEMORY__
       disk: 100
   gateway:
     webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
@@ -40,15 +42,18 @@ bcs:
   sleepEntrypoint: /tools/sleep.sh
   resources:
     builder:
-      cpu: 16.0
-      memory: 32769
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
       disk: 100
     job:
-      cpu: 16.0
-      memory: 32769
+      cpu: __BK_CI_BCS_CPU__
+      memory: __BK_CI_BCS_MEMORY__
       disk: 100
 
 registry:
   host: __BK_CI_DOCKER_REGISTRY_URL__
   userName: __BK_CI_DOCKER_REGISTRY_USER__
   password: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+
+gateway:
+  url: __BK_CI_PRIVATE_URL__

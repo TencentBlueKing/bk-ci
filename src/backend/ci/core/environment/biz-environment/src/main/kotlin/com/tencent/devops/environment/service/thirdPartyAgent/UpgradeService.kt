@@ -53,7 +53,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,
@@ -141,6 +141,11 @@ class UpgradeService @Autowired constructor(
         }
     }
 
+    fun getDockerInitFileMd5(): String {
+        // 目前仅支持linux且amd和arm脚本上没有区别
+        return getRedisValueWithCache(agentGrayUtils.getDockerInitFileMd5Key())
+    }
+
     fun getGatewayMapping(): Map<String, String> {
         val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping")
         return objectMapper.readValue(mappingConfig)
@@ -153,7 +158,6 @@ class UpgradeService @Autowired constructor(
         agentVersion: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-
         val (status, _) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
@@ -195,12 +199,27 @@ class UpgradeService @Autowired constructor(
         val (status, props, os) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
-            return AgentResult(status, UpgradeItem(false, false, false))
+            return AgentResult(
+                status, UpgradeItem(
+                    agent = false,
+                    worker = false,
+                    jdk = false,
+                    dockerInitFile = false
+                )
+            )
+        }
+
+        if (!checkProjectUpgrade(projectId)) {
+            return AgentResult(
+                AgentStatus.IMPORT_OK,
+                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false)
+            )
         }
 
         val currentWorkerVersion = getWorkerVersion()
         val currentGoAgentVersion = getAgentVersion()
         val currentJdkVersion = getJdkVersion(os, props?.arch)
+        val currentDockerInitFileMd5 = getDockerInitFileMd5()
 
         val canUpgrade = agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
 
@@ -241,11 +260,28 @@ class UpgradeService @Autowired constructor(
                                     currentJdkVersion.trim() != info.jdkVersion?.get(2)?.trim()))
         }
 
+        val dockerInitFile = when {
+            info.dockerInitFileInfo == null -> false
+            // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
+            info.dockerInitFileInfo?.needUpgrade != true -> false
+            currentDockerInitFileMd5.isBlank() -> {
+                logger.warn(
+                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}|current docker init md5 is null"
+                )
+                false
+            }
+
+            agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> false
+            agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> true
+            else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
+        }
+
         return AgentResult(
             AgentStatus.IMPORT_OK, UpgradeItem(
                 agent = goAgentVersion,
                 worker = workerVersion,
-                jdk = jdkVersion
+                jdk = jdkVersion,
+                dockerInitFile = dockerInitFile
             )
         )
     }
@@ -303,18 +339,43 @@ class UpgradeService @Autowired constructor(
             return Triple(AgentStatus.DELETE, null, null)
         }
 
-        val props = if (agentRecord.agentProps.isNullOrBlank()) {
+        val props = parseAgentProps(agentRecord.agentProps)
+
+        return Triple(AgentStatus.fromStatus(agentRecord.status), props, agentRecord.os)
+    }
+
+    fun parseAgentProps(props: String?): AgentProps? {
+        return if (props.isNullOrBlank()) {
             null
         } else {
             try {
-                JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
+                JsonUtil.to(props, AgentProps::class.java)
             } catch (e: Exception) {
                 // 兼容老数据格式不对的情况
                 null
             }
         }
+    }
 
-        return Triple(AgentStatus.fromStatus(agentRecord.status), props, agentRecord.os)
+    /**
+     * 校验这个agent所属的项目是否可以进行升级或者其他属性
+     * @return true 可以升级 false 不能进行升级
+     */
+    private fun checkProjectUpgrade(
+        projectId: String
+    ): Boolean {
+        // 校验不升级项目，这些项目不参与Agent升级
+        if (projectId in agentGrayUtils.getNotUpgradeProjects()) {
+            return false
+        }
+
+        // 校验优先升级，这些项目在升级时，其他项目不能进行升级
+        val priorityProjects = agentGrayUtils.getPriorityUpgradeProjects()
+        if (priorityProjects.isEmpty()) {
+            return true
+        }
+
+        return projectId in priorityProjects
     }
 
     private fun getUpgradeFile(file: String) = downloadAgentInstallService.getUpgradeFile(file)

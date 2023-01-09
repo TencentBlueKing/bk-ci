@@ -182,6 +182,9 @@ class TemplateFacadeService @Autowired constructor(
     @Value("\${template.instanceListUrl}")
     private val instanceListUrl: String = ""
 
+    @Value("\${template.maxErrorReasonLength:200}")
+    private val maxErrorReasonLength: Int = 200
+
     fun createTemplate(projectId: String, userId: String, template: Model): String {
         logger.info("Start to create the template ${template.name} by user $userId")
         checkPermission(projectId, userId)
@@ -915,7 +918,13 @@ class TemplateFacadeService @Autowired constructor(
         )
     }
 
-    fun getTemplate(projectId: String, userId: String, templateId: String, version: Long?): TemplateModelDetail {
+    fun getTemplate(
+        projectId: String,
+        userId: String,
+        templateId: String,
+        version: Long?,
+        versionName: String? = null
+    ): TemplateModelDetail {
         var latestTemplate = templateDao.getLatestTemplate(dslContext, projectId, templateId)
         val isConstrainedFlag = latestTemplate.type == TemplateType.CONSTRAINT.name
 
@@ -939,10 +948,18 @@ class TemplateFacadeService @Autowired constructor(
                 defaultMessage = "模板设置不存在"
             )
         }
-        val template = if (version == null) {
+        val template = if (version == null && versionName.isNullOrBlank()) {
             latestTemplate
         } else {
-            templateDao.getTemplate(dslContext = dslContext, version = version)
+            if (version == null) {
+                templateDao.getTemplate(
+                    dslContext = dslContext,
+                    templateId = templateId,
+                    versionName = versionName
+                )
+            } else {
+                templateDao.getTemplate(dslContext = dslContext, version = version)
+            }
         }
         val currentVersion = TemplateVersion(
             template.version,
@@ -1404,7 +1421,7 @@ class TemplateFacadeService @Autowired constructor(
             val validateRet = client.get(ServiceTemplateResource::class)
                 .validateUserTemplateComponentVisibleDept(
                     userId = userId,
-                    templateCode = templateId,
+                    templateCode = srcTemplateId,
                     projectCode = projectId
                 )
             if (validateRet.isNotOk()) {
@@ -1507,8 +1524,8 @@ class TemplateFacadeService @Autowired constructor(
                 } catch (t: Throwable) {
                     logger.warn("FailUpdateTemplate|${templateInstanceUpdate.pipelineName}|$projectId|$userId", t)
                     val message =
-                        if (!t.message.isNullOrBlank() && t.message!!.length > 36)
-                            t.message!!.substring(0, 36) + "......" else t.message
+                        if (!t.message.isNullOrBlank() && t.message!!.length > maxErrorReasonLength)
+                            t.message!!.substring(0, maxErrorReasonLength) + "......" else t.message
                     failurePipelines.add("【${templateInstanceUpdate.pipelineName}】reason：$message")
                 }
             }

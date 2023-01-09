@@ -464,7 +464,7 @@ dispatch:
 
 # dispatchDocker Deployment
 dispatchDocker:
-  enabled: false
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:

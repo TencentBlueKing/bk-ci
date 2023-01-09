@@ -69,20 +69,18 @@ spec:
               value: {{ .Values.multiCluster.defaultNamespace }}
           workingDir: /data/workspace/kubernetes-manager
           livenessProbe:
-            httpGet:
-              path: /management/health/livenessState
-              port: http
+            tcpSocket:
+              port: 80
             initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1
           readinessProbe:
-            httpGet:
-              path: /management/health/readinessState
-              port: http
+            tcpSocket:
+              port: 80
             initialDelaySeconds: 60
-            periodSeconds: 15
+            periodSeconds: 20
             timeoutSeconds: 10
             failureThreshold: 5
             successThreshold: 1

@@ -208,26 +208,31 @@ class AuthManagerApprovalService @Autowired constructor(
         authName: String,
         authDetail: String
     ) {
+        val managerId = authManagerUserRecord.managerId
+        val userId = authManagerUserRecord.userId
         val approvalId = authManagerApprovalDao.createApproval(
             dslContext = dslContext,
-            userId = authManagerUserRecord.userId,
-            managerId = authManagerUserRecord.managerId,
+            userId = userId,
+            managerId = managerId,
             expireTime = authManagerUserRecord.endTime,
             status = START_APPROVAL
         )
         val weworkRobotNotifyMessage = buildUserRenewalMessage(
-            userId = authManagerUserRecord.userId,
+            userId = userId,
             manager = authManagerUserRecord.createUser,
             approvalId = approvalId,
             authName = authName,
             authDetail = authDetail,
             expiredTime = authManagerUserRecord.endTime.toString()
         )
-        try {
-            client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage)
-        } catch (e: Exception) {
+
+        val sendResult = client.get(ServiceNotifyResource::class).sendWeworkRobotNotify(weworkRobotNotifyMessage).data
+        if (sendResult != true) {
             authManagerApprovalDao.deleteByapprovalId(dslContext, approvalId)
-            logger.warn("startRenewalProcess :send wework message failed .error = $e")
+            logger.warn(
+                "startRenewalProcess :send wework message failed .userId = $userId | " +
+                    "managerId = $managerId | authDetail = $authDetail"
+            )
         }
     }
 
