@@ -62,6 +62,15 @@ class RemoteDevService @Autowired constructor(
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
         val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, event)
 
+        // 记录创建历史
+        dispatchWorkspaceDao.createWorkspace(
+            userId = userId,
+            event = event,
+            environmentUid = enviromentUid,
+            status = EnvStatusEnum.Running,
+            dslContext = dslContext
+        )
+
         val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
 
@@ -82,10 +91,8 @@ class RemoteDevService @Autowired constructor(
 
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                dispatchWorkspaceDao.createWorkspace(
-                    userId = userId,
-                    event = event,
-                    environmentUid = enviromentUid,
+                dispatchWorkspaceDao.updateWorkspaceStatus(
+                    workspaceName = event.workspaceName,
                     status = EnvStatusEnum.Running,
                     dslContext = context
                 )
@@ -106,11 +113,9 @@ class RemoteDevService @Autowired constructor(
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
-                dispatchWorkspaceDao.createWorkspace(
-                    userId = userId,
-                    event = event,
-                    environmentUid = enviromentUid,
-                    status = EnvStatusEnum.Failed, // TODO 这里的task状态应该是跟workspace状态分开的
+                dispatchWorkspaceDao.updateWorkspaceStatus(
+                    workspaceName = event.workspaceName,
+                    status = EnvStatusEnum.Failed,
                     dslContext = context
                 )
 
