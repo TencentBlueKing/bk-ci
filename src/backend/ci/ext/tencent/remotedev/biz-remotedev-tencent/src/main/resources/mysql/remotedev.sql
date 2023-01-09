@@ -59,6 +59,7 @@ CREATE TABLE `T_WORKSPACE_TEMPLATE`  (
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
                                                     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
                                                     `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
+                                                    `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
                                                     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
                                                     `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: 0-CREATE, 1-START, 2-SLEEP, 3-DELETE, 4-SHARE',
                                                     `ACTION_MSG` varchar(256) NOT NULL DEFAULT '' COMMENT '操作行为描述',
@@ -74,6 +75,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
                                                      `ID` bigint(20) NOT NULL AUTO_INCREMENT,
                                                      `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
+                                                     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
                                                      `STARTER` varchar(64) NOT NULL DEFAULT '' COMMENT '启动人',
                                                      `STOPPER` varchar(64) NOT NULL DEFAULT '' COMMENT '停止人',
                                                      `START_TIME` timestamp NULL DEFAULT NULL COMMENT '开始时间',
@@ -109,6 +111,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
     `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
+    `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
     `SHARED_USER` varchar(64) NOT NULL DEFAULT '' COMMENT '被共享的用户',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',

@@ -17,12 +17,12 @@ class WorkspaceSharedDao {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.insertInto(
                 this,
-                WORKSPACE_ID,
+                WORKSPACE_NAME,
                 OPERATOR,
                 SHARED_USER
             )
                 .values(
-                    workspaceShared.workspaceId,
+                    workspaceShared.workspaceName,
                     userId,
                     workspaceShared.sharedUser
                 ).execute()
@@ -35,7 +35,7 @@ class WorkspaceSharedDao {
     ): Boolean {
         return with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.selectCount().from(this)
-                .where(WORKSPACE_ID.eq(workspaceShared.workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceShared.workspaceName))
                 .and(SHARED_USER.eq(workspaceShared.sharedUser))
                 .fetchOne(0, Int::class.java)!! > 0
         }

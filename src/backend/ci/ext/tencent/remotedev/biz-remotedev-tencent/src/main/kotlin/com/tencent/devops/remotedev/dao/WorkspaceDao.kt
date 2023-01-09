@@ -109,10 +109,10 @@ class WorkspaceDao {
         dslContext: DSLContext,
         limit: SQLLimit,
         userId: String? = null,
-        workspaceId: Long? = null
+        workspaceName: String? = null
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceId)
+            val condition = mixCondition(userId, workspaceName)
 
             if (condition.isEmpty()) {
                 return null
@@ -181,14 +181,14 @@ class WorkspaceDao {
      */
     fun fetchWorkspaceUser(
         dslContext: DSLContext,
-        workspaceId: Long
+        workspaceName: String
     ): List<String> {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.select(CREATOR).from(this)
-                .where(ID.eq(workspaceId)).unionAll(
+                .where(NAME.eq(workspaceName)).unionAll(
                     DSL.select(shared.SHARED_USER).from(shared).where(
-                        shared.WORKSPACE_ID.eq(workspaceId)
+                        shared.WORKSPACE_NAME.eq(workspaceName)
                     )
                 ).fetch(0, String::class.java)
         }
@@ -211,11 +211,10 @@ class WorkspaceDao {
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
-        workspaceId: Long? = null,
         workspaceName: String? = null
     ): TWorkspaceRecord? {
         with(TWorkspace.T_WORKSPACE) {
-            val condition = mixCondition(userId, workspaceId)
+            val condition = mixCondition(userId, workspaceName)
 
             if (condition.isEmpty()) {
                 return null
@@ -246,16 +245,12 @@ class WorkspaceDao {
 
     fun mixCondition(
         userId: String? = null,
-        workspaceId: Long? = null,
         workspaceName: String? = null
     ): List<Condition> {
         val condition = mutableListOf<Condition>()
         with(TWorkspace.T_WORKSPACE) {
             if (!userId.isNullOrBlank()) {
                 condition.add(CREATOR.eq(userId))
-            }
-            if (workspaceId != null) {
-                condition.add(ID.eq(workspaceId))
             }
             if (!workspaceName.isNullOrBlank()) {
                 condition.add(NAME.eq(workspaceName))
@@ -265,7 +260,7 @@ class WorkspaceDao {
     }
 
     fun updateWorkspaceStatus(
-        workspaceId: Long,
+        workspaceName: String,
         status: WorkspaceStatus,
         dslContext: DSLContext
     ) {
@@ -274,7 +269,7 @@ class WorkspaceDao {
                 .set(STATUS, status.ordinal)
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                .where(ID.eq(workspaceId))
+                .where(NAME.eq(workspaceName))
                 .execute()
         }
     }
@@ -296,38 +291,38 @@ class WorkspaceDao {
     }
 
     fun updateWorkspaceUsageTime(
-        workspaceId: Long,
+        workspaceName: String,
         usageTime: Int,
         dslContext: DSLContext
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(USAGE_TIME, USAGE_TIME + usageTime)
-                .where(ID.eq(workspaceId))
+                .where(NAME.eq(workspaceName))
                 .execute()
         }
     }
 
     fun updateWorkspaceSleepingTime(
-        workspaceId: Long,
+        workspaceName: String,
         sleepTime: Int,
         dslContext: DSLContext
     ) {
         with(TWorkspace.T_WORKSPACE) {
             dslContext.update(this)
                 .set(SLEEPING_TIME, SLEEPING_TIME + sleepTime)
-                .where(ID.eq(workspaceId))
+                .where(NAME.eq(workspaceName))
                 .execute()
         }
     }
 
     fun deleteWorkspace(
-        workspaceId: Long,
+        workspaceName: String,
         dslContext: DSLContext
     ): Int {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.delete(this)
-                .where(ID.eq(workspaceId))
+                .where(NAME.eq(workspaceName))
                 .execute()
         }
     }

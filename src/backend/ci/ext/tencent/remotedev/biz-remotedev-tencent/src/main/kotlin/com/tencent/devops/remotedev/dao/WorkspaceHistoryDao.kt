@@ -39,20 +39,20 @@ class WorkspaceHistoryDao {
 
     fun createWorkspaceHistory(
         dslContext: DSLContext,
-        workspaceId: Long,
+        workspaceName: String,
         startUserId: String,
         lastSleepTimeCost: Int
     ) {
         with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
             dslContext.insertInto(
                 this,
-                WORKSPACE_ID,
+                WORKSPACE_NAME,
                 STARTER,
                 START_TIME,
                 LAST_SLEEP_TIME_COST
             )
                 .values(
-                    workspaceId,
+                    workspaceName,
                     startUserId,
                     LocalDateTime.now(),
                     lastSleepTimeCost
@@ -77,22 +77,22 @@ class WorkspaceHistoryDao {
 
     fun fetchHistory(
         dslContext: DSLContext,
-        workspaceId: Long
+        workspaceName: String
     ): Result<TWorkspaceHistoryRecord> {
         with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
             return dslContext.selectFrom(this)
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceName))
                 .orderBy(CREATED_TIME.desc()).fetch()
         }
     }
 
     fun fetchAnyHistory(
         dslContext: DSLContext,
-        workspaceId: Long
+        workspaceName: String
     ): TWorkspaceHistoryRecord? {
         with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
             return dslContext.selectFrom(this)
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceName))
                 .orderBy(CREATED_TIME.desc()).fetchAny()
         }
     }

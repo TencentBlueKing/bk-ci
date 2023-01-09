@@ -55,28 +55,28 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
-    override fun startWorkspace(userId: String, workspaceId: Long): Result<WorkspaceResponse> {
-        return Result(workspaceService.startWorkspace(userId, workspaceId))
+    override fun startWorkspace(userId: String, workspaceName: String): Result<WorkspaceResponse> {
+        return Result(workspaceService.startWorkspace(userId, workspaceName))
     }
 
-    override fun stopWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        return Result(workspaceService.stopWorkspace(userId, workspaceId))
+    override fun stopWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.stopWorkspace(userId, workspaceName))
     }
 
-    override fun shareWorkspace(userId: String, workspaceId: Long, sharedUser: String): Result<Boolean> {
-        return Result(workspaceService.shareWorkspace(userId, workspaceId, sharedUser))
+    override fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Result<Boolean> {
+        return Result(workspaceService.shareWorkspace(userId, workspaceName, sharedUser))
     }
 
-    override fun deleteWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
-        return Result(workspaceService.deleteWorkspace(userId, workspaceId))
+    override fun deleteWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+        return Result(workspaceService.deleteWorkspace(userId, workspaceName))
     }
 
     override fun getWorkspaceList(userId: String, page: Int?, pageSize: Int?): Result<Page<Workspace>> {
         return Result(workspaceService.getWorkspaceList(userId, page, pageSize))
     }
 
-    override fun getWorkspaceDetail(userId: String, workspaceId: Long): Result<WorkspaceDetail?> {
-        return Result(workspaceService.getWorkspaceDetail(userId, workspaceId))
+    override fun getWorkspaceDetail(userId: String, workspaceName: String): Result<WorkspaceDetail?> {
+        return Result(workspaceService.getWorkspaceDetail(userId, workspaceName))
     }
 
     override fun getWorkspaceUserDetail(userId: String): Result<WorkspaceUserDetail?> {
@@ -119,14 +119,14 @@ class UserWorkspaceResourceImpl @Autowired constructor(
 
     override fun getWorkspaceTimeline(
         userId: String,
-        workspaceId: Long,
+        workspaceName: String,
         page: Int?,
         pageSize: Int?
     ): Result<Page<WorkspaceOpHistory>> {
         return Result(
             workspaceService.getWorkspaceTimeline(
                 userId = userId,
-                workspaceId = workspaceId,
+                workspaceName = workspaceName,
                 page = page,
                 pageSize = pageSize
             )

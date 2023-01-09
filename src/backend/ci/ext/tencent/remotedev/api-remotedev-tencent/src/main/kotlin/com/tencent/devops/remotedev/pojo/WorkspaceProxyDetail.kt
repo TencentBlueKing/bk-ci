@@ -25,43 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service
+package com.tencent.devops.remotedev.pojo
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.remotedev.dao.WorkspaceDao
-import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.Response
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Service
-class PermissionService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val workspaceDao: WorkspaceDao
-) {
-    @Value("\${remoteDev.enablePermission:true}")
-    private val enablePermission: Boolean = true
-
-    private val projectUserCache = CacheBuilder.newBuilder()
-        .maximumSize(1000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build(
-            object : CacheLoader<String, List<String>>() {
-                override fun load(name: String): List<String> {
-                    return workspaceDao.fetchWorkspaceUser(dslContext, name)
-                }
-            }
-        )
-
-    fun checkPermission(userId: String, workspaceName: String) {
-        if (!enablePermission) return
-
-        if (!projectUserCache.get(workspaceName).contains(userId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "拒绝访问")
-        }
-    }
-}
+@ApiModel("workspaceProxy依赖的工作空间信息")
+data class WorkspaceProxyDetail(
+    @ApiModelProperty("工作空间名称")
+    val workspaceName: String,
+    @ApiModelProperty("工作空间名称")
+    val podIp: String,
+    @ApiModelProperty("工作空间关联秘钥")
+    val sshKey: String
+)

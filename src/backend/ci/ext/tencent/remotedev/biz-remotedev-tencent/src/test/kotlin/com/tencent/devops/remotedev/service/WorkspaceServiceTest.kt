@@ -92,7 +92,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* endTime = */ null,
         /* lastSleepTimeCost = */ 0,
         /* updateTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-        /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter)
+        /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
+                   "",
 
     )
 
@@ -102,7 +103,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* operator = */ "user00",
         /* action = */ 0,
         /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
-        /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter)
+        /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter),
+                   "",
 
     )
 
@@ -111,7 +113,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* workspaceId = */ 1,
         /* operator = */ "user00",
         /* sharedUser = */ "user01",
-        /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter)
+        /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter),
+                   "",
     )
 
     @Nested

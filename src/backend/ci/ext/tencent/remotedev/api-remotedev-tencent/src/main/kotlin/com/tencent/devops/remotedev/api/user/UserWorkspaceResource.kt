@@ -91,9 +91,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
     ): Result<Boolean>
 
     @ApiOperation("开启工作空间")
@@ -103,9 +103,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
     ): Result<WorkspaceResponse>
 
     @ApiOperation("休眠工作空间")
@@ -115,9 +115,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
     ): Result<Boolean>
 
     @ApiOperation("分享工作空间")
@@ -127,9 +127,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
         @ApiParam("分享用户", required = true)
         @QueryParam("sharedUser")
         sharedUser: String
@@ -143,9 +143,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String
     ): Result<WorkspaceDetail?>
 
     @ApiOperation("获取用户工作空间详情")
@@ -164,9 +164,9 @@ interface UserWorkspaceResource {
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("工作空间ID", required = true)
-        @QueryParam("workspaceId")
-        workspaceId: Long,
+        @ApiParam("工作空间名称", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
         @ApiParam("第几页", required = false, defaultValue = "1")
         @QueryParam("page")
         page: Int?,

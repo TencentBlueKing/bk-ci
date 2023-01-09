@@ -40,7 +40,7 @@ class WorkspaceOpHistoryDao {
 
     fun createWorkspaceHistory(
         dslContext: DSLContext,
-        workspaceId: Long,
+        workspaceName: String,
         operator: String,
         action: WorkspaceAction,
         actionMessage: String
@@ -48,13 +48,13 @@ class WorkspaceOpHistoryDao {
         with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
             dslContext.insertInto(
                 this,
-                WORKSPACE_ID,
+                WORKSPACE_NAME,
                 OPERATOR,
                 ACTION,
                 ACTION_MSG
             )
                 .values(
-                    workspaceId,
+                    workspaceName,
                     operator,
                     action.ordinal,
                     actionMessage
@@ -64,23 +64,23 @@ class WorkspaceOpHistoryDao {
 
     fun countOpHistory(
         dslContext: DSLContext,
-        workspaceId: Long
+        workspaceName: String
     ): Long {
         with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
             return dslContext.selectCount().from(this)
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceName))
                 .fetchOne(0, Long::class.java) ?: 0
         }
     }
 
     fun limitFetchOpHistory(
         dslContext: DSLContext,
-        workspaceId: Long,
+        workspaceName: String,
         limit: SQLLimit
     ): Result<TWorkspaceOpHisRecord> {
         with(TWorkspaceOpHis.T_WORKSPACE_OP_HIS) {
             return dslContext.selectFrom(this)
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceName))
                 .orderBy(CREATED_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset).fetch()
         }
