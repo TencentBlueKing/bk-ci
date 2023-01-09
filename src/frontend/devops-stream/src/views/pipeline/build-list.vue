@@ -417,16 +417,21 @@
             },
             filterData: {
                 handler () {
-                    this.initBuildData()
-                    const query = { page: 1 }
-                    Object.keys(this.filterData).forEach(key => {
-                        if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
-                            query[key] = this.filterData[key]
-                        } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
-                            query[key] = this.filterData[key].join(',')
-                        }
-                    })
-                    this.$router.replace({ query })
+                    debounce(
+                        () => {
+                            this.initBuildData()
+                            const query = { page: 1 }
+                            Object.keys(this.filterData).forEach(key => {
+                                if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                                    query[key] = this.filterData[key]
+                                } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                                    query[key] = this.filterData[key].join(',')
+                                }
+                            })
+                            this.$router.replace({ query })
+                        },
+                        400
+                    )
                 },
                 deep: true
             }
