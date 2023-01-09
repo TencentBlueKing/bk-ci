@@ -91,13 +91,13 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
             val syncsNumber = 10
             if (projectMinId != null && projectMaxId != null) {
-                logger.info("syncAtomErrorCodeRel begin")
                 do {
                     val projectIds = client.get(ServiceProjectResource::class)
                         .getProjectListById(
                             minId = projectMinId,
                             maxId = projectMinId + syncsNumber
                         ).data?.map { it.englishName }
+                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
                     val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
                     logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes")
                     atomCodes.forEach { atomCode ->
