@@ -46,7 +46,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.concurrent.Executors
 
 @Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
@@ -85,44 +84,43 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncAtomErrorCodeRel(userId: String): Boolean {
-        Executors.newFixedThreadPool(1).submit {
-            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-            logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-            val syncsNumber = 10
-            if (projectMinId != null && projectMaxId != null) {
-                do {
-                    val projectIds = client.get(ServiceProjectResource::class)
-                        .getProjectListById(
-                            minId = projectMinId,
-                            maxId = projectMinId + syncsNumber
-                        ).data?.map { it.englishName }
-                    val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
-                    atomCodes.forEach { atomCode ->
-                        val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
-                        saveErrorCodeInfoPOs.forEach {
-                            try {
-                                metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                            } catch (ignored: DuplicateKeyException) {
-                                logger.info("fail to update errorCodeInfo:$it", ignored)
-                                metricsDataReportDao.updateErrorCodeInfo(
-                                    dslContext = dslContext,
-                                    atomCode = atomCode,
-                                    updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                        errorType = it.errorType,
-                                        errorCode = it.errorCode,
-                                        errorMsg = it.errorMsg,
-                                        modifier = it.modifier,
-                                        updateTime = LocalDateTime.now()
-                                    )
+        var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+        val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+        logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
+        val syncsNumber = 10
+        if (projectMinId != null && projectMaxId != null) {
+            do {
+                val projectIds = client.get(ServiceProjectResource::class)
+                    .getProjectListById(
+                        minId = projectMinId,
+                        maxId = projectMinId + syncsNumber
+                    ).data?.map { it.englishName }
+                val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
+                atomCodes.forEach { atomCode ->
+                    val saveErrorCodeInfoPOs = getAtomErrorInfos(userId, atomCode)
+                    logger.info("syncAtomErrorCodeRel saveErrorCodeInfoPOs:$saveErrorCodeInfoPOs")
+                    saveErrorCodeInfoPOs.forEach {
+                        try {
+                            metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
+                        } catch (ignored: DuplicateKeyException) {
+                            logger.info("fail to update errorCodeInfo:$it", ignored)
+                            metricsDataReportDao.updateErrorCodeInfo(
+                                dslContext = dslContext,
+                                atomCode = atomCode,
+                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                    errorType = it.errorType,
+                                    errorCode = it.errorCode,
+                                    errorMsg = it.errorMsg,
+                                    modifier = it.modifier,
+                                    updateTime = LocalDateTime.now()
                                 )
-                            }
+                            )
                         }
                     }
-                    projectMinId += (syncsNumber + 1)
-                } while (projectMinId <= projectMaxId)
-                logger.info("end syncAtomErrorCodeRel.")
-            }
+                }
+                projectMinId += (syncsNumber + 1)
+            } while (projectMinId <= projectMaxId)
+            logger.info("end syncAtomErrorCodeRel.")
         }
         return true
     }
