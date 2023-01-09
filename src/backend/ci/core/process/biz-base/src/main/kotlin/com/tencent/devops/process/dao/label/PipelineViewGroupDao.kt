@@ -95,7 +95,7 @@ class PipelineViewGroupDao {
         viewId: Long,
         offset: Int? = null,
         limit: Int? = null
-    ): Result<TPipelineViewGroupRecord> {
+    ): List<TPipelineViewGroupRecord> {
         return with(TPipelineViewGroup.T_PIPELINE_VIEW_GROUP) {
             dslContext.selectFrom(this)
                 .where(VIEW_ID.eq(viewId))
