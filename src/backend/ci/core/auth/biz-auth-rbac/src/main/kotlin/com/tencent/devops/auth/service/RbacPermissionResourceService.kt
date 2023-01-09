@@ -152,6 +152,17 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            val projectInfo = getProjectInfo(projectCode)
+            permissionGradeManagerService.deleteGradeManager(projectInfo.relationId!!)
+        } else {
+            val resourceInfo = getResourceInfo(
+                projectId = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+        }
         authResourceService.delete(
             projectCode = projectCode,
             resourceType = resourceType,
@@ -178,7 +189,7 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId.toInt())
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
         if (subsetManagerDetail.members.contains(userId)) {
             return true
         }
@@ -300,7 +311,7 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId.toInt())
+        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
         if (!subsetManagerDetail.members.contains(userId)) {
             throw PermissionForbiddenException(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
