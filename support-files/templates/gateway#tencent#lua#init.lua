@@ -107,7 +107,8 @@ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLI
     jwtPrivateKey = "-----BEGIN RSA PRIVATE KEY-----\n__BKCI_RSA_PRIVATE_KEY__\n-----END RSA PRIVATE KEY-----",
     bkci = {host = "__BK_CI_FQDN__", port = 80},
     kubernetes = {domain = "__BK_CI_KUBERNETES_DOMAIN__", codecc = {domain = "__CODECC_KUBERNETES_DOMAIN__"}},
-    openHttps = "__BKCI_OPEN_HTTPS__"
+    openHttps = "__BKCI_OPEN_HTTPS__",
+    mobileSiteToken = "__BK_CI_MOBILE_SITE_TOKEN__"
 }
 
 require("init_common")

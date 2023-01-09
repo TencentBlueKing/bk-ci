@@ -40,7 +40,7 @@ if ms_timestamp ~= nil and ms_signature ~= nil and ms_staffid ~= nil and ms_staf
     local timestamp = ngx.time()
     local absTime = math.abs(tonumber(ms_timestamp) - timestamp)
     if absTime < 180 then
-        local token = "ZOZUKWH8QRRIDTUTJ0V12KHHBHG7PE5Y" -- TODO test
+        local token = config.mobileSiteToken
         local input = ms_timestamp .. token .. ms_x_rio_seq .. "," .. ms_staffid .. "," .. ms_staffname .. "," ..
                           ms_x_ext_data .. timestamp
         local resty_sha256 = require "resty.sha256"
@@ -51,9 +51,9 @@ if ms_timestamp ~= nil and ms_signature ~= nil and ms_staffid ~= nil and ms_staf
         local my_signature = string.upper(resty_str.str_to_hex(digest))
         ngx.log(ngx.ERR, "my_signature : ", my_signature)
         if ms_signature == my_signature then
-          --- 设置用户信息
-        ngx.header["x-devops-uid"] = ms_staffname
-        ngx.exit(200)
+            --- 设置用户信息
+            ngx.header["x-devops-uid"] = ms_staffname
+            ngx.exit(200)
         end
     end
 end
