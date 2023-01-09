@@ -25,38 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.redis
+package com.tencent.devops.remotedev.pojo
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-/**
- * 用于等待dispatch k8s返回消息
- */
-open class RedisWaiting4K8s(
-    private val redisOperation: RedisOperation,
-    private val lockKey: String,
-    private val objectMapper: ObjectMapper,
-    private val expiredCount: Int = 90
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(RedisWaiting4K8s::class.java)
-    }
-
-    fun waiting(): RemoteDevUpdateEvent? {
-        var expired = expiredCount
-        while (expired-- > 0) {
-            val result = redisOperation.get(lockKey)
-            if (result != null) {
-                redisOperation.delete(lockKey)
-                logger.info("RedisWaiting4K8s get $lockKey for $result")
-                return objectMapper.readValue(result, RemoteDevUpdateEvent::class.java)
-            }
-            Thread.sleep(1000)
-        }
-        logger.info("RedisWaiting4K8s get $lockKey time out")
-        return null
-    }
-}
+@ApiModel("工作空间接口返回")
+data class WorkspaceResponse(
+    @ApiModelProperty("工作空间名称")
+    val workspaceName: String,
+    @ApiModelProperty("构建环境ID")
+    val environmentUid: String,
+    @ApiModelProperty("构建环境HOST")
+    val environmentHost: String
+)

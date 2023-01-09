@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.kubernetes.interfaces
 
+import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 
 /**
  * 用来获取不同类型的dispatchType的service来调用相关实现
@@ -72,4 +72,9 @@ interface RemoteDevInterface {
      * 工作空间task任务回调
      */
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean
+
+    /**
+     * 查询工作空间状态
+     */
+    fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo
 }

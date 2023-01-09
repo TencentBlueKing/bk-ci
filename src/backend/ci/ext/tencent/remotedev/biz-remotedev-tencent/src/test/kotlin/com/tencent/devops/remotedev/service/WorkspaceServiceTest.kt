@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -48,7 +49,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             permissionService = permissionService,
             sshService = sshService,
             client = client,
-            dispatcher = dispatcher
+            dispatcher = dispatcher,
+            objectMapper = objectMapper
         ),
         recordPrivateCalls = true
     )

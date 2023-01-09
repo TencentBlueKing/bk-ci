@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.HTTP_401
@@ -60,6 +61,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceAction
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceShared
 import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
@@ -92,7 +94,8 @@ class WorkspaceService @Autowired constructor(
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
     private val client: Client,
-    private val dispatcher: RemoteDevDispatcher
+    private val dispatcher: RemoteDevDispatcher,
+    private val objectMapper: ObjectMapper
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
@@ -158,7 +161,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): String {
+    fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
 
         val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
@@ -190,10 +193,11 @@ class WorkspaceService @Autowired constructor(
         }.onFailure { logger.warn("get $userId info error|${it.message}") }.getOrElse { null }?.data
 
         val bizId = MDC.get(TraceTag.BIZID)
+        val workspaceName = "$userId-${UUIDUtil.generate().takeLast(10)}"
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
-                name = "$userId-${UUIDUtil.generate().takeLast(10)}",
+                name = workspaceName,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -248,8 +252,9 @@ class WorkspaceService @Autowired constructor(
         RedisWaiting4K8s(
             redisOperation,
             "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId",
+            objectMapper
         ).waiting().let {
-            if (it) {
+            if (it != null) {
                 val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceId = workspaceId)
                     ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
                 dslContext.transaction { configuration ->
@@ -288,7 +293,11 @@ class WorkspaceService @Autowired constructor(
                     ws.name
                 ).data
 
-                return workspaceUrl!!
+                return WorkspaceResponse(
+                    workspaceName = workspaceName,
+                    environmentUid = it.environmentUid,
+                    environmentHost = it.environmentHost
+                )
             } else {
                 // 创建失败
                 logger.warn("create workspace $workspaceId failed")
@@ -298,7 +307,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun startWorkspace(userId: String, workspaceId: Long): Boolean {
+    fun startWorkspace(userId: String, workspaceId: Long): WorkspaceResponse {
         logger.info("$userId start workspace $workspaceId")
         permissionService.checkPermission(userId, workspaceId)
         RedisCallLimit(
@@ -351,46 +360,57 @@ class WorkspaceService @Autowired constructor(
             RedisWaiting4K8s(
                 redisOperation,
                 "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId",
-            ).waiting().onSuccess {
-                val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceId).firstOrNull()
-                dslContext.transaction { configuration ->
-                    val transactionContext = DSL.using(configuration)
-                    workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
+                objectMapper = objectMapper
+            ).waiting().let {
+                if (it != null) {
+                    val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceId).firstOrNull()
+                    dslContext.transaction { configuration ->
+                        val transactionContext = DSL.using(configuration)
+                        workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.RUNNING, transactionContext)
 
-                    val lastHistory = workspaceHistoryDao.fetchAnyHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId
-                    )
-                    if (lastHistory != null) {
-                        workspaceDao.updateWorkspaceSleepingTime(
+                        val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                            dslContext = transactionContext,
+                            workspaceId = workspaceId
+                        )
+                        if (lastHistory != null) {
+                            workspaceDao.updateWorkspaceSleepingTime(
+                                workspaceId = workspaceId,
+                                sleepTime = Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt(),
+                                dslContext = transactionContext
+                            )
+                        }
+                        workspaceHistoryDao.createWorkspaceHistory(
+                            dslContext = transactionContext,
                             workspaceId = workspaceId,
-                            sleepTime = Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt(),
-                            dslContext = transactionContext
+                            startUserId = userId,
+                            lastSleepTimeCost = if (history != null) {
+                                Duration.between(history.endTime, LocalDateTime.now()).seconds.toInt()
+                            } else 0
+                        )
+                        workspaceOpHistoryDao.createWorkspaceHistory(
+                            dslContext = transactionContext,
+                            workspaceId = workspaceId,
+                            operator = userId,
+                            action = WorkspaceAction.START,
+                            actionMessage = String.format(
+                                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                                status.name,
+                                WorkspaceStatus.RUNNING.name
+                            )
                         )
                     }
-                    workspaceHistoryDao.createWorkspaceHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId,
-                        startUserId = userId,
-                        lastSleepTimeCost = if (history != null) {
-                            Duration.between(history.endTime, LocalDateTime.now()).seconds.toInt()
-                        } else 0
+                    return WorkspaceResponse(
+                        workspaceName = workspace.name,
+                        environmentUid = it.environmentUid,
+                        environmentHost = it.environmentHost
                     )
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId,
-                        operator = userId,
-                        action = WorkspaceAction.START,
-                        actionMessage = String.format(
-                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.RUNNING.name
-                        )
-                    )
+                } else {
+                    // 启动失败
+                    logger.warn("start workspace $workspaceId failed")
+                    workspaceDao.deleteWorkspace(workspaceId, dslContext)
+                    throw CustomException(Response.Status.BAD_REQUEST, "工作空间启动失败")
                 }
-                return true
             }
-            return false
         }
     }
 
@@ -443,43 +463,47 @@ class WorkspaceService @Autowired constructor(
             RedisWaiting4K8s(
                 redisOperation,
                 "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
-            ).waiting().onSuccess {
-                dslContext.transaction { configuration ->
-                    val transactionContext = DSL.using(configuration)
-                    workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
-                    val lastHistory = workspaceHistoryDao.fetchAnyHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId
-                    )
-                    if (lastHistory != null) {
-                        workspaceDao.updateWorkspaceUsageTime(
+                objectMapper = objectMapper
+            ).waiting().let {
+                if (it != null) {
+                    dslContext.transaction { configuration ->
+                        val transactionContext = DSL.using(configuration)
+                        workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.SLEEP, transactionContext)
+                        val lastHistory = workspaceHistoryDao.fetchAnyHistory(
+                            dslContext = transactionContext,
+                            workspaceId = workspaceId
+                        )
+                        if (lastHistory != null) {
+                            workspaceDao.updateWorkspaceUsageTime(
+                                workspaceId = workspaceId,
+                                usageTime = Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds.toInt(),
+                                dslContext = transactionContext,
+                            )
+                            workspaceHistoryDao.updateWorkspaceHistory(
+                                dslContext = transactionContext,
+                                id = lastHistory.id,
+                                stopUserId = userId
+                            )
+                        } else {
+                            logger.error("$workspaceId get last history info null")
+                        }
+                        workspaceOpHistoryDao.createWorkspaceHistory(
+                            dslContext = transactionContext,
                             workspaceId = workspaceId,
-                            usageTime = Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds.toInt(),
-                            dslContext = transactionContext,
+                            operator = userId,
+                            action = WorkspaceAction.SLEEP,
+                            actionMessage = String.format(
+                                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                                status.name,
+                                WorkspaceStatus.SLEEP.name
+                            )
                         )
-                        workspaceHistoryDao.updateWorkspaceHistory(
-                            dslContext = transactionContext,
-                            id = lastHistory.id,
-                            stopUserId = userId
-                        )
-                    } else {
-                        logger.error("$workspaceId get last history info null")
                     }
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId,
-                        operator = userId,
-                        action = WorkspaceAction.SLEEP,
-                        actionMessage = String.format(
-                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.SLEEP.name
-                        )
-                    )
+                    return true
+                } else {
+                    return false
                 }
-                return true
             }
-            return false
         }
     }
 
@@ -528,25 +552,29 @@ class WorkspaceService @Autowired constructor(
             RedisWaiting4K8s(
                 redisOperation,
                 "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
-            ).waiting().onSuccess {
-                dslContext.transaction { configuration ->
-                    val transactionContext = DSL.using(configuration)
-                    workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
-                    workspaceOpHistoryDao.createWorkspaceHistory(
-                        dslContext = transactionContext,
-                        workspaceId = workspaceId,
-                        operator = userId,
-                        action = WorkspaceAction.DELETE,
-                        actionMessage = String.format(
-                            getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
-                            status.name,
-                            WorkspaceStatus.DELETED.name
+                objectMapper = objectMapper
+            ).waiting().let {
+                if (it != null) {
+                    dslContext.transaction { configuration ->
+                        val transactionContext = DSL.using(configuration)
+                        workspaceDao.updateWorkspaceStatus(workspaceId, WorkspaceStatus.DELETED, transactionContext)
+                        workspaceOpHistoryDao.createWorkspaceHistory(
+                            dslContext = transactionContext,
+                            workspaceId = workspaceId,
+                            operator = userId,
+                            action = WorkspaceAction.DELETE,
+                            actionMessage = String.format(
+                                getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                                status.name,
+                                WorkspaceStatus.DELETED.name
+                            )
                         )
-                    )
+                    }
+                    return true
+                } else {
+                    return false
                 }
-                return true
             }
-            return false
         }
     }
 
@@ -753,7 +781,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     private inline fun Boolean.onSuccess(action: () -> Unit): Boolean {
-        if (this) action()
+        if (this != null) action()
         return this
     }
 

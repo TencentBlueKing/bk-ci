@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
@@ -50,11 +51,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     val workspaceService: WorkspaceService
 ) : UserWorkspaceResource {
 
-    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<String> {
+    override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<WorkspaceResponse> {
         return Result(workspaceService.createWorkspace(userId, workspace))
     }
 
-    override fun startWorkspace(userId: String, workspaceId: Long): Result<Boolean> {
+    override fun startWorkspace(userId: String, workspaceId: Long): Result<WorkspaceResponse> {
         return Result(workspaceService.startWorkspace(userId, workspaceId))
     }
 

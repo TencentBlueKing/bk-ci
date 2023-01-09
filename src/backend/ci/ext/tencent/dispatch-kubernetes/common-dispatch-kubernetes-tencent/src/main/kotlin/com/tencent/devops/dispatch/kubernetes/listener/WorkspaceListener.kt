@@ -32,7 +32,6 @@ import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
-import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
@@ -49,12 +48,17 @@ class WorkspaceListener @Autowired constructor(
     @BkTimed
     fun handleWorkspaceCreate(event: WorkspaceCreateEvent) {
         var status = false
+        var devcloudEnvironmentUid = ""
+        var devcloudEnvironmentHost = ""
         try {
             logger.info("Start to handle workspace create ($event)")
-            remoteDevService.createWorkspace(
+            val workspaceResponse = remoteDevService.createWorkspace(
                 userId = event.userId,
                 event = event
             )
+
+            devcloudEnvironmentUid = workspaceResponse.enviromentUid
+            devcloudEnvironmentHost = workspaceResponse.environmentHost
 
             status = true
         } catch (e: BuildFailureException) {
@@ -70,7 +74,9 @@ class WorkspaceListener @Autowired constructor(
                 userId = event.userId,
                 workspaceName = event.workspaceName,
                 type = UpdateEventType.CREATE,
-                status = status
+                status = status,
+                environmentUid = devcloudEnvironmentUid,
+                environmentHost = devcloudEnvironmentHost
             ))
         }
     }
@@ -102,7 +108,9 @@ class WorkspaceListener @Autowired constructor(
                 userId = event.userId,
                 workspaceName = event.workspaceName,
                 type = event.type,
-                status = true
+                status = true,
+                environmentHost = "",
+                environmentUid = ""
             ))
         }
     }

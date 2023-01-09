@@ -45,6 +45,7 @@ import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
+import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -222,9 +223,25 @@ class DevCloudRemoteDevService @Autowired constructor(
         return true
     }
 
+    override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
+        val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        return WorkspaceInfo(
+            status = environmentStatus.status,
+            hostIP = environmentStatus.hostIP,
+            EnvironmentIP = environmentStatus.EnvironmentIP,
+            clusterId = environmentStatus.clusterId,
+            namespace = environmentStatus.namespace,
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId)
+        )
+    }
+
     private fun getEnvironmentUid(workspaceName: String): String {
         val workspaceRecord = dispatchWorkspaceDao.getWorkspaceInfo(workspaceName, dslContext)
         return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
+    }
+
+    private fun getEnvironmentHost(clusterId: String): String {
+        return devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId) ?: ""
     }
 
     companion object {

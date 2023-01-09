@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
+import com.tencent.devops.dispatch.kubernetes.pojo.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
@@ -64,6 +65,10 @@ class BcsRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
+        TODO("Not yet implemented")
+    }
+
+    override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         TODO("Not yet implemented")
     }
 }

@@ -33,6 +33,7 @@ import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResour
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -40,7 +41,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class ServiceRemoteDevResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ServiceRemoteDevResource {
-    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Result<String> {
+    override fun createWorkspace(userId: String, workspaceReq: WorkspaceReq): Result<WorkspaceResponse> {
         return Result(remoteDevService.createWorkspace(userId, WorkspaceCreateEvent(
             userId = userId,
             traceId = "",

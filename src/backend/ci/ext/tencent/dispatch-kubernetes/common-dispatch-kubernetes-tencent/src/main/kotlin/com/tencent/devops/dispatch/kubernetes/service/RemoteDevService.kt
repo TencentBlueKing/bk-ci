@@ -37,6 +37,7 @@ import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildTaskStatu
 import com.tencent.devops.dispatch.kubernetes.pojo.devcloud.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceReq
+import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.WorkspaceResponse
 import com.tencent.devops.dispatch.kubernetes.service.factory.ContainerServiceFactory
 import com.tencent.devops.dispatch.kubernetes.service.factory.RemoteDevServiceFactory
 import org.jooq.DSLContext
@@ -58,14 +59,26 @@ class RemoteDevService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
     }
 
-    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): String {
+    fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
         val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, event)
 
         val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            logger.info("$userId create workspace success.")
+            logger.info("$userId create workspace success. $enviromentUid")
+
+            val workspaceInfo = remoteDevServiceFactory.load("test-sawyer2")
+                .getWorkspaceInfo(userId, event.workspaceName)
+
+            if (workspaceInfo.status != EnvStatusEnum.Running) {
+                throw BuildFailureException(
+                    ErrorCodeEnum.START_VM_ERROR.errorType,
+                    ErrorCodeEnum.START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    "工作空间状态非RUNNING"
+                )
+            }
 
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -86,7 +99,10 @@ class RemoteDevService @Autowired constructor(
                 )
             }
 
-            return event.workspaceName
+            return WorkspaceResponse(
+                enviromentUid = enviromentUid,
+                environmentHost = workspaceInfo.environmentHost
+            )
         } else {
             dslContext.transaction { t ->
                 val context = DSL.using(t)
@@ -112,7 +128,7 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "构建机启动失败，错误信息:$failedMsg"
+                "工作空间启动失败，错误信息:$failedMsg"
             )
         }
     }

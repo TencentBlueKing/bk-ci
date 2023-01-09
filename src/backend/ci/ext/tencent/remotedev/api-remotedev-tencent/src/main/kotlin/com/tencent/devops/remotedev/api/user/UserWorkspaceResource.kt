@@ -36,6 +36,7 @@ import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
 import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
+import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -66,7 +67,7 @@ interface UserWorkspaceResource {
         userId: String,
         @ApiParam("工作空间描述", required = true)
         workspace: WorkspaceCreate
-    ): Result<String>
+    ): Result<WorkspaceResponse>
 
     @ApiOperation("获取用户工作空间列表")
     @GET
@@ -105,7 +106,7 @@ interface UserWorkspaceResource {
         @ApiParam("工作空间ID", required = true)
         @QueryParam("workspaceId")
         workspaceId: Long
-    ): Result<Boolean>
+    ): Result<WorkspaceResponse>
 
     @ApiOperation("休眠工作空间")
     @POST

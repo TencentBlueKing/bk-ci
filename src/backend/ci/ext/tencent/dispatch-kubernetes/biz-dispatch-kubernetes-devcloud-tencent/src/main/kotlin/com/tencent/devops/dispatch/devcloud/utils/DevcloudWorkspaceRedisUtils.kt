@@ -105,6 +105,23 @@ class DevcloudWorkspaceRedisUtils @Autowired constructor(
         return "dispatchkubernetes:task_status"
     }
 
+    /*-------------------------*/
+    fun setDevcloudClusterIdHost(clusterId: String, host: String) {
+        redisOperation.set(
+            key = devcloudClusterIdKey(clusterId),
+            value = host,
+            expired = false
+        )
+    }
+
+    fun getDevcloudClusterIdHost(clusterId: String): String? {
+        return redisOperation.get(devcloudClusterIdKey(clusterId))
+    }
+
+    private fun devcloudClusterIdKey(clusterId: String): String {
+        return "dispatchkubernetes:devcloud_cluster_id_$clusterId"
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(DevcloudWorkspaceRedisUtils::class.java)
     }
