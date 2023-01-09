@@ -316,7 +316,7 @@ class AuthPipelineService @Autowired constructor(
         token: String
     ): ListInstanceResponseDTO {
         authTokenApi.checkToken(token)
-        val pipelineGroupList = pipelineViewDao.list(
+        val pipelineGroupList = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
             limit = limit,
@@ -415,7 +415,7 @@ class AuthPipelineService @Autowired constructor(
         token: String,
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
-        val pipelineGroupInfo = pipelineViewDao.list(
+        val pipelineGroupInfo = pipelineViewDao.listByPage(
             dslContext = dslContext,
             projectId = projectId,
             viewName = keyword,

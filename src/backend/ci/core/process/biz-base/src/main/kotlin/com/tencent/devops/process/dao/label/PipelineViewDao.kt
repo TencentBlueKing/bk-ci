@@ -189,7 +189,7 @@ class PipelineViewDao {
         }
     }
 
-    fun list(
+    fun listByPage(
         dslContext: DSLContext,
         projectId: String,
         viewName: String? = null,
