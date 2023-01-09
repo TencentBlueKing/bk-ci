@@ -80,7 +80,7 @@ class QualityHisMetadataJob @Autowired constructor(
             val deleteTime = System.currentTimeMillis() - TimeUnit.DAYS.toMillis(cleanTimeGapDay)
 
             logger.info("start to delete quality his meta data: " +
-                "$deleteTime, $cleanTimeGapDay, $cleanRound， $roundSize, $roundGap")
+                "$deleteTime, $cleanTimeGapDay, $cleanRound, $roundSize, $roundGap")
 
             // 执行cleanRound轮清理详情数据操作
             for (i in 1..cleanRound) {
