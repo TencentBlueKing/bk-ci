@@ -287,12 +287,6 @@ class WorkspaceService @Autowired constructor(
                     )
                 }
 
-                // 获取远程登录url
-                val workspaceUrl = client.get(ServiceRemoteDevResource::class).getWorkspaceUrl(
-                    userId,
-                    ws.name
-                ).data
-
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
                     environmentUid = it.environmentUid,
