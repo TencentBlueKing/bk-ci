@@ -865,6 +865,6 @@ class WorkspaceService @Autowired constructor(
         } else {
             userId
         }
-        return "${subUserId.replace("_", "-")}${UUIDUtil.generate().takeLast(16)}-"
+        return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(16)}"
     }
 }
