@@ -54,8 +54,8 @@ import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record3
 import org.jooq.Record4
 import org.jooq.Result
 import org.jooq.SelectJoinStep
@@ -228,12 +228,12 @@ class AtomFailInfoDao {
         }
     }
 
-    fun getAtomErrorInfos(dslContext: DSLContext, atomCode: String): List<Record3<Int, Int, String>> {
+    fun getAtomErrorInfos(dslContext: DSLContext, atomCode: String): Result<Record> {
         with(TAtomFailDetailData.T_ATOM_FAIL_DETAIL_DATA) {
-            return dslContext.select(ERROR_CODE, ERROR_TYPE, ERROR_MSG)
+            return dslContext.select()
                 .from(this)
                 .where(ATOM_CODE.eq(atomCode))
-                .groupBy(ERROR_CODE, ERROR_TYPE, ERROR_MSG)
+                .groupBy(ERROR_CODE, ERROR_TYPE)
                 .fetch()
         }
     }

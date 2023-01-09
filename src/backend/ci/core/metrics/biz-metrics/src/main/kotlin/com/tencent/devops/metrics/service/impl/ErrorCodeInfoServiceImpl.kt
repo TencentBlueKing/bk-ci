@@ -29,6 +29,7 @@ package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.dao.AtomFailInfoDao
 import com.tencent.devops.metrics.dao.ErrorCodeInfoDao
 import com.tencent.devops.metrics.dao.MetricsDataReportDao
@@ -130,9 +131,9 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             SaveErrorCodeInfoPO(
                 id = client.get(ServiceAllocIdResource::class)
                     .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
-                errorCode = it.value1(),
-                errorType = it.value2(),
-                errorMsg = it.value3(),
+                errorCode = it[Constants.BK_ERROR_CODE] as Int,
+                errorType = it[Constants.BK_ERROR_TYPE] as Int,
+                errorMsg = it[Constants.BK_ERROR_MSG] as String,
                 creator = userId,
                 modifier = userId,
                 createTime = LocalDateTime.now(),
