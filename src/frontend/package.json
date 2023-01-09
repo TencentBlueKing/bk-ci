@@ -53,8 +53,6 @@
       "devops-metrics"
     ],
     "nohoist": [
-      "bk-pipeline",
-      "bk-pipeline/**",
       "devops-stream",
       "devops-stream/**",
       "devops-metrics",
