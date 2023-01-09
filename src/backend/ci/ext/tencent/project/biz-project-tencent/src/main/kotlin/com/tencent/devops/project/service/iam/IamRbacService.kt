@@ -570,8 +570,10 @@ class IamRbacService @Autowired constructor(
         if (actions.second.isNotEmpty()) {
             // 资源的权限
             actions.second.forEach { (resource, actions) ->
-                val groupAuthorizationScopes = buildOtherAuthorizationScopes(actions, projectCode, resource)
-                iamManagerService.grantRoleGroupV2(roleId, groupAuthorizationScopes)
+                if (actions.isNotEmpty()) {
+                    val groupAuthorizationScopes = buildOtherAuthorizationScopes(actions, projectCode, resource)
+                    iamManagerService.grantRoleGroupV2(roleId, groupAuthorizationScopes)
+                }
             }
         }
     }
