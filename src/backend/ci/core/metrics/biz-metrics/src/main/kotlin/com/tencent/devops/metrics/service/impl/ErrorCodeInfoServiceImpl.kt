@@ -108,7 +108,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                             try {
                                 metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
                             } catch (ignored: DuplicateKeyException) {
-                                logger.warn("fail to update errorCodeInfo:$it", ignored)
+                                logger.info("fail to update errorCodeInfo:$it", ignored)
                                 metricsDataReportDao.updateErrorCodeInfo(
                                     dslContext = dslContext,
                                     atomCode = atomCode,
