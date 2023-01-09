@@ -97,7 +97,8 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                             minId = projectMinId,
                             maxId = projectMinId + syncsNumber
                         ).data?.map { it.englishName }
-                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
+                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds" +
+                            "atomCodes:${atomFailInfoDao.limitAtomCodes(dslContext, projectIds!!)}")
                     val atomCodes = atomFailInfoDao.limitAtomCodes(dslContext, projectIds ?: emptyList())
                     logger.info("syncAtomErrorCodeRel atomCodes:$atomCodes .")
                     atomCodes.forEach { atomCode ->
