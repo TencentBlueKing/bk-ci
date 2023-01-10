@@ -42,7 +42,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["EXTERNAL_REMOTE_DEV"], description = "External-remoteDev")
-@Path("/external/remoteDev/")
+@Path("/external/remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
