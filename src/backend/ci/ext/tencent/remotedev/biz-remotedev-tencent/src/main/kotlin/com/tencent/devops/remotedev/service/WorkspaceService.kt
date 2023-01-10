@@ -248,7 +248,12 @@ class WorkspaceService @Autowired constructor(
                     ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
                 dslContext.transaction { configuration ->
                     val transactionContext = DSL.using(configuration)
-                    workspaceDao.updateWorkspaceStatus(workspaceName, WorkspaceStatus.RUNNING, transactionContext)
+                    workspaceDao.updateWorkspaceStatus(
+                        dslContext = transactionContext,
+                        workspaceName = workspaceName,
+                        status = WorkspaceStatus.RUNNING,
+                        hostName = it.environmentHost
+                    )
                     workspaceHistoryDao.createWorkspaceHistory(
                         dslContext = transactionContext,
                         workspaceName = workspaceName,
@@ -339,7 +344,11 @@ class WorkspaceService @Autowired constructor(
                     val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceName).firstOrNull()
                     dslContext.transaction { configuration ->
                         val transactionContext = DSL.using(configuration)
-                        workspaceDao.updateWorkspaceStatus(workspaceName, WorkspaceStatus.RUNNING, transactionContext)
+                        workspaceDao.updateWorkspaceStatus(
+                            workspaceName = workspaceName,
+                            status = WorkspaceStatus.RUNNING,
+                            dslContext = transactionContext
+                        )
 
                         val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                             dslContext = transactionContext,
@@ -680,11 +689,11 @@ class WorkspaceService @Autowired constructor(
                 workspaceName
             ).toSet()
         )
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("", workspaceName)
-
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("admin", workspaceName)
+        logger.info("=========: ${JsonUtil.toJson(workspaceInfo)}")
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
-            podIp = workspaceInfo.data?.EnvironmentIP ?: "",
+            podIp = workspaceInfo.data?.environmentIP ?: "",
             sshKey = sshKey
         )
     }
@@ -811,7 +820,11 @@ class WorkspaceService @Autowired constructor(
     private fun doDeleteWS(operator: String, beforeStatus: WorkspaceStatus, workspaceName: String) {
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-            workspaceDao.updateWorkspaceStatus(workspaceName, WorkspaceStatus.DELETED, transactionContext)
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.DELETED,
+                dslContext = transactionContext
+            )
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = transactionContext,
                 workspaceName = workspaceName,

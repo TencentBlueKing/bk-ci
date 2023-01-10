@@ -107,6 +107,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                                 mountPath = WORKSPACE_PATH
                             )
                         ),
+                        command = listOf("/.devopsRemoting/devopsRemoting", "init"),
                         env = listOf(
                             EnvVar("DEVOPS_REMOTING_IDE_PORT", "23000"),
                             EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
@@ -122,7 +123,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                 initContainers = listOf(
                     Container(
                         name = event.workspaceName + "-init",
-                        image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.1",
+                        image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.2",
                         resource = ResourceRequirements(2000, 4096),
                         volumeMounts = listOf(
                             VolumeMount(
@@ -132,7 +133,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                         ),
                         env = listOf(
                             EnvVar("GIT_TOKEN", event.gitOAuth),
-                            EnvVar("GIT_URL", event.repositoryUrl)
+                            EnvVar("GIT_URL", event.repositoryUrl),
+                            EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", gitRepoRootPath)
                         )
                     )
                 ),
@@ -216,7 +218,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
-            EnvironmentIP = environmentStatus.EnvironmentIP,
+            environmentIP = environmentStatus.EnvironmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
             environmentHost = getEnvironmentHost(environmentStatus.clusterId)

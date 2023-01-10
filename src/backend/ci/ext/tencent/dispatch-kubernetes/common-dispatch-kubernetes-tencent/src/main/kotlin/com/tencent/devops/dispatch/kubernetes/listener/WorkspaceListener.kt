@@ -83,11 +83,13 @@ class WorkspaceListener @Autowired constructor(
 
     @BkTimed
     fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
+        var environmentHost = ""
         try {
             logger.info("Start to handle workspace operate ($event)")
             when (event.type) {
                 UpdateEventType.START -> {
-                    remoteDevService.startWorkspace(event.userId, event.workspaceName)
+                    val workspaceResponse = remoteDevService.startWorkspace(event.userId, event.workspaceName)
+                    environmentHost = workspaceResponse.environmentHost
                 }
                 UpdateEventType.STOP -> {
                     remoteDevService.stopWorkspace(event.userId, event.workspaceName)
@@ -109,7 +111,7 @@ class WorkspaceListener @Autowired constructor(
                 workspaceName = event.workspaceName,
                 type = event.type,
                 status = true,
-                environmentHost = "",
+                environmentHost = environmentHost,
                 environmentUid = ""
             ))
         }

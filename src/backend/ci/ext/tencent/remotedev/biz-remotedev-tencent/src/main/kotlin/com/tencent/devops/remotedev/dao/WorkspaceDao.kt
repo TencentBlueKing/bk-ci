@@ -194,20 +194,6 @@ class WorkspaceDao {
         }
     }
 
-    fun updateWorkspaceName(
-        oldName: String,
-        name: String,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(NAME, name)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .where(NAME.eq(oldName))
-                .execute()
-        }
-    }
-
     fun fetchAnyWorkspace(
         dslContext: DSLContext,
         userId: String? = null,
@@ -265,33 +251,28 @@ class WorkspaceDao {
     }
 
     fun updateWorkspaceStatus(
+        dslContext: DSLContext,
         workspaceName: String,
         status: WorkspaceStatus,
-        dslContext: DSLContext
+        hostName: String? = ""
     ) {
         with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(STATUS, status.ordinal)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                .where(NAME.eq(workspaceName))
-                .execute()
-        }
-    }
-
-    // 根据ws唯一名称更新状态
-    fun updateWorkspaceStatusWithName(
-        workspaceName: String,
-        status: WorkspaceStatus,
-        dslContext: DSLContext
-    ) {
-        with(TWorkspace.T_WORKSPACE) {
-            dslContext.update(this)
-                .set(STATUS, status.ordinal)
-                .set(UPDATE_TIME, LocalDateTime.now())
-                .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
-                .where(NAME.eq(workspaceName))
-                .execute()
+            if (hostName.isNullOrBlank()) {
+                dslContext.update(this)
+                    .set(STATUS, status.ordinal)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                    .where(NAME.eq(workspaceName))
+                    .execute()
+            } else {
+                dslContext.update(this)
+                    .set(STATUS, status.ordinal)
+                    .set(HOST_NAME, hostName)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(LAST_STATUS_UPDATE_TIME, LocalDateTime.now())
+                    .where(NAME.eq(workspaceName))
+                    .execute()
+            }
         }
     }
 

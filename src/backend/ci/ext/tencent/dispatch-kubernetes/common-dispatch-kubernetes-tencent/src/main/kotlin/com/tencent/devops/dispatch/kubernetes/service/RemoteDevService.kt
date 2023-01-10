@@ -138,12 +138,24 @@ class RemoteDevService @Autowired constructor(
         }
     }
 
-    fun startWorkspace(userId: String, workspaceName: String): Boolean {
+    fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
         val taskId = remoteDevServiceFactory.load("test-sawyer2").startWorkspace(userId, workspaceName)
         val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            val workspaceInfo = remoteDevServiceFactory.load("test-sawyer2")
+                .getWorkspaceInfo(userId, workspaceName)
+
+            if (workspaceInfo.status != EnvStatusEnum.running) {
+                throw BuildFailureException(
+                    ErrorCodeEnum.START_VM_ERROR.errorType,
+                    ErrorCodeEnum.START_VM_ERROR.errorCode,
+                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    "工作空间状态非RUNNING"
+                )
+            }
+
             // 更新db状态
             dispatchWorkspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
@@ -151,7 +163,10 @@ class RemoteDevService @Autowired constructor(
                 dslContext = dslContext
             )
 
-            return true
+            return WorkspaceResponse(
+                environmentHost = workspaceInfo.environmentHost,
+                enviromentUid = ""
+            )
         } else {
             throw BuildFailureException(
                 ErrorCodeEnum.START_VM_ERROR.errorType,

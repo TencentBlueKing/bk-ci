@@ -75,7 +75,7 @@ interface ServiceRemoteDevResource {
         @ApiParam("工作空间唯一name", required = false)
         @PathParam("workspaceName")
         workspaceName: String
-    ): Result<Boolean>
+    ): Result<WorkspaceResponse>
 
     @ApiOperation("关闭工作空间")
     @POST
