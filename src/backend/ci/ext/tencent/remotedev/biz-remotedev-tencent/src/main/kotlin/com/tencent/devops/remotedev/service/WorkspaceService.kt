@@ -682,7 +682,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("=========: ${JsonUtil.toJson(workspaceInfo)}")
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
-            podIp = workspaceInfo.data?.EnvironmentIP ?: "",
+            podIp = workspaceInfo.data?.environmentIP ?: "",
             sshKey = sshKey
         )
     }
