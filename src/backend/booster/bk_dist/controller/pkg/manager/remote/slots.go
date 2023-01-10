@@ -317,6 +317,7 @@ func (wr *resource) getWorkerWithMostFreeSlots() *worker {
 func (wr *resource) getWorkerLargeFileFirst(f string) *worker {
 	var w *worker
 	max := 0
+	inlargequeue := false
 	for _, worker := range wr.worker {
 		if worker.disabled {
 			continue
@@ -326,11 +327,20 @@ func (wr *resource) getWorkerLargeFileFirst(f string) *worker {
 
 		// 大文件优先
 		if free > 0 && worker.hasFile(f) {
-			w = worker
-			break
+			if !inlargequeue { // first in large queue
+				inlargequeue = true
+				max = free
+				w = worker
+			} else {
+				if free >= max {
+					max = free
+					w = worker
+				}
+			}
+			continue
 		}
 
-		if free >= max {
+		if free >= max && !inlargequeue {
 			max = free
 			w = worker
 		}
