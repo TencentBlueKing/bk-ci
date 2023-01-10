@@ -44,6 +44,7 @@ import org.jooq.DSLContext
 import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class StoreIndexManageInfoDao {
@@ -338,6 +339,22 @@ class StoreIndexManageInfoDao {
                     .set(ELEMENT_VALUE, it.elementValue)
                     .set(REMARK, it.remark)
             }).execute()
+        }
+    }
+
+    fun updateIndexCalculateProgress(
+        dslContext: DSLContext,
+        indexId: String,
+        totalTaskNum: Int,
+        finishTaskNum: Int
+    ) {
+        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
+            dslContext.update(this)
+                .set(TOTAL_TASK_NUM, totalTaskNum)
+                .set(FINISH_TASK_NUM, finishTaskNum)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(ID.eq(indexId))
+                .execute()
         }
     }
 }

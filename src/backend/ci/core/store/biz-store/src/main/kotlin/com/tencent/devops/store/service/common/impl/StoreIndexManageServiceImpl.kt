@@ -142,36 +142,40 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 
         val indexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
         val atomCode = indexBaseInfo.atomCode
-        val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
-            dslContext = dslContext,
-            storeCode = atomCode,
-            storeType = StoreTypeEnum.ATOM,
-            busType = StorePipelineBusTypeEnum.INDEX
-        )
-        if (storePipelineRelRecord != null) {
-            val pipelineId = storePipelineRelRecord.pipelineId
-            // 查询插件对应的初始化项目
-            val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+        // 如果运算类型为插件则需要初始化流水线
+        if (indexBaseInfo.operationType == IndexOperationTypeEnum.ATOM.name) {
+            val storePipelineRelRecord = storePipelineRelDao.getStorePipelineRel(
                 dslContext = dslContext,
                 storeCode = atomCode,
-                storeType = StoreTypeEnum.ATOM.type.toByte()
-            )!!
-            val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
-                initProjectCode,
-                listOf(pipelineId)
-            ).data?.get(storePipelineRelRecord.pipelineId)
-            pipelineBuildInfo?.let {
-                if (it.status == BuildStatus.PREPARE_ENV.statusName || it.status == BuildStatus.RUNNING.statusName) {
-                    client.get(ServiceBuildResource::class).manualShutdown(
-                        userId = userId,
-                        projectId = initProjectCode,
-                        pipelineId = pipelineId,
-                        buildId = it.buildId,
-                        channelCode = ChannelCode.AM
-                    )
+                storeType = StoreTypeEnum.ATOM,
+                busType = StorePipelineBusTypeEnum.INDEX
+            )
+            if (storePipelineRelRecord != null) {
+                val pipelineId = storePipelineRelRecord.pipelineId
+                // 查询插件对应的初始化项目
+                val initProjectCode = storeProjectRelDao.getInitProjectCodeByStoreCode(
+                    dslContext = dslContext,
+                    storeCode = atomCode,
+                    storeType = StoreTypeEnum.ATOM.type.toByte()
+                )!!
+                val pipelineBuildInfo = client.get(ServiceBuildResource::class).getPipelineLatestBuildByIds(
+                    initProjectCode,
+                    listOf(pipelineId)
+                ).data?.get(storePipelineRelRecord.pipelineId)
+                pipelineBuildInfo?.let {
+                    if (it.status == BuildStatus.PREPARE_ENV.statusName || it.status == BuildStatus.RUNNING.statusName) {
+                        client.get(ServiceBuildResource::class).manualShutdown(
+                            userId = userId,
+                            projectId = initProjectCode,
+                            pipelineId = pipelineId,
+                            buildId = it.buildId,
+                            channelCode = ChannelCode.AM
+                        )
+                    }
                 }
             }
         }
+
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeIndexManageInfoDao.deleteTStoreIndexLevelInfo(context, indexId)
@@ -189,15 +193,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 
         val count = storeIndexManageInfoDao.count(dslContext, keyWords)
         val records = storeIndexManageInfoDao.list(dslContext, keyWords, page, pageSize)
-        // 计算任务插件通过Redis实时上报计算进度
-        records.forEach {
-            val totalTaskNum = redisOperation.get("${it.indexCode}_totalTaskNum")
-            val finishTaskNum = redisOperation.get("${it.indexCode}_finishTaskNum")
-            if (totalTaskNum != null && finishTaskNum != null) {
-                it.totalTaskNum = totalTaskNum.toInt()
-                it.finishTaskNum = finishTaskNum.toInt()
-            }
-        }
         return Page(
             count = count,
             page = page,
@@ -302,8 +297,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 
         dslContext.transaction {  configuration ->
             val context = DSL.using(configuration)
-            storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(dslContext, indexCode, storeCodes)
-            storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(dslContext, indexCode, storeCodes)
+            storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(context, indexCode, storeCodes)
+            storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(context, indexCode, storeCodes)
         }
         return Result(true)
     }

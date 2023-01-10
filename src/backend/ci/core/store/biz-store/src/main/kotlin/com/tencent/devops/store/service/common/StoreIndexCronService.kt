@@ -173,6 +173,12 @@ class StoreIndexCronService constructor(
                 storeIndexManageInfoDao.batchCreateElementDetail(dslContext, tStoreIndexElementDetailRecords)
                 // 记录计算进度
                 finishTaskNum += atomCodes.size
+                storeIndexManageInfoDao.updateIndexCalculateProgress(
+                    dslContext = dslContext,
+                    indexId = storeIndexBaseInfoId,
+                    totalTaskNum = totalTaskNum,
+                    finishTaskNum = finishTaskNum
+                )
                 page++
             } while (atomCodes.size == DEFAULT_PAGE_SIZE)
             logger.info("end computeAtomSlaIndexData!!")
