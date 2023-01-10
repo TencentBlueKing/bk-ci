@@ -64,7 +64,7 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
         )))
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Result<Boolean> {
+    override fun startWorkspace(userId: String, workspaceName: String): Result<WorkspaceResponse> {
         return Result(remoteDevService.startWorkspace(userId, workspaceName))
     }
 
