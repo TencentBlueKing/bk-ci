@@ -28,13 +28,12 @@
 package com.tencent.devops.project.util
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.SubjectScopeInfo
 
 @Suppress("ALL")
 object ProjectUtils {

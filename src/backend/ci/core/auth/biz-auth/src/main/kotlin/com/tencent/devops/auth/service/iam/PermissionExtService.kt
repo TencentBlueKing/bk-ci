@@ -27,13 +27,17 @@
 
 package com.tencent.devops.auth.service.iam
 
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
+
 interface PermissionExtService {
+    @Suppress("LongParameterList")
     fun resourceCreateRelation(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo? = null
     ): Boolean
 
     fun resourceModifyRelation(

@@ -28,8 +28,6 @@
 package com.tencent.devops.project.service.impl
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
@@ -45,6 +43,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
@@ -67,10 +66,9 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -180,7 +178,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         logger.info("create project : subjectScopes = $subjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
-                val resourceCreateInfo = ResourceCreateInfo(
+                val authProjectCreateInfo = AuthProjectCreateInfo(
                     userId = userId,
                     accessToken = accessToken,
                     userDeptDetail = userDeptDetail,
@@ -194,7 +192,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         resourceCode = projectCreateInfo.englishName,
                         resourceName = projectCreateInfo.projectName
                     ),
-                    resourceCreateInfo = resourceCreateInfo
+                    authProjectCreateInfo = authProjectCreateInfo
                 )
             }
         } catch (e: PermissionForbiddenException) {
@@ -209,8 +207,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                if (subjectScopes.isEmpty()) {
-                    subjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+                subjectScopes.ifEmpty {
+                    listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
                 }
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
@@ -363,8 +361,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 dslContext.transaction { configuration ->
                     val context = DSL.using(configuration)
                     // 修改时，若传递的可授权人员范围为空，则直接用全公司
-                    if (subjectScopes.isEmpty()) {
-                        subjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+                    subjectScopes.ifEmpty {
+                        listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
                     }
                     val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                     logger.info("subjectScopesStr : $subjectScopesStr")

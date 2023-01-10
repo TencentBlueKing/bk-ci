@@ -23,62 +23,29 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service.permission
 
-import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
-import org.springframework.beans.factory.annotation.Autowired
 
-class StreamProjectPermissionServiceImpl @Autowired constructor(
-    val client: Client,
-    val tokenService: ClientTokenService
+class RbacProjectPermissionService(
+    private val authResourceApi: AuthResourceApi,
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
-    override fun verifyUserProjectPermission(
-        accessToken: String?,
-        projectCode: String,
-        userId: String
-    ): Boolean {
-        return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectCode
-        ).data ?: false
-    }
-
-    override fun createResources(
-        resourceRegisterInfo: ResourceRegisterInfo,
-        authProjectCreateInfo: AuthProjectCreateInfo
-    ): String {
-        return ""
-    }
-
-    override fun deleteResource(projectCode: String) {
-        return
-    }
-
-    override fun modifyResource(
-        projectInfo: TProjectRecord,
-        resourceUpdateInfo: ResourceUpdateInfo
-    ) {
-        return
-    }
-
-    override fun getUserProjects(userId: String): List<String> {
-        return listOf("demo")
-    }
-
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        return emptyMap()
+    override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
+        return true
     }
 
     override fun verifyUserProjectPermission(
@@ -87,18 +54,42 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): Boolean {
-        if (permission == AuthPermission.MANAGE) {
-            return client.get(ServiceProjectAuthResource::class).checkProjectManager(
-                userId = userId,
-                projectCode = projectCode,
-                token = tokenService.getSystemToken(null)!!
-            ).data ?: false
-        }
-        return client.get(ServiceProjectAuthResource::class).isProjectUser(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectCode
-        ).data ?: false
+        return true
+    }
+
+    override fun createResources(
+        resourceRegisterInfo: ResourceRegisterInfo,
+        authProjectCreateInfo: AuthProjectCreateInfo
+    ): String {
+        authResourceApi.createResource(
+            user = authProjectCreateInfo.userId,
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = resourceRegisterInfo.resourceCode,
+            resourceCode = resourceRegisterInfo.resourceCode,
+            resourceName = resourceRegisterInfo.resourceName,
+            resourceCreateInfo = ResourceCreateInfo(
+                needApproval = authProjectCreateInfo.needApproval,
+                subjectScopes = authProjectCreateInfo.iamSubjectScopes
+            )
+        )
+        return ""
+    }
+
+    override fun deleteResource(projectCode: String) {
+
+    }
+
+    override fun modifyResource(projectInfo: TProjectRecord, resourceUpdateInfo: ResourceUpdateInfo) {
+
+    }
+
+    override fun getUserProjects(userId: String): List<String> {
+        return emptyList()
+    }
+
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        return emptyMap()
     }
 
     override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {

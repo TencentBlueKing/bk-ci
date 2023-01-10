@@ -36,6 +36,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,7 +59,8 @@ class PermissionGradeManagerService @Autowired constructor(
         projectName: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Int {
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = resourceName,
@@ -75,13 +77,16 @@ class PermissionGradeManagerService @Autowired constructor(
             projectCode = projectCode,
             projectName = projectName
         )
+        val subjectScopes = resourceCreateInfo?.subjectScopes?.map {
+            ManagerScopes(it.type, it.id)
+        } ?: listOf(ManagerScopes("*", "*"))
         val createManagerDTO = CreateManagerDTO.builder()
             .system(iamConfiguration.systemId)
             .name(name)
             .description(description)
             .members(listOf(userId))
             .authorization_scopes(authorizationScopes)
-            .subject_scopes(listOf(ManagerScopes("*", "*")))
+            .subject_scopes(subjectScopes)
             .sync_perm(true)
             .build()
         val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)

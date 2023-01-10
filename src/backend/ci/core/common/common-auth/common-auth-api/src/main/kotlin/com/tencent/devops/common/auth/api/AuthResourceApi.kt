@@ -28,6 +28,7 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
@@ -48,7 +49,8 @@ interface AuthResourceApi {
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo? = null
     )
 
     /**
