@@ -45,7 +45,7 @@ data class QueryAtomStatisticsInfoDTO(
     @ApiModelProperty("结束时间")
     val endTime: String,
     @ApiModelProperty("错误类型")
-    val errorTypes: List<Int>?,
+    val errorTypes: List<Int>? = null,
     @ApiModelProperty("插件代码")
     val atomCodes: List<String>?,
     @ApiModelProperty("页码")

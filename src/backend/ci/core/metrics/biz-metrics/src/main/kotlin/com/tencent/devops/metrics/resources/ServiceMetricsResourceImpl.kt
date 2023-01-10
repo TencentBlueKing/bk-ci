@@ -35,14 +35,17 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil
+import java.time.LocalDateTime
 
 @RestResource
 class ServiceMetricsResourceImpl constructor(
     private val thirdPartyManageService: ThirdPartyManageService,
-    private val pipelineOverviewManageService: PipelineOverviewManageService
+    private val pipelineOverviewManageService: PipelineOverviewManageService,
+    private val atomStatisticsManageService: AtomStatisticsManageService
 ) : ServiceMetricsResource {
 
     override fun queryPipelineSumInfo(
@@ -89,6 +92,20 @@ class ServiceMetricsResourceImpl constructor(
                     endTime = endDateTime
                 )
             )
+        )
+    }
+
+    override fun queryAtomComplianceInfo(
+        userId: String,
+        projectIds: List<String>,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
+    ): Result<Map<String, Double>> {
+        return atomStatisticsManageService.queryAtomComplianceInfo(
+            userId = userId,
+            projectIds = projectIds,
+            startDateTime = startDateTime,
+            endDateTime = endDateTime
         )
     }
 }
