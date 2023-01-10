@@ -255,14 +255,6 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         }
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         val output = file.outputStream()
-        // 判断上传的Icon是否为正方形规格
-//        val width = img.width
-//        val height = img.height
-//        if (width != height) {
-//            return MessageCodeUtil.generateResponseDataObject(
-//                StoreMessageCode.USER_STORE_ICON_IS_SQUARE
-//            )
-//        }
         val buffer = ByteArray(1024)
         var len: Int
         try {

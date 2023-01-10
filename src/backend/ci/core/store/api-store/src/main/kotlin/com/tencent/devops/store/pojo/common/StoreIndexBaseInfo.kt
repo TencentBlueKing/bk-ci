@@ -58,9 +58,9 @@ data class StoreIndexBaseInfo(
     @ApiModelProperty("插件执行版本号")
     val atomVersion: String? = null,
     @ApiModelProperty("完成执行任务数量", required = true)
-    var finishTaskNum: Int,
+    val finishTaskNum: Int,
     @ApiModelProperty("执行任务总数", required = true)
-    var totalTaskNum: Int,
+    val totalTaskNum: Int,
     @ApiModelProperty("指标执行时间类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
     @ApiModelProperty("组件类型", required = true)
