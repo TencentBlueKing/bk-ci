@@ -331,7 +331,7 @@ class WorkspaceDao {
     fun getTimeOutInactivityWorkspace(
         timeOutDays: Int,
         dslContext: DSLContext
-    ): Result<TWorkspaceRecord>? {
+    ): Result<TWorkspaceRecord> {
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
                 .where(

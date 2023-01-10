@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -51,6 +52,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -730,7 +732,13 @@ class WorkspaceService @Autowired constructor(
         logger.info("getTimeOutInactivityWorkspace")
         workspaceDao.getTimeOutInactivityWorkspace(
             Constansts.timeoutDays, dslContext
-        )?.forEach {
+        ).parallelStream().forEach {
+            MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
+            logger.info(
+                "workspace ${it.name} last active is ${
+                    it.updateTime
+                } ready to delete"
+            )
             heartBeatDeleteWS(it)
         }
     }
