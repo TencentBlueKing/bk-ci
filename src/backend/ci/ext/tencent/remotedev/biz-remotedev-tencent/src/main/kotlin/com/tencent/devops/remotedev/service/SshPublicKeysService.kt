@@ -94,8 +94,9 @@ class SshPublicKeysService @Autowired constructor(
         userIds: Set<String>
     ): String {
         val res = mapOf<String, List<String>>(
-            "keys" to getSshPublicKeysList(userIds).map { Base64Util.encode(it.publicKey.toByteArray()) })
-        return JsonUtil.toJson(res, false)
+            "keys" to getSshPublicKeysList(userIds).map { it.publicKey })
+        logger.info("=======: ${JsonUtil.toJson(res, false)}")
+        return Base64Util.encode(JsonUtil.toJson(res, false).toByteArray())
     }
 
     // 校验用户是否存在
