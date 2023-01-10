@@ -15,7 +15,7 @@
 
 <script lang="ts">
 import http from '@/http/api';
-import UserGroup from '../../../../../common-lib/user-group/index.vue';
+import UserGroup from '@/components/user-group/group-entry.vue';
 import { Message } from 'bkui-vue';
 
 export default {

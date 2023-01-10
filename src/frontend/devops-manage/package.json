@@ -22,7 +22,6 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@vue/composition-api": "^1.7.1",
     "bkui-vue": "0.0.1-beta.217",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",

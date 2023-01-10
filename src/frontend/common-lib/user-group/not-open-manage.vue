@@ -20,8 +20,6 @@
 
 <script>
     export default {
-        name: 'NotOpenManage',
-
         props: {
             openManage: {
                 type: Function,

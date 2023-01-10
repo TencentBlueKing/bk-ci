@@ -19,14 +19,22 @@ module.exports = {
     },
   },
   chainWebpack (config) {
+
+    config.resolve
+      .alias
+      .clear()
+      .set('@', path.join(__dirname, 'src'))
+
     config.resolve
       .modules
       .clear()
+      .add('node_modules')
       .add(path.join(__dirname, 'node_modules'))
 
     config.resolveLoader
       .modules
       .clear()
+      .add('node_modules')
       .add(path.join(__dirname, 'node_modules'))
 
     return config
