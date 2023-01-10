@@ -80,7 +80,7 @@ class WorkspaceDao {
             )
                 .values(
                     /* value1 = */ "",
-                    /* value2 = */ workspace.name,
+                    /* value2 = */ workspace.workspaceName,
                     /* value3 = */ workspace.wsTemplateId,
                     /* value4 = */ workspace.repositoryUrl,
                     /* value5 = */ workspace.branch,

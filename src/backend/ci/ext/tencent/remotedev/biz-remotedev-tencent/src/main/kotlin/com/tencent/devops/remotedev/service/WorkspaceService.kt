@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -52,7 +51,6 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import com.tencent.devops.remotedev.cron.WorkspaceCheckJob
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -201,7 +199,7 @@ class WorkspaceService @Autowired constructor(
         val workspace = with(workspaceCreate) {
             Workspace(
                 workspaceId = null,
-                name = workspaceName,
+                workspaceName = workspaceName,
                 repositoryUrl = repositoryUrl,
                 branch = branch,
                 devFilePath = devFilePath,
@@ -230,7 +228,7 @@ class WorkspaceService @Autowired constructor(
             WorkspaceCreateEvent(
                 userId = userId,
                 traceId = bizId,
-                workspaceName = workspace.name,
+                workspaceName = workspace.workspaceName,
                 repositoryUrl = workspace.repositoryUrl,
                 branch = workspace.branch,
                 devFilePath = workspace.devFilePath,
@@ -546,7 +544,7 @@ class WorkspaceService @Autowired constructor(
                 val status = WorkspaceStatus.values()[it.status]
                 Workspace(
                     workspaceId = it.id,
-                    name = it.name,
+                    workspaceName = it.name,
                     repositoryUrl = it.url,
                     branch = it.branch,
                     devFilePath = it.yamlPath,
@@ -609,7 +607,7 @@ class WorkspaceService @Autowired constructor(
         return with(workspace) {
             WorkspaceDetail(
                 workspaceId = id,
-                name = name,
+                workspaceName = name,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
                 chargeableTime = chargeableTime,

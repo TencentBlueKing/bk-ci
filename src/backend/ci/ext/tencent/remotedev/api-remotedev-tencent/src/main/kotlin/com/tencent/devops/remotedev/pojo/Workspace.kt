@@ -35,7 +35,7 @@ data class Workspace(
     @ApiModelProperty("工作空间ID<只读>", accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     val workspaceId: Long?,
     @ApiModelProperty("工作空间名称")
-    val name: String,
+    val workspaceName: String,
     @ApiModelProperty("远程开发仓库地址")
     val repositoryUrl: String,
     @ApiModelProperty("仓库分支")

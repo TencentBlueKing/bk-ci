@@ -35,7 +35,7 @@ data class WorkspaceDetail(
     @ApiModelProperty("工作空间ID")
     val workspaceId: Long,
     @ApiModelProperty("工作空间名称")
-    val name: String,
+    val workspaceName: String,
     @ApiModelProperty("工作空间状态")
     val status: WorkspaceStatus,
     @ApiModelProperty("最近状态修改时间")
