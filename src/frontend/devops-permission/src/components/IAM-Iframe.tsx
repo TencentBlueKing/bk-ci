@@ -12,6 +12,10 @@ export default defineComponent({
     query: {
       type: Object,
     },
+    urlPerfix: {
+      type: String,
+      default: window.BK_IAM_URL_PREFIX,
+    },
   },
   setup(props) {
     const commonQuery = {
@@ -29,7 +33,7 @@ export default defineComponent({
       ],
       () => {
         // 构造 url
-        const url = new URL(`${window.BK_IAM_URL_PREFIX}/${props.path}`);
+        const url = new URL(`${props.urlPerfix}/${props.path}`);
         const query = {
           ...commonQuery,
           ...props.query,
