@@ -36,7 +36,6 @@ import com.tencent.devops.metrics.dao.MetricsDataReportDao
 import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
 import com.tencent.devops.metrics.pojo.po.SaveErrorCodeInfoPO
-import com.tencent.devops.metrics.pojo.po.UpdateErrorCodeInfoPO
 import com.tencent.devops.metrics.pojo.qo.QueryErrorCodeInfoQO
 import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
@@ -44,8 +43,6 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.dao.DataAccessException
-import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
@@ -92,7 +89,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
         val syncsNumber = 10
         if (projectMinId != null && projectMaxId != null) {
             do {
-                val saveErrorCodeInfoPOs = mutableListOf<SaveErrorCodeInfoPO>()
+                val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
                     client.get(ServiceProjectResource::class).getProjectListById(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
@@ -115,26 +112,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                             )
                         }
                     }
-                saveErrorCodeInfoPOs.forEach {
-                    try {
-                        metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                    } catch (ignored: DataAccessException) {
-                        logger.info("fail to update errorCodeInfo:$it", ignored)
-                        if (ignored.contains(DuplicateKeyException::class.java)) {
-                            metricsDataReportDao.updateErrorCodeInfo(
-                                dslContext = dslContext,
-                                atomCode = it.atomCode!!,
-                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                    errorType = it.errorType,
-                                    errorCode = it.errorCode,
-                                    errorMsg = it.errorMsg,
-                                    modifier = it.modifier,
-                                    updateTime = LocalDateTime.now()
-                                )
-                            )
-                        }
-                    }
-                }
+                metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
                 projectMinId += (syncsNumber + 1)
             } while (projectMinId <= projectMaxId)
             logger.info("end syncAtomErrorCodeRel.")
