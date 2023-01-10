@@ -325,8 +325,8 @@ func (wr *resource) getWorkerLargeFileFirst(f string) *worker {
 
 		free := worker.totalSlots - worker.occupiedSlots
 
-		// 大文件优先
-		if free > 0 && worker.hasFile(f) {
+		// 在资源空闲时，大文件优先
+		if free > worker.totalSlots/2 && worker.hasFile(f) {
 			if !inlargequeue { // first in large queue
 				inlargequeue = true
 				max = free
