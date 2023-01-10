@@ -38,17 +38,19 @@ class WorkspaceCheckJob @Autowired constructor(
             if (lockSuccess) {
                 logger.info("Stop inactive workspace get lock.")
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
-                sleepWorkspaceList.parallelStream().forEach {
+                sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
                     logger.info(
-                        "workspace ${it.first} last active is ${
+                        "workspace $workspaceName last active is ${
                             DateTimeUtil.formatMilliTime(
-                                it.second.toLong(),
+                                time.toLong(),
                                 DateTimeUtil.YYYY_MM_DD_HH_MM_SS
                             )
                         } ready to sleep"
                     )
-                    workspaceService.heartBeatStopWS(it.first)
-                    redisHeartBeat.deleteWorkspaceHeartbeat("admin", it.first)
+                    kotlin.runCatching {
+                        workspaceService.heartBeatStopWS(workspaceName)
+                        redisHeartBeat.deleteWorkspaceHeartbeat("admin", workspaceName)
+                    }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
                 }
             }
         } catch (e: Throwable) {
