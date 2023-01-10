@@ -41,13 +41,6 @@ class ExternalResourceImpl @Autowired constructor(
     private val remoteDevService: RemoteDevService
 ) : ExternalResource {
 
-    @Value("\${remoteDev.callBackSignSecret:}")
-    private val signSecret: String = ""
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(ExternalResourceImpl::class.java)
-    }
-
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Result<Boolean> {
         return Result(remoteDevService.workspaceTaskCallback(taskStatus))
     }
