@@ -368,6 +368,7 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveErrorCodeInfoPO.modifier)
                     .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                     .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
+                    .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
                     .onDuplicateKeyUpdate()
                     .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
                     .set(MODIFIER, saveErrorCodeInfoPO.modifier)
