@@ -679,7 +679,7 @@ class WorkspaceService @Autowired constructor(
             ).toSet()
         )
         val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("admin", workspaceName)
-
+        logger.info("=========: ${JsonUtil.toJson(workspaceInfo)}")
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
             podIp = workspaceInfo.data?.EnvironmentIP ?: "",
