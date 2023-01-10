@@ -88,14 +88,16 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
             val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-            val syncsNumber = 10
+            val syncsNumber = 5
             if (projectMinId != null && projectMaxId != null) {
                 do {
                     val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
-                    client.get(ServiceProjectResource::class).getProjectListById(
+                    val projectIds = client.get(ServiceProjectResource::class).getProjectListById(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
-                    ).data?.map {
+                    ).data
+                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
+                    projectIds?.map {
                         val errorCodeInfos = atomFailInfoDao.getAtomErrorInfos(dslContext, it.englishName)
                         errorCodeInfos.map { e ->
                             saveErrorCodeInfoPOs.add(
