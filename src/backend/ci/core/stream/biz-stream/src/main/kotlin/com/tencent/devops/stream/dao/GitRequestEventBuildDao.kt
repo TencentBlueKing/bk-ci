@@ -608,7 +608,7 @@ class GitRequestEventBuildDao {
             return if (!commitMsg.isNullOrBlank()) {
                 var result = 0
                 query.fetch().forEach {
-                    if (it.component2().contains(commitMsg)) result++
+                    if (it.component2()?.contains(commitMsg) == true) result++
                 }
                 result
             } else {
