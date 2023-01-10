@@ -50,7 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
 
-@Suppress("LongParameterList", "LongMethod")
+@Suppress("LongParameterList", "LongMethod", "ComplexMethod")
 @Service
 class PipelineElementService @Autowired constructor(
     private val modelTaskIdGenerator: ModelTaskIdGenerator,
