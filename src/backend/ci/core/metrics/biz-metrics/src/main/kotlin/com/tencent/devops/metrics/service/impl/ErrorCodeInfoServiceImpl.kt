@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.Executors
 
 @Service
 class ErrorCodeInfoServiceImpl @Autowired constructor(
@@ -83,13 +84,14 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
     }
 
     override fun syncAtomErrorCodeRel(userId: String): Boolean {
-        var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
-        val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
-        logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-        val syncsNumber = 10
-        if (projectMinId != null && projectMaxId != null) {
-            do {
-                val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
+        Executors.newFixedThreadPool(1).submit {
+            var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
+            val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
+            logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
+            val syncsNumber = 10
+            if (projectMinId != null && projectMaxId != null) {
+                do {
+                    val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
                     client.get(ServiceProjectResource::class).getProjectListById(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
@@ -112,10 +114,11 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                             )
                         }
                     }
-                metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
-                projectMinId += (syncsNumber + 1)
-            } while (projectMinId <= projectMaxId)
-            logger.info("end syncAtomErrorCodeRel.")
+                    metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
+                    projectMinId += (syncsNumber + 1)
+                } while (projectMinId <= projectMaxId)
+                logger.info("end syncAtomErrorCodeRel.")
+            }
         }
         return true
     }
