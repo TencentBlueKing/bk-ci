@@ -133,7 +133,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                         ),
                         env = listOf(
                             EnvVar("GIT_TOKEN", event.gitOAuth),
-                            EnvVar("GIT_URL", event.repositoryUrl)
+                            EnvVar("GIT_URL", event.repositoryUrl),
+                            EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", gitRepoRootPath)
                         )
                     )
                 ),
