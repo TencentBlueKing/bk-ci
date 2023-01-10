@@ -851,7 +851,7 @@ class WorkspaceService @Autowired constructor(
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceStatus(
                 workspaceName = workspaceName,
-                status = WorkspaceStatus.STOPPED,
+                status = WorkspaceStatus.SLEEP,
                 dslContext = transactionContext
             )
             val lastHistory = workspaceHistoryDao.fetchAnyHistory(
