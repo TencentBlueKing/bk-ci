@@ -404,13 +404,22 @@ class WorkspaceService @Autowired constructor(
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
             }
 
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.SLEEP,
-                actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
-            )
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    action = WorkspaceAction.SLEEP,
+                    actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
+                )
+
+                workspaceDao.updateWorkspaceStatus(
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.STOPPED,
+                    dslContext = transactionContext
+                )
+            }
 
             val bizId = MDC.get(TraceTag.BIZID)
 
@@ -463,13 +472,24 @@ class WorkspaceService @Autowired constructor(
                 logger.info("$workspace has been deleted, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
             }
-            workspaceOpHistoryDao.createWorkspaceHistory(
-                dslContext = dslContext,
-                workspaceName = workspaceName,
-                operator = userId,
-                action = WorkspaceAction.DELETE,
-                actionMessage = getOpHistory(OpHistoryCopyWriting.DELETE)
-            )
+
+            dslContext.transaction { configuration ->
+                val transactionContext = DSL.using(configuration)
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = dslContext,
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    action = WorkspaceAction.DELETE,
+                    actionMessage = getOpHistory(OpHistoryCopyWriting.DELETE)
+                )
+
+                workspaceDao.updateWorkspaceStatus(
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.DELETED,
+                    dslContext = transactionContext
+                )
+            }
+
             val bizId = MDC.get(TraceTag.BIZID)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
