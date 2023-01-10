@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 
 class SamplePermissionExtService : PermissionExtService {
     override fun resourceCreateRelation(
@@ -35,7 +36,8 @@ class SamplePermissionExtService : PermissionExtService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Boolean {
         TODO("Not yet implemented")
     }

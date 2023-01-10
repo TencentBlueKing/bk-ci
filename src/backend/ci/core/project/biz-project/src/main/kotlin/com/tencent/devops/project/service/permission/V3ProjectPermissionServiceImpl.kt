@@ -23,9 +23,10 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service.permission
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -40,7 +41,7 @@ import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ApplicationInfo
-import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
@@ -67,10 +68,10 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
     // 创建项目
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
+        authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
         val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
-            user = resourceCreateInfo.userId,
+            user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = "",
@@ -82,7 +83,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
             )
         }
         authResourceApi.createResource(
-            user = resourceCreateInfo.userId,
+            user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = resourceRegisterInfo.resourceCode,

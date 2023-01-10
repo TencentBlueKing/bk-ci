@@ -35,6 +35,7 @@ import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,7 +52,8 @@ class BkPermissionExtServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Boolean {
         val ancestors = mutableListOf<AncestorsApiReq>()
         if (resourceType != AuthResourceType.PROJECT.value) {

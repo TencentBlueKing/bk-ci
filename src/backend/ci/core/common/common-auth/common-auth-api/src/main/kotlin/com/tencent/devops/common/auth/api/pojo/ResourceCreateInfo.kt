@@ -26,21 +26,15 @@
  *
  */
 
-package com.tencent.devops.project.listener
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
-data class TxIamRbacCreateEvent(
-    override val userId: String,
-    override val projectId: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId: String?,
-    val subjectScopes: List<SubjectScopeInfo>? = emptyList()
-) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
+@ApiModel("资源创建信息")
+data class ResourceCreateInfo(
+    @ApiModelProperty("是否需要审批")
+    val needApproval: Boolean? = false,
+    @ApiModelProperty("资源最大授权范围,目前只有rbac需要使用")
+    val subjectScopes: List<SubjectScopeInfo>,
+)

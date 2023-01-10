@@ -46,6 +46,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -73,7 +74,8 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Boolean {
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
@@ -82,7 +84,8 @@ class RbacPermissionResourceService(
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                resourceCreateInfo = resourceCreateInfo
             )
         } else {
             // 获取项目管理的权限资源
