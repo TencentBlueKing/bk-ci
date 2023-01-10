@@ -603,6 +603,12 @@ class WorkspaceService @Autowired constructor(
                 Duration.between(latestHistory[it.name]?.startTime ?: LocalDateTime.now(), LocalDateTime.now()).seconds
             } else 0
         }
+        val sleepingTime = workspaces.sumOf {
+            it.sleepingTime + if (WorkspaceStatus.values()[it.status].isSleeping()) {
+                // 如果正在休眠，需要加上目前距离上次结束的时间
+                Duration.between(latestHistory[it.name]?.endTime, LocalDateTime.now()).seconds
+            } else 0
+        }
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
         return WorkspaceUserDetail(
@@ -611,7 +617,7 @@ class WorkspaceService @Autowired constructor(
             deleteCount = status.count { it.isDeleted() },
             chargeableTime = usageTime - discountTime,
             usageTime = usageTime,
-            sleepingTime = workspaces.sumOf { it.sleepingTime },
+            sleepingTime = sleepingTime.toInt(),
             cpu = workspaces.sumOf { it.cpu },
             memory = workspaces.sumOf { it.memory },
             disk = workspaces.sumOf { it.disk },
