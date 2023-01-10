@@ -28,7 +28,9 @@
 package com.tencent.devops.process.engine.service.record
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.KEY_VERSION
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -46,23 +48,26 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
+import com.tencent.devops.process.engine.pojo.BuildInfo
+import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.engine.common.BuildTimeCostUtils
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
-import com.tencent.devops.process.engine.pojo.BuildInfo
-import com.tencent.devops.process.engine.service.PipelineBuildDetailService
-import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
+import com.tencent.devops.process.utils.KEY_PIPELINE_ID
+import com.tencent.devops.process.utils.KEY_PROJECT_ID
 import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -88,6 +93,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordTaskDao: BuildRecordTaskDao,
     private val recordModelService: PipelineRecordModelService,
     private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -173,16 +179,23 @@ class PipelineBuildRecordService @Autowired constructor(
         )
 
         // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
+        val version = buildInfo.version
         val model = executeCount?.let {
             val resourceStr = pipelineResVersionDao.getVersionModelString(
-                dslContext, projectId, pipelineId, buildInfo.version
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
+            ) ?: throw ErrorCodeException(
+                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
+                params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
             )
             try {
                 val recordMap = recordModelService.generateFieldRecordModelMap(
                     projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline!!
                 )
+                val fullModel = JsonUtil.to(resourceStr, Model::class.java)
+                // 为model填充element
+                pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
                 ModelUtils.generatePipelineBuildModel(
-                    baseModelMap = JsonUtil.getObjectMapper().readValue(resourceStr!!),
+                    baseModelMap = JsonUtil.toMutableMap(fullModel),
                     modelFieldRecordMap = recordMap
                 )
             } catch (t: Throwable) {
