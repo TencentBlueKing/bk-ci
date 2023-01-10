@@ -21,6 +21,7 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Action } from 'vuex-class'
     import AnnouncementDialog from '../components/AnnouncementDialog/index.vue'
+    import { mapDocumnetTitle } from '@/utils/constants'
     
     @Component({
         components: {
