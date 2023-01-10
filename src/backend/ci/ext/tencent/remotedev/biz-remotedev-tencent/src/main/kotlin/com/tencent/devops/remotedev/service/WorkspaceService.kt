@@ -307,8 +307,14 @@ class WorkspaceService @Autowired constructor(
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.isRunning()) {
-                logger.info("$workspace has been started, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been started")
+                logger.info("$workspace is running.")
+                val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                    .getWorkspaceInfo("admin", workspaceName)
+
+                return WorkspaceResponse(
+                    workspaceName = workspaceName,
+                    workspaceHost = workspaceInfo.data?.environmentHost ?: ""
+                )
             }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
