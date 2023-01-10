@@ -45,7 +45,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Suppress("ComplexCondition", "ComplexMethod")
+@Suppress("ComplexCondition", "ComplexMethod", "NestedBlockDepth")
 @Repository
 class GitRequestEventBuildDao {
     fun save(
