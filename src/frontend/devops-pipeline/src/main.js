@@ -38,11 +38,11 @@ import '@icon-cool/bk-icon-devops/src/index'
 import '@icon-cool/bk-icon-devops'
 
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
 
 const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 
