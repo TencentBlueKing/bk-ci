@@ -1,5 +1,6 @@
 package com.tencent.devops.remotedev.cron
 
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
@@ -38,8 +39,16 @@ class WorkspaceCheckJob @Autowired constructor(
                 logger.info("Stop inactive workspace get lock.")
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach {
-                    workspaceService.heartBeatStopWS(it)
-                    redisHeartBeat.deleteWorkspaceHeartbeat("admin", it)
+                    logger.info(
+                        "workspace ${it.first} last active is ${
+                            DateTimeUtil.formatMilliTime(
+                                it.second.toLong(),
+                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                            )
+                        } ready to sleep"
+                    )
+                    workspaceService.heartBeatStopWS(it.first)
+                    redisHeartBeat.deleteWorkspaceHeartbeat("admin", it.first)
                 }
             }
         } catch (e: Throwable) {

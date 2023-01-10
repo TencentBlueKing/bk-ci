@@ -4,7 +4,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.util.stream.Collectors
 
 @Component
 class RedisHeartBeat @Autowired constructor(
@@ -34,13 +33,13 @@ class RedisHeartBeat @Autowired constructor(
         return redisOperation.hentries(heartbeatKey()) ?: mutableMapOf()
     }
 
-    fun getSleepWorkspaceHeartbeats(): List<String> {
-        val values = redisOperation.hvalues(heartbeatKey())
+    fun getSleepWorkspaceHeartbeats(): List<Pair<String, String>> {
+        val entries = redisOperation.hentries(heartbeatKey())
 
-        val sleepValues = values?.stream()?.filter {
-            val elapse = System.currentTimeMillis() - it.toLong()
+        val sleepValues = entries?.filter {
+            val elapse = System.currentTimeMillis() - it.value.toLong()
             elapse > 1800000
-        }?.collect(Collectors.toList()) ?: emptyList()
+        }?.toList() ?: emptyList()
 
         return sleepValues
     }
