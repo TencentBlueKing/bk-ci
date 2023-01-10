@@ -50,6 +50,8 @@ import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
 import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import org.jooq.Record3
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
@@ -210,6 +212,24 @@ class AtomStatisticsDao {
                     .on(this.PIPELINE_ID.eq(tProjectPipelineLabelInfo.PIPELINE_ID))
             }
             return step.where(conditions).groupBy(ATOM_CODE).execute().toLong()
+        }
+    }
+
+    fun queryAtomComplianceInfo(
+        dslContext: DSLContext,
+        projectIds: List<String>,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
+    ): Result<Record3<String, BigDecimal, BigDecimal>> {
+        with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
+            return dslContext.select(
+                ATOM_CODE.`as`(BK_ATOM_CODE),
+                sum(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
+                sum(FAIL_COMPLIANCE_COUNT).`as`(BK_FAIL_COMPLIANCE_COUNT)
+            )
+                .where(PROJECT_ID.`in`(projectIds))
+                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .fetch()
         }
     }
 }

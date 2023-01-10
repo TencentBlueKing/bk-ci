@@ -1280,6 +1280,15 @@ class AtomDao : AtomBaseDao() {
         }
     }
 
+    fun getAtomCodeSrc(dslContext: DSLContext, atomCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(CODE_SRC)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode))
+                .fetchOne(0, String::class.java)
+        }
+    }
+
     fun getAtomRealVersion(
         dslContext: DSLContext,
         projectCode: String,
