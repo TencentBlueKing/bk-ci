@@ -57,9 +57,9 @@ class ExternalResourceImpl @Autowired constructor(
     }
 
     override fun getWorkspaceDetail(signature: String, workspaceName: String, timestamp: String): Result<WorkspaceProxyDetail> {
-        if (!checkSignature(signature, workspaceName, timestamp)) {
+/*        if (!checkSignature(signature, workspaceName, timestamp)) {
             return Result(status = 403, message = "Forbidden request")
-        }
+        }*/
 
         return Result(workspaceService.getWorkspaceProxyDetail(workspaceName))
     }

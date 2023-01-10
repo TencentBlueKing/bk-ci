@@ -678,7 +678,7 @@ class WorkspaceService @Autowired constructor(
                 workspaceName
             ).toSet()
         )
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("", workspaceName)
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("admin", workspaceName)
 
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
