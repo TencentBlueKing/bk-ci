@@ -44,6 +44,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.dao.DataAccessException
 import org.springframework.dao.DuplicateKeyException
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -117,19 +118,21 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                 saveErrorCodeInfoPOs.forEach {
                     try {
                         metricsDataReportDao.saveErrorCodeInfo(dslContext, it)
-                    } catch (ignored: DuplicateKeyException) {
+                    } catch (ignored: DataAccessException) {
                         logger.info("fail to update errorCodeInfo:$it", ignored)
-                        metricsDataReportDao.updateErrorCodeInfo(
-                            dslContext = dslContext,
-                            atomCode = it.atomCode!!,
-                            updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
-                                errorType = it.errorType,
-                                errorCode = it.errorCode,
-                                errorMsg = it.errorMsg,
-                                modifier = it.modifier,
-                                updateTime = LocalDateTime.now()
+                        if (ignored.contains(DuplicateKeyException::class.java)) {
+                            metricsDataReportDao.updateErrorCodeInfo(
+                                dslContext = dslContext,
+                                atomCode = it.atomCode!!,
+                                updateErrorCodeInfoPO = UpdateErrorCodeInfoPO(
+                                    errorType = it.errorType,
+                                    errorCode = it.errorCode,
+                                    errorMsg = it.errorMsg,
+                                    modifier = it.modifier,
+                                    updateTime = LocalDateTime.now()
+                                )
                             )
-                        )
+                        }
                     }
                 }
                 projectMinId += (syncsNumber + 1)
