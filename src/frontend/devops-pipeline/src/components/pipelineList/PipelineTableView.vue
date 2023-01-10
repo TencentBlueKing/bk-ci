@@ -287,9 +287,9 @@
                 return res
             },
             sortField () {
-                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                const { sortType, collation = ORDER_ENUM.descending } = this.$route.query
                 return {
-                    sortType,
+                    sortType: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
                     collation
                 }
             }
