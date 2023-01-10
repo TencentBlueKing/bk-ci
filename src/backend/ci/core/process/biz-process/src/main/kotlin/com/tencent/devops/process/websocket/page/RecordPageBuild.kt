@@ -25,38 +25,20 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.websocket.pojo
+package com.tencent.devops.process.websocket.page
 
-enum class WebSocketType {
-    CODECC, // codecc错误推送
-    WEBHOOK, // webhook错误推送
-    STATUS, // 状态，首页
-    HISTORY, // 历史页
-    AMD, // 其他页面推送
-    NOTIFY, // 消息推送
-    DETAIL, // 详情页
-    RECORD; // 详情记录页
+import com.tencent.devops.common.websocket.page.IPath
+import com.tencent.devops.common.websocket.pojo.BuildPageInfo
 
-    companion object {
-        fun changWebType(webSocketType: WebSocketType): String
-        {
-            if (webSocketType == CODECC || webSocketType == WEBHOOK) {
-                return "NAV"
-            }
-            if (webSocketType == STATUS || webSocketType == HISTORY ||
-                webSocketType == DETAIL || webSocketType == RECORD) {
-                return "IFRAME"
-            }
-
-            if (webSocketType == NOTIFY) {
-                return "NOTIFY"
-            }
-
-            if (webSocketType == AMD) {
-                return "AMD"
-            }
-
-            return "IFRAME"
+abstract class RecordPageBuild : IPath {
+    override fun buildPage(buildPageInfo: BuildPageInfo): String {
+        val defaultPage = "/console/pipeline/${buildPageInfo.projectId}/${buildPageInfo.pipelineId}" +
+            "/detail/${buildPageInfo.buildId}/${buildPageInfo.executeCount}"
+        if (!extRecordPage(buildPageInfo).isNullOrEmpty()) {
+            return extRecordPage(buildPageInfo)!!
         }
+        return defaultPage
     }
+
+    abstract fun extRecordPage(buildPageInfo: BuildPageInfo): String?
 }

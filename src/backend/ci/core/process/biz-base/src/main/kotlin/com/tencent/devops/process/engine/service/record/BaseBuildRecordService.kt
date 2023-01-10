@@ -120,7 +120,7 @@ open class BaseBuildRecordService(
 
             watcher.start("dispatchEvent")
             // TODO #7983 暂时不在record进行推送，避免和detail重复
-//            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser)
+            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
@@ -150,7 +150,8 @@ open class BaseBuildRecordService(
         projectId: String,
         pipelineId: String,
         buildId: String,
-        startUser: String
+        startUser: String,
+        executeCount: Int
     ) {
         pipelineEventDispatcher.dispatch(
             PipelineBuildWebSocketPushEvent(
@@ -159,7 +160,8 @@ open class BaseBuildRecordService(
                 pipelineId = pipelineId,
                 userId = startUser,
                 buildId = buildId,
-                refreshTypes = RefreshType.DETAIL.binary
+                executeCount = executeCount,
+                refreshTypes = RefreshType.RECORD.binary
             )
         )
     }
