@@ -14,7 +14,6 @@ import (
 	"context"
 	"runtime"
 	"sync"
-	"time"
 
 	dcProtocol "github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
@@ -44,10 +43,10 @@ func newResource(hl []*dcProtocol.Host) *resource {
 		}
 
 		wl = append(wl, &worker{
-			host:              h,
-			totalSlots:        h.Jobs,
-			occupiedSlots:     0,
-			lastHeartBeatTime: time.Now(),
+			host:                h,
+			totalSlots:          h.Jobs,
+			occupiedSlots:       0,
+			continuousNetErrors: 0,
 		})
 		total += h.Jobs
 	}
@@ -71,6 +70,7 @@ func newResource(hl []*dcProtocol.Host) *resource {
 	return &resource{
 		totalSlots:    total,
 		occupiedSlots: 0,
+		noRecover:     false,
 		usageMap:      usageMap,
 		lockChan:      make(lockWorkerChan, 1000),
 		unlockChan:    make(lockWorkerChan, 1000),
@@ -85,6 +85,7 @@ type resource struct {
 
 	workerLock sync.RWMutex
 	worker     []*worker
+	noRecover  bool
 
 	totalSlots    int
 	occupiedSlots int
@@ -116,9 +117,10 @@ func (wr *resource) Reset(hl []*dcProtocol.Host) ([]*dcProtocol.Host, error) {
 		}
 
 		wl = append(wl, &worker{
-			host:          h,
-			totalSlots:    h.Jobs,
-			occupiedSlots: 0,
+			host:                h,
+			totalSlots:          h.Jobs,
+			occupiedSlots:       0,
+			continuousNetErrors: 0,
 		})
 		total += h.Jobs
 	}
@@ -237,12 +239,13 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 	return
 }
 
-func (wr *resource) disableAllWorker() {
+func (wr *resource) disableAllWorker(noRecover bool) {
 	blog.Infof("remote slot: ready disable all host")
 
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
+	wr.noRecover = noRecover
 	for _, w := range wr.worker {
 		if w.disabled {
 			continue
@@ -261,6 +264,63 @@ func (wr *resource) disableAllWorker() {
 	return
 }
 
+func (wr *resource) enableWorker(host *dcProtocol.Host) {
+	if host == nil {
+		return
+	}
+	blog.Infof("remote slot: ready enable host(%s)", host.Server)
+	if wr.noRecover {
+		blog.Infof("remote slot: enable host(%s) failed, no recover is set", host.Server)
+		return
+	}
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if !host.Equal(w.host) {
+			continue
+		}
+
+		if !w.disabled {
+			blog.Infof("remote slot: host:%v enabled before,do nothing now", *host)
+			w.continuousNetErrors = 0
+			break
+		}
+
+		w.disabled = false
+		w.continuousNetErrors = 0
+		wr.totalSlots += w.totalSlots
+		break
+	}
+
+	for _, v := range wr.usageMap {
+		v.limit = wr.totalSlots
+		blog.Infof("remote slot: usage map:%v after enable host:%v", *v, *host)
+	}
+
+	blog.Infof("remote slot: total slot:%d after enable host:%v", wr.totalSlots, *host)
+	return
+}
+
+func (wr *resource) countWorkerError(host *dcProtocol.Host) {
+	if host == nil {
+		return
+	}
+	blog.Infof("remote slot: ready count error from host(%s)", host.Server)
+
+	wr.workerLock.Lock()
+	defer wr.workerLock.Unlock()
+
+	for _, w := range wr.worker {
+		if !host.Equal(w.host) {
+			continue
+		}
+		w.continuousNetErrors++
+		break
+	}
+}
+
 func (wr *resource) addWorker(host *dcProtocol.Host) {
 	if host == nil || host.Jobs <= 0 {
 		return
@@ -277,9 +337,10 @@ func (wr *resource) addWorker(host *dcProtocol.Host) {
 	}
 
 	wr.worker = append(wr.worker, &worker{
-		host:          host,
-		totalSlots:    host.Jobs,
-		occupiedSlots: 0,
+		host:                host,
+		totalSlots:          host.Jobs,
+		occupiedSlots:       0,
+		continuousNetErrors: 0,
 	})
 	wr.totalSlots += host.Jobs
 
@@ -433,11 +494,11 @@ func (wr *resource) putSlot(msg lockWorkerMessage) {
 // worker describe the worker information includes the host details and the slots status
 // and it is the caller's responsibility to ensure the lock.
 type worker struct {
-	disabled          bool
-	host              *dcProtocol.Host
-	totalSlots        int
-	occupiedSlots     int
-	lastHeartBeatTime time.Time
+	disabled            bool
+	host                *dcProtocol.Host
+	totalSlots          int
+	occupiedSlots       int
+	continuousNetErrors int
 }
 
 func (wr *worker) occupySlot() error {

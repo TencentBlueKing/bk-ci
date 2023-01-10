@@ -43,6 +43,7 @@ func NewMgr(pCtx context.Context, work *types.Work) types.RemoteMgr {
 		fileMessageBank:       newFileMessageBank(),
 		conf:                  work.Config(),
 		resourceCheckTick:     5 * time.Second,
+		workerCheckTick:       5 * time.Second,
 		sendCorkTick:          10 * time.Millisecond,
 		corkSize:              1024 * 512, // 512KB, it will delay much if too big
 		corkFiles:             make(map[string]*[]*corkFile, 0),
@@ -80,6 +81,7 @@ type Mgr struct {
 	conf *config.ServerConfig
 
 	resourceCheckTick time.Duration
+	workerCheckTick   time.Duration
 	lastUsed          uint64 // only accurate to second now
 	lastApplied       uint64 // only accurate to second now
 	remotejobs        int64  // save job number which using remote worker
@@ -312,7 +314,7 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 
 				if needfree {
 					// disable all workers and release
-					m.resource.disableAllWorker()
+					m.resource.disableAllWorker(true)
 					// clean file cache
 					m.cleanFileCache()
 					// notify resource release
@@ -326,6 +328,37 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 					m.setLastApplied(0)
 				}
 			}
+		}
+	}
+}
+
+// workerCheck check disconnected worker and recover it when it's available
+func (m *Mgr) workerCheck(ctx context.Context) {
+	blog.Infof("remote: run worker check tick for work: %s", m.work.ID())
+	ticker := time.NewTicker(m.workerCheckTick)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			blog.Infof("remote: run worker check for work(%s) canceled by context", m.work.ID())
+			return
+
+		case <-ticker.C:
+			handler := m.remoteWorker.Handler(0, nil, nil, nil)
+			for _, w := range m.resource.worker {
+				if w.disabled && w.continuousNetErrors >= 3 {
+					go func(w *worker) {
+						_, err := handler.ExecuteSyncTime(w.host.Server)
+						if err != nil {
+							blog.Warnf("remote: try to sync time for host(%s) failed: %v", w.host.Server, err)
+							return
+						}
+						m.resource.enableWorker(w.host)
+					}(w)
+				}
+			}
+
 		}
 	}
 }
@@ -403,22 +436,26 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 			if !w.host.Equal(req.Server) {
 				continue
 			}
-			if strings.Contains(err.Error(), "connection") {
-				if w.lastHeartBeatTime.Add(2 * time.Minute).Before(time.Now()) {
+			if strings.Contains(err.Error(), "dial tcp") {
+				m.resource.countWorkerError(req.Server)
+				if w.continuousNetErrors >= 3 {
 					m.resource.disableWorker(req.Server)
-					blog.Errorf("remote: server(%s) in work(%s) is disconected since (%s), "+
-						"make it disabled", req.Server.Server, m.work.ID(), w.lastHeartBeatTime.String())
+					blog.Errorf("remote: server(%s) in work(%s) has (%d) continuous net errors "+
+						"make it disabled", req.Server.Server, m.work.ID(), w.continuousNetErrors)
 				}
 			} else {
-				w.lastHeartBeatTime = time.Now()
+				m.resource.enableWorker(req.Server)
 			}
+			break
 		}
+
 		blog.Errorf("remote: execute remote task for work(%s) from pid(%d) to server(%s), "+
 			"remote execute failed: %v", m.work.ID(), req.Pid, req.Server.Server, err)
 		return nil, err
 	}
 
 	req.Stats.RemoteWorkSuccess = true
+	m.resource.enableWorker(req.Server)
 	blog.Infof("remote: success to execute remote task for work(%s) from pid(%d) to server(%s)",
 		m.work.ID(), req.Pid, req.Server.Server)
 	return &types.RemoteTaskExecuteResult{
@@ -1128,6 +1165,7 @@ func (m *Mgr) syncHostTime(hostList []*dcProtocol.Host) []*dcProtocol.Host {
 					blog.Warnf("remote: try to sync time for host(%s) failed: %v", h.Server, err)
 					return
 				}
+
 				t2 := time.Now().Local().UnixNano()
 
 				deltaTime := remoteTime - (t1+t2)/2
