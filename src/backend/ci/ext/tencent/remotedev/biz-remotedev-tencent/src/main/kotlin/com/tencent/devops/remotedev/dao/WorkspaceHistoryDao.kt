@@ -31,6 +31,7 @@ import com.tencent.devops.model.remotedev.tables.TWorkspaceHistory
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
+import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
@@ -94,6 +95,23 @@ class WorkspaceHistoryDao {
             return dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.eq(workspaceName))
                 .orderBy(CREATED_TIME.desc()).fetchAny()
+        }
+    }
+
+    fun fetchLatestHistory(
+        dslContext: DSLContext,
+        workspaceName: Set<String>
+    ): Result<TWorkspaceHistoryRecord> {
+        with(TWorkspaceHistory.T_WORKSPACE_HISTORY) {
+            return dslContext.selectFrom(this).where(
+                ID.`in`(
+                    DSL.select(DSL.max(ID)).from(this).where(
+                        WORKSPACE_NAME.`in`(
+                            workspaceName
+                        )
+                    ).groupBy(WORKSPACE_NAME)
+                )
+            ).fetch()
         }
     }
 }

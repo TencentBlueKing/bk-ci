@@ -419,22 +419,13 @@ class WorkspaceService @Autowired constructor(
                 throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
             }
 
-            dslContext.transaction { configuration ->
-                val transactionContext = DSL.using(configuration)
-                workspaceOpHistoryDao.createWorkspaceHistory(
-                    dslContext = transactionContext,
-                    workspaceName = workspaceName,
-                    operator = userId,
-                    action = WorkspaceAction.SLEEP,
-                    actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
-                )
-
-                workspaceDao.updateWorkspaceStatus(
-                    workspaceName = workspaceName,
-                    status = WorkspaceStatus.STOPPED,
-                    dslContext = transactionContext
-                )
-            }
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
+            )
 
             val bizId = MDC.get(TraceTag.BIZID)
 
@@ -600,7 +591,18 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get his all workspace ")
         val workspaces = workspaceDao.fetchWorkspace(dslContext, userId) ?: emptyList()
         val status = workspaces.map { WorkspaceStatus.values()[it.status] }
-        val usageTime = workspaces.sumOf { it.usageTime }
+
+        // 查出所有正在运行ws的最新历史记录
+        val latestHistory = workspaceHistoryDao.fetchLatestHistory(
+            dslContext,
+            workspaces.asSequence().filter { WorkspaceStatus.values()[it.status].isRunning() }.map { it.name }.toSet()
+        ).associateBy { it.workspaceName }
+        val usageTime = workspaces.sumOf {
+            it.usageTime + if (WorkspaceStatus.values()[it.status].isRunning()) {
+                // 如果正在运行，需要加上目前距离该次启动的时间
+                Duration.between(latestHistory[it.name]?.startTime ?: LocalDateTime.now(), LocalDateTime.now()).seconds
+            } else 0
+        }
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
         return WorkspaceUserDetail(
@@ -847,7 +849,11 @@ class WorkspaceService @Autowired constructor(
 
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
-
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.STOPPED,
+                dslContext = transactionContext
+            )
             val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                 dslContext = transactionContext,
                 workspaceName = workspaceName
