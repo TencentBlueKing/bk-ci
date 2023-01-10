@@ -45,6 +45,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.project.tables.records.TProjectRecord
@@ -54,11 +55,10 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
 import com.tencent.devops.project.listener.TxIamRbacCreateEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.SubjectScopeInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -100,7 +100,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
 
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
         val needApproval = resourceCreateInfo.needApproval
         val iamSubjectScopes = resourceCreateInfo.iamSubjectScopes
@@ -113,8 +113,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             subjectScopes = resourceCreateInfo.projectCreateInfo.subjectScopes,
             authSecrecy = resourceCreateInfo.projectCreateInfo.authSecrecy
         )
-        if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+        iamSubjectScopes.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         if (needApproval) {
             projectDispatcher.dispatch(
@@ -176,8 +176,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             subjectScopes = resourceUpdateInfo.projectUpdateInfo.subjectScopes,
             authSecrecy = resourceUpdateInfo.projectUpdateInfo.authSecrecy
         )
-        if (iamSubjectScopes.isEmpty()) {
-            iamSubjectScopes.add(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+        iamSubjectScopes.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
         if (approvalStatus == ApproveStatus.CREATE_PENDING.status ||
@@ -245,7 +245,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
 
     private fun checkParams(
         needApproval: Boolean,
-        subjectScopes: ArrayList<SubjectScopeInfo>?,
+        subjectScopes: List<SubjectScopeInfo>?,
         authSecrecy: Boolean?
     ) {
         if (needApproval && (subjectScopes!!.isEmpty() || authSecrecy == null)) {

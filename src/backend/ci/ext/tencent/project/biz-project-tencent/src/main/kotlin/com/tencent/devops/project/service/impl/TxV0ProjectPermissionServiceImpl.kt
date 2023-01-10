@@ -43,8 +43,8 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ApplicationInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.ResourceCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -70,7 +70,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
         val accessToken = resourceCreateInfo.accessToken
         val userId = resourceCreateInfo.userId

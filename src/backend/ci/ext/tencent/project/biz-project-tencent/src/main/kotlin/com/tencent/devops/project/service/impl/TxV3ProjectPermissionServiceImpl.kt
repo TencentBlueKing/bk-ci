@@ -28,33 +28,33 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectPermissionService
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
-import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectPermissionService
 import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
@@ -81,7 +81,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
+        resourceCreateInfo: AuthProjectCreateInfo
     ): String {
         val userId = resourceCreateInfo.userId
         val accessToken = resourceCreateInfo.accessToken
