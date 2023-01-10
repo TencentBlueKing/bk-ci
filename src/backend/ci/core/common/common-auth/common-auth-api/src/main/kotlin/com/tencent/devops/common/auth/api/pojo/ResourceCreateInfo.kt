@@ -23,35 +23,18 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class SamplePermissionExtService : PermissionExtService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
-
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-}
+@ApiModel("资源创建信息")
+data class ResourceCreateInfo(
+    @ApiModelProperty("是否需要审批")
+    val needApproval: Boolean? = false,
+    @ApiModelProperty("资源最大授权范围,目前只有rbac需要使用")
+    val subjectScopes: List<SubjectScopeInfo>,
+)

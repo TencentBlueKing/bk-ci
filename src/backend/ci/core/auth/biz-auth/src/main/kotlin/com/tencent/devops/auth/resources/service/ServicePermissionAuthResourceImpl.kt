@@ -34,6 +34,7 @@ import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -157,7 +158,8 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Result<Boolean> {
         return Result(
             permissionExtService.resourceCreateRelation(
@@ -165,7 +167,8 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                resourceCreateInfo = resourceCreateInfo
             )
         )
     }

@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import org.slf4j.LoggerFactory
 
 class RbacPermissionExtService(
@@ -45,7 +46,8 @@ class RbacPermissionExtService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String
+        resourceName: String,
+        resourceCreateInfo: ResourceCreateInfo?
     ): Boolean {
         logger.info("resourceCreateRelation $userId|$projectCode|$resourceCode|$resourceName|$resourceType")
         return permissionResourceService.resourceCreateRelation(
@@ -53,7 +55,8 @@ class RbacPermissionExtService(
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode,
-            resourceName = resourceName
+            resourceName = resourceName,
+            resourceCreateInfo = resourceCreateInfo
         )
     }
 
