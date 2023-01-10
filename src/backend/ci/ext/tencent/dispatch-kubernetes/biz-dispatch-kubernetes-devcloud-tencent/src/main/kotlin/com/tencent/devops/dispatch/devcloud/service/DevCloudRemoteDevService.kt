@@ -221,7 +221,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             environmentIP = environmentStatus.EnvironmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId)
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName)
         )
     }
 
@@ -230,8 +230,8 @@ class DevCloudRemoteDevService @Autowired constructor(
         return workspaceRecord?.environmentUid ?: throw RuntimeException("No devcloud environment with $workspaceName")
     }
 
-    private fun getEnvironmentHost(clusterId: String): String {
-        return devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId) ?: ""
+    private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
+        return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId)}"
     }
 
     companion object {

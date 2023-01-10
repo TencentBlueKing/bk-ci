@@ -78,8 +78,8 @@ class DevcloudWorkspaceRedisUtils @Autowired constructor(
         )
     }
 
-    fun getDevcloudClusterIdHost(clusterId: String): String? {
-        return redisOperation.get(devcloudClusterIdKey(clusterId))
+    fun getDevcloudClusterIdHost(clusterId: String): String {
+        return redisOperation.get(devcloudClusterIdKey(clusterId)) ?: ""
     }
 
     private fun devcloudClusterIdKey(clusterId: String): String {
