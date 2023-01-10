@@ -4,10 +4,12 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
+import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
@@ -39,6 +41,7 @@ class WorkspaceCheckJob @Autowired constructor(
                 logger.info("Stop inactive workspace get lock.")
                 val sleepWorkspaceList = redisHeartBeat.getSleepWorkspaceHeartbeats()
                 sleepWorkspaceList.parallelStream().forEach { (workspaceName, time) ->
+                    MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
                             DateTimeUtil.formatMilliTime(
