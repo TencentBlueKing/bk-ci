@@ -88,7 +88,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
             var projectMinId = client.get(ServiceProjectResource::class).getMinId().data
             val projectMaxId = client.get(ServiceProjectResource::class).getMaxId().data
             logger.info("begin syncAtomErrorCodeRel projectMinId:$projectMinId|projectMaxId:$projectMaxId")
-            val syncsNumber = 5
+            val syncsNumber = 10
             if (projectMinId != null && projectMaxId != null) {
                 do {
                     val saveErrorCodeInfoPOs = mutableSetOf<SaveErrorCodeInfoPO>()
@@ -117,6 +117,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         )
                     }
                     metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
+                    logger.info("syncAtomErrorCodeRel.projectMinId:$projectMinId")
                     projectMinId += (syncsNumber + 1)
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncAtomErrorCodeRel.")
