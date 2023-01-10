@@ -152,28 +152,21 @@ class DevCloudRemoteDevService @Autowired constructor(
         return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun startWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        workspaceDevCloudClient.operatorWorkspace(
+        val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
             environmentAction = EnvironmentAction.START
         )
 
-        // 更新db状态
-        dispatchWorkspaceDao.updateWorkspaceStatus(
-            workspaceName = workspaceName,
-            status = EnvStatusEnum.running,
-            dslContext = dslContext
-        )
-
-        return true
+        return resp.taskUid
     }
 
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun stopWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        workspaceDevCloudClient.operatorWorkspace(
+        val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
@@ -187,12 +180,12 @@ class DevCloudRemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        return true
+        return resp.taskUid
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
         val environmentUid = getEnvironmentUid(workspaceName)
-        workspaceDevCloudClient.operatorWorkspace(
+        val resp = workspaceDevCloudClient.operatorWorkspace(
             userId = userId,
             environmentUid = environmentUid,
             workspaceName = workspaceName,
@@ -206,7 +199,7 @@ class DevCloudRemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        return true
+        return resp.taskUid
     }
 
     override fun getWorkspaceUrl(userId: String, workspaceName: String): String {

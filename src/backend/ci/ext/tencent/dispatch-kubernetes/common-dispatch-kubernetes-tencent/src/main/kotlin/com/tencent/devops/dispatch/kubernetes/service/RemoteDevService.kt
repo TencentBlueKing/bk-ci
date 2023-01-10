@@ -133,21 +133,81 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "工作空间启动失败，错误信息:$failedMsg"
+                "工作空间创建失败，错误信息:$failedMsg"
             )
         }
     }
 
     fun startWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("test-sawyer2").startWorkspace(userId, workspaceName)
+        val taskId = remoteDevServiceFactory.load("test-sawyer2").startWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+            .waitTaskFinish(userId, taskId)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = EnvStatusEnum.running,
+                dslContext = dslContext
+            )
+
+            return true
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.START_VM_ERROR.errorType,
+                ErrorCodeEnum.START_VM_ERROR.errorCode,
+                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                "工作空间启动失败，错误信息:$failedMsg"
+            )
+        }
     }
 
     fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("test-sawyer2").stopWorkspace(userId, workspaceName)
+        val taskId = remoteDevServiceFactory.load("test-sawyer2").stopWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+            .waitTaskFinish(userId, taskId)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = EnvStatusEnum.stopped,
+                dslContext = dslContext
+            )
+
+            return true
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.START_VM_ERROR.errorType,
+                ErrorCodeEnum.START_VM_ERROR.errorCode,
+                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                "工作空间休眠失败，错误信息:$failedMsg"
+            )
+        }
     }
 
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        return remoteDevServiceFactory.load("test-sawyer2").deleteWorkspace(userId, workspaceName)
+        val taskId = remoteDevServiceFactory.load("test-sawyer2").deleteWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+            .waitTaskFinish(userId, taskId)
+
+        if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
+            // 更新db状态
+            dispatchWorkspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = EnvStatusEnum.deleted,
+                dslContext = dslContext
+            )
+
+            return true
+        } else {
+            throw BuildFailureException(
+                ErrorCodeEnum.START_VM_ERROR.errorType,
+                ErrorCodeEnum.START_VM_ERROR.errorCode,
+                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                "工作空间删除失败，错误信息:$failedMsg"
+            )
+        }
     }
 
     fun getWorkspaceUrl(userId: String, workspaceName: String): String? {

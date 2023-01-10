@@ -43,15 +43,15 @@ class BcsRemoteDevService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun startWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun startWorkspace(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
 
-    override fun stopWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun stopWorkspace(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
 
-    override fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
+    override fun deleteWorkspace(userId: String, workspaceName: String): String {
         TODO("Not yet implemented")
     }
 

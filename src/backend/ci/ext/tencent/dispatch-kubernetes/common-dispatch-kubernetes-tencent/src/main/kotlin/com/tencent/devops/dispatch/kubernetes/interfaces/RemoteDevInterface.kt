@@ -46,17 +46,17 @@ interface RemoteDevInterface {
     /**
      * 启动远程工作空间
      */
-    fun startWorkspace(userId: String, workspaceName: String): Boolean
+    fun startWorkspace(userId: String, workspaceName: String): String
 
     /**
      * 停止远程工作空间
      */
-    fun stopWorkspace(userId: String, workspaceName: String): Boolean
+    fun stopWorkspace(userId: String, workspaceName: String): String
 
     /**
      * 删除远程工作空间
      */
-    fun deleteWorkspace(userId: String, workspaceName: String): Boolean
+    fun deleteWorkspace(userId: String, workspaceName: String): String
 
     /**
      * 获取工作空间web端链接
