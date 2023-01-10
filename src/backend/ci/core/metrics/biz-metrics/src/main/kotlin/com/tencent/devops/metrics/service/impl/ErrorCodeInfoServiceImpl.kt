@@ -96,25 +96,25 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
                     ).data
-                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
-                    projectIds?.map {
-                        val errorCodeInfos = atomFailInfoDao.getAtomErrorInfos(dslContext, it.englishName)
-                        errorCodeInfos.map { e ->
-                            saveErrorCodeInfoPOs.add(
-                                SaveErrorCodeInfoPO(
-                                    id = client.get(ServiceAllocIdResource::class)
-                                        .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
-                                    errorCode = e[Constants.BK_ERROR_CODE] as Int,
-                                    errorType = e[Constants.BK_ERROR_TYPE] as Int,
-                                    errorMsg = e[Constants.BK_ERROR_MSG] as String,
-                                    creator = userId,
-                                    modifier = userId,
-                                    createTime = LocalDateTime.now(),
-                                    updateTime = LocalDateTime.now(),
-                                    atomCode = e[Constants.BK_ATOM_CODE] as String
-                                )
+                    val errorCodeInfos = atomFailInfoDao.getAtomErrorInfos(
+                        dslContext,
+                        projectIds?.map { it.englishName } ?: emptyList()
+                    )
+                    errorCodeInfos.map { e ->
+                        saveErrorCodeInfoPOs.add(
+                            SaveErrorCodeInfoPO(
+                                id = client.get(ServiceAllocIdResource::class)
+                                    .generateSegmentId("METRICS_ERROR_CODE_INFO").data ?: 0,
+                                errorCode = e[Constants.BK_ERROR_CODE] as Int,
+                                errorType = e[Constants.BK_ERROR_TYPE] as Int,
+                                errorMsg = e[Constants.BK_ERROR_MSG] as String,
+                                creator = userId,
+                                modifier = userId,
+                                createTime = LocalDateTime.now(),
+                                updateTime = LocalDateTime.now(),
+                                atomCode = e[Constants.BK_ATOM_CODE] as String
                             )
-                        }
+                        )
                     }
                     metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
                     projectMinId += (syncsNumber + 1)
