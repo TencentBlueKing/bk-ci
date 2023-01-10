@@ -51,8 +51,9 @@ class WorkspaceCheckJob @Autowired constructor(
                         } ready to sleep"
                     )
                     kotlin.runCatching {
-                        workspaceService.heartBeatStopWS(workspaceName)
-                        redisHeartBeat.deleteWorkspaceHeartbeat("admin", workspaceName)
+                        if (workspaceService.heartBeatStopWS(workspaceName)) {
+                            redisHeartBeat.deleteWorkspaceHeartbeat("admin", workspaceName)
+                        }
                     }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
                 }
             }
