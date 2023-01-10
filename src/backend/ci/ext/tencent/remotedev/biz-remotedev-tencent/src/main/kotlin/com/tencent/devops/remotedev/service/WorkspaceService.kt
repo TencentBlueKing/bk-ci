@@ -682,7 +682,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun heartBeatStopWS(workSpaceName: String) {
+    fun heartBeatStopWS(workSpaceName: String): Boolean {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workSpaceName)
             ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workSpaceName not find")
         // 校验状态
@@ -722,7 +722,8 @@ class WorkspaceService @Autowired constructor(
             ).waiting().let {
                 if (it != null) {
                     doStopWS("system", status, workspace.name)
-                }
+                    return true
+                } else return false
             }
         }
     }
