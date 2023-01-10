@@ -505,11 +505,11 @@ class GitRequestEventBuildDao {
         buildIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val temp = dslContext.selectFrom(this)
+            val query = dslContext.selectFrom(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!pipelineId.isNullOrBlank()) {
-                temp.and(PIPELINE_ID.eq(pipelineId))
+                query.and(PIPELINE_ID.eq(pipelineId))
             }
             if (!branchName.isNullOrEmpty()) {
                 val branchList = branchName.map {
@@ -521,38 +521,36 @@ class GitRequestEventBuildDao {
                     }
                 }.toSet()
                 if (!sourceGitProjectId.isNullOrEmpty()) {
-                    temp.and(BRANCH.`in`(branchList))
+                    query.and(BRANCH.`in`(branchList))
                         .and(SOURCE_GIT_PROJECT_ID.`in`(sourceGitProjectId).or(SOURCE_GIT_PROJECT_ID.isNull))
                 } else {
-                    temp.and(BRANCH.`in`(branchList))
+                    query.and(BRANCH.`in`(branchList))
                 }
             }
             if (!triggerUser.isNullOrEmpty()) {
-                temp.and(TRIGGER_USER.`in`(triggerUser))
+                query.and(TRIGGER_USER.`in`(triggerUser))
             }
             if (!event.isNullOrEmpty()) {
-                temp.and(OBJECT_KIND.`in`(event))
+                query.and(OBJECT_KIND.`in`(event))
             }
             if (!commitMsg.isNullOrBlank()) {
-                temp.and(COMMIT_MESSAGE.like("%$commitMsg%"))
+                query.and(COMMIT_MESSAGE.like("%$commitMsg%"))
             }
             if (!buildStatus.isNullOrEmpty()) {
-                temp.and(BUILD_STATUS.`in`(buildStatus))
+                query.and(BUILD_STATUS.`in`(buildStatus))
             }
             if (!pipelineIds.isNullOrEmpty()) {
-                temp.and(PIPELINE_ID.`in`(pipelineIds))
+                query.and(PIPELINE_ID.`in`(pipelineIds))
             }
             if (!buildIds.isNullOrEmpty()) {
-                temp.and(BUILD_ID.`in`(buildIds))
+                query.and(BUILD_ID.`in`(buildIds))
             }
+            val result = query.orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
             return if (!commitMsg.isNullOrBlank()) {
-                val ids = temp.fetch(ID)
-                dslContext.selectFrom(this).where(
-                    ID.`in`(ids)
-                )
+                result.filter { it.commitMessage.contains(commitMsg) }
             } else {
-                temp
-            }.orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
+                result
+            }
         }
     }
 
@@ -570,11 +568,11 @@ class GitRequestEventBuildDao {
         buildIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
-            val temp = dslContext.selectFrom(this)
+            val query = dslContext.select(ID, COMMIT_MESSAGE).from(this)
                 .where(GIT_PROJECT_ID.eq(gitProjectId))
                 .and(BUILD_ID.isNotNull)
             if (!pipelineId.isNullOrBlank()) {
-                temp.and(PIPELINE_ID.eq(pipelineId))
+                query.and(PIPELINE_ID.eq(pipelineId))
             }
             if (!branchName.isNullOrEmpty()) {
                 val branchList = branchName.map {
@@ -586,33 +584,35 @@ class GitRequestEventBuildDao {
                     }
                 }.toSet()
                 if (!sourceGitProjectId.isNullOrEmpty()) {
-                    temp.and(BRANCH.`in`(branchList))
+                    query.and(BRANCH.`in`(branchList))
                         .and(SOURCE_GIT_PROJECT_ID.`in`(sourceGitProjectId).or(SOURCE_GIT_PROJECT_ID.isNull))
                 } else {
-                    temp.and(BRANCH.`in`(branchList))
+                    query.and(BRANCH.`in`(branchList))
                 }
             }
             if (!triggerUser.isNullOrEmpty()) {
-                temp.and(TRIGGER_USER.`in`(triggerUser))
+                query.and(TRIGGER_USER.`in`(triggerUser))
             }
             if (!event.isNullOrEmpty()) {
-                temp.and(OBJECT_KIND.`in`(event))
+                query.and(OBJECT_KIND.`in`(event))
             }
             if (!buildStatus.isNullOrEmpty()) {
-                temp.and(BUILD_STATUS.`in`(buildStatus))
+                query.and(BUILD_STATUS.`in`(buildStatus))
             }
             if (!pipelineIds.isNullOrEmpty()) {
-                temp.and(PIPELINE_ID.`in`(pipelineIds))
+                query.and(PIPELINE_ID.`in`(pipelineIds))
             }
             if (!buildIds.isNullOrEmpty()) {
-                temp.and(BUILD_ID.`in`(buildIds))
+                query.and(BUILD_ID.`in`(buildIds))
             }
             return if (!commitMsg.isNullOrBlank()) {
-                dslContext.selectCount().from(temp).where(
-                    COMMIT_MESSAGE.like("%$commitMsg%")
-                ).fetchOne(0, Int::class.java)!!
+                var result = 0
+                query.fetch().forEach {
+                    if (it.component2().contains(commitMsg)) result++
+                }
+                result
             } else {
-                dslContext.selectCount().from(temp).fetchOne(0, Int::class.java)!!
+                dslContext.selectCount().from(query).fetchOne(0, Int::class.java)!!
             }
         }
     }
