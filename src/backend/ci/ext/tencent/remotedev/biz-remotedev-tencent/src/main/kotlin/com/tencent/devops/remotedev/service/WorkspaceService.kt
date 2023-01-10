@@ -597,6 +597,12 @@ class WorkspaceService @Autowired constructor(
             dslContext,
             workspaces.asSequence().filter { WorkspaceStatus.values()[it.status].isRunning() }.map { it.name }.toSet()
         ).associateBy { it.workspaceName }
+
+        // 查出所有已休眠状态ws的最新历史记录
+        val latestSleepHistory = workspaceHistoryDao.fetchLatestHistory(
+            dslContext,
+            workspaces.asSequence().filter { WorkspaceStatus.values()[it.status].isSleeping() }.map { it.name }.toSet()
+        ).associateBy { it.workspaceName }
         val usageTime = workspaces.sumOf {
             it.usageTime + if (WorkspaceStatus.values()[it.status].isRunning()) {
                 // 如果正在运行，需要加上目前距离该次启动的时间
@@ -606,7 +612,7 @@ class WorkspaceService @Autowired constructor(
         val sleepingTime = workspaces.sumOf {
             it.sleepingTime + if (WorkspaceStatus.values()[it.status].isSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
-                Duration.between(latestHistory[it.name]?.endTime, LocalDateTime.now()).seconds
+                Duration.between(latestSleepHistory[it.name]?.endTime, LocalDateTime.now()).seconds
             } else 0
         }
 
