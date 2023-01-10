@@ -48,7 +48,6 @@ import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -58,6 +57,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -87,7 +87,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     private val recordModelService: PipelineRecordModelService,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
     redisOperation: RedisOperation,
     stageTagService: StageTagService,
     pipelineEventDispatcher: PipelineEventDispatcher
@@ -174,7 +174,7 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
         val model = executeCount?.let {
-            val resourceStr = pipelineResDao.getVersionModelString(
+            val resourceStr = pipelineResVersionDao.getVersionModelString(
                 dslContext, projectId, pipelineId, buildInfo.version
             )
             try {
