@@ -47,6 +47,7 @@ import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
+@Suppress("ComplexCondition", "ComplexMethod")
 @Repository
 class GitRequestEventDao {
 
