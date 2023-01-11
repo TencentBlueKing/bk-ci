@@ -51,6 +51,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
@@ -97,6 +98,7 @@ class WorkspaceService @Autowired constructor(
     private val sshService: SshPublicKeysService,
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
+    private val remoteDevSettingDao: RemoteDevSettingDao,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -234,7 +236,8 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId).accessToken,
-                sshKeys = sshService.getSshPublicKeys4Ws(setOf(userId))
+                sshKeys = sshService.getSshPublicKeys4Ws(setOf(userId)),
+                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
             )
         )
 
@@ -337,7 +340,8 @@ class WorkspaceService @Autowired constructor(
                             workspaceName
                         ).toSet()
                     ),
-                    workspaceName = workspace.name
+                    workspaceName = workspace.name,
+                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
                 )
             )
 
@@ -437,15 +441,6 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspace.name
                 )
             )
-//            val res = kotlin.runCatching {
-//                client.get(ServiceRemoteDevResource::class).stopWorkspace(
-//                    userId,
-//                    workspace.name
-//                ).data ?: false
-//            }.getOrElse {
-//                logger.error("stop workspace error |${it.message}", it)
-//                false
-//            }
 
             RedisWaiting4K8s(
                 redisOperation,

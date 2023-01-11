@@ -31,12 +31,16 @@ import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.remotedev.WorkspaceEvent
 import com.tencent.devops.common.remotedev.MQ
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
+import io.swagger.annotations.ApiModelProperty
 
 @Event(MQ.EXCHANGE_REMOTE_DEV_LISTENER_DIRECT, MQ.ROUTE_WORKSPACE_OPERATE_STARTUP)
 data class WorkspaceOperateEvent(
     override val userId: String,
     override val traceId: String,
     val type: UpdateEventType,
+    @ApiModelProperty("用户设置里云开发的环境变量")
+    val settingEnvs: Map<String, String> = emptyMap(),
+    @ApiModelProperty("包含了创建者 ssh key 的字符串")
     val sshKeys: String = "",
     override val workspaceName: String,
     override val delayMills: Int = 0,

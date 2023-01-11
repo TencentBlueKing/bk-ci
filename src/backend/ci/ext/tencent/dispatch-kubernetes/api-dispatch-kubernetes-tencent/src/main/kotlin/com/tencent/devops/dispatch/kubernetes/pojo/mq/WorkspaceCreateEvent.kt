@@ -50,6 +50,8 @@ data class WorkspaceCreateEvent(
     val devFile: Devfile,
     @ApiModelProperty("包含了创建者 ssh key 的字符串")
     val sshKeys: String,
+    @ApiModelProperty("用户设置里云开发的环境变量")
+    val settingEnvs: Map<String, String>,
     override val delayMills: Int = 0,
     override val retryTime: Int = 0
 ) : WorkspaceEvent(userId, traceId, workspaceName, delayMills, retryTime)

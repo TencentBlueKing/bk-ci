@@ -60,7 +60,8 @@ class ServiceRemoteDevResourceImpl @Autowired constructor(
                 gitEmail = null
             ),
             gitOAuth = "",
-            sshKeys = ""
+            sshKeys = "",
+            settingEnvs = emptyMap()
         )))
     }
 
