@@ -364,8 +364,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                         recommendFlag = it[tAtomFeature.RECOMMEND_FLAG],
                         yamlFlag = it[tAtomFeature.YAML_FLAG],
                         recentExecuteNum = statistic?.recentExecuteNum ?: 0,
-                        honorInfos = atomHonorInfos,
-                        indexInfos = atomIndexInfos
+                        indexInfos = atomIndexInfos,
+                        honorInfos = atomHonorInfos
                     )
                 )
             }
