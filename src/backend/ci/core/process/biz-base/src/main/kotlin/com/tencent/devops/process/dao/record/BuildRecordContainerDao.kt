@@ -149,7 +149,7 @@ class BuildRecordContainerDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
             // 获取每个最大执行次数
-            val max = dslContext.select(
+            val max = DSL.select(
                 CONTAINER_ID.`as`(KEY_CONTAINER_ID),
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(CONTAINER_ID)
