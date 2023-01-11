@@ -52,6 +52,7 @@ import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service("devcloudRemoteDevService")
@@ -61,6 +62,9 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
+
+    @Value("\${devCloud.initContainer.image:mirrors.tencent.com/sawyertest/workspace-init:v1.0.2}")
+    var initContainerImage: String = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.2"
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -81,74 +85,55 @@ class DevCloudRemoteDevService @Autowired constructor(
 
         val environmentOpRsp = workspaceDevCloudClient.createWorkspace(
             userId,
-                Environment(
-            kind = "evn/v1",
-            APIVersion = "",
-            metadata = ObjectMeta(
-                labels = mapOf(
-                    "bkci.dispatch.kubenetes.remoting/workspaceID" to event.workspaceName,
-                    "bkci.dispatch.kubenetes.remoting/core" to "workspace",
-                    "bkci.dispatch.kubenetes.remoting/owner" to userId
-                ),
-                annotations = mapOf(
-                    "bkci.dispatch.kubenetes.remoting/sshPublicKeys" to event.sshKeys
-                )
-            ),
-            spec = EnvironmentSpec(
-                containers = listOf(
-                    Container(
-                        name = event.workspaceName,
-                        image = event.devFile.image?.publicImage ?: "",
-                        resource = ResourceRequirements(2000, 4096),
-                        workingDir = gitRepoRootPath,
-                        volumeMounts = listOf(
-                            VolumeMount(
-                                name = "workspace",
-                                mountPath = WORKSPACE_PATH
-                            )
-                        ),
-                        command = listOf("/.devopsRemoting/devopsRemoting", "init"),
-                        env = listOf(
-                            EnvVar("DEVOPS_REMOTING_IDE_PORT", "23000"),
-                            EnvVar("DEVOPS_REMOTING_WORKSPACE_ROOT_PATH", WORKSPACE_PATH),
-                            EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", gitRepoRootPath),
-                            EnvVar("DEVOPS_REMOTING_GIT_USERNAME", userId),
-                            EnvVar("DEVOPS_REMOTING_GIT_EMAIL", event.devFile.gitEmail ?: ""),
-                            EnvVar("DEVOPS_REMOTING_YAML_NAME", event.devFilePath),
-                            EnvVar("DEVOPS_REMOTING_DEBUG_ENABLE", "true"),
-                            EnvVar("DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE", "true"),
+            Environment(
+                kind = "evn/v1",
+                APIVersion = "",
+                spec = EnvironmentSpec(
+                    containers = listOf(
+                        Container(
+                            name = event.workspaceName,
+                            image = event.devFile.image?.publicImage ?: "",
+                            resource = ResourceRequirements(2000, 4096),
+                            workingDir = gitRepoRootPath,
+                            volumeMounts = listOf(
+                                VolumeMount(
+                                    name = VOLUME_MOUNT_NAME,
+                                    mountPath = WORKSPACE_PATH
+                                )
+                            ),
+                            command = listOf("/.devopsRemoting/devopsRemoting", "init"),
+                            env = generateContainerEnvVar(userId, gitRepoRootPath, event)
                         )
-                    )
-                ),
-                initContainers = listOf(
-                    Container(
-                        name = event.workspaceName + "-init",
-                        image = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.2",
-                        resource = ResourceRequirements(2000, 4096),
-                        volumeMounts = listOf(
-                            VolumeMount(
-                                name = "workspace",
-                                mountPath = WORKSPACE_PATH
+                    ),
+                    initContainers = listOf(
+                        Container(
+                            name = event.workspaceName + "-init",
+                            image = initContainerImage,
+                            resource = ResourceRequirements(2000, 4096),
+                            volumeMounts = listOf(
+                                VolumeMount(
+                                    name = VOLUME_MOUNT_NAME,
+                                    mountPath = WORKSPACE_PATH
+                                )
+                            ),
+                            env = listOf(
+                                EnvVar(INIT_CONTAINER_GIT_TOKEN, event.gitOAuth),
+                                EnvVar(INIT_CONTAINER_GIT_URL, event.repositoryUrl),
+                                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath)
                             )
-                        ),
-                        env = listOf(
-                            EnvVar("GIT_TOKEN", event.gitOAuth),
-                            EnvVar("GIT_URL", event.repositoryUrl),
-                            EnvVar("DEVOPS_REMOTING_GIT_REPO_ROOT_PATH", gitRepoRootPath)
                         )
-                    )
-                ),
-                imagePullCertificate = imagePullCertificateList,
-                volumes = listOf(
-                    Volume(
-                        name = "workspace",
-                        volumeSource = VolumeSource(
-                            dataDisk = DataDiskSource()
+                    ),
+                    imagePullCertificate = imagePullCertificateList,
+                    volumes = listOf(
+                        Volume(
+                            name = VOLUME_MOUNT_NAME,
+                            volumeSource = VolumeSource(
+                                dataDisk = DataDiskSource()
+                            )
                         )
                     )
                 )
             )
-        )
         )
 
         return Pair(environmentOpRsp.environmentUid ?: "", environmentOpRsp.taskUid)
@@ -234,9 +219,50 @@ class DevCloudRemoteDevService @Autowired constructor(
         return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId)}"
     }
 
+    private fun generateContainerEnvVar(
+        userId: String,
+        gitRepoRootPath: String,
+        event: WorkspaceCreateEvent
+    ): List<EnvVar> {
+        val envVarList = mutableListOf<EnvVar>()
+        val allCustomizedEnvs = event.settingEnvs.toMutableMap().plus(event.devFile.envs ?: emptyMap())
+        allCustomizedEnvs.forEach { (t, u) ->
+            envVarList.add(EnvVar(t, u))
+        }
+
+        envVarList.addAll(
+            listOf(
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, "23000"),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
+                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
+                EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
+                EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
+                EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
+                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true")
+            )
+        )
+
+        return envVarList
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudRemoteDevService::class.java)
 
         private const val WORKSPACE_PATH = "/data/landun/workspace"
+        private const val VOLUME_MOUNT_NAME = "workspace"
+
+        private const val DEVOPS_REMOTING_IDE_PORT = "DEVOPS_REMOTING_IDE_PORT"
+        private const val DEVOPS_REMOTING_WORKSPACE_ROOT_PATH = "DEVOPS_REMOTING_WORKSPACE_ROOT_PATH"
+        private const val DEVOPS_REMOTING_GIT_REPO_ROOT_PATH = "DEVOPS_REMOTING_GIT_REPO_ROOT_PATH"
+        private const val DEVOPS_REMOTING_GIT_USERNAME = "DEVOPS_REMOTING_GIT_USERNAME"
+        private const val DEVOPS_REMOTING_GIT_EMAIL = "DEVOPS_REMOTING_GIT_EMAIL"
+        private const val DEVOPS_REMOTING_YAML_NAME = "DEVOPS_REMOTING_YAML_NAME"
+        private const val DEVOPS_REMOTING_DEBUG_ENABLE = "DEVOPS_REMOTING_DEBUG_ENABLE"
+        private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
+
+
+        private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
+        private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
     }
 }

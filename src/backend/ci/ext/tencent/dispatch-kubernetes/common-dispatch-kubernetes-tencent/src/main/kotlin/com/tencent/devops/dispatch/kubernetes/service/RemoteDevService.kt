@@ -57,10 +57,12 @@ class RemoteDevService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
+
+        private const val WORKSPACE_PROJECT = "test-sawyer2"
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {
-        val (enviromentUid, taskId) = remoteDevServiceFactory.load("test-sawyer2").createWorkspace(userId, event)
+        val (enviromentUid, taskId) = remoteDevServiceFactory.load(WORKSPACE_PROJECT).createWorkspace(userId, event)
 
         // 记录创建历史
         dispatchWorkspaceDao.createWorkspace(
@@ -71,13 +73,13 @@ class RemoteDevService @Autowired constructor(
             dslContext = dslContext
         )
 
-        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+        val (taskStatus, failedMsg) = containerServiceFactory.load(WORKSPACE_PROJECT)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
             logger.info("$userId create workspace success. $enviromentUid")
 
-            val workspaceInfo = remoteDevServiceFactory.load("test-sawyer2")
+            val workspaceInfo = remoteDevServiceFactory.load(WORKSPACE_PROJECT)
                 .getWorkspaceInfo(userId, event.workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
@@ -139,12 +141,12 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun startWorkspace(userId: String, workspaceName: String): WorkspaceResponse {
-        val taskId = remoteDevServiceFactory.load("test-sawyer2").startWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+        val taskId = remoteDevServiceFactory.load(WORKSPACE_PROJECT).startWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load(WORKSPACE_PROJECT)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
-            val workspaceInfo = remoteDevServiceFactory.load("test-sawyer2")
+            val workspaceInfo = remoteDevServiceFactory.load(WORKSPACE_PROJECT)
                 .getWorkspaceInfo(userId, workspaceName)
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
@@ -178,8 +180,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun stopWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.load("test-sawyer2").stopWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+        val taskId = remoteDevServiceFactory.load(WORKSPACE_PROJECT).stopWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load(WORKSPACE_PROJECT)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -202,8 +204,8 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
-        val taskId = remoteDevServiceFactory.load("test-sawyer2").deleteWorkspace(userId, workspaceName)
-        val (taskStatus, failedMsg) = containerServiceFactory.load("test-sawyer2")
+        val taskId = remoteDevServiceFactory.load(WORKSPACE_PROJECT).deleteWorkspace(userId, workspaceName)
+        val (taskStatus, failedMsg) = containerServiceFactory.load(WORKSPACE_PROJECT)
             .waitTaskFinish(userId, taskId)
 
         if (taskStatus == DispatchBuildTaskStatusEnum.SUCCEEDED) {
@@ -226,14 +228,14 @@ class RemoteDevService @Autowired constructor(
     }
 
     fun getWorkspaceUrl(userId: String, workspaceName: String): String? {
-        return remoteDevServiceFactory.load("test-sawyer2").getWorkspaceUrl(userId, workspaceName)
+        return remoteDevServiceFactory.load(WORKSPACE_PROJECT).getWorkspaceUrl(userId, workspaceName)
     }
 
     fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
-        return remoteDevServiceFactory.load("test-sawyer2").getWorkspaceInfo(userId, workspaceName)
+        return remoteDevServiceFactory.load(WORKSPACE_PROJECT).getWorkspaceInfo(userId, workspaceName)
     }
 
     fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
-        return remoteDevServiceFactory.load("test-sawyer2").workspaceTaskCallback(taskStatus)
+        return remoteDevServiceFactory.load(WORKSPACE_PROJECT).workspaceTaskCallback(taskStatus)
     }
 }
