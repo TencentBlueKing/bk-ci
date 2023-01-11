@@ -309,7 +309,6 @@
             },
             getSortIconName (sortType) {
                 if (this.isActiveSort(sortType) && this.$route.query.collation) {
-                    console.log(123, this.$route.query.collation.toLowerCase())
                     return `sort-${this.$route.query.collation.toLowerCase()}`
                 }
                 return 'sort'

@@ -289,14 +289,15 @@
             sortField () {
                 const { sortType, collation = ORDER_ENUM.descending } = this.$route.query
                 return {
-                    sortType: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
-                    collation
+                    prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
+                    order: collation
                 }
             }
         },
 
         watch: {
             '$route.params.viewId': function (viewId) {
+                this.clearSort()
                 this.requestList({
                     viewId,
                     page: 1
@@ -356,14 +357,18 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
-                this.$router.push({
-                    ...this.$route,
-                    query: {
-                        ...this.$route.query,
-                        sortType: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime,
-                        collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
-                    }
-                })
+                const sortType = PIPELINE_SORT_FILED[prop]
+                if (sortType) {
+                    localStorage.setItem('pipelineSortType', sortType)
+                    this.$router.push({
+                        ...this.$route,
+                        query: {
+                            ...this.$route.query,
+                            sortType: sortType,
+                            collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
+                        }
+                    })
+                }
             },
             async requestList (query = {}) {
                 this.isLoading = true
