@@ -58,7 +58,6 @@ CREATE TABLE `T_WORKSPACE_TEMPLATE`  (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
                                                     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-                                                    `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
                                                     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
                                                     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
                                                     `ACTION` int(10) NOT NULL DEFAULT 0 COMMENT '操作行为: 0-CREATE, 1-START, 2-SLEEP, 3-DELETE, 4-SHARE',
@@ -66,7 +65,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
                                                     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
                                                     PRIMARY KEY (`ID`) USING BTREE,
-                                                    KEY `uni_1` (`WORKSPACE_ID`)
+                                                    KEY `uni_1` (`WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间操作记录表';
 
 -- ----------------------------
@@ -74,7 +73,6 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_OP_HIS` (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
                                                      `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-                                                     `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
                                                      `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
                                                      `STARTER` varchar(64) NOT NULL DEFAULT '' COMMENT '启动人',
                                                      `STOPPER` varchar(64) NOT NULL DEFAULT '' COMMENT '停止人',
@@ -85,7 +83,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE_HISTORY` (
                                                      `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
                                                      PRIMARY KEY (`ID`) USING BTREE,
-                                                     KEY `uni_1` (`WORKSPACE_ID`)
+                                                     KEY `uni_1` (`WORKSPACE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间运行记录表';
 
 -- ----------------------------
@@ -110,13 +108,12 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
 -- ----------------------------
 CREATE TABLE IF NOT EXISTS `T_WORKSPACE_SHARED` (
     `ID` bigint(20) NOT NULL AUTO_INCREMENT,
-    `WORKSPACE_ID` bigint(20) NOT NULL DEFAULT 0 COMMENT '工作空间ID',
     `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
     `OPERATOR` varchar(64) NOT NULL DEFAULT '' COMMENT '操作人',
     `SHARED_USER` varchar(64) NOT NULL DEFAULT '' COMMENT '被共享的用户',
     `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     PRIMARY KEY (`ID`) USING BTREE,
-    KEY `uni_1` (`WORKSPACE_ID`),
+    KEY `uni_1` (`WORKSPACE_NAME`),
     KEY `uni_2` (`SHARED_USER`),
     KEY `uni_3` (`OPERATOR`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '工作空间共享记录表';
