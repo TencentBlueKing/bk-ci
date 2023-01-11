@@ -35,12 +35,13 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexBaseInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record7
 import org.jooq.Record8
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -125,7 +126,6 @@ class StoreIndexManageInfoDao {
                 ID,
                 INDEX_CODE,
                 INDEX_NAME,
-                ICON_URL,
                 DESCRIPTION,
                 OPERATION_TYPE,
                 ATOM_CODE,
@@ -235,7 +235,7 @@ class StoreIndexManageInfoDao {
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
         storeCodes: List<String>
-    ): Result<Record8<String, String, String, String, String, String, String, String>> {
+    ): Result<Record7<String, String, String, String, String, String, String>> {
         with(TStoreIndexResult.T_STORE_INDEX_RESULT) {
             val tStoreIndexBaseInfo = TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO
             val tStoreIndexLevelInfo = TStoreIndexLevelInfo.T_STORE_INDEX_LEVEL_INFO
@@ -243,11 +243,10 @@ class StoreIndexManageInfoDao {
                 this.STORE_CODE,
                 tStoreIndexBaseInfo.INDEX_CODE,
                 tStoreIndexBaseInfo.INDEX_NAME,
-                tStoreIndexBaseInfo.ICON_URL,
+                tStoreIndexLevelInfo.ICON_URL,
                 tStoreIndexBaseInfo.DESCRIPTION,
                 this.ICON_TIPS,
-                tStoreIndexLevelInfo.LEVEL_NAME,
-                tStoreIndexLevelInfo.ICON_CSS_VALUE,
+                tStoreIndexLevelInfo.LEVEL_NAME
             ).from(this)
                 .leftJoin(tStoreIndexBaseInfo)
                 .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))

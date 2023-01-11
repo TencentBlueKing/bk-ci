@@ -44,7 +44,6 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.store.constant.StoreConstants.STORE_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_CODE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_DESCRIPTION
-import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_CSS_VALUE
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_TIPS
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_ICON_URL
 import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_LEVEL_NAME
@@ -52,13 +51,13 @@ import com.tencent.devops.store.constant.StoreConstants.STORE_INDEX_NAME
 import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StorePipelineRelDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StorePipelineBusTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
+import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexPipelineInitRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import com.tencent.devops.store.service.common.StoreIndexPipelineService
@@ -96,7 +95,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         tStoreIndexBaseInfoRecord.storeType = storeIndexCreateRequest.storeType.type.toByte()
         tStoreIndexBaseInfoRecord.indexCode = indexCode
         tStoreIndexBaseInfoRecord.indexName = storeIndexCreateRequest.indexName
-        tStoreIndexBaseInfoRecord.iconUrl = storeIndexCreateRequest.iconUrl
         tStoreIndexBaseInfoRecord.description = storeIndexCreateRequest.description
         tStoreIndexBaseInfoRecord.operationType = storeIndexCreateRequest.operationType.name
         tStoreIndexBaseInfoRecord.executeTimeType = storeIndexCreateRequest.executeTimeType.name
@@ -109,7 +107,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
             val tStoreIndexLevelInfo = TStoreIndexLevelInfoRecord()
             tStoreIndexLevelInfo.id = UUIDUtil.generate()
             tStoreIndexLevelInfo.levelName = it.levelName
-            tStoreIndexLevelInfo.iconCssValue = it.iconCssValue
+            tStoreIndexLevelInfo.iconUrl = it.iconUrl
             tStoreIndexLevelInfo.indexId = storeIndexBaseInfoId
             tStoreIndexLevelInfo.creator = userId
             tStoreIndexLevelInfo.modifier = userId
@@ -219,7 +217,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     iconUrl = it[STORE_INDEX_ICON_URL] as String,
                     description = it[STORE_INDEX_DESCRIPTION] as String,
                     indexLevelName = it[STORE_INDEX_LEVEL_NAME] as String,
-                    iconColor = it[STORE_INDEX_ICON_CSS_VALUE] as String,
                     hover = it[STORE_INDEX_ICON_TIPS].toString()
                 )
             )

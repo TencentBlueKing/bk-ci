@@ -34,6 +34,6 @@ import io.swagger.annotations.ApiModelProperty
 data class StoreIndexLevelInfo(
     @ApiModelProperty("等级名称", required = true)
     val levelName: String,
-    @ApiModelProperty("图标CSS值", required = false)
-    val iconCssValue: String? = null
+    @ApiModelProperty("图标URL", required = true)
+    val iconUrl: String
 )

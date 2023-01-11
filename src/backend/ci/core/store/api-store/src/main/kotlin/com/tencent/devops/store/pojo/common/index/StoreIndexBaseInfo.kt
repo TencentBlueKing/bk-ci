@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.pojo.common.index
 
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
@@ -46,8 +46,6 @@ data class StoreIndexBaseInfo(
     @ApiModelProperty("指标名称", required = true)
     @BkField(maxLength = 64)
     val indexName: String,
-    @ApiModelProperty("图标地址", required = true)
-    val iconUrl: String,
     @ApiModelProperty("指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,

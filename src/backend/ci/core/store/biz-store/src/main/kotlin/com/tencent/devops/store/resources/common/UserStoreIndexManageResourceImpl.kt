@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.UserStoreIndexManageResource
-import com.tencent.devops.store.pojo.common.StoreIndexBaseInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired

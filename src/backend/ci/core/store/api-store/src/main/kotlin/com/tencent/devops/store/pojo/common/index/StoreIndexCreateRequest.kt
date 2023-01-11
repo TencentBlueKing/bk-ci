@@ -43,8 +43,6 @@ data class StoreIndexCreateRequest(
     @ApiModelProperty("指标名称", required = true)
     @BkField(maxLength = 64)
     val indexName: String,
-    @ApiModelProperty("图标地址", required = true)
-    val iconUrl: String,
     @ApiModelProperty("指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,

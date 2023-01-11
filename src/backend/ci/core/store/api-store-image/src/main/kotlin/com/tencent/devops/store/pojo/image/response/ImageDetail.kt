@@ -29,7 +29,7 @@ package com.tencent.devops.store.pojo.image.response
 
 import com.tencent.devops.store.pojo.common.HonorInfo
 import com.tencent.devops.store.pojo.common.Label
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.image.enums.ImageAgentTypeEnum
 import io.swagger.annotations.ApiModel
