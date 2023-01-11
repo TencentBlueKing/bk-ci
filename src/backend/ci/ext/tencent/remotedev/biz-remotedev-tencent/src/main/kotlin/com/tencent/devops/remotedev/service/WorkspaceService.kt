@@ -699,14 +699,13 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceProxyDetail(workspaceName: String): WorkspaceProxyDetail {
-        val sshKey = sshService.getSshPublicKeys4Ws(
-            workspaceDao.fetchWorkspaceUser(
-                dslContext,
-                workspaceName
-            ).toSet()
-        )
-        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo("admin", workspaceName)
-        logger.info("=========: ${JsonUtil.toJson(workspaceInfo)}")
+        val userSet = workspaceDao.fetchWorkspaceUser(
+            dslContext,
+            workspaceName
+        ).toSet()
+        val sshKey = sshService.getSshPublicKeys4Ws(userSet)
+        val workspaceInfo = client.get(ServiceRemoteDevResource::class).getWorkspaceInfo(userSet.first(), workspaceName)
+
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
             podIp = workspaceInfo.data?.environmentIP ?: "",

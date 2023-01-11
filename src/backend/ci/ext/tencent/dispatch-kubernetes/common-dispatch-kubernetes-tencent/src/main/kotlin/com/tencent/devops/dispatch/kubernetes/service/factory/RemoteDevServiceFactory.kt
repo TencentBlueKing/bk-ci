@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.kubernetes.service.factory
 
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
