@@ -96,7 +96,6 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         minId = projectMinId,
                         maxId = projectMinId + syncsNumber
                     ).data
-                    logger.info("syncAtomErrorCodeRel projectIds:$projectIds")
                     projectIds?.map {
                         val errorCodeInfos = atomFailInfoDao.getAtomErrorInfos(dslContext, it.englishName)
                         errorCodeInfos.map { e ->
@@ -117,7 +116,7 @@ class ErrorCodeInfoServiceImpl @Autowired constructor(
                         }
                     }
                     metricsDataReportDao.batchSaveErrorCodeInfo(dslContext, saveErrorCodeInfoPOs)
-                    logger.info("syncAtomErrorCodeRel.projectMinId:$projectMinId")
+                    logger.info("syncAtomErrorCodeRel.Progress:$projectMinId total:$projectMaxId")
                     projectMinId += (syncsNumber + 1)
                 } while (projectMinId <= projectMaxId)
                 logger.info("end syncAtomErrorCodeRel.")
