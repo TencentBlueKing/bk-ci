@@ -844,6 +844,5 @@ class MetricsDataReportServiceImpl @Autowired constructor(
             }
             else -> return false
         }
-
     }
 }

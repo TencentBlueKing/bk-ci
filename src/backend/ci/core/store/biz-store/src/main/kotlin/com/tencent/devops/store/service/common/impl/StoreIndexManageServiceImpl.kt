@@ -183,7 +183,6 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo> {
         //  管理员权限校验
         val count = storeIndexManageInfoDao.count(dslContext, keyWords)
