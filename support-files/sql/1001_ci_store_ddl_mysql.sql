@@ -770,6 +770,7 @@ CREATE TABLE IF NOT EXISTS `T_STORE_PIPELINE_REL`
     `CREATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
     `UPDATE_TIME` datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
     `STORE_TYPE`  tinyint(4)  NOT NULL DEFAULT '0' COMMENT '商店组件类型 0：插件 1：模板 2：镜像 3：IDE插件',
+    `BUS_TYPE` varchar(32) NOT NULL DEFAULT 'BUILD' COMMENT '业务类型 BUILD:构建 INDEX:研发商店指标',
     PRIMARY KEY (`ID`),
     KEY `inx_tspr_code` (`STORE_CODE`),
     KEY `inx_tspr_type` (`STORE_TYPE`),
