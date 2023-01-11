@@ -136,8 +136,8 @@ class WorkspaceDao {
             return dslContext.selectCount().from(this)
                 .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectCount().from(this).where(
-                        ID.`in`(
-                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                        NAME.`in`(
+                            DSL.select(shared.WORKSPACE_NAME).from(shared).where(
                                 shared.SHARED_USER.eq(
                                     userId
                                 )
@@ -162,8 +162,8 @@ class WorkspaceDao {
             return dslContext.selectFrom(this)
                 .where(CREATOR.eq(userId)).unionAll(
                     DSL.selectFrom(this).where(
-                        ID.`in`(
-                            DSL.select(shared.WORKSPACE_ID).from(shared).where(
+                        NAME.`in`(
+                            DSL.select(shared.WORKSPACE_NAME).from(shared).where(
                                 shared.SHARED_USER.eq(
                                     userId
                                 )
