@@ -97,6 +97,4 @@ interface UserStoreIndexManageResource {
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
     ): Result<Page<StoreIndexBaseInfo>>
-
 }
-

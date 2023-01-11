@@ -61,5 +61,4 @@ interface StoreHonorService {
         storeType: StoreTypeEnum,
         storeCodes: List<String>
     ): Map<String, List<HonorInfo>>
-
 }

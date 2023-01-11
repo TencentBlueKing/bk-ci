@@ -207,7 +207,7 @@ class StoreHonorDao {
         storeCode: String,
         storeType: StoreTypeEnum,
         honorId: String
-    ){
+    ) {
         with(TStoreHonorRel.T_STORE_HONOR_REL) {
             dslContext.update(this)
                 .set(MOUNT_FLAG, false)

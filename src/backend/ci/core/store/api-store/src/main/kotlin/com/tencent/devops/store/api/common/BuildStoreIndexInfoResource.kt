@@ -89,4 +89,3 @@ interface BuildStoreIndexInfoResource {
         storeCodes: List<String>
     ): Result<Boolean>
 }
-

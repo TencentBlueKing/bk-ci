@@ -42,7 +42,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class UserStoreHonorResourceImpl @Autowired constructor(
     private val storeHonorService: StoreHonorService
-): UserStoreHonorResource {
+) : UserStoreHonorResource {
     override fun list(
         userId: String,
         keyWords: String?,
