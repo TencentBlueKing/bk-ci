@@ -62,6 +62,8 @@ data class SaveAtomOverviewDataPO(
     val successExecuteCount: Long,
     @ApiModelProperty("失败执行次数")
     val failExecuteCount: Long,
+    @ApiModelProperty("失败合规次数")
+    val failComplianceCount: Long,
     @ApiModelProperty("统计时间")
     val statisticsTime: LocalDateTime,
     @ApiModelProperty("创建人")

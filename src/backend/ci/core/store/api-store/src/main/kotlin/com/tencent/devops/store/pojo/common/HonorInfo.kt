@@ -25,54 +25,25 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import com.tencent.devops.common.web.annotation.BkField
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
-
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun getStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
-}
+@ApiModel("荣誉信息")
+data class HonorInfo(
+    @ApiModelProperty("荣誉ID")
+    val honorId: String,
+    @ApiModelProperty("荣誉头衔")
+    @BkField(maxLength = 4)
+    val honorTitle: String,
+    @ApiModelProperty("荣誉名称")
+    @BkField(maxLength = 40)
+    val honorName: String,
+    @ApiModelProperty("是否佩戴")
+    val mountFlag: Boolean,
+    @ApiModelProperty("创建时间")
+    val createTime: LocalDateTime
+)

@@ -25,54 +25,36 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.pojo.common
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
-
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun getStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
-}
+@ApiModel("组件荣誉管理信息")
+data class StoreHonorManageInfo(
+    @ApiModelProperty("storeName", required = true)
+    val storeName: String,
+    @ApiModelProperty("storeCode", required = true)
+    val storeCode: String,
+    @ApiModelProperty("ID", required = true)
+    val honorId: String,
+    @ApiModelProperty("荣誉头衔", required = true)
+    @BkField(maxLength = 4)
+    val honorTitle: String,
+    @ApiModelProperty("荣誉名称", required = true)
+    @BkField(maxLength = 40)
+    val honorName: String,
+    @ApiModelProperty("组件范畴", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("创建者", required = true)
+    val creator: String,
+    @ApiModelProperty("修改者", required = true)
+    val modifier: String,
+    @ApiModelProperty("更新时间", required = true)
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: LocalDateTime
+)

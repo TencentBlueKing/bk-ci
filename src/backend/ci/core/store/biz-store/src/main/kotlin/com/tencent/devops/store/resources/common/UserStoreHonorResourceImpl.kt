@@ -30,32 +30,58 @@ package com.tencent.devops.store.resources.common
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.UserStoreIndexManageResource
-import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
-import com.tencent.devops.store.service.common.StoreIndexManageService
+import com.tencent.devops.store.api.common.UserStoreHonorResource
+import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
+import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.common.StoreHonorService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserStoreIndexManageResourceImpl @Autowired constructor(
-    private val storeIndexManageService: StoreIndexManageService
-) : UserStoreIndexManageResource {
-    override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
-        return storeIndexManageService.add(userId, storeIndexCreateRequest)
-    }
-
-    override fun delete(userId: String, indexId: String): Result<Boolean> {
-        return storeIndexManageService.delete(userId, indexId)
-    }
-
-    override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Result<Page<StoreIndexBaseInfo>> {
+class UserStoreHonorResourceImpl @Autowired constructor(
+    private val storeHonorService: StoreHonorService
+): UserStoreHonorResource {
+    override fun list(
+        userId: String,
+        keyWords: String?,
+        page: Int,
+        pageSize: Int
+    ): Result<Page<StoreHonorManageInfo>> {
         return Result(
-            storeIndexManageService.list(
+            storeHonorService.list(
                 userId = userId,
                 keyWords = keyWords,
                 page = page,
                 pageSize = pageSize
             )
         )
+    }
+
+    override fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Result<Boolean> {
+        return Result(storeHonorService.batchDelete(userId, storeHonorRelList))
+    }
+
+    override fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean> {
+        return storeHonorService.add(userId, addStoreHonorRequest)
+    }
+
+    override fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo> {
+        return storeHonorService.getStoreHonor(userId, storeType, storeCode)
+    }
+
+    override fun installStoreHonor(
+        userId: String,
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        honorId: String
+    ): Result<Boolean> {
+        return Result(storeHonorService.installStoreHonor(
+            userId = userId,
+            storeCode = storeCode,
+            storeType = storeType,
+            honorId = honorId
+        ))
     }
 }

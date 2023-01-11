@@ -27,80 +27,42 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
+import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+interface StoreIndexManageService {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
+    fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean>
+
+    fun delete(userId: String, indexId: String): Result<Boolean>
+
+    fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo>
+
+    fun getStoreIndexInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<StoreIndexInfo>>
+
+    fun getStoreIndexInfosByStoreCode(
+        storeType: StoreTypeEnum,
+        storeCode: String
+    ): List<StoreIndexInfo>
+
+    fun createIndexComputeDetail(
         userId: String,
-        contentLength: Long,
-        sizeLimitFlag: Boolean? = true,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
-
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
-
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
+        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
     ): Result<Boolean>
 
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
+    fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>>
 
-    /**
-     * 删除logo
-     */
-    fun delete(
+    fun deleteStoreIndexResultByStoreCode(
         userId: String,
-        id: String
+        indexCode: String,
+        storeCodes: List<String>
     ): Result<Boolean>
-
-    /**
-     * 上传图标
-     */
-    fun uploadStoreIcon(
-        userId: String,
-        contentLength: Long,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?>
 }

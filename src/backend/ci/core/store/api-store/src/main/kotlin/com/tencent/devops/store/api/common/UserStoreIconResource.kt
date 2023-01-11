@@ -25,82 +25,50 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.api.common
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.store.pojo.common.Logo
 import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
+import com.tencent.devops.store.pojo.common.enums.LogoTypeEnum
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
+import javax.ws.rs.core.MediaType
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+@Api(tags = ["USER_STORE_ICON"], description = "STORE-ICON")
+@Path("/user/store/icon")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserStoreIconResource {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        sizeLimitFlag: Boolean? = true,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
-
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
-
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
-
-    /**
-     * 上传图标
-     */
+    @ApiOperation("上传图标")
+    @POST
+    @Path("/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
     fun uploadStoreIcon(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam("contentLength", required = true)
+        @HeaderParam("content-length")
         contentLength: Long,
+        @ApiParam("icon", required = true)
+        @FormDataParam("icon")
         inputStream: InputStream,
+        @FormDataParam("icon")
         disposition: FormDataContentDisposition
     ): Result<String?>
 }

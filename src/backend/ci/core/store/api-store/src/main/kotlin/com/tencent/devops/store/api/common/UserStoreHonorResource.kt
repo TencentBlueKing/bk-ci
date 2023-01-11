@@ -32,54 +32,33 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
-import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
+import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import javax.validation.Valid
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
-@Path("/user/store/indexs/manage")
+@Api(tags = ["USER_STORE_HONOR"], description = "研发商店——组件荣誉")
+@Path("/user/store/honor")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserStoreIndexManageResource {
+interface UserStoreHonorResource {
 
-    @ApiOperation("新增研发商店指标")
-    @POST
-    @Path("/add")
-    fun add(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("研发商店指标请求报文体", required = true)
-        @Valid
-        storeIndexCreateRequest: StoreIndexCreateRequest
-    ): Result<Boolean>
-
-    @ApiOperation("删除研发商店指标")
-    @DELETE
-    @Path("/indexIds/{indexId}/delete}")
-    fun delete(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("指标ID", required = true)
-        @PathParam("indexId")
-        indexId: String
-    ): Result<Boolean>
-
-    @ApiOperation("查询研发商店指标")
+    @ApiOperation("根据插件名称/插件标识/荣誉头衔/荣誉名称搜索")
     @GET
     @Path("/list")
     fun list(
@@ -88,7 +67,7 @@ interface UserStoreIndexManageResource {
         userId: String,
         @ApiParam("查询关键字", required = false)
         @QueryParam("keyWords")
-        keyWords: String? = null,
+        keyWords: String?,
         @ApiParam("页码", required = true, defaultValue = "1")
         @QueryParam("page")
         page: Int,
@@ -96,7 +75,60 @@ interface UserStoreIndexManageResource {
         @QueryParam("pageSize")
         @BkField(patternStyle = BkStyleEnum.PAGE_SIZE_STYLE, required = true)
         pageSize: Int
-    ): Result<Page<StoreIndexBaseInfo>>
+    ): Result<Page<StoreHonorManageInfo>>
 
+    @ApiOperation("批量删除组件荣誉")
+    @DELETE
+    @Path("/batch/delete")
+    fun batchDelete(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件荣誉关联信息列表", required = true)
+        storeHonorRelList: List<StoreHonorRel>
+    ): Result<Boolean>
+
+    @ApiOperation("添加组件荣誉")
+    @POST
+    @Path("/add")
+    fun add(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件荣誉信息", required = true)
+        addStoreHonorRequest: AddStoreHonorRequest
+    ): Result<Boolean>
+
+    @ApiOperation("查询组件荣誉")
+    @GET
+    @Path("/get")
+    fun getStoreHonor(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("组件代码", required = true)
+        @QueryParam("storeCode")
+        storeCode: String
+    ): List<HonorInfo>
+
+    @ApiOperation("佩戴组件荣誉")
+    @PUT
+    @Path("storeCodes/{storeCode}/install")
+    fun installStoreHonor(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件代码", required = true)
+        @PathParam("storeCode")
+        storeCode: String,
+        @ApiParam("组件类型", required = true)
+        @QueryParam("storeType")
+        storeType: StoreTypeEnum,
+        @ApiParam("荣誉ID")
+        @QueryParam("honorId")
+        honorId: String
+    ): Result<Boolean>
 }
-

@@ -25,54 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.constant
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+object StoreConstants {
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
-
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun getStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
+    const val STORE_INDEX_CODE = "INDEX_CODE"
+    const val STORE_INDEX_NAME = "INDEX_NAME"
+    const val STORE_INDEX_ICON_URL = "ICON_URL"
+    const val STORE_INDEX_DESCRIPTION = "DESCRIPTION"
+    const val STORE_INDEX_ICON_TIPS = "ICON_TIPS"
+    const val STORE_INDEX_LEVEL_NAME = "LEVEL_NAME"
+    const val STORE_CODE = "STORE_CODE"
+    const val STORE_NAME = "STORE_NAME"
+    const val STORE_TYPE = "STORE_TYPE"
+    const val STORE_DAILY_FAIL_DETAIL = "DAILY_FAIL_DETAIL"
+    const val DELETE_STORE_INDEX_RESULT_LOCK_KEY = "DELETE_STORE_INDEX_RESULT_LOCK"
+    const val DELETE_STORE_INDEX_RESULT_KEY = "DELETE_STORE_INDEX_RESULT"
+    const val STORE_HONOR_ID = "HONOR_ID"
+    const val STORE_HONOR_TITLE = "HONOR_TITLE"
+    const val STORE_HONOR_NAME = "HONOR_NAME"
+    const val STORE_CREATOR = "CREATOR"
+    const val STORE_MODIFIER = "MODIFIER"
+    const val STORE_CREATE_TIME = "CREATE_TIME"
+    const val STORE_UPDATE_TIME = "UPDATE_TIME"
+    const val STORE_HONOR_MOUNT_FLAG = "MOUNT_FLAG"
+    const val CREATE_TIME = "CREATE_TIME"
 }

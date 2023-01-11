@@ -27,80 +27,39 @@
 
 package com.tencent.devops.store.service.common
 
+import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.store.pojo.common.AddStoreHonorRequest
+import com.tencent.devops.store.pojo.common.HonorInfo
+import com.tencent.devops.store.pojo.common.StoreHonorManageInfo
+import com.tencent.devops.store.pojo.common.StoreHonorRel
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+interface StoreHonorService {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
-        userId: String,
-        contentLength: Long,
-        sizeLimitFlag: Boolean? = true,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
-
-    /**
-     * 获取logo列表
-     */
     fun list(
         userId: String,
-        type: String
-    ): Result<List<Logo>?>
+        keyWords: String?,
+        page: Int,
+        pageSize: Int
+    ): Page<StoreHonorManageInfo>
 
-    /**
-     * 获取logo
-     */
-    fun get(
-        userId: String,
-        id: String
-    ): Result<Logo?>
+    fun batchDelete(userId: String, storeHonorRelList: List<StoreHonorRel>): Boolean
 
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
+    fun add(userId: String, addStoreHonorRequest: AddStoreHonorRequest): Result<Boolean>
 
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
+    fun getStoreHonor(userId: String, storeType: StoreTypeEnum, storeCode: String): List<HonorInfo>
 
-    /**
-     * 删除logo
-     */
-    fun delete(
+    fun installStoreHonor(
         userId: String,
-        id: String
-    ): Result<Boolean>
+        storeType: StoreTypeEnum,
+        storeCode: String,
+        honorId: String
+    ): Boolean
 
-    /**
-     * 上传图标
-     */
-    fun uploadStoreIcon(
-        userId: String,
-        contentLength: Long,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?>
+    fun getHonorInfosByStoreCodes(
+        storeType: StoreTypeEnum,
+        storeCodes: List<String>
+    ): Map<String, List<HonorInfo>>
+
 }

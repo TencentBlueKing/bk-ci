@@ -25,82 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.service.common
+package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.Logo
-import com.tencent.devops.store.pojo.common.StoreLogoInfo
-import com.tencent.devops.store.pojo.common.StoreLogoReq
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import java.io.InputStream
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
+import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
+import com.tencent.devops.store.service.common.StoreIndexManageService
+import org.springframework.beans.factory.annotation.Autowired
 
-/**
- * store商城logo逻辑类
- *
- * since: 2019-02-15
- */
-interface StoreLogoService {
+@RestResource
+class BuildStoreIndexInfoResourceImpl @Autowired constructor(
+    private val storeIndexManageService: StoreIndexManageService
+) : BuildStoreIndexInfoResource {
 
-    /**
-     * 上传logo
-     */
-    fun uploadStoreLogo(
+    override fun createIndexComputeDetail(
         userId: String,
-        contentLength: Long,
-        sizeLimitFlag: Boolean? = true,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<StoreLogoInfo?>
+        createIndexComputeDetailRequest: CreateIndexComputeDetailRequest
+    ): Result<Boolean> {
+        return storeIndexManageService.createIndexComputeDetail(userId, createIndexComputeDetailRequest)
+    }
 
-    /**
-     * 获取logo列表
-     */
-    fun list(
-        userId: String,
-        type: String
-    ): Result<List<Logo>?>
+    override fun getCertifiedPlugins(
+        indexCode: String,
+        elementName: String
+    ): Result<List<String>> {
+        return storeIndexManageService.getStoreCodeByElementValue(indexCode, elementName)
+    }
 
-    /**
-     * 获取logo
-     */
-    fun get(
+    override fun deleteStoreIndexResultByStoreCode(
         userId: String,
-        id: String
-    ): Result<Logo?>
-
-    /**
-     * 新增logo
-     */
-    fun add(
-        userId: String,
-        type: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 更新logo
-     */
-    fun update(
-        userId: String,
-        id: String,
-        storeLogoReq: StoreLogoReq
-    ): Result<Boolean>
-
-    /**
-     * 删除logo
-     */
-    fun delete(
-        userId: String,
-        id: String
-    ): Result<Boolean>
-
-    /**
-     * 上传图标
-     */
-    fun uploadStoreIcon(
-        userId: String,
-        contentLength: Long,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?>
+        indexCode: String,
+        storeCodes: List<String>
+    ): Result<Boolean> {
+        return storeIndexManageService.deleteStoreIndexResultByStoreCode(userId, indexCode, storeCodes)
+    }
 }

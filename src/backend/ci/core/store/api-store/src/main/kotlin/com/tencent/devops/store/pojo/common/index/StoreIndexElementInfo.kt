@@ -25,31 +25,17 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.pojo.common.index
 
-import com.tencent.devops.model.store.tables.TStoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.jooq.Condition
-import org.jooq.DSLContext
-import org.springframework.stereotype.Repository
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Repository
-class StoreIndexBaseInfoDao {
-
-    fun getIndexCodesByAtomCode(
-        dslContext: DSLContext,
-        storeType: StoreTypeEnum,
-        atomCode: String,
-        executeTimeType: IndexExecuteTimeTypeEnum? = null
-    ): List<String> {
-        with(TStoreIndexBaseInfo.T_STORE_INDEX_BASE_INFO) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(ATOM_CODE.eq(atomCode))
-            executeTimeType?.let { conditions.add(EXECUTE_TIME_TYPE.eq(executeTimeType.name)) }
-            return dslContext.select(INDEX_CODE).from(this)
-                .where(conditions).fetchInto(String::class.java)
-        }
-    }
-}
+@ApiModel("组件指标要素信息")
+data class StoreIndexElementInfo(
+    @ApiModelProperty("指标要素名称", required = true)
+    val elementName: String,
+    @ApiModelProperty("指标要素值", required = true)
+    val elementValue: String,
+    @ApiModelProperty("备注", required = false)
+    val remark: String? = null
+)

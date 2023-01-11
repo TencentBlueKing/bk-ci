@@ -25,83 +25,68 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.api
+package com.tencent.devops.store.api.common
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
-import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
-import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.time.LocalDateTime
+import javax.validation.Valid
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
+import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["SERVICE_METRICS"], description = "METRICS")
-@Path("/service/metrics/")
+@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
+@Path("/build/store/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceMetricsResource {
+interface BuildStoreIndexInfoResource {
 
-    @ApiOperation("查询流水线汇总信息")
-    @Path("/summary_pipeline")
+    @ApiOperation("添加组件指标计算详情")
     @POST
-    fun queryPipelineSumInfo(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        @BkField(required = true)
-        projectId: String,
+    @Path("/element/detail/add")
+    fun createIndexComputeDetail(
         @ApiParam("userId", required = true)
-        @BkField(required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("查询条件", required = false)
-        baseQueryReq: BaseQueryReqVO?
-    ): Result<PipelineSumInfoVO>
+        @ApiParam("指标要素请求报文体", required = true)
+        @Valid
+        storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
+    ): Result<Boolean>
 
-    @ApiOperation("获取第三方汇总信息")
-    @Path("/summary_third_party")
+    @ApiOperation("根据组织名称获取组织维护的插件列表")
     @GET
-    fun queryPipelineSummaryInfo(
-        @ApiParam("项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        @BkField(required = true)
-        projectId: String,
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(required = true)
-        userId: String,
-        @ApiParam("开始时间", required = false)
-        @QueryParam("startTime")
-        startTime: String?,
-        @ApiParam("结束时间", required = false)
-        @QueryParam("endTime")
-        endTime: String?
-    ): Result<ThirdPlatformOverviewInfoVO>
+    @Path("/element/value/get")
+    fun getCertifiedPlugins(
+        @ApiParam("指标代码", required = true)
+        @QueryParam("indexCode")
+        indexCode: String,
+        @ApiParam("指标要素名称", required = true)
+        @QueryParam("elementName")
+        elementName: String
+    ): Result<List<String>>
 
-    @ApiOperation("查询项目所属插件合规率信息")
-    @Path("/compliance_atom")
-    @POST
-    fun queryAtomComplianceInfo(
+    @ApiOperation("根据组件代码删除指标结果")
+    @DELETE
+    @Path("/indexCodes/{indexCode}/result/delete")
+    fun deleteStoreIndexResultByStoreCode(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
-        @BkField(required = true)
         userId: String,
-        @ApiParam("项目列表", required = false)
-        projectIds: List<String>,
-        @ApiParam("开始时间", required = true)
-        startDateTime: LocalDateTime,
-        @ApiParam("结束时间", required = true)
-        endDateTime: LocalDateTime
-    ): Result<Map<String, Double>>
+        @ApiParam("指标代码", required = true)
+        @PathParam("indexCode")
+        indexCode: String,
+        @ApiParam("组件代码列表", required = true)
+        storeCodes: List<String>
+    ): Result<Boolean>
 }
+

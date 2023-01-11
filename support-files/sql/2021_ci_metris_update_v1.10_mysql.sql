@@ -25,54 +25,42 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+USE devops_ci_metrics;
+SET NAMES utf8mb4;
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+DROP PROCEDURE IF EXISTS ci_metrics_schema_update;
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
+DELIMITER <CI_UBF>
+CREATE PROCEDURE ci_metrics_schema_update()
+BEGIN
 
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+SELECT DATABASE() INTO db;
 
-    abstract fun getStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
+IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_ERROR_CODE_INFO'
+                        AND COLUMN_NAME = 'ATOM_CODE') THEN
+ALTER TABLE `T_ERROR_CODE_INFO`
+    ADD COLUMN `ATOM_CODE` varchar(64) DEFAULT NULL COMMENT '关联插件代码';
 
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
+END IF;
 
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
+    IF NOT EXISTS(SELECT 1
+                          FROM information_schema.COLUMNS
+                          WHERE TABLE_SCHEMA = db
+                            AND TABLE_NAME = 'T_ATOM_OVERVIEW_DATA'
+                            AND COLUMN_NAME = 'FAIL_COMPLIANCE_COUNT') THEN
+ALTER TABLE `T_ATOM_OVERVIEW_DATA`
+    ADD COLUMN `FAIL_COMPLIANCE_COUNT` bigint(20) DEFAULT '0' COMMENT '失败合规次数'`FAIL_COMPLIANCE_COUNT` bigint(20) DEFAULT '0' COMMENT '失败合规次数';
 
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
+END IF;
 
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
+COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
 
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
-}
+CALL ci_metrics_schema_update();

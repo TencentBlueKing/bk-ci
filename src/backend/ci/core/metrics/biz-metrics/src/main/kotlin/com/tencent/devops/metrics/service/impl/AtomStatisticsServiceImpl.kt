@@ -28,6 +28,7 @@
 package com.tencent.devops.metrics.service.impl
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.metrics.config.MetricsConfig
@@ -40,6 +41,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
@@ -169,6 +172,27 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         return AtomTrendInfoVO(
             atomTrendInfoMap.values.toList()
         )
+    }
+
+    override fun queryAtomComplianceInfo(
+        userId: String,
+        projectIds: List<String>,
+        startDateTime: LocalDateTime,
+        endDateTime: LocalDateTime
+    ): Result<Map<String, Double>> {
+        val result = mutableMapOf<String, Double>()
+        atomStatisticsDao.queryAtomComplianceInfo(
+            dslContext = dslContext,
+            projectIds = projectIds,
+            startDateTime = startDateTime,
+            endDateTime = endDateTime
+        ).forEach {
+            val failExecuteCount = (it[BK_FAIL_EXECUTE_COUNT] as BigDecimal).toDouble()
+            val failComplianceCount = it[BK_FAIL_COMPLIANCE_COUNT] as BigDecimal
+            result[it[BK_ATOM_CODE] as String] =
+                if (failExecuteCount == 0.0) 0.0 else failComplianceCount.toDouble() / failExecuteCount
+        }
+        return Result(result)
     }
 
     override fun queryAtomExecuteStatisticsInfo(

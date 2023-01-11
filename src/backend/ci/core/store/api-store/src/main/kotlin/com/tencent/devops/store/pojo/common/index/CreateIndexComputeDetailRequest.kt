@@ -25,54 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.dao.common
+package com.tencent.devops.store.pojo.common.index
 
-import com.tencent.devops.store.pojo.common.StoreBaseInfo
-import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
+import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@Suppress("ALL")
-abstract class AbstractStoreCommonDao {
-
-    abstract fun getStoreNameById(
-        dslContext: DSLContext,
-        storeId: String
-    ): String?
-
-    abstract fun getStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getNewestStoreNameByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): String?
-
-    abstract fun getStorePublicFlagByCode(
-        dslContext: DSLContext,
-        storeCode: String
-    ): Boolean
-
-    abstract fun getStoreCodeListByName(
-        dslContext: DSLContext,
-        storeName: String
-    ): Result<out Record>?
-
-    abstract fun getLatestStoreInfoListByCodes(
-        dslContext: DSLContext,
-        storeCodeList: List<String>
-    ): Result<out Record>?
-
-    abstract fun getStoreDevLanguages(
-        dslContext: DSLContext,
-        storeCode: String
-    ): List<String>?
-
-    abstract fun getNewestStoreBaseInfoByCode(
-        dslContext: DSLContext,
-        storeCode: String,
-        storeStatus: Byte? = null
-    ): StoreBaseInfo?
-}
+@ApiModel("新增指标要素请求报文体")
+data class CreateIndexComputeDetailRequest(
+    @ApiModelProperty("组件代码", required = true)
+    val storeCode: String,
+    @ApiModelProperty("store组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("图标提示信息", required = true)
+    val iconTips: String,
+    @ApiModelProperty("等级名称", required = true)
+    val LevelName: String,
+    @ApiModelProperty("指标代码", required = true)
+    @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
+    val indexCode: String,
+    @ApiModelProperty("指标要素列表", required = true)
+    val elementInfos: List<StoreIndexElementInfo>
+)

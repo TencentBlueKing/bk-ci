@@ -34,9 +34,12 @@ import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
-@ApiModel("新增指标请求报文体")
-data class StoreIndexCreateRequest(
+@ApiModel("研发商店指标基本信息")
+data class StoreIndexBaseInfo(
+    @ApiModelProperty("ID", required = true)
+    val id: String,
     @ApiModelProperty("指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
@@ -46,16 +49,26 @@ data class StoreIndexCreateRequest(
     @ApiModelProperty("指标描述", required = true)
     @BkField(maxLength = 256)
     val description: String,
-    @ApiModelProperty("等级信息", required = true)
-    val levelInfos: List<StoreIndexLevelInfo>,
     @ApiModelProperty("运算类型", required = true)
     val operationType: IndexOperationTypeEnum,
-    @ApiModelProperty("指标对应的插件件代码", required = false)
+    @ApiModelProperty("指标对应的插件代码")
     val atomCode: String? = null,
-    @ApiModelProperty("指标对应的插件版本", required = false)
+    @ApiModelProperty("插件执行版本号")
     val atomVersion: String? = null,
-    @ApiModelProperty("指标执行时机类型", required = true)
+    @ApiModelProperty("完成执行任务数量", required = true)
+    val finishTaskNum: Int,
+    @ApiModelProperty("执行任务总数", required = true)
+    val totalTaskNum: Int,
+    @ApiModelProperty("指标执行时间类型", required = true)
     val executeTimeType: IndexExecuteTimeTypeEnum,
-    @ApiModelProperty("store组件类型", required = true)
-    val storeType: StoreTypeEnum
+    @ApiModelProperty("组件类型", required = true)
+    val storeType: StoreTypeEnum,
+    @ApiModelProperty("创建者", required = true)
+    val creator: String,
+    @ApiModelProperty("修改者", required = true)
+    val modifier: String,
+    @ApiModelProperty("更新时间", required = true)
+    val updateTime: LocalDateTime,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: LocalDateTime
 )
