@@ -261,10 +261,6 @@ class SendNotify @Autowired constructor(
 
         val vars = mutableSetOf<String>()
         value.forEach { re ->
-            if (!re.contains(',')) {
-                vars.add(re)
-                return@forEach
-            }
             vars.addAll(re.parseEnv(variables)
                 .split(",").asSequence().filter { it.isNotBlank() }.map { it.trim() }.toSet()
             )
