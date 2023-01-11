@@ -541,7 +541,10 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspaceName,
                     operator = userId,
                     action = WorkspaceAction.SHARE,
-                    actionMessage = getOpHistory(OpHistoryCopyWriting.SHARE)
+                    actionMessage = String.format(
+                        getOpHistory(OpHistoryCopyWriting.SHARE),
+                        sharedUser
+                    )
                 )
             }
             return true
