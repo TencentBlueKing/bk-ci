@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.pojo.common.index
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
@@ -42,8 +42,6 @@ data class StoreIndexInfo(
     val description: String,
     @ApiModelProperty("等级名称", required = true)
     val indexLevelName: String,
-    @ApiModelProperty("等级图标CSS值", required = true)
-    val iconColor: String,
     @ApiModelProperty("指标状态显示", required = true)
     val hover: String
 )

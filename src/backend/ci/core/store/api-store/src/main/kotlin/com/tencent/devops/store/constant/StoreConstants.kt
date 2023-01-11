@@ -35,7 +35,6 @@ object StoreConstants {
     const val STORE_INDEX_DESCRIPTION = "DESCRIPTION"
     const val STORE_INDEX_ICON_TIPS = "ICON_TIPS"
     const val STORE_INDEX_LEVEL_NAME = "LEVEL_NAME"
-    const val STORE_INDEX_ICON_CSS_VALUE = "ICON_CSS_VALUE"
     const val STORE_CODE = "STORE_CODE"
     const val STORE_NAME = "STORE_NAME"
     const val STORE_TYPE = "STORE_TYPE"

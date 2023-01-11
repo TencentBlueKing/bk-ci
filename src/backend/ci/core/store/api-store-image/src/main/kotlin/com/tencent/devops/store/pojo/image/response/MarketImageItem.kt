@@ -27,7 +27,7 @@
 package com.tencent.devops.store.pojo.image.response
 
 import com.tencent.devops.store.pojo.common.HonorInfo
-import com.tencent.devops.store.pojo.common.StoreIndexInfo
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
