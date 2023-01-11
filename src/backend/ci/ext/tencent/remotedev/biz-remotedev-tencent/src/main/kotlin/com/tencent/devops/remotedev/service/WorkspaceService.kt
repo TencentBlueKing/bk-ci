@@ -419,8 +419,8 @@ class WorkspaceService @Autowired constructor(
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.isSleeping()) {
-                logger.info("$workspace has been stopped, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
+                logger.info("${workspace.name} has been stopped, return error.")
+                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been stopped")
             }
 
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -470,8 +470,8 @@ class WorkspaceService @Autowired constructor(
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.isDeleted()) {
-                logger.info("$workspace has been deleted, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
+                logger.info("${workspace.name} has been deleted, return error.")
+                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been deleted")
             }
 
             dslContext.transaction { configuration ->

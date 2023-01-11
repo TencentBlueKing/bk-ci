@@ -32,7 +32,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.common.exception.RepeatRequestException
 import org.slf4j.LoggerFactory
-import java.util.UUID
 
 /**
  * 主要用于一些同一时间只允许有一个实例运行的地方。
@@ -43,17 +42,8 @@ open class RedisCallLimit(
     private val expiredTimeInSeconds: Long
 ) : AutoCloseable {
     companion object {
-        /**
-         * 调用set后的返回值
-         */
-        private const val OK = "OK"
-
         private val logger = LoggerFactory.getLogger(RedisCallLimit::class.java)
     }
-
-    private val lockValue = UUID.randomUUID().toString()
-
-    private var locked = false
 
     private val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
 
@@ -64,13 +54,11 @@ open class RedisCallLimit(
      * @throws CustomException 已经存在 key ，说明是重复请求
      */
     fun lock(): RedisCallLimit {
-        val result = redisLock.set(lockKey, lockValue, expiredTimeInSeconds)
-        val l = OK.equals(result, true)
-        if (!l) {
+        val result = redisLock.tryLock()
+        if (!result) {
             logger.warn("$lockKey call duplicate, reject it.")
             throw RepeatRequestException(lockKey)
         }
-        locked = true
         return this
     }
 
