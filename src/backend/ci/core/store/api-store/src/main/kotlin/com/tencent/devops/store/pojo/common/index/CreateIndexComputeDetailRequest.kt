@@ -42,7 +42,7 @@ data class CreateIndexComputeDetailRequest(
     @ApiModelProperty("图标提示信息", required = true)
     val iconTips: String,
     @ApiModelProperty("等级名称", required = true)
-    val LevelName: String,
+    val levelName: String,
     @ApiModelProperty("指标代码", required = true)
     @BkField(maxLength = 10, patternStyle = BkStyleEnum.CODE_STYLE)
     val indexCode: String,
