@@ -43,13 +43,13 @@ class WorkspaceSharedDao {
 
     // 删除工作空间共享记录
     fun deleteWorkspaceSharedInfo(
-        workspaceId: Long,
+        workspaceName: String,
         sharedUser: String,
         dslContext: DSLContext
     ) {
         with(TWorkspaceShared.T_WORKSPACE_SHARED) {
             dslContext.delete(this)
-                .where(WORKSPACE_ID.eq(workspaceId))
+                .where(WORKSPACE_NAME.eq(workspaceName))
                 .and(SHARED_USER.equals(sharedUser))
                 .limit(1)
         }
