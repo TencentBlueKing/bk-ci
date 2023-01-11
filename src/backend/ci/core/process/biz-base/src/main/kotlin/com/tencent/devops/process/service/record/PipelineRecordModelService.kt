@@ -34,11 +34,14 @@ import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.JsonUtil.deepCopy
+import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
@@ -58,7 +61,8 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
-    private val pipelineResDao: PipelineResDao,
+    private val pipelineResVersionDao: PipelineResVersionDao,
+    private val pipelineElementService: PipelineElementService,
     private val dslContext: DSLContext
 ) {
 
@@ -109,7 +113,7 @@ class PipelineRecordModelService @Autowired constructor(
         if (matrixContainerFlag) {
             // 查出该次构建对应的流水线基本模型
             val version = buildRecordModel.resourceVersion
-            val modelStr = pipelineResDao.getVersionModelString(
+            val modelStr = pipelineResVersionDao.getVersionModelString(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
@@ -118,7 +122,10 @@ class PipelineRecordModelService @Autowired constructor(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                 params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
             )
-            pipelineBaseMap = JsonUtil.toMap(modelStr)
+            val fullModel = JsonUtil.to(modelStr, Model::class.java)
+            // 为model填充element
+            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+            pipelineBaseMap = JsonUtil.toMap(fullModel)
         }
         buildRecordStages.forEach { buildRecordStage ->
             val stageVarMap = buildRecordStage.stageVar
@@ -170,7 +177,7 @@ class PipelineRecordModelService @Autowired constructor(
                     // 生成矩阵job的变量模型
                     var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
-                    val containerBaseModelMap = containerBaseMap.toMutableMap()
+                    val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
                     matrixContainerVarMap[ID] = matrixContainerId
                     matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
                     matrixContainerVarMap[EXECUTE_COUNT] = matrixRecordContainer.executeCount
