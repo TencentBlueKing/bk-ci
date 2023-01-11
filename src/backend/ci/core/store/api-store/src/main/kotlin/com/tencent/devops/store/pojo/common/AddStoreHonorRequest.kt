@@ -32,7 +32,7 @@ import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("添加组件荣誉请求报文")
+@ApiModel("添加组件荣誉信息请求报文")
 data class AddStoreHonorRequest(
     @ApiModelProperty("荣誉头衔", required = true)
     @BkField(maxLength = 4)
