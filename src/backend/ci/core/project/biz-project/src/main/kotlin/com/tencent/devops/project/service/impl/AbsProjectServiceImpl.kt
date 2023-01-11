@@ -173,7 +173,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes!!
+        val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+        }
         val needApproval = createExtInfo.needApproval
         logger.info("create project : subjectScopes = $subjectScopes")
         try {
@@ -207,9 +209,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                subjectScopes.ifEmpty {
-                    listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
-                }
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
                 val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 val logoAddress = projectCreateInfo.logoAddress
