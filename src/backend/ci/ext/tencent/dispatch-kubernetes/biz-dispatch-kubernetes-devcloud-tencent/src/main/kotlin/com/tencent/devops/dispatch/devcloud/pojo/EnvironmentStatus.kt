@@ -11,7 +11,7 @@ data class EnvironmentStatus(
     val EnvironmentIP: String,
     val clusterId: String,
     val namespace: String,
-    val startTime: String,
+    val startTime: String ? = null,
     val containerStatuses: List<ContainerStatus>,
     val initContainerStatuses: List<ContainerStatus> ?= null
 )
