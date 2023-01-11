@@ -821,8 +821,8 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     frontendType = FrontendTypeEnum.getFrontendTypeObj(htmlTemplateVersion),
                     // 开启插件yml显示
                     yamlFlag = true,
-                    editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     dailyStatisticList = getRecentDailyStatisticList(atomCode),
+                    editFlag = marketAtomCommonService.checkEditCondition(atomCode),
                     honorInfos = storeHonorService.getStoreHonor(userId, StoreTypeEnum.ATOM, atomCode),
                     indexInfos = storeIndexManageService.getStoreIndexInfosByStoreCode(StoreTypeEnum.ATOM, atomCode)
                 )
