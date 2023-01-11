@@ -137,7 +137,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     override fun delete(userId: String, indexId: String): Result<Boolean> {
         //  管理员权限校验
 
-        val indexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
+        val indexBaseInfo =
+            storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
         val atomCode = indexBaseInfo.atomCode
         // 如果运算类型为插件则需要初始化流水线
         if (indexBaseInfo.operationType == IndexOperationTypeEnum.ATOM.name) {
@@ -160,7 +161,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
                     listOf(pipelineId)
                 ).data?.get(storePipelineRelRecord.pipelineId)
                 pipelineBuildInfo?.let {
-                    if (it.status == BuildStatus.PREPARE_ENV.statusName || it.status == BuildStatus.RUNNING.statusName) {
+                    if (it.status == BuildStatus.PREPARE_ENV.statusName ||
+                        it.status == BuildStatus.RUNNING.statusName) {
                         client.get(ServiceBuildResource::class).manualShutdown(
                             userId = userId,
                             projectId = initProjectCode,
@@ -242,7 +244,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         val levelId = storeIndexManageInfoDao.getStoreIndexLevelInfo(
             dslContext,
             indexId,
-            createIndexComputeDetailRequest.LevelName
+            createIndexComputeDetailRequest.levelName
         )?.id
         val tStoreIndexResultRecord = TStoreIndexResultRecord()
         tStoreIndexResultRecord.id = UUIDUtil.generate()
@@ -300,8 +302,11 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     ): Result<Boolean>? {
         val indexCode = storeIndexCreateRequest.indexCode
         // 判断指标代码是否存在
-        val codeCount =
-            storeIndexManageInfoDao.getStoreIndexBaseInfoByCode(dslContext, storeIndexCreateRequest.storeType, indexCode)
+        val codeCount = storeIndexManageInfoDao.getStoreIndexBaseInfoByCode(
+            dslContext,
+            storeIndexCreateRequest.storeType,
+            indexCode
+        )
         if (codeCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
@@ -311,8 +316,11 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         }
         val indexName = storeIndexCreateRequest.indexName
         // 判断指标名称是否存在
-        val nameCount =
-            storeIndexManageInfoDao.getStoreIndexBaseInfoByName(dslContext, storeIndexCreateRequest.storeType, indexName)
+        val nameCount = storeIndexManageInfoDao.getStoreIndexBaseInfoByName(
+            dslContext,
+            storeIndexCreateRequest.storeType,
+            indexName
+        )
         if (nameCount > 0) {
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(

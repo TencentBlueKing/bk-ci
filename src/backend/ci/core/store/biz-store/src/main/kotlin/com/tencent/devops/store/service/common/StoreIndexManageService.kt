@@ -29,11 +29,11 @@ package com.tencent.devops.store.service.common
 
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
-import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
+import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import com.tencent.devops.store.pojo.common.index.StoreIndexCreateRequest
+import com.tencent.devops.store.pojo.common.index.StoreIndexInfo
 
 interface StoreIndexManageService {
 
