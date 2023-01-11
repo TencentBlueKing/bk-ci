@@ -84,7 +84,6 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
     @Value("\${logo.maxUploadLogoSize}")
     private lateinit var maxUploadIconSize: String
 
-
     private val logger = LoggerFactory.getLogger(StoreLogoServiceImpl::class.java)
 
     /**
@@ -250,7 +249,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
         val file = Files.createTempFile(UUIDUtil.generate(), ".$fileType").toFile()
         val output = file.outputStream()
         // svg类型图片不做尺寸检查
-        if("svg" == fileType) {
+        if ("svg" == fileType) {
             val buffer = ByteArray(1024)
             var len: Int
             try {

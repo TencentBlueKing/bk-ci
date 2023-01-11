@@ -1330,6 +1330,4 @@ class AtomDao : AtomBaseDao() {
                 .orderBy(tAtom.CREATE_TIME.desc()).limit(1).fetchOne(0, String::class.java)
         }
     }
-
-
 }

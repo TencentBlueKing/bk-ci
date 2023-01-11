@@ -80,8 +80,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 ) : StoreIndexManageService {
 
     override fun add(userId: String, storeIndexCreateRequest: StoreIndexCreateRequest): Result<Boolean> {
-        //管理员权限校验
-
+        //  管理员权限校验
         val indexCode = storeIndexCreateRequest.indexCode
         // 验证指标代码是否已存在
         val validateResult = validateAddStoreIndexCreateReq(storeIndexCreateRequest)
@@ -136,7 +135,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     }
 
     override fun delete(userId: String, indexId: String): Result<Boolean> {
-        //管理员权限校验
+        //  管理员权限校验
 
         val indexBaseInfo = storeIndexManageInfoDao.getStoreIndexBaseInfoById(dslContext, indexId) ?: return Result(false)
         val atomCode = indexBaseInfo.atomCode
@@ -186,9 +185,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
 
 
     override fun list(userId: String, keyWords: String?, page: Int, pageSize: Int): Page<StoreIndexBaseInfo> {
-        //管理员权限校验
-
-
+        //  管理员权限校验
         val count = storeIndexManageInfoDao.count(dslContext, keyWords)
         val records = storeIndexManageInfoDao.list(dslContext, keyWords, page, pageSize)
         return Page(
@@ -291,8 +288,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         storeCodes: List<String>
     ): Result<Boolean> {
         // 权限校验
-
-        dslContext.transaction {  configuration ->
+        dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             storeIndexManageInfoDao.deleteStoreIndexElementDetailByStoreCode(context, indexCode, storeCodes)
             storeIndexManageInfoDao.deleteStoreIndexResultByStoreCode(context, indexCode, storeCodes)

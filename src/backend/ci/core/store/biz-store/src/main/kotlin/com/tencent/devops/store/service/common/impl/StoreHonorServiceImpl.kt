@@ -156,7 +156,7 @@ class StoreHonorServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             storeHonorDao.createStoreHonorInfo(context, userId, storeHonorInfo)
-            storeHonorDao.batchCreateStoreHonorRel(context,tStoreHonorRelList)
+            storeHonorDao.batchCreateStoreHonorRel(context, tStoreHonorRelList)
         }
         return Result(true)
     }
@@ -225,7 +225,7 @@ class StoreHonorServiceImpl @Autowired constructor(
                 storeHonorInfoMap[storeCode] = honorInfos
             }
         }
-        return  storeHonorInfoMap
+        return storeHonorInfoMap
     }
 
     private fun getStoreCommonDao(storeType: String): AbstractStoreCommonDao {

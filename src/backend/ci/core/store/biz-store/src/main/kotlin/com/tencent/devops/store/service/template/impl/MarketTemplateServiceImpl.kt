@@ -59,7 +59,6 @@ import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.MarketAtomDao
 import com.tencent.devops.store.dao.common.AbstractStoreCommonDao
 import com.tencent.devops.store.dao.common.ClassifyDao
-import com.tencent.devops.store.dao.common.StoreHonorDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
@@ -259,8 +258,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                 storeCodeList = templateCodeList
             )
             val templateHonorInfoMap = storeHonorService.getHonorInfosByStoreCodes(storeType, templateCodeList)
-            val templateIndexInfosMap
-            = storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, templateCodeList)
+            val templateIndexInfosMap =
+                storeIndexManageService.getStoreIndexInfosByStoreCodes(storeType, templateCodeList)
             // 获取成员
             val memberData = storeMemberService.batchListMember(templateCodeList, storeType).data
 

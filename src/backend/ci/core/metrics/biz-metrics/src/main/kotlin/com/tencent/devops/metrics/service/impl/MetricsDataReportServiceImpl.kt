@@ -829,17 +829,17 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
         when {
-            errorCodePrefix == "8" ->{
+            errorCodePrefix == "8" -> {
                 return client.get(ServiceAtomResource::class).isComplianceErrorCode(
                     atomCode,
                     StoreTypeEnum.ATOM,
                     errorCode.toInt()
                 ).data!!
             }
-            errorCodePrefix.startsWith("100") ->{
+            errorCodePrefix.startsWith("100") -> {
                 return true
             }
-            errorCodePrefix.toInt() in 101..599 ->{
+            errorCodePrefix.toInt() in 101..599 -> {
                 return true
             }
             else -> return false
