@@ -181,7 +181,11 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         // 1. 先判断是否是项目管理员
-        val projectInfo = getProjectInfo(projectId)
+        val projectInfo = getResourceInfo(
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
         if (gradeManagerDetail.members.contains(userId)) {
             return true
