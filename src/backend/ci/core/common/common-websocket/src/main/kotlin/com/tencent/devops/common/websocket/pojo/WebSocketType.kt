@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.websocket.pojo
 
+@Suppress("ComplexCondition")
 enum class WebSocketType {
     CODECC, // codecc错误推送
     WEBHOOK, // webhook错误推送
