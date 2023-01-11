@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
@@ -67,7 +68,7 @@ class OpProjectServiceImpl @Autowired constructor(
     private val paasCCService: ProjectPaasCCService,
     private val bkAuthProjectApi: AuthProjectApi,
     private val bsAuthTokenApi: AuthTokenApi,
-    private val bsPipelineAuthServiceCode: AuthServiceCode
+    private val pipelineAuthServiceCode: PipelineAuthServiceCode
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,
     projectDao = projectDao,
@@ -168,7 +169,7 @@ class OpProjectServiceImpl @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NOT_EXIST))
         }
         var isSyn = false
-        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        val accessToken = bsAuthTokenApi.getAccessToken(pipelineAuthServiceCode)
         val paasProjectInfo = paasCCService.getPaasCCProjectInfo(projectCode, accessToken)
         if (paasProjectInfo == null) {
             logger.info("synProject projectCode:$projectCode, paasCC is not exist. start Syn")
@@ -196,7 +197,7 @@ class OpProjectServiceImpl @Autowired constructor(
             }
             isSyn = true
         }
-        val authProjectInfo = bkAuthProjectApi.getProjectInfo(bsPipelineAuthServiceCode, projectCode)
+        val authProjectInfo = bkAuthProjectApi.getProjectInfo(pipelineAuthServiceCode, projectCode)
         if (authProjectInfo == null) {
             logger.info("synProject projectCode:$projectCode, authCenter is not exist. start Syn")
 //            if (isRefresh!!) {
