@@ -3,11 +3,9 @@ package com.tencent.devops.remotedev.cron
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,10 +14,8 @@ import org.springframework.stereotype.Component
 
 @Component
 class WorkspaceCheckJob @Autowired constructor(
-    private val dslContext: DSLContext,
     private val redisHeartBeat: RedisHeartBeat,
     private val redisOperation: RedisOperation,
-    private val remoteDevDispatcher: RemoteDevDispatcher,
     private val workspaceService: WorkspaceService
 ) {
 
@@ -51,9 +47,7 @@ class WorkspaceCheckJob @Autowired constructor(
                         } ready to sleep"
                     )
                     kotlin.runCatching {
-                        if (workspaceService.heartBeatStopWS(workspaceName)) {
-                            redisHeartBeat.deleteWorkspaceHeartbeat("admin", workspaceName)
-                        }
+                        workspaceService.heartBeatStopWS(workspaceName)
                     }.onFailure { logger.warn("heart beat stop ws $workspaceName fail, ${it.message}") }
                 }
             }
