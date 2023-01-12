@@ -181,16 +181,18 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         endDateTime: LocalDateTime
     ): Result<Map<String, Double>> {
         val result = mutableMapOf<String, Double>()
-        atomStatisticsDao.queryAtomComplianceInfo(
-            dslContext = dslContext,
-            projectIds = projectIds,
-            startDateTime = startDateTime,
-            endDateTime = endDateTime
-        ).forEach {
-            val failExecuteCount = (it[BK_FAIL_EXECUTE_COUNT] as BigDecimal).toDouble()
-            val failComplianceCount = it[BK_FAIL_COMPLIANCE_COUNT] as BigDecimal
-            result[it[BK_ATOM_CODE] as String] =
-                if (failExecuteCount == 0.0) 0.0 else failComplianceCount.toDouble() / failExecuteCount
+        projectIds.forEach { projectId ->
+            atomStatisticsDao.queryAtomComplianceInfo(
+                dslContext = dslContext,
+                projectId = projectId,
+                startDateTime = startDateTime,
+                endDateTime = endDateTime
+            ).forEach {
+                val failExecuteCount = (it[BK_FAIL_EXECUTE_COUNT] as BigDecimal).toDouble()
+                val failComplianceCount = it[BK_FAIL_COMPLIANCE_COUNT] as BigDecimal
+                result[it[BK_ATOM_CODE] as String] =
+                    if (failExecuteCount == 0.0) 0.0 else failComplianceCount.toDouble() / failExecuteCount
+            }
         }
         return Result(result)
     }
