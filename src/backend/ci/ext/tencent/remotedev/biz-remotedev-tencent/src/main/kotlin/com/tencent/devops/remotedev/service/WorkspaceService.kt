@@ -70,6 +70,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceStatus
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.service.redis.RedisWaiting4K8s
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
@@ -99,6 +100,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
+    private val redisHeartBeat: RedisHeartBeat,
     private val objectMapper: ObjectMapper
 ) {
 
@@ -284,6 +286,8 @@ class WorkspaceService @Autowired constructor(
                     )
                 }
 
+                redisHeartBeat.refreshHeartbeat(workspaceName)
+
                 return WorkspaceResponse(
                     workspaceName = workspaceName,
                     workspaceHost = it.environmentHost ?: ""
@@ -391,6 +395,9 @@ class WorkspaceService @Autowired constructor(
                             )
                         )
                     }
+
+                    redisHeartBeat.refreshHeartbeat(workspaceName)
+
                     return WorkspaceResponse(
                         workspaceName = workspace.name,
                         workspaceHost = it.environmentHost ?: ""
