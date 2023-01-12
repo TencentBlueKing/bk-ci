@@ -295,8 +295,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             //判断模板里镜像是否发布
             templateModel.stages.forEach { stage ->
                 stage.containers.forEach c@{ container  ->
-                    if (container is VMBuildContainer) {
-                        val imageCode = (container.dispatchType as StoreDispatchType).imageCode
+                    if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
+                        val imageCode = (container.dispatchType as StoreDispatchType).imageName
                         val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
                         if (imageCode.isNullOrBlank()){
                             return@c
