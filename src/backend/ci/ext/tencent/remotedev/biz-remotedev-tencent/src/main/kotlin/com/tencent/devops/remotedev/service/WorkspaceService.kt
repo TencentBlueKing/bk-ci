@@ -405,7 +405,6 @@ class WorkspaceService @Autowired constructor(
                 } else {
                     // 启动失败
                     logger.warn("start workspace $workspaceName failed")
-                    workspaceDao.deleteWorkspace(workspaceName, dslContext)
                     throw CustomException(Response.Status.BAD_REQUEST, "工作空间启动失败")
                 }
             }
