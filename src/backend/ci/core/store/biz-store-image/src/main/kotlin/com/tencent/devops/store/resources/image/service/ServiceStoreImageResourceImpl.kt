@@ -50,6 +50,19 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getImageStatusByCodeAndVersion(
+        imageCode: String,
+        imageVersion: String
+    ): Result<String> {
+        return Result(
+            imageService.getImageStatusByCodeAndVersion(
+                imageCode = imageCode,
+                imageVersion = imageVersion,
+                interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
+            )
+        )
+    }
+
     override fun isInstalled(userId: String, projectCode: String, imageCode: String): Result<Boolean> {
         return Result(
             // 公共镜像视为默认安装
