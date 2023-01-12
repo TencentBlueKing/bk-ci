@@ -226,7 +226,7 @@ class AtomStatisticsDao {
                 ATOM_CODE.`as`(BK_ATOM_CODE),
                 sum(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
                 sum(FAIL_COMPLIANCE_COUNT).`as`(BK_FAIL_COMPLIANCE_COUNT)
-            )
+            ).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .groupBy(ATOM_CODE)
