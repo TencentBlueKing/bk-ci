@@ -152,10 +152,10 @@
                     },
                     {
                         id: 'OAUTHTOKEN',
-                        name: this.$t('setting.ticket.accessToken'),
-                        desc: this.$t('setting.ticket.accessTokenDesc'),
+                        name: this.$t('setting.ticket.oauthToken'),
+                        desc: this.$t('setting.ticket.oauthTokenDesc'),
                         content: [
-                            { id: 'v1', label: this.$t('setting.ticket.accessToken'), type: 'password', required: true, rules: [this.requireRule('oauth_token')], placeholder: this.$t('setting.ticket.accessTokenDesc') }
+                            { id: 'v1', label: this.$t('setting.ticket.oauthToken'), type: 'password', required: true, rules: [this.requireRule('oauth_token')], placeholder: this.$t('setting.ticket.oauthTokenDesc') }
                         ]
                     }
                 ],
