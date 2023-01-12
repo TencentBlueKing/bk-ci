@@ -100,8 +100,7 @@ class WorkspaceService @Autowired constructor(
     private val client: Client,
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val redisHeartBeat: RedisHeartBeat,
-    private val objectMapper: ObjectMapper
+    private val redisHeartBeat: RedisHeartBeat
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
@@ -123,6 +122,7 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
         const val REDIS_UPDATE_EVENT_PREFIX = "remotedev:updateEvent:"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
+        private const val defaultPageSize = 20
     }
 
     fun getAuthorizedGitRepository(
@@ -133,7 +133,7 @@ class WorkspaceService @Autowired constructor(
     ): List<RemoteDevRepository> {
         logger.info("$userId get user git repository|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: defaultPageSize
         return checkOauthIllegal(userId) {
             gitTransferService.getProjectList(
                 userId = userId,
@@ -155,7 +155,7 @@ class WorkspaceService @Autowired constructor(
     ): List<String> {
         logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: defaultPageSize
         return checkOauthIllegal(userId) {
             gitTransferService.getProjectBranches(
                 userId = userId,
@@ -245,8 +245,7 @@ class WorkspaceService @Autowired constructor(
 
         RedisWaiting4K8s(
             redisOperation,
-            "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId",
-            objectMapper
+            "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId"
         ).waiting().let {
             if (it?.status == true) {
                 val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -351,8 +350,7 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId",
-                objectMapper = objectMapper
+                "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId"
             ).waiting().let {
                 if (it?.status == true) {
                     val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceName).firstOrNull()
@@ -450,8 +448,7 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
-                objectMapper = objectMapper
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId"
             ).waiting().let {
                 if (it?.status == true) {
                     doStopWS(userId, status, workspaceName)
@@ -509,8 +506,7 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
-                objectMapper = objectMapper
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId"
             ).waiting().let {
                 if (it?.status == true) {
                     doDeleteWS(userId, status, workspaceName)
@@ -682,7 +678,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get workspace time line from id $workspaceName")
         permissionService.checkPermission(userId, workspaceName)
         val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: 20
+        val pageSizeNotNull = pageSize ?: defaultPageSize
         val count = workspaceOpHistoryDao.countOpHistory(dslContext, workspaceName)
         val result = workspaceOpHistoryDao.limitFetchOpHistory(
             dslContext = dslContext,
@@ -766,8 +762,7 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
-                objectMapper = objectMapper
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId"
             ).waiting().let {
                 if (it != null) {
                     doStopWS("system", status, workspace.name)
@@ -824,8 +819,7 @@ class WorkspaceService @Autowired constructor(
             )
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
-                objectMapper = objectMapper
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId"
             ).waiting().let {
                 if (it != null) {
                     doDeleteWS("system", status, workspace.name)
@@ -926,11 +920,11 @@ class WorkspaceService @Autowired constructor(
         }
 
     private fun generateWorkspaceName(userId: String): String {
-        val subUserId = if (userId.length > 14) {
-            userId.substring(0 until 14)
+        val subUserId = if (userId.length > Constansts.subUserIdLimitLen) {
+            userId.substring(0 until Constansts.subUserIdLimitLen)
         } else {
             userId
         }
-        return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(16)}"
+        return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 }

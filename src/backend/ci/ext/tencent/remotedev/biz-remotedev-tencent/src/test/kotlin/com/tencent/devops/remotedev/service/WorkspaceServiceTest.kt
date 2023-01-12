@@ -12,10 +12,12 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
+import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -36,7 +38,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val sshService: SshPublicKeysService = mockk()
     private val dispatcher: RemoteDevDispatcher = mockk()
     private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
-
+    private val remoteDevSettingDao: RemoteDevSettingDao = mockk()
+    private val redisHeartBeat: RedisHeartBeat = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -50,7 +53,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             sshService = sshService,
             client = client,
             dispatcher = dispatcher,
-            objectMapper = objectMapper
+            remoteDevSettingDao = remoteDevSettingDao,
+            redisHeartBeat = redisHeartBeat
         ),
         recordPrivateCalls = true
     )
