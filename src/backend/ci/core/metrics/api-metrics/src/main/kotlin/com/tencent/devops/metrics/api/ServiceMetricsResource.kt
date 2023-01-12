@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import java.time.LocalDateTime
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
@@ -97,11 +97,7 @@ interface ServiceMetricsResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
-        @ApiParam("项目列表", required = false)
-        projectIds: List<String>,
-        @ApiParam("开始时间", required = true)
-        startDateTime: LocalDateTime,
-        @ApiParam("结束时间", required = true)
-        endDateTime: LocalDateTime
+        @ApiParam("查询项目列表视图", required = true)
+        queryProjectInfoVO: QueryProjectInfoVO
     ): Result<Map<String, Double>>
 }
