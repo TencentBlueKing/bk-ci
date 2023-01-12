@@ -154,7 +154,7 @@ interface ServicePipelineViewResource {
         viewName: String?,
         @ApiParam("维度是否为项目,和viewName搭配使用", required = false)
         @QueryParam("isProject")
-        isProject: Boolean?,
+        isProject: Boolean?
     ): Result<PipelineNewView>
 
     @ApiOperation("删除视图")
