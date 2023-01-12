@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
@@ -295,9 +296,19 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
             templateModel.stages.forEach { stage ->
                 stage.containers.forEach c@{ container  ->
                     if (container is VMBuildContainer) {
-                        if (!isRelease(container,userId)){
-                            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
+                        val imageCode = (container.dispatchType as StoreDispatchType).imageCode
+                        val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
+                        if (imageCode.isNullOrBlank()){
+                            return@c
+                        }else{
+                            if (imageVersion.isNullOrBlank()) {
+                                throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
+                            }
+                            if (!isRelease(userId,imageCode,imageVersion)){
+                                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
+                            }
                         }
+
                     }else{
                         return@c
                     }
@@ -312,15 +323,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         }
     }
 
-    private fun isRelease(container: VMBuildContainer, userId: String):Boolean {
-        val imageCode = (container.dispatchType as DockerDispatchType).imageCode
-        val imageVersion= (container.dispatchType as DockerDispatchType).imageVersion
-        if (null == imageCode) {
-            throw InvalidParamException("Input:($userId,$imageCode),imageCode is null")
-        }
-        if (null == imageVersion) {
-            throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
-        }
+    private fun isRelease(userId: String,imageCode: String,imageVersion: String):Boolean {
         val imageDetail = client.get(ServiceStoreImageResource::class)
             .getImageDetailByCodeAndVersion(userId,imageCode,imageVersion)
         val imageStatus= imageDetail.data?.imageStatus
