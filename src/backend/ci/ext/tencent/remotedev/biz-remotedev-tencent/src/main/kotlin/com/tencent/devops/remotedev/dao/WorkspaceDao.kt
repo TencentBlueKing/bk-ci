@@ -160,7 +160,9 @@ class WorkspaceDao {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectFrom(this)
-                .where(CREATOR.eq(userId)).unionAll(
+                .where(CREATOR.eq(userId))
+                .and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                .unionAll(
                     DSL.selectFrom(this).where(
                         NAME.`in`(
                             DSL.select(shared.WORKSPACE_NAME).from(shared).where(

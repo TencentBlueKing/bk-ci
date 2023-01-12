@@ -445,16 +445,6 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val encKey = ShaUtils.sha256("$appId,$timestampMillis,$userId,$requestId,$token")
         headerBuilder["Key"] = encKey
 
-/*        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        headerBuilder["TIMESTAMP"] = timestamp
-        val staffId = "mock"
-        headerBuilder["STAFFID"] = staffId
-        headerBuilder["X-EXT-DATA"] = ""
-        val seq = "mock"
-        headerBuilder["X-RIO-SEQ"] = seq
-        val signature = ShaUtils.sha256("$timestamp$proxyToken$seq,$staffId,$userId,$timestamp")
-        headerBuilder["SIGNATURE"] = signature.toUpperCase()*/
-
         return headerBuilder
     }
 }
