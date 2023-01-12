@@ -6,4 +6,6 @@ object Constansts {
     const val devFileDirectoryName = ".preci"
     const val prefixWorkPath = "/data/landun/workspace/"
     const val timeoutDays = 14
+    const val subUserIdLimitLen = 14
+    const val workspaceNameSuffixLimitLen = 16
 }
