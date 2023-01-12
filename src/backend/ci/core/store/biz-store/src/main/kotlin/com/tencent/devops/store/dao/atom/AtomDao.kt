@@ -1284,7 +1284,7 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             return dslContext.select(CODE_SRC)
                 .from(this)
-                .where(ATOM_CODE.eq(atomCode))
+                .where(ATOM_CODE.eq(atomCode).and(LATEST_FLAG.eq(true)))
                 .fetchOne(0, String::class.java)
         }
     }
