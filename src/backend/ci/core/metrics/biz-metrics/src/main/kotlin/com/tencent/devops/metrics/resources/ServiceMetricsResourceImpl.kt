@@ -34,12 +34,12 @@ import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
+import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.service.PipelineOverviewManageService
 import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil
-import java.time.LocalDateTime
 
 @RestResource
 class ServiceMetricsResourceImpl constructor(
@@ -97,15 +97,13 @@ class ServiceMetricsResourceImpl constructor(
 
     override fun queryAtomComplianceInfo(
         userId: String,
-        projectIds: List<String>,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime
+        queryProjectInfoVO: QueryProjectInfoVO
     ): Result<Map<String, Double>> {
         return atomStatisticsManageService.queryAtomComplianceInfo(
             userId = userId,
-            projectIds = projectIds,
-            startDateTime = startDateTime,
-            endDateTime = endDateTime
+            projectIds = queryProjectInfoVO.projectIds,
+            startDateTime = queryProjectInfoVO.startDateTime,
+            endDateTime = queryProjectInfoVO.endDateTime
         )
     }
 }
