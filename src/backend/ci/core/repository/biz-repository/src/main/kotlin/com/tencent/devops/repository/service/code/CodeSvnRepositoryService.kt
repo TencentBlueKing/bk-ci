@@ -31,24 +31,23 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Record
-import org.jooq.Result
 import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -64,8 +63,9 @@ class CodeSvnRepositoryService @Autowired constructor(
         return CodeSvnRepository::class.java.name
     }
 
-    override fun create(projectId: String, userId: String, token: String, repository: CodeSvnRepository): Long {
-        var repositoryId: Long = 0L
+    override fun create(projectId: String, userId: String, repository: CodeSvnRepository): Long {
+        checkCredentialInfo(projectId = projectId, repository = repository)
+        var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryId = repositoryDao.create(
@@ -141,55 +141,64 @@ class CodeSvnRepositoryService @Autowired constructor(
         )
     }
 
-    override fun checkToken(
-        credentialList: List<String>,
-        repository: CodeSvnRepository,
-        credentialType: CredentialType
+    fun checkToken(
+        repoCredentialInfo: RepoCredentialInfo,
+        repository: CodeSvnRepository
     ): TokenCheckResult {
-        val svnCredential = CredentialUtils.getCredential(repository, credentialList, credentialType)
         return scmService.checkPrivateKeyAndToken(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
             type = ScmType.CODE_SVN,
-            privateKey = svnCredential.privateKey,
-            passPhrase = svnCredential.passPhrase,
+            privateKey = repoCredentialInfo.privateKey,
+            passPhrase = repoCredentialInfo.passPhrase,
             token = null,
             region = repository.region,
-            userName = svnCredential.username
+            userName = repoCredentialInfo.username
         )
     }
 
-    override fun getAuthMap(
-        repositoryRecordList: Result<TRepositoryRecord>
-    ): Map<Long, Record> {
-        val svnAuthMap: MutableMap<Long, Record> = HashMap()
-        val svnRepoIds =
-            repositoryRecordList.filter { it.type == ScmType.CODE_SVN.name }
-                    .map { it.repositoryId }.toSet()
-        repositoryCodeSvnDao.list(dslContext, svnRepoIds)
-                .forEach { svnAuthMap.put(it.repositoryId, it) }
-        return svnAuthMap
-    }
-
-    override fun getAuth(
-        authMap: Map<String, Map<Long, Record>>,
-        repository: TRepositoryRecord
-    ): Pair<String, String?> {
-        val svnRepo = authMap[ScmType.CODE_SVN.name]?.get(repository.repositoryId)
-        return Pair(
-            (svnRepo?.get(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN.SVN_TYPE)?.toUpperCase() ?: RepoAuthType.SSH.name),
-            svnRepo?.get(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN.CREDENTIAL_ID)
-        )
-    }
-
-    override fun needCheckToken(repository: CodeSvnRepository): Boolean {
+    fun needCheckToken(repository: CodeSvnRepository): Boolean {
         return true
     }
 
-    override fun getCredentialInfo(
-        projectId: String,
-        repository: CodeSvnRepository
-    ): Pair<List<String>, CredentialType> {
-        return credentialService.getCredentialInfo(projectId = projectId, repository = repository)
+    /**
+     * 检查凭证信息
+     */
+    private fun checkCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
+        return if (needCheckToken(repository)) {
+            // 凭证信息
+            val repoCredentialInfo: RepoCredentialInfo = credentialService.getCredentialInfo(
+                projectId = projectId,
+                repository = repository
+            )
+            val checkResult: TokenCheckResult = checkToken(
+                repoCredentialInfo = repoCredentialInfo,
+                repository = repository
+            )
+            if (!checkResult.result) {
+                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+                throw OperationException(checkResult.message)
+            }
+            repoCredentialInfo
+        } else {
+            EmptyCredentialInfo()
+        }
+    }
+
+    override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
+        return repositoryCodeSvnDao.list(
+            dslContext = dslContext,
+            repositoryIds = repositoryIds.toSet()
+        ).associateBy({ it.repositoryId }, {
+            RepoAuthInfo(
+                authType = it.svnType?.toUpperCase() ?: RepoAuthType.SSH.name,
+                credentialId = it.credentialId,
+                svnType = it.svnType
+            )
+        })
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
     }
 }

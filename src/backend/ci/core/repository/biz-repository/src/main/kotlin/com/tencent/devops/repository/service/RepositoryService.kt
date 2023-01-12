@@ -45,7 +45,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.repository.tables.TRepositoryCodeSvn
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
@@ -53,6 +52,7 @@ import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.RepositoryInfoWithPermission
+import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -67,8 +67,8 @@ import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
+import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
-import org.jooq.Record
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -413,7 +413,8 @@ class RepositoryService @Autowired constructor(
                         projectName = gitProjectInfo.namespaceName,
                         userName = repo.userName,
                         credentialId = repo.credentialId,
-                        authType = repo.authType
+                        authType = repo.authType,
+                        gitProjectId = StringUtils.EMPTY
                     )
                 }
                 Result(gitProjectInfo)
@@ -430,7 +431,7 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-                        .contains("bkdevops-extension-service", true)
+                .contains("bkdevops-extension-service", true)
         ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
@@ -470,9 +471,8 @@ class RepositoryService @Autowired constructor(
             )
         }
         val repositoryService = CodeRepositoryServiceRegistrar.getService(repository = repository)
-        val token = repositoryService.checkToken(projectId = projectId, repository = repository)
         val repositoryId =
-            repositoryService.create(projectId = projectId, userId = userId, token = token, repository = repository)
+            repositoryService.create(projectId = projectId, userId = userId, repository = repository)
         createResource(userId, projectId, repositoryId, repository.aliasName)
         return repositoryId
     }
@@ -566,7 +566,6 @@ class RepositoryService @Autowired constructor(
             )
         }
         val codeRepositoryService = CodeRepositoryServiceRegistrar.getService(repository)
-        codeRepositoryService.checkToken(projectId = projectId, repository = repository)
         codeRepositoryService.edit(
             userId = userId,
             projectId = projectId,
@@ -651,17 +650,20 @@ class RepositoryService @Autowired constructor(
             sortBy = sortBy,
             sortType = sortType
         )
-        val authMap = getAuthMap(repositoryRecordList = repositoryRecordList)
+        val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
+        val repoAuthInfoMap: MutableMap<Long, RepoAuthInfo> = mutableMapOf()
+        repoGroup.map { (type, repositoryIds) ->
+            {
+                // 1. 获取处理类
+                val codeGitRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = type)
+                // 2. 得到授权身份<repoId, authInfo>
+                repoAuthInfoMap.putAll(codeGitRepositoryService.getAuthInfo(repositoryIds))
+            }
+        }
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
-            val codeRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = it.type)
-            val authInfo: Pair<String, String?> = codeRepositoryService.getAuth(
-                authMap = authMap,
-                repository = it
-            )
-            val svnType = authMap[ScmType.CODE_SVN.name]?.get(it.repositoryId)
-                    ?.get(TRepositoryCodeSvn.T_REPOSITORY_CODE_SVN.SVN_TYPE)
+            val authInfo: RepoAuthInfo = repoAuthInfoMap[it.repositoryId]!!
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -670,9 +672,9 @@ class RepositoryService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
-                authType = authInfo.first,
-                svnType = svnType,
-                authIdentity = authInfo.second
+                authType = authInfo.authType,
+                svnType = authInfo.svnType,
+                authIdentity = authInfo.credentialId
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
@@ -1044,22 +1046,6 @@ class RepositoryService @Autowired constructor(
             token = token,
             tokenType = finalTokenType
         )
-    }
-
-    fun getAuthMap(repositoryRecordList: org.jooq.Result<TRepositoryRecord>): MutableMap<String, Map<Long, Record>> {
-        val authMap: MutableMap<String, Map<Long, Record>> = HashMap()
-        val codeGitRepositoryService =
-            CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = ScmType.CODE_GIT.name)
-        authMap[ScmType.CODE_GIT.name] = codeGitRepositoryService.getAuthMap(repositoryRecordList)
-        val codeGitLabRepositoryService =
-            CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = ScmType.CODE_GITLAB.name)
-        authMap[ScmType.CODE_GITLAB.name] = codeGitLabRepositoryService.getAuthMap(repositoryRecordList)
-        val codeSvnRepositoryService =
-            CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = ScmType.CODE_SVN.name)
-        authMap[ScmType.CODE_SVN.name] = codeSvnRepositoryService.getAuthMap(repositoryRecordList)
-        val codeP4RepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = ScmType.CODE_P4.name)
-        authMap[ScmType.CODE_P4.name] = codeP4RepositoryService.getAuthMap(repositoryRecordList)
-        return authMap
     }
 
     companion object {

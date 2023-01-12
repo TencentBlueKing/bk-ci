@@ -24,36 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.repository.service.code
+package com.tencent.devops.repository.pojo.credential
 
-import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
-import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
+import io.swagger.annotations.ApiModelProperty
+import org.apache.commons.lang3.StringUtils
 
-interface CodeRepositoryService<T> {
-
-    /**
-     * 代码库类型
-     */
-    fun repositoryType(): String
-
-    /**
-     * 创建代码库
-     */
-    fun create(projectId: String, userId: String, repository: T): Long
-
-    /**
-     * 编辑代码库
-     */
-    fun edit(userId: String, projectId: String, repositoryHashId: String, repository: T, record: TRepositoryRecord)
-
-    /**
-     * 代码库组成
-     */
-    fun compose(repository: TRepositoryRecord): Repository
-
-    /**
-     * 获取授权信息
-     */
-    fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
-}
+data class UserNamePasswordCredentialInfo(
+    @ApiModelProperty("用户名密码授权Token")
+    override val token: String,
+    @ApiModelProperty("用户名")
+    override val username: String,
+    @ApiModelProperty("密码")
+    override val password: String,
+    override val privateKey: String = StringUtils.EMPTY,
+    override val passPhrase: String? = null
+) : RepoCredentialInfo
