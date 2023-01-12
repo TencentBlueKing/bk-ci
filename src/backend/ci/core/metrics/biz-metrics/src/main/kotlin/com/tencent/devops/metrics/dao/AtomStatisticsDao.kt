@@ -229,6 +229,7 @@ class AtomStatisticsDao {
             )
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
+                .groupBy(ATOM_CODE)
                 .fetch()
         }
     }
