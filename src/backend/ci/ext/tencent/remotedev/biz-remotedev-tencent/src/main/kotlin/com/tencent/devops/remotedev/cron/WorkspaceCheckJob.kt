@@ -65,7 +65,7 @@ class WorkspaceCheckJob @Autowired constructor(
     }
 
     /**
-     * 每天凌晨2点触发，检测空闲超过七天的工作空间并销毁
+     * 每天凌晨2点触发，检测空闲超过14天的工作空间并销毁
      */
     @Scheduled(cron = "0 0 2 * * ?")
     fun clearIdleWorkspace() {
