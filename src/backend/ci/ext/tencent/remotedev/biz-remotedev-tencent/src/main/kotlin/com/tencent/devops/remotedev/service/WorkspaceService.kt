@@ -248,7 +248,7 @@ class WorkspaceService @Autowired constructor(
             "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId",
             objectMapper
         ).waiting().let {
-            if (it != null) {
+            if (it?.status == true) {
                 val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
                     ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceId not find")
                 dslContext.transaction { configuration ->
@@ -354,7 +354,7 @@ class WorkspaceService @Autowired constructor(
                 "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId",
                 objectMapper = objectMapper
             ).waiting().let {
-                if (it != null) {
+                if (it?.status == true) {
                     val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceName).firstOrNull()
                     dslContext.transaction { configuration ->
                         val transactionContext = DSL.using(configuration)
@@ -453,7 +453,7 @@ class WorkspaceService @Autowired constructor(
                 "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
                 objectMapper = objectMapper
             ).waiting().let {
-                if (it != null) {
+                if (it?.status == true) {
                     doStopWS(userId, status, workspaceName)
                     return true
                 } else {
@@ -512,7 +512,7 @@ class WorkspaceService @Autowired constructor(
                 "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
                 objectMapper = objectMapper
             ).waiting().let {
-                if (it != null) {
+                if (it?.status == true) {
                     doDeleteWS(userId, status, workspaceName)
                     return true
                 } else {
