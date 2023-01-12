@@ -84,6 +84,7 @@ class WorkspaceListener @Autowired constructor(
     @BkTimed
     fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
         var environmentHost = ""
+        var status = true
         try {
             logger.info("Start to handle workspace operate ($event)")
             when (event.type) {
@@ -103,6 +104,7 @@ class WorkspaceListener @Autowired constructor(
             }
         } catch (t: Throwable) {
             logger.warn("Fail to handle workspace operate ($event)", t)
+            status = false
         } finally {
             // 业务逻辑处理完成回调remotedev事件
             remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
@@ -110,7 +112,7 @@ class WorkspaceListener @Autowired constructor(
                 userId = event.userId,
                 workspaceName = event.workspaceName,
                 type = event.type,
-                status = true,
+                status = status,
                 environmentHost = environmentHost,
                 environmentUid = ""
             ))

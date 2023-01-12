@@ -39,7 +39,6 @@ import org.slf4j.LoggerFactory
 open class RedisWaiting4K8s(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
-    private val objectMapper: ObjectMapper,
     private val expiredCount: Int = 90
 ) {
     companion object {
