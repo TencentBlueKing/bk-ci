@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.service.image.ImageFeatureService
@@ -50,6 +51,21 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         )
     }
 
+    override fun getImageDetailByCodeAndVersion(
+        userId: String,
+        imageCode: String,
+        imageVersion: String
+    ): Result<ImageDetail> {
+        return Result(
+            imageService.getImageDetailByCodeAndVersion(
+                userId = userId,
+                imageCode = imageCode,
+                imageVersion = imageVersion,
+                interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
+            )
+        )
+    }
+
     override fun isInstalled(userId: String, projectCode: String, imageCode: String): Result<Boolean> {
         return Result(
             // 公共镜像视为默认安装
@@ -61,6 +77,7 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
                 )
         )
     }
+
 
     override fun getImageRepoInfoByCodeAndVersion(
         userId: String,

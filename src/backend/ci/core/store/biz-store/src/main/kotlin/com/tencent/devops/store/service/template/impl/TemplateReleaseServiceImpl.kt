@@ -28,13 +28,17 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
+import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
@@ -181,6 +185,14 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
+        val templateDetailResult = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(templateCode)
+        if (templateDetailResult.isNotOk()) {
+            // 抛出错误提示
+            return Result(templateDetailResult.status, templateDetailResult.message ?: "")
+        }
+        val templateDetail = templateDetailResult.data
+        val templateModel = templateDetail?.templateModel
+            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在
@@ -279,6 +291,18 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     )
                 }
             }
+            //判断模板里镜像是否发布
+            templateModel.stages.forEach { stage ->
+                stage.containers.forEach c@{ container  ->
+                    if (container is VMBuildContainer) {
+                        if (!isRelease(container,userId)){
+                            return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
+                        }
+                    }else{
+                        return@c
+                    }
+                }
+            }
             return Result(templateId)
         } else {
             return MessageCodeUtil.generateResponseDataObject(
@@ -286,6 +310,21 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 params = arrayOf(templateCode)
             )
         }
+    }
+
+    private fun isRelease(container: VMBuildContainer, userId: String):Boolean {
+        val imageCode = (container.dispatchType as DockerDispatchType).imageCode
+        val imageVersion= (container.dispatchType as DockerDispatchType).imageVersion
+        if (null == imageCode) {
+            throw InvalidParamException("Input:($userId,$imageCode),imageCode is null")
+        }
+        if (null == imageVersion) {
+            throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
+        }
+        val imageDetail = client.get(ServiceStoreImageResource::class)
+            .getImageDetailByCodeAndVersion(userId,imageCode,imageVersion)
+        val imageStatus= imageDetail.data?.imageStatus
+        return "RELEASED" == imageStatus
     }
 
     private fun upgradeMarketTemplate(
