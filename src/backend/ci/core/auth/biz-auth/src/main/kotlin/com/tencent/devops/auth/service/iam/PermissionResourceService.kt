@@ -151,6 +151,13 @@ interface PermissionResourceService {
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean
 
+    fun deleteMember(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean
+
     fun deleteGroup(
         userId: String,
         projectId: String,

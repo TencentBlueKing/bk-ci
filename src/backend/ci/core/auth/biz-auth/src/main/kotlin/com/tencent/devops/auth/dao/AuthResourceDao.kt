@@ -47,6 +47,7 @@ class AuthResourceDao {
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        enable: Boolean,
         relationId: String
     ): Int {
         val now = LocalDateTime.now()
@@ -57,6 +58,7 @@ class AuthResourceDao {
                 RESOURCE_TYPE,
                 RESOURCE_CODE,
                 RESOURCE_NAME,
+                ENABLE,
                 RELATION_ID,
                 CREATE_TIME,
                 CREATE_USER,
@@ -67,6 +69,7 @@ class AuthResourceDao {
                 resourceType,
                 resourceCode,
                 resourceName,
+                enable,
                 relationId,
                 now,
                 userId,

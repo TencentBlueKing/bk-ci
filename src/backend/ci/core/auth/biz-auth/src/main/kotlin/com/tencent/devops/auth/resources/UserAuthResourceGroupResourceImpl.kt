@@ -28,129 +28,79 @@
 
 package com.tencent.devops.auth.resources
 
-import com.tencent.devops.auth.api.user.UserAuthResourceResource
-import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserAuthResourceResourceImpl @Autowired constructor(
+class UserAuthResourceGroupResourceImpl @Autowired constructor(
     private val permissionResourceService: PermissionResourceService
-) : UserAuthResourceResource {
-    override fun hasManagerPermission(
+) : UserAuthResourceGroupResource {
+    override fun getGroupPolicies(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
+        groupId: Int
+    ): Result<List<String>> {
+        return Result(
+            permissionResourceService.getGroupPolicies(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                groupId = groupId
+            )
+        )
+    }
+
+    override fun renewal(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.hasManagerPermission(
+            permissionResourceService.renewal(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
-                resourceCode = resourceCode
+                groupId = groupId,
+                memberRenewalDTO = memberRenewalDTO
             )
         )
     }
 
-    override fun isEnablePermission(
+    override fun deleteMember(
+        userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
+        groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.isEnablePermission(
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        )
-    }
-
-    override fun listGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Result<List<IamGroupInfoVo>> {
-        return Result(
-            permissionResourceService.listGroup(
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        )
-    }
-
-    override fun listUserBelongGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Result<List<IamGroupMemberInfoVo>> {
-        return Result(
-            permissionResourceService.listUserBelongGroup(
+            permissionResourceService.deleteMember(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
-                resourceCode = resourceCode
+                groupId = groupId
             )
         )
     }
 
-    override fun enable(
+    override fun deleteGroup(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
+        groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.enableResourcePermission(
+            permissionResourceService.deleteMember(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        )
-    }
-
-    override fun disable(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Result<Boolean> {
-        return Result(
-            permissionResourceService.disableResourcePermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-        )
-    }
-
-    override fun listResoureces(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceName: String?,
-        page: Int,
-        pageSize: Int
-    ): Result<Pagination<AuthResourceInfo>> {
-        return Result(
-            permissionResourceService.listResoureces(
-                userId = userId,
-                projectId = projectId,
-                resourceType = resourceType,
-                resourceName = resourceName,
-                page = page,
-                pageSize = pageSize
+                groupId = groupId
             )
         )
     }

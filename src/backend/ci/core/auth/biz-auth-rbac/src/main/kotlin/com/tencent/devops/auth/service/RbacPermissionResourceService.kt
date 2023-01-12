@@ -106,6 +106,8 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
+            // 项目默认开启权限管理
+            enable = resourceType == AuthResourceType.PROJECT.value,
             relationId = managerId.toString()
         )
         return true
@@ -174,6 +176,7 @@ class RbacPermissionResourceService(
         return true
     }
 
+    @Suppress("ReturnCount")
     override fun hasManagerPermission(
         userId: String,
         projectId: String,
@@ -190,15 +193,17 @@ class RbacPermissionResourceService(
         if (gradeManagerDetail.members.contains(userId)) {
             return true
         }
-        // 2. 判断是否是资源管理员
-        val resourceInfo = getResourceInfo(
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
-        if (subsetManagerDetail.members.contains(userId)) {
-            return true
+        if (resourceType != AuthResourceType.PROJECT.value) {
+            // 2. 判断是否是资源管理员
+            val resourceInfo = getResourceInfo(
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
+            if (subsetManagerDetail.members.contains(userId)) {
+                return true
+            }
         }
         return false
     }
@@ -393,7 +398,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun deleteGroup(
+    override fun deleteMember(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -405,6 +410,27 @@ class RbacPermissionResourceService(
             ManagerScopesEnum.getType(ManagerScopesEnum.USER),
             userId
         )
+        return true
+    }
+
+    override fun deleteGroup(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean {
+        logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
+        if (!hasManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId
+        )) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
+        iamV2ManagerService.deleteRoleGroupV2(groupId)
         return true
     }
 
