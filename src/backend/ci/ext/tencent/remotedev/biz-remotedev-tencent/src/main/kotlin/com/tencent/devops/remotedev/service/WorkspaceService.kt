@@ -509,6 +509,9 @@ class WorkspaceService @Autowired constructor(
                 "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId"
             ).waiting().let {
                 if (it?.status == true) {
+                    // 删除心跳缓存
+                    redisHeartBeat.deleteWorkspaceHeartbeat(userId, workspaceName)
+
                     doDeleteWS(userId, status, workspaceName)
                     return true
                 } else {
