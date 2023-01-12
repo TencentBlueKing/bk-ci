@@ -237,7 +237,6 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId).accessToken,
-                sshKeys = sshService.getSshPublicKeys4Ws(setOf(userId)),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
             )
         )
