@@ -53,6 +53,7 @@ class AuthResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        enable: Boolean,
         relationId: String
     ): Int {
         return authResourceDao.create(
@@ -62,6 +63,7 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
+            enable = enable,
             relationId = relationId
         )
     }
