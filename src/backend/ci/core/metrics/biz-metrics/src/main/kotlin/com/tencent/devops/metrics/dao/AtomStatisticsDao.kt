@@ -29,30 +29,30 @@ package com.tencent.devops.metrics.dao
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.productSum
+import com.tencent.devops.common.service.utils.JooqUtils.sum
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
-import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
-import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
 import org.jooq.Result
-import com.tencent.devops.common.service.utils.JooqUtils.sum
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
-import org.jooq.Record3
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -217,7 +217,7 @@ class AtomStatisticsDao {
 
     fun queryAtomComplianceInfo(
         dslContext: DSLContext,
-        projectIds: List<String>,
+        projectId: String,
         startDateTime: LocalDateTime,
         endDateTime: LocalDateTime
     ): Result<Record3<String, BigDecimal, BigDecimal>> {
@@ -227,7 +227,7 @@ class AtomStatisticsDao {
                 sum(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
                 sum(FAIL_COMPLIANCE_COUNT).`as`(BK_FAIL_COMPLIANCE_COUNT)
             )
-                .where(PROJECT_ID.`in`(projectIds))
+                .where(PROJECT_ID.eq(projectId))
                 .and(STATISTICS_TIME.between(startDateTime, endDateTime))
                 .fetch()
         }
