@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.HTTP_401
@@ -835,6 +834,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun doDeleteWS(operator: String, beforeStatus: WorkspaceStatus, workspaceName: String) {
+        // 清心跳
+        redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceStatus(
@@ -857,7 +858,8 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun doStopWS(operator: String, beforeStatus: WorkspaceStatus, workspaceName: String) {
-
+        // 清心跳
+        redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             workspaceDao.updateWorkspaceStatus(
