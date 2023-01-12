@@ -652,18 +652,20 @@ class RepositoryService @Autowired constructor(
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
         val repoAuthInfoMap: MutableMap<Long, RepoAuthInfo> = mutableMapOf()
-        repoGroup.map { (type, repositoryIds) ->
-            {
+        repoGroup.forEach { (type, repositoryIds) ->
+            run {
                 // 1. 获取处理类
                 val codeGitRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = type)
                 // 2. 得到授权身份<repoId, authInfo>
                 repoAuthInfoMap.putAll(codeGitRepositoryService.getAuthInfo(repositoryIds))
             }
         }
+        logger.info("repoAuthInfoMap.keys=${repoAuthInfoMap.keys}")
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
-            val authInfo: RepoAuthInfo = repoAuthInfoMap[it.repositoryId]!!
+            val authInfo: RepoAuthInfo = repoAuthInfoMap[it.repositoryId]
+                ?: throw NotFoundException("代码库授权信息不存在|repoId=[${it.repositoryId}]|type=[${it.type}]")
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
