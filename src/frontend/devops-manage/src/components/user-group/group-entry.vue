@@ -3,14 +3,14 @@
     <!-- 管理员 -->
     <template v-if="hasPermission">
       <div
-        v-if="!isEnablePermission"
+        v-if="isEnablePermission"
         class="group-manage"
       >
         <group-aside
           v-bind="$props"
+          :delete-group="handleDeleteGroup"
           @choose-group="handleChooseGroup"
           @create-group="handleCreateGroup"
-          @delete-group="handleDeleteGroup"
           @update-enable="handelUpdateEnable"
         />
         <iam-iframe
@@ -84,6 +84,10 @@ export default {
       type: Function,
       default: () => {},
     },
+    deleteGroup: {
+      type: Function,
+      default: () => {},
+    },
   },
 
   emits: ['delete-group'],
@@ -94,13 +98,17 @@ export default {
     };
   },
 
-  async created() {
-    this.path = this.iamIframePath;
-    window.addEventListener('message', this.handleMessage);
+  watch: {
+    iamIframePath: {
+      handler() {
+        this.path = this.iamIframePath;
+      },
+      immediate: true,
+    },
   },
 
-  beforeUnmount() {
-    window.removeEventListener('message', this.handleMessage);
+  async created() {
+    window.addEventListener('message', this.handleMessage);
   },
 
   beforeUnmount() {
@@ -131,7 +139,7 @@ export default {
     },
 
     handleDeleteGroup(group) {
-      this.$emit('delete-group', group);
+      return this.deleteGroup(group);
     },
 
     handelUpdateEnable() {

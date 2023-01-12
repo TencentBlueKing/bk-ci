@@ -6,14 +6,14 @@
         v-for="(group, index) in groupList"
         :key="index"
         @click="handleChangeTab(group)">
-        <span class="group-name">{{ group.name }}</span>
+        <span class="group-name" :title="group.name">{{ group.name }}</span>
         <span class="user-num">
-          <i class="manage-icon manage-icon-user-shape"></i>
-          {{ group.user }}
+          <i class="manage-icon small-size manage-icon-user-shape"></i>
+          {{ group.userCount }}
         </span>
         <span class="group-num">
-          <i class="manage-icon manage-icon-user-shape"></i>
-          {{ group.group }}
+          <i class="manage-icon small-size manage-icon-user-shape"></i>
+          {{ group.departmentCount }}
         </span>
         <bk-popover
           v-if="resourceType === 'project'"
@@ -29,7 +29,7 @@
               class="btn"
               :disabled="[1, 2].includes(group.id)"
               text
-              @click="handleDeleteGroup(group)">
+              @click="handleShowDeleteGroup(group)">
               {{ $t('删除') }}
             </bk-button>
           </template>
@@ -49,13 +49,16 @@
       <bk-button @click="handleShowDeleteGroup">{{ $t('关闭权限管理') }}</bk-button>
     </div>
     <bk-dialog
-      :is-show="deleteObj.isShow"
-      :title="$t('是否删除用户组', [deleteObj.group.name])"
+      header-align="center"
       theme="danger"
       quick-close
+      :is-show="deleteObj.isShow"
+      :title="$t('删除')"
+      :is-loading="deleteObj.isLoading"
       @closed="handleHiddenDeleteGroup"
       @confirm="handleDeleteGroup"
     >
+      {{ $t('是否删除用户组', [deleteObj.group.name]) }}
     </bk-dialog>
   </article>
 </template>
@@ -87,16 +90,29 @@ export default {
       type: Function,
       default: () => {},
     },
+    deleteGroup: {
+      type: Function,
+      default: () => {},
+    },
   },
   emits: ['create-group', 'choose-group', 'delete-group'],
   data() {
     return {
-      activeTab: '管理员',
+      activeTab: '',
       deleteObj: {
         group: {},
         isShow: false,
+        isLoading: false,
       },
     };
+  },
+  watch: {
+    groupList: {
+      handler() {
+        this.activeTab = this.groupList[0]?.name;
+      },
+      immediate: true,
+    },
   },
   methods: {
     handleShowDeleteGroup(group) {
@@ -108,8 +124,13 @@ export default {
       this.deleteObj.group = {};
     },
     handleDeleteGroup() {
-      this.$emit('delete-group', this.deleteObj.group);
-      this.handleHiddenDeleteGroup();
+      this.deleteObj.isLoading = true;
+      return this
+        .deleteGroup(this.deleteObj.group)
+        .then(() => {
+          this.deleteObj.isLoading = false;
+          this.handleHiddenDeleteGroup();
+        });
     },
     handleChangeTab(group) {
       this.activeTab = group.name;
@@ -167,6 +188,10 @@ export default {
   .group-active {
     color: #3A84FF;
     background-color: #E1ECFF;
+    .user-num, .group-num {
+      background-color: #A3C5FD;
+      color: #fff;
+    }
   }
   .user-num,
   .group-num {
@@ -175,7 +200,10 @@ export default {
   }
   .group-name {
     display: inline-block;
-    min-width: 110px;
+    width: 100px;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
   }
   .user-num,
   .group-num {
@@ -190,7 +218,7 @@ export default {
     line-height: 16px;
     margin-right: 3px;
     text-align: center;
-    color: #979BA5;
+    color: #C4C6CC;
   }
   .more-icon {
     border-radius: 50%;
@@ -231,5 +259,8 @@ export default {
   .close-btn {
     margin-bottom: 20px;
     text-align: center;
+  }
+  .small-size {
+    scale: 0.9;
   }
 </style>

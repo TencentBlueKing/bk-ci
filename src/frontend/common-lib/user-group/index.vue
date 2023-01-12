@@ -3,14 +3,14 @@
         <!-- 管理员 -->
         <template v-if="hasPermission">
             <div
-                v-if="!isEnablePermission"
+                v-if="isEnablePermission"
                 class="group-manage"
             >
                 <group-aside
                     v-bind="$props"
+                    :delete-group="handleDeleteGroup"
                     @choose-group="handleChooseGroup"
                     @create-group="handleCreateGroup"
-                    @delete-group="handleDeleteGroup"
                     @update-enable="handelUpdateEnable"
                 />
                 <iam-iframe
@@ -25,13 +25,13 @@
         <not-open-manage v-else v-bind="$props" />
     </article>
 </template>
-
-<script>
+  
+  <script>
     import GroupAside from './group-aside.vue'
     import GroupTable from './group-table.vue'
     import NotOpenManage from './not-open-manage.vue'
-    import IamIframe from './iam-Iframe.vue'
-
+    import IamIframe from '../IAM-Iframe'
+  
     export default {
         components: {
             GroupAside,
@@ -39,7 +39,7 @@
             NotOpenManage,
             IamIframe
         },
-
+  
         props: {
             // 资源类型
             resourceType: {
@@ -83,37 +83,45 @@
             closeManage: {
                 type: Function,
                 default: () => {}
+            },
+            deleteGroup: {
+                type: Function,
+                default: () => {}
             }
         },
-
+  
         data () {
             return {
                 path: ''
             }
         },
-
+  
+        watch: {
+            iamIframePath: {
+                handler () {
+                    this.path = this.iamIframePath
+                },
+                immediate: true
+            }
+        },
+  
         async created () {
-            this.path = this.iamIframePath
             window.addEventListener('message', this.handleMessage)
         },
-
+  
         beforeDestroy () {
             window.removeEventListener('message', this.handleMessage)
         },
-
-        beforeUnmount () {
-            window.removeEventListener('message', this.handleMessage)
-        },
-
+  
         methods: {
             handleChooseGroup (payload) {
                 this.path = `user-group-detail/${payload.id}`
             },
-
+  
             handleCreateGroup () {
                 this.path = 'create-user-group'
             },
-
+  
             handleMessage (event) {
                 const { data } = event
                 if (data.type === 'IAM') {
@@ -127,29 +135,29 @@
                     }
                 }
             },
-
+  
             handleDeleteGroup (group) {
-                this.$emit('delete-group', group)
+                return this.deleteGroup(group)
             },
-
-            handelUpdateEnable (payload) {
-                this.isEnablePermission = payload
+  
+            handelUpdateEnable () {
+                // this.isEnablePermission = payload;
             }
         }
     }
-</script>
-
-<style lang="postcss" scoped>
-  .group-wrapper {
-    display: flex;
-    flex: 1;
-  }
-  .group-manage {
-    display: flex;
-    flex: 1;
-    overflow: hidden;
-  }
-  .group-frame {
-    flex: 1;
-  }
-</style>
+  </script>
+  
+  <style lang="scss" scoped>
+    .group-wrapper {
+      display: flex;
+      flex: 1;
+    }
+    .group-manage {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .group-frame {
+      flex: 1;
+    }
+  </style>

@@ -1,6 +1,5 @@
 import http from './fetch';
 import {
-  MANAGE_PERFIX,
   API_PERFIX,
   STORE_PERFIX,
   PROJECT_PERFIX,
@@ -70,13 +69,13 @@ export default {
   },
 
   /**
-   * 上传项目logo 
+   * 上传项目logo
    */
   async uploadProjectLogo(params: any) {
     const { formData } = params;
     return http.post(`${PROJECT_PERFIX}/user/projects/upload/logo`, formData, {
-      disabledResponseType: true
-    })
+      disabledResponseType: true,
+    });
   },
 
   /**
@@ -84,7 +83,7 @@ export default {
    */
   signOutGroup(params: any) {
     const { projectCode, resourceType, groupId } = params;
-    return http.delete(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/member/delete`) 
+    return http.delete(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/member`);
   },
 
   /**
@@ -92,7 +91,7 @@ export default {
    */
   renewalGroup(params: any) {
     const { projectCode, resourceType, groupId } = params;
-    return http.delete(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/member//renewal`) 
+    return http.delete(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/member/renewal`);
   },
 
   /**
@@ -100,14 +99,14 @@ export default {
    */
   async enableGroupPermission(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/enable`) 
+    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/enable`);
   },
   /**
    * 流水线/流水线组 关闭用户组权限管理
    */
   async disableGroupPermission(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/disable`) 
+    return http.put(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/disable`);
   },
 
   /**
@@ -115,7 +114,7 @@ export default {
    */
   async fetchHasManagerPermission(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/hasManagerPermission`)
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/hasManagerPermission`);
   },
 
   /**
@@ -123,7 +122,7 @@ export default {
    */
   async fetchEnablePermission(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/isEnablePermission`)
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/isEnablePermission`);
   },
 
   /**
@@ -131,7 +130,7 @@ export default {
    */
   async fetchUserGroupList(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/listGroup`)
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/listGroup`);
   },
 
   /**
@@ -139,7 +138,7 @@ export default {
    */
   async fetchGroupMember(params: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/resource/${resourceCode}/groupMember`)
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/groupMember`);
   },
 
   /**
@@ -147,7 +146,7 @@ export default {
    */
   async fetchGroupPolicies(params: any) {
     const { projectCode, resourceType, groupId } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/group/${groupId}/groupPolicies`)
+    return http.get(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/groupPolicies`);
   },
 
   /**
@@ -155,6 +154,14 @@ export default {
    */
   async fetchResourceList(params: any) {
     const { projectCode, resourceType } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/listResources`)
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/listResources`);
+  },
+
+  /**
+   * 删除组
+   */
+  async deleteGroup(params: any) {
+    const { projectCode, resourceType, groupId } = params;
+    return http.delete(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}`);
   },
 };

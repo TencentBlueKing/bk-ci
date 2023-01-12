@@ -10,6 +10,7 @@
     :is-enable-permission="isEnablePermission"
     :open-manage="handleOpenManage"
     :close-manage="handleCloseManage"
+    :delete-group="handleDeleteGroup"
   />
 </template>
 
@@ -162,7 +163,8 @@ export default {
           projectCode,
         })
         .then((res) => {
-          this.groupList = res.data;
+          this.groupList = res;
+          this.iamIframePath = `user-group-detail/${res[0]?.id}`;
         });
     },
 
@@ -183,8 +185,26 @@ export default {
           projectCode,
         })
         .then((res) => {
-          this.memberGroupList = res.data;
+          this.memberGroupList = res;
         });
+    },
+
+    /**
+     * 删除用户组
+     */
+    handleDeleteGroup(group: any) {
+      const {
+        resourceType,
+        projectCode,
+      } = this;
+
+      return http
+        .deleteGroup({
+          resourceType,
+          projectCode,
+          groupId: group.id,
+        })
+        .then(() => this.fetchMemberGroupList());
     },
   },
 };
