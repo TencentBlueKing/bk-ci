@@ -620,14 +620,15 @@ class WorkspaceService @Autowired constructor(
             } else 0
         }
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toLong()
         return WorkspaceUserDetail(
             runningCount = status.count { it.isRunning() },
             sleepingCount = status.count { it.isSleeping() },
             deleteCount = status.count { it.isDeleted() },
-            chargeableTime = usageTime - discountTime,
+            chargeableTime = (usageTime - discountTime).coerceAtLeast(0),
             usageTime = usageTime,
-            sleepingTime = sleepingTime.toInt(),
+            sleepingTime = sleepingTime,
+            discountTime = discountTime,
             cpu = workspaces.sumOf { it.cpu },
             memory = workspaces.sumOf { it.memory },
             disk = workspaces.sumOf { it.disk },
@@ -655,15 +656,13 @@ class WorkspaceService @Autowired constructor(
             Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds
         } else 0
 
-        val chargeableTime = usageTime - discountTime
-
         return with(workspace) {
             WorkspaceDetail(
                 workspaceId = id,
                 workspaceName = name,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = chargeableTime,
+                chargeableTime = (usageTime - discountTime).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,

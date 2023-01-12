@@ -38,12 +38,14 @@ data class WorkspaceUserDetail(
     val sleepingCount: Int,
     @ApiModelProperty("已销毁容器数量")
     val deleteCount: Int,
-    @ApiModelProperty("计费时间（分钟）")
+    @ApiModelProperty("计费时间（秒）")
     val chargeableTime: Long,
-    @ApiModelProperty("使用时间（分钟）")
+    @ApiModelProperty("使用时间（秒）")
     val usageTime: Long,
-    @ApiModelProperty("休眠时间（分钟）")
-    val sleepingTime: Int,
+    @ApiModelProperty("休眠时间（秒）")
+    val sleepingTime: Long,
+    @ApiModelProperty("免费时间（秒）")
+    val discountTime: Long,
     @ApiModelProperty("CPU 核心数")
     val cpu: Int,
     @ApiModelProperty("内存大小（MB）")
