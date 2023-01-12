@@ -308,7 +308,7 @@
                 return this.execDetail?.model?.instanceFromTemplate
             },
             curMatchRules () {
-                return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+                return this.$route.path.split('/')[3].indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
             }
         },
 
