@@ -38,7 +38,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmOauthService
@@ -278,7 +278,7 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
         url: String,
         type: ScmType,
         token: String?
-    ): Result<RepositoryProjectInfo> {
+    ): Result<GitProjectInfo?> {
         return Result(
             scmOauthService.getProjectInfo(
                 projectName = projectName,

@@ -46,7 +46,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -392,7 +392,7 @@ class ScmOauthService @Autowired constructor(
         url: String,
         type: ScmType,
         token: String?
-    ): RepositoryProjectInfo {
+    ): GitProjectInfo? {
         return ScmOauthFactory.getScm(
             projectName = projectName,
             url = url,

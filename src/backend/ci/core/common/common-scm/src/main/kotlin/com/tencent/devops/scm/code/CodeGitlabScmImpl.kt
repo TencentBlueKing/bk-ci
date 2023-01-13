@@ -37,7 +37,7 @@ import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.ScmException
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.eclipse.jgit.api.Git
@@ -192,7 +192,7 @@ class CodeGitlabScmImpl constructor(
         )
     }
 
-    override fun getProjectInfo(projectName: String): RepositoryProjectInfo {
+    override fun getProjectInfo(projectName: String): GitProjectInfo {
         val url = "projects/${GitUtils.urlEncode(projectName)}"
         return gitApi.getProjectInfo(
             host = apiUrl,

@@ -25,10 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.git
+package com.tencent.devops.scm.pojo
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,7 +35,7 @@ import io.swagger.annotations.ApiModelProperty
 data class GitProjectInfo(
     @ApiModelProperty("项目ID", name = "id")
     @JsonProperty("id")
-    override val id: Int,
+    val id: Int,
     @ApiModelProperty("项目名称", name = "name")
     @JsonProperty("name")
     val name: String,
@@ -70,4 +69,4 @@ data class GitProjectInfo(
     @ApiModelProperty("项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?
-): RepositoryProjectInfo()
+)

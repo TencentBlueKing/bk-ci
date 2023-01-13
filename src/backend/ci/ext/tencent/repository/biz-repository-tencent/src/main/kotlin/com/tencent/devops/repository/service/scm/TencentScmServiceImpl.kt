@@ -32,13 +32,12 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceScmResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.EmptyRepositoryProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -342,12 +341,12 @@ class TencentScmServiceImpl @Autowired constructor(val client: Client) : IScmSer
         url: String,
         type: ScmType,
         token: String?
-    ): RepositoryProjectInfo {
+    ): GitProjectInfo? {
         return client.getScm(ServiceScmResource::class).getProjectInfo(
             projectName = projectName,
             url = url,
             type = type,
             token = token
-        ).data ?: EmptyRepositoryProjectInfo()
+        ).data
     }
 }

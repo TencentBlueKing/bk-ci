@@ -32,7 +32,6 @@ import com.tencent.devops.model.repository.tables.TRepositoryCodeGitlab
 import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitlabRecord
 import com.tencent.devops.repository.pojo.UpdateRepositoryInfoRequest
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
@@ -105,7 +104,7 @@ class RepositoryCodeGitLabDao {
                     .set(USER_NAME, userName)
                     .set(CREDENTIAL_ID, credentialId)
                     .set(UPDATED_TIME, now)
-                if (StringUtils.isNotBlank(gitProjectId)) {
+                if (!gitProjectId.isNullOrBlank()) {
                     updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
                 }
                 updateSetStep.where(REPOSITORY_ID.eq(repositoryId))

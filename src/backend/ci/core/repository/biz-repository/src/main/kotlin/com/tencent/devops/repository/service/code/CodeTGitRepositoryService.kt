@@ -42,7 +42,6 @@ import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -214,10 +213,10 @@ class CodeTGitRepositoryService @Autowired constructor(
      * 检查凭证信息
      */
     private fun checkCredentialInfo(repository: CodeTGitRepository): RepoCredentialInfo {
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+        val repoCredentialInfo = getCredentialInfo(
             repository = repository
         )
-        val checkResult: TokenCheckResult = checkToken(
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )
@@ -233,14 +232,14 @@ class CodeTGitRepositoryService @Autowired constructor(
      */
     fun getGitProjectId(repo: CodeTGitRepository, token: String): Int {
         logger.info("the repo is:$repo")
-        val repositoryProjectInfo: RepositoryProjectInfo = scmService.getProjectInfo(
+        val repositoryProjectInfo = scmService.getProjectInfo(
             projectName = repo.projectName,
             url = repo.getFormatURL(),
             type = ScmType.CODE_TGIT,
             token = token
         )
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo.id
+        return repositoryProjectInfo?.id ?: -1
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {

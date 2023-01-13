@@ -94,7 +94,7 @@ class CodeP4RepositoryService @Autowired constructor(
         record: TRepositoryRecord
     ) {
         // 提交的参数与数据库中类型不匹配
-        if (!StringUtils.equals(record.type, ScmType.CODE_P4.name)) {
+        if (record.type != ScmType.CODE_P4.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }
         repository.projectId = projectId
@@ -135,10 +135,10 @@ class CodeP4RepositoryService @Autowired constructor(
      * 检查凭证信息
      */
     private fun checkCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+        val repoCredentialInfo = getCredentialInfo(
             repository = repository
         )
-        val checkResult: TokenCheckResult = checkToken(
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )
@@ -159,7 +159,7 @@ class CodeP4RepositoryService @Autowired constructor(
             type = ScmType.CODE_P4,
             username = repoCredentialInfo.username,
             password = repoCredentialInfo.password,
-            token = StringUtils.EMPTY,
+            token = "",
             region = null,
             repoUsername = repoCredentialInfo.username
         )
