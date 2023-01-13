@@ -93,7 +93,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                         Container(
                             name = event.workspaceName,
                             image = event.devFile.image?.publicImage ?: "",
-                            resource = ResourceRequirements(2000, 4096),
+                            resource = ResourceRequirements(2000, 16096),
                             workingDir = gitRepoRootPath,
                             volumeMounts = listOf(
                                 VolumeMount(
