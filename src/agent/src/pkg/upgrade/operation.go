@@ -107,6 +107,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 	}()
 	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
 		job.GBuildDockerManager.GetInstanceCount() > 0 {
+		logs.Info("agent has upgrade item, but has job running, so skip.")
 		return nil
 	}
 
