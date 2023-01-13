@@ -343,7 +343,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     ): Result<List<GitFileInfo>> {
         return Result(
             gitService.getGitCIFileTree(
-                gitProjectId = gitProjectId,
+                gitProjectId = "$gitProjectId",
                 path = path,
                 token = token,
                 ref = ref,
@@ -751,34 +751,6 @@ class ServiceGitResourceImpl @Autowired constructor(
             gitProjectId = gitProjectId,
             type = type,
             iid = iid
-        )
-    }
-
-    override fun getTGitProjectInfo(
-        token: String,
-        tokenType: TokenTypeEnum,
-        gitProjectId: String,
-        repoUrl: String
-    ): Result<GitProjectInfo?> {
-        return gitService.getTGitProjectInfo(
-            id = gitProjectId,
-            token = token,
-            tokenType = tokenType,
-            repoUrl = repoUrl
-        )
-    }
-
-    override fun getGitLabProjectInfo(
-        token: String,
-        tokenType: TokenTypeEnum,
-        gitProjectId: String,
-        repoUrl: String
-    ): Result<GitProjectInfo?> {
-        return gitService.getGitLabProjectInfo(
-            id = gitProjectId,
-            token = token,
-            tokenType = tokenType,
-            repoUrl = repoUrl
         )
     }
 }

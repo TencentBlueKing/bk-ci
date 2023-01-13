@@ -359,18 +359,4 @@ interface IGitService {
         type: String,
         iid: Long
     ): Result<List<TapdWorkItem>>
-
-    fun getTGitProjectInfo(
-        id: String,
-        token: String,
-        tokenType: TokenTypeEnum,
-        repoUrl: String
-    ): Result<GitProjectInfo?>
-
-    fun getGitLabProjectInfo(
-        id: String,
-        token: String,
-        tokenType: TokenTypeEnum,
-        repoUrl: String
-    ): Result<GitProjectInfo?>
 }
