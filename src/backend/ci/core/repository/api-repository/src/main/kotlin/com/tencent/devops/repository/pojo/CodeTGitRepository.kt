@@ -47,7 +47,7 @@ data class CodeTGitRepository(
     @ApiModelProperty("仓库认证类型", required = false)
     val authType: RepoAuthType? = RepoAuthType.SSH,
     @ApiModelProperty("项目id", required = true)
-    override val projectId: String?,
+    override var projectId: String?,
     override val repoHashId: String?
 ) : Repository {
     companion object {

@@ -35,6 +35,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import io.swagger.annotations.Api
@@ -387,4 +388,22 @@ interface ServiceScmResource {
         @QueryParam("size")
         size: Int
     ): Result<List<GitCommit>>
+
+    @ApiOperation("获取项目详情")
+    @GET
+    @Path("getProjectInfo")
+    fun getProjectInfo(
+        @ApiParam("项目名称", required = true)
+        @QueryParam("projectName")
+        projectName: String,
+        @ApiParam("仓库地址", required = true)
+        @QueryParam("url")
+        url: String,
+        @ApiParam("仓库类型", required = true)
+        @QueryParam("type")
+        type: ScmType,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String?
+    ): Result<RepositoryProjectInfo>
 }

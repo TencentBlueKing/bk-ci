@@ -27,11 +27,13 @@
 
 package com.tencent.devops.scm
 
+import com.tencent.devops.scm.pojo.EmptyRepositoryProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 
 @Suppress("ALL")
@@ -83,4 +85,6 @@ interface IScm {
     fun getMrReviewInfo(mrId: Long): GitMrReviewInfo? = null
 
     fun getMrCommitList(mrId: Long, page: Int, size: Int) = emptyList<GitCommit>()
+
+    fun getProjectInfo(projectName: String): RepositoryProjectInfo = EmptyRepositoryProjectInfo()
 }

@@ -37,7 +37,6 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeP4Repository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
-import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -63,7 +62,8 @@ class CodeP4RepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeP4Repository): Long {
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        repository.projectId = projectId
+        checkCredentialInfo(repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -97,7 +97,8 @@ class CodeP4RepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_P4.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        repository.projectId = projectId
+        checkCredentialInfo(repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -133,25 +134,19 @@ class CodeP4RepositoryService @Autowired constructor(
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(projectId: String, repository: CodeP4Repository): RepoCredentialInfo {
-        return if (needCheckToken(repository)) {
-            // 凭证信息
-            val repoCredentialInfo: RepoCredentialInfo = credentialService.getCredentialInfo(
-                projectId = projectId,
-                repository = repository
-            )
-            val checkResult: TokenCheckResult = checkToken(
-                repoCredentialInfo = repoCredentialInfo,
-                repository = repository
-            )
-            if (!checkResult.result) {
-                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
-                throw OperationException(checkResult.message)
-            }
-            repoCredentialInfo
-        } else {
-            EmptyCredentialInfo()
+    private fun checkCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
+        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+            repository = repository
+        )
+        val checkResult: TokenCheckResult = checkToken(
+            repoCredentialInfo = repoCredentialInfo,
+            repository = repository
+        )
+        if (!checkResult.result) {
+            logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+            throw OperationException(checkResult.message)
         }
+        return repoCredentialInfo
     }
 
     fun checkToken(
@@ -179,8 +174,15 @@ class CodeP4RepositoryService @Autowired constructor(
         }) ?: mapOf()
     }
 
-    fun needCheckToken(repository: CodeP4Repository): Boolean {
-        return true
+    /**
+     * 获取凭证信息
+     */
+    fun getCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
+        // 凭证信息
+        return credentialService.getCredentialInfo(
+            projectId = repository.projectId!!,
+            repository = repository
+        )
     }
 
     companion object {
