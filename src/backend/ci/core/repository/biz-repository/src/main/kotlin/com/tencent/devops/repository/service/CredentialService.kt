@@ -163,7 +163,7 @@ class CredentialService @Autowired constructor(
                     )
                 }
                 var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v3.isNullOrBlank()){
+                if (!credentialInfo.v2.isNullOrBlank()){
                     passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
                 }
                 SshCredentialInfo(

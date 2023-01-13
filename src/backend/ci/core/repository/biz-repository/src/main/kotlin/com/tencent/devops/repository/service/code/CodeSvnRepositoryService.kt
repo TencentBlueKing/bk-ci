@@ -28,6 +28,7 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -38,6 +39,8 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
+import com.tencent.devops.repository.pojo.credential.SshCredentialInfo
+import com.tencent.devops.repository.pojo.credential.UserNamePasswordCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
@@ -145,15 +148,28 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
+        // 根据凭证类型匹配私钥
+        val privateKey = when (repoCredentialInfo) {
+            is SshCredentialInfo -> {
+                repoCredentialInfo.privateKey
+            }
+            is UserNamePasswordCredentialInfo -> {
+                repoCredentialInfo.password
+            }
+            else -> {
+                throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
+            }
+        }
+
         return scmService.checkPrivateKeyAndToken(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
             type = ScmType.CODE_SVN,
-            privateKey = repoCredentialInfo.privateKey,
+            privateKey = privateKey,
             passPhrase = repoCredentialInfo.passPhrase,
             token = null,
             region = repository.region,
-            userName = repoCredentialInfo.username
+            userName = repository.userName
         )
     }
 
