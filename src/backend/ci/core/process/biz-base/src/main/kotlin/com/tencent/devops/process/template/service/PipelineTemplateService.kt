@@ -27,12 +27,20 @@
 
 package com.tencent.devops.process.template.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.type.StoreDispatchType
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
+import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
+import com.tencent.devops.store.constant.StoreMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +51,8 @@ import org.springframework.util.StringUtils
 @Service
 class PipelineTemplateService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val templateDao: TemplateDao
+    private val templateDao: TemplateDao,
+    private val client: Client
 ) {
 
     fun getTemplateDetailInfo(templateCode: String): Result<TemplateDetailInfo?> {
@@ -63,6 +72,49 @@ class PipelineTemplateService @Autowired constructor(
             )
         )
     }
+
+    fun getIsRelease (templateCode: String,userId: String): Result<Boolean> {
+        logger.info("getIsRelease templateCode is:$templateCode")
+        val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
+            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        var flag= true
+        run aa@{
+        templateModel.stages.forEach { stage ->
+            stage.containers.forEach c@{ container  ->
+                if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
+                    val imageCode = (container.dispatchType as StoreDispatchType).imageCode
+                    val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
+                    if (imageCode.isNullOrBlank()){
+                        logger.info("再次遍历container, templateCode is:$imageCode,imageVersion is:$imageVersion")
+                        return@c
+                    }else{
+                        if (imageVersion.isNullOrBlank()) {
+                            throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
+                        }
+                        flag=isRelease(userId,imageCode,imageVersion)
+                        return@aa
+                            //MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
+                    }
+
+                }else{
+                    logger.info("container is not VMBuildContainer ")
+                    return@c
+                }
+            }
+        }}
+        logger.info("flag is $flag ")
+        return  Result(flag)
+    }
+
+    private fun isRelease(userId: String,imageCode: String,imageVersion: String):Boolean {
+        val imageDetail = client.get(ServiceStoreImageResource::class)
+            .getImageDetailByCodeAndVersion(userId,imageCode,imageVersion)
+        val imageStatus= imageDetail.data?.imageStatus
+        logger.info("imageStatus is:$imageStatus")
+        return "RELEASED" == imageStatus
+    }
+
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateService::class.java)

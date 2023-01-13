@@ -186,14 +186,13 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
-        val templateDetailResult = client.get(ServicePTemplateResource::class).getTemplateDetailInfo(templateCode)
-        if (templateDetailResult.isNotOk()) {
+        val isReleaseResult = client.get(ServicePTemplateResource::class).getIsRelease(templateCode,userId)
+        if (isReleaseResult.isNotOk()) {
             // 抛出错误提示
-            return Result(templateDetailResult.status, templateDetailResult.message ?: "")
+            return Result(isReleaseResult.status, isReleaseResult.message ?: "")
         }
-        val templateDetail = templateDetailResult.data
-        val templateModel = templateDetail?.templateModel
-            ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
+        val flag =isReleaseResult.data
+        if (flag != true) return  Result(null)
         if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在
@@ -292,28 +291,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                     )
                 }
             }
-            //判断模板里镜像是否发布
-            templateModel.stages.forEach { stage ->
-                stage.containers.forEach c@{ container  ->
-                    if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
-                        val imageCode = (container.dispatchType as StoreDispatchType).imageName
-                        val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
-                        if (imageCode.isNullOrBlank()){
-                            return@c
-                        }else{
-                            if (imageVersion.isNullOrBlank()) {
-                                throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
-                            }
-                            if (!isRelease(userId,imageCode,imageVersion)){
-                                return MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
-                            }
-                        }
 
-                    }else{
-                        return@c
-                    }
-                }
-            }
             return Result(templateId)
         } else {
             return MessageCodeUtil.generateResponseDataObject(
@@ -321,13 +299,6 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 params = arrayOf(templateCode)
             )
         }
-    }
-
-    private fun isRelease(userId: String,imageCode: String,imageVersion: String):Boolean {
-        val imageDetail = client.get(ServiceStoreImageResource::class)
-            .getImageDetailByCodeAndVersion(userId,imageCode,imageVersion)
-        val imageStatus= imageDetail.data?.imageStatus
-        return "RELEASED" == imageStatus
     }
 
     private fun upgradeMarketTemplate(

@@ -90,6 +90,18 @@ interface ServicePTemplateResource {
         templateCode: String
     ): Result<TemplateDetailInfo?>
 
+    @ApiOperation("判断模板镜像是否发布")
+    @GET
+    @Path("/store/templateCode/{templateCode}")
+    fun getIsRelease(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("模板代码", required = true)
+        @PathParam("templateCode")
+        templateCode: String
+    ): Result<Boolean>
+
     @ApiOperation("查询项目下所有源模板的ID")
     @GET
     @Path("/store/projects/{projectId}/srcTemplates")
