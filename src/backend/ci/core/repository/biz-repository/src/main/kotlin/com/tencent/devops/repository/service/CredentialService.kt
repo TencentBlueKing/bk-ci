@@ -162,10 +162,14 @@ class CredentialService @Autowired constructor(
                         message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
                     )
                 }
+                var passPhrase = StringUtils.EMPTY
+                if (!credentialInfo.v2.isNullOrBlank()){
+                    passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                }
                 SshCredentialInfo(
                     token = StringUtils.EMPTY,
                     privateKey = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    passPhrase = passPhrase,
                     username = StringUtils.EMPTY,
                     password = StringUtils.EMPTY
                 )
