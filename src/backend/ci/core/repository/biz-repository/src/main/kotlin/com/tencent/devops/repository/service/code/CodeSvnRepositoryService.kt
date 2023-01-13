@@ -37,7 +37,6 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
-import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -64,7 +63,8 @@ class CodeSvnRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeSvnRepository): Long {
-        checkCredentialInfo(projectId = projectId, repository = repository)
+        repository.projectId = projectId
+        checkCredentialInfo(repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -157,32 +157,23 @@ class CodeSvnRepositoryService @Autowired constructor(
         )
     }
 
-    fun needCheckToken(repository: CodeSvnRepository): Boolean {
-        return true
-    }
-
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
-        return if (needCheckToken(repository)) {
-            // 凭证信息
-            val repoCredentialInfo: RepoCredentialInfo = credentialService.getCredentialInfo(
-                projectId = projectId,
-                repository = repository
-            )
-            val checkResult: TokenCheckResult = checkToken(
-                repoCredentialInfo = repoCredentialInfo,
-                repository = repository
-            )
-            if (!checkResult.result) {
-                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
-                throw OperationException(checkResult.message)
-            }
-            repoCredentialInfo
-        } else {
-            EmptyCredentialInfo()
+    private fun checkCredentialInfo(repository: CodeSvnRepository): RepoCredentialInfo {
+        // 凭证信息
+        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+            repository = repository
+        )
+        val checkResult: TokenCheckResult = checkToken(
+            repoCredentialInfo = repoCredentialInfo,
+            repository = repository
+        )
+        if (!checkResult.result) {
+            logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
+            throw OperationException(checkResult.message)
         }
+        return repoCredentialInfo
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
@@ -196,6 +187,17 @@ class CodeSvnRepositoryService @Autowired constructor(
                 svnType = it.svnType
             )
         })
+    }
+
+    /**
+     * 获取凭证信息
+     */
+    fun getCredentialInfo(repository: CodeSvnRepository): RepoCredentialInfo {
+        // 凭证信息
+        return credentialService.getCredentialInfo(
+            projectId = repository.projectId!!,
+            repository = repository
+        )
     }
 
     companion object {

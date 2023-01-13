@@ -49,6 +49,7 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
@@ -57,6 +58,7 @@ import com.tencent.devops.scm.pojo.TapdWorkItem
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import java.net.URLEncoder
@@ -88,6 +90,7 @@ open class GitApi {
         private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
         private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
         private const val OPERATION_TAPD_WORKITEMS = "查看绑定的TAPD单"
+        private const val GET_PROJECT_INFO = "获取项目详情"
     }
 
     fun listBranches(
@@ -456,7 +459,7 @@ open class GitApi {
     ): List<GitCommit> {
         val request = get(
             host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(
@@ -597,5 +600,11 @@ open class GitApi {
             }
         }
         return sb.toString()
+    }
+
+    fun getProjectInfo(host: String, token: String, url: String): RepositoryProjectInfo {
+        logger.info("Start to get projectInfo of host=[$host] by url=[$url] and token=[${StringUtils.length(token)}]")
+        val request = get(host, token, url, StringUtils.EMPTY)
+        return JsonUtil.getObjectMapper().readValue(getBody(GET_PROJECT_INFO, request))
     }
 }

@@ -37,14 +37,14 @@ import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
-import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
+import com.tencent.devops.repository.pojo.credential.OauthCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitOauthService
-import com.tencent.devops.repository.service.scm.IGitService
+import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -61,15 +61,16 @@ class CodeGitRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val credentialService: CredentialService,
     private val scmService: IScmService,
-    private val gitService: IGitService,
-    private val gitOauthService: IGitOauthService
+    private val gitOauthService: IGitOauthService,
+    private val scmOauthService: IScmOauthService,
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
     }
 
     override fun create(projectId: String, userId: String, repository: CodeGitRepository): Long {
-        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
+        repository.projectId = projectId
+        val credentialInfo = checkCredentialInfo(repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -81,15 +82,11 @@ class CodeGitRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.CODE_GIT
             )
-            var accessToken = StringUtils.EMPTY
-            // OAUTH授权需获取accessToken
-            if (repository.authType == RepoAuthType.OAUTH) {
-                accessToken = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: StringUtils.EMPTY
-            }
             // Git项目ID
             val gitProjectId =
                 getGitProjectId(
-                    repo = repository, token = StringUtils.defaultIfBlank(accessToken, credentialInfo.token)
+                    repo = repository,
+                    token = credentialInfo.token
                 ).toString()
             repositoryCodeGitDao.create(
                 dslContext = dslContext,
@@ -115,8 +112,9 @@ class CodeGitRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_GIT.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_INVALID))
         }
+        repository.projectId = projectId
         // 凭证信息
-        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
+        val credentialInfo = checkCredentialInfo(repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         // 原始代码库URL
         val sourceUrl = repositoryDao.get(
@@ -127,15 +125,12 @@ class CodeGitRepositoryService @Autowired constructor(
         var gitProjectId: String = StringUtils.EMPTY
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
-            var accessToken = StringUtils.EMPTY
-            // OAUTH授权需获取accessToken
-            if (repository.authType == RepoAuthType.OAUTH) {
-                accessToken = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: StringUtils.EMPTY
-            }
+            logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
+                            "targetUrl=[${repository.url}]")
             // Git项目ID
             gitProjectId = getGitProjectId(
                 repo = repository,
-                token = StringUtils.defaultIfBlank(accessToken, credentialInfo.token)
+                token = credentialInfo.token
             ).toString()
         }
         dslContext.transaction { configuration ->
@@ -215,12 +210,25 @@ class CodeGitRepositoryService @Autowired constructor(
      * 获取Git项目ID
      */
     fun getGitProjectId(repo: CodeGitRepository, token: String): Int {
-        logger.info("the repo is:$repo")
-        // 根据仓库授权类型匹配Token类型
-        val tokenType = if (repo.authType == RepoAuthType.OAUTH) TokenTypeEnum.OAUTH else TokenTypeEnum.PRIVATE_KEY
-        val gitProjectInfo = gitService.getGitProjectInfo(id = repo.projectName, token = token, tokenType = tokenType)
-        logger.info("the gitProjectInfo is:$gitProjectInfo")
-        return gitProjectInfo.data?.id ?: -1
+        val isOauth = repo.authType == RepoAuthType.OAUTH
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:${isOauth}")
+        val repositoryProjectInfo: RepositoryProjectInfo = if (isOauth) {
+            scmOauthService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        } else {
+            scmService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        }
+        logger.info("the gitProjectInfo is:$repositoryProjectInfo")
+        return repositoryProjectInfo.id
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
@@ -242,13 +250,11 @@ class CodeGitRepositoryService @Autowired constructor(
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(projectId: String, repository: CodeGitRepository): RepoCredentialInfo {
-        return if (needCheckToken(repository)) {
-            // 凭证信息
-            val repoCredentialInfo: RepoCredentialInfo = credentialService.getCredentialInfo(
-                projectId = projectId,
-                repository = repository
-            )
+    private fun checkCredentialInfo(repository: CodeGitRepository): RepoCredentialInfo {
+        // 凭证信息
+        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(repository)
+        // 若授权类型不为OAUTH则需要检查Token
+        if (repository.authType != RepoAuthType.OAUTH) {
             val checkResult: TokenCheckResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository
@@ -257,15 +263,29 @@ class CodeGitRepositoryService @Autowired constructor(
                 logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
                 throw OperationException(checkResult.message)
             }
-            repoCredentialInfo
-        } else {
-            EmptyCredentialInfo()
         }
+        return repoCredentialInfo
     }
 
-    fun needCheckToken(repository: CodeGitRepository): Boolean {
-        // 若授权类型不为OAUTH则需要检查Token
-        return repository.authType != RepoAuthType.OAUTH
+    /**
+     * 获取凭证信息
+     */
+    fun getCredentialInfo(repository: CodeGitRepository): RepoCredentialInfo {
+        // 凭证信息
+        return if (repository.authType == RepoAuthType.OAUTH) {
+            OauthCredentialInfo(
+                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: StringUtils.EMPTY,
+                privateKey = StringUtils.EMPTY,
+                passPhrase = StringUtils.EMPTY,
+                password = StringUtils.EMPTY,
+                username = StringUtils.EMPTY
+            )
+        } else {
+            credentialService.getCredentialInfo(
+                projectId = repository.projectId!!,
+                repository = repository
+            )
+        }
     }
 
     companion object {

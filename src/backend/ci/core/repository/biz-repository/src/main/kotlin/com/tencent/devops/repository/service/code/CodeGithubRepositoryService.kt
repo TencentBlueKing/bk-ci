@@ -36,14 +36,10 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
-import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
-import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -59,12 +55,6 @@ class CodeGithubRepositoryService @Autowired constructor(
 
     override fun create(projectId: String, userId: String, repository: GithubRepository): Long {
         // Github无需检查凭证信息
-        checkCredentialInfo(
-            repoCredentialInfo = EmptyCredentialInfo(
-                token = StringUtils.EMPTY
-            ),
-            repository = repository
-        )
         var repositoryId: Long = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -117,33 +107,6 @@ class CodeGithubRepositoryService @Autowired constructor(
         )
     }
 
-    /**
-     * 检查凭证信息
-     */
-    private fun checkCredentialInfo(repoCredentialInfo: RepoCredentialInfo, repository: GithubRepository) {
-        if (needCheckToken(repository)) {
-            val checkResult: TokenCheckResult = checkToken(
-                repoCredentialInfo = repoCredentialInfo,
-                repository = repository
-            )
-            if (!checkResult.result) {
-                logger.warn("Fail to check the repo token & private key because of ${checkResult.message}")
-                throw OperationException(checkResult.message)
-            }
-        }
-    }
-
-    fun needCheckToken(repository: GithubRepository): Boolean {
-        return false
-    }
-
-    fun checkToken(
-        repoCredentialInfo: RepoCredentialInfo,
-        repository: GithubRepository
-    ): TokenCheckResult {
-        return TokenCheckResult(true, "OK")
-    }
-
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
         return repositoryGithubDao.list(
             dslContext = dslContext,
@@ -151,9 +114,5 @@ class CodeGithubRepositoryService @Autowired constructor(
         )?.associateBy({ it -> it.repositoryId }, {
             RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = it.userName)
         }) ?: mapOf()
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(CodeGithubRepositoryService::class.java)
     }
 }
