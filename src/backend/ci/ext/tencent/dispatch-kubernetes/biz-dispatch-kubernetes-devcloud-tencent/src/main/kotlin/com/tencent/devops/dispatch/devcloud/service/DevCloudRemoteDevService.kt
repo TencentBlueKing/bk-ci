@@ -63,8 +63,8 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
 
-    @Value("\${devCloud.initContainer.image:mirrors.tencent.com/sawyertest/workspace-init:v1.0.2}")
-    var initContainerImage: String = "mirrors.tencent.com/sawyertest/workspace-init:v1.0.2"
+    @Value("\${devCloud.initContainer.image:mirrors.tencent.com/ci/workspace-init:v1.0.3}")
+    var initContainerImage: String = "mirrors.tencent.com/ci/workspace-init:v1.0.3"
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -119,7 +119,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                             env = listOf(
                                 EnvVar(INIT_CONTAINER_GIT_TOKEN, event.gitOAuth),
                                 EnvVar(INIT_CONTAINER_GIT_URL, event.repositoryUrl),
-                                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath)
+                                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
+                                EnvVar(INIT_CONTAINER_GIT_BRANCH, event.branch)
                             )
                         )
                     ),
@@ -266,5 +267,6 @@ class DevCloudRemoteDevService @Autowired constructor(
 
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
         private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
+        private const val INIT_CONTAINER_GIT_BRANCH = "GIT_BRANCH"
     }
 }
