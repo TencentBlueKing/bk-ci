@@ -312,7 +312,7 @@ class WorkspaceService @Autowired constructor(
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.isRunning()) {
-                logger.info("$workspace is running.")
+                logger.info("${workspace.name} is running.")
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
 
