@@ -29,13 +29,15 @@ package com.tencent.devops.repository.service.scm
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.EmptyRepositoryProjectInfo
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import org.springframework.beans.factory.annotation.Autowired
@@ -218,6 +220,20 @@ class TencentScmOauthServiceImpl @Autowired constructor(val client: Client) : IS
             page = page,
             size = size
         ).data ?: emptyList()
+    }
+
+    override fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): RepositoryProjectInfo {
+        return client.getScm(ServiceScmOauthResource::class).getProjectInfo(
+            projectName = projectName,
+            url = url,
+            type = type,
+            token = token
+        ).data ?: EmptyRepositoryProjectInfo()
     }
 
     override fun addCommitCheck(request: CommitCheckRequest) {

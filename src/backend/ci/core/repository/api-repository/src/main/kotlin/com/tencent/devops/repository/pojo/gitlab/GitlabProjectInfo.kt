@@ -46,4 +46,4 @@ data class GitlabProjectInfo(
     @ApiModelProperty(name = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String
-): RepositoryProjectInfo
+): RepositoryProjectInfo()

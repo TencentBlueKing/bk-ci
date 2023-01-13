@@ -70,4 +70,4 @@ data class GitProjectInfo(
     @ApiModelProperty("项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
     val avatarUrl: String?
-): RepositoryProjectInfo
+): RepositoryProjectInfo()

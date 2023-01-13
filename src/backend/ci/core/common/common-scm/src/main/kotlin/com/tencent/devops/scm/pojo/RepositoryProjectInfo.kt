@@ -30,6 +30,4 @@ package com.tencent.devops.scm.pojo
 import io.swagger.annotations.ApiModel
 
 @ApiModel("代码库基础信息-多态基类")
-interface RepositoryProjectInfo {
-    val id: Int
-}
+open class RepositoryProjectInfo(open val id: Int = -1)

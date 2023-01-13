@@ -36,4 +36,4 @@ data class EmptyRepositoryProjectInfo(
     @ApiModelProperty("项目ID", name = "id")
     @JsonProperty("id")
     override val id: Int = -1
-): RepositoryProjectInfo
+): RepositoryProjectInfo()

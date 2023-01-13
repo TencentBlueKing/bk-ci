@@ -42,6 +42,7 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
@@ -60,7 +61,8 @@ class CodeGitRepositoryService @Autowired constructor(
     private val dslContext: DSLContext,
     private val credentialService: CredentialService,
     private val scmService: IScmService,
-    private val gitOauthService: IGitOauthService
+    private val gitOauthService: IGitOauthService,
+    private val scmOauthService: IScmOauthService,
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -125,15 +127,10 @@ class CodeGitRepositoryService @Autowired constructor(
         if (sourceUrl != repository.url) {
             logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
                             "targetUrl=[${repository.url}]")
-            var accessToken = StringUtils.EMPTY
-            // OAUTH授权需获取accessToken
-            if (repository.authType == RepoAuthType.OAUTH) {
-                accessToken = gitOauthService.getAccessToken(userId = userId)?.accessToken ?: StringUtils.EMPTY
-            }
             // Git项目ID
             gitProjectId = getGitProjectId(
                 repo = repository,
-                token = StringUtils.defaultIfBlank(accessToken, credentialInfo.token)
+                token = credentialInfo.token
             ).toString()
         }
         dslContext.transaction { configuration ->
@@ -213,13 +210,23 @@ class CodeGitRepositoryService @Autowired constructor(
      * 获取Git项目ID
      */
     fun getGitProjectId(repo: CodeGitRepository, token: String): Int {
-        logger.info("the repo is:$repo")
-        val repositoryProjectInfo: RepositoryProjectInfo = scmService.getProjectInfo(
-            projectName = repo.projectName,
-            url = repo.getFormatURL(),
-            type = ScmType.CODE_GIT,
-            token = token
-        )
+        val isOauth = repo.authType == RepoAuthType.OAUTH
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:${isOauth}")
+        val repositoryProjectInfo: RepositoryProjectInfo = if (isOauth) {
+            scmOauthService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        } else {
+            scmService.getProjectInfo(
+                projectName = repo.projectName,
+                url = repo.getFormatURL(),
+                type = ScmType.CODE_GIT,
+                token = token
+            )
+        }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
         return repositoryProjectInfo.id
     }

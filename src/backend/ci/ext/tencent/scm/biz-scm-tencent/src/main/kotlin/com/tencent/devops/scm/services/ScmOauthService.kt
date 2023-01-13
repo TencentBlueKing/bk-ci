@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.scm.ScmFactory
 import com.tencent.devops.scm.ScmOauthFactory
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.config.SVNConfig
@@ -45,6 +46,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.utils.QualityUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -383,6 +385,26 @@ class ScmOauthService @Autowired constructor(
             userName = null,
             event = null
         ).getMrCommitList(mrId = mrId, page = page, size = size)
+    }
+
+    fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): RepositoryProjectInfo {
+        return ScmOauthFactory.getScm(
+            projectName = projectName,
+            url = url,
+            type = type,
+            branchName = null,
+            privateKey = null,
+            passPhrase = null,
+            token = token,
+            region = null,
+            userName = null,
+            event = null
+        ).getProjectInfo(projectName = projectName)
     }
 
     companion object {
