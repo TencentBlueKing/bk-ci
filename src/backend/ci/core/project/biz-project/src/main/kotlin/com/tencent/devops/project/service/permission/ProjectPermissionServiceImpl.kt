@@ -144,4 +144,6 @@ class ProjectPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return true
     }
+
+    override fun needApproval(needApproval: Boolean?) = false
 }

@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -228,8 +227,7 @@ interface ServicePermissionAuthResource {
         resourceCode: String,
         @QueryParam("resourceName")
         @ApiParam("资源名称")
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo? = null
+        resourceName: String
     ): Result<Boolean>
 
     @Path("/projects/{projectCode}/modify/relation")

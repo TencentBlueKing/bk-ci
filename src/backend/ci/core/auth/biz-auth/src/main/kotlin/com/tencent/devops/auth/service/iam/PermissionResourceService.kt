@@ -30,10 +30,9 @@ package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 
 /**
  * 权限资源操作
@@ -49,8 +48,7 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo? = null
+        resourceName: String
     ): Boolean
 
     /**

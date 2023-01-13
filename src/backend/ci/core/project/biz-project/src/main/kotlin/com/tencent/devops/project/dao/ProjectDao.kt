@@ -103,7 +103,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(IS_AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(false))
                 .fetch()
         }
     }
@@ -127,7 +127,7 @@ class ProjectDao {
             dslContext.selectFrom(this)
                 .where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(IS_AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(false))
                 .limit(limit).offset(offset).fetch()
         }
     }
@@ -136,7 +136,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             dslContext.selectCount().from(this).where(ENABLED.eq(true))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(IS_AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(false))
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -283,7 +283,7 @@ class ProjectDao {
         userDeptDetail: UserDeptDetail,
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
-        needApproval: Boolean? = false,
+        approvalStatus: Int,
         subjectScopesStr: String,
         authSecrecy: Boolean?
     ): Int {
@@ -313,8 +313,8 @@ class ProjectDao {
                 CHANNEL,
                 ENABLED,
                 PROPERTIES,
-                SUBJECTSCOPES,
-                IS_AUTH_SECRECY
+                SUBJECT_SCOPES,
+                AUTH_SECRECY
             ).values(
                 projectCreateInfo.projectName,
                 projectId,
@@ -331,7 +331,7 @@ class ProjectDao {
                 userId,
                 LocalDateTime.now(),
                 projectCreateInfo.projectType,
-                ApproveStatus.CREATE_APPROVED.status,
+                approvalStatus,
                 logoAddress ?: "",
                 userDeptDetail.bgName,
                 userDeptDetail.deptName,
@@ -372,8 +372,8 @@ class ProjectDao {
                 .set(UPDATOR, userId)
             if (!needApproval) {
                 // todo 只有rbac集群并且需要审批的，才不立即落库 可授权人员范围和是否私密项目，得去判断是否是RBAC集群打过来的
-                update.set(SUBJECTSCOPES, subjectScopesStr)
-                authSecrecy?.let { update.set(IS_AUTH_SECRECY, authSecrecy) }
+                update.set(SUBJECT_SCOPES, subjectScopesStr)
+                authSecrecy?.let { update.set(AUTH_SECRECY, authSecrecy) }
             }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
@@ -399,8 +399,8 @@ class ProjectDao {
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
-                .set(SUBJECTSCOPES, subjectScopesStr)
-                .set(IS_AUTH_SECRECY, authSecrecy)
+                .set(SUBJECT_SCOPES, subjectScopesStr)
+                .set(AUTH_SECRECY, authSecrecy)
                 .set(APPROVAL_STATUS, statusEnum.status)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
@@ -541,7 +541,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(IS_AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(false))
                 .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
                 .limit(limit)
@@ -672,7 +672,7 @@ class ProjectDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(IS_AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(false))
                 .limit(limit).offset(offset).fetch()
         }
     }
@@ -697,7 +697,7 @@ class ProjectDao {
     fun updateSubjectScopesByCode(dslContext: DSLContext, projectCode: String, SubjectScopesStr: String): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
-                .set(SUBJECTSCOPES, SubjectScopesStr).where(ENGLISH_NAME.eq(projectCode))
+                .set(SUBJECT_SCOPES, SubjectScopesStr).where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }

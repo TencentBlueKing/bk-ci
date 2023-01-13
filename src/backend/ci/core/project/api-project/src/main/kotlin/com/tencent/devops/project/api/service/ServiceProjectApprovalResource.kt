@@ -23,33 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.project.api.service
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-class SamplePermissionExtService : PermissionExtService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
+@Api(tags = ["SERVICE_PROJECT_APPROVAL"], description = "项目审批接口")
+@Path("/service/projects/approval")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceProjectApprovalResource {
 
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
-
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+    @GET
+    @Path("/{projectId}")
+    @ApiOperation("查询指定项目审批信息")
+    fun get(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<ProjectApprovalInfo?>
 }
