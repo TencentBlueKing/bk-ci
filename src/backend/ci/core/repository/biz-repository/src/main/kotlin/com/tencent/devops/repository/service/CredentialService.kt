@@ -84,7 +84,7 @@ class CredentialService @Autowired constructor(
         }
         val credential: CredentialInfo = result.data!!
         logger.info("Get the credential($credential)")
-        return buildRepoCredentialInfo(credential, credential.credentialType)
+        return buildRepoCredentialInfo(credential, credential.credentialType,pair)
     }
 
     /**
@@ -118,7 +118,8 @@ class CredentialService @Autowired constructor(
      */
     private fun buildRepoCredentialInfo(
         credentialInfo: CredentialInfo,
-        credentialType: CredentialType
+        credentialType: CredentialType,
+        pair: DHKeyPair
     ): RepoCredentialInfo {
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
@@ -134,8 +135,8 @@ class CredentialService @Autowired constructor(
                 }
                 UserNamePasswordCredentialInfo(
                     token = StringUtils.EMPTY,
-                    username = credentialInfo.v1,
-                    password = credentialInfo.v2!!
+                    username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
                 )
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
@@ -150,9 +151,9 @@ class CredentialService @Autowired constructor(
                     )
                 }
                 UserNamePasswordCredentialInfo(
-                    token = credentialInfo.v1,
-                    username = credentialInfo.v2!!,
-                    password = credentialInfo.v3!!
+                    token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    username = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    password = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
                 )
             }
             CredentialType.SSH_PRIVATEKEY -> {
@@ -163,8 +164,8 @@ class CredentialService @Autowired constructor(
                 }
                 SshCredentialInfo(
                     token = StringUtils.EMPTY,
-                    privateKey = credentialInfo.v1,
-                    passPhrase = credentialInfo.v2!!,
+                    privateKey = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     username = StringUtils.EMPTY,
                     password = StringUtils.EMPTY
                 )
@@ -175,10 +176,14 @@ class CredentialService @Autowired constructor(
                         message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
                     )
                 }
+                var passPhrase = StringUtils.EMPTY
+                if (!credentialInfo.v3.isNullOrBlank()){
+                    passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                }
                 SshCredentialInfo(
-                    token = credentialInfo.v1,
-                    privateKey = credentialInfo.v2!!,
-                    passPhrase = credentialInfo.v3,
+                    token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    privateKey = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    passPhrase = passPhrase,
                     username = StringUtils.EMPTY,
                     password = StringUtils.EMPTY
                 )
