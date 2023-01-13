@@ -105,7 +105,7 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 	defer func() {
 		job.BuildTotalManager.Lock.Unlock()
 	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 ||
+	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
 		job.GBuildDockerManager.GetInstanceCount() > 0 {
 		return nil
 	}
