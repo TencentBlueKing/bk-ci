@@ -13,6 +13,7 @@ class RedisHeartBeat @Autowired constructor(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RedisHeartBeat::class.java)
+        private const val INACTIVETIME = 1800000
     }
 
     fun refreshHeartbeat(
@@ -40,7 +41,7 @@ class RedisHeartBeat @Autowired constructor(
 
         val sleepValues = entries?.filter {
             val elapse = System.currentTimeMillis() - it.value.toLong()
-            elapse > 1800000
+            elapse > INACTIVETIME
         }?.toList() ?: emptyList()
 
         return sleepValues

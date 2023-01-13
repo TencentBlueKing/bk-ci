@@ -120,7 +120,7 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
         const val REDIS_UPDATE_EVENT_PREFIX = "remotedev:updateEvent:"
-        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
+        private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
     }
 
@@ -243,7 +243,8 @@ class WorkspaceService @Autowired constructor(
 
         RedisWaiting4K8s(
             redisOperation,
-            "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId"
+            "${REDIS_UPDATE_EVENT_PREFIX}CREATE:$bizId",
+            expiredTimeInSeconds
         ).waiting().let {
             if (it?.status == true) {
                 val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -348,7 +349,8 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId"
+                "${REDIS_UPDATE_EVENT_PREFIX}START:$bizId",
+                expiredTimeInSeconds
             ).waiting().let {
                 if (it?.status == true) {
                     val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceName).firstOrNull()
@@ -446,7 +448,8 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId"
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
+                expiredTimeInSeconds
             ).waiting().let {
                 if (it?.status == true) {
                     doStopWS(userId, status, workspaceName)
@@ -504,7 +507,8 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId"
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
+                expiredTimeInSeconds
             ).waiting().let {
                 if (it?.status == true) {
                     doDeleteWS(userId, status, workspaceName)
@@ -760,7 +764,8 @@ class WorkspaceService @Autowired constructor(
 
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId"
+                "${REDIS_UPDATE_EVENT_PREFIX}STOP:$bizId",
+                expiredTimeInSeconds
             ).waiting().let {
                 if (it != null) {
                     doStopWS("system", status, workspace.name)
@@ -817,7 +822,8 @@ class WorkspaceService @Autowired constructor(
             )
             RedisWaiting4K8s(
                 redisOperation,
-                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId"
+                "${REDIS_UPDATE_EVENT_PREFIX}DELETE:$bizId",
+                expiredTimeInSeconds
             ).waiting().let {
                 if (it != null) {
                     doDeleteWS("system", status, workspace.name)

@@ -27,7 +27,6 @@
 
 package com.tencent.devops.remotedev.service.redis
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
@@ -39,7 +38,7 @@ import org.slf4j.LoggerFactory
 open class RedisWaiting4K8s(
     private val redisOperation: RedisOperation,
     private val lockKey: String,
-    private val expiredCount: Int = 90
+    private val expiredCount: Long = 120L
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(RedisWaiting4K8s::class.java)
@@ -47,7 +46,7 @@ open class RedisWaiting4K8s(
 
     fun waiting(): RemoteDevUpdateEvent? {
         var expired = expiredCount
-        while (expired-- > 0) {
+        while (expired-- > 0L) {
             val result = redisOperation.get(lockKey)
             if (result != null) {
                 redisOperation.delete(lockKey)
