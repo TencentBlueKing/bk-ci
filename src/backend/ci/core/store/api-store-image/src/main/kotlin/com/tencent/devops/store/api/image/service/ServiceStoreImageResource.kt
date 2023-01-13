@@ -94,15 +94,12 @@ interface ServiceStoreImageResource {
     @ApiOperation("根据code和版本号查询镜像详情")
     @GET
     @Path("/image/imageCodes/{imageCode}/imageVersions/{imageVersion}")
-    fun getImageDetailByCodeAndVersion(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
+    fun getImageStatusByCodeAndVersion(
         @ApiParam("镜像标识", required = true)
         @PathParam("imageCode")
         imageCode: String,
         @ApiParam("镜像版本", required = false)
         @PathParam("imageVersion")
         imageVersion: String
-    ): Result<ImageDetail>
+    ): Result<String>
 }

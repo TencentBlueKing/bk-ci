@@ -93,7 +93,7 @@ interface ServicePTemplateResource {
     @ApiOperation("判断模板镜像是否发布")
     @GET
     @Path("/store/templateCode/{templateCode}")
-    fun getIsRelease(
+    fun getCheckTemplate(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

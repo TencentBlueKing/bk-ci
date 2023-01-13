@@ -28,6 +28,8 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -41,6 +43,7 @@ import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -186,13 +189,18 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
-        val isReleaseResult = client.get(ServicePTemplateResource::class).getIsRelease(templateCode,userId)
-        if (isReleaseResult.isNotOk()) {
+        val ReleaseResult = client.get(ServicePTemplateResource::class).getCheckTemplate(templateCode,userId)
+        if (ReleaseResult.isNotOk()) {
             // 抛出错误提示
-            return Result(isReleaseResult.status, isReleaseResult.message ?: "")
+            return Result(ReleaseResult.status, ReleaseResult.message ?: "")
         }
-        val flag =isReleaseResult.data
-        if (flag != true) return  Result(null)
+        val flag =ReleaseResult.data
+        if (flag != true){
+            throw  ErrorCodeException(
+                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                defaultMessage = "模板镜像校验未通过，请检查后再试"
+            )
+        }
         if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在

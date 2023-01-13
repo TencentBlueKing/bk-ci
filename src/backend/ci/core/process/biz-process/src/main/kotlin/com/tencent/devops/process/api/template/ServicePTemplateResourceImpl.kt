@@ -65,8 +65,8 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return pipelineTemplateService.getTemplateDetailInfo(templateCode)
     }
 
-    override fun getIsRelease(templateCode: String,userId: String): Result<Boolean> {
-        return pipelineTemplateService.getIsRelease(templateCode,userId)
+    override fun getCheckTemplate(templateCode: String,userId: String): Result<Boolean> {
+        return pipelineTemplateService.getCheckTemplate(templateCode,userId)
     }
 
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {

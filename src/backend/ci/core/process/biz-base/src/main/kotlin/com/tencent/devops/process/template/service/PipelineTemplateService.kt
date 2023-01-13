@@ -41,6 +41,7 @@ import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -73,27 +74,29 @@ class PipelineTemplateService @Autowired constructor(
         )
     }
 
-    fun getIsRelease (templateCode: String,userId: String): Result<Boolean> {
-        logger.info("getIsRelease templateCode is:$templateCode")
+    fun getCheckTemplate (templateCode: String,userId: String): Result<Boolean> {
+        logger.info("getCheckTemplate templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         var flag= true
+        val images = ArrayList<String>()
         run aa@{
         templateModel.stages.forEach { stage ->
             stage.containers.forEach c@{ container  ->
                 if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
                     val imageCode = (container.dispatchType as StoreDispatchType).imageCode
                     val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
-                    if (imageCode.isNullOrBlank()){
-                        logger.info("再次遍历container, templateCode is:$imageCode,imageVersion is:$imageVersion")
+                    val image = imageCode + imageVersion
+                    if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()){
                         return@c
                     }else{
-                        if (imageVersion.isNullOrBlank()) {
-                            throw InvalidParamException("Input:($userId,$imageVersion),imageVersion is null")
+                        if (image in images){
+                                return@c
+                        }else{
+                            images.add(image)
                         }
-                        flag=isRelease(userId,imageCode,imageVersion)
+                        flag=isRelease(imageCode,imageVersion)
                         return@aa
-                            //MessageCodeUtil.generateResponseDataObject(StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID)
                     }
 
                 }else{
@@ -106,12 +109,11 @@ class PipelineTemplateService @Autowired constructor(
         return  Result(flag)
     }
 
-    private fun isRelease(userId: String,imageCode: String,imageVersion: String):Boolean {
-        val imageDetail = client.get(ServiceStoreImageResource::class)
-            .getImageDetailByCodeAndVersion(userId,imageCode,imageVersion)
-        val imageStatus= imageDetail.data?.imageStatus
+    private fun isRelease(imageCode: String,imageVersion: String):Boolean {
+        val imageStatus = client.get(ServiceStoreImageResource::class)
+            .getImageStatusByCodeAndVersion(imageCode,imageVersion).data
         logger.info("imageStatus is:$imageStatus")
-        return "RELEASED" == imageStatus
+        return ImageStatusEnum.RELEASED.name == imageStatus
     }
 
 

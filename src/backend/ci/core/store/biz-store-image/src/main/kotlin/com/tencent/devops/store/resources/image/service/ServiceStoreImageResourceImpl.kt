@@ -51,14 +51,12 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         )
     }
 
-    override fun getImageDetailByCodeAndVersion(
-        userId: String,
+    override fun getImageStatusByCodeAndVersion(
         imageCode: String,
         imageVersion: String
-    ): Result<ImageDetail> {
+    ): Result<String> {
         return Result(
-            imageService.getImageDetailByCodeAndVersion(
-                userId = userId,
+            imageService.getImageStatusByCodeAndVersion(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
                 interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
