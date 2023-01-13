@@ -239,7 +239,8 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
-                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true")
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName)
             )
         )
 
@@ -260,6 +261,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_YAML_NAME = "DEVOPS_REMOTING_YAML_NAME"
         private const val DEVOPS_REMOTING_DEBUG_ENABLE = "DEVOPS_REMOTING_DEBUG_ENABLE"
         private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
+        private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
 
 
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
