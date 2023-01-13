@@ -200,8 +200,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
      * 检查凭证信息
      */
     private fun checkCredentialInfo(repository: CodeGitlabRepository): RepoCredentialInfo {
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(repository = repository)
-        val checkResult: TokenCheckResult = checkToken(
+        val repoCredentialInfo = getCredentialInfo(repository = repository)
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )

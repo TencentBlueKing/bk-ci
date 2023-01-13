@@ -135,10 +135,10 @@ class CodeP4RepositoryService @Autowired constructor(
      * 检查凭证信息
      */
     private fun checkCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+        val repoCredentialInfo = getCredentialInfo(
             repository = repository
         )
-        val checkResult: TokenCheckResult = checkToken(
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )

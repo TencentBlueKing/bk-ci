@@ -213,10 +213,10 @@ class CodeTGitRepositoryService @Autowired constructor(
      * 检查凭证信息
      */
     private fun checkCredentialInfo(repository: CodeTGitRepository): RepoCredentialInfo {
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+        val repoCredentialInfo = getCredentialInfo(
             repository = repository
         )
-        val checkResult: TokenCheckResult = checkToken(
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )

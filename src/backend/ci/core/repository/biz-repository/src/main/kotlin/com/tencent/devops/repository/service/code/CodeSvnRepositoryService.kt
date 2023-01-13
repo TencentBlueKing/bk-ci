@@ -178,10 +178,10 @@ class CodeSvnRepositoryService @Autowired constructor(
      */
     private fun checkCredentialInfo(repository: CodeSvnRepository): RepoCredentialInfo {
         // 凭证信息
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(
+        val repoCredentialInfo = getCredentialInfo(
             repository = repository
         )
-        val checkResult: TokenCheckResult = checkToken(
+        val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
         )

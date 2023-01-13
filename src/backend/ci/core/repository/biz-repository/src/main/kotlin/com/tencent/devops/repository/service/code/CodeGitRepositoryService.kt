@@ -171,7 +171,7 @@ class CodeGitRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeGitRepository
     ): TokenCheckResult {
-        val checkResult: TokenCheckResult = when (repository.authType) {
+        val checkResult = when (repository.authType) {
             RepoAuthType.SSH -> {
                 scmService.checkPrivateKeyAndToken(
                     projectName = repository.projectName,
@@ -252,10 +252,10 @@ class CodeGitRepositoryService @Autowired constructor(
      */
     private fun checkCredentialInfo(repository: CodeGitRepository): RepoCredentialInfo {
         // 凭证信息
-        val repoCredentialInfo: RepoCredentialInfo = getCredentialInfo(repository)
+        val repoCredentialInfo = getCredentialInfo(repository)
         // 若授权类型不为OAUTH则需要检查Token
         if (repository.authType != RepoAuthType.OAUTH) {
-            val checkResult: TokenCheckResult = checkToken(
+            val checkResult = checkToken(
                 repoCredentialInfo = repoCredentialInfo,
                 repository = repository
             )
