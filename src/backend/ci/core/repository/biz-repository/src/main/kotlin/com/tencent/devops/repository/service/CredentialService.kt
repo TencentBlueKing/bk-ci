@@ -84,7 +84,7 @@ class CredentialService @Autowired constructor(
         }
         val credential: CredentialInfo = result.data!!
         logger.info("Get the credential($credential)")
-        return buildRepoCredentialInfo(credential, credential.credentialType,pair)
+        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
     }
 
     /**
@@ -163,7 +163,7 @@ class CredentialService @Autowired constructor(
                     )
                 }
                 var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v2.isNullOrBlank()){
+                if (!credentialInfo.v2.isNullOrBlank()) {
                     passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
                 }
                 SshCredentialInfo(
@@ -181,7 +181,7 @@ class CredentialService @Autowired constructor(
                     )
                 }
                 var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v3.isNullOrBlank()){
+                if (!credentialInfo.v3.isNullOrBlank()) {
                     passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
                 }
                 SshCredentialInfo(

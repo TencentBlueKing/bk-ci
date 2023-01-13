@@ -104,7 +104,7 @@ class RepositoryCodeGitLabDao {
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
 
-            if (StringUtils.isNotBlank(gitProjectId)) {
+            if (!gitProjectId.isNullOrBlank()) {
                 updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
             }
             updateSetStep.where(REPOSITORY_ID.eq(repositoryId))

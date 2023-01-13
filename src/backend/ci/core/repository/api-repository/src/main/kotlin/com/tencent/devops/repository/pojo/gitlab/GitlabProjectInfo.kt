@@ -28,11 +28,10 @@
 package com.tencent.devops.repository.pojo.gitlab
 
 import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import io.swagger.annotations.ApiModelProperty
 
 data class GitlabProjectInfo(
-    override val id: Int,
+    val id: Int,
     val description: String,
     @JsonProperty("ssh_url_to_repo")
     @ApiModelProperty(name = "ssh_url_to_repo")
@@ -46,4 +45,4 @@ data class GitlabProjectInfo(
     @ApiModelProperty(name = "path_with_namespace")
     @JsonProperty("path_with_namespace")
     val pathWithNamespace: String
-): RepositoryProjectInfo()
+)

@@ -41,7 +41,6 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -103,7 +102,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         record: TRepositoryRecord
     ) {
         // 提交的参数与数据库中类型不匹配
-        if (!StringUtils.equals(record.type, ScmType.CODE_GITLAB.name)) {
+        if (record.type != ScmType.CODE_GITLAB.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
         }
         repository.projectId = projectId
@@ -187,14 +186,14 @@ class CodeGitlabRepositoryService @Autowired constructor(
      */
     fun getGitProjectId(repo: CodeGitlabRepository, token: String): Int {
         logger.info("the repo is:$repo")
-        val repositoryProjectInfo: RepositoryProjectInfo = scmService.getProjectInfo(
+        val repositoryProjectInfo = scmService.getProjectInfo(
             projectName = repo.projectName,
             url = repo.getFormatURL(),
             type = ScmType.CODE_GITLAB,
             token = token
         )
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo.id
+        return repositoryProjectInfo?.id ?: -1
     }
 
     /**

@@ -113,7 +113,7 @@ class RepositoryCodeGitDao {
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
                 .set(AUTH_TYPE, authType?.name ?: RepoAuthType.SSH.name)
-            if (StringUtils.isNotBlank(gitProjectId)) {
+            if (!gitProjectId.isNullOrBlank()) {
                 updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
             }
             updateSetStep.where(REPOSITORY_ID.eq(repositoryId))

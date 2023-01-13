@@ -49,7 +49,7 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
@@ -602,7 +602,7 @@ open class GitApi {
         return sb.toString()
     }
 
-    fun getProjectInfo(host: String, token: String, url: String): RepositoryProjectInfo {
+    fun getProjectInfo(host: String, token: String, url: String): GitProjectInfo {
         logger.info("Start to get projectInfo of host=[$host] by url=[$url] and token=[${StringUtils.length(token)}]")
         val request = get(host, token, url, StringUtils.EMPTY)
         return JsonUtil.getObjectMapper().readValue(getBody(GET_PROJECT_INFO, request))

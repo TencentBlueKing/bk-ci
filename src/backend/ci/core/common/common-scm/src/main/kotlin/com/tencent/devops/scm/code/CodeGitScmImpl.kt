@@ -40,7 +40,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
@@ -276,7 +276,7 @@ class CodeGitScmImpl constructor(
         )
     }
 
-    override fun getProjectInfo(projectName: String): RepositoryProjectInfo {
+    override fun getProjectInfo(projectName: String): GitProjectInfo {
         val url = "projects/${urlEncode(projectName)}"
         return gitApi.getProjectInfo(
             host = apiUrl,

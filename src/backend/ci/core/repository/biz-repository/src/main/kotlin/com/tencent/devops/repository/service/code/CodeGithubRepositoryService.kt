@@ -37,7 +37,6 @@ import com.tencent.devops.repository.dao.RepositoryGithubDao
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
-import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.springframework.beans.factory.annotation.Autowired
@@ -79,7 +78,7 @@ class CodeGithubRepositoryService @Autowired constructor(
         record: TRepositoryRecord
     ) {
         // 提交的参数与数据库中类型不匹配
-        if (!StringUtils.equals(record.type, ScmType.GITHUB.name)) {
+        if (record.type != ScmType.GITHUB.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITHUB_INVALID))
         }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)

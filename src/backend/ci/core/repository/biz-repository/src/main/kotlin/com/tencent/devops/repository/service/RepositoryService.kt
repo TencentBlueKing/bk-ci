@@ -56,7 +56,7 @@ import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import com.tencent.devops.repository.service.scm.IGitOauthService
@@ -652,8 +652,8 @@ class RepositoryService @Autowired constructor(
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
         val repoAuthInfoMap: MutableMap<Long, RepoAuthInfo> = mutableMapOf()
-        repoGroup.map { (type, repositoryIds) ->
-            {
+        repoGroup.forEach { (type, repositoryIds) ->
+            run {
                 // 1. 获取处理类
                 val codeGitRepositoryService = CodeRepositoryServiceRegistrar.getServiceByScmType(scmType = type)
                 // 2. 得到授权身份<repoId, authInfo>

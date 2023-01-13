@@ -44,7 +44,7 @@ import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.RepositoryProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -62,7 +62,7 @@ class CodeGitRepositoryService @Autowired constructor(
     private val credentialService: CredentialService,
     private val scmService: IScmService,
     private val gitOauthService: IGitOauthService,
-    private val scmOauthService: IScmOauthService,
+    private val scmOauthService: IScmOauthService
 ) : CodeRepositoryService<CodeGitRepository> {
     override fun repositoryType(): String {
         return CodeGitRepository::class.java.name
@@ -109,7 +109,7 @@ class CodeGitRepositoryService @Autowired constructor(
         record: TRepositoryRecord
     ) {
         // 提交的参数与数据库中类型不匹配
-        if (!StringUtils.equals(record.type, ScmType.CODE_GIT.name)) {
+        if (record.type != ScmType.CODE_GIT.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_INVALID))
         }
         repository.projectId = projectId
@@ -212,7 +212,7 @@ class CodeGitRepositoryService @Autowired constructor(
     fun getGitProjectId(repo: CodeGitRepository, token: String): Int {
         val isOauth = repo.authType == RepoAuthType.OAUTH
         logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:${isOauth}")
-        val repositoryProjectInfo: RepositoryProjectInfo = if (isOauth) {
+        val repositoryProjectInfo = if (isOauth) {
             scmOauthService.getProjectInfo(
                 projectName = repo.projectName,
                 url = repo.getFormatURL(),
@@ -228,7 +228,7 @@ class CodeGitRepositoryService @Autowired constructor(
             )
         }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo.id
+        return repositoryProjectInfo?.id ?: -1
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
