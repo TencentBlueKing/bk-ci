@@ -105,7 +105,6 @@ class ServiceCodeccResourceImpl @Autowired constructor(
         return codeccApi.createCodeccPipeline(repoId, languages)
     }
 
-
     override fun getCodeccOpensourceMeasurement(codeSrc: String): Result<Map<String, Any>> {
         return codeccService.getCodeccOpensourceMeasurement(codeSrc)
     }
