@@ -50,6 +50,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
 
     @SensitiveApiPermission("syc_atom_index")
     override fun getCertifiedPlugins(
+        userId: String,
         indexCode: String,
         elementName: String
     ): Result<List<String>> {

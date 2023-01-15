@@ -45,7 +45,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_STORE_INDEX_MANAGE"], description = "研发商店指标管理")
+@Api(tags = ["BUILD_STORE_INDEX_MANAGE"], description = "build_index")
 @Path("/build/store/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
@@ -67,6 +67,9 @@ interface BuildStoreIndexInfoResource {
     @GET
     @Path("/element/value/get")
     fun getCertifiedPlugins(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
         @ApiParam("指标代码", required = true)
         @QueryParam("indexCode")
         indexCode: String,
