@@ -40,7 +40,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     private val storeIndexManageService: StoreIndexManageService
 ) : BuildStoreIndexInfoResource {
 
-    @SensitiveApiPermission("syc_atom_quality_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun createIndexComputeDetail(
         userId: String,
         storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
@@ -48,7 +48,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
         return storeIndexManageService.createIndexComputeDetail(userId, storeIndexElementCreateRequest)
     }
 
-    @SensitiveApiPermission("syc_atom_quality_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun getCertifiedPlugins(
         indexCode: String,
         elementName: String
@@ -56,7 +56,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
         return storeIndexManageService.getStoreCodeByElementValue(indexCode, elementName)
     }
 
-    @SensitiveApiPermission("syc_atom_quality_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
