@@ -290,7 +290,7 @@ class CodeccService @Autowired constructor(
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
                     errorCode = response.code().toString(),
-                    defaultMessage = "get codecc opensource measurement response fail $body"
+                    defaultMessage = "get codecc opensource measurement response fail.$body"
                 )
             }
             return objectMapper.readValue(body)
