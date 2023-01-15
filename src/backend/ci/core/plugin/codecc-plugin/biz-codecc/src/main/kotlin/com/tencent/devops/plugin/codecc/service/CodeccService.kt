@@ -30,6 +30,8 @@ package com.tencent.devops.plugin.codecc.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -275,5 +277,24 @@ class CodeccService @Autowired constructor(
             fileSizeUrl = fileSizePath,
             downloadUrl = scriptPath
         )
+    }
+
+    fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
+        val url = "http://$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        val httpReq = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(httpReq).use { response ->
+            val body = response.body()!!.string()
+            logger.info("codecc opensource measurement response: $body")
+            if (!response.isSuccessful) {
+                throw ErrorCodeException(
+                    errorCode = response.code().toString(),
+                    defaultMessage = "get codecc opensource measurement response fail $body"
+                )
+            }
+            return objectMapper.readValue(body)
+        }
     }
 }
