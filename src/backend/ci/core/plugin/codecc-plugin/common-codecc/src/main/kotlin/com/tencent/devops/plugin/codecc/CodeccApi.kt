@@ -30,6 +30,7 @@ package com.tencent.devops.plugin.codecc
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -182,13 +183,21 @@ open class CodeccApi constructor(
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
         val url = "$newCodeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
-        logger.info("codecc opensource measurement url: $url")
-        val result = taskExecution(
-            body = mapOf(),
-            headers = null,
-            path = url,
-            method = HttpMethod.GET
-        )
-        return objectMapper.readValue(result)
+        logger.info("codecc opensource measurement host:$newCodeccHost url: $url")
+        val httpReq = Request.Builder()
+            .url(url)
+            .get()
+            .build()
+        OkhttpUtils.doHttp(httpReq).use { response ->
+            val body = response.body()!!.string()
+            logger.info("codecc opensource measurement response: $body")
+            if (!response.isSuccessful) {
+                throw ErrorCodeException(
+                    errorCode = response.code().toString(),
+                    defaultMessage = "get codecc opensource measurement response fail.$body"
+                )
+            }
+            return objectMapper.readValue(body)
+        }
     }
 }
