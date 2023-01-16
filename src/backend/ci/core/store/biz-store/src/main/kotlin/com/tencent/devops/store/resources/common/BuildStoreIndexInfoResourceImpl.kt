@@ -29,7 +29,7 @@ package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
+import com.tencent.devops.store.api.common.ServiceStoreIndexInfoResource
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     private val storeIndexManageService: StoreIndexManageService
-) : BuildStoreIndexInfoResource {
+) : ServiceStoreIndexInfoResource {
 
 //    @SensitiveApiPermission("syc_atom_index")
     override fun createIndexComputeDetail(
