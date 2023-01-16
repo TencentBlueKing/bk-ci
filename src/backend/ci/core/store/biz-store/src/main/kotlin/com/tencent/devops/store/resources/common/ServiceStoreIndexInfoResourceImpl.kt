@@ -35,7 +35,7 @@ import com.tencent.devops.store.service.common.StoreIndexManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildStoreIndexInfoResourceImpl @Autowired constructor(
+class ServiceStoreIndexInfoResourceImpl @Autowired constructor(
     private val storeIndexManageService: StoreIndexManageService
 ) : ServiceStoreIndexInfoResource {
 
