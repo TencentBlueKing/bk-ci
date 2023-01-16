@@ -807,7 +807,7 @@ abstract class ImageService @Autowired constructor() {
     ): String {
         logger.info("$interfaceName:getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         var imageRecord: TImageRecord? = null
-        if (VersionUtils.isLatestVersion(VERSION)) {
+        if (VersionUtils.isLatestVersion(imageVersion)) {
             imageRecord = imageDao.getImageByMaxVersion(dslContext,imageCode)?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode",
