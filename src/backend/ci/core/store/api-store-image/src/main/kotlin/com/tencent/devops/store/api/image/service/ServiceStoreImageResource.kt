@@ -28,7 +28,6 @@ package com.tencent.devops.store.api.image.service
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.store.pojo.image.response.ImageDetail
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation

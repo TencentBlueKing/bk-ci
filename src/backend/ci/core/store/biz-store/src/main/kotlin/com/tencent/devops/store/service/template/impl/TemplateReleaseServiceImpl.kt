@@ -28,20 +28,14 @@
 package com.tencent.devops.store.service.template.impl
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_VALIDATE_ERROR
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
-import com.tencent.devops.common.pipeline.type.StoreDispatchType
-import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
-import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
 import com.tencent.devops.store.dao.common.StoreMemberDao
@@ -189,14 +183,14 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
-        val ReleaseResult = client.get(ServicePTemplateResource::class).getCheckTemplate(templateCode,userId)
+        val ReleaseResult = client.get(ServicePTemplateResource::class).getCheckTemplate(templateCode, userId)
         if (ReleaseResult.isNotOk()) {
             // 抛出错误提示
             return Result(ReleaseResult.status, ReleaseResult.message ?: "")
         }
-        val flag =ReleaseResult.data
-        if (flag != true){
-            throw  ErrorCodeException(
+        val flag = ReleaseResult.data
+        if (flag != true) {
+            throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "模板镜像校验未通过，请检查后再试"
             )

@@ -28,7 +28,6 @@
 package com.tencent.devops.process.template.service
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -40,7 +39,6 @@ import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.pojo.template.TemplateDetailInfo
 import com.tencent.devops.process.pojo.template.TemplateType
 import com.tencent.devops.store.api.image.service.ServiceStoreImageResource
-import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.pojo.image.enums.ImageStatusEnum
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -74,50 +72,47 @@ class PipelineTemplateService @Autowired constructor(
         )
     }
 
-    fun getCheckTemplate (templateCode: String,userId: String): Result<Boolean> {
+    fun getCheckTemplate(templateCode: String, userId: String): Result<Boolean> {
         logger.info("start getCheckTemplate templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        var flag= true
+        var flag = true
         val images = ArrayList<String>()
         run aa@{
         templateModel.stages.forEach { stage ->
-            stage.containers.forEach c@{ container  ->
+            stage.containers.forEach c@{ container ->
                 if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
                     val imageCode = (container.dispatchType as StoreDispatchType).imageCode
-                    val imageVersion= (container.dispatchType as StoreDispatchType).imageVersion
+                    val imageVersion = (container.dispatchType as StoreDispatchType).imageVersion
                     val image = imageCode + imageVersion
-                    if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()){
+                    if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) {
                         return@c
-                    }else{
-                        if (image in images){
+                    } else {
+                        if (image in images) {
                                 return@c
-                        }else{
+                        } else {
                             images.add(image)
                         }
                         logger.info("images is:$images")
-                        flag=isRelease(imageCode,imageVersion)
+                        flag = isRelease(imageCode, imageVersion)
                         return@aa
                     }
-
-                }else{
+                } else {
                     logger.info("container is not VMBuildContainer ")
                     return@c
                 }
             }
-        }}
+        } }
         logger.info("flag is $flag ")
-        return  Result(flag)
+        return Result(flag)
     }
 
-    private fun isRelease(imageCode: String,imageVersion: String):Boolean {
+    private fun isRelease(imageCode: String, imageVersion: String): Boolean {
         val imageStatus = client.get(ServiceStoreImageResource::class)
-            .getImageStatusByCodeAndVersion(imageCode,imageVersion).data
+            .getImageStatusByCodeAndVersion(imageCode, imageVersion).data
         logger.info("imageStatus is:$imageStatus")
         return ImageStatusEnum.RELEASED.name == imageStatus
     }
-
-
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineTemplateService::class.java)

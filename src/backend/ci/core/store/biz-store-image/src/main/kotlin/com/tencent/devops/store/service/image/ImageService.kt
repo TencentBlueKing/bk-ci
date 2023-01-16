@@ -29,12 +29,14 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.*
+import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -808,12 +810,12 @@ abstract class ImageService @Autowired constructor() {
         logger.info("$interfaceName:getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         var imageRecord: TImageRecord? = null
         if (VersionUtils.isLatestVersion(imageVersion)) {
-            imageRecord = imageDao.getImageByMaxVersion(dslContext,imageCode)?: throw ErrorCodeException(
+            imageRecord = imageDao.getImageByMaxVersion(dslContext, imageCode) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode",
                 params = arrayOf(imageCode)
             )
-        }else {
+        } else {
             imageRecord =
                 imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                     errorCode = USER_IMAGE_VERSION_NOT_EXIST,
