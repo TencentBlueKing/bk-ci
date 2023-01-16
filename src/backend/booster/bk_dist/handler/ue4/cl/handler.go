@@ -45,6 +45,7 @@ const (
 	MaxWindowsCommandLength = 30000
 
 	appendEnvKey = "INCLUDE="
+	osWindows    = "windows"
 )
 
 var (
@@ -307,7 +308,7 @@ func (cl *TaskCL) getIncludeExe() (string, error) {
 	blog.Debugf("cl: ready get include exe")
 
 	target := "bk-includes"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		target = "bk-includes.exe"
 	}
 
@@ -410,7 +411,7 @@ func (cl *TaskCL) copyPumpHeadFile(workdir string) error {
 	}
 
 	sep := "\n"
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		sep = "\r\n"
 	}
 
@@ -1063,7 +1064,7 @@ func (cl *TaskCL) preBuild(args []string) error {
 	}
 
 	// quota result file if it's path contains space
-	if runtime.GOOS == "windows" {
+	if runtime.GOOS == osWindows {
 		if hasSpace(cl.outputFile) && !strings.HasPrefix(cl.outputFile, "\"") {
 			for index := range serverSideArgs {
 				if strings.HasPrefix(serverSideArgs[index], "/Fo") {
