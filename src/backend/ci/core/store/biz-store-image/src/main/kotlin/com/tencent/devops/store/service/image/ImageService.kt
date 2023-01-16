@@ -29,14 +29,12 @@ package com.tencent.devops.store.service.image
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.api.util.*
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -108,6 +106,7 @@ import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.ImageUtil
+import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -806,14 +805,25 @@ abstract class ImageService @Autowired constructor() {
         imageVersion: String,
         interfaceName: String? = "Anon interface"
     ): String {
-        logger.info("$interfaceName:getImageByCodeAndVersion:Input:($imageCode,$imageVersion)")
-            val imageRecord =
+        logger.info("$interfaceName:getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
+        var imageRecord: TImageRecord? = null
+        if (VersionUtils.isLatestVersion(VERSION)) {
+            imageRecord = imageDao.getImageByMaxVersion(dslContext,imageCode)?: throw ErrorCodeException(
+                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
+                defaultMessage = "image is null,imageCode=$imageCode",
+                params = arrayOf(imageCode)
+            )
+        }else {
+            imageRecord =
                 imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                     errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                     defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion)
                 )
+        }
+
         val imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
+        logger.info("imageStatus:$imageStatus")
         return imageStatus
     }
 

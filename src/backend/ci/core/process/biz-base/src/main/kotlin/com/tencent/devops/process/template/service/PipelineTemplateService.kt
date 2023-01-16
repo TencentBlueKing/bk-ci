@@ -75,7 +75,7 @@ class PipelineTemplateService @Autowired constructor(
     }
 
     fun getCheckTemplate (templateCode: String,userId: String): Result<Boolean> {
-        logger.info("getCheckTemplate templateCode is:$templateCode")
+        logger.info("start getCheckTemplate templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         var flag= true
@@ -95,6 +95,7 @@ class PipelineTemplateService @Autowired constructor(
                         }else{
                             images.add(image)
                         }
+                        logger.info("images is:$images")
                         flag=isRelease(imageCode,imageVersion)
                         return@aa
                     }
