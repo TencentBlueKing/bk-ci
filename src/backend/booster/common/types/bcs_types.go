@@ -149,3 +149,16 @@ type ResourceItem struct {
 	Mem     string `json:"memory,omitempty"`
 	Storage string `json:"storage,omitempty"`
 }
+
+// Image define a worker iamge on devops
+type Image struct {
+	Name             string   `json:"param_name"`
+	Value            string   `json:"param_value"`
+	ProjectWhitelist []string `json:"visual_range"`
+}
+
+// WorkerImage define a worker iamge on devops
+type WorkerImage struct {
+	Mesos []Image `json:"mesos"`
+	K8s   []Image `json:"k8s"`
+}

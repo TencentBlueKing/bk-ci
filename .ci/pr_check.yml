@@ -16,9 +16,6 @@ stages:
   jobs:
     job_1:
       name: "源代码规范性检查"
-      runs-on:
-        needs:
-          jdk: "1.8.0_161"
       steps:
         - checkout: self
           name: "预合并 BK-CI代码"

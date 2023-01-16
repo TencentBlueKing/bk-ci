@@ -104,7 +104,6 @@ Vue.mixin({
                     resourceId,
                     instanceId
                 }])
-                console.log('redirectUrl', redirectUrl)
                 window.open(redirectUrl, '_blank')
                 this.$bkInfo({
                     title: this.$t('permissionRefreshtitle'),

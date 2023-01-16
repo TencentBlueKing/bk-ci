@@ -210,6 +210,7 @@ server:
       enabled: true
       pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
       dir: ${service.log.dir}
+  shutdown: graceful
 
 # gateway for system
 devopsGateway:

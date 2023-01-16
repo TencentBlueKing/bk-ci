@@ -41,6 +41,12 @@ import (
 )
 
 func DoAgentHeartbeat() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent heartbeat panic: ", err)
+		}
+	}()
+
 	for {
 		_ = agentHeartbeat()
 		time.Sleep(10 * time.Second)
@@ -49,11 +55,18 @@ func DoAgentHeartbeat() {
 
 func agentHeartbeat() error {
 	var jdkVersion []string
-	version := upgrade.JdkVersion.Version.Load()
+	version := upgrade.JdkVersion.GetVersion()
 	if version != nil {
-		jdkVersion = version.([]string)
+		jdkVersion = version
 	}
-	result, err := api.Heartbeat(job.GBuildManager.GetInstances(), jdkVersion)
+	result, err := api.Heartbeat(
+		job.GBuildManager.GetInstances(),
+		jdkVersion,
+		job.GBuildDockerManager.GetInstances(),
+		api.DockerInitFileInfo{
+			FileMd5:     upgrade.DockerFileMd5.Md5,
+			NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
+		})
 	if err != nil {
 		logs.Error("agent heartbeat failed: ", err.Error())
 		return errors.New("agent heartbeat failed")
@@ -88,6 +101,10 @@ func agentHeartbeat() error {
 	}
 	if heartbeatResponse.FileGateway != "" && heartbeatResponse.FileGateway != config.GAgentConfig.FileGateway {
 		config.GAgentConfig.FileGateway = heartbeatResponse.FileGateway
+		configChanged = true
+	}
+	if config.GAgentConfig.DockerParallelTaskCount != heartbeatResponse.DockerParallelTaskCount {
+		config.GAgentConfig.DockerParallelTaskCount = heartbeatResponse.DockerParallelTaskCount
 		configChanged = true
 	}
 

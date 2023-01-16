@@ -33,4 +33,8 @@ dependencies {
     api("io.github.openfeign.form:feign-form")
     api("io.github.openfeign.form:feign-form-spring")
     api("io.github.openfeign:feign-spring4")
+    if (System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+        print("use common-kubernetes")
+        api(project(":core:common:common-kubernetes"))
+    }
 }

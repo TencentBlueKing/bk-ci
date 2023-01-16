@@ -56,34 +56,34 @@ class MQPipelineCreateListener @Autowired constructor(
 
     override fun run(event: PipelineCreateEvent) {
         val watcher = Watcher(id = "${event.traceId}|CreatePipeline#${event.pipelineId}|${event.userId}")
-        try {
 
-            watcher.start("callback")
+        watcher.safeAround("callback") {
             callBackControl.pipelineCreateEvent(projectId = event.projectId, pipelineId = event.pipelineId)
-            watcher.stop()
-            watcher.start("updateAtomPipelineNum")
+        }
+
+        watcher.safeAround("updateAtomPipelineNum") {
             pipelineAtomStatisticsService.updateAtomPipelineNum(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version ?: 1
             )
-            watcher.stop()
-            watcher.start("updateAgentPipelineRef")
+        }
+
+        watcher.safeAround("updateAgentPipelineRef") {
             with(event) {
                 agentPipelineRefService.updateAgentPipelineRef(userId, "create_pipeline", projectId, pipelineId)
             }
-            watcher.stop()
-            watcher.start("addWebhook")
+        }
+
+        watcher.safeAround("addWebhook") {
             pipelineWebhookService.addWebhook(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 version = event.version,
                 userId = event.userId
             )
-            watcher.stop()
-        } finally {
-            watcher.stop()
-            LogUtils.printCostTimeWE(watcher = watcher)
         }
+
+        LogUtils.printCostTimeWE(watcher = watcher)
     }
 }

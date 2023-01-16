@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.constant.BUILD_COMPLETED
 import com.tencent.devops.common.api.constant.BUILD_FAILED
 import com.tencent.devops.common.api.constant.BUILD_REVIEWING
 import com.tencent.devops.common.api.constant.BUILD_RUNNING
+import com.tencent.devops.common.api.constant.BUILD_STAGE_SUCCESS
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -157,16 +158,14 @@ open class BaseBuildDetailService constructor(
         val stageTagMap: Map<String, String>
             by lazy { stageTagService.getAllStageTag().data!!.associate { it.id to it.stageTagName } }
         // 更新Stage状态至BuildHistory
-        val (statusMessage, reason) = if (buildStatus == BuildStatus.REVIEWING) {
-            Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
-        } else if (buildStatus.isFailure()) {
-            Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
-        } else if (buildStatus.isCancel()) {
-            Pair(BUILD_CANCELED, cancelUser)
-        } else if (buildStatus.isSuccess()) {
-            Pair(BUILD_COMPLETED, null)
-        } else {
-            Pair(BUILD_RUNNING, null)
+
+        val (statusMessage, reason) = when {
+            buildStatus == BuildStatus.REVIEWING -> Pair(BUILD_REVIEWING, reviewers?.joinToString(","))
+            buildStatus == BuildStatus.STAGE_SUCCESS -> Pair(BUILD_STAGE_SUCCESS, null)
+            buildStatus.isFailure() -> Pair(BUILD_FAILED, errorMsg ?: buildStatus.name)
+            buildStatus.isCancel() -> Pair(BUILD_CANCELED, cancelUser)
+            buildStatus.isSuccess() -> Pair(BUILD_COMPLETED, null)
+            else -> Pair(BUILD_RUNNING, null)
         }
         return model.stages.map {
             BuildStageStatus(

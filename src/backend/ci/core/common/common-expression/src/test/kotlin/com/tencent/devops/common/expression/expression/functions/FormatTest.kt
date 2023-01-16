@@ -56,28 +56,28 @@ internal class FormatTest {
             ExpressionParser.createTree(
                 "format('{0}-{1}:{3}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null)
+            )!!.evaluate(null, ev, null, null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0}-{1}:3}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null)
+            )!!.evaluate(null, ev, null, null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0}-{1}:{3', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null)
+            )!!.evaluate(null, ev, null, null)
         }
 
         Assertions.assertThrows(FunctionFormatException::class.java) {
             ExpressionParser.createTree(
                 "format('{0:yyyyMMdd}', variables.str, variables.doub, variables.arry)",
                 null, nameValue, null
-            )!!.evaluate(null, ev, null)
+            )!!.evaluate(null, ev, null, null)
         }
     }
 
@@ -92,7 +92,7 @@ internal class FormatTest {
     )
     fun evaluateCoreTest(format: String) {
         val (exp, expect) = format.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null).value
+        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
         Assertions.assertEquals(expect, res)
     }
 
@@ -109,7 +109,7 @@ internal class FormatTest {
         val res =
             ExpressionParser
                 .createSubNameValueEvaluateTree(exp, null, parametersNameValue, null, SubNameValueEvaluateInfo())!!
-                .subNameValueEvaluate(null, parametersEv, null, SubNameValueEvaluateInfo()).value
+                .subNameValueEvaluate(null, parametersEv, null, SubNameValueEvaluateInfo(), null).value
         Assertions.assertEquals(expect, res)
     }
 
