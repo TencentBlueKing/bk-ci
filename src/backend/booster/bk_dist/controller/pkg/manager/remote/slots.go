@@ -235,7 +235,7 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 		}
 	}
 
-	blog.Infof("remote slot: total slot:%d after disable host:%v", wr.totalSlots, *host)
+	blog.Infof("remote slot: total slot:%d after :%v", wr.totalSlots, *host)
 	return
 }
 

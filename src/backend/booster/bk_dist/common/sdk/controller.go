@@ -129,6 +129,8 @@ type ControllerConfig struct {
 	AutoResourceMgr    bool
 	ResIdleSecsForFree int
 	SendCork           bool
+	NetErrorLimit      int
+	RemoteRetryTimes   int
 }
 
 // Target return the server ip and port of controller

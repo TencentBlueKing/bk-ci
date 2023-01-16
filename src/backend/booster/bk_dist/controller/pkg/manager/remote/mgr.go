@@ -197,6 +197,8 @@ func (m *Mgr) Init() {
 		go m.resourceCheck(ctx)
 	}
 
+	go m.workerCheck(ctx)
+
 	if m.conf.SendCork {
 		m.sendCorkChan = make(chan bool, 1000)
 		go m.sendFilesWithCorkTick(ctx)
@@ -347,7 +349,7 @@ func (m *Mgr) workerCheck(ctx context.Context) {
 		case <-ticker.C:
 			handler := m.remoteWorker.Handler(0, nil, nil, nil)
 			for _, w := range m.resource.worker {
-				if w.disabled && w.continuousNetErrors >= 3 {
+				if w.disabled && w.continuousNetErrors >= m.conf.NetErrorLimit {
 					go func(w *worker) {
 						_, err := handler.ExecuteSyncTime(w.host.Server)
 						if err != nil {
@@ -436,9 +438,9 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 			if !w.host.Equal(req.Server) {
 				continue
 			}
-			if strings.Contains(err.Error(), "dial tcp") {
+			if strings.Contains(err.Error(), "connection") {
 				m.resource.countWorkerError(req.Server)
-				if w.continuousNetErrors >= 3 {
+				if w.continuousNetErrors >= m.conf.NetErrorLimit {
 					m.resource.disableWorker(req.Server)
 					blog.Errorf("remote: server(%s) in work(%s) has (%d) continuous net errors "+
 						"make it disabled", req.Server.Server, m.work.ID(), w.continuousNetErrors)

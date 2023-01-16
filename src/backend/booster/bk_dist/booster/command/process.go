@@ -220,6 +220,17 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		pumpCacheSizeMaxMB = 1024
 	}
 
+	netErrLimit := 5
+	if c.IsSet(FlagNerErrLimit) && c.Int(FlagNerErrLimit) > 0 {
+		netErrLimit = c.Int(FlagNerErrLimit)
+	}
+
+	remoteRetryTimes := 1
+	if c.IsSet(FlagRemoteRetryTimes) && c.Int(FlagRemoteRetryTimes) > 0 {
+		remoteRetryTimes = c.Int(FlagRemoteRetryTimes)
+
+	}
+
 	// generate a new booster.
 	cmdConfig := dcType.BoosterConfig{
 		Type:      dcType.GetBoosterType(bt),
@@ -316,6 +327,8 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			AutoResourceMgr:    c.Bool(FlagAutoResourceMgr),
 			ResIdleSecsForFree: resIdleSecsForFree,
 			SendCork:           c.Bool(FlagSendCork),
+			NetErrorLimit:      netErrLimit,
+			RemoteRetryTimes:   remoteRetryTimes,
 		},
 	}
 
