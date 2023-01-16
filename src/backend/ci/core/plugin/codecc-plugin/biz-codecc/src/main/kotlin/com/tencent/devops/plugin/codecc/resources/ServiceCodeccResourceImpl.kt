@@ -106,6 +106,6 @@ class ServiceCodeccResourceImpl @Autowired constructor(
     }
 
     override fun getCodeccOpensourceMeasurement(codeSrc: String): Result<Map<String, Any>> {
-        return codeccService.getCodeccOpensourceMeasurement(codeSrc)
+        return codeccApi.getCodeccOpensourceMeasurement(codeSrc)
     }
 }
