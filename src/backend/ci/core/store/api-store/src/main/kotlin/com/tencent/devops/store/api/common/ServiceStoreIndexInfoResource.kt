@@ -45,11 +45,11 @@ import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["BUILD_STORE_INDEX_MANAGE"], description = "build_index")
-@Path("/build/store/index")
+@Api(tags = ["SERVICE_STORE_INDEX_MANAGE"], description = "service_index")
+@Path("/service/store/index")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface BuildStoreIndexInfoResource {
+interface ServiceStoreIndexInfoResource {
 
     @ApiOperation("添加组件指标计算详情")
     @POST
