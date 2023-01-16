@@ -34,7 +34,7 @@ import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.event.annotation.RabbitEvent
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineRoutableEvent
 
-@RabbitEvent(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_SHUTDOWN_DISPATCH)
+@RabbitEvent(MQ.EXCHANGE_BUILD_LESS_AGENT_LISTENER_DIRECT, MQ.ROUTE_BUILD_LESS_AGENT_STARTUP_DISPATCH)
 data class PipelineBuildLessStartupDispatchEvent(
     override val source: String,
     override val projectId: String,
