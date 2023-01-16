@@ -45,7 +45,8 @@ import javax.ws.rs.HttpMethod
 @Suppress("ALL")
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
-    private val codeccApiProxyUrl: String
+    private val codeccApiProxyUrl: String,
+    private val newCodeccHost: String
 ) {
 
     companion object {
@@ -175,6 +176,18 @@ open class CodeccApi constructor(
             path = "/ms/task/api/service/task/repo/create",
             headers = generateCodeccHeaders(repoId, null),
             method = HttpMethod.POST
+        )
+        return objectMapper.readValue(result)
+    }
+
+    fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
+        val url = "$newCodeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        logger.info("codecc opensource measurement url: $url")
+        val result = taskExecution(
+            body = mapOf(),
+            headers = null,
+            path = url,
+            method = HttpMethod.GET
         )
         return objectMapper.readValue(result)
     }
