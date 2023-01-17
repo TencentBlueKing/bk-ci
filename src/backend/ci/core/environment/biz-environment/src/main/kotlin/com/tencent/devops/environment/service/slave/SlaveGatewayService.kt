@@ -27,11 +27,11 @@
 
 package com.tencent.devops.environment.service.slave
 
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.slave.SlaveGatewayDao
 import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.service.AgentUrlService
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,7 +43,7 @@ class SlaveGatewayService @Autowired constructor(
     private val dslContext: DSLContext,
     private val slaveGatewayDao: SlaveGatewayDao,
     private val commonConfig: CommonConfig,
-    private val agentGrayUtils: AgentGrayUtils,
+    private val agentPropsScope: AgentPropsScope,
     private val agentUrlService: AgentUrlService
 ) {
 
@@ -65,22 +65,22 @@ class SlaveGatewayService @Autowired constructor(
     }
 
     fun getFileGateway(zoneName: String?): String? {
-        if (agentGrayUtils.useDefaultFileGateway()) {
-            val defaultFileGateway = agentGrayUtils.getDefaultFileGateway()
-            if (!defaultFileGateway.isNullOrBlank()) return defaultFileGateway!!
+        if (agentPropsScope.useDefaultFileGateway()) {
+            val defaultFileGateway = agentPropsScope.getDefaultFileGateway()
+            if (defaultFileGateway.isBlank()) return defaultFileGateway
         }
         return getConfigGateway(zoneName)
     }
 
     fun getGateway(zoneName: String?): String? {
-        if (agentGrayUtils.useDefaultGateway()) {
-            val defaultGateway = agentGrayUtils.getDefaultGateway()
-            if (!defaultGateway.isNullOrBlank()) return defaultGateway!!
+        if (agentPropsScope.useDefaultGateway()) {
+            val defaultGateway = agentPropsScope.getDefaultGateway()
+            if (defaultGateway.isBlank()) return defaultGateway
         }
         return getConfigGateway(zoneName)
     }
 
-    private fun getConfigGateway(zoneName: String?): String? {
+    private fun getConfigGateway(zoneName: String?): String {
         if (zoneName.isNullOrBlank()) {
             return agentUrlService.fixGateway(commonConfig.devopsBuildGateway!!)
         }
