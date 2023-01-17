@@ -42,6 +42,6 @@ class CodeccConfig {
     @Value("\${codeccGateway.proxy:}")
     val codeccApiProxyGateWay: String = ""
 
-    @Value("\${codecc.new.host:}")
-    var newCodeccHost: String = ""
+    @Value("\${codecc.host:}")
+    var codeccHost: String = ""
 }
