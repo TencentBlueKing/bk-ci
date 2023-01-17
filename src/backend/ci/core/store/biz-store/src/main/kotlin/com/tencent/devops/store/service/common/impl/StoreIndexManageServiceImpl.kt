@@ -116,8 +116,8 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         }
         storeIndexManageInfoDao.batchCreateStoreIndexLevelInfo(dslContext, indexLevelInfoRecords)
         // 如果运算类型为插件则需要初始化流水线
-        if (storeIndexCreateRequest.operationType == IndexOperationTypeEnum.ATOM
-            && !storeIndexCreateRequest.atomCode.isNullOrBlank()) {
+        if (storeIndexCreateRequest.operationType == IndexOperationTypeEnum.ATOM &&
+            !storeIndexCreateRequest.atomCode.isNullOrBlank()) {
             tStoreIndexBaseInfoRecord.atomCode = storeIndexCreateRequest.atomCode
             storeIndexManageInfoDao.createStoreIndexBaseInfo(dslContext, tStoreIndexBaseInfoRecord)
             storeIndexPipelineService.initStoreIndexPipeline(
