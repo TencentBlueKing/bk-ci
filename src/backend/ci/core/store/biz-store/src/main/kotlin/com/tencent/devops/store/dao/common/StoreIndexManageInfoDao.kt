@@ -36,7 +36,6 @@ import com.tencent.devops.model.store.tables.records.TStoreIndexElementDetailRec
 import com.tencent.devops.model.store.tables.records.TStoreIndexLevelInfoRecord
 import com.tencent.devops.model.store.tables.records.TStoreIndexResultRecord
 import com.tencent.devops.store.pojo.common.enums.IndexExecuteTimeTypeEnum
-import com.tencent.devops.store.pojo.common.enums.IndexOperationTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.pojo.common.index.StoreIndexBaseInfo
 import org.jooq.Condition
@@ -216,7 +215,6 @@ class StoreIndexManageInfoDao {
 
     fun getStoreIndexBaseInfo(
         dslContext: DSLContext,
-        indexOperationType: IndexOperationTypeEnum,
         storeType: StoreTypeEnum,
         indexCode: String
     ): String? {
@@ -224,7 +222,6 @@ class StoreIndexManageInfoDao {
             return dslContext.select(ID)
                 .from(this)
                 .where(INDEX_CODE.eq(indexCode))
-                .and(OPERATION_TYPE.eq(indexOperationType.name))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
                 .fetchOne(0, String::class.java)
         }
