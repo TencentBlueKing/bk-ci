@@ -265,7 +265,11 @@ class StreamProjectService @Autowired constructor(
             key = key,
             start = 0,
             end = max(size - 1, 0)
-        )?.map { GitCommonUtils.getGitProjectId(it) } ?: return null
+        )?.map { GitCommonUtils.getGitProjectId(it) }
+
+        if (gitProjectIds.isNullOrEmpty()) { // 防止let里的return产生的理解成本：到底是在let闭包返回，还是从当前函数返回
+            return null
+        }
 
         val settings = streamBasicSettingDao.getBasicSettingList(dslContext, gitProjectIds, null, null)
             .associateBy { it.id }
