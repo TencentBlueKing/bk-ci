@@ -47,7 +47,7 @@ import javax.ws.rs.HttpMethod
 open class CodeccApi constructor(
     private val codeccApiUrl: String,
     private val codeccApiProxyUrl: String,
-    private val newCodeccHost: String
+    private val codeccHost: String
 ) {
 
     companion object {
@@ -182,8 +182,8 @@ open class CodeccApi constructor(
     }
 
     fun getCodeccOpensourceMeasurement(atomCodeSrc: String): Result<Map<String, Any>> {
-        val url = "$newCodeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
-        logger.info("codecc opensource measurement host:$newCodeccHost url: $url")
+        val url = "$codeccHost/ms/defect/api/service/defect/opensource/measurement?url=$atomCodeSrc"
+        logger.info("codecc opensource measurement host:$codeccHost url: $url")
         val httpReq = Request.Builder()
             .url(url)
             .get()
