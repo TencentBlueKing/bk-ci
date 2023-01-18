@@ -280,7 +280,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
     }
 
     override fun getStoreCodeByElementValue(indexCode: String, elementName: String): Result<List<String>> {
-        return Result(storeIndexManageInfoDao.getStoreCodeByElementValue(dslContext, indexCode, elementName))
+        return Result(storeIndexManageInfoDao.getStoreCodeByElementName(dslContext, indexCode, elementName))
     }
 
     override fun deleteStoreIndexResultByStoreCode(
