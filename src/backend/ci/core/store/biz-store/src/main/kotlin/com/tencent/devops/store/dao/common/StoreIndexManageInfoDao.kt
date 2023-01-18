@@ -265,9 +265,9 @@ class StoreIndexManageInfoDao {
         }
     }
 
-    fun getStoreCodeByElementValue(dslContext: DSLContext, indexCode: String, elementName: String): List<String> {
+    fun getStoreCodeByElementName(dslContext: DSLContext, indexCode: String, elementName: String): List<String> {
         with(TStoreIndexElementDetail.T_STORE_INDEX_ELEMENT_DETAIL) {
-            return dslContext.select(ELEMENT_VALUE).from(this)
+            return dslContext.select(STORE_CODE).from(this)
                 .where(INDEX_CODE.eq(indexCode).and(ELEMENT_NAME.eq(elementName)))
                 .fetchInto(String::class.java)
         }
