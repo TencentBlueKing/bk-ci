@@ -91,6 +91,8 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
     }
 
     override fun getSubPipelineStatus(
+        authProjectId: String,
+        authBuildId: String,
         projectId: String,
         pipelineId: String,
         buildId: String

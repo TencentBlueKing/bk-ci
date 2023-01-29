@@ -46,6 +46,8 @@ class BuildBuildResourceImpl @Autowired constructor(
 ) : BuildBuildResource {
 
     override fun getSingleHistoryBuild(
+        authProjectId: String,
+        authBuildId: String,
         projectId: String,
         pipelineId: String,
         buildNum: String,
@@ -62,6 +64,8 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getLatestSuccessBuild(
+        authProjectId: String,
+        authBuildId: String,
         projectId: String,
         pipelineId: String,
         channelCode: ChannelCode?
@@ -76,6 +80,8 @@ class BuildBuildResourceImpl @Autowired constructor(
     }
 
     override fun getBuildDetail(
+        authProjectId: String,
+        authBuildId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,

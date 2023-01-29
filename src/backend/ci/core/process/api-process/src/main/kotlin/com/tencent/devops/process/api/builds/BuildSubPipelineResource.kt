@@ -60,6 +60,12 @@ interface BuildSubPipelineResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/subPipeline/{projectId}/{pipelineId}/{buildId}/detail")
     fun getSubPipelineStatus(
+        @ApiParam("当前项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        authProjectId: String,
+        @ApiParam(value = "当前构建ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
+        authBuildId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
