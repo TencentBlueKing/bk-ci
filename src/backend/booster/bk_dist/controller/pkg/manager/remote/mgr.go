@@ -439,7 +439,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 				continue
 			}
 			if strings.Contains(err.Error(), "connection") {
-				m.resource.countWorkerError(req.Server)
+				m.resource.countWorkerError(w.host)
 				if w.continuousNetErrors >= m.conf.NetErrorLimit {
 					m.resource.disableWorker(req.Server)
 					blog.Errorf("remote: server(%s) in work(%s) has (%d) continuous net errors "+

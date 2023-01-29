@@ -70,7 +70,7 @@ func newResource(hl []*dcProtocol.Host) *resource {
 	return &resource{
 		totalSlots:    total,
 		occupiedSlots: 0,
-		noRecover:     false,
+		readyReleased: false,
 		usageMap:      usageMap,
 		lockChan:      make(lockWorkerChan, 1000),
 		unlockChan:    make(lockWorkerChan, 1000),
@@ -83,9 +83,9 @@ func newResource(hl []*dcProtocol.Host) *resource {
 type resource struct {
 	ctx context.Context
 
-	workerLock sync.RWMutex
-	worker     []*worker
-	noRecover  bool
+	workerLock    sync.RWMutex
+	worker        []*worker
+	readyReleased bool
 
 	totalSlots    int
 	occupiedSlots int
@@ -239,13 +239,13 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 	return
 }
 
-func (wr *resource) disableAllWorker(noRecover bool) {
+func (wr *resource) disableAllWorker(readyReleased bool) {
 	blog.Infof("remote slot: ready disable all host")
 
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
-	wr.noRecover = noRecover
+	wr.readyReleased = readyReleased
 	for _, w := range wr.worker {
 		if w.disabled {
 			continue
@@ -269,7 +269,7 @@ func (wr *resource) enableWorker(host *dcProtocol.Host) {
 		return
 	}
 	blog.Infof("remote slot: ready enable host(%s)", host.Server)
-	if wr.noRecover {
+	if wr.readyReleased {
 		blog.Infof("remote slot: enable host(%s) failed, no recover is set", host.Server)
 		return
 	}

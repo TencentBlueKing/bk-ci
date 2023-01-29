@@ -43,8 +43,8 @@ type ServerConfig struct {
 
 	SendCork bool `json:"send_cork" value:"false" usage:"if true, controller will send files like tcp cork"`
 
-	NetErrorLimit    int `json:"net_error_limit" value:"false" usage:"if true, controller will send files like tcp cork"`
-	RemoteRetryTimes int `json:"remote_retry_times" value:"false" usage:"if true, controller will send files like tcp cork"`
+	NetErrorLimit    int `json:"net_error_limit" value:"3" usage:"define net error limit,make a worker disabled when it's net errors reach this limit"`
+	RemoteRetryTimes int `json:"remote_retry_times" value:"1" usage:"define retry times when remote execute failed"`
 }
 
 // CertConfig  configuration of Cert
