@@ -604,7 +604,6 @@ class PipelineRuntimeService @Autowired constructor(
         return genBuildHistory(record, values, currentTimestamp)
     }
 
-
     fun getTriggerUser(projectId: String, buildId: String): String? {
         return pipelineBuildDao.getTriggerUser(dslContext, projectId, buildId)
     }
