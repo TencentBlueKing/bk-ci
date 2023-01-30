@@ -95,6 +95,7 @@ class PipelineTemplateService @Autowired constructor(
                         }
                         logger.info("images is:$images")
                         flag = isRelease(imageCode, imageVersion)
+                        logger.info("flag is:$flag")
                         return@aa
                     }
                 } else {
