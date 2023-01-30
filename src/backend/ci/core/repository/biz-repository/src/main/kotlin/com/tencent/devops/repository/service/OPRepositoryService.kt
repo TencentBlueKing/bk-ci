@@ -296,10 +296,15 @@ class OPRepositoryService @Autowired constructor(
                     val repositoryProjectInfo = try {
                         val tokenLength = token?.length ?: 0
                         logger.info("get codeGit project info,token length =[$tokenLength]")
+                        val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) {
+                            ScmType.CODE_GIT
+                        } else {
+                            ScmType.CODE_TGIT
+                        }
                         scmService.getProjectInfo(
                             projectName = it.projectName,
                             url = repositoryInfo.url,
-                            type = ScmType.CODE_GIT,
+                            type = type,
                             token = token
                         )
                     } catch (e: Exception) {
