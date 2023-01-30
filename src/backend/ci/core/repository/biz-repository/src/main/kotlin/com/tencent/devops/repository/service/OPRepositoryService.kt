@@ -315,7 +315,7 @@ class OPRepositoryService @Autowired constructor(
                         logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
                         null
                     }
-                    logger.info("codeGit project info=[$repositoryInfo]")
+                    logger.info("codeGit project info=[$repositoryProjectInfo]")
                     val gitProjectId = repositoryProjectInfo?.id ?: -1
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
