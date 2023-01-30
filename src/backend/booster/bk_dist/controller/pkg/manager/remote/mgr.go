@@ -13,7 +13,6 @@ import (
 	"context"
 	"fmt"
 	"runtime/debug"
-	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -438,7 +437,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 			if !w.host.Equal(req.Server) {
 				continue
 			}
-			if strings.Contains(err.Error(), "connection") {
+			if isCaredNetError(err) {
 				m.resource.countWorkerError(w.host)
 				if w.continuousNetErrors >= m.conf.NetErrorLimit {
 					m.resource.disableWorker(req.Server)
