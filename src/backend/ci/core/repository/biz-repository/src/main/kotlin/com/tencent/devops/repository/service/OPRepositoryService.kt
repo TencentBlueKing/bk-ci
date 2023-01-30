@@ -223,7 +223,7 @@ class OPRepositoryService @Autowired constructor(
                             userName = repositoryInfo.userId,
                             projectId = repositoryInfo.projectId,
                             repoHashId = repositoryInfo.repositoryHashId,
-                            authType = RepoAuthType.valueOf(it.authType)
+                            authType = null
                         )
                     ).token
                     val repositoryProjectInfo = scmService.getProjectInfo(
@@ -269,7 +269,8 @@ class OPRepositoryService @Autowired constructor(
                 val repositoryInfo = repoMap[repositoryId]!!
                 // 仅处理未删除代码库信息
                 if (!repositoryInfo.isDeleted) {
-                    val token = if (RepoAuthType.valueOf(it.authType) == RepoAuthType.OAUTH) {
+                    val token = if (!it.authType.isNullOrBlank() &&
+                        RepoAuthType.valueOf(it.authType) == RepoAuthType.OAUTH) {
                         gitOauthService.getAccessToken(it.userName)?.accessToken
                     } else {
                         credentialService.getCredentialInfo(
@@ -282,7 +283,7 @@ class OPRepositoryService @Autowired constructor(
                                 userName = repositoryInfo.userId,
                                 projectId = repositoryInfo.projectId,
                                 repoHashId = repositoryInfo.repositoryHashId,
-                                authType = RepoAuthType.valueOf(it.authType)
+                                authType = null
                             )
                         ).token
                     }
