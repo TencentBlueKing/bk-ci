@@ -119,6 +119,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -136,6 +137,7 @@ class OpAtomServiceImpl @Autowired constructor(
             dslContext = dslContext,
             atomName = atomName,
             atomType = atomType,
+            atomCode = atomCode,
             serviceScope = serviceScope,
             os = os,
             category = category,
@@ -152,6 +154,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val totalSize = atomDao.getOpPipelineAtomCount(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
