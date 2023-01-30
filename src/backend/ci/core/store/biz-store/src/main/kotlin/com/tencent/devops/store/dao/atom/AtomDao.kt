@@ -358,7 +358,7 @@ class AtomDao : AtomBaseDao() {
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
             val conditions =
-                queryOpPipelineAtomsConditions(atomName,atomCode, atomType, serviceScope, os, category, classifyId, atomStatus)
+                queryOpPipelineAtomsConditions(atomName, atomCode, atomType, serviceScope, os, category, classifyId, atomStatus)
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
                 if (desc != null && desc) {
