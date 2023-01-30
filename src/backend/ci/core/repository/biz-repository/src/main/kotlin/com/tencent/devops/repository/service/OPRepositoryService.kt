@@ -270,7 +270,7 @@ class OPRepositoryService @Autowired constructor(
                     repoMap[it.repositoryId] = it
                 }
             }
-            repoRecords?.map {
+            repoRecords?.forEach {
                 val repositoryId = it.repositoryId
                 // 基础信息
                 val repositoryInfo = repoMap[repositoryId]!!
@@ -315,6 +315,7 @@ class OPRepositoryService @Autowired constructor(
                         logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
                         null
                     }
+                    logger.info("codeGit project info=[$repositoryInfo]")
                     val gitProjectId = repositoryProjectInfo?.id ?: -1
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
