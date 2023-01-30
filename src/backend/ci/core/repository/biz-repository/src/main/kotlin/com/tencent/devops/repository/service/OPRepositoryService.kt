@@ -227,7 +227,8 @@ class OPRepositoryService @Autowired constructor(
                         )
                     ).token
                     val repositoryProjectInfo = try {
-                        logger.info("get codeGit project info,token length =[${token.length}]")
+                        logger.info("get gitlab project info,token length=[${token.length}]" +
+                                        "|projectName=[${it.projectName}]|repoId=[$repositoryId]")
                         scmService.getProjectInfo(
                             projectName = it.projectName,
                             url = repositoryInfo.url,
@@ -295,7 +296,8 @@ class OPRepositoryService @Autowired constructor(
                     }
                     val repositoryProjectInfo = try {
                         val tokenLength = token?.length ?: 0
-                        logger.info("get codeGit project info,token length =[$tokenLength]")
+                        logger.info("get codeGit project info,token length=[$tokenLength]" +
+                                        "|projectName=[${it.projectName}]|repoId=[$repositoryId]")
                         val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) {
                             ScmType.CODE_GIT
                         } else {
