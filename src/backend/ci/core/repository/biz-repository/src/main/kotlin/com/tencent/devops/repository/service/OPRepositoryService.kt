@@ -226,12 +226,17 @@ class OPRepositoryService @Autowired constructor(
                             authType = null
                         )
                     ).token
-                    val repositoryProjectInfo = scmService.getProjectInfo(
-                        projectName = it.projectName,
-                        url = repositoryInfo.url,
-                        type = ScmType.CODE_GITLAB,
-                        token = token
-                    )
+                    val repositoryProjectInfo = try {
+                        scmService.getProjectInfo(
+                            projectName = it.projectName,
+                            url = repositoryInfo.url,
+                            type = ScmType.CODE_GITLAB,
+                            token = token
+                        )
+                    } catch (e: Exception) {
+                        logger.warn("get gitlab project info failed,projectName=[${it.projectName}] | $e ")
+                        null
+                    }
                     val gitlabProjectId = repositoryProjectInfo?.id ?: -1
                     codeGitLabDao.updateGitProjectId(
                         dslContext = dslContext,
@@ -287,12 +292,17 @@ class OPRepositoryService @Autowired constructor(
                             )
                         ).token
                     }
-                    val repositoryProjectInfo = scmService.getProjectInfo(
-                        projectName = it.projectName,
-                        url = repositoryInfo.url,
-                        type = ScmType.CODE_GIT,
-                        token = token
-                    )
+                    val repositoryProjectInfo = try {
+                        scmService.getProjectInfo(
+                            projectName = it.projectName,
+                            url = repositoryInfo.url,
+                            type = ScmType.CODE_GIT,
+                            token = token
+                        )
+                    } catch (e: Exception) {
+                        logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
+                        null
+                    }
                     val gitProjectId = repositoryProjectInfo?.id ?: -1
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
