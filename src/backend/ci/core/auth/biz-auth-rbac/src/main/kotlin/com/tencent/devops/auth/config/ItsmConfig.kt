@@ -23,18 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.callback
+package com.tencent.devops.auth.config
 
-object AuthConstants {
-    const val KEYWORD_SHORT = 406L
-    const val KEYWORD_SHORT_MESSAGE = "the length of keyword should be greater than or equals to 2"
-    const val TOO_RESULT_DATA = 422L
-    const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
-    const val MAX_LIMIT = 100
-    const val KEYWORD_MIN_SIZE = 2
-    const val USER_TYPE = "user"
-    const val ALL_MEMBERS = "*"
-    const val ALL_MEMBERS_NAME = "全体成员"
-}
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
+import org.springframework.context.annotation.Configuration
+import org.springframework.core.Ordered
+
+@Configuration
+@ConditionalOnWebApplication
+@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+data class ItsmConfig(
+    @Value("\${itsm.callback.update.url:#{null}}")
+    val itsmUpdateCallBackUrl: String = "",
+
+    @Value("\${itsm.callback.create.url:#{null}}")
+    val itsmCreateCallBackUrl: String = ""
+)

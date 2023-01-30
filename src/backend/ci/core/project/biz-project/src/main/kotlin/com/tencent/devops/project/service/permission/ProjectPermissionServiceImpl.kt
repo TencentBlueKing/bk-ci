@@ -23,115 +23,105 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service.permission
 
-import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
+import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.model.project.tables.records.TProjectRecord
-import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ApplicationInfo
-import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
-@Suppress("ALL")
-class V3ProjectPermissionServiceImpl @Autowired constructor(
+class ProjectPermissionServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao,
     private val authProjectApi: AuthProjectApi,
     private val authResourceApi: AuthResourceApi,
-    private val authPermissionApi: AuthPermissionApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val projectDao: ProjectDao,
-    private val dslContext: DSLContext
+    private val projectAuthServiceCode: ProjectAuthServiceCode
 ) : ProjectPermissionService {
 
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
-        return authProjectApi.checkProjectUser(
-            user = userId,
+        val projectCodes = authProjectApi.getUserProjects(
             serviceCode = projectAuthServiceCode,
-            projectCode = projectCode
+            userId = userId,
+            supplier = supplierForPermission
         )
+        return projectCodes.contains(projectCode)
     }
 
-    // 创建项目
-    override fun createResources(
-        resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
-    ): String {
-        val validateCreatePermission = authPermissionApi.validateUserResourcePermission(
-            user = resourceCreateInfo.userId,
-            serviceCode = projectAuthServiceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = "",
-            permission = AuthPermission.CREATE
-        )
-        if (!validateCreatePermission) {
-            throw PermissionForbiddenException(
-                MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.USER_NOT_CREATE_PERM)
-            )
+    private val supplierForPermission = {
+        val fakeList = mutableListOf<String>()
+        projectDao.listProjectCodes(dslContext).forEach {
+            fakeList.add(it)
         }
-        authResourceApi.createResource(
-            user = resourceCreateInfo.userId,
-            serviceCode = projectAuthServiceCode,
-            resourceType = AuthResourceType.PROJECT,
-            projectCode = resourceRegisterInfo.resourceCode,
-            resourceCode = resourceRegisterInfo.resourceCode,
-            resourceName = resourceRegisterInfo.resourceName
-        )
-        return ""
+        fakeList
     }
 
-    override fun deleteResource(projectCode: String) {
-        return
+    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
+        return authProjectApi.getUserProjectsAvailable(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = supplierForPermission
+        )
+    }
+
+    override fun getUserProjects(userId: String): List<String> {
+        return authProjectApi.getUserProjects(
+            serviceCode = projectAuthServiceCode,
+            userId = userId,
+            supplier = supplierForPermission
+        )
     }
 
     override fun modifyResource(
         projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
-        return
+        authResourceApi.modifyResource(
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = BK_DEVOPS_SCOPE,
+            resourceCode = resourceUpdateInfo.projectUpdateInfo.englishName,
+            resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+        )
     }
 
-    override fun getUserProjects(userId: String): List<String> {
-        val projects = authProjectApi.getUserProjects(
+    override fun deleteResource(projectCode: String) {
+
+        authResourceApi.deleteResource(
             serviceCode = projectAuthServiceCode,
-            userId = userId,
-            supplier = null
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = BK_DEVOPS_SCOPE,
+            resourceCode = projectCode
         )
-
-        if (projects.isEmpty()) {
-            return emptyList()
-        }
-
-        val projectList = mutableListOf<String>()
-        return if (projects[0] == "*") {
-            projectDao.getAllProject(dslContext).filter { projectList.add(it.englishName) }
-            projectList
-        } else {
-            projects.map {
-                projectList.add(it.trim())
-            }
-            projectList
-        }
     }
 
-    override fun getUserProjectsAvailable(userId: String): Map<String, String> {
-        return authProjectApi.getUserProjectsAvailable(
-            userId = userId,
+    override fun createResources(
+        resourceRegisterInfo: ResourceRegisterInfo,
+        authProjectCreateInfo: AuthProjectCreateInfo
+    ): String {
+        val projectList = mutableListOf<ResourceRegisterInfo>()
+        projectList.add(resourceRegisterInfo)
+        authResourceApi.batchCreateResource(
             serviceCode = projectAuthServiceCode,
-            supplier = null
+            resourceType = AuthResourceType.PROJECT,
+            resourceList = projectList,
+            projectCode = BK_DEVOPS_SCOPE,
+            user = authProjectCreateInfo.userId
         )
+        return ""
     }
 
     override fun verifyUserProjectPermission(
@@ -140,14 +130,7 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         userId: String,
         permission: AuthPermission
     ): Boolean {
-        return authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            serviceCode = projectAuthServiceCode,
-            resourceType = projectResourceType,
-            resourceCode = projectCode,
-            projectCode = projectCode,
-            permission = permission
-        )
+        return true
     }
 
     override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
@@ -162,7 +145,5 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
-    companion object {
-        private val projectResourceType = AuthResourceType.PROJECT
-    }
+    override fun needApproval(needApproval: Boolean?) = false
 }

@@ -23,18 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.callback
+package com.tencent.devops.common.auth.api.pojo
 
-object AuthConstants {
-    const val KEYWORD_SHORT = 406L
-    const val KEYWORD_SHORT_MESSAGE = "the length of keyword should be greater than or equals to 2"
-    const val TOO_RESULT_DATA = 422L
-    const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
-    const val MAX_LIMIT = 100
-    const val KEYWORD_MIN_SIZE = 2
-    const val USER_TYPE = "user"
-    const val ALL_MEMBERS = "*"
-    const val ALL_MEMBERS_NAME = "全体成员"
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("资源创建信息")
+data class ResourceCreateInfo(
+    @ApiModelProperty("是否需要审批")
+    val needApproval: Boolean? = false,
+    @ApiModelProperty("资源最大授权范围,目前只有rbac需要使用")
+    val subjectScopes: List<SubjectScopeInfo>,
+    @ApiModelProperty("资源描述")
+    val description: String? = null,
+    @ApiModelProperty("是否私有资源")
+    val authSecrecy: Boolean = false
+)

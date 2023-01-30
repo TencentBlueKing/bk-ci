@@ -28,11 +28,11 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import com.tencent.devops.common.auth.api.pojo.AncestorsApiReq
-import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.service.IamEsbService
 import org.springframework.beans.factory.annotation.Autowired
 

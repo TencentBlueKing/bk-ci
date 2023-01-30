@@ -23,18 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.callback
+package com.tencent.devops.project.service
 
-object AuthConstants {
-    const val KEYWORD_SHORT = 406L
-    const val KEYWORD_SHORT_MESSAGE = "the length of keyword should be greater than or equals to 2"
-    const val TOO_RESULT_DATA = 422L
-    const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
-    const val MAX_LIMIT = 100
-    const val KEYWORD_MIN_SIZE = 2
-    const val USER_TYPE = "user"
-    const val ALL_MEMBERS = "*"
-    const val ALL_MEMBERS_NAME = "全体成员"
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.dao.ProjectApprovalDao
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
+
+@Service
+class ProjectApprovalService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectApprovalDao: ProjectApprovalDao
+) {
+
+    fun create(
+        userId: String,
+        projectCreateInfo: ProjectCreateInfo,
+        approvalStatus: Int,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Int {
+        return projectApprovalDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            projectCreateInfo = projectCreateInfo,
+            approvalStatus = approvalStatus,
+            subjectScopes = subjectScopes
+        )
+    }
 }

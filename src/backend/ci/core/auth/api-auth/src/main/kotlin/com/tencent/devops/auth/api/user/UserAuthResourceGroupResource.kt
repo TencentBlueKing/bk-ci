@@ -28,35 +28,32 @@
 
 package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["AUTH_RESOURCE"], description = "用户态-iam资源映射")
-@Path("/user/auth/resource/{projectId}/{resourceType}")
+@Api(tags = ["AUTH_RESOURCE_GROUP"], description = "用户态-iam用户组")
+@Path("/user/auth/resource/group/{projectId}/{resourceType}")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserAuthResourceResource {
+interface UserAuthResourceGroupResource {
 
     @GET
-    @Path("{resourceCode}/hasManagerPermission")
-    @ApiOperation("是否有资源管理操作的权限")
-    fun hasManagerPermission(
+    @Path("{groupId}/groupPolicies")
+    @ApiOperation("获取组策略详情")
+    fun getGroupPolicies(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -66,66 +63,15 @@ interface UserAuthResourceResource {
         @ApiParam("资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<Boolean>
-
-    @GET
-    @Path("{resourceCode}/isEnablePermission")
-    @ApiOperation("是否启用权限管理")
-    fun isEnablePermission(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("资源类型")
-        @PathParam("resourceType")
-        resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<Boolean>
-
-    @GET
-    @Path("{resourceCode}/listGroup")
-    @ApiOperation("获取用户组列表")
-    fun listGroup(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("资源类型")
-        @PathParam("resourceType")
-        resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<List<IamGroupInfoVo>>
-
-    @GET
-    @Path("{resourceCode}/groupMember")
-    @ApiOperation("获取用户所属组")
-    fun listUserBelongGroup(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("资源类型")
-        @PathParam("resourceType")
-        resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<List<IamGroupMemberInfoVo>>
+        @ApiParam("用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<List<String>>
 
     @PUT
-    @Path("{resourceCode}/enable")
-    @ApiOperation("开启权限管理")
-    fun enable(
+    @Path("{groupId}/member/renewal")
+    @ApiOperation("用户续期")
+    fun renewal(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -135,34 +81,16 @@ interface UserAuthResourceResource {
         @ApiParam("资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
+        @ApiParam("用户组Id")
+        @PathParam("groupId")
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean>
 
-    @PUT
-    @Path("{resourceCode}/disable")
-    @ApiOperation("关闭权限管理")
-    fun disable(
-        @ApiParam(name = "用户名", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam(name = "项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("资源类型")
-        @PathParam("resourceType")
-        resourceType: String,
-        @ApiParam("资源ID")
-        @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<Boolean>
-
-    @GET
-    @Path("listResoureces")
-    @ApiOperation("获取资源列表")
-    @SuppressWarnings("LongParameterList")
-    fun listResoureces(
+    @DELETE
+    @Path("{groupId}/member")
+    @ApiOperation("用户退出")
+    fun deleteMember(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -172,14 +100,26 @@ interface UserAuthResourceResource {
         @ApiParam("资源类型")
         @PathParam("resourceType")
         resourceType: String,
-        @ApiParam("资源名称")
-        @QueryParam("resourceName")
-        resourceName: String?,
-        @ApiParam("第几页")
-        @QueryParam("page")
-        page: Int,
-        @ApiParam("每页多少条")
-        @QueryParam("pageSize")
-        pageSize: Int
-    ): Result<Pagination<AuthResourceInfo>>
+        @ApiParam("用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Boolean>
+
+    @DELETE
+    @Path("{groupId}")
+    @ApiOperation("删除组")
+    fun deleteGroup(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("用户组Id")
+        @PathParam("groupId")
+        groupId: Int
+    ): Result<Boolean>
 }

@@ -23,9 +23,10 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.service.impl
+package com.tencent.devops.project.service.permission
 
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -37,7 +38,7 @@ import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ApplicationInfo
-import com.tencent.devops.project.pojo.ResourceCreateInfo
+import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -111,7 +112,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
 
     override fun createResources(
         resourceRegisterInfo: ResourceRegisterInfo,
-        resourceCreateInfo: ResourceCreateInfo
+        authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
         val projectList = mutableListOf<ResourceRegisterInfo>()
         projectList.add(resourceRegisterInfo)
@@ -121,7 +122,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
             systemId = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             resourceList = projectList,
-            principalId = resourceCreateInfo.userId
+            principalId = authProjectCreateInfo.userId
         )
         return ""
     }
@@ -134,4 +135,6 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return true
     }
+
+    override fun needApproval(needApproval: Boolean?) = false
 }

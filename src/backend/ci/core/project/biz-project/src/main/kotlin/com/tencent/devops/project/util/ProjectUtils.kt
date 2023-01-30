@@ -28,13 +28,12 @@
 package com.tencent.devops.project.util
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.SubjectScopeInfo
 
 @Suppress("ALL")
 object ProjectUtils {
@@ -97,10 +96,10 @@ object ProjectUtils {
             properties = tProjectRecord.properties?.let { self ->
                 JsonUtil.to(self, ProjectProperties::class.java)
             },
-            subjectScopes = tProjectRecord.subjectscopes?.let {
+            subjectScopes = tProjectRecord.subjectScopes?.let {
                 JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
             },
-            authSecrecy = tProjectRecord.isAuthSecrecy
+            authSecrecy = tProjectRecord.authSecrecy
         )
     }
 }

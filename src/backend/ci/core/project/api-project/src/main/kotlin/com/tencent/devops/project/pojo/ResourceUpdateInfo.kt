@@ -1,6 +1,6 @@
 package com.tencent.devops.project.pojo
 
-import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -15,5 +15,5 @@ data class ResourceUpdateInfo(
     @ApiModelProperty("是否需要审批（从页面调起）")
     val needApproval: Boolean,
     @ApiModelProperty("iamSubjectScopes")
-    val iamSubjectScopes: ArrayList<SubjectScopeInfo>
+    val iamSubjectScopes: List<SubjectScopeInfo>
 )

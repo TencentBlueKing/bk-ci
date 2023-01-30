@@ -183,7 +183,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             IamGroupInfoVo(
                 id = it.id,
                 name = it.name,
-                displayName = IamGroupUtils.getSubsetManagerGroupDisplayName(it.name),
+                displayName = IamGroupUtils.getGroupDisplayName(it.name),
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )

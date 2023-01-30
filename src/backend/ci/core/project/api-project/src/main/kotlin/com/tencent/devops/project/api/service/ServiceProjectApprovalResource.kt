@@ -23,18 +23,35 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.callback
+package com.tencent.devops.project.api.service
 
-object AuthConstants {
-    const val KEYWORD_SHORT = 406L
-    const val KEYWORD_SHORT_MESSAGE = "the length of keyword should be greater than or equals to 2"
-    const val TOO_RESULT_DATA = 422L
-    const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
-    const val MAX_LIMIT = 100
-    const val KEYWORD_MIN_SIZE = 2
-    const val USER_TYPE = "user"
-    const val ALL_MEMBERS = "*"
-    const val ALL_MEMBERS_NAME = "全体成员"
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
+import com.tencent.devops.project.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
+
+@Api(tags = ["SERVICE_PROJECT_APPROVAL"], description = "项目审批接口")
+@Path("/service/projects/approval")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ServiceProjectApprovalResource {
+
+    @GET
+    @Path("/{projectId}")
+    @ApiOperation("查询指定项目审批信息")
+    fun get(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<ProjectApprovalInfo?>
 }
