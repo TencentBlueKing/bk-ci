@@ -143,4 +143,34 @@ class RepositoryCodeGitLabDao {
                 .fetch()
         }
     }
+
+    /**
+     * 分页查询
+     */
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TRepositoryCodeGitlabRecord>? {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            return dslContext.selectFrom(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateGitProjectId(
+        dslContext: DSLContext,
+        id: Long,
+        gitProjectId: String
+    ) {
+        with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            dslContext.update(this)
+                .set(GIT_PROJECT_ID, gitProjectId)
+                .where(REPOSITORY_ID.eq(id))
+                .and(GIT_PROJECT_ID.isNull)
+                .execute()
+        }
+    }
 }
