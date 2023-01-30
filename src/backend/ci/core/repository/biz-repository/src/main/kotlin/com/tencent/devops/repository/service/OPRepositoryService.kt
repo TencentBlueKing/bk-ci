@@ -36,6 +36,7 @@ import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -53,6 +54,7 @@ class OPRepositoryService @Autowired constructor(
     private val codeGitLabDao: RepositoryCodeGitLabDao,
     private val codeGitDao: RepositoryCodeGitDao,
     private val scmService: IScmService,
+    private val scmOauthService: IScmOauthService,
     private val gitOauthService: IGitOauthService,
     private val credentialService: CredentialService
 ) {
@@ -276,8 +278,9 @@ class OPRepositoryService @Autowired constructor(
                 val repositoryInfo = repoMap[repositoryId]!!
                 // 仅处理未删除代码库信息
                 if (!repositoryInfo.isDeleted) {
-                    val token = if (!it.authType.isNullOrBlank() &&
-                        RepoAuthType.valueOf(it.authType) == RepoAuthType.OAUTH) {
+                    // 是否为OAUTH
+                    val isOauth = RepoAuthType.OAUTH.name == it.authType
+                    val token = if (isOauth) {
                         gitOauthService.getAccessToken(it.userName)?.accessToken
                     } else {
                         credentialService.getCredentialInfo(
@@ -301,22 +304,34 @@ class OPRepositoryService @Autowired constructor(
                         } else {
                             ScmType.CODE_TGIT
                         }
-                        logger.info("get codeGit project info,token=[$token]" +
-                                        "|projectName=[${it.projectName}]" +
-                                        "|repoType=[$type]" +
-                                        "|repoId=[$repositoryId]")
-                        scmService.getProjectInfo(
-                            projectName = it.projectName,
-                            url = repositoryInfo.url,
-                            type = type,
-                            token = token
+                        logger.info(
+                            "get codeGit project info,token=[$token]" +
+                                "|projectName=[${it.projectName}]" +
+                                "|repoType=[$type]" +
+                                "|repoId=[$repositoryId]"
                         )
+                        if (isOauth) {
+                            scmOauthService.getProjectInfo(
+                                projectName = it.projectName,
+                                url = repositoryInfo.url,
+                                type = type,
+                                token = token
+                            )
+                        } else {
+                            scmService.getProjectInfo(
+                                projectName = it.projectName,
+                                url = repositoryInfo.url,
+                                type = type,
+                                token = token
+                            )
+                        }
                     } catch (e: Exception) {
                         logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
                         null
                     }
                     logger.info("codeGit project info=[$repositoryProjectInfo]")
                     val gitProjectId = repositoryProjectInfo?.id ?: -1
+                    logger.info("updateGitProjectId|id=[$repositoryId]|gitProjectId=[$gitProjectId]")
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
