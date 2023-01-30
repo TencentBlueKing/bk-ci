@@ -263,7 +263,7 @@ abstract class StoreLogoServiceImpl @Autowired constructor() : StoreLogoService 
                 }
                 output.flush()
             } catch (ignored: Throwable) {
-                logger.error("BKSystemErrorMonitor|uploadStoreLogo|error=${ignored.message}", ignored)
+                logger.error("BKSystemErrorMonitor|uploadStoreIcon|error=${ignored.message}", ignored)
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             } finally {
                 output.close()
