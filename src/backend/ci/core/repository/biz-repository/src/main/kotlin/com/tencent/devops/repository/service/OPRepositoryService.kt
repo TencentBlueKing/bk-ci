@@ -27,8 +27,15 @@
 
 package com.tencent.devops.repository.service
 
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.repository.dao.RepositoryCodeGitDao
+import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.CodeGitlabRepository
+import com.tencent.devops.repository.pojo.enums.RepoAuthType
+import com.tencent.devops.repository.service.scm.IGitOauthService
+import com.tencent.devops.repository.service.scm.IScmService
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,7 +48,12 @@ import java.util.concurrent.TimeUnit
 @Service
 class OPRepositoryService @Autowired constructor(
     private val repositoryDao: RepositoryDao,
-    private val dslContext: DSLContext
+    private val dslContext: DSLContext,
+    private val codeGitLabDao: RepositoryCodeGitLabDao,
+    private val codeGitDao: RepositoryCodeGitDao,
+    private val scmService: IScmService,
+    private val gitOauthService: IGitOauthService,
+    private val credentialService: CredentialService
 ) {
     fun addHashId() {
         val startTime = System.currentTimeMillis()
@@ -147,6 +159,120 @@ class OPRepositoryService @Autowired constructor(
             hash <= (grayWeight ?: -1) -> true
             else -> false
         }
+    }
+
+    fun updateGitProjectId() {
+        val startTime = System.currentTimeMillis()
+        logger.info("OPRepositoryService:begin updateGitProjectId-----------")
+        val threadPoolExecutor = ThreadPoolExecutor(
+            1,
+            1,
+            0,
+            TimeUnit.SECONDS,
+            LinkedBlockingQueue(1),
+            Executors.defaultThreadFactory(),
+            ThreadPoolExecutor.AbortPolicy()
+        )
+        threadPoolExecutor.submit {
+            logger.info("OPRepositoryService:begin updateGitProjectId threadPoolExecutor-----------")
+            var offset = 0
+            val limit = 1000
+            try {
+                logger.info("OPRepositoryService:begin updateGitLabProjectId")
+                do {
+                    val repoRecords = codeGitLabDao.getAllRepo(dslContext, limit, offset)
+                    val repoSize = repoRecords?.size
+                    logger.info("repoSize:$repoSize")
+                    repoRecords?.map {
+                        val repositoryId = it.repositoryId
+                        // 基础信息
+                        val repositoryInfo = repositoryDao.get(
+                            dslContext = dslContext,
+                            repositoryId = repositoryId
+                        )
+                        val token = credentialService.getCredentialInfo(
+                            projectId = repositoryInfo.projectId,
+                            CodeGitlabRepository(
+                                aliasName = repositoryInfo.aliasName,
+                                url = repositoryInfo.url,
+                                credentialId = it.credentialId,
+                                projectName = it.projectName,
+                                userName = repositoryInfo.userId,
+                                projectId = repositoryInfo.projectId,
+                                repoHashId = repositoryInfo.repositoryHashId,
+                                authType = RepoAuthType.valueOf(it.authType)
+                            )
+                        ).token
+                        val repositoryProjectInfo = scmService.getProjectInfo(
+                            projectName = it.projectName,
+                            url = repositoryInfo.url,
+                            type = ScmType.CODE_GITLAB,
+                            token = token
+                        )
+                        val gitlabProjectId = repositoryProjectInfo?.id ?: -1
+                        codeGitLabDao.updateGitProjectId(
+                            dslContext = dslContext,
+                            id = repositoryId,
+                            gitProjectId = "$gitlabProjectId"
+                        )
+                    }
+                    offset += limit
+                } while (repoSize == 1000)
+                logger.info("OPRepositoryService:end updateGitLabProjectId")
+                logger.info("OPRepositoryService:begin updateCodeGitProjectId")
+                offset = 0
+                do {
+                    val repoRecords = codeGitDao.getAllRepo(dslContext, limit, offset)
+                    val repoSize = repoRecords?.size
+                    logger.info("repoSize:$repoSize")
+                    repoRecords?.map {
+                        val repositoryId = it.repositoryId
+                        // 基础信息
+                        val repositoryInfo = repositoryDao.get(
+                            dslContext = dslContext,
+                            repositoryId = repositoryId
+                        )
+                        val token = if (RepoAuthType.valueOf(it.authType) == RepoAuthType.OAUTH){
+                            gitOauthService.getAccessToken(it.userName)?.accessToken
+                        }else{
+                            credentialService.getCredentialInfo(
+                                projectId = repositoryInfo.projectId,
+                                CodeGitlabRepository(
+                                    aliasName = repositoryInfo.aliasName,
+                                    url = repositoryInfo.url,
+                                    credentialId = it.credentialId,
+                                    projectName = it.projectName,
+                                    userName = repositoryInfo.userId,
+                                    projectId = repositoryInfo.projectId,
+                                    repoHashId = repositoryInfo.repositoryHashId,
+                                    authType = RepoAuthType.valueOf(it.authType)
+                                )
+                            ).token
+                        }
+                        val repositoryProjectInfo = scmService.getProjectInfo(
+                            projectName = it.projectName,
+                            url = repositoryInfo.url,
+                            type = ScmType.CODE_GIT,
+                            token = token
+                        )
+                        val gitProjectId = repositoryProjectInfo?.id ?: -1
+                        codeGitDao.updateGitProjectId(
+                            dslContext = dslContext,
+                            id = repositoryId,
+                            gitProjectId = "$gitProjectId"
+                        )
+                    }
+                    offset += limit
+                } while (repoSize == 1000)
+                logger.info("OPRepositoryService:end updateCodeGitProjectId")
+            } catch (e: Exception) {
+                logger.warn("OpRepositoryService：updateGitProjectId failed | $e ")
+            } finally {
+                threadPoolExecutor.shutdown()
+            }
+        }
+        logger.info("OPRepositoryService:finish updateGitProjectId-----------")
+        logger.info("updateGitProjectId time cost: ${System.currentTimeMillis() - startTime}")
     }
 
     companion object {
