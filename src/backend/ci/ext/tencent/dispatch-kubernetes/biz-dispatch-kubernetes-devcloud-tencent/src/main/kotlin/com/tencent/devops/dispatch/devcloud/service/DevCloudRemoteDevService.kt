@@ -34,8 +34,11 @@ import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
 import com.tencent.devops.dispatch.devcloud.pojo.EnvVar
 import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
+import com.tencent.devops.dispatch.devcloud.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
 import com.tencent.devops.dispatch.devcloud.pojo.ObjectMeta
+import com.tencent.devops.dispatch.devcloud.pojo.Probe
+import com.tencent.devops.dispatch.devcloud.pojo.ProbeHandler
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
 import com.tencent.devops.dispatch.devcloud.pojo.Volume
 import com.tencent.devops.dispatch.devcloud.pojo.VolumeMount
@@ -99,6 +102,15 @@ class DevCloudRemoteDevService @Autowired constructor(
                                 VolumeMount(
                                     name = VOLUME_MOUNT_NAME,
                                     mountPath = WORKSPACE_PATH
+                                )
+                            ),
+                            readinessProbe = Probe(
+                                handler = ProbeHandler(
+                                    httpGet = HTTPGetAction(
+                                        path = "/api/remoting/status",
+                                        port = 22999,
+                                        httpHeaders = emptyList()
+                                    )
                                 )
                             ),
                             command = listOf("/.devopsRemoting/devopsRemoting", "init"),
