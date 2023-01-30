@@ -57,7 +57,7 @@ class StoreHonorDao {
                 condition.add(
                     (HONOR_TITLE.like("%$keyWords%"))
                         .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(STORE_TYPE.like("%$keyWords%"))
+                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
                         .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
                 )
             }
@@ -107,7 +107,7 @@ class StoreHonorDao {
                 condition.add(
                     (HONOR_TITLE.like("%$keyWords%"))
                         .or(HONOR_NAME.like("%$keyWords%"))
-                        .or(STORE_TYPE.like("%$keyWords%"))
+                        .or(tStoreHonorRel.STORE_NAME.like("%$keyWords%"))
                         .or(tStoreHonorRel.STORE_CODE.like("%$keyWords%"))
                 )
             }
