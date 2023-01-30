@@ -170,9 +170,7 @@ class RepositoryCodeGitLabDao {
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
-                .where(REPOSITORY_ID.eq(id))
-                .and(GIT_PROJECT_ID.eq(""))
-                .or(GIT_PROJECT_ID.eq("-1"))
+                .where(REPOSITORY_ID.eq(id).and(GIT_PROJECT_ID.eq("").or(GIT_PROJECT_ID.eq("-1"))))
                 .execute()
         }
     }
