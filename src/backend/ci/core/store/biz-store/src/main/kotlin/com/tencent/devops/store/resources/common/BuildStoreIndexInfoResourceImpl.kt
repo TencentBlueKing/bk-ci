@@ -29,6 +29,7 @@ package com.tencent.devops.store.resources.common
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.SensitiveApiPermission
 import com.tencent.devops.store.api.common.BuildStoreIndexInfoResource
 import com.tencent.devops.store.pojo.common.index.CreateIndexComputeDetailRequest
 import com.tencent.devops.store.service.common.StoreIndexManageService
@@ -39,7 +40,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
     private val storeIndexManageService: StoreIndexManageService
 ) : BuildStoreIndexInfoResource {
 
-//    @SensitiveApiPermission("syc_atom_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun createIndexComputeDetail(
         userId: String,
         storeIndexElementCreateRequest: CreateIndexComputeDetailRequest
@@ -47,7 +48,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
         return storeIndexManageService.createIndexComputeDetail(userId, storeIndexElementCreateRequest)
     }
 
-//    @SensitiveApiPermission("syc_atom_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun getCertifiedPlugins(
         userId: String,
         indexCode: String,
@@ -56,7 +57,7 @@ class BuildStoreIndexInfoResourceImpl @Autowired constructor(
         return storeIndexManageService.getStoreCodeByElementValue(indexCode, elementName)
     }
 
-//    @SensitiveApiPermission("syc_atom_index")
+    @SensitiveApiPermission("syc_atom_index")
     override fun deleteStoreIndexResultByStoreCode(
         userId: String,
         indexCode: String,
