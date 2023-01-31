@@ -805,7 +805,7 @@ abstract class ImageService @Autowired constructor() {
 
     fun getImageStatusByCodeAndVersion(
         imageCode: String,
-        imageVersion: String,
+        imageVersion: String
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         var imageRecord: TImageRecord? = null

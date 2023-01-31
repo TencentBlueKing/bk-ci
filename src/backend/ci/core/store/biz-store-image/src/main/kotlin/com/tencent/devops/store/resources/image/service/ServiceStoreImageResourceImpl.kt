@@ -57,7 +57,7 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
         return Result(
             imageService.getImageStatusByCodeAndVersion(
                 imageCode = imageCode,
-                imageVersion = imageVersion,
+                imageVersion = imageVersion
             )
         )
     }
