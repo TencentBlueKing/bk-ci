@@ -280,25 +280,30 @@ class OPRepositoryService @Autowired constructor(
                 if (!repositoryInfo.isDeleted) {
                     // 是否为OAUTH
                     val isOauth = RepoAuthType.OAUTH.name == it.authType
-                    val token = if (isOauth) {
-                        gitOauthService.getAccessToken(it.userName)?.accessToken
-                    } else {
-                        credentialService.getCredentialInfo(
-                            projectId = repositoryInfo.projectId,
-                            CodeGitlabRepository(
-                                aliasName = repositoryInfo.aliasName,
-                                url = repositoryInfo.url,
-                                credentialId = it.credentialId,
-                                projectName = it.projectName,
-                                userName = repositoryInfo.userId,
+                    val token = try {
+                        if (isOauth) {
+                            gitOauthService.getAccessToken(it.userName)?.accessToken
+                        } else {
+                            credentialService.getCredentialInfo(
                                 projectId = repositoryInfo.projectId,
-                                repoHashId = repositoryInfo.repositoryHashId,
-                                authType = null
-                            )
-                        ).token
+                                CodeGitlabRepository(
+                                    aliasName = repositoryInfo.aliasName,
+                                    url = repositoryInfo.url,
+                                    credentialId = it.credentialId,
+                                    projectName = it.projectName,
+                                    userName = repositoryInfo.userId,
+                                    projectId = repositoryInfo.projectId,
+                                    repoHashId = repositoryInfo.repositoryHashId,
+                                    authType = null
+                                )
+                            ).token
+                        }
+                    } catch (e: Exception) {
+                        logger.warn("get credential info failed,set token to Empty String," +
+                                        "repositoryId=[$repositoryId] | $e ")
+                        ""
                     }
                     val repositoryProjectInfo = try {
-                        // val tokenLength = token?.length ?: 0
                         val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) {
                             ScmType.CODE_GIT
                         } else {
