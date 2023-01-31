@@ -227,7 +227,7 @@ class CodeGitRepositoryService @Autowired constructor(
             )
         }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: -1
+        return repositoryProjectInfo?.id ?: 0
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {

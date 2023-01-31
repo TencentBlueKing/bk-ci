@@ -218,11 +218,21 @@ class OPRepositoryService @Autowired constructor(
                 val repositoryInfo = repoMap[repositoryId]
                 if (repositoryInfo == null) {
                     logger.warn("Invalid gitlab repository info,repositoryId=[$repositoryId]")
+                    codeGitLabDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = "0"
+                    )
                     return@forEach
                 }
                 // 仅处理未删除代码库信息
                 if (repositoryInfo.isDeleted) {
                     logger.warn("Invalid gitlab repository info,repository deleted,repositoryId=[$repositoryId]")
+                    codeGitLabDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = "0"
+                    )
                     return@forEach
                 }
                 val token = try {
@@ -262,7 +272,7 @@ class OPRepositoryService @Autowired constructor(
                     logger.warn("get gitlab project info failed,projectName=[${it.projectName}] | $e ")
                     null
                 }
-                val gitlabProjectId = repositoryProjectInfo?.id ?: -1
+                val gitlabProjectId = repositoryProjectInfo?.id ?: 0
                 codeGitLabDao.updateGitProjectId(
                     dslContext = dslContext,
                     id = repositoryId,
@@ -298,11 +308,21 @@ class OPRepositoryService @Autowired constructor(
                 val repositoryInfo = repoMap[repositoryId]
                 if (repositoryInfo == null) {
                     logger.warn("Invalid codeGit repository info,repositoryId=[$repositoryId]")
+                    codeGitLabDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = "0"
+                    )
                     return@forEach
                 }
                 // 仅处理未删除代码库信息
                 if (repositoryInfo.isDeleted) {
                     logger.warn("Invalid codeGit repository info,repository deleted,repositoryId=[$repositoryId]")
+                    codeGitLabDao.updateGitProjectId(
+                        dslContext = dslContext,
+                        id = repositoryId,
+                        gitProjectId = "0"
+                    )
                     return@forEach
                 }
                 // 是否为OAUTH
@@ -323,7 +343,7 @@ class OPRepositoryService @Autowired constructor(
                     type = type,
                     isOauth = isOauth
                 )
-                val gitProjectId = repositoryProjectInfo?.id ?: -1
+                val gitProjectId = repositoryProjectInfo?.id ?: 0
                 codeGitDao.updateGitProjectId(
                     dslContext = dslContext,
                     id = repositoryId,

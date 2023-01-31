@@ -193,7 +193,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
             token = token
         )
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: -1
+        return repositoryProjectInfo?.id ?: 0
     }
 
     /**
