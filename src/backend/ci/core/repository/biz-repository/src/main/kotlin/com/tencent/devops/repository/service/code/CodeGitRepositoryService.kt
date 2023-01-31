@@ -44,7 +44,6 @@ import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.apache.commons.lang3.StringUtils
@@ -211,7 +210,7 @@ class CodeGitRepositoryService @Autowired constructor(
      */
     fun getGitProjectId(repo: CodeGitRepository, token: String): Int {
         val isOauth = repo.authType == RepoAuthType.OAUTH
-        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:${isOauth}")
+        logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
         val repositoryProjectInfo = if (isOauth) {
             scmOauthService.getProjectInfo(
                 projectName = repo.projectName,
@@ -228,7 +227,7 @@ class CodeGitRepositoryService @Autowired constructor(
             )
         }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: -1
+        return repositoryProjectInfo?.id ?: 0
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
