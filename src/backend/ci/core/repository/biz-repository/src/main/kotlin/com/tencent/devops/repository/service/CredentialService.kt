@@ -193,7 +193,7 @@ class CredentialService @Autowired constructor(
                     password = StringUtils.EMPTY
                 )
             }
-            CredentialType.ACCESSTOKEN ->{
+            CredentialType.ACCESSTOKEN -> {
                 AccessTokenCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     privateKey = StringUtils.EMPTY,
