@@ -181,14 +181,19 @@
                 return originVal.reduce((acc, filter) => {
                     if (acc[filter.classify]) {
                         acc[filter.classify] += `,${filter.values.map(val => val.id).join(',')}`
-                    } else {
+                    } else if (filter.classify) {
                         acc[filter.classify] = filter.values.map(val => val.id).join(',')
+                    } else {
+                        acc[PIPELINE_FILTER_PIPELINENAME] = (acc[PIPELINE_FILTER_PIPELINENAME]
+                            ? `${acc[PIPELINE_FILTER_PIPELINENAME]},`
+                            : '') + filter.id
                     }
                     return acc
                 }, {})
             },
             handleChange (value) {
                 const formatVal = this.formatValue(value)
+                console.log(formatVal)
                 this.filterKeys.forEach(key => {
                     if (!formatVal[key]) {
                         formatVal[key] = undefined
