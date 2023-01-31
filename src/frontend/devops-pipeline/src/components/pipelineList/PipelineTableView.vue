@@ -156,7 +156,7 @@
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="props.row.delete"
+                    v-else-if="props.row.delete && !isRecentView"
                     text
                     theme="primary"
                     :disabled="!isManage"
@@ -165,14 +165,14 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.hasPermission"
+                    v-else-if="!props.row.hasPermission && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
                 <template
-                    v-else
+                    v-else-if="props.row.hasPermission"
                 >
                     <bk-button
                         text
@@ -216,6 +216,7 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import {
         DELETED_VIEW_ID,
+        RECENT_USED_VIEW_ID,
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { convertTime, isShallowEqual } from '@/utils/util'
@@ -265,11 +266,14 @@
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
             },
+            isRecentView () {
+                return this.$route.params.viewId === RECENT_USED_VIEW_ID
+            },
             pipelineGroups () {
                 const res = this.pipelineList.map((pipeline, index) => {
                     const { viewNames } = pipeline
                     const visibleCount = this.visibleTagCountList[index]
-                                        
+
                     if (visibleCount >= 1) {
                         return {
                             visibleGroups: viewNames.slice(0, visibleCount),
@@ -277,7 +281,7 @@
                             showMore: viewNames.length - visibleCount
                         }
                     }
-                    
+
                     return {
                         visibleGroups: viewNames,
                         hiddenGroups: [],
