@@ -212,56 +212,62 @@ class OPRepositoryService @Autowired constructor(
                     repoMap[it.repositoryId] = it
                 }
             }
-            repoRecords?.map {
+            repoRecords?.forEach {
                 val repositoryId = it.repositoryId
                 // 基础信息
-                val repositoryInfo = repoMap[repositoryId]!!
-                // 仅处理未删除代码库信息
-                if (!repositoryInfo.isDeleted) {
-                    val token = try {
-                        credentialService.getCredentialInfo(
-                            projectId = repositoryInfo.projectId,
-                            CodeGitlabRepository(
-                                aliasName = repositoryInfo.aliasName,
-                                url = repositoryInfo.url,
-                                credentialId = it.credentialId,
-                                projectName = it.projectName,
-                                userName = repositoryInfo.userId,
-                                projectId = repositoryInfo.projectId,
-                                repoHashId = repositoryInfo.repositoryHashId,
-                                authType = null
-                            )
-                        ).token
-                    } catch (e: Exception) {
-                        logger.warn(
-                            "get gitlab credential info failed,set token to Empty String," +
-                                "repositoryId=[$repositoryId] | $e "
-                        )
-                        ""
-                    }
-                    val repositoryProjectInfo = try {
-                        logger.info(
-                            "get gitlab project info,projectName=[${it.projectName}]" +
-                                "|repoId=[$repositoryId]"
-                        )
-                        getProjectInfo(
-                            projectName = it.projectName,
-                            token = token,
-                            url = repositoryInfo.url,
-                            type = ScmType.CODE_GITLAB,
-                            isOauth = false
-                        )
-                    } catch (e: Exception) {
-                        logger.warn("get gitlab project info failed,projectName=[${it.projectName}] | $e ")
-                        null
-                    }
-                    val gitlabProjectId = repositoryProjectInfo?.id ?: -1
-                    codeGitLabDao.updateGitProjectId(
-                        dslContext = dslContext,
-                        id = repositoryId,
-                        gitProjectId = "$gitlabProjectId"
-                    )
+                val repositoryInfo = repoMap[repositoryId]
+                if (repositoryInfo == null) {
+                    logger.warn("Invalid gitlab repository info,repositoryId=[$repositoryId]")
+                    return@forEach
                 }
+                // 仅处理未删除代码库信息
+                if (repositoryInfo.isDeleted) {
+                    logger.warn("Invalid gitlab repository info,repository deleted,repositoryId=[$repositoryId]")
+                    return@forEach
+                }
+                val token = try {
+                    credentialService.getCredentialInfo(
+                        projectId = repositoryInfo.projectId,
+                        CodeGitlabRepository(
+                            aliasName = repositoryInfo.aliasName,
+                            url = repositoryInfo.url,
+                            credentialId = it.credentialId,
+                            projectName = it.projectName,
+                            userName = repositoryInfo.userId,
+                            projectId = repositoryInfo.projectId,
+                            repoHashId = repositoryInfo.repositoryHashId,
+                            authType = null
+                        )
+                    ).token
+                } catch (e: Exception) {
+                    logger.warn(
+                        "get gitlab credential info failed,set token to Empty String," +
+                            "repositoryId=[$repositoryId] | $e "
+                    )
+                    ""
+                }
+                val repositoryProjectInfo = try {
+                    logger.info(
+                        "get gitlab project info,projectName=[${it.projectName}]" +
+                            "|repoId=[$repositoryId]"
+                    )
+                    getProjectInfo(
+                        projectName = it.projectName,
+                        token = token,
+                        url = repositoryInfo.url,
+                        type = ScmType.CODE_GITLAB,
+                        isOauth = false
+                    )
+                } catch (e: Exception) {
+                    logger.warn("get gitlab project info failed,projectName=[${it.projectName}] | $e ")
+                    null
+                }
+                val gitlabProjectId = repositoryProjectInfo?.id ?: -1
+                codeGitLabDao.updateGitProjectId(
+                    dslContext = dslContext,
+                    id = repositoryId,
+                    gitProjectId = "$gitlabProjectId"
+                )
             }
             offset += limit
         } while (repoSize == 1000)
@@ -289,9 +295,14 @@ class OPRepositoryService @Autowired constructor(
             repoRecords?.forEach {
                 val repositoryId = it.repositoryId
                 // 基础信息
-                val repositoryInfo = repoMap[repositoryId]!!
+                val repositoryInfo = repoMap[repositoryId]
+                if (repositoryInfo == null) {
+                    logger.warn("Invalid codeGit repository info,repositoryId=[$repositoryId]")
+                    return@forEach
+                }
                 // 仅处理未删除代码库信息
                 if (repositoryInfo.isDeleted) {
+                    logger.warn("Invalid codeGit repository info,repository deleted,repositoryId=[$repositoryId]")
                     return@forEach
                 }
                 // 是否为OAUTH
