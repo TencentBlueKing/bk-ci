@@ -184,12 +184,13 @@ type LocalSlotsFreeConfig struct {
 
 // RemoteTaskExecuteRequest describe the remote task execution param
 type RemoteTaskExecuteRequest struct {
-	Pid       int
-	Server    *dcProtocol.Host
-	Req       *dcSDK.BKDistCommand
-	Stats     *dcSDK.ControllerJobStats
-	Sandbox   *dcSyscall.Sandbox
-	IOTimeout int
+	Pid           int
+	Server        *dcProtocol.Host
+	Req           *dcSDK.BKDistCommand
+	Stats         *dcSDK.ControllerJobStats
+	Sandbox       *dcSyscall.Sandbox
+	IOTimeout     int
+	BanWorkerList []*dcProtocol.Host
 }
 
 // RemoteTaskExecuteResult describe the remote task execution result

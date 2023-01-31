@@ -22,9 +22,10 @@ import (
 )
 
 type lockWorkerMessage struct {
-	jobUsage dcSDK.JobUsage
-	toward   *dcProtocol.Host
-	result   chan *dcProtocol.Host
+	jobUsage      dcSDK.JobUsage
+	toward        *dcProtocol.Host
+	result        chan *dcProtocol.Host
+	banWorkerList []*dcProtocol.Host
 }
 type lockWorkerChan chan lockWorkerMessage
 
@@ -161,15 +162,16 @@ func (wr *resource) Handle(ctx context.Context) {
 }
 
 // Lock get an usage lock, success with true, failed with false
-func (wr *resource) Lock(usage dcSDK.JobUsage) *dcProtocol.Host {
+func (wr *resource) Lock(usage dcSDK.JobUsage, banWorkerList []*dcProtocol.Host) *dcProtocol.Host {
 	if !wr.handling {
 		return nil
 	}
 
 	msg := lockWorkerMessage{
-		jobUsage: usage,
-		toward:   nil,
-		result:   make(chan *dcProtocol.Host, 1),
+		jobUsage:      usage,
+		toward:        nil,
+		result:        make(chan *dcProtocol.Host, 1),
+		banWorkerList: banWorkerList,
 	}
 
 	// send a new lock request
@@ -218,7 +220,7 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 
 		if w.disabled {
 			blog.Infof("remote slot: host:%v disabled before,do nothing now", *host)
-			break
+			return
 		}
 
 		w.disabled = true
@@ -235,7 +237,7 @@ func (wr *resource) disableWorker(host *dcProtocol.Host) {
 		}
 	}
 
-	blog.Infof("remote slot: total slot:%d after :%v", wr.totalSlots, *host)
+	blog.Infof("remote slot: total slot:%d after disable host:%v", wr.totalSlots, *host)
 	return
 }
 
@@ -353,12 +355,17 @@ func (wr *resource) addWorker(host *dcProtocol.Host) {
 	return
 }
 
-func (wr *resource) getWorkerWithMostFreeSlots() *worker {
+func (wr *resource) getWorkerWithMostFreeSlots(banWorkerList []*dcProtocol.Host) *worker {
 	var w *worker
 	max := 0
 	for _, worker := range wr.worker {
 		if worker.disabled {
 			continue
+		}
+		for _, host := range banWorkerList {
+			if worker.host.Equal(host) {
+				continue
+			}
 		}
 
 		free := worker.totalSlots - worker.occupiedSlots
@@ -374,11 +381,11 @@ func (wr *resource) getWorkerWithMostFreeSlots() *worker {
 	return w
 }
 
-func (wr *resource) occupyWorkerSlots() *dcProtocol.Host {
+func (wr *resource) occupyWorkerSlots(banWorkerList []*dcProtocol.Host) *dcProtocol.Host {
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
-	worker := wr.getWorkerWithMostFreeSlots()
+	worker := wr.getWorkerWithMostFreeSlots(banWorkerList)
 	_ = worker.occupySlot()
 
 	return worker.host
@@ -445,7 +452,7 @@ func (wr *resource) getSlot(msg lockWorkerMessage) {
 			wr.occupiedSlots++
 			blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot available",
 				wr.totalSlots, wr.occupiedSlots)
-			msg.result <- wr.occupyWorkerSlots()
+			msg.result <- wr.occupyWorkerSlots(msg.banWorkerList)
 			satisfied = true
 		}
 	}
@@ -477,7 +484,7 @@ func (wr *resource) putSlot(msg lockWorkerMessage) {
 					wr.occupiedSlots++
 
 					chanElement := e.Next()
-					chanElement.Value.(chan *dcProtocol.Host) <- wr.occupyWorkerSlots()
+					chanElement.Value.(chan *dcProtocol.Host) <- wr.occupyWorkerSlots([]*dcProtocol.Host{})
 
 					// delete this element
 					wr.waitingList.Remove(e)

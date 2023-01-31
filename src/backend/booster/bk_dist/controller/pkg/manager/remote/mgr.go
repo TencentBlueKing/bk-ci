@@ -382,7 +382,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 	defer dcSDK.StatsTimeNow(&req.Stats.RemoteWorkLeaveTime)
 	m.work.Basic().UpdateJobStats(req.Stats)
 
-	req.Server = m.lockSlots(dcSDK.JobUsageRemoteExe)
+	req.Server = m.lockSlots(dcSDK.JobUsageRemoteExe, req.BanWorkerList)
 	dcSDK.StatsTimeNow(&req.Stats.RemoteWorkLockTime)
 	defer dcSDK.StatsTimeNow(&req.Stats.RemoteWorkUnlockTime)
 	defer m.unlockSlots(dcSDK.JobUsageRemoteExe, req.Server)
@@ -450,6 +450,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 			break
 		}
 
+		req.BanWorkerList = append(req.BanWorkerList, req.Server)
 		blog.Errorf("remote: execute remote task for work(%s) from pid(%d) to server(%s), "+
 			"remote execute failed: %v", m.work.ID(), req.Pid, req.Server.Server, err)
 		return nil, err
@@ -1115,8 +1116,8 @@ func (m *Mgr) getCachedToolChainStatus(server string, toolChainKey string) (type
 	return types.FileSendUnknown, nil
 }
 
-func (m *Mgr) lockSlots(usage dcSDK.JobUsage) *dcProtocol.Host {
-	return m.resource.Lock(usage)
+func (m *Mgr) lockSlots(usage dcSDK.JobUsage, banWorkerList []*dcProtocol.Host) *dcProtocol.Host {
+	return m.resource.Lock(usage, banWorkerList)
 }
 
 func (m *Mgr) unlockSlots(usage dcSDK.JobUsage, host *dcProtocol.Host) {

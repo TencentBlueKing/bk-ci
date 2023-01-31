@@ -17,6 +17,7 @@ import (
 
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/recorder"
 
+	"github.com/Tencent/bk-ci/src/booster/bk_dist/common/protocol"
 	dcSDK "github.com/Tencent/bk-ci/src/booster/bk_dist/common/sdk"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/manager/analyser"
 	"github.com/Tencent/bk-ci/src/booster/bk_dist/controller/pkg/types"
@@ -169,15 +170,18 @@ func (m *Mgr) ExecuteTask(
 	}
 
 	var r *types.RemoteTaskExecuteResult
-	for i := 0; i < e.remoteTryTimes(); i++ {
+	remoteReq := &types.RemoteTaskExecuteRequest{
+		Pid:           req.Pid,
+		Req:           c,
+		Stats:         req.Stats,
+		Sandbox:       e.sandbox,
+		IOTimeout:     e.ioTimeout,
+		BanWorkerList: []*protocol.Host{},
+	}
+	//for i := 0; i < e.remoteTryTimes(); i++ {
+	for i := 0; i < m.work.Config().RemoteRetryTimes; i++ {
 		req.Stats.RemoteTryTimes = i + 1
-		r, err = m.work.Remote().ExecuteTask(&types.RemoteTaskExecuteRequest{
-			Pid:       req.Pid,
-			Req:       c,
-			Stats:     req.Stats,
-			Sandbox:   e.sandbox,
-			IOTimeout: e.ioTimeout,
-		})
+		r, err = m.work.Remote().ExecuteTask(remoteReq)
 		if err != nil {
 			blog.Warnf("local: execute remote-task for work(%s) from pid(%d) (%d)try failed: %v", m.work.ID(), req.Pid, i, err)
 			req.Stats.RemoteErrorMessage = err.Error()
@@ -187,6 +191,8 @@ func (m *Mgr) ExecuteTask(
 					m.work.ID(), req.Pid, i, err)
 				break
 			}
+			blog.Infof("local: retry remote-task from work(%s) for the(%d) time from pid(%d),ban (%d) worker:(%s)",
+				m.work.ID(), i+1, req.Pid, len(remoteReq.BanWorkerList), remoteReq.BanWorkerList)
 		} else {
 			break
 		}
