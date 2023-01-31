@@ -308,7 +308,7 @@ class OPRepositoryService @Autowired constructor(
                 val repositoryInfo = repoMap[repositoryId]
                 if (repositoryInfo == null) {
                     logger.warn("Invalid codeGit repository info,repositoryId=[$repositoryId]")
-                    codeGitLabDao.updateGitProjectId(
+                    codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
                         gitProjectId = "0"
@@ -318,7 +318,7 @@ class OPRepositoryService @Autowired constructor(
                 // 仅处理未删除代码库信息
                 if (repositoryInfo.isDeleted) {
                     logger.warn("Invalid codeGit repository info,repository deleted,repositoryId=[$repositoryId]")
-                    codeGitLabDao.updateGitProjectId(
+                    codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
                         gitProjectId = "0"
