@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.AccessTokenCredentialInfo
 import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.credential.SshCredentialInfo
@@ -188,6 +189,15 @@ class CredentialService @Autowired constructor(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     privateKey = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     passPhrase = passPhrase,
+                    username = StringUtils.EMPTY,
+                    password = StringUtils.EMPTY
+                )
+            }
+            CredentialType.ACCESSTOKEN ->{
+                AccessTokenCredentialInfo(
+                    token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    privateKey = StringUtils.EMPTY,
+                    passPhrase = StringUtils.EMPTY,
                     username = StringUtils.EMPTY,
                     password = StringUtils.EMPTY
                 )

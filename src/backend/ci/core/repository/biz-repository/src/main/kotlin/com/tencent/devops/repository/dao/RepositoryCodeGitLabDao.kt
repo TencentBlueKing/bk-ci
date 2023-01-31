@@ -169,7 +169,6 @@ class RepositoryCodeGitLabDao {
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
                 .where(REPOSITORY_ID.eq(id))
-                .and(GIT_PROJECT_ID.isNull)
                 .execute()
         }
     }
