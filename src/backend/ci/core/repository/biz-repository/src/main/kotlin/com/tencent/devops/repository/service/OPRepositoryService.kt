@@ -296,33 +296,22 @@ class OPRepositoryService @Autowired constructor(
                 }
                 // 是否为OAUTH
                 val isOauth = RepoAuthType.OAUTH.name == it.authType
-                val token = try {
-                    getToken(isOauth, it, repositoryInfo)
-                } catch (e: Exception) {
-                    logger.warn(
-                        "get codeGit credential info failed,set token to Empty String," +
-                            "repositoryId=[$repositoryId] | $e "
-                    )
-                    ""
-                }
+                // 获取token
+                val token = getToken(isOauth, it, repositoryInfo)
                 val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) ScmType.CODE_GIT else ScmType.CODE_TGIT
                 logger.info(
                     "get codeGit project info,projectName=[${it.projectName}]" +
                         "|repoType=[$type]" +
                         "|repoId=[$repositoryId]"
                 )
-                val repositoryProjectInfo = try {
-                    getProjectInfo(
-                        projectName = it.projectName,
-                        token = token,
-                        url = repositoryInfo.url,
-                        type = type,
-                        isOauth = isOauth
-                    )
-                } catch (e: Exception) {
-                    logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
-                    null
-                }
+                // 获取代码库信息
+                val repositoryProjectInfo = getProjectInfo(
+                    projectName = it.projectName,
+                    token = token,
+                    url = repositoryInfo.url,
+                    type = type,
+                    isOauth = isOauth
+                )
                 val gitProjectId = repositoryProjectInfo?.id ?: -1
                 codeGitDao.updateGitProjectId(
                     dslContext = dslContext,
@@ -335,24 +324,33 @@ class OPRepositoryService @Autowired constructor(
         logger.info("OPRepositoryService:end updateCodeGitProjectId")
     }
 
-    private fun getToken(isOauth: Boolean, it: TRepositoryCodeGitRecord, repositoryInfo: TRepositoryRecord) =
-        if (isOauth) {
-            gitOauthService.getAccessToken(it.userName)?.accessToken
-        } else {
-            credentialService.getCredentialInfo(
-                projectId = repositoryInfo.projectId,
-                CodeGitRepository(
-                    aliasName = repositoryInfo.aliasName,
-                    url = repositoryInfo.url,
-                    credentialId = it.credentialId,
-                    projectName = it.projectName,
-                    userName = repositoryInfo.userId,
+    private fun getToken(isOauth: Boolean, it: TRepositoryCodeGitRecord, repositoryInfo: TRepositoryRecord): String? {
+        return try {
+            if (isOauth) {
+                gitOauthService.getAccessToken(it.userName)?.accessToken
+            } else {
+                credentialService.getCredentialInfo(
                     projectId = repositoryInfo.projectId,
-                    repoHashId = repositoryInfo.repositoryHashId,
-                    authType = null
-                )
-            ).token
+                    CodeGitRepository(
+                        aliasName = repositoryInfo.aliasName,
+                        url = repositoryInfo.url,
+                        credentialId = it.credentialId,
+                        projectName = it.projectName,
+                        userName = repositoryInfo.userId,
+                        projectId = repositoryInfo.projectId,
+                        repoHashId = repositoryInfo.repositoryHashId,
+                        authType = null
+                    )
+                ).token
+            }
+        } catch (e: Exception) {
+            logger.warn(
+                "get codeGit credential info failed,set token to Empty String," +
+                    "repositoryId=[${repositoryInfo.repositoryId}] | $e "
+            )
+            ""
         }
+    }
 
     private fun getProjectInfo(
         projectName: String,
@@ -361,20 +359,25 @@ class OPRepositoryService @Autowired constructor(
         type: ScmType,
         isOauth: Boolean
     ): GitProjectInfo? {
-        return if (isOauth) {
-            scmOauthService.getProjectInfo(
-                projectName = projectName,
-                url = url,
-                type = type,
-                token = token
-            )
-        } else {
-            scmService.getProjectInfo(
-                projectName = projectName,
-                url = url,
-                type = type,
-                token = token
-            )
+        return try {
+            if (isOauth) {
+                scmOauthService.getProjectInfo(
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    token = token
+                )
+            } else {
+                scmService.getProjectInfo(
+                    projectName = projectName,
+                    url = url,
+                    type = type,
+                    token = token
+                )
+            }
+        } catch (e: Exception) {
+            logger.warn("get codeGit project info failed,projectName=[$projectName] | $e ")
+            null
         }
     }
 
