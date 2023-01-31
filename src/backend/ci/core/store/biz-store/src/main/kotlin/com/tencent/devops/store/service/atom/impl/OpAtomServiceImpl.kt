@@ -136,8 +136,8 @@ class OpAtomServiceImpl @Autowired constructor(
         val pipelineAtomList = atomDao.getOpPipelineAtoms(
             dslContext = dslContext,
             atomName = atomName,
-            atomType = atomType,
             atomCode = atomCode,
+            atomType = atomType,
             serviceScope = serviceScope,
             os = os,
             category = category,
