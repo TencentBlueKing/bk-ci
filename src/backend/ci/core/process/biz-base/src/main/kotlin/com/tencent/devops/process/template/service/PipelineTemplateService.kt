@@ -78,32 +78,31 @@ class PipelineTemplateService @Autowired constructor(
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         var flag = true
         val images = ArrayList<String>()
-        run aa@{
+        run releaseStatus@{
             templateModel.stages.forEach { stage ->
-                stage.containers.forEach c@{ container ->
+                stage.containers.forEach imageInfo@{ container ->
                     if (container is VMBuildContainer && container.dispatchType is StoreDispatchType) {
                         val imageCode = (container.dispatchType as StoreDispatchType).imageCode
                         val imageVersion = (container.dispatchType as StoreDispatchType).imageVersion
                         val image = imageCode + imageVersion
                         if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) {
-                            return@c
+                            return@imageInfo
                         } else {
                             if (image in images) {
-                                return@c
+                                return@imageInfo
                             } else {
                                 images.add(image)
                             }
-                            logger.info("images is:$images")
                             flag = isRelease(imageCode, imageVersion)
-                            return@aa
+                            return@releaseStatus
                         }
                     } else {
                         logger.info("container is not VMBuildContainer ")
-                        return@c
+                        return@imageInfo
                     }
                 }
             } }
-        logger.info("flag is $flag ")
+        logger.info("@releaseStatus flag is $flag ")
         return Result(flag)
     }
 

@@ -58,7 +58,6 @@ class ServiceStoreImageResourceImpl @Autowired constructor(
             imageService.getImageStatusByCodeAndVersion(
                 imageCode = imageCode,
                 imageVersion = imageVersion,
-                interfaceName = "/image/imageCodes/{imageCode}/imageVersions/{imageVersion}"
             )
         )
     }

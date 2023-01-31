@@ -183,11 +183,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
-        val ReleaseResult = client.get(ServicePTemplateResource::class).getCheckTemplate(templateCode, userId)
-        if (ReleaseResult.isNotOk()) {
-            // 抛出错误提示
-            return Result(ReleaseResult.status, ReleaseResult.message ?: "")
-        }
+        val ReleaseResult = client.get(ServicePTemplateResource::class).getImageReleaseStatus(templateCode, userId)
         val flag = ReleaseResult.data
         if (flag != true) {
             throw ErrorCodeException(

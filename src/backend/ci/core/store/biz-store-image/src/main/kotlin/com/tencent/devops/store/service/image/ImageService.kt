@@ -806,27 +806,23 @@ abstract class ImageService @Autowired constructor() {
     fun getImageStatusByCodeAndVersion(
         imageCode: String,
         imageVersion: String,
-        interfaceName: String? = "Anon interface"
     ): String {
-        logger.info("$interfaceName:getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
+        logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         var imageRecord: TImageRecord? = null
         if (VersionUtils.isLatestVersion(imageVersion)) {
-            imageRecord = imageDao.getImageByMaxVersion(dslContext, imageCode) ?: throw ErrorCodeException(
+            imageRecord = imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                defaultMessage = "image is null,imageCode=$imageCode",
-                params = arrayOf(imageCode)
+                defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
+                params = arrayOf(imageCode, imageVersion)
             )
         } else {
-            imageRecord =
-                imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+            imageRecord = imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                     errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                     defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion)
                 )
         }
-
         val imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
-        logger.info("imageStatus:$imageStatus")
         return imageStatus
     }
 
