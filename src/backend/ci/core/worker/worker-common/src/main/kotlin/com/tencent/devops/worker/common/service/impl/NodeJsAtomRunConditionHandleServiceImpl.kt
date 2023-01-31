@@ -35,6 +35,8 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
+import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
@@ -74,6 +76,11 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         }
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
         val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
+        val script= LinuxScriptElement(
+            script = "pwd",
+            scriptType = BuildScriptType.SHELL,
+            continueNoneZero = false
+        )
         logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
         storePkgRunEnvInfo?.let {
             // 判断nodejs安装包是否已经存在构建机上
@@ -94,10 +101,24 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                 logger.info("prepareRunEnv download [$pkgName] success")
                 // 把nodejs安装包解压到构建机上
-                if (osType == OSType.WINDOWS) {
+                if (osType == OSType.WINDOWS)  {
                     ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 } else {
-                    CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                    for (i in 1..3)  {
+                        CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                        try {
+                            CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile,true)
+                        }catch (e: Exception){
+                            if (i == 3) {
+                                throw TaskExecuteException(
+                                    errorType = ErrorType.USER,
+                                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                                    errorMsg = "Script command execution failed because of ${e.message}"
+                                )
+                            }
+                            logger.info("Fail to execute the command,${e.message}")
+                        }
+                    }
                 }
                 // 删除安装包
                 pkgFile.delete()
