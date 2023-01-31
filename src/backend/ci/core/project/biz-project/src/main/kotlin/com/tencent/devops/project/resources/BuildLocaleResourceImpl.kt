@@ -25,39 +25,21 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.resources
 
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.build.BuildLocaleResource
 import com.tencent.devops.project.pojo.LocaleInfo
+import com.tencent.devops.project.service.UserLocaleService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface UserLocaleService {
+@RestResource
+class BuildLocaleResourceImpl @Autowired constructor(
+    private val userLocaleService: UserLocaleService
+) : BuildLocaleResource {
 
-    /**
-     * 添加用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun addUserLocale(userId: String, locale: String): Boolean
-
-    /**
-     * 删除用户国际化信息
-     * @param userId 用户ID
-     * @return 布尔值
-     */
-    fun deleteUserLocale(userId: String): Boolean
-
-    /**
-     * 更新用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun updateUserLocale(userId: String, locale: String): Boolean
-
-    /**
-     * 根据用户ID查找用户国际化信息
-     * @param userId 用户ID
-     * @return 用户国际化信息
-     */
-    fun getUserLocale(userId: String): LocaleInfo
+    override fun getUserLocale(userId: String): Result<LocaleInfo> {
+        return Result(userLocaleService.getUserLocale(userId))
+    }
 }

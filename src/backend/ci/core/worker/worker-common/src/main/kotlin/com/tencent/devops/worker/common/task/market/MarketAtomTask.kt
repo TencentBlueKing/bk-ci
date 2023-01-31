@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
 import com.tencent.devops.common.api.constant.LABEL
+import com.tencent.devops.common.api.constant.LOCALE
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
@@ -226,7 +227,8 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_CODE to atomData.atomCode,
                 PIPELINE_ATOM_VERSION to atomData.version,
                 PIPELINE_TASK_NAME to taskName,
-                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString()
+                PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString(),
+                LOCALE to System.getProperty(LOCALE)
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }

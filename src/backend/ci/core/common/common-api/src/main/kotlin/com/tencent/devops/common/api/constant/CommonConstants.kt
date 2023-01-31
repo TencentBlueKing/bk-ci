@@ -112,6 +112,7 @@ const val BUILD_STAGE_SUCCESS = "buildStageSuccess" // 构建阶段性完成
 const val BUILD_COMPLETED = "buildCompleted" // 运行成功
 const val BUILD_CANCELED = "buildCanceled" // 构建已取消
 const val BUILD_FAILED = "buildFailed" // 构建失败
+const val LOCALE = "BK_CI_LOCALE" // locale国际化信息
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"

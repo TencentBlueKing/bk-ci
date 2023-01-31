@@ -71,6 +71,17 @@ class UserLocaleDao {
         }
     }
 
+    fun countLocaleByUserId(
+        dslContext: DSLContext,
+        userId: String
+    ): Int {
+        with(TUserLocale.T_USER_LOCALE) {
+            return dslContext.selectCount().from(this)
+                .where(USER_ID.eq(userId))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
     fun getLocaleByUserId(
         dslContext: DSLContext,
         userId: String

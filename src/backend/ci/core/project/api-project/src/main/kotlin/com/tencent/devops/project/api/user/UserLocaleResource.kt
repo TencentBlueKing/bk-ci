@@ -25,39 +25,43 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.api.user
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.LocaleInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface UserLocaleService {
+@Api(tags = ["USER_LOCALE"], description = "用户-国际化")
+@Path("/user/locales")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserLocaleResource {
 
-    /**
-     * 添加用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun addUserLocale(userId: String, locale: String): Boolean
+    @GET
+    @Path("/users/{userId}/get")
+    @ApiOperation("获取用户国际化信息")
+    fun getUserLocale(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<LocaleInfo>
 
-    /**
-     * 删除用户国际化信息
-     * @param userId 用户ID
-     * @return 布尔值
-     */
-    fun deleteUserLocale(userId: String): Boolean
-
-    /**
-     * 更新用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun updateUserLocale(userId: String, locale: String): Boolean
-
-    /**
-     * 根据用户ID查找用户国际化信息
-     * @param userId 用户ID
-     * @return 用户国际化信息
-     */
-    fun getUserLocale(userId: String): LocaleInfo
+    @GET
+    @Path("/users/{userId}/update")
+    @ApiOperation("更新用户国际化信息")
+    fun updateUserLocale(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String,
+        @ApiParam(value = "国际化信息", required = true)
+        localeInfo: LocaleInfo
+    ): Result<Boolean>
 }

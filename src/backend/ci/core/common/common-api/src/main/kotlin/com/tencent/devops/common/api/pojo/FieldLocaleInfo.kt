@@ -24,40 +24,16 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.api.pojo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-package com.tencent.devops.project.service
-
-import com.tencent.devops.project.pojo.LocaleInfo
-
-interface UserLocaleService {
-
-    /**
-     * 添加用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun addUserLocale(userId: String, locale: String): Boolean
-
-    /**
-     * 删除用户国际化信息
-     * @param userId 用户ID
-     * @return 布尔值
-     */
-    fun deleteUserLocale(userId: String): Boolean
-
-    /**
-     * 更新用户国际化信息
-     * @param userId 用户ID
-     * @param locale 国际化信息
-     * @return 布尔值
-     */
-    fun updateUserLocale(userId: String, locale: String): Boolean
-
-    /**
-     * 根据用户ID查找用户国际化信息
-     * @param userId 用户ID
-     * @return 用户国际化信息
-     */
-    fun getUserLocale(userId: String): LocaleInfo
-}
+@ApiModel("字段国际化信息")
+data class FieldLocaleInfo(
+    @ApiModelProperty("字段名称")
+    val fieldName: String,
+    @ApiModelProperty("字段值")
+    val fieldValue: String,
+    @ApiModelProperty("语言环境")
+    val locale: String? = null
+)

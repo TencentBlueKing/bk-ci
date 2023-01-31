@@ -27,30 +27,81 @@
 
 package com.tencent.devops.project.service.impl
 
+import com.tencent.devops.common.api.util.LocaleUtil
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.dao.UserLocaleDao
+import com.tencent.devops.project.pojo.LocaleInfo
 import com.tencent.devops.project.service.UserLocaleService
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class UserLocaleServiceImpl @Autowired constructor(
+    private val dslContext: DSLContext,
     private val userLocaleDao: UserLocaleDao,
     private val redisOperation: RedisOperation
 ) : UserLocaleService {
     override fun addUserLocale(userId: String, locale: String): Boolean {
-        TODO("Not yet implemented")
+        val key = LocaleUtil.getUserLocaleKey(userId)
+        val lock = RedisLock(redisOperation, "$key:add", 10)
+        try {
+            lock.lock()
+            val localeCount = userLocaleDao.countLocaleByUserId(
+                dslContext = dslContext,
+                userId = userId
+            )
+            if (localeCount > 0) {
+                // 已添加则无需重复添加
+                return true
+            }
+            // locale信息入库
+            userLocaleDao.add(dslContext, userId, locale)
+            // locale写入redis缓存
+            redisOperation.set(
+                key = key,
+                value = locale
+            )
+        } finally {
+            lock.unlock()
+        }
+        return true
     }
 
     override fun deleteUserLocale(userId: String): Boolean {
-        TODO("Not yet implemented")
+        userLocaleDao.delete(dslContext, userId)
+        redisOperation.delete(LocaleUtil.getUserLocaleKey(userId))
+        return true
     }
 
     override fun updateUserLocale(userId: String, locale: String): Boolean {
-        TODO("Not yet implemented")
+        val key = LocaleUtil.getUserLocaleKey(userId)
+        val lock = RedisLock(redisOperation, "$key:update", 10)
+        try {
+            lock.lock()
+            // 更新db中locale信息
+            userLocaleDao.update(dslContext, userId, locale)
+            // 更新redis缓存locale信息
+            redisOperation.set(
+                key = key,
+                value = locale
+            )
+        } finally {
+            lock.unlock()
+        }
+        return true
     }
 
-    override fun getUserLocale(userId: String): String {
-        TODO("Not yet implemented")
+    override fun getUserLocale(userId: String): LocaleInfo {
+        val key = LocaleUtil.getUserLocaleKey(userId)
+        // 从缓存中获取locale信息
+        var locale = redisOperation.get(key)
+        if (locale.isNullOrBlank()) {
+            // 缓存中未取到则直接从db查
+            locale = userLocaleDao.getLocaleByUserId(dslContext, userId)
+        }
+        // 用户未配置locale信息则默认返回简体中文
+        return LocaleInfo(locale ?: "zh_CN")
     }
 }
