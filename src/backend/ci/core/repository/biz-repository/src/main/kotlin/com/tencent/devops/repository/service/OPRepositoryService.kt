@@ -29,15 +29,18 @@ package com.tencent.devops.repository.service
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.model.repository.tables.records.TRepositoryCodeGitRecord
 import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryCodeGitLabDao
 import com.tencent.devops.repository.dao.RepositoryDao
+import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.scm.IGitOauthService
 import com.tencent.devops.repository.service.scm.IScmOauthService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -241,11 +244,12 @@ class OPRepositoryService @Autowired constructor(
                             "get gitlab project info,projectName=[${it.projectName}]" +
                                 "|repoId=[$repositoryId]"
                         )
-                        scmService.getProjectInfo(
+                        getProjectInfo(
                             projectName = it.projectName,
+                            token = token,
                             url = repositoryInfo.url,
                             type = ScmType.CODE_GITLAB,
-                            token = token
+                            isOauth = false
                         )
                     } catch (e: Exception) {
                         logger.warn("get gitlab project info failed,projectName=[${it.projectName}] | $e ")
@@ -293,23 +297,7 @@ class OPRepositoryService @Autowired constructor(
                 // 是否为OAUTH
                 val isOauth = RepoAuthType.OAUTH.name == it.authType
                 val token = try {
-                    if (isOauth) {
-                        gitOauthService.getAccessToken(it.userName)?.accessToken
-                    } else {
-                        credentialService.getCredentialInfo(
-                            projectId = repositoryInfo.projectId,
-                            CodeGitlabRepository(
-                                aliasName = repositoryInfo.aliasName,
-                                url = repositoryInfo.url,
-                                credentialId = it.credentialId,
-                                projectName = it.projectName,
-                                userName = repositoryInfo.userId,
-                                projectId = repositoryInfo.projectId,
-                                repoHashId = repositoryInfo.repositoryHashId,
-                                authType = null
-                            )
-                        ).token
-                    }
+                    getToken(isOauth, it, repositoryInfo)
                 } catch (e: Exception) {
                     logger.warn(
                         "get codeGit credential info failed,set token to Empty String," +
@@ -317,28 +305,20 @@ class OPRepositoryService @Autowired constructor(
                     )
                     ""
                 }
+                val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) ScmType.CODE_GIT else ScmType.CODE_TGIT
+                logger.info(
+                    "get codeGit project info,projectName=[${it.projectName}]" +
+                        "|repoType=[$type]" +
+                        "|repoId=[$repositoryId]"
+                )
                 val repositoryProjectInfo = try {
-                    val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) ScmType.CODE_GIT else ScmType.CODE_TGIT
-                    logger.info(
-                        "get codeGit project info,projectName=[${it.projectName}]" +
-                            "|repoType=[$type]" +
-                            "|repoId=[$repositoryId]"
+                    getProjectInfo(
+                        projectName = it.projectName,
+                        token = token,
+                        url = repositoryInfo.url,
+                        type = type,
+                        isOauth = isOauth
                     )
-                    if (isOauth) {
-                        scmOauthService.getProjectInfo(
-                            projectName = it.projectName,
-                            url = repositoryInfo.url,
-                            type = type,
-                            token = token
-                        )
-                    } else {
-                        scmService.getProjectInfo(
-                            projectName = it.projectName,
-                            url = repositoryInfo.url,
-                            type = type,
-                            token = token
-                        )
-                    }
                 } catch (e: Exception) {
                     logger.warn("get codeGit project info failed,projectName=[${it.projectName}] | $e ")
                     null
@@ -353,6 +333,49 @@ class OPRepositoryService @Autowired constructor(
             offset += limit
         } while (repoSize == 1000)
         logger.info("OPRepositoryService:end updateCodeGitProjectId")
+    }
+
+    private fun getToken(isOauth: Boolean, it: TRepositoryCodeGitRecord, repositoryInfo: TRepositoryRecord) =
+        if (isOauth) {
+            gitOauthService.getAccessToken(it.userName)?.accessToken
+        } else {
+            credentialService.getCredentialInfo(
+                projectId = repositoryInfo.projectId,
+                CodeGitRepository(
+                    aliasName = repositoryInfo.aliasName,
+                    url = repositoryInfo.url,
+                    credentialId = it.credentialId,
+                    projectName = it.projectName,
+                    userName = repositoryInfo.userId,
+                    projectId = repositoryInfo.projectId,
+                    repoHashId = repositoryInfo.repositoryHashId,
+                    authType = null
+                )
+            ).token
+        }
+
+    private fun getProjectInfo(
+        projectName: String,
+        token: String?,
+        url: String,
+        type: ScmType,
+        isOauth: Boolean
+    ): GitProjectInfo? {
+        return if (isOauth) {
+            scmOauthService.getProjectInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token
+            )
+        } else {
+            scmService.getProjectInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token
+            )
+        }
     }
 
     companion object {
