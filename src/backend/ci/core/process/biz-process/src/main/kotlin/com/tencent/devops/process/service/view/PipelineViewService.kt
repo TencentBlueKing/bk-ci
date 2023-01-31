@@ -444,7 +444,7 @@ class PipelineViewService @Autowired constructor(
     }
 
     fun getFilters(pipelineNewView: PipelineNewView):
-            Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
+        Triple<List<PipelineViewFilterByName>, List<PipelineViewFilterByCreator>, List<PipelineViewFilterByLabel>> {
         val filterByNames = mutableListOf<PipelineViewFilterByName>()
         val filterByCreators = mutableListOf<PipelineViewFilterByCreator>()
         val filterByLabels = mutableListOf<PipelineViewFilterByLabel>()
@@ -694,6 +694,16 @@ class PipelineViewService @Autowired constructor(
             }
         }
         return result
+    }
+
+    fun viewName2viewId(
+        projectId: String,
+        name: String,
+        isProject: Boolean
+    ): String? {
+        return pipelineViewDao.fetchAnyByName(
+            dslContext = dslContext, projectId = projectId, name = name, isProject = isProject
+        )?.id?.let { encode(it) }
     }
 
     companion object {
