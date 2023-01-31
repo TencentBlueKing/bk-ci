@@ -318,11 +318,7 @@ class OPRepositoryService @Autowired constructor(
                     ""
                 }
                 val repositoryProjectInfo = try {
-                    val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) {
-                        ScmType.CODE_GIT
-                    } else {
-                        ScmType.CODE_TGIT
-                    }
+                    val type = if (repositoryInfo.type == ScmType.CODE_GIT.name) ScmType.CODE_GIT else ScmType.CODE_TGIT
                     logger.info(
                         "get codeGit project info,projectName=[${it.projectName}]" +
                             "|repoType=[$type]" +

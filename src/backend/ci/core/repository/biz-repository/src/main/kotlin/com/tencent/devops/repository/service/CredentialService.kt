@@ -124,16 +124,8 @@ class CredentialService @Autowired constructor(
     ): RepoCredentialInfo {
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
-                if (credentialInfo.v1.isNullOrEmpty()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
-                    )
-                }
-                if (credentialInfo.v2.isNullOrBlank()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
-                    )
-                }
+                checkUsername(credentialInfo.v1)
+                checkPassword(credentialInfo.v2)
                 UserNamePasswordCredentialInfo(
                     token = StringUtils.EMPTY,
                     username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
@@ -141,16 +133,8 @@ class CredentialService @Autowired constructor(
                 )
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
-                if (credentialInfo.v2.isNullOrBlank()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
-                    )
-                }
-                if (credentialInfo.v3.isNullOrBlank()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
-                    )
-                }
+                checkUsername(credentialInfo.v2)
+                checkPassword(credentialInfo.v3)
                 UserNamePasswordCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     username = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
@@ -176,11 +160,7 @@ class CredentialService @Autowired constructor(
                 )
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                if (credentialInfo.v2.isNullOrBlank()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
-                    )
-                }
+                checkUsername(credentialInfo.v2)
                 var passPhrase = StringUtils.EMPTY
                 if (!credentialInfo.v3.isNullOrBlank()) {
                     passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
@@ -205,6 +185,22 @@ class CredentialService @Autowired constructor(
             else -> {
                 EmptyCredentialInfo(token = StringUtils.EMPTY)
             }
+        }
+    }
+
+    fun checkUsername(username: String?) {
+        if (username.isNullOrEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+            )
+        }
+    }
+
+    fun checkPassword(password: String?) {
+        if (password.isNullOrBlank()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+            )
         }
     }
 }
