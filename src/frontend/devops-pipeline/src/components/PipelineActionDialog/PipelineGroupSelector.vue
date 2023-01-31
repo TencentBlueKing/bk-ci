@@ -67,7 +67,6 @@
     import Logo from '@/components/Logo'
 
     export default {
-        name: 'copy-pipeline-dialog',
         components: {
             PipelineLabelSelector,
             Logo

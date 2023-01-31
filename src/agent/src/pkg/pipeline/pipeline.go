@@ -44,6 +44,12 @@ import (
 )
 
 func Start() {
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent pipeline panic: ", err)
+		}
+	}()
+
 	time.Sleep(10 * time.Second)
 	for {
 		runPipeline()

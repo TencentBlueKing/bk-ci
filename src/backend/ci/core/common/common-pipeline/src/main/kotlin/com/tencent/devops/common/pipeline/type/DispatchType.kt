@@ -39,14 +39,12 @@ import com.tencent.devops.common.pipeline.type.codecc.CodeCCDispatchType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.kubernetes.KubernetesDispatchType
-import com.tencent.devops.common.pipeline.type.tstack.TStackDispatchType
 
 @JsonTypeInfo(use = JsonTypeInfo.Id.NAME, include = JsonTypeInfo.As.PROPERTY, property = "buildType", visible = false)
 @JsonSubTypes(
     JsonSubTypes.Type(value = DockerDispatchType::class, name = "DOCKER"),
     JsonSubTypes.Type(value = KubernetesDispatchType::class, name = "KUBERNETES"),
     JsonSubTypes.Type(value = ESXiDispatchType::class, name = "ESXi"),
-    JsonSubTypes.Type(value = TStackDispatchType::class, name = "TSTACK"),
     JsonSubTypes.Type(value = ThirdPartyAgentIDDispatchType::class, name = "THIRD_PARTY_AGENT_ID"),
     JsonSubTypes.Type(value = ThirdPartyAgentEnvDispatchType::class, name = "THIRD_PARTY_AGENT_ENV"),
     JsonSubTypes.Type(value = ThirdPartyDevCloudDispatchType::class, name = "THIRD_PARTY_DEVCLOUD"),

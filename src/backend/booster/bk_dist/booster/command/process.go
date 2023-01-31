@@ -155,6 +155,7 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 	usr, err := user.Current()
 	if err != nil {
 		blog.Warnf("booster-command: get current user failed: %v", err)
+		return nil, err
 	}
 
 	// decide which server to connect to.
@@ -220,6 +221,11 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 		pumpCacheSizeMaxMB = 1024
 	}
 
+	pumpMinActionNum := 50
+	if c.IsSet(FlagPumpMinActionNum) {
+		pumpMinActionNum = c.Int(FlagPumpMinActionNum)
+	}
+
 	netErrLimit := 5
 	if c.IsSet(FlagNerErrLimit) && c.Int(FlagNerErrLimit) > 0 {
 		netErrLimit = c.Int(FlagNerErrLimit)
@@ -228,7 +234,6 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 	remoteRetryTimes := 1
 	if c.IsSet(FlagRemoteRetryTimes) && c.Int(FlagRemoteRetryTimes) > 0 {
 		remoteRetryTimes = c.Int(FlagRemoteRetryTimes)
-
 	}
 
 	// generate a new booster.
@@ -284,6 +289,8 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 			PumpCacheDir:         c.String(FlagPumpCacheDir),
 			PumpCacheSizeMaxMB:   pumpCacheSizeMaxMB,
 			PumpCacheRemoveAll:   c.Bool(FlagPumpCacheRemoveAll),
+			PumpBlackList:        c.StringSlice(FlagPumpBlackList),
+			PumpMinActionNum:     int32(pumpMinActionNum),
 			ForceLocalList:       c.StringSlice(FlagForceLocalList),
 			NoWork:               c.Bool(FlagNoWork),
 			WriteMemroy:          c.Bool(FlagWriteMemroMemroy),

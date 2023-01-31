@@ -14,6 +14,11 @@ allprojects {
     version = (System.getProperty("ci_version") ?: "1.9.0") +
             if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
 
+    // Docker镜像构建
+    if (name.startsWith("boot-") && System.getProperty("devops.assemblyMode") == "KUBERNETES") {
+        pluginManager.apply("task-docker-build")
+    }
+
     // TODO bkrepo依赖到 , 后续加到framework后可以删掉
     repositories {
         maven(url = "https://repo.spring.io/milestone")
@@ -127,6 +132,7 @@ allprojects {
         it.exclude("dom4j", "dom4j")
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")
+        it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656

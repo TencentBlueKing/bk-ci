@@ -63,7 +63,7 @@ func runUpgrader(action string) error {
 	scripPath := systemutil.GetUpgradeDir() + "/" + config.GetClientUpgraderFile()
 
 	if !systemutil.IsWindows() {
-		err := os.Chmod(scripPath, 0777)
+		err := systemutil.Chmod(scripPath, 0777)
 		if err != nil {
 			logs.Error("[agentUpgrade]|chmod failed: ", err.Error())
 			return errors.New("chmod failed: ")
@@ -105,8 +105,9 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 	defer func() {
 		job.BuildTotalManager.Lock.Unlock()
 	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 ||
+	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
 		job.GBuildDockerManager.GetInstanceCount() > 0 {
+		logs.Info("agent has upgrade item, but has job running, so skip.")
 		return nil
 	}
 
@@ -194,8 +195,8 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 			logs.Error("[agentUpgrade]|replace work docker init file failed: ", err.Error())
 			return errors.New("replace work docker init file failed")
 		}
-		// 授予文件可执行权限
-		if err = os.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
+		// 授予文件可执行权限，每次升级后赋予权限可以减少直接在启动时赋予的并发赋予的情况
+		if err = systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
 			logs.Error("[agentUpgrade]|chmod work docker init file failed: ", err.Error())
 			return errors.New("chmod work docker init file failed")
 		}

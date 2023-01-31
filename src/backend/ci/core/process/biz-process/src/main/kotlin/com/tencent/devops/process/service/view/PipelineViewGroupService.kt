@@ -29,12 +29,14 @@ package com.tencent.devops.process.service.view
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestamp
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
@@ -58,7 +60,6 @@ import com.tencent.devops.process.pojo.classify.PipelineViewPreview
 import com.tencent.devops.process.pojo.classify.enums.Logic
 import com.tencent.devops.process.service.view.lock.PipelineViewGroupLock
 import com.tencent.devops.process.utils.PIPELINE_VIEW_UNCLASSIFIED
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -66,6 +67,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
+import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LoopWithTooManyJumpStatements", "LongParameterList", "TooManyFunctions", "ReturnCount")
@@ -78,8 +80,14 @@ class PipelineViewGroupService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper,
-    private val client: Client
+    private val client: Client,
+    private val clientTokenService: ClientTokenService
 ) {
+    private val allPipelineInfoCache = Caffeine.newBuilder()
+        .maximumSize(10)
+        .expireAfterWrite(10, TimeUnit.SECONDS)
+        .build<String, List<TPipelineInfoRecord>>()
+
     fun getViewNameMap(
         projectId: String,
         pipelineIds: MutableSet<String>
@@ -529,27 +537,29 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     private fun allPipelineInfos(projectId: String, includeDelete: Boolean): List<TPipelineInfoRecord> {
-        val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
-        val step = 200
-        var offset = 0
-        var hasNext = true
-        while (hasNext) {
-            val subPipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
-                dslContext = dslContext,
-                projectId = projectId,
-                offset = offset,
-                limit = step,
-                deleteFlag = if (includeDelete) null else false,
-                channelCode = ChannelCode.BS
-            ) ?: emptyList<TPipelineInfoRecord>()
-            if (subPipelineInfos.isEmpty()) {
-                break
+        return allPipelineInfoCache.get("$projectId-$includeDelete") {
+            val pipelineInfos = mutableListOf<TPipelineInfoRecord>()
+            val step = 200
+            var offset = 0
+            var hasNext = true
+            while (hasNext) {
+                val subPipelineInfos = pipelineInfoDao.listPipelineInfoByProject(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    offset = offset,
+                    limit = step,
+                    deleteFlag = if (includeDelete) null else false,
+                    channelCode = ChannelCode.BS
+                ) ?: emptyList<TPipelineInfoRecord>()
+                if (subPipelineInfos.isEmpty()) {
+                    break
+                }
+                pipelineInfos.addAll(subPipelineInfos)
+                offset += step
+                hasNext = subPipelineInfos.size == step
             }
-            pipelineInfos.addAll(subPipelineInfos)
-            offset += step
-            hasNext = subPipelineInfos.size == step
-        }
-        return pipelineInfos
+            pipelineInfos
+        } ?: emptyList()
     }
 
     fun bulkAdd(userId: String, projectId: String, bulkAdd: PipelineViewBulkAdd): Boolean {
@@ -629,7 +639,8 @@ class PipelineViewGroupService @Autowired constructor(
     }
 
     fun hasPermission(userId: String, projectId: String) =
-        client.get(ServiceProjectResource::class).hasPermission(userId, projectId, AuthPermission.MANAGE).data ?: false
+        client.get(ServiceProjectAuthResource::class)
+            .checkManager(clientTokenService.getSystemToken(null)!!, userId, projectId).data ?: false
 
     fun listView(userId: String, projectId: String, projected: Boolean?, viewType: Int?): List<PipelineNewViewSummary> {
         val views = pipelineViewDao.list(dslContext, userId, projectId, projected, viewType)
@@ -729,6 +740,19 @@ class PipelineViewGroupService @Autowired constructor(
             normalCount = pipelineInfos.size - deleteCount,
             deleteCount = deleteCount
         )
+    }
+
+    fun initAllView() {
+        val dynamicProjectIds = pipelineViewDao.listDynamicProjectId(dslContext)
+        logger.info("dynamicProjectIds : $dynamicProjectIds")
+        dynamicProjectIds.forEach { projectId ->
+            pipelineViewDao.listDynamicViewByProjectId(dslContext, projectId).forEach { view ->
+                redisOperation.delete(firstInitMark(view.projectId, view.id))
+                logger.info("init start , ${view.projectId} , ${view.id}")
+                initDynamicViewGroup(view, "admin")
+                logger.info("init finish , ${view.projectId} , ${view.id}")
+            }
+        }
     }
 
     companion object {

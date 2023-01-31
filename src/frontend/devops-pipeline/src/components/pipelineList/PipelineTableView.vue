@@ -152,7 +152,6 @@
                     v-if="isDeleteView"
                     text
                     theme="primary"
-                    class="pipeline-exec-btn"
                     @click="handleRestore(props.row)">
                     {{ $t('restore.restore') }}
                 </bk-button>
@@ -160,7 +159,6 @@
                     v-else-if="props.row.delete"
                     text
                     theme="primary"
-                    class="pipeline-exec-btn"
                     :disabled="!isManage"
                     @click="removeHandler(props.row)"
                 >
@@ -170,7 +168,6 @@
                     v-else-if="!props.row.hasPermission"
                     outline
                     theme="primary"
-                    class="pipeline-exec-btn"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
@@ -179,11 +176,29 @@
                 >
                     <bk-button
                         text
-                        theme="primary"
+                        theme=""
                         class="pipeline-exec-btn"
-                        :disabled="props.row.lock || !props.row.canManualStartup"
-                        @click="execPipeline(props.row)">
-                        {{ $t(props.row.lock ? 'disabled' : 'exec') }}
+                        :disabled="props.row.disabled"
+                        @click="execPipeline(props.row)"
+                    >
+                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
+                            <logo v-if="props.row.lock" name="minus-circle"></logo>
+                            <logo
+                                v-else
+                                name="play"
+                            />
+                        </span>
+                    </bk-button>
+                    <bk-button
+                        text
+                        :theme="props.row.hasCollect ? 'warning' : ''"
+                        class="pipeline-collect-btn"
+                        @click="collectHandler(props.row)">
+                        <i :class="{
+                            'devops-icon': true,
+                            'icon-star': !props.row.hasCollect,
+                            'icon-star-shape': props.row.hasCollect
+                        }" />
                     </bk-button>
                     <ext-menu :data="props.row" :config="props.row.pipelineActions"></ext-menu>
                 </template>
@@ -227,8 +242,8 @@
                 pipelineList: [],
                 selectionLength: 0,
                 pagination: {
-                    current: this.$route.query.page ?? 1,
-                    limit: this.$route.query.pageSize ?? 20,
+                    current: parseInt(this.$route.query.page ?? 1),
+                    limit: parseInt(this.$route.query.pageSize ?? 50),
                     count: 0
                 },
                 visibleTagCountList: {}

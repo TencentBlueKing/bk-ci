@@ -25,16 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.pipeline.type.tstack
+package com.tencent.devops.metrics.utils
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.pipeline.type.DispatchType
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-data class TStackDispatchType(@JsonProperty("value") val tstackAgentId: String) : DispatchType(tstackAgentId) {
-    override fun cleanDataBeforeSave() = Unit
+/**
+ * 错误码信息缓存
+ *
+ * @since: 2022-12-09
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object ErrorCodeInfoCacheUtil {
 
-    override fun replaceField(variables: Map<String, String>) = Unit
+    private val shardingRoutingCache = Caffeine.newBuilder()
+        .maximumSize(5000)
+        .expireAfterWrite(7, TimeUnit.DAYS)
+        .build<String, Boolean>()
 
-    override fun buildType() = BuildType.valueOf(BuildType.TSTACK.name)
+    /**
+     * 保存错误码信息缓存
+     * @param key 缓存key (atomCode:errorType:errorCode)
+     * @param value 缓存value
+     */
+    fun put(key: String, value: Boolean) {
+        shardingRoutingCache.put(key, value)
+    }
+
+    /**
+     * 从缓存中获取错误码信息
+     * @param key 缓存key
+     * @return 缓存value
+     */
+    fun getIfPresent(key: String): Boolean? {
+        return shardingRoutingCache.getIfPresent(key)
+    }
 }
