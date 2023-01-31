@@ -810,13 +810,15 @@ abstract class ImageService @Autowired constructor() {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         var imageRecord: TImageRecord? = null
         if (VersionUtils.isLatestVersion(imageVersion)) {
-            imageRecord = imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+            imageRecord =
+                imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                 params = arrayOf(imageCode, imageVersion)
             )
         } else {
-            imageRecord = imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+            imageRecord =
+                imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                     errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                     defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                     params = arrayOf(imageCode, imageVersion)
