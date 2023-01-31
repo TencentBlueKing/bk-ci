@@ -14,6 +14,7 @@
                         :pipeline="pipeline"
                         :remove-handler="removeHandler"
                         :exec-pipeline="execPipeline"
+                        :collect-pipeline="collectHandler"
                         :apply-permission="applyPermission"
                     >
                     </pipeline-card>
@@ -29,6 +30,8 @@
     import PipelineCard from '@/components/pipelineList/PipelineCard'
     import InfiniteScroll from '@/components/InfiniteScroll'
     import PipelineListEmpty from '@/components/pipelineList/PipelineListEmpty'
+    import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import { isShallowEqual } from '@/utils/util'
 
     export default {
         components: {
@@ -41,26 +44,35 @@
             filterParams: {
                 type: Object,
                 default: () => ({})
-            },
-            sortType: {
-                type: String,
-                default: 'CREATE_TIME'
             }
         },
         data () {
             return {
                 isLoading: false,
                 isPatchOperate: false,
-                defaultPageSize: 16,
+                defaultPageSize: 50,
                 activePipeline: null
+            }
+        },
+        computed: {
+            sortField () {
+                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                return {
+                    sortType,
+                    collation
+                }
             }
         },
         watch: {
             '$route.params.viewId': function () {
                 this.$refs.infiniteScroll?.updateList?.()
             },
-            sortType: function () {
-                this.$refs.infiniteScroll?.updateList?.()
+            sortField: function (newSortField, oldSortField) {
+                if (!isShallowEqual(newSortField, oldSortField)) {
+                    this.$nextTick(() => {
+                        this.$refs.infiniteScroll?.updateList?.()
+                    })
+                }
             },
             filterParams: function () {
                 this.$refs.infiniteScroll?.updateList?.()
@@ -71,11 +83,9 @@
                 const res = await this.getPipelines({
                     page,
                     pageSize,
-                    sortType: this.sortType,
                     viewId: this.$route.params.viewId,
                     ...this.filterParams
                 })
-                console.log(res)
                 return res
             },
             refresh () {

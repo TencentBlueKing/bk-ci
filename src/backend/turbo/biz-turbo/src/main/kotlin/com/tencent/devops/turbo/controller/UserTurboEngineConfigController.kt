@@ -2,6 +2,7 @@ package com.tencent.devops.turbo.controller
 
 import com.tencent.devops.api.pojo.Response
 import com.tencent.devops.turbo.api.IUserTurboEngineConfigController
+import com.tencent.devops.turbo.pojo.ParamEnumModel
 import com.tencent.devops.turbo.pojo.TurboEngineConfigModel
 import com.tencent.devops.turbo.service.TurboEngineConfigService
 import com.tencent.devops.turbo.service.TurboPlanService
@@ -20,7 +21,9 @@ class UserTurboEngineConfigController @Autowired constructor(
         private val logger = LoggerFactory.getLogger(UserTurboEngineConfigController::class.java)
     }
 
-    override fun getEngineConfigList(projectId: String): Response<List<TurboEngineConfigVO>> {
+    override fun getEngineConfigList(
+        projectId: String
+    ): Response<List<TurboEngineConfigVO>> {
         return Response.success(turboEngineConfigService.getEngineConfigList(projectId))
     }
 
@@ -73,5 +76,19 @@ class UserTurboEngineConfigController @Autowired constructor(
             return Response.success(null)
         }
         return Response.success(turboEngineConfigService.queryEngineConfigInfo(turboPlanDetailVO.engineCode))
+    }
+
+    override fun getCompilerVersionListByQueueName(
+        engineCode: String,
+        projectId: String,
+        queueName: String?
+    ): Response<List<ParamEnumModel>> {
+        return Response.success(
+            turboEngineConfigService.getCompilerVersionListByQueueName(
+                engineCode = engineCode,
+                projectId = projectId,
+                queueName = queueName
+            )
+        )
     }
 }

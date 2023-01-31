@@ -2,6 +2,7 @@
     <bk-dialog
         width="500"
         :loading="saving"
+        render-directive="if"
         header-position="left"
         :mask-close="false"
         v-model="isShow"

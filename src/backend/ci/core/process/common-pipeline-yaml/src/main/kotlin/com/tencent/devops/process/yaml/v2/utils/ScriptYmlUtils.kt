@@ -719,7 +719,7 @@ object ScriptYmlUtils {
             return null
         }
 
-        if (preTriggerOn.openapi != EnableType.TRUE.value || preTriggerOn.openapi != EnableType.FALSE.value) {
+        if (preTriggerOn.openapi != EnableType.TRUE.value && preTriggerOn.openapi != EnableType.FALSE.value) {
             throw YamlFormatException("not allow openapi type ${preTriggerOn.openapi}")
         }
 

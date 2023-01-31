@@ -49,7 +49,12 @@ class BluekingAgentUrlServiceImpl constructor(
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val gw = genGateway(agentRecord)
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/agent?arch=\${ARCH}"
+        return if (agentRecord.os == OS.WINDOWS.name) {
+            // windows下不需要区分架构，删除arch
+            "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/agent"
+        } else {
+            "$gw/ms/environment/api/external/thirdPartyAgent/$agentHashId/agent?arch=\${ARCH}"
+        }
     }
 
     override fun genAgentInstallScript(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
