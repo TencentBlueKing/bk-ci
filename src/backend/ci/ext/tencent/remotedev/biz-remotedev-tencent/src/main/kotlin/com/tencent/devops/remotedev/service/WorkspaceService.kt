@@ -232,7 +232,7 @@ class WorkspaceService @Autowired constructor(
             }.email
         }
 
-        workspaceDao.createWorkspace(
+        val workspaceId = workspaceDao.createWorkspace(
             userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
