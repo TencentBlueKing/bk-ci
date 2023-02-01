@@ -104,15 +104,16 @@ class DevCloudRemoteDevService @Autowired constructor(
                                     mountPath = WORKSPACE_PATH
                                 )
                             ),
-                            /*readinessProbe = Probe(
+                            readinessProbe = Probe(
                                 handler = ProbeHandler(
                                     httpGet = HTTPGetAction(
-                                        path = "/api/remoting/status",
+                                        path = "/_remoting/api/remoting/status",
                                         port = 22999,
+                                        host = "",
                                         httpHeaders = emptyList()
                                     )
                                 )
-                            ),*/
+                            ),
                             command = listOf("/.devopsRemoting/devopsRemoting", "init"),
                             env = generateContainerEnvVar(userId, gitRepoRootPath, event)
                         )
