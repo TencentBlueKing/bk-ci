@@ -105,13 +105,13 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                         logger.info("pkgFileDir.absolutePath is $pkgFileDir.absolutePath")
                         logger.info("pkgFile.absoluteFile is $pkgFile.absolutePath")
                         try {
+                            val str = CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
+                            logger.info("$str")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absolutePath}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absolutePath}")
                             CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
-                            val str = CommandLineUtils.execute("node -v",pkgFile.absoluteFile ,true)
-                            logger.info("$str")
                         }catch (e: Exception){
                             logger.info("执行脚本出现异常，开始捕获.循环次数是$i")
                             if (i == 3) {
