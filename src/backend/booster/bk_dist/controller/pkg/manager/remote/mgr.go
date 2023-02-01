@@ -445,6 +445,10 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 	defer dcSDK.StatsTimeNow(&req.Stats.RemoteWorkLeaveTime)
 	m.work.Basic().UpdateJobStats(req.Stats)
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> b71f49f145d0d56c60397caaac8857906c57488e
 	// 如果有超过100MB的大文件，则在选择host时，作为选择条件
 	fpath, _ := getMaxSizeFile(req, m.largeFileSize)
 	req.Server = m.lockSlots(dcSDK.JobUsageRemoteExe, fpath, req.BanWorkerList)
