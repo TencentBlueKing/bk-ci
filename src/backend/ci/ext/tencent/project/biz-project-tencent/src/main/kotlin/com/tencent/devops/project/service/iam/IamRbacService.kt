@@ -75,8 +75,8 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamRbacCreateApplicationEvent
 import com.tencent.devops.project.listener.TxIamRbacCreateEvent
-import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.service.impl.TxRbacProjectPermissionServiceImpl
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -254,7 +254,7 @@ class IamRbacService @Autowired constructor(
             projectId = projectCode,
             desc = projectInfo.description,
             organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
-            authSecrecy = projectInfo.isAuthSecrecy,
+            authSecrecy = projectInfo.authSecrecy,
             subjectScopes = iamSubjectScopes
         )
         val gradeManagerDetail = iamManagerService.getGradeManagerDetail(projectInfo.relationId)
@@ -285,7 +285,7 @@ class IamRbacService @Autowired constructor(
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = context,
                 projectCode = projectInfo.englishName,
-                statusEnum = ApproveStatus.UPDATE_PENDING
+                statusEnum = ProjectApproveStatus.UPDATE_PENDING
             )
             // 存储审批单
             projectApprovalCallbackDao.create(
@@ -375,7 +375,7 @@ class IamRbacService @Autowired constructor(
             projectId = projectCode,
             desc = projectInfo.description,
             organization = "${projectInfo.bgName}-${projectInfo.deptName}-${projectInfo.deptName}",
-            authSecrecy = projectInfo.isAuthSecrecy,
+            authSecrecy = projectInfo.authSecrecy,
             subjectScopes = iamSubjectScopes
         )
         logger.info("itsmCreateCallBackUrl:$itsmCreateCallBackUrl")
@@ -412,7 +412,7 @@ class IamRbacService @Autowired constructor(
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                statusEnum = ApproveStatus.CREATE_PENDING
+                statusEnum = ProjectApproveStatus.CREATE_PENDING
             )
         }
     }

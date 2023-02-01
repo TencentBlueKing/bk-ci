@@ -58,6 +58,7 @@ object AuthMessageCode {
     const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
     const val RESOURCE_NOT_FOUND = "2121014" // 权限系统：资源{0}不存在
     const val DEFAULT_GROUP_NOT_FOUND = "2121015" // 权限系统：资源类型{0}关联的默认组{1}不存在
+    const val RESOURCE_ACTION_EMPTY = "2121016" // 权限系统：资源未绑定动作
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"

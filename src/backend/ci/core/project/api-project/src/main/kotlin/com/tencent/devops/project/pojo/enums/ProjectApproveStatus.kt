@@ -25,31 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+enum class ProjectApproveStatus(val status: Int) {
+    // 创建审批中
+    CREATE_PENDING(1),
 
-class SamplePermissionExtService : PermissionExtService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
+    // 审批通过
+    CREATE_APPROVED(2),
 
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
+    // 创建中审批拒绝
+    CREATE_REJECT(3),
 
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+    // 修改审批中
+    UPDATE_PENDING(4),
+
+    // 修改审批拒绝
+    UPDATE_REJECT(5),
+
+    // 修改审批通过
+    UPDATE_APPROVED(6),
+
+    // 取消创建
+    CANCEL_CREATE(7)
 }

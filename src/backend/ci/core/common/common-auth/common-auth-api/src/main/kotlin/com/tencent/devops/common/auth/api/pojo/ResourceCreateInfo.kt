@@ -37,4 +37,8 @@ data class ResourceCreateInfo(
     val needApproval: Boolean? = false,
     @ApiModelProperty("资源最大授权范围,目前只有rbac需要使用")
     val subjectScopes: List<SubjectScopeInfo>,
+    @ApiModelProperty("资源描述")
+    val description: String? = null,
+    @ApiModelProperty("是否私有资源")
+    val authSecrecy: Boolean = false
 )

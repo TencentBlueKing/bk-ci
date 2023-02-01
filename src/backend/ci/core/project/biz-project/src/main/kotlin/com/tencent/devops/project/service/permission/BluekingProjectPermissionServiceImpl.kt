@@ -135,4 +135,6 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
     ): Boolean {
         return true
     }
+
+    override fun needApproval(needApproval: Boolean?) = false
 }

@@ -59,7 +59,7 @@ import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamRbacService
@@ -102,8 +102,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         resourceRegisterInfo: ResourceRegisterInfo,
         resourceCreateInfo: AuthProjectCreateInfo
     ): String {
-        val needApproval = resourceCreateInfo.needApproval
-        val iamSubjectScopes = resourceCreateInfo.iamSubjectScopes
+        val needApproval = true
+        val iamSubjectScopes = resourceCreateInfo.subjectScopes
         val userId = resourceCreateInfo.userId
         val reason = resourceCreateInfo.projectCreateInfo.description
         logger.info("createResources : $needApproval|$iamSubjectScopes|$userId|$reason")
@@ -165,7 +165,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         // todo 上线之前这里必须刷数据，要不会报错，因为拿出的数据库，可授权人员范围为空。
         // 数据库中的最大可授权人员范围
         val dbSubjectscopes = JsonUtil.to(
-            dbProjectInfo.subjectscopes, object : TypeReference<ArrayList<SubjectScopeInfo>>() {}
+            dbProjectInfo.subjectScopes, object : TypeReference<ArrayList<SubjectScopeInfo>>() {}
         )
         logger.info(
             "Rbac modifyResource : $needApproval|$iamSubjectScopes|$projectCode|" +
@@ -180,13 +180,13 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
             listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(iamSubjectScopes)
-        if (approvalStatus == ApproveStatus.CREATE_PENDING.status ||
-            approvalStatus == ApproveStatus.UPDATE_PENDING.status
+        if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status ||
+            approvalStatus == ProjectApproveStatus.UPDATE_PENDING.status
         ) {
             throw OperationException("The project is under approval, modification is not allowed！")
         }
         // 编辑发起审批分为两种：1、项目已创建成功或修改审核通过，修改项目发起的审批。2、项目创建被拒绝审批通过，再次修改项目发起的审批
-        if (approvalStatus == ApproveStatus.CREATE_REJECT.status) {
+        if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
             // 项目创建被拒绝审批通过，再次修改项目发起的审批，此时直接发起创建分级管理员申请
             if (!needApproval) {
                 throw OperationException("Modifications must be made through the bkci client！")
@@ -206,7 +206,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                 )
             )
         } else {
-            val isAuthSecrecyChange = dbProjectInfo.isAuthSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
+            val isAuthSecrecyChange = dbProjectInfo.authSecrecy != resourceUpdateInfo.projectUpdateInfo.authSecrecy
             // todo 注意空处理，可能会出现未刷数据的出现问题
             val isSubjectScopesChange = (dbSubjectscopes.toSet() != iamSubjectScopes.toSet())
             logger.info("Rbac modifyResource :$isAuthSecrecyChange|$isSubjectScopesChange")
@@ -226,7 +226,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                     subjectScopesStr = subjectScopesStr
                 )
             } else {
-                if (approvalStatus != ApproveStatus.CREATE_APPROVED.status) {
+                if (approvalStatus != ProjectApproveStatus.CREATE_APPROVED.status) {
                     throw OperationException("Modifications must be made through the bkci client！")
                 }
                 // 若relationId为空，则表示并没有在Iam那边注册分级管理员，那么不需要去修改分级管理员
@@ -335,8 +335,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
         var success = false
-        if (status == ApproveStatus.CREATE_PENDING.status ||
-            status == ApproveStatus.CREATE_REJECT.status
+        if (status == ProjectApproveStatus.CREATE_PENDING.status ||
+            status == ProjectApproveStatus.CREATE_REJECT.status
         ) {
             val callbackRecord = projectApprovalCallbackDao.getCallbackByEnglishName(
                 dslContext = dslContext,
@@ -381,6 +381,8 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         iamManagerService.createRoleGroupApplicationV2(applicationInfo)
         return true
     }
+
+    override fun needApproval(needApproval: Boolean?): Boolean = true
 
     companion object {
         val logger = LoggerFactory.getLogger(TxRbacProjectPermissionServiceImpl::class.java)
