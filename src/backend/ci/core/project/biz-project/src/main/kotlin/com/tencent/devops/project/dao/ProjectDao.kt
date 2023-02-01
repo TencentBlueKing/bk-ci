@@ -37,7 +37,7 @@ import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
@@ -262,7 +262,7 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ApproveStatus.CREATE_APPROVED.status,
+                    ProjectApproveStatus.CREATE_APPROVED.status,
                     true
                 )
                 .execute()
@@ -395,7 +395,7 @@ class ProjectDao {
         subjectScopesStr: String,
         authSecrecy: Boolean,
         projectCode: String,
-        statusEnum: ApproveStatus
+        statusEnum: ProjectApproveStatus
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
@@ -522,8 +522,8 @@ class ProjectDao {
                 .where(
                     APPROVAL_STATUS.`in`(
                         listOf(
-                            ApproveStatus.CREATE_REJECT.status,
-                            ApproveStatus.CREATE_PENDING.status
+                            ProjectApproveStatus.CREATE_REJECT.status,
+                            ProjectApproveStatus.CREATE_PENDING.status
                         )
                     )
                 ).and(CREATOR.eq(userId))
@@ -745,7 +745,7 @@ class ProjectDao {
     fun updateProjectStatusByEnglishName(
         dslContext: DSLContext,
         projectCode: String,
-        statusEnum: ApproveStatus
+        statusEnum: ProjectApproveStatus
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
@@ -756,9 +756,9 @@ class ProjectDao {
 
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
-            ApproveStatus.CREATE_PENDING.status,
-            ApproveStatus.CREATE_REJECT.status,
-            ApproveStatus.CANCEL_CREATE.status
+            ProjectApproveStatus.CREATE_PENDING.status,
+            ProjectApproveStatus.CREATE_REJECT.status,
+            ProjectApproveStatus.CANCEL_CREATE.status
         )
     }
 }

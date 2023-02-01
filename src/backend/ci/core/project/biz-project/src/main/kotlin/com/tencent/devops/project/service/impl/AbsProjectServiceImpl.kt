@@ -69,7 +69,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -178,9 +178,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
-            ApproveStatus.CREATE_APPROVED.status
+            ProjectApproveStatus.CREATE_APPROVED.status
         } else {
-            ApproveStatus.CREATE_PENDING.status
+            ProjectApproveStatus.CREATE_PENDING.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
         logger.info("create project : subjectScopes = $subjectScopes")
@@ -876,8 +876,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (!(status == ApproveStatus.CREATE_PENDING.status ||
-                status == ApproveStatus.CREATE_REJECT.status
+        if (!(status == ProjectApproveStatus.CREATE_PENDING.status ||
+                status == ProjectApproveStatus.CREATE_REJECT.status
                 )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
@@ -899,7 +899,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
                     projectCode = projectInfo.englishName,
-                    statusEnum = ApproveStatus.CANCEL_CREATE
+                    statusEnum = ProjectApproveStatus.CANCEL_CREATE
                 )
             }
             success = true

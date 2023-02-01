@@ -36,7 +36,7 @@ import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -102,7 +102,7 @@ class ProjectApprovalDao {
         dslContext: DSLContext,
         userId: String,
         projectCode: String,
-        statusEnum: ApproveStatus
+        statusEnum: ProjectApproveStatus
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             return dslContext.update(this)
