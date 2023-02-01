@@ -183,8 +183,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
-        val ReleaseResult = client.get(ServicePTemplateResource::class).getImageReleaseStatus(templateCode, userId)
-        val flag = ReleaseResult.data
+        val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(templateCode, userId)
+        val flag = releaseResult.data
         if (flag != true) {
             throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,

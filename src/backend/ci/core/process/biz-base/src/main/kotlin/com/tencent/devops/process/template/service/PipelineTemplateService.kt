@@ -72,7 +72,7 @@ class PipelineTemplateService @Autowired constructor(
         )
     }
 
-    fun getCheckTemplate(templateCode: String, userId: String): Result<Boolean> {
+    fun getCheckTemplate(userId: String, templateCode: String): Result<Boolean> {
         logger.info("start getCheckTemplate templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -97,19 +97,16 @@ class PipelineTemplateService @Autowired constructor(
                             return@releaseStatus
                         }
                     } else {
-                        logger.info("container is not VMBuildContainer ")
                         return@imageInfo
                     }
                 }
             } }
-        logger.info("@releaseStatus flag is $flag ")
         return Result(flag)
     }
 
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
         val imageStatus = client.get(ServiceStoreImageResource::class)
             .getImageStatusByCodeAndVersion(imageCode, imageVersion).data
-        logger.info("imageStatus is:$imageStatus")
         return ImageStatusEnum.RELEASED.name == imageStatus
     }
 

@@ -108,7 +108,6 @@ import com.tencent.devops.store.service.common.StoreMemberService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import com.tencent.devops.store.service.common.StoreUserService
 import com.tencent.devops.store.util.ImageUtil
-import com.tencent.devops.store.utils.VersionUtils
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.impl.DSL
@@ -808,22 +807,12 @@ abstract class ImageService @Autowired constructor() {
         imageVersion: String
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
-        var imageRecord: TImageRecord? = null
-        if (VersionUtils.isLatestVersion(imageVersion)) {
-            imageRecord =
+        val imageRecord =
                 imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                 params = arrayOf(imageCode, imageVersion)
             )
-        } else {
-            imageRecord =
-                imageDao.getImageByCodeAndVersion(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
-                    errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                    defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
-                    params = arrayOf(imageCode, imageVersion)
-                )
-        }
         val imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
         return imageStatus
     }
