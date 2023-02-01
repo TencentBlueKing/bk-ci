@@ -14,9 +14,9 @@ data class AuthProjectCreateInfo(
     @ApiModelProperty("用户部门详细")
     val userDeptDetail: UserDeptDetail?,
     @ApiModelProperty("iamSubjectScopes")
-    val iamSubjectScopes: List<SubjectScopeInfo>,
+    val subjectScopes: List<SubjectScopeInfo>,
     @ApiModelProperty("projectCreateInfo")
     val projectCreateInfo: ProjectCreateInfo,
-    @ApiModelProperty("是否需要审批（从页面调起）")
-    val needApproval: Boolean?
+    @ApiModelProperty("审批状态")
+    val approvalStatus: Int
 )

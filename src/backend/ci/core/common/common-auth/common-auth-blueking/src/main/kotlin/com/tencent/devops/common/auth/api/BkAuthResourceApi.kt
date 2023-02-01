@@ -37,7 +37,6 @@ import com.tencent.devops.common.auth.api.pojo.BkRegisterResourcesRequest
 import com.tencent.devops.common.auth.api.pojo.BkRegisterResourcesResponse
 import com.tencent.devops.common.auth.api.pojo.BkUpdateResourceRequest
 import com.tencent.devops.common.auth.api.pojo.BkUpdateResourceResponse
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.utils.AuthUtils
 import com.tencent.devops.common.auth.code.AuthServiceCode
@@ -76,8 +75,7 @@ class BkAuthResourceApi constructor(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
+        resourceName: String
     ) {
         batchCreateResource(
             serviceCode = serviceCode,

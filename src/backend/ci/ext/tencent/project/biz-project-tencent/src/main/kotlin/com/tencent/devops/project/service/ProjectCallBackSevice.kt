@@ -39,8 +39,8 @@ import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
-import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ApproveType
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.service.iam.IamRbacService
 import okhttp3.MediaType
 import okhttp3.Request
@@ -90,7 +90,7 @@ class ProjectCallBackSevice @Autowired constructor(
                 defaultMessage = "The project does not exist! | englishName = $englishName"
             )
         )
-        if (projectInfo.approvalStatus == ApproveStatus.CANCEL_CREATE.status) {
+        if (projectInfo.approvalStatus == ProjectApproveStatus.CANCEL_CREATE.status) {
             logger.info("This project has been canceled create! englishName = $englishName")
             return
         }
@@ -133,7 +133,7 @@ class ProjectCallBackSevice @Autowired constructor(
                     projectDao.updateProjectStatusByEnglishName(
                         dslContext = context,
                         projectCode = englishName,
-                        statusEnum = ApproveStatus.CREATE_APPROVED
+                        statusEnum = ProjectApproveStatus.CREATE_APPROVED
                     )
                     projectApprovalCallbackDao.updateCallbackBySn(
                         dslContext = context,
@@ -153,7 +153,7 @@ class ProjectCallBackSevice @Autowired constructor(
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
                     projectCode = englishName,
-                    statusEnum = ApproveStatus.CREATE_REJECT
+                    statusEnum = ProjectApproveStatus.CREATE_REJECT
                 )
                 projectApprovalCallbackDao.updateCallbackBySn(
                     dslContext = context,
@@ -187,7 +187,7 @@ class ProjectCallBackSevice @Autowired constructor(
             )
         val callBackId = dbCallBackInfo.callbackId
         val currentStatus = itsmCallBackInfo.currentStatus
-        var authSecrecy = projectInfo.isAuthSecrecy
+        var authSecrecy = projectInfo.authSecrecy
         logger.info(
             "updateProjectCallBack: ${itsmCallBackInfo.title}" +
                 "|$sn|$approveResult|$englishName|$callBackId|$authSecrecy"
@@ -215,14 +215,14 @@ class ProjectCallBackSevice @Autowired constructor(
                     subjectScopesStr = dbCallBackInfo.subjectScopes,
                     authSecrecy = authSecrecy,
                     projectCode = englishName,
-                    statusEnum = ApproveStatus.UPDATE_APPROVED
+                    statusEnum = ProjectApproveStatus.UPDATE_APPROVED
                 )
             } else {
                 // 修改状态
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
                     projectCode = englishName,
-                    statusEnum = ApproveStatus.UPDATE_REJECT
+                    statusEnum = ProjectApproveStatus.UPDATE_REJECT
                 )
             }
             projectApprovalCallbackDao.updateCallbackBySn(

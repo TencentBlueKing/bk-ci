@@ -75,4 +75,6 @@ interface ProjectPermissionService {
         applicationInfo: ApplicationInfo,
         gradeManagerId: String
     ): Boolean
+
+    fun needApproval(needApproval: Boolean?): Boolean
 }

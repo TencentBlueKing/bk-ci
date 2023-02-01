@@ -40,11 +40,11 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val systemId = ""
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(24, TimeUnit.HOURS)
+        .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String, List<ActionInfoVo>>()
     private val resourceTypesCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
-        .expireAfterWrite(24, TimeUnit.HOURS)
+        .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String, List<ResourceTypeInfoVo>>()
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
@@ -64,14 +64,22 @@ class PermissionApplyServiceImpl @Autowired constructor(
 
     override fun listActions(userId: String, resourceType: String): List<ActionInfoVo> {
         if (actionCache.getIfPresent(resourceType) == null) {
-            val actionList = authActionDao.list(dslContext, resourceType).map {
+            val actionList = authActionDao.list(dslContext, resourceType)
+            if (actionList.isEmpty()) {
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.RESOURCE_ACTION_EMPTY,
+                    params = arrayOf(resourceType),
+                    defaultMessage = "权限系统：[$resourceType]资源类型关联的动作不存在"
+                )
+            }
+            val actionInfoVoList = actionList.map {
                 ActionInfoVo(
                     actionId = it.actionid,
                     actionName = it.actionname,
                     resourceType = it.resourcetype
                 )
             }
-            actionCache.put(resourceType, actionList)
+            actionCache.put(resourceType, actionInfoVoList)
         }
         return actionCache.getIfPresent(resourceType)!!
 

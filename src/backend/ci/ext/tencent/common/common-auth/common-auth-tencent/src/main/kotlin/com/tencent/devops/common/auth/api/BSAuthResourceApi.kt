@@ -36,7 +36,6 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthResourceCreateRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthResourceDeleteRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthResourceModifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import okhttp3.MediaType
@@ -133,8 +132,7 @@ class BSAuthResourceApi @Autowired constructor(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
+        resourceName: String
     ) {
         createGrantResource(
             user = user,

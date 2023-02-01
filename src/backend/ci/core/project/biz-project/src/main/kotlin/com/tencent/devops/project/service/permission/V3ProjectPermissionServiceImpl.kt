@@ -163,6 +163,8 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun needApproval(needApproval: Boolean?) = false
+
     companion object {
         private val projectResourceType = AuthResourceType.PROJECT
     }

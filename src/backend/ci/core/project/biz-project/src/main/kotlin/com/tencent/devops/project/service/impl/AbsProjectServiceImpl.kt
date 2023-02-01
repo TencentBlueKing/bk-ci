@@ -69,7 +69,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
@@ -173,8 +173,16 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val userDeptDetail = getDeptInfo(userId)
         var projectId = defaultProjectId
-        val subjectScopes = projectCreateInfo.subjectScopes!!
-        val needApproval = createExtInfo.needApproval
+        val subjectScopes = projectCreateInfo.subjectScopes!!.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+        }
+        val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
+        val approvalStatus = if (needApproval) {
+            ProjectApproveStatus.CREATE_APPROVED.status
+        } else {
+            ProjectApproveStatus.CREATE_PENDING.status
+        }
+        val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
         logger.info("create project : subjectScopes = $subjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
@@ -182,9 +190,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userId = userId,
                     accessToken = accessToken,
                     userDeptDetail = userDeptDetail,
-                    iamSubjectScopes = subjectScopes,
+                    subjectScopes = subjectScopes,
                     projectCreateInfo = projectCreateInfo,
-                    needApproval = needApproval
+                    approvalStatus = approvalStatus
                 )
                 // 注册项目到权限中心
                 projectId = projectPermissionService.createResources(
@@ -207,11 +215,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
             dslContext.transaction { configuration ->
                 val context = DSL.using(configuration)
-                subjectScopes.ifEmpty {
-                    listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
-                }
                 val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
-                val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
                 val logoAddress = projectCreateInfo.logoAddress
                 projectDao.create(
                     dslContext = context,
@@ -221,41 +225,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     userDeptDetail = userDeptDetail,
                     projectId = projectId,
                     channelCode = projectChannel,
-                    needApproval = needApproval,
+                    approvalStatus = approvalStatus,
                     subjectScopesStr = subjectScopesStr,
                     authSecrecy = projectCreateInfo.authSecrecy
                 )
-                try {
+                if (!needApproval) {
                     createExtProjectInfo(
                         userId = userId,
                         projectId = projectId,
                         accessToken = accessToken,
-                        projectCreateInfo = projectInfo,
-                        createExtInfo = createExtInfo
+                        projectInfo = projectInfo,
+                        createExtInfo = createExtInfo,
+                        logoAddress = logoAddress,
+                        projectChannel = projectChannel
                     )
-                    // 修改bcs的logo
-                    if (logoAddress != null) {
-                        projectDispatcher.dispatch(
-                            ProjectUpdateLogoBroadCastEvent(
-                                userId = userId,
-                                projectId = projectId,
-                                logoAddr = logoAddress
-                            )
-                        )
-                    }
-                    // 为项目分配数据源
-                    shardingRoutingRuleAssignService.assignShardingRoutingRule(
-                        channelCode = projectChannel,
-                        routingName = projectCreateInfo.englishName,
-                        moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
-                    )
-                } catch (e: Exception) {
-                    logger.warn("fail to create the project[$projectId] ext info $projectCreateInfo", e)
-                    projectDao.delete(dslContext, projectId)
-                    throw e
-                }
-                if (projectInfo.secrecy) {
-                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
             }
         } catch (e: DuplicateKeyException) {
@@ -276,6 +259,49 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
+    }
+
+    private fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo,
+        logoAddress: String?,
+        projectChannel: ProjectChannelCode
+    ) {
+        try {
+            createExtProjectInfo(
+                userId = userId,
+                projectId = projectId,
+                accessToken = accessToken,
+                projectCreateInfo = projectInfo,
+                createExtInfo = createExtInfo
+            )
+            // 修改bcs的logo
+            if (logoAddress != null) {
+                projectDispatcher.dispatch(
+                    ProjectUpdateLogoBroadCastEvent(
+                        userId = userId,
+                        projectId = projectId,
+                        logoAddr = logoAddress
+                    )
+                )
+            }
+            // 为项目分配数据源
+            shardingRoutingRuleAssignService.assignShardingRoutingRule(
+                channelCode = projectChannel,
+                routingName = projectInfo.englishName,
+                moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+            )
+        } catch (e: Exception) {
+            logger.warn("fail to create the project[$projectId] ext info $projectInfo", e)
+            projectDao.delete(dslContext, projectId)
+            throw e
+        }
+        if (projectInfo.secrecy) {
+            redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
+        }
     }
 
     override fun createExtProject(
@@ -850,8 +876,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         var success = false
         val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
         val status = projectInfo.approvalStatus
-        if (!(status == ApproveStatus.CREATE_PENDING.status ||
-                status == ApproveStatus.CREATE_REJECT.status
+        if (!(status == ProjectApproveStatus.CREATE_PENDING.status ||
+                status == ProjectApproveStatus.CREATE_REJECT.status
                 )) {
             logger.warn(
                 "The project can't be cancel！ : ${projectInfo.englishName}"
@@ -873,7 +899,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
                     projectCode = projectInfo.englishName,
-                    statusEnum = ApproveStatus.CANCEL_CREATE
+                    statusEnum = ProjectApproveStatus.CANCEL_CREATE
                 )
             }
             success = true

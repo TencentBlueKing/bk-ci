@@ -23,33 +23,41 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.project.service
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.dao.ProjectApprovalDao
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
+import com.tencent.devops.project.pojo.ProjectCreateInfo
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-class SamplePermissionExtService : PermissionExtService {
-    override fun resourceCreateRelation(
+@Service
+class ProjectApprovalService @Autowired constructor(
+    private val dslContext: DSLContext,
+    private val projectApprovalDao: ProjectApprovalDao
+) {
+
+    fun create(
         userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        TODO("Not yet implemented")
+        projectCreateInfo: ProjectCreateInfo,
+        approvalStatus: Int,
+        subjectScopes: List<SubjectScopeInfo>
+    ): Int {
+        return projectApprovalDao.create(
+            dslContext = dslContext,
+            userId = userId,
+            projectCreateInfo = projectCreateInfo,
+            approvalStatus = approvalStatus,
+            subjectScopes = subjectScopes
+        )
     }
 
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
-
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+    fun get(projectId: String): ProjectApprovalInfo? {
+        return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
+    }
 }

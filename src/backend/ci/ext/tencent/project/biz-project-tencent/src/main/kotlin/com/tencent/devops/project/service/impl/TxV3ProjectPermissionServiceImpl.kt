@@ -140,6 +140,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun needApproval(needApproval: Boolean?) = false
+
     override fun verifyUserProjectPermission(
         accessToken: String?,
         projectCode: String,

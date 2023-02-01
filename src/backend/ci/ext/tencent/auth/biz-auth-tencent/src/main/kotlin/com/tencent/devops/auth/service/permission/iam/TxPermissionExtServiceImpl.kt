@@ -36,7 +36,6 @@ import com.tencent.devops.auth.refresh.event.IamCacheRefreshEvent
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -51,8 +50,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
+        resourceName: String
     ): Boolean {
         logger.info("resourceCreateRelation $userId $projectCode $resourceCode $resourceName $resourceType")
         val ancestors = mutableListOf<AncestorsApiReq>()

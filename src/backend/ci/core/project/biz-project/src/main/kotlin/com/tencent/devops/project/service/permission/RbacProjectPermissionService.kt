@@ -31,18 +31,19 @@ package com.tencent.devops.project.service.permission
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectPermissionService
 
 class RbacProjectPermissionService(
     private val authResourceApi: AuthResourceApi,
-    private val projectAuthServiceCode: ProjectAuthServiceCode
+    private val projectAuthServiceCode: ProjectAuthServiceCode,
+    private val projectApprovalService: ProjectApprovalService
 ) : ProjectPermissionService {
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return true
@@ -61,17 +62,22 @@ class RbacProjectPermissionService(
         resourceRegisterInfo: ResourceRegisterInfo,
         authProjectCreateInfo: AuthProjectCreateInfo
     ): String {
+        with(authProjectCreateInfo) {
+            projectApprovalService.create(
+                userId = userId,
+                projectCreateInfo = projectCreateInfo,
+                approvalStatus = approvalStatus,
+                subjectScopes = subjectScopes
+            )
+        }
+
         authResourceApi.createResource(
             user = authProjectCreateInfo.userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = resourceRegisterInfo.resourceCode,
             resourceCode = resourceRegisterInfo.resourceCode,
-            resourceName = resourceRegisterInfo.resourceName,
-            resourceCreateInfo = ResourceCreateInfo(
-                needApproval = authProjectCreateInfo.needApproval,
-                subjectScopes = authProjectCreateInfo.iamSubjectScopes
-            )
+            resourceName = resourceRegisterInfo.resourceName
         )
         return ""
     }
@@ -103,4 +109,6 @@ class RbacProjectPermissionService(
     ): Boolean {
         return true
     }
+
+    override fun needApproval(needApproval: Boolean?) = needApproval == true
 }

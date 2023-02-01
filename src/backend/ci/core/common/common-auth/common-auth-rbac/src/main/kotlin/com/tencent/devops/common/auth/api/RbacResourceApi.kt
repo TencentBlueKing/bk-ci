@@ -30,7 +30,6 @@ package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -47,8 +46,7 @@ class RbacResourceApi(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
+        resourceName: String
     ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             token = tokenService.getSystemToken(null)!!,
@@ -56,8 +54,7 @@ class RbacResourceApi(
             resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
             resourceCode = resourceCode,
             resourceName = resourceName,
-            projectCode = projectCode,
-            resourceCreateInfo = resourceCreateInfo
+            projectCode = projectCode
         )
     }
 

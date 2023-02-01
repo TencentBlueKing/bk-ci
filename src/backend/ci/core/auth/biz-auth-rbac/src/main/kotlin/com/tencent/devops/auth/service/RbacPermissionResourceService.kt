@@ -46,7 +46,6 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -74,8 +73,7 @@ class RbacPermissionResourceService(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo?
+        resourceName: String
     ): Boolean {
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
@@ -84,8 +82,7 @@ class RbacPermissionResourceService(
                 projectName = resourceName,
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = resourceCode,
-                resourceName = resourceName,
-                resourceCreateInfo = resourceCreateInfo
+                resourceName = resourceName
             )
         } else {
             // 获取项目管理的权限资源
@@ -106,6 +103,8 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
+            // 项目默认开启权限管理
+            enable = resourceType == AuthResourceType.PROJECT.value,
             relationId = managerId.toString()
         )
         return true
@@ -174,6 +173,7 @@ class RbacPermissionResourceService(
         return true
     }
 
+    @Suppress("ReturnCount")
     override fun hasManagerPermission(
         userId: String,
         projectId: String,
@@ -181,20 +181,26 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         // 1. 先判断是否是项目管理员
-        val projectInfo = getProjectInfo(projectId)
+        val projectInfo = getResourceInfo(
+            projectId = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
         if (gradeManagerDetail.members.contains(userId)) {
             return true
         }
-        // 2. 判断是否是资源管理员
-        val resourceInfo = getResourceInfo(
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
-        if (subsetManagerDetail.members.contains(userId)) {
-            return true
+        if (resourceType != AuthResourceType.PROJECT.value) {
+            // 2. 判断是否是资源管理员
+            val resourceInfo = getResourceInfo(
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
+            if (subsetManagerDetail.members.contains(userId)) {
+                return true
+            }
         }
         return false
     }
@@ -389,7 +395,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun deleteGroup(
+    override fun deleteMember(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -401,6 +407,27 @@ class RbacPermissionResourceService(
             ManagerScopesEnum.getType(ManagerScopesEnum.USER),
             userId
         )
+        return true
+    }
+
+    override fun deleteGroup(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean {
+        logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
+        if (!hasManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId
+        )) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
+        iamV2ManagerService.deleteRoleGroupV2(groupId)
         return true
     }
 
@@ -438,7 +465,7 @@ class RbacPermissionResourceService(
         projectInfo.relationId ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
             params = arrayOf(projectCode),
-            defaultMessage = "权限系统：[$projectCode]绑定系统资源为空"
+            defaultMessage = "the resource not exists, projectCode:$projectCode"
         )
         return projectInfo
     }
@@ -455,7 +482,7 @@ class RbacPermissionResourceService(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
             params = arrayOf(resourceCode),
-            defaultMessage = "权限系统：资源${resourceCode}不存在"
+            defaultMessage = "the resource not exists, resourceCode:$resourceCode"
         )
     }
 }

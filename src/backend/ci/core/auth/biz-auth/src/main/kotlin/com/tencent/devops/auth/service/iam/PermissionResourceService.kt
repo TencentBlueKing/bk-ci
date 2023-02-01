@@ -33,7 +33,6 @@ import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.auth.api.pojo.ResourceCreateInfo
 
 /**
  * 权限资源操作
@@ -49,8 +48,7 @@ interface PermissionResourceService {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
-        resourceCreateInfo: ResourceCreateInfo? = null
+        resourceName: String
     ): Boolean
 
     /**
@@ -149,6 +147,13 @@ interface PermissionResourceService {
         resourceType: String,
         groupId: Int,
         memberRenewalDTO: GroupMemberRenewalDTO
+    ): Boolean
+
+    fun deleteMember(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
     ): Boolean
 
     fun deleteGroup(

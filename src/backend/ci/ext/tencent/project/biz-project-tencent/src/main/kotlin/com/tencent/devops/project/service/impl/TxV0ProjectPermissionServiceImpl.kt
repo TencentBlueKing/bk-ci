@@ -199,6 +199,8 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun needApproval(needApproval: Boolean?) = false
+
     companion object {
         val logger = LoggerFactory.getLogger(TxV0ProjectPermissionServiceImpl::class.java)
     }
