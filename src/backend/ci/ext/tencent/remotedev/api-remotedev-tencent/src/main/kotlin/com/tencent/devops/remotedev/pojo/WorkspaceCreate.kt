@@ -37,7 +37,7 @@ data class WorkspaceCreate(
     @ApiModelProperty("仓库分支")
     val branch: String,
     @ApiModelProperty("devfile配置路径")
-    val devFilePath: String?,
+    var devFilePath: String?,
     @ApiModelProperty("工作空间模板ID")
     val wsTemplateId: Int?,
     @ApiModelProperty("是否使用官方devfile")

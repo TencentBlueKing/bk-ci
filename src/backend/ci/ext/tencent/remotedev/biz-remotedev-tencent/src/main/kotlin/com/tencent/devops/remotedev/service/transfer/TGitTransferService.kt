@@ -14,6 +14,7 @@ import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
+import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -113,5 +114,12 @@ class TGitTransferService @Autowired constructor(
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
             message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
         )
+    }
+
+    override fun getUserInfo(userId: String): GitUserInfo {
+        return client.get(ServiceGitResource::class).getUserInfoByToken(
+            token = getAndCheckOauthToken(userId).accessToken,
+            tokenType = TokenTypeEnum.OAUTH,
+        ).data!!
     }
 }

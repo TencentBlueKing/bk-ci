@@ -18,7 +18,7 @@ data class Devfile(
     @ApiModelProperty("用来指定工作空间声明周期命令")
     val commands: DevfileCommands?,
     @ApiModelProperty("DEVOPS_REMOTING_GIT_EMAIL 配置")
-    val gitEmail: String?
+    var gitEmail: String?
 )
 
 data class DevfileImage(

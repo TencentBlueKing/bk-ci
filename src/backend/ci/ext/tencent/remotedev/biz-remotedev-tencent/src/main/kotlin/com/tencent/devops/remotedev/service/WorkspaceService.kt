@@ -183,7 +183,11 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get yaml failed ${it.message}")
                 throw CustomException(Response.Status.BAD_REQUEST, "获取 devfile 异常 ${it.message}")
             }
-        } else redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
+        } else {
+            // 防止污传
+            workspaceCreate.devFilePath = null
+            redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
+        }
 
         if (yaml.isBlank()) {
             logger.warn(
@@ -217,9 +221,18 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
-        val devfile = DevfileUtil.parseDevfile(yaml)
+        val devfile = DevfileUtil.parseDevfile(yaml).apply {
+            gitEmail = kotlin.runCatching {
+                gitTransferService.getUserInfo(
+                    userId = userId
+                )
+            }.getOrElse {
+                logger.warn("get user $userId info failed ${it.message}")
+                throw CustomException(Response.Status.BAD_REQUEST, "获取 user $userId info 异常 ${it.message}")
+            }.email
+        }
 
-        val workspaceId = workspaceDao.createWorkspace(
+        workspaceDao.createWorkspace(
             userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
@@ -227,6 +240,7 @@ class WorkspaceService @Autowired constructor(
             userInfo = userInfo
         )
 
+        // 发送给k8s
         dispatcher.dispatch(
             WorkspaceCreateEvent(
                 userId = userId,
