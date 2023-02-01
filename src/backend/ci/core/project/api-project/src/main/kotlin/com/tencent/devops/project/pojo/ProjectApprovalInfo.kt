@@ -32,14 +32,9 @@ import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import io.swagger.annotations.ApiModelProperty
 
 data class ProjectApprovalInfo(
-    @ApiModelProperty("主键ID")
-    val id: Long,
     @ApiModelProperty("项目名称")
     // @JsonProperty("project_name")
     val projectName: String,
-    @ApiModelProperty("项目代码")
-    // @JsonProperty("project_code")
-    val projectCode: String,
     @ApiModelProperty("项目类型")
     val approvalStatus: Int?,
     @ApiModelProperty("审批时间")

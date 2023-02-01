@@ -28,10 +28,13 @@
 
 package com.tencent.devops.project.dao
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.TProjectApproval
 import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import java.time.LocalDateTime
@@ -87,9 +90,11 @@ class ProjectApprovalDao {
         }
     }
 
-    fun getByEnglishName(dslContext: DSLContext, englishName: String): TProjectApprovalRecord? {
+    fun getByEnglishName(dslContext: DSLContext, englishName: String): ProjectApprovalInfo? {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
-            return dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny()
+            val record =
+                dslContext.selectFrom(this).where(ENGLISH_NAME.eq(englishName)).fetchAny() ?: return null
+            return convert(record)
         }
     }
 
@@ -106,6 +111,33 @@ class ProjectApprovalDao {
                 .set(APPROVAL_TIME, LocalDateTime.now())
                 .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
+        }
+    }
+
+    fun convert(record: TProjectApprovalRecord): ProjectApprovalInfo {
+        return with(record) {
+            ProjectApprovalInfo(
+                projectName = projectName,
+                englishName = englishName,
+                description = description,
+                bgId = bgId?.toString(),
+                bgName = bgName,
+                deptId = deptId?.toString(),
+                deptName = deptName,
+                centerId = centerId?.toString(),
+                centerName = centerName,
+                creator = creator,
+                createdAt = DateTimeUtil.toDateTime(createdAt, "yyyy-MM-dd"),
+                updatedAt = updatedAt?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd") },
+                approvalStatus = approvalStatus,
+                logoAddr = logoAddr,
+                subjectScopes = subjectScopes?.let {
+                    JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
+                },
+                authSecrecy = authSecrecy,
+                approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
+                approver = approver
+            )
         }
     }
 }

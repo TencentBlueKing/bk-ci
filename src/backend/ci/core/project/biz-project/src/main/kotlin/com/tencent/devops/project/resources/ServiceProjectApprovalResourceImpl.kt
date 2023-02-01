@@ -26,38 +26,21 @@
  *
  */
 
-package com.tencent.devops.project.service
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.project.dao.ProjectApprovalDao
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.ProjectCreateInfo
-import org.jooq.DSLContext
+import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectApprovalService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
-class ProjectApprovalService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val projectApprovalDao: ProjectApprovalDao
-) {
+@RestResource
+class ServiceProjectApprovalResourceImpl @Autowired constructor(
+    private val projectApprovalService: ProjectApprovalService
+) : ServiceProjectApprovalResource {
 
-    fun create(
-        userId: String,
-        projectCreateInfo: ProjectCreateInfo,
-        approvalStatus: Int,
-        subjectScopes: List<SubjectScopeInfo>
-    ): Int {
-        return projectApprovalDao.create(
-            dslContext = dslContext,
-            userId = userId,
-            projectCreateInfo = projectCreateInfo,
-            approvalStatus = approvalStatus,
-            subjectScopes = subjectScopes
-        )
-    }
-
-    fun get(projectId: String): ProjectApprovalInfo? {
-        return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
+    override fun get(projectId: String): Result<ProjectApprovalInfo?> {
+        return Result(projectApprovalService.get(projectId = projectId))
     }
 }
