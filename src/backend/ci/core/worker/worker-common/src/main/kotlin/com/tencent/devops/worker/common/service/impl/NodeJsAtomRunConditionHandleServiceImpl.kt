@@ -98,11 +98,22 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 logger.info("prepareRunEnv download [$pkgName] success")
                 // 把nodejs安装包解压到构建机上
                 if (osType == OSType.WINDOWS)  {
+                    logger.info("环境是windows，开始进入到循环解压判断")
                     for (i in 1..3)  {
+                        logger.info("开始解压")
                         ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                        logger.info("pkgFileDir.absolutePath is $pkgFileDir.absolutePath")
+                        logger.info("pkgFile.absoluteFile is $pkgFile.absolutePath")
                         try {
-                            CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
+                            CommandLineUtils.execute("node -v",pkgFile.absoluteFile ,true)
+                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
+                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
+                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absolutePath}")
+                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absolutePath}")
+                            val str = CommandLineUtils.execute("node -v",pkgFile.absoluteFile ,true)
+                            logger.info("$str")
                         }catch (e: Exception){
+                            logger.info("执行脚本出现异常，开始捕获")
                             if (i == 3) {
                                 throw TaskExecuteException(
                                     errorType = ErrorType.USER,
