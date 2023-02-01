@@ -123,7 +123,6 @@ class StoreHonorServiceImpl @Autowired constructor(
         logger.info("create storeHonor userid:$userId||honorTitle:${addStoreHonorRequest.honorTitle}")
         val honorTitleCount = storeHonorDao.countByhonorTitle(dslContext, addStoreHonorRequest.honorTitle)
         if (honorTitleCount > 0) {
-            // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
                 arrayOf(addStoreHonorRequest.honorTitle)
@@ -140,7 +139,13 @@ class StoreHonorServiceImpl @Autowired constructor(
         storeHonorInfo.createTime = LocalDateTime.now()
         storeHonorInfo.updateTime = LocalDateTime.now()
         val tStoreHonorRelList = addStoreHonorRequest.storeCodes.map {
-            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)!!
+            val atomName = getStoreCommonDao(addStoreHonorRequest.storeType.name).getStoreNameByCode(dslContext, it)
+            if (atomName.isNullOrBlank()) {
+                return MessageCodeUtil.generateResponseDataObject(
+                    CommonMessageCode.ERROR_INVALID_PARAM_,
+                    arrayOf("${addStoreHonorRequest.storeType.name}:$it")
+                )
+            }
             val tStoreHonorRelRecord = TStoreHonorRelRecord()
             tStoreHonorRelRecord.id = UUIDUtil.generate()
             tStoreHonorRelRecord.storeCode = it
