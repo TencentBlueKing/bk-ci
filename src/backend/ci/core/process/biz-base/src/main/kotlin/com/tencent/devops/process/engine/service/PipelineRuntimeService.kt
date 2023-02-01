@@ -1297,7 +1297,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = it.status.name, timestamps = mapOf()
+                    status = null, timestamps = mapOf()
                 )
             )
         }
