@@ -44,6 +44,7 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
+import com.tencent.devops.worker.common.utils.CommandLineExecutor
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -76,11 +77,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         }
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
         val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
-        val script= LinuxScriptElement(
-            script = "pwd",
-            scriptType = BuildScriptType.SHELL,
-            continueNoneZero = false
-        )
         logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
         storePkgRunEnvInfo?.let {
             // 判断nodejs安装包是否已经存在构建机上
@@ -102,7 +98,21 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 logger.info("prepareRunEnv download [$pkgName] success")
                 // 把nodejs安装包解压到构建机上
                 if (osType == OSType.WINDOWS)  {
-                    ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                    for (i in 1..3)  {
+                        ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                        try {
+                            CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
+                        }catch (e: Exception){
+                            if (i == 3) {
+                                throw TaskExecuteException(
+                                    errorType = ErrorType.USER,
+                                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                                    errorMsg = "Script command execution failed because of ${e.message}"
+                                )
+                            }
+                            logger.info("Fail to execute the command,${e.message}")
+                        }
+                    }
                 } else {
                     for (i in 1..3)  {
                         CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
