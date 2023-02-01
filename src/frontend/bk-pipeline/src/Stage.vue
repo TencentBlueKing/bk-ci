@@ -12,8 +12,8 @@
                 check-type="checkIn"
                 :stage-index="stageIndex"
                 :stage-check="stage.checkIn"
-                :is-exec-detail="isExecDetail"
-                :user-name="userName"
+                :is-exec-detail="reactiveData.isExecDetail"
+                :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />
             <span
@@ -30,7 +30,7 @@
                 <span class="stage-title-name">{{ stageTitle }}</span>
             </span>
             <Logo v-if="isStageError" name="exclamation-triangle-shape" size="14" class="stage-entry-error-icon" />
-            <span @click.stop v-if="canSkipElement" class="check-total-stage">
+            <span @click.stop v-if="reactiveData.canSkipElement" class="check-total-stage">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
             </span>
             <span v-if="canStageRetry" @click.stop="triggerStageRetry" class="stage-single-retry">
@@ -52,8 +52,8 @@
                 check-type="checkOut"
                 :stage-index="stageIndex"
                 :stage-check="stage.checkOut"
-                :is-exec-detail="isExecDetail"
-                :user-name="userName"
+                :is-exec-detail="reactiveData.isExecDetail"
+                :user-name="reactiveData.userName"
                 :stage-status="stageStatusCls"
             />
         </div>
@@ -66,7 +66,7 @@
                 :stage-index="stageIndex"
                 :container-index="index"
                 :stage-length="stageLength"
-                :editable="editable"
+                :editable="reactiveData.editable"
                 :can-skip-element="isShowCheckbox"
                 :handle-change="handleChange"
                 :stage-disabled="stageDisabled"
@@ -80,7 +80,7 @@
             </stage-container>
         </draggable>
         
-        <template v-if="editable">
+        <template v-if="reactiveData.editable">
             <span v-if="!isFirstStage" class="add-menu" @click.stop="toggleAddMenu(!isAddMenuShow)">
                 <i :class="{ [iconCls]: true, 'active': isAddMenuShow }" />
                 <template v-if="isAddMenuShow">
@@ -94,7 +94,7 @@
                     </div>
                 </template>
             </span>
-            <span v-if="isLastStage && !isFinallyStage && editable" @click.stop="toggleAddMenu(!lastAddMenuShow, true)" class="append-stage pointer">
+            <span v-if="isLastStage && !isFinallyStage && reactiveData.editable" @click.stop="toggleAddMenu(!lastAddMenuShow, true)" class="append-stage pointer">
                 <span class="add-plus-connector"></span>
                 <i class="add-plus-icon" />
                 <insert-stage-menu v-if="lastAddMenuShow" :disable-finally="disableFinally" :is-last="true" :edit-stage="editStage"></insert-stage-menu>
@@ -156,11 +156,7 @@
             }
         },
         inject: [
-            'currentExecCount',
-            'userName',
-            'isExecDetail',
-            'editable',
-            'canSkipElement'
+            'reactiveData'
         ],
         emits: [
             CLICK_EVENT_NAME,
@@ -191,10 +187,10 @@
                 return this.stage.canRetry === true
             },
             showCopyStage () {
-                return this.isMiddleStage && this.editable && !this.isFirstStage
+                return this.isMiddleStage && this.reactiveData.editable && !this.isFirstStage
             },
             showDeleteStage () {
-                return this.editable && !this.stage.isTrigger
+                return this.reactiveData.editable && !this.stage.isTrigger
             },
             isFirstStage () {
                 return this.stageIndex === 0
@@ -230,10 +226,10 @@
                     'pipeline-stage',
                     {
                         'is-final-stage': this.isFinallyStage,
-                        'pipeline-drag': this.editable && !this.stage.isTrigger,
-                        readonly: !this.editable || this.stageDisabled,
-                        editable: this.editable,
-                        'un-exec-this-time': this.isExecDetail && this.isUnExecThisTime
+                        'pipeline-drag': this.reactiveData.editable && !this.stage.isTrigger,
+                        readonly: !this.reactiveData.editable || this.stageDisabled,
+                        editable: this.reactiveData.editable,
+                        'un-exec-this-time': this.reactiveData.isExecDetail && this.isUnExecThisTime
                     }
                 ]
             },
@@ -270,7 +266,7 @@
                     ghostClass: 'sortable-ghost-atom',
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
-                    disabled: !this.editable
+                    disabled: !this.reactiveData.editable
                 }
             },
             iconCls () {
@@ -308,13 +304,13 @@
                 }
             },
             isUnExecThisTime () {
-                return this.stage?.executeCount < this.currentExecCount
+                return this.stage?.executeCount < this.reactiveData.currentExecCount
             }
         },
         watch: {
             'stage.runStage' (newVal) {
                 const { containers } = this.stage
-                if (this.stageDisabled || !this.canSkipElement) return
+                if (this.stageDisabled || !this.reactiveData.canSkipElement) return
                 containers.filter(container =>
                     (container.jobControlOption === undefined || container.jobControlOption.enable)
                 )
@@ -328,7 +324,7 @@
         },
         mounted () {
             this.updateHeight()
-            if (this.canSkipElement) {
+            if (this.reactiveData.canSkipElement) {
                 this.handleChange(this.stage, {
                     runStage: !this.stageDisabled
                 })
@@ -382,7 +378,7 @@
             },
             
             toggleAddMenu (isShow, isLast = false) {
-                if (!this.editable) return
+                if (!this.reactiveData.editable) return
                 const show = typeof isShow === 'boolean' ? isShow : false
                 if (isLast) {
                     this.lastAddMenuShow = show

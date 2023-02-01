@@ -1,6 +1,6 @@
 <template>
     <div :class="['bk-pipeline-matrix-group', {
-        'un-exec-this-time': isExecDetail && isUnExecThisTime
+        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
     }]">
         <header class="bk-pipeline-matrix-group-header" @click="showMatrixPanel">
             <div class="matrix-name" @click.stop="toggleMatrixOpen">
@@ -69,8 +69,7 @@
             updateCruveConnectHeight: Function
         },
         inject: [
-            'currentExecCount',
-            'isExecDetail'
+            'reactiveData'
         ],
         data () {
             return {
@@ -91,7 +90,7 @@
                 }
             },
             isUnExecThisTime () {
-                return this.matrix?.executeCount < this.currentExecCount
+                return this.matrix?.executeCount < this.reactiveData.currentExecCount
             },
             matrixStatusDescCls () {
                 return {

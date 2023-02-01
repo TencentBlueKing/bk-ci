@@ -5,8 +5,8 @@
             'devops-stage-container': true,
             'first-stage-container': stageIndex === 0,
             'last-stage-container': stageIndex === stageLength - 1,
-            'readonly': !editable || containerDisabled,
-            'editing': editable
+            'readonly': !reactiveData.editable || containerDisabled,
+            'editing': reactiveData.editable
         }"
     >
         <Logo v-if="stageIndex !== 0" size="12" name="right-shape" class="container-connect-triangle" />
@@ -66,8 +66,7 @@
             }
         },
         inject: [
-            'isExecDetail',
-            'editable'
+            'reactiveData'
         ],
         data () {
             return {
@@ -79,10 +78,10 @@
                 return !!(this.container.jobControlOption && this.container.jobControlOption.enable === false) || this.stageDisabled
             },
             isMatrix () {
-                return this.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
+                return this.reactiveData.isExecDetail && this.container.matrixGroupFlag && this.container.groupContainers
             },
             showLastCruveLine () {
-                return (this.stageIndex !== this.stageLength - 1 || this.editable) && !this.isFinallyStage
+                return (this.stageIndex !== this.stageLength - 1 || this.reactiveData.editable) && !this.isFinallyStage
             },
             jobComponentName () {
                 return this.isMatrix ? MatrixGroup : Job

@@ -8,10 +8,9 @@
             :stage="stage"
             :is-preview="isPreview"
             :is-exec-detail="isExecDetail"
-            :can-skip-element="!stage.isTrigger || canSkipElement"
+            :can-skip-element="!stage.isTrigger && canSkipElement"
             :has-finally-stage="hasFinallyStage"
             :stage-index="index"
-            :user-name="userName"
             :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
             :is-latest-build="isLatestBuild"
@@ -114,16 +113,26 @@
             }
         },
         provide () {
+            const reactiveData = {}
+            ;[
+                'currentExecCount',
+                'isPreview',
+                'userName',
+                'matchRules',
+                'editable',
+                'isExecDetail',
+                'isLatestBuild',
+                'canSkipElement',
+                'cancelUserId'
+            ].forEach(key => {
+                Object.defineProperty(reactiveData, key, {
+                    enumerable: true,
+                    get: () => this[key]
+                })
+            })
+            
             return {
-                currentExecCount: this.currentExecCount,
-                isPreview: this.isPreview,
-                userName: this.userName,
-                matchRules: this.matchRules,
-                editable: this.editable,
-                isExecDetail: this.isExecDetail,
-                isLatestBuild: this.isLatestBuild,
-                canSkipElement: this.canSkipElement,
-                cancelUserId: this.cancelUserId
+                reactiveData
             }
         },
         data () {

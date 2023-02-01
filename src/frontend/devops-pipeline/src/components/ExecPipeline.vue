@@ -5,7 +5,7 @@
                 <span>{{$t('details.num')}}</span>
                 <bk-select
                     ext-cls="pipeline-exec-count-select"
-                    v-model="executeCount"
+                    :value="executeCount"
                     :popover-width="200"
                     :clearable="false"
                     @selected="handleExecuteCountChange"
@@ -72,8 +72,9 @@
                 <bk-pipeline
                     :editable="false"
                     is-exec-detail
-                    :current-exec-count="execDetail.executeCount"
+                    :current-exec-count="executeCount"
                     :cancel-user-id="cancelUserId"
+                    :user-name="userName"
                     :pipeline="curPipeline"
                     v-bind="$attrs"
                     @click="handlePiplineClick"
@@ -165,7 +166,7 @@
             :toggle-check="toggleCheckDialog"
             :element="currentAtom"
         />
-        
+
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
                 <span>{{$t('details.queueCost')}}</span>
@@ -185,7 +186,7 @@
             </ul>
         </div>
         <template v-if="execDetail && showLog">
-            <complete-log @close="toggleCompleteLog"></complete-log>
+            <complete-log @close="toggleCompleteLog" :execute-count="executeCount"></complete-log>
         </template>
     </div>
 </template>
@@ -213,7 +214,6 @@
             return {
                 showRetryStageDialog: false,
                 showLog: false,
-                executeCount: this.$route.params.executeCount ?? this.execDetail?.executeCount ?? 1,
                 retryTaskId: '',
                 skipTask: false,
                 failedContainer: false,
@@ -305,6 +305,10 @@
             cancelUserId () {
                 return this.execDetail?.cancelUserId ?? '--'
             },
+            executeCount () {
+                console.log(this.$route.params.executeCount)
+                return this.$route.params.executeCount ?? this.execDetail?.executeCount ?? 1
+            },
             curPipeline () {
                 const stages = this.hideSkipTask
                     ? this.execDetail?.model?.stages.filter(stage => {
@@ -377,12 +381,6 @@
             }
         },
         watch: {
-            'execDetail.executeCount': function (val) {
-                if (this.executeCount !== val) {
-                    this.executeCount = val ?? '1'
-                    this.handleExecuteCountChange(val)
-                }
-            },
             executeCount (executeCount) {
                 this.requestPipelineExecDetail({
                     ...this.routerParams,
@@ -596,10 +594,10 @@
                     } else {
                         container = stage.containers.find(item => item.id === containerId)
                     }
-                    
+
                     console.log(container)
                     const element = container.elements.find(element => element.id === taskId)
-                    
+
                     this.$set(element, 'locateActive', isLocate)
                 } catch (e) {
                     console.log(e)
@@ -773,7 +771,7 @@
                 left: 50%;
                 top: 0;
                 z-index: 2;
-    
+
             }
             .fix-error-jump {
                 display: flex;
@@ -809,7 +807,7 @@
             display: flex;
             justify-content: space-between;
             font-weight: bold;
-            
+
             >span:first-child {
                 color: #979BA5;
                 font-weight: normal;

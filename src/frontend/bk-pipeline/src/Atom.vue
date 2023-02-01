@@ -76,7 +76,7 @@
                 <span class="atom-review-diasbled-tips">{{ t('aborted') }}</span>
                 <template slot="content">
                     <p>
-                        {{ t('abortTips') }}{{ t('checkUser') }}{{ cancelUserId }}
+                        {{ t('abortTips') }}{{ t('checkUser') }}{{ reactiveData.cancelUserId }}
                     </p>
                 </template>
             </bk-popover>
@@ -128,7 +128,7 @@
             </span>
             
             <Logo
-                v-if="editable && stageIndex !== 0 && !atom.isError"
+                v-if="reactiveData.editable && stageIndex !== 0 && !atom.isError"
                 name="clipboard"
                 class="copy"
                 size="14"
@@ -136,11 +136,11 @@
                 @click.stop="copyAtom"
             />
             
-            <template v-if="editable">
+            <template v-if="reactiveData.editable">
                 <i @click.stop="deleteAtom(false)" class="add-plus-icon close" />
                 <Logo v-if="atom.isError" class="atom-invalid-icon" name="exclamation-triangle-shape" />
             </template>
-            <span v-if="canSkipElement" @click.stop="">
+            <span v-if="reactiveData.canSkipElement" @click.stop="">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="atom.canElementSkip" :disabled="isSkip" />
             </span>
         </template>
@@ -175,12 +175,7 @@
     export default {
         name: 'atom',
         inject: [
-            'currentExecCount',
-            'userName',
-            'matchRules',
-            'editable',
-            'canSkipElement',
-            'cancelUserId'
+            'reactiveData'
         ],
         components: {
             StatusIcon,
@@ -304,7 +299,7 @@
             },
             atomCls () {
                 return {
-                    readonly: !this.editable,
+                    readonly: !this.reactiveData.editable,
                     'bk-pipeline-atom': true,
                     'trigger-atom': isTriggerContainer(this.container),
                     [STATUS_MAP.REVIEWING]: this.atom.isReviewing,
@@ -330,12 +325,12 @@
                 return atomCode
             },
             hasReviewPerm () {
-                return this.atom.computedReviewers.includes(this.userName)
+                return this.atom.computedReviewers.includes(this.reactiveData.userName)
             },
             hasExecPerm () {
                 const hasPauseReviewer = Array.isArray(this.atom.pauseReviewers)
                 if (!hasPauseReviewer || (hasPauseReviewer && this.atom.pauseReviewers.length === 0)) return true
-                return this.atom.pauseReviewers.includes(this.userName)
+                return this.atom.pauseReviewers.includes(this.reactiveData.userName)
             },
             pauseReviewerStr () {
                 return Array.isArray(this.atom.pauseReviewers) && this.atom.pauseReviewers.join(';')
@@ -351,8 +346,8 @@
                 }
             },
             isQualityCheckAtom () {
-                return Array.isArray(this.matchRules)
-                    && this.matchRules.some(rule => rule.taskId === this.atom.atomCode
+                return Array.isArray(this.reactiveData.matchRules)
+                    && this.reactiveData.matchRules.some(rule => rule.taskId === this.atom.atomCode
                         && (rule.ruleList.some(val => this.atom.name.indexOf(val.gatewayId) > -1) || rule.ruleList.every(val => !val.gatewayId))
                     )
             },
@@ -360,7 +355,7 @@
                 return this.atomStatus === STATUS_MAP.RUNNING && this.atom.startEpoch
             },
             isUnExecThisTime () {
-                return this.atom?.executeCount < this.currentExecCount
+                return this.atom?.executeCount < this.reactiveData.currentExecCount
             }
         },
         watch: {

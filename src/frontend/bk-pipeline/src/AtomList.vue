@@ -4,7 +4,7 @@
             :class="{
                 'container-atom-list': true,
                 'trigger-container': stageIndex === 0,
-                'readonly': !editable
+                'readonly': !reactiveData.editable
             }"
             :data-baseos="container.baseOS || container.classType"
             v-model="atomList"
@@ -30,7 +30,7 @@
             />
             
             <span
-                v-if="editable"
+                v-if="reactiveData.editable"
                 :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }"
                 @click="editAtom(atomList.length - 1, true)"
             >
@@ -74,7 +74,7 @@
             Atom
         },
         inject: [
-            'editable'
+            'reactiveData'
         ],
         mixins: [localeMixins],
         props: {
@@ -114,7 +114,7 @@
                 return this.containerStatus === STATUS_MAP.PREPARE_ENV
             },
             isInstanceEditable () {
-                return !this.editable && this.pipeline && this.pipeline.instanceFromTemplate
+                return !this.reactiveData.editable && this.pipeline && this.pipeline.instanceFromTemplate
             },
             hasHookAtom () {
                 return this.container.elements.some(this.isHookAtom)
@@ -177,7 +177,7 @@
                     ghostClass: 'sortable-ghost-atom',
                     chosenClass: 'sortable-chosen-atom',
                     animation: 130,
-                    disabled: !this.editable
+                    disabled: !this.reactiveData.editable
                 }
             }
         },

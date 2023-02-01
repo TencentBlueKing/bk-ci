@@ -2,7 +2,7 @@
     <div class="pipeline-preview-header">
         <pipeline-bread-crumb>
             <span class="build-num-switcher-wrapper">
-                {{ $t('execPreview') }}
+                {{ $t('details.execPreview') }}
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-preview-right-aside">

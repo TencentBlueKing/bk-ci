@@ -29,7 +29,14 @@
                         </section>
                     </p>
                     <div class="pipeline-detail">
-                        <pipeline :show-header="false" :pipeline="pipeline" :editable="false" :is-preview="true" :can-skip-element="curPipelineInfo.canElementSkip"></pipeline>
+                        <pipeline
+                            is-preview
+                            :show-header="false"
+                            :pipeline="pipeline"
+                            :editable="false"
+                            :can-skip-element="curPipelineInfo.canElementSkip"
+                        >
+                        </pipeline>
                     </div>
                 </div>
             </div>
@@ -178,7 +185,7 @@
                     } else {
                         this.curPipelineInfo = this.curParamList
                     }
-
+                    console.log(this.curPipelineInfo)
                     if (this.curPipelineInfo.canManualStartup) {
                         if (this.curPipelineInfo.buildNo) {
                             this.buildNo = this.curPipelineInfo.buildNo

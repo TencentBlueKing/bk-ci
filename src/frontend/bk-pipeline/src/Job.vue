@@ -1,11 +1,11 @@
 <template>
     <div :class="{
-        'un-exec-this-time': isExecDetail && isUnExecThisTime
+        'un-exec-this-time': reactiveData.isExecDetail && isUnExecThisTime
     }">
         <h3 :class="jobTitleCls"
             @click.stop="showContainerPanel"
         >
-            <status-icon type="container" :editable="editable" :container-disabled="disabled" :status="containerStatus" :depend-on-value="dependOnValue">
+            <status-icon type="container" :editable="reactiveData.editable" :container-disabled="disabled" :status="containerStatus" :depend-on-value="dependOnValue">
                 {{ containerSerialNum }}
             </status-icon>
             <p class="container-name">
@@ -16,7 +16,7 @@
                     {{ displayName }}
                 </span>
             </p>
-            <container-type :class="containerTypeCls" :container="container" v-if="!canSkipElement"></container-type>
+            <container-type :class="containerTypeCls" :container="container" v-if="!reactiveData.canSkipElement"></container-type>
             <Logo
                 v-if="showCopyJob && !container.isError"
                 :title="t('copyJob')"
@@ -26,11 +26,11 @@
                 size="16"
             />
             <i v-if="showCopyJob" @click.stop="deleteJob" class="add-plus-icon close" />
-            <span @click.stop v-if="canSkipElement">
+            <span @click.stop v-if="reactiveData.canSkipElement">
                 <bk-checkbox class="atom-canskip-checkbox" v-model="container.runContainer" :disabled="disabled"></bk-checkbox>
             </span>
             <Logo
-                v-if="(editable || isPreview) && container.matrixGroupFlag"
+                v-if="(reactiveData.editable || reactiveData.isPreview) && container.matrixGroupFlag"
                 name="matrix"
                 size="16"
                 class="matrix-flag-icon"
@@ -118,15 +118,7 @@
             updateCruveConnectHeight: Function
         },
         inject: [
-            'currentExecCount',
-            'userName',
-            'isLatestBuild',
-            'isExecDetail',
-            'isPreview',
-            'matchRules',
-            'editable',
-            'canSkipElement',
-            'cancelUserId'
+            'reactiveData'
         ],
         emits: [
             DELETE_EVENT_NAME,
@@ -178,7 +170,7 @@
                 }
             },
             showCopyJob () {
-                return !isTriggerContainer(this.container) && this.editable
+                return !isTriggerContainer(this.container) && this.reactiveData.editable
             },
             containerSerialNum () {
                 return `${this.stageIndex + 1}-${this.containerIndex + 1}`
@@ -196,7 +188,7 @@
                 return `${this.t('dependOn')} 【${val}】`
             },
             showMatrixFold () {
-                return this.isExecDetail && this.containerGroupIndex !== undefined
+                return this.reactiveData.isExecDetail && this.containerGroupIndex !== undefined
             },
             buildResourceType () {
                 try {
@@ -206,12 +198,12 @@
                 }
             },
             showDebugBtn () {
-                const { isLatestBuild, isExecDetail, container: { baseOS, status } } = this
+                const { reactiveData, container: { baseOS, status } } = this
                 const isshowDebugType = [DOCKER_BUILD_TYPE, PUBLIC_DEVCLOUD_BUILD_TYPE, PUBLIC_BCS_BUILD_TYPE].includes(this.buildResourceType)
-                return baseOS === 'LINUX' && isshowDebugType && isExecDetail && isLatestBuild && status === STATUS_MAP.FAILED
+                return baseOS === 'LINUX' && isshowDebugType && reactiveData.isExecDetail && reactiveData.isLatestBuild && status === STATUS_MAP.FAILED
             },
             isUnExecThisTime () {
-                return this.container?.executeCount < this.currentExecCount
+                return this.container?.executeCount < this.reactiveData.currentExecCount
             }
         },
         watch: {
