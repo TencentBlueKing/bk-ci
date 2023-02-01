@@ -33,20 +33,20 @@ func getFileDetailsFromExecuteRequest(req *types.RemoteTaskExecuteRequest) []*ty
 }
 
 func getMaxSizeFile(req *types.RemoteTaskExecuteRequest, threshold int64) (string, int64) {
-	// var maxsize int64
-	// fpath := ""
-	// for _, c := range req.Req.Commands {
-	// 	for _, v := range c.Inputfiles {
-	// 		if v.FileSize > maxsize {
-	// 			fpath = v.FilePath
-	// 			maxsize = v.FileSize
-	// 		}
-	// 	}
-	// }
+	var maxsize int64
+	fpath := ""
+	for _, c := range req.Req.Commands {
+		for _, v := range c.Inputfiles {
+			if v.FileSize > maxsize {
+				fpath = v.FilePath
+				maxsize = v.FileSize
+			}
+		}
+	}
 
-	// if maxsize > threshold {
-	// 	return fpath, maxsize
-	// }
+	if maxsize > threshold {
+		return fpath, maxsize
+	}
 
 	return "", 0
 }
