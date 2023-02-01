@@ -25,11 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.api.user
+package com.tencent.devops.process.api
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.process.api.user.UserSubPipelineInfoResource
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.service.SubPipelineStartUpService
 import org.springframework.beans.factory.annotation.Autowired
@@ -39,7 +40,11 @@ class UserSubPipelineInfoResourceImpl @Autowired constructor (
     private val subPipeService: SubPipelineStartUpService
 ) : UserSubPipelineInfoResource {
 
-    override fun subpipManualStartupInfo(userId: String, projectId: String, pipelineId: String): Result<List<SubPipelineStartUpInfo>> {
+    override fun subpipManualStartupInfo(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<List<SubPipelineStartUpInfo>> {
         checkParam(userId)
         return subPipeService.subPipelineManualStartupInfo(
             userId = userId, projectId = projectId, pipelineId = pipelineId
