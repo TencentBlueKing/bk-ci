@@ -86,7 +86,7 @@ class CodeGitRepositoryService @Autowired constructor(
                 getGitProjectId(
                     repo = repository,
                     token = credentialInfo.token
-                ).toString()
+                )
             repositoryCodeGitDao.create(
                 dslContext = dslContext,
                 repositoryId = repositoryId,
@@ -121,7 +121,7 @@ class CodeGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repositoryId = repositoryId
         ).url
-        var gitProjectId: String = StringUtils.EMPTY
+        var gitProjectId = 0L
         // 需要更新gitProjectId
         if (sourceUrl != repository.url) {
             logger.info("repository url unMatch,need change gitProjectId,sourceUrl=[$sourceUrl] " +
@@ -130,7 +130,7 @@ class CodeGitRepositoryService @Autowired constructor(
             gitProjectId = getGitProjectId(
                 repo = repository,
                 token = credentialInfo.token
-            ).toString()
+            )
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -208,7 +208,7 @@ class CodeGitRepositoryService @Autowired constructor(
     /**
      * 获取Git项目ID
      */
-    fun getGitProjectId(repo: CodeGitRepository, token: String): Int {
+    fun getGitProjectId(repo: CodeGitRepository, token: String): Long {
         val isOauth = repo.authType == RepoAuthType.OAUTH
         logger.info("the repo is:$repo,token length:${StringUtils.length(token)},isOauth:$isOauth")
         val repositoryProjectInfo = if (isOauth) {
@@ -227,7 +227,7 @@ class CodeGitRepositoryService @Autowired constructor(
             )
         }
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: 0
+        return repositoryProjectInfo?.id ?: 0L
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {

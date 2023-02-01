@@ -47,7 +47,7 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -102,7 +102,7 @@ class RepositoryCodeGitDao {
         userName: String,
         credentialId: String,
         authType: RepoAuthType?,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -112,7 +112,7 @@ class RepositoryCodeGitDao {
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
                 .set(AUTH_TYPE, authType?.name ?: RepoAuthType.SSH.name)
-            if (!gitProjectId.isNullOrBlank()) {
+            if (gitProjectId >= 0) {
                 updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
             }
             updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
@@ -164,12 +164,16 @@ class RepositoryCodeGitDao {
     fun updateGitProjectId(
         dslContext: DSLContext,
         id: Long,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            val conditions = mutableListOf(
+                REPOSITORY_ID.eq(id),
+                GIT_PROJECT_ID.le(0)
+            )
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
-                .where(REPOSITORY_ID.eq(id))
+                .where(conditions)
                 .execute()
         }
     }

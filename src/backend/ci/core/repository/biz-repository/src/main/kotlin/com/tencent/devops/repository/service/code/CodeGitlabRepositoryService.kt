@@ -77,10 +77,10 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 type = ScmType.CODE_GITLAB
             )
             // Git项目ID
-            val gitProjectId: String = getGitProjectId(
+            val gitProjectId: Long = getGitProjectId(
                 repo = repository,
                 token = credentialInfo.token
-            ).toString()
+            )
             repositoryCodeGitLabDao.create(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
@@ -109,7 +109,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
         // 凭证信息
         val credentialInfo = checkCredentialInfo(repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        var gitProjectId: String = StringUtils.EMPTY
+        var gitProjectId = 0L
         // 需要更新gitProjectId
         if (record.url != repository.url) {
             logger.info(
@@ -120,7 +120,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
             gitProjectId = getGitProjectId(
                 repo = repository,
                 token = credentialInfo.token
-            ).toString()
+            )
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -184,7 +184,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     /**
      * 获取Git项目ID
      */
-    fun getGitProjectId(repo: CodeGitlabRepository, token: String): Int {
+    fun getGitProjectId(repo: CodeGitlabRepository, token: String): Long {
         logger.info("the repo is:$repo")
         val repositoryProjectInfo = scmService.getProjectInfo(
             projectName = repo.projectName,
@@ -193,7 +193,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
             token = token
         )
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: 0
+        return repositoryProjectInfo?.id ?: 0L
     }
 
     /**
