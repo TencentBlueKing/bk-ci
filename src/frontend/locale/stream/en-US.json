@@ -64,6 +64,7 @@
         "goToGit": "go to git"
     },
     "pipeline": {
+        "commitMsgWithEnter": "Please enter the submission message and press the Enter key to search",
         "queue": "Queue",
         "queueTimeout": "Queue Timeout",
         "running": "Running",
