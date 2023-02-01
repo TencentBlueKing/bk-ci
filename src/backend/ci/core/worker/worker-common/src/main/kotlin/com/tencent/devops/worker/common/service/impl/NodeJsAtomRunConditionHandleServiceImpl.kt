@@ -105,15 +105,15 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                         logger.info("pkgFileDir.absolutePath is $pkgFileDir.absolutePath")
                         logger.info("pkgFile.absoluteFile is $pkgFile.absolutePath")
                         try {
-                            CommandLineUtils.execute("node -v",pkgFile.absoluteFile ,true)
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absolutePath}")
                             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFileDir.absolutePath}")
+                            CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
                             val str = CommandLineUtils.execute("node -v",pkgFile.absoluteFile ,true)
                             logger.info("$str")
                         }catch (e: Exception){
-                            logger.info("执行脚本出现异常，开始捕获")
+                            logger.info("执行脚本出现异常，开始捕获.循环次数是$i")
                             if (i == 3) {
                                 throw TaskExecuteException(
                                     errorType = ErrorType.USER,
@@ -121,7 +121,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                                     errorMsg = "Script command execution failed because of ${e.message}"
                                 )
                             }
-                            logger.info("Fail to execute the command,${e.message}")
+                            logger.info("Fail to execute the command,.........${e.message}")
                         }
                     }
                 } else {
