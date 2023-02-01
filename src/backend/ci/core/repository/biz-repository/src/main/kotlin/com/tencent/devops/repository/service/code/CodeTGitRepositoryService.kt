@@ -79,7 +79,7 @@ class CodeTGitRepositoryService @Autowired constructor(
                 type = ScmType.CODE_TGIT
             )
             // Git项目ID
-            val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token).toString()
+            val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
             repositoryCodeGitDao.create(
                 dslContext = dslContext,
                 repositoryId = repositoryId,
@@ -107,7 +107,7 @@ class CodeTGitRepositoryService @Autowired constructor(
         // 凭证信息
         val credentialInfo = checkCredentialInfo(repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
-        var gitProjectId: String = StringUtils.EMPTY
+        var gitProjectId = 0L
         // 需要更新gitProjectId
         if (record.url != repository.url) {
             logger.info(
@@ -118,7 +118,7 @@ class CodeTGitRepositoryService @Autowired constructor(
             gitProjectId = getGitProjectId(
                 repo = repository,
                 token = credentialInfo.token
-            ).toString()
+            )
         }
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -230,7 +230,7 @@ class CodeTGitRepositoryService @Autowired constructor(
     /**
      * 获取Git项目ID
      */
-    fun getGitProjectId(repo: CodeTGitRepository, token: String): Int {
+    fun getGitProjectId(repo: CodeTGitRepository, token: String): Long {
         logger.info("the repo is:$repo")
         val repositoryProjectInfo = scmService.getProjectInfo(
             projectName = repo.projectName,
@@ -239,7 +239,7 @@ class CodeTGitRepositoryService @Autowired constructor(
             token = token
         )
         logger.info("the gitProjectInfo is:$repositoryProjectInfo")
-        return repositoryProjectInfo?.id ?: 0
+        return repositoryProjectInfo?.id ?: 0L
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {

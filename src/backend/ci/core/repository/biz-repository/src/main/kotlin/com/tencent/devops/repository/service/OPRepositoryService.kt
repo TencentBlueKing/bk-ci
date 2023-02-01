@@ -220,7 +220,7 @@ class OPRepositoryService @Autowired constructor(
                     codeGitLabDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
-                        gitProjectId = "0"
+                        gitProjectId = 0L
                     )
                     return@forEach
                 }
@@ -230,7 +230,7 @@ class OPRepositoryService @Autowired constructor(
                     codeGitLabDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
-                        gitProjectId = "0"
+                        gitProjectId = 0L
                     )
                     return@forEach
                 }
@@ -243,11 +243,11 @@ class OPRepositoryService @Autowired constructor(
                     type = ScmType.CODE_GITLAB,
                     isOauth = false
                 )
-                val gitlabProjectId = repositoryProjectInfo?.id ?: 0
+                val gitlabProjectId = repositoryProjectInfo?.id ?: 0L
                 codeGitLabDao.updateGitProjectId(
                     dslContext = dslContext,
                     id = repositoryId,
-                    gitProjectId = "$gitlabProjectId"
+                    gitProjectId = gitlabProjectId
                 )
             }
             offset += limit
@@ -282,7 +282,7 @@ class OPRepositoryService @Autowired constructor(
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
-                        gitProjectId = "0"
+                        gitProjectId = 0L
                     )
                     return@forEach
                 }
@@ -292,7 +292,7 @@ class OPRepositoryService @Autowired constructor(
                     codeGitDao.updateGitProjectId(
                         dslContext = dslContext,
                         id = repositoryId,
-                        gitProjectId = "0"
+                        gitProjectId = 0L
                     )
                     return@forEach
                 }
@@ -314,11 +314,11 @@ class OPRepositoryService @Autowired constructor(
                     type = type,
                     isOauth = isOauth
                 )
-                val gitProjectId = repositoryProjectInfo?.id ?: 0
+                val gitProjectId = repositoryProjectInfo?.id ?: 0L
                 codeGitDao.updateGitProjectId(
                     dslContext = dslContext,
                     id = repositoryId,
-                    gitProjectId = "$gitProjectId"
+                    gitProjectId = gitProjectId
                 )
             }
             offset += limit
@@ -329,15 +329,15 @@ class OPRepositoryService @Autowired constructor(
     private fun getToken(isOauth: Boolean, it: Record, repositoryInfo: TRepositoryRecord): String? {
         return try {
             if (isOauth) {
-                gitOauthService.getAccessToken(it.get("userName").toString())?.accessToken
+                gitOauthService.getAccessToken(it.get("USER_NAME").toString())?.accessToken
             } else {
                 credentialService.getCredentialInfo(
                     projectId = repositoryInfo.projectId,
                     CodeGitRepository(
                         aliasName = repositoryInfo.aliasName,
                         url = repositoryInfo.url,
-                        credentialId = it.get("credentialId").toString(),
-                        projectName = it.get("projectName").toString(),
+                        credentialId = it.get("CREDENTIAL_ID").toString(),
+                        projectName = it.get("PROJECT_NAME").toString(),
                         userName = repositoryInfo.userId,
                         projectId = repositoryInfo.projectId,
                         repoHashId = repositoryInfo.repositoryHashId,

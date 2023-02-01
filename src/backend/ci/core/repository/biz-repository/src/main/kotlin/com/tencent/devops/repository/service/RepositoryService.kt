@@ -414,7 +414,7 @@ class RepositoryService @Autowired constructor(
                         userName = repo.userName,
                         credentialId = repo.credentialId,
                         authType = repo.authType,
-                        gitProjectId = StringUtils.EMPTY
+                        gitProjectId = -1L
                     )
                 }
                 Result(gitProjectInfo)

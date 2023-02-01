@@ -35,7 +35,7 @@ import io.swagger.annotations.ApiModelProperty
 data class GitProjectInfo(
     @ApiModelProperty("项目ID", name = "id")
     @JsonProperty("id")
-    val id: Int,
+    val id: Long,
     @ApiModelProperty("项目名称", name = "name")
     @JsonProperty("name")
     val name: String,

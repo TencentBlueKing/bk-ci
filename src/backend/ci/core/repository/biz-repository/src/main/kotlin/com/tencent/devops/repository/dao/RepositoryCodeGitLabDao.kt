@@ -47,7 +47,7 @@ class RepositoryCodeGitLabDao {
         userName: String,
         privateToken: String,
         authType: RepoAuthType?,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
@@ -93,21 +93,23 @@ class RepositoryCodeGitLabDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
-            val updateSetStep = dslContext.update(this)
-                .set(PROJECT_NAME, projectName)
-                .set(USER_NAME, userName)
-                .set(CREDENTIAL_ID, credentialId)
-                .set(UPDATED_TIME, now)
-
-            if (!gitProjectId.isNullOrBlank()) {
-                updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+            with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+                dslContext.update(this)
+                val updateSetStep = dslContext.update(this)
+                    .set(PROJECT_NAME, projectName)
+                    .set(USER_NAME, userName)
+                    .set(CREDENTIAL_ID, credentialId)
+                    .set(UPDATED_TIME, now)
+                if (gitProjectId >= 0) {
+                    updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+                }
+                updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
+                    .execute()
             }
-            updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
-                .execute()
         }
     }
 
@@ -163,12 +165,16 @@ class RepositoryCodeGitLabDao {
     fun updateGitProjectId(
         dslContext: DSLContext,
         id: Long,
-        gitProjectId: String
+        gitProjectId: Long
     ) {
         with(TRepositoryCodeGitlab.T_REPOSITORY_CODE_GITLAB) {
+            val conditions = mutableListOf(
+                REPOSITORY_ID.eq(id),
+                GIT_PROJECT_ID.le(0)
+            )
             dslContext.update(this)
                 .set(GIT_PROJECT_ID, gitProjectId)
-                .where(REPOSITORY_ID.eq(id))
+                .where(conditions)
                 .execute()
         }
     }
