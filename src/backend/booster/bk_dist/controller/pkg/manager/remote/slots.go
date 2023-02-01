@@ -501,6 +501,7 @@ func (wr *resource) getSlot(msg lockWorkerMessage) {
 			wr.occupiedSlots++
 			blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot available",
 				wr.totalSlots, wr.occupiedSlots)
+
 			msg.result <- wr.occupyWorkerSlots(msg.largeFile, msg.banWorkerList)
 			satisfied = true
 		}
