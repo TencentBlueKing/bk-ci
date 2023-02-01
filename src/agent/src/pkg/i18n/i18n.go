@@ -1,0 +1,115 @@
+/*
+ * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
+ *
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
+ *
+ * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
+ *
+ * A copy of the MIT License is included in this file.
+ *
+ *
+ * Terms of the MIT License:
+ * ---------------------------------------------------
+ * Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
+ * documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
+ * rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to
+ * permit persons to whom the Software is furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all copies or substantial portions of
+ * the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT
+ * LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+ * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
+ * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+ * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ */
+
+package i18n
+
+import (
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n/translation"
+	"github.com/nicksnyder/go-i18n/v2/i18n"
+	"golang.org/x/text/language"
+	"sync"
+)
+
+//go:generate go run ../../cmd/translation_generator/translation_generator.go
+
+var localizer *localizerType
+
+type localizerType struct {
+	nowLocalizer language.Tag
+	rwLock       sync.RWMutex
+	localizers   map[language.Tag]*i18n.Localizer
+}
+
+func (l *localizerType) getLocalizer() *i18n.Localizer {
+	return l.localizers[l.nowLocalizer]
+}
+
+func InitAgentI18n() {
+	localizers := map[language.Tag]*i18n.Localizer{}
+	bundle := i18n.NewBundle(language.SimplifiedChinese)
+	for lanuage, messages := range translation.Translations {
+		// 通过自动生成的校验之后不会出现err，但是如果出现了我们直接跳过
+		tag, err := language.Parse(lanuage)
+		if err != nil {
+			continue
+		}
+		bundle.AddMessages(tag, messages...)
+		localizers[tag] = i18n.NewLocalizer(bundle, tag.String())
+	}
+
+	localizer = &localizerType{
+		// 初始化时默认为中文
+		nowLocalizer: language.Make("zh_CN"),
+		rwLock:       sync.RWMutex{},
+		localizers:   localizers,
+	}
+}
+
+func Localize(messageId string, templateData map[string]interface{}) string {
+	localizer.rwLock.RLock()
+	defer localizer.rwLock.RUnlock()
+
+	nowLocalizer := localizer.getLocalizer()
+	if nowLocalizer == nil {
+		// TODO: 这里和翻译错误类似，可能是后台传入了一个错误的翻译类型，或者是初始化出现问题
+		return ""
+	}
+
+	translation, err := nowLocalizer.Localize(&i18n.LocalizeConfig{
+		MessageID:    messageId,
+		TemplateData: templateData,
+	})
+	if err != nil {
+		// TODO: 翻译出现错误时看是打印错误，还是换成中文翻译再是一次
+		return ""
+	}
+
+	return translation
+}
+
+// CheckLocalizer 检查并且切换国际化语言
+func CheckLocalizer() {
+
+	// TODO: 目前先写死中文
+	_, _ = api.GetUserLanguage()
+
+	newLocal := language.Make("zh_CN")
+
+	// 先用读锁看一眼，如果一样就不换了
+	localizer.rwLock.RLock()
+	if localizer.nowLocalizer == newLocal {
+		localizer.rwLock.RUnlock()
+		return
+	}
+	localizer.rwLock.RUnlock()
+
+	localizer.rwLock.Lock()
+	defer localizer.rwLock.Unlock()
+
+	localizer.nowLocalizer = newLocal
+}

@@ -176,3 +176,9 @@ func AddLogRedLine(buildId string, message *LogMessage, vmSeqId string) (*httput
 		Post(url).Body(message).SetHeaders(headers).Execute().
 		IntoDevopsResult()
 }
+
+// GetUserLanguage 通过后台接口获取用户的国际化语言
+func GetUserLanguage() (*httputil.DevopsResult, error) {
+	// TODO: 目前接口没出来，所以都返回空
+	return nil, nil
+}

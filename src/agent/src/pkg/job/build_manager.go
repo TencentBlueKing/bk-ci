@@ -30,12 +30,14 @@ package job
 import (
 	"encoding/json"
 	"fmt"
+	"os"
+	"sync"
+
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
-	"os"
-	"sync"
 )
 
 // buildManager 二进制构建对象管理
@@ -54,7 +56,7 @@ func init() {
 
 func (b *buildManager) GetInstanceCount() int {
 	var i = 0
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})
@@ -63,7 +65,7 @@ func (b *buildManager) GetInstanceCount() int {
 
 func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, value interface{}) bool {
 		result = append(result, *value.(*api.ThirdPartyBuildInfo))
 		return true
 	})
@@ -79,9 +81,7 @@ func (b *buildManager) AddBuild(processId int, buildInfo *api.ThirdPartyBuildInf
 
 	// #5806 预先录入异常信息，在构建进程正常结束时清理掉。如果没清理掉，则说明进程非正常退出，可能被OS或人为杀死
 	errorMsgFile := getWorkerErrorMsgFile(buildInfo.BuildId, buildInfo.VmSeqId)
-	_ = fileutil.WriteString(errorMsgFile,
-		"业务构建进程异常退出，可能被操作系统或其他程序杀掉，需自查并降低负载后重试，"+
-			"或解压 agent.zip 还原安装后重启agent再重试。(Builder process was killed.)")
+	_ = fileutil.WriteString(errorMsgFile, i18n.Localize("BuilderProcessWasKilled", nil))
 	_ = systemutil.Chmod(errorMsgFile, os.ModePerm)
 	go b.waitProcessDone(processId)
 }
@@ -94,7 +94,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 		info = inf.(*api.ThirdPartyBuildInfo)
 	}
 	if err != nil {
-		errMsg := fmt.Sprintf("build process err, pid: %d, err: %s", processId, err.Error())
+		errMsg := i18n.Localize("BuildProcessErr", map[string]interface{}{"pid": processId, "err": err.Error()})
 		logs.Warn(errMsg)
 		b.instances.Delete(processId)
 		workerBuildFinish(info.ToFinish(false, errMsg, api.BuildProcessRunErrorEnum))
@@ -114,7 +114,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 	}
 	success := true
 	if len(msg) == 0 {
-		msg = fmt.Sprintf("worker pid[%d] exit", processId)
+		msg = i18n.Localize("WorkerExit", map[string]interface{}{"pid": processId})
 	} else {
 		success = false
 	}
@@ -130,7 +130,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 func (b *buildManager) GetPreInstancesCount() int {
 	var i = 0
-	b.preInstances.Range(func(key, value interface{}) bool {
+	b.preInstances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})

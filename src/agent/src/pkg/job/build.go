@@ -41,6 +41,7 @@ import (
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
@@ -129,6 +130,9 @@ func DoPollAndBuild() {
 		}
 
 		logs.Info("build info ", buildInfo, " dockerCanRun ", dockerCanRun)
+
+		// 接取任务后判断国际化是否需要切换语言
+		i18n.CheckLocalizer()
 
 		if buildInfo.DockerBuildInfo != nil && dockerCanRun {
 			// 接取job任务之后才可以解除总任务锁解锁
@@ -227,10 +231,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			upgradeWorkerFileVersion := config.DetectWorkerVersion()
 			if err != nil || !strings.HasPrefix(upgradeWorkerFileVersion, "v") {
 				// #5806 宽松判断合法的版本v开头
-				errorMsg := fmt.Sprintf(
-					"\n尝试恢复 [%s] 执行文件失败，请到 [%s] 目录下执行 install.sh 或解压 agent.zip 还原安装目录"+
-						"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
-					agentJarPath, workDir, agentJarPath, workDir)
+				errorMsg := i18n.Localize("AttemptToRestoreFailed", map[string]interface{}{"filename": agentJarPath, "dir": workDir})
 				logs.Error(errorMsg)
 				workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.RecoverRunFileErrorEnum))
 			} else { // #5806 替换后修正版本号
@@ -239,10 +240,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 				}
 			}
 		} else {
-			errorMsg := fmt.Sprintf(
-				"\n%s执行文件丢失，请到%s目录下执行 install.sh 或者重新解压 agent.zip 还原安装目录"+
-					"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
-				agentJarPath, workDir, agentJarPath, workDir)
+			errorMsg := i18n.Localize("ExecutableFileMissing", map[string]interface{}{"filename": agentJarPath, "dir": workDir})
 			logs.Error(errorMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
 		}
@@ -270,7 +268,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	// #5806 定义临时目录
 	tmpDir, tmpMkErr := systemutil.MkBuildTmpDir()
 	if tmpMkErr != nil {
-		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
+		errMsg := i18n.Localize("CreateTmpDirectoryFailed", map[string]interface{}{"err": tmpMkErr.Error()})
 		logs.Error(errMsg)
 		workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.MakeTmpDirErrorEnum))
 		return tmpMkErr
@@ -290,7 +288,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 			getEncodedBuildInfo(buildInfo)}
 		pid, err := command.StartProcess(startCmd, args, workDir, goEnv, runUser)
 		if err != nil {
-			errMsg := "start worker process failed: " + err.Error()
+			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
 			logs.Error(errMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
@@ -304,14 +302,14 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	} else {
 		startScriptFile, err := writeStartBuildAgentScript(buildInfo, tmpDir)
 		if err != nil {
-			errMsg := "准备构建脚本生成失败(create start script failed): " + err.Error()
+			errMsg := i18n.Localize("CreateStartScriptFailed", map[string]interface{}{"err": err.Error()})
 			logs.Error(errMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.PrepareScriptCreateErrorEnum))
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
-			errMsg := "启动构建进程失败(start worker process failed): " + err.Error()
+			errMsg := i18n.Localize("StartWorkerProcessFailed", map[string]interface{}{"err": err.Error()})
 			logs.Error(errMsg)
 			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err

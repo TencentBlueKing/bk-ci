@@ -32,6 +32,7 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/cron"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/heartbeat"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/pipeline"
@@ -40,6 +41,9 @@ import (
 
 func Run() {
 	config.Init()
+
+	// 初始化国际化
+	i18n.InitAgentI18n()
 
 	_, err := job.AgentStartup()
 	if err != nil {
