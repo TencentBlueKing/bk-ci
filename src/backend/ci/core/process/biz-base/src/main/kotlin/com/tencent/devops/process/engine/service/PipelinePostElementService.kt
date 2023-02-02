@@ -189,14 +189,15 @@ class PipelinePostElementService @Autowired constructor(
             originElementId = modelTaskIdGenerator.getNextId()
             originAtomElement.id = originElementId
         } else {
+            // 若post插件的父类插件id不为空，可能会通过变量的方式来进行对父插件的跳过，需要对父插件启用状态设置为false
             if (startValues != null) {
                 originAtomElement.disableBySkipVar(variables = startValues)
             }
-            val status = originAtomElement.initStatus(rerun = finallyStage)
-            // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
-            if (status == BuildStatus.SKIP) {
-                elementStatus = BuildStatus.SKIP.name
-            }
+        }
+        val status = originAtomElement.initStatus(rerun = finallyStage)
+        // 如果原插件执行时选择跳过，那么插件的post操作也要跳過
+        if (status == BuildStatus.SKIP) {
+            elementStatus = BuildStatus.SKIP.name
         }
         val elementName =
             if (originAtomElement.name.length > 128) originAtomElement.name.substring(0, 128)
