@@ -42,6 +42,9 @@ import com.tencent.devops.store.pojo.atom.enums.OpSortTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
 import javax.ws.rs.GET
@@ -186,5 +189,23 @@ interface OpAtomResource {
         atomCode: String,
         @ApiParam("下架插件请求报文")
         atomOfflineReq: AtomOfflineReq
+    ): Result<Boolean>
+
+    @ApiOperation("根据插件包一键部署插件")
+    @POST
+    @Path("/deploy")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun releaseAtom(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @FormDataParam("atomCode")
+        atomCode: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
     ): Result<Boolean>
 }

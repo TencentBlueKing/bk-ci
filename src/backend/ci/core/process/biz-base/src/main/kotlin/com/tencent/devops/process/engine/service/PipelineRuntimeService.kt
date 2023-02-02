@@ -73,11 +73,16 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_MERGE_COMMIT_SHA
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_NUMBER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_URL
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_NOTE_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_TAG_NAME
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_ALIAS_NAME
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_AUTH_USER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_WEBHOOK_REPO_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
@@ -245,6 +250,9 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.convert(t)
     }
 
+    /** 根据状态信息获取并发组构建列表
+     * @return Pair( PIPELINE_ID , BUILD_ID )
+     */
     fun getBuildInfoListByConcurrencyGroup(
         projectId: String,
         concurrencyGroup: String,
@@ -254,6 +262,19 @@ class PipelineRuntimeService @Autowired constructor(
             dslContext = dslContext,
             projectId = projectId,
             concurrencyGroup = concurrencyGroup,
+            statusSet = status
+        ).map { Pair(it.value1(), it.value2()) }
+    }
+
+    fun getBuildInfoListByConcurrencyGroupNull(
+        projectId: String,
+        pipelineId: String,
+        status: List<BuildStatus>
+    ): List<Pair<String, String>> {
+        return pipelineBuildDao.getBuildTasksByConcurrencyGroupNull(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
             statusSet = status
         ).map { Pair(it.value1(), it.value2()) }
     }
@@ -300,7 +321,8 @@ class PipelineRuntimeService @Autowired constructor(
             pipelineFilterParamList = pipelineFilterParamList,
             permissionFlag = permissionFlag,
             page = page,
-            pageSize = pageSize
+            pageSize = pageSize,
+            userId = null
         )
     }
 
@@ -1297,6 +1319,7 @@ class PipelineRuntimeService @Autowired constructor(
                 webhookRepoUrl = params[BK_REPO_WEBHOOK_REPO_URL]?.toString(),
                 webhookType = params[PIPELINE_WEBHOOK_TYPE]?.toString(),
                 webhookBranch = params[PIPELINE_WEBHOOK_BRANCH]?.toString(),
+                webhookAliasName = params[BK_REPO_WEBHOOK_REPO_ALIAS_NAME]?.toString(),
                 // GIT事件分为MR和MR accept,但是PIPELINE_WEBHOOK_EVENT_TYPE值只有MR
                 webhookEventType = if (params[PIPELINE_WEBHOOK_TYPE] == CodeType.GIT.name) {
                     params[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]?.toString()
@@ -1309,7 +1332,11 @@ class PipelineRuntimeService @Autowired constructor(
                 mrId = params[BK_REPO_GIT_WEBHOOK_MR_ID]?.toString(),
                 mrIid = params[BK_REPO_GIT_WEBHOOK_MR_NUMBER]?.toString(),
                 mrUrl = params[BK_REPO_GIT_WEBHOOK_MR_URL]?.toString(),
-                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString()
+                repoAuthUser = params[BK_REPO_WEBHOOK_REPO_AUTH_USER]?.toString(),
+                tagName = params[BK_REPO_GIT_WEBHOOK_TAG_NAME]?.toString(),
+                issueIid = params[BK_REPO_GIT_WEBHOOK_ISSUE_IID]?.toString(),
+                noteId = params[BK_REPO_GIT_WEBHOOK_NOTE_ID]?.toString(),
+                reviewId = params[BK_REPO_GIT_WEBHOOK_REVIEW_ID]?.toString()
             ),
             formatted = false
         )
@@ -1635,29 +1662,42 @@ class PipelineRuntimeService @Autowired constructor(
         return pipelineBuildDao.count(dslContext = dslContext, projectId = projectId, pipelineId = pipelineId)
     }
 
+    fun getBuilds(
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        return pipelineBuildDao.getBuilds(
+            dslContext = dslContext,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildStatus = buildStatus
+        )
+    }
+
     fun getPipelineBuildHistoryCount(
         projectId: String,
         pipelineId: String,
-        materialAlias: List<String>?,
-        materialUrl: String?,
-        materialBranch: List<String>?,
-        materialCommitId: String?,
-        materialCommitMessage: String?,
+        materialAlias: List<String>? = null,
+        materialUrl: String? = null,
+        materialBranch: List<String>? = null,
+        materialCommitId: String? = null,
+        materialCommitMessage: String? = null,
         status: List<BuildStatus>?,
-        trigger: List<StartType>?,
-        queueTimeStartTime: Long?,
-        queueTimeEndTime: Long?,
-        startTimeStartTime: Long?,
-        startTimeEndTime: Long?,
-        endTimeStartTime: Long?,
-        endTimeEndTime: Long?,
-        totalTimeMin: Long?,
-        totalTimeMax: Long?,
-        remark: String?,
-        buildNoStart: Int?,
-        buildNoEnd: Int?,
-        buildMsg: String?,
-        startUser: List<String>?
+        trigger: List<StartType>? = null,
+        queueTimeStartTime: Long? = null,
+        queueTimeEndTime: Long? = null,
+        startTimeStartTime: Long? = null,
+        startTimeEndTime: Long? = null,
+        endTimeStartTime: Long? = null,
+        endTimeEndTime: Long? = null,
+        totalTimeMin: Long? = null,
+        totalTimeMax: Long? = null,
+        remark: String? = null,
+        buildNoStart: Int? = null,
+        buildNoEnd: Int? = null,
+        buildMsg: String? = null,
+        startUser: List<String>? = null
     ): Int {
         return pipelineBuildDao.count(
             dslContext = dslContext,

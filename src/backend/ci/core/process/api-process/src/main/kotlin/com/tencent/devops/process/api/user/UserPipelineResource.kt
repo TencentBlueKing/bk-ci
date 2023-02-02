@@ -32,20 +32,23 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.Model
-import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
+import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.pojo.Permission
 import com.tencent.devops.process.pojo.Pipeline
+import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineCopy
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.PipelineName
 import com.tencent.devops.process.pojo.PipelineRemoteToken
 import com.tencent.devops.process.pojo.PipelineSortType
-import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.PipelineStageTag
+import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineViewAndPipelines
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
+import com.tencent.devops.process.pojo.pipeline.BatchDeletePipeline
+import com.tencent.devops.process.pojo.pipeline.PipelineCount
 import com.tencent.devops.process.pojo.setting.PipelineModelAndSetting
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import io.swagger.annotations.Api
@@ -288,7 +291,6 @@ interface UserPipelineResource {
 
     @ApiOperation("删除流水线编排")
     @DELETE
-    // @Path("/projects/{projectId}/pipelines/{pipelineId}/")
     @Path("/{projectId}/{pipelineId}/")
     fun softDelete(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -301,6 +303,16 @@ interface UserPipelineResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Boolean>
+
+    @ApiOperation("批量删除流水线编排")
+    @DELETE
+    @Path("/batchDelete")
+    fun batchDelete(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        batchDeletePipeline: BatchDeletePipeline
+    ): Result<Map<String, Boolean>>
 
     @ApiOperation("删除流水线版本")
     @DELETE
@@ -367,9 +379,18 @@ interface UserPipelineResource {
         @ApiParam("按标签过滤", required = false)
         @QueryParam("filterByLabels")
         filterByLabels: String?,
-        @ApiParam("用户视图ID", required = true)
+        @ApiParam("按视图过滤", required = false)
+        @QueryParam("filterByViewIds")
+        filterByViewIds: String? = null,
+        @ApiParam("用户视图ID,表示用户当前所在视图", required = true)
         @QueryParam("viewId")
-        viewId: String
+        viewId: String,
+        @ApiParam("排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation?,
+        @ApiParam("是否展示已删除流水线", required = false)
+        @QueryParam("showDelete")
+        showDelete: Boolean? = false
     ): Result<PipelineViewPipelinePage<Pipeline>>
 
     @ApiOperation("有权限流水线编排列表")
@@ -445,7 +466,6 @@ interface UserPipelineResource {
 
     @ApiOperation("列出等还原回收的流水线列表")
     @GET
-    // @Path("/projects/{projectId}/pipelineRecycleList")
     @Path("/{projectId}/pipelineRecycleList")
     fun recycleList(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
@@ -462,7 +482,10 @@ interface UserPipelineResource {
         pageSize: Int?,
         @ApiParam("流水线排序", required = false, defaultValue = "CREATE_TIME")
         @QueryParam("sortType")
-        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME
+        sortType: PipelineSortType? = PipelineSortType.CREATE_TIME,
+        @ApiParam("排序规则", required = false)
+        @QueryParam("collation")
+        collation: PipelineCollation?
     ): Result<PipelineViewPipelinePage<PipelineInfo>>
 
     @ApiOperation("流水线重命名")
@@ -559,4 +582,16 @@ interface UserPipelineResource {
         @ApiParam("yaml内容", required = true)
         yaml: MatrixPipelineInfo
     ): Result<MatrixPipelineInfo>
+
+    @ApiOperation("获取列表页列表相关的数目")
+    @GET
+    @Path("/projects/{projectId}/getCount")
+    fun getCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<PipelineCount>
 }

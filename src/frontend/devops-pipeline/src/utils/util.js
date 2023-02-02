@@ -18,6 +18,9 @@
  */
 
 import { v4 as uuidv4 } from 'uuid'
+import {
+    ALL_PIPELINE_VIEW_ID
+} from '@/store/constants'
 
 export function isVNode (node) {
     return typeof node === 'object' && Object.prototype.hasOwnProperty.call(node, 'componentOptions')
@@ -25,6 +28,19 @@ export function isVNode (node) {
 
 export function urlJoin (...args) {
     return args.filter(arg => arg).join('/').replace(/([^:]\/)\/+/g, '$1')
+}
+
+export function isShallowEqual (obj1, obj2) {
+    if (!isObject(obj1) || !isObject(obj2)) {
+        return false
+    }
+    const obj1Keys = Object.keys(obj1)
+    const obj2Keys = Object.keys(obj2)
+    if (obj1Keys.length !== obj2Keys.length) {
+        return false
+    }
+
+    return obj1Keys.every(key => obj1[key] === obj2[key])
 }
 
 export function isInArray (ele, array) {
@@ -654,4 +670,15 @@ export class HttpError extends Error {
 
 export function bkVarWrapper (name) {
     return '${{' + name + '}}'
+}
+
+export function cacheViewIdKey (projectId) {
+    return `BK_DEVOPS_VIEW_ID_LS_PREFIX_${projectId}`
+}
+export function cacheViewId (projectId, viewId) {
+    localStorage.setItem(cacheViewIdKey(projectId), viewId)
+}
+
+export function getCacheViewId (projectId) {
+    return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
 }

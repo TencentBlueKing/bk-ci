@@ -197,6 +197,11 @@ class PipelineStageService @Autowired constructor(
 
     fun pauseStage(buildStage: PipelineBuildStage) {
         with(buildStage) {
+            // 兜底保护，若已经被审核过则直接忽略
+            if (checkIn?.status == BuildStatus.REVIEW_ABORT.name ||
+                checkIn?.status == BuildStatus.REVIEW_PROCESSED.name) {
+                return@with
+            }
             checkIn?.status = BuildStatus.REVIEWING.name
             val allStageStatus = stageBuildDetailService.stagePause(
                 projectId = projectId,

@@ -31,13 +31,14 @@ package com.tencent.devops.common.auth.api.pojo
  * 项目角色组
  */
 enum class BkAuthGroup(val value: String) {
-    CIADMIN("ciAdmin"), // CI管理员
+    CIADMIN("ciAdmin"), // CI管理员 TODO : 看IAM接口找不到这个标志, 用的是ci_manager
     MANAGER("manager"), // 管理员
     DEVELOPER("developer"), // 开发人员
     MAINTAINER("maintainer"), // 运维人员
     TESTER("tester"), // 测试人员
     PM("pm"), // 产品人员
-    QC("qc"); // 质量管理员
+    QC("qc"), // 质量管理员
+    CI_MANAGER("ci_manager"); // CI 管理员
 
     companion object {
         fun get(value: String): BkAuthGroup {
