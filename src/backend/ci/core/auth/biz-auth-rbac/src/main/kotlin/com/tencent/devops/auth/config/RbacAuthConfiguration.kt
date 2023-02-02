@@ -39,15 +39,18 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionResourceGroupService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.RbacPermissionExtService
+import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -127,6 +130,20 @@ class RbacAuthConfiguration {
         permissionResourceService: PermissionResourceService
     ) = RbacPermissionExtService(
         permissionResourceService = permissionResourceService,
+    )
+
+    @Bean
+    @Primary
+    fun permissionItsmCallbackService(
+        client: Client,
+        dslContext: DSLContext,
+        authItsmCallbackDao: AuthItsmCallbackDao,
+        permissionGradeManagerService: PermissionGradeManagerService
+    ) = RbacPermissionItsmCallbackService(
+        client = client,
+        dslContext = dslContext,
+        authItsmCallbackDao = authItsmCallbackDao,
+        permissionGradeManagerService = permissionGradeManagerService
     )
 
     @Bean

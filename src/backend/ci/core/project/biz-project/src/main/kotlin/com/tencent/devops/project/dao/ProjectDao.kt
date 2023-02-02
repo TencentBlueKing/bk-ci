@@ -754,6 +754,22 @@ class ProjectDao {
         }
     }
 
+    fun updateApprovalStatus(
+        dslContext: DSLContext,
+        projectCode: String,
+        approver: String,
+        approvalStatus: Int
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(APPROVER, approver)
+                .set(APPROVAL_TIME, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
             ProjectApproveStatus.CREATE_PENDING.status,

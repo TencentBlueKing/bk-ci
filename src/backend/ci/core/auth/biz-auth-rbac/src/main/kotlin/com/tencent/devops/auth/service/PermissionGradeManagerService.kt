@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
@@ -42,11 +43,13 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.config.ItsmConfig
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS
@@ -56,19 +59,24 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.Arrays
 
 @Service
+@Suppress("LongParameterList")
 class PermissionGradeManagerService @Autowired constructor(
     private val client: Client,
     private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
     private val permissionResourceGroupService: PermissionResourceGroupService,
-    private val itsmConfig: ItsmConfig
+    private val itsmConfig: ItsmConfig,
+    private val authItsmCallbackDao: AuthItsmCallbackDao,
+    private val dslContext: DSLContext,
+    private val authResourceService: AuthResourceService
 ) {
 
     companion object {
@@ -170,8 +178,50 @@ class PermissionGradeManagerService @Autowired constructor(
             logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
             val createGradeManagerApplication =
                 iamV2ManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
-            createGradeManagerApplication.id
+            authItsmCallbackDao.create(
+                dslContext = dslContext,
+                sn = createGradeManagerApplication.sn,
+                englishName = projectCode,
+                callbackId = callbackId,
+                applicant = userId
+            )
+            0
         }
+    }
+
+    fun handleItsmCallback(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        sn: String,
+        callBackId: String,
+        currentStatus: String
+    ): Int {
+        logger.info("handle itsm callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
+        val callbackApplicationDTO = CallbackApplicationDTO
+            .builder()
+            .sn(sn)
+            .currentStatus(currentStatus)
+            .approveResult(true).build()
+        val gradeManagerId =
+            iamV2ManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO).roleId
+        authResourceService.create(
+            userId = userId,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName,
+            // 项目默认开启权限管理
+            enable = true,
+            relationId = gradeManagerId.toString()
+        )
+        permissionResourceGroupService.createGradeDefaultGroup(
+            gradeManagerId = gradeManagerId,
+            userId = userId,
+            projectCode = projectCode,
+            projectName = projectName
+        )
+        return gradeManagerId
     }
 
     @Suppress("LongParameterList")
