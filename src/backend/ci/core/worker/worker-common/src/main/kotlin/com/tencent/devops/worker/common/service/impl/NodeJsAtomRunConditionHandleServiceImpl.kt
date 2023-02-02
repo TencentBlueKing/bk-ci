@@ -162,12 +162,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         try {
             logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
             logger.info("CommandLineUtils.execute(\"node -v\",pkgFileDir.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
+            logger.info("CommandLineUtils.execute(\"node -v\",File(envDir, NODEJS).absoluteFile,true) ,true) :  ${File(envDir, NODEJS).absoluteFile}")
+            logger.info("CommandLineUtils.execute(\"node -v\",File(envDir, NODEJS) :  ${File(envDir, NODEJS)}")
             if (osType == OSType.WINDOWS){
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute("node -vvvv",pkgFileDir.absoluteFile ,true)
             } else {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                CommandLineUtils.execute("node -v",File(envDir, NODEJS).absoluteFile,true)
+                CommandLineUtils.execute("node -vvvv",File(envDir, NODEJS).absoluteFile,true)
             }
         }catch (e: Exception) {
             logger.info("执行脚本出现异常，开始捕获.循环次数是$retryNum")
