@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -97,17 +98,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                 logger.info("prepareRunEnv download [$pkgName] success")
                 // 把nodejs安装包解压到构建机上
-                /*if (osType == OSType.WINDOWS)  {
-                        logger.info("环境是windows，开始进入到循环解压判断")
-                        logger.info("开始解压")
-                    ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
-                        logger.info("pkgFileDir.absolutePath is ${pkgFileDir.absolutePath}")
-                        logger.info("pkgFile.absoluteFile is ${pkgFile.absolutePath}")
-                    //isUnzipSuccess( pkgFile = pkgFile, pkgFileDir = pkgFileDir, pkgName = null, osType = OSType.WINDOWS)
-                } else {
-                    CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                    //isUnzipSuccess(pkgFile = null,pkgFileDir = File(envDir, NODEJS),pkgName = pkgName, osType = null)
-                }*/
                 isUnzipSuccess(
                     retryNum = 3,
                     pkgFile = pkgFile,
@@ -174,12 +164,13 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             logger.info("CommandLineUtils.execute(\"node -v\",pkgFileDir.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
             if (osType == OSType.WINDOWS){
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
-                CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
+                CommandLineUtils.execute("node -vvvv",pkgFileDir.absoluteFile ,true)
             } else {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute("node -v",File(envDir, NODEJS).absoluteFile,true)
             }
         }catch (e: Exception) {
+            logger.info("执行脚本出现异常，开始捕获.循环次数是$retryNum")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
@@ -187,7 +178,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     errorMsg = "Script command execution failed because of ${e.message}"
                 )
             }
-            logger.info("执行脚本出现异常，开始捕获.循环次数是$retryNum")
             isUnzipSuccess(
                 retryNum = retryNum-1,
                 pkgFile = pkgFile,
