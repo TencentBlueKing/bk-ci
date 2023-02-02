@@ -97,46 +97,25 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                 logger.info("prepareRunEnv download [$pkgName] success")
                 // 把nodejs安装包解压到构建机上
-                if (osType == OSType.WINDOWS)  {
-                    logger.info("环境是windows，开始进入到循环解压判断")
-                    for (i in 1..3)  {
+                /*if (osType == OSType.WINDOWS)  {
+                        logger.info("环境是windows，开始进入到循环解压判断")
                         logger.info("开始解压")
-                        ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                    ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                         logger.info("pkgFileDir.absolutePath is ${pkgFileDir.absolutePath}")
                         logger.info("pkgFile.absoluteFile is ${pkgFile.absolutePath}")
-                        try {
-                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
-                            logger.info("CommandLineUtils.execute(\"node -v\",pkgFileDir.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
-                            CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
-                        }catch (e: Exception){
-                            logger.info("执行脚本出现异常，开始捕获.循环次数是$i")
-                            if (i == 3) {
-                                throw TaskExecuteException(
-                                    errorType = ErrorType.USER,
-                                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                                    errorMsg = "Script command execution failed because of ${e.message}"
-                                )
-                            }
-                            logger.info("Fail to execute the command,.........${e.message}")
-                        }
-                    }
+                    //isUnzipSuccess( pkgFile = pkgFile, pkgFileDir = pkgFileDir, pkgName = null, osType = OSType.WINDOWS)
                 } else {
-                    for (i in 1..3)  {
-                        CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                        try {
-                            CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile,true)
-                        }catch (e: Exception){
-                            if (i == 3) {
-                                throw TaskExecuteException(
-                                    errorType = ErrorType.USER,
-                                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                                    errorMsg = "Script command execution failed because of ${e.message}"
-                                )
-                            }
-                            logger.info("Fail to execute the command,${e.message}")
-                        }
-                    }
-                }
+                    CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                    //isUnzipSuccess(pkgFile = null,pkgFileDir = File(envDir, NODEJS),pkgName = pkgName, osType = null)
+                }*/
+                isUnzipSuccess(
+                    retryNum = 3,
+                    pkgFile = pkgFile,
+                    pkgFileDir = pkgFileDir,
+                    envDir = envDir,
+                    osType = osType,
+                    pkgName = pkgName
+                )
                 // 删除安装包
                 pkgFile.delete()
                 logger.info("prepareRunEnv decompress [$pkgName] success")
@@ -180,5 +159,43 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         preCmds.add(0, "tar -xzf $pkgName")
         logger.info("handleAtomPreCmd convertPreCmd:$preCmds")
         return JsonUtil.toJson(preCmds, false)
+    }
+
+    private fun isUnzipSuccess(
+        retryNum: Int,
+        pkgFile: File,
+        pkgFileDir: File,
+        envDir: File,
+        osType: OSType,
+        pkgName: String
+    ) {
+        try {
+            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
+            logger.info("CommandLineUtils.execute(\"node -v\",pkgFileDir.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
+            if (osType == OSType.WINDOWS){
+                ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
+            } else {
+                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                CommandLineUtils.execute("node -v",File(envDir, NODEJS).absoluteFile,true)
+            }
+        }catch (e: Exception) {
+            if (retryNum == 0) {
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                    errorMsg = "Script command execution failed because of ${e.message}"
+                )
+            }
+            logger.info("执行脚本出现异常，开始捕获.循环次数是$retryNum")
+            isUnzipSuccess(
+                retryNum = retryNum-1,
+                pkgFile = pkgFile,
+                pkgFileDir = pkgFileDir,
+                envDir = envDir,
+                osType = osType,
+                pkgName = pkgName
+            )
+        }
     }
 }
