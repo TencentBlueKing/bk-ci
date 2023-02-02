@@ -99,4 +99,19 @@ class UserFileResourceImpl @Autowired constructor(
     override fun downloadFileExt(userId: String, filePath: String, logo: Boolean?, response: HttpServletResponse) {
         downloadFile(userId, filePath, logo, response)
     }
+
+    override fun uploadStaticFile(
+        userId: String,
+        inputStream: InputStream,
+        disposition: FormDataContentDisposition
+    ): Result<String?> {
+        val url = archiveFileService.uploadFile(
+            userId = userId,
+            inputStream = inputStream,
+            disposition = disposition,
+            fileType = FileTypeEnum.BK_STATIC,
+            fileChannelType = FileChannelTypeEnum.WEB_SHOW
+        )
+        return Result(url)
+    }
 }

@@ -39,6 +39,7 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
+import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STATIC_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_IMAGE
@@ -55,6 +56,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -70,6 +72,7 @@ import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletResponse
@@ -79,6 +82,7 @@ import javax.ws.rs.NotFoundException
 @Suppress("TooManyFunctions", "MagicNumber")
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = "bkrepo")
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
+    private val bkRepoClientConfig: BkRepoClientConfig,
     private val bkRepoClient: BkRepoClient
 ) : ArchiveFileServiceImpl() {
 
@@ -118,7 +122,23 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             projectId!!
         }
         val repoName = BkRepoUtils.getRepoName(fileType)
-        return if (logo == true) {
+        return if (fileType == FileTypeEnum.BK_STATIC) {
+            bkRepoClient.uploadLocalFile(
+                userId = userId,
+                projectId = BKREPO_STATIC_PROJECT_ID,
+                repoName = REPO_NAME_STATIC,
+                path = destPath,
+                file = file,
+                gatewayFlag = false,
+                bkrepoApiUrl = bkRepoClientConfig.bkRepoApiUrl,
+                userName = bkRepoClientConfig.bkRepoStaticUserName,
+                password = bkRepoClientConfig.bkRepoStaticPassword,
+                properties = metadata
+            )
+            val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
+            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID, REPO_NAME_STATIC)
+            "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
+        } else if (logo == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,

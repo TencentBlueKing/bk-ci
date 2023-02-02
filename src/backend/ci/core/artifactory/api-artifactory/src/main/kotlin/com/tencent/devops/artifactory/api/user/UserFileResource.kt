@@ -120,4 +120,19 @@ interface UserFileResource {
         @Context
         response: HttpServletResponse
     )
+
+    @ApiOperation("上传静态文件")
+    @POST
+    @Path("/static/file/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadStaticFile(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }
