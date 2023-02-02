@@ -67,7 +67,7 @@ class SlaveGatewayService @Autowired constructor(
     fun getFileGateway(zoneName: String?): String? {
         if (agentPropsScope.useDefaultFileGateway()) {
             val defaultFileGateway = agentPropsScope.getDefaultFileGateway()
-            if (defaultFileGateway.isBlank()) return defaultFileGateway
+            if (defaultFileGateway.isNotBlank()) return defaultFileGateway
         }
         return getConfigGateway(zoneName)
     }
@@ -75,7 +75,7 @@ class SlaveGatewayService @Autowired constructor(
     fun getGateway(zoneName: String?): String? {
         if (agentPropsScope.useDefaultGateway()) {
             val defaultGateway = agentPropsScope.getDefaultGateway()
-            if (defaultGateway.isBlank()) return defaultGateway
+            if (defaultGateway.isNotBlank()) return defaultGateway
         }
         return getConfigGateway(zoneName)
     }
