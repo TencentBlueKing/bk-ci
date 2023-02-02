@@ -378,7 +378,7 @@ func (m *Mgr) resourceCheck(ctx context.Context) {
 
 				if needfree {
 					// disable all workers and release
-					m.resource.disableAllWorker(true)
+					m.resource.disableAllWorker()
 					// clean file cache
 					m.cleanFileCache()
 					// notify resource release
@@ -410,15 +410,15 @@ func (m *Mgr) workerCheck(ctx context.Context) {
 
 		case <-ticker.C:
 			handler := m.remoteWorker.Handler(0, nil, nil, nil)
-			for _, w := range m.resource.worker {
-				if w.disabled && w.continuousNetErrors >= m.conf.NetErrorLimit {
+			for _, w := range m.resource.getWorkers() {
+				if !w.disabled && w.dead {
 					go func(w *worker) {
 						_, err := handler.ExecuteSyncTime(w.host.Server)
 						if err != nil {
 							blog.Warnf("remote: try to sync time for host(%s) failed: %v", w.host.Server, err)
 							return
 						}
-						m.resource.enableWorker(w.host)
+						m.resource.recoverDeadWorker(w.host)
 					}(w)
 				}
 			}
@@ -473,7 +473,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 			"ensure tool chain failed: %v, going to disable host(%s)",
 			m.work.ID(), req.Pid, req.Server.Server, err, req.Server.Server)
 
-		m.resource.disableWorker(req.Server)
+		m.resource.workerDead(req.Server)
 		return nil, err
 	}
 
@@ -501,19 +501,19 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 
 	dcSDK.StatsTimeNow(&req.Stats.RemoteWorkEndTime)
 	if err != nil {
-		for _, w := range m.resource.worker {
+		for _, w := range m.resource.getWorkers() {
 			if !w.host.Equal(req.Server) {
 				continue
 			}
 			if isCaredNetError(err) {
-				m.resource.countWorkerError(w.host)
-				if w.continuousNetErrors >= m.conf.NetErrorLimit {
-					m.resource.disableWorker(req.Server)
+				m.resource.countWorkerError(w.host, m.conf.NetErrorLimit)
+				if w.isDead(m.conf.NetErrorLimit) {
+					m.resource.workerDead(req.Server)
 					blog.Errorf("remote: server(%s) in work(%s) has (%d) continuous net errors "+
 						"make it disabled", req.Server.Server, m.work.ID(), w.continuousNetErrors)
 				}
 			} else {
-				m.resource.enableWorker(req.Server)
+				//m.resource.recoverDeadWorker(req.Server)
 			}
 			break
 		}
@@ -525,7 +525,7 @@ func (m *Mgr) ExecuteTask(req *types.RemoteTaskExecuteRequest) (*types.RemoteTas
 	}
 
 	req.Stats.RemoteWorkSuccess = true
-	m.resource.enableWorker(req.Server)
+	//m.resource.recoverDeadWorker(req.Server)
 	blog.Infof("remote: success to execute remote task for work(%s) from pid(%d) to server(%s)",
 		m.work.ID(), req.Pid, req.Server.Server)
 	return &types.RemoteTaskExecuteResult{

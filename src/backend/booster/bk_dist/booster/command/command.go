@@ -91,7 +91,7 @@ const (
 	FlagAutoResourceMgr      = "auto_resource_mgr"
 	FlagResIdleSecsForFree   = "res_idle_secs_for_free"
 	FlagSendCork             = "send_cork"
-	FlagNerErrLimit          = "net_error_limit"
+	FlagNetErrorLimit        = "net_error_limit"
 	FlagRemoteRetryTimes     = "remote_retry_times"
 
 	EnvBuildIDOld  = "TURBO_PLAN_BUILD_ID"

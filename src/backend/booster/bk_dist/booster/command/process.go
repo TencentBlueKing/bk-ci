@@ -227,8 +227,8 @@ func newBooster(c *commandCli.Context) (*pkg.Booster, error) {
 	}
 
 	netErrLimit := 5
-	if c.IsSet(FlagNerErrLimit) && c.Int(FlagNerErrLimit) > 0 {
-		netErrLimit = c.Int(FlagNerErrLimit)
+	if c.IsSet(FlagNetErrorLimit) && c.Int(FlagNetErrorLimit) > 0 {
+		netErrLimit = c.Int(FlagNetErrorLimit)
 	}
 
 	remoteRetryTimes := 1
