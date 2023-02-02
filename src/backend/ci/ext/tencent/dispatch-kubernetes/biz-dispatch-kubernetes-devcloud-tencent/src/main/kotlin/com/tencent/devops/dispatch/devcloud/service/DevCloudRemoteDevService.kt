@@ -142,7 +142,10 @@ class DevCloudRemoteDevService @Autowired constructor(
                         Volume(
                             name = VOLUME_MOUNT_NAME,
                             volumeSource = VolumeSource(
-                                dataDisk = DataDiskSource()
+                                dataDisk = DataDiskSource(
+                                    type = "PVC",
+                                    sizeLimit = 100
+                                )
                             )
                         )
                     )
