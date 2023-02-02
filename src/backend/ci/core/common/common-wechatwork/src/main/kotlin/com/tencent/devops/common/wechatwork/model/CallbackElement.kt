@@ -25,11 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:api-notify"))
-    api(project(":core:notify:model-notify"))
-    api(project(":core:common:common-db"))
-    api(project(":core:common:common-notify"))
-    api(project(":core:common:common-wechatwork"))
-}
+package com.tencent.devops.common.wechatwork.model
+
+import com.tencent.devops.common.wechatwork.model.enums.FromType
+import com.tencent.devops.common.wechatwork.model.enums.MsgType
+import org.dom4j.Element
+
+data class CallbackElement(
+        // 公共部分抽离出来
+    val toUserName: String, // 接收人
+    val serviceId: String, // 服务号id
+    val agentType: String, // 一般都是chat
+    val chatId: String, // 发送人
+    val msgType: MsgType, // xml.Msg.MsgType
+    val fromType: FromType, // xml.Msg.MsgType
+        // 没办法抽离出来的，讲Msg整个element存放起来
+    val msgElement: Element, // xml.Msg
+    val fromElement: Element // xml.Msg.From
+
+)

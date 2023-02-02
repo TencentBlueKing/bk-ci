@@ -55,7 +55,13 @@ data class StagePauseCheck(
     @ApiModelProperty("质量红线规则ID集合", required = false)
     var ruleIds: List<String>? = null, // 质量红线规则ID集合
     @ApiModelProperty("记录本次构建质量红线规则的检查次数", required = false)
-    var checkTimes: Int? = null // 记录本次构建质量红线规则的检查次数
+    var checkTimes: Int? = null, // 记录本次构建质量红线规则的检查次数
+    @ApiModelProperty("是否以markdown格式发送审核说明", required = false)
+    var markdownContent: Boolean? = false, // 是否以markdown格式发送审核说明
+    @ApiModelProperty("发送的通知类型", required = false)
+    var notifyType: MutableList<String>? = mutableListOf("WEWORK_GROUP", "RTX"), // 通知类型[企业微信消息通知、企业微信群消息]
+    @ApiModelProperty("企业微信群id", required = false)
+    var notifyGroup: MutableList<String>? = null
 ) {
 
     /**
@@ -185,6 +191,9 @@ data class StagePauseCheck(
             }
         }
         reviewDesc = EnvReplacementParser.parse(reviewDesc, variables, asCodeEnabled)
+        notifyGroup = notifyGroup?.map {
+            EnvReplacementParser.parse(it, variables, asCodeEnabled)
+        }?.toMutableList()
         reviewParams?.forEach { it.parseValueWithType(variables) }
     }
 

@@ -207,4 +207,19 @@ CREATE TABLE IF NOT EXISTS `T_WEWORK_NOTIFY_MESSAGE_TEMPLATE`
 ) ENGINE = InnoDB
   DEFAULT CHARSET = utf8mb4 COMMENT='wework模板表';
 
+CREATE TABLE IF NOT EXISTS `T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE`
+(
+    `ID`                 varchar(32) NOT NULL COMMENT '主键ID',
+    `COMMON_TEMPLATE_ID` varchar(32) NOT NULL COMMENT '模板ID',
+    `CREATOR`            varchar(50) NOT NULL COMMENT '创建者',
+    `MODIFIOR`           varchar(50) NOT NULL COMMENT '修改者',
+    `TITLE`              varchar(256)         DEFAULT NULL COMMENT '邮件标题',
+    `BODY`               mediumtext  NOT NULL COMMENT '内容',
+    `CREATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME`        datetime    NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`),
+    KEY `idx_templateId` (`COMMON_TEMPLATE_ID`)
+) ENGINE = InnoDB
+  DEFAULT CHARSET = utf8mb4 COMMENT='企业微信群模板表';
+
 SET FOREIGN_KEY_CHECKS = 1;
