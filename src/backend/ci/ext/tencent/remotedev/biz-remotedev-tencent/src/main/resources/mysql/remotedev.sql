@@ -12,7 +12,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `URL` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目URL',
                                              `BRANCH` varchar(1024) NOT NULL DEFAULT '' COMMENT '工蜂项目分支',
                                              `YAML` longtext NOT NULL COMMENT '配置yaml内容',
-                                             `YAML_PATH` varchar(1024) NOT NULL DEFAULT ''  COMMENT '配置yaml路径',
+                                             `YAML_PATH` varchar(1024) DEFAULT ''  COMMENT '配置yaml路径',
                                              `DOCKERFILE` longtext NOT NULL COMMENT '依赖镜像的DockerFile内容',
                                              `IMAGE_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '镜像地址',
                                              `WORK_PATH` varchar(256) NOT NULL DEFAULT '' COMMENT '工作区路径',

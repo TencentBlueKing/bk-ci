@@ -25,34 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.listener
+package com.tencent.devops.remotedev.websocket.page
 
-import com.tencent.devops.common.event.listener.Listener
-import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
-import com.tencent.devops.remotedev.pojo.event.UpdateEventType
-import com.tencent.devops.remotedev.service.WorkspaceService
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
-
-@Suppress("LongParameterList")
-@Component
-class RemoteDevUpdateListener @Autowired constructor(
-    private val workspaceService: WorkspaceService
-) : Listener<RemoteDevUpdateEvent> {
-
-    override fun execute(event: RemoteDevUpdateEvent) {
-        logger.info("A message is received from dispatch k8s $event")
-
-        when (event.type) {
-            UpdateEventType.CREATE -> workspaceService.afterCreateWorkspace(event)
-            UpdateEventType.START -> workspaceService.afterStartWorkspace(event)
-            UpdateEventType.STOP -> workspaceService.afterStopWorkspace(event)
-            UpdateEventType.DELETE -> workspaceService.afterDeleteWorkspace(event)
-        }
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(RemoteDevUpdateListener::class.java)
+object WorkspacePageBuild {
+    fun buildPage(workspaceName: String): String {
+        return "/remotedev/workspace/$workspaceName"
     }
 }
