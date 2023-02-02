@@ -32,5 +32,9 @@ enum class WorkspaceAction {
     START, // 1
     SLEEP, // 2
     DELETE, // 3
-    SHARE // 4
+    SHARE, // 4
+    CREATING,
+    STARTING,
+    SLEEPING,
+    DELETING
 }

@@ -258,4 +258,13 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @ApiOperation("获取默认的devfile文件内容")
+    @POST
+    @Path("/devfile")
+    fun getDevfile(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
 }
