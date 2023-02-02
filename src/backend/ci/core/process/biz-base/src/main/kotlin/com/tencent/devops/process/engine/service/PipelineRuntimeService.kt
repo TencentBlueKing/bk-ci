@@ -724,6 +724,23 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             )
         }
+        // #7983 审核插件在被取消时作为审核结束处理，增加时间戳
+        val tasks = pipelineTaskService.listContainerBuildTasks(
+            projectId = projectId,
+            buildId = buildId,
+            containerSeqId = null,
+            buildStatusSet = setOf(BuildStatus.REVIEWING)
+        )
+        tasks.forEach { task ->
+            taskBuildRecordService.updateTaskRecord(
+                projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
+                taskId = task.taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
+                taskVar = mapOf(), timestamps = mapOf(
+                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                )
+            )
+        }
         return true
     }
 

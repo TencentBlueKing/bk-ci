@@ -279,7 +279,7 @@ class PipelineTaskService @Autowired constructor(
     fun listContainerBuildTasks(
         projectId: String,
         buildId: String,
-        containerSeqId: String,
+        containerSeqId: String?,
         buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
         return pipelineBuildTaskDao.listByStatus(
