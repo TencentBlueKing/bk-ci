@@ -29,15 +29,12 @@ package com.tencent.devops.worker.common.service.impl
 
 import com.tencent.devops.common.api.constant.NODEJS
 import com.tencent.devops.common.api.enums.OSType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
-import com.tencent.devops.common.pipeline.enums.BuildScriptType
-import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
@@ -45,7 +42,6 @@ import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.AtomRunConditionHandleService
-import com.tencent.devops.worker.common.utils.CommandLineExecutor
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -160,19 +156,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         pkgName: String
     ) {
         try {
-            logger.info("CommandLineUtils.execute(\"node -v\",pkgFile.absoluteFile ,true) :  ${pkgFile.absoluteFile}")
-            logger.info("CommandLineUtils.execute(\"node -v\",pkgFileDir.absoluteFile ,true) :  ${pkgFileDir.absoluteFile}")
-            logger.info("CommandLineUtils.execute(\"node -v\",File(envDir, NODEJS).absoluteFile,true) ,true) :  ${File(envDir, NODEJS).absoluteFile}")
-            logger.info("CommandLineUtils.execute(\"node -v\",File(envDir, NODEJS) :  ${File(envDir, NODEJS)}")
             if (osType == OSType.WINDOWS){
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
-                CommandLineUtils.execute("node -vvvv",pkgFileDir.absoluteFile ,true)
+                CommandLineUtils.execute("node -v",pkgFileDir.absoluteFile ,true)
             } else {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                CommandLineUtils.execute("node -vvvv",File(envDir, NODEJS).absoluteFile,true)
+                CommandLineUtils.execute("node -v",File(envDir, NODEJS).absoluteFile,true)
             }
         }catch (e: Exception) {
-            logger.info("执行脚本出现异常，开始捕获.循环次数是$retryNum")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
