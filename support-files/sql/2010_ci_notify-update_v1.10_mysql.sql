@@ -25,9 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api(project(":core:notify:biz-notify"))
-    api(project(":core:notify:biz-notify-blueking")) // 对接蓝鲸实现
-    api(project(":core:notify:biz-notify-tencentcloud")) // 对接腾讯云实现
-    implementation(project(":core:notify:biz-notify-wework")) // 对接企业微信实现
-}
+USE devops_ci_notify;
+SET NAMES utf8mb4;
+
+DROP PROCEDURE IF EXISTS ci_notify_schema_update;
+
+DELIMITER <CI_UBF>
+CREATE PROCEDURE ci_notify_schema_update()
+BEGIN
+
+    DECLARE db VARCHAR(100);
+    SET AUTOCOMMIT = 0;
+SELECT DATABASE() INTO db;
+
+IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_EMAILS_NOTIFY_MESSAGE_TEMPLATE'
+                    AND COLUMN_NAME = 'TENCENT_CLOUD_TEMPLATE_ID') THEN
+ALTER TABLE `T_EMAILS_NOTIFY_MESSAGE_TEMPLATE`
+    ADD COLUMN `TENCENT_CLOUD_TEMPLATE_ID` int(11) NULL COMMENT '腾讯云邮件模板id';
+	
+END IF;
+
+COMMIT;
+END <CI_UBF>
+DELIMITER ;
+COMMIT;
+
+CALL ci_notify_schema_update();
