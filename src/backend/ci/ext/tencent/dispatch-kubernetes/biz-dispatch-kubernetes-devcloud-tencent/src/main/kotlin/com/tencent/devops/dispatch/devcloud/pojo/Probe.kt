@@ -7,5 +7,5 @@ data class Probe(
     val periodSeconds: Int = 2,
     val successThreshold: Int = 1,
     val failureThreshold: Int = 5,
-    val terminationGracePeriodSeconds: Long = 10
+    val terminationGracePeriodSeconds: Long? = null
 )

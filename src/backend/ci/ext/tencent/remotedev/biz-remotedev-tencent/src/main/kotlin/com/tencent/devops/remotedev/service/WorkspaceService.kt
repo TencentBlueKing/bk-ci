@@ -1173,4 +1173,9 @@ class WorkspaceService @Autowired constructor(
         }
         return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
+
+    fun getDevfile(userId: String): String {
+        logger.info("$userId get devfile content")
+        return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
+    }
 }
