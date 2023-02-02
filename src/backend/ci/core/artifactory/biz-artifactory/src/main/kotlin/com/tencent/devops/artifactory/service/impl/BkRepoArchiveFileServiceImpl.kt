@@ -79,7 +79,7 @@ import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
 
 @Service
-@Suppress("TooManyFunctions", "MagicNumber")
+@Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = "bkrepo")
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
     private val bkRepoClientConfig: BkRepoClientConfig,
