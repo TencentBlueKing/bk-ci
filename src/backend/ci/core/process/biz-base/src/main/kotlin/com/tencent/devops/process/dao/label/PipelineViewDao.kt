@@ -384,6 +384,21 @@ class PipelineViewDao {
         }
     }
 
+    fun fetchAnyByName(
+        dslContext: DSLContext,
+        projectId: String,
+        name: String,
+        isProject: Boolean
+    ): TPipelineViewRecord? {
+        with(TPipelineView.T_PIPELINE_VIEW) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(NAME.eq(name))
+                .and(IS_PROJECT.eq(isProject))
+                .fetchAny()
+        }
+    }
+
     fun countForLimit(
         dslContext: DSLContext,
         projectId: String,
