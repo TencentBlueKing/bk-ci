@@ -178,9 +178,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
         val needApproval = projectPermissionService.needApproval(createExtInfo.needApproval)
         val approvalStatus = if (needApproval) {
-            ProjectApproveStatus.CREATE_APPROVED.status
-        } else {
             ProjectApproveStatus.CREATE_PENDING.status
+        } else {
+            ProjectApproveStatus.CREATE_APPROVED.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
         logger.info("create project : subjectScopes = $subjectScopes")
@@ -236,9 +236,17 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                         accessToken = accessToken,
                         projectInfo = projectInfo,
                         createExtInfo = createExtInfo,
-                        logoAddress = logoAddress,
-                        projectChannel = projectChannel
+                        logoAddress = logoAddress
                     )
+                }
+                // 为项目分配数据源
+                shardingRoutingRuleAssignService.assignShardingRoutingRule(
+                    channelCode = projectChannel,
+                    routingName = projectInfo.englishName,
+                    moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
+                )
+                if (projectInfo.secrecy) {
+                    redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
                 }
             }
         } catch (e: DuplicateKeyException) {
@@ -267,8 +275,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?,
         projectInfo: ProjectCreateInfo,
         createExtInfo: ProjectCreateExtInfo,
-        logoAddress: String?,
-        projectChannel: ProjectChannelCode
+        logoAddress: String?
     ) {
         try {
             createExtProjectInfo(
@@ -288,19 +295,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     )
                 )
             }
-            // 为项目分配数据源
-            shardingRoutingRuleAssignService.assignShardingRoutingRule(
-                channelCode = projectChannel,
-                routingName = projectInfo.englishName,
-                moduleCodes = listOf(SystemModuleEnum.PROCESS, SystemModuleEnum.METRICS)
-            )
         } catch (e: Exception) {
             logger.warn("fail to create the project[$projectId] ext info $projectInfo", e)
             projectDao.delete(dslContext, projectId)
             throw e
-        }
-        if (projectInfo.secrecy) {
-            redisOperation.addSetValue(SECRECY_PROJECT_REDIS_KEY, projectInfo.englishName)
         }
     }
 

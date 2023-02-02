@@ -30,17 +30,25 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.project.dao.ProjectApprovalDao
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ProjectApprovalService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val projectApprovalDao: ProjectApprovalDao
+    private val projectApprovalDao: ProjectApprovalDao,
+    private val projectDao: ProjectDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(ProjectApprovalService::class.java)
+    }
 
     fun create(
         userId: String,
@@ -59,5 +67,24 @@ class ProjectApprovalService @Autowired constructor(
 
     fun get(projectId: String): ProjectApprovalInfo? {
         return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
+    }
+
+    fun updateApprovalStatus(projectId: String, approver: String, approvalStatus: Int) {
+        logger.info("update project approval status|$projectId|$approver|$approvalStatus")
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            projectApprovalDao.updateApprovalStatus(
+                dslContext = context,
+                projectCode = projectId,
+                approver = approver,
+                approvalStatus = approvalStatus
+            )
+            projectDao.updateApprovalStatus(
+                dslContext = context,
+                projectCode = projectId,
+                approver = approver,
+                approvalStatus = approvalStatus
+            )
+        }
     }
 }

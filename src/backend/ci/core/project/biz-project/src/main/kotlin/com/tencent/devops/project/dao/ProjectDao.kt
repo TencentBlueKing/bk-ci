@@ -41,6 +41,8 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
+import java.net.URLDecoder
+import java.time.LocalDateTime
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
@@ -48,8 +50,6 @@ import org.jooq.Record1
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
-import java.time.LocalDateTime
 
 @Suppress("ALL")
 @Repository
@@ -750,6 +750,22 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(APPROVAL_STATUS, statusEnum.status).where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateApprovalStatus(
+        dslContext: DSLContext,
+        projectCode: String,
+        approver: String,
+        approvalStatus: Int
+    ): Int {
+        with(TProject.T_PROJECT) {
+            return dslContext.update(this)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(APPROVER, approver)
+                .set(APPROVAL_TIME, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
     }
