@@ -28,61 +28,86 @@
 package com.tencent.devops.environment.service.thirdPartyAgent
 
 import com.tencent.devops.common.api.enums.AgentStatus
+import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.environment.agent.AgentUpgradeType
+import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentScope
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
+import org.springframework.scheduling.annotation.Scheduled
+import org.springframework.stereotype.Component
 
-@Service
-class AgentUpgradeService @Autowired constructor(
+@Component
+@Suppress("UNUSED")
+class AgentUpgradeJob @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val agentGrayUtils: AgentGrayUtils,
+    private val agentPropsScope: AgentPropsScope,
+    private val agentScope: AgentScope,
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val client: Client,
-    private val upgradeService: UpgradeService
+    private val client: Client
 ) {
+    companion object {
+        private val logger = LoggerFactory.getLogger(AgentUpgradeJob::class.java)
+        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
+        private const val MINUTES_10 = 600L
+        private const val SECONDS_10 = 10000L
+        private const val SECONDS_30 = 30000L
+    }
 
+    @Scheduled(initialDelay = SECONDS_10, fixedDelay = SECONDS_30)
     fun updateCanUpgradeAgentList() {
-        val maxParallelCount = redisOperation.get(
-            key = agentGrayUtils.getParallelUpgradeCountKey()
-        )?.toInt() ?: agentGrayUtils.getDefaultParallelUpgradeCount()
-        if (maxParallelCount < 1) {
-            logger.warn("parallel count set to zero")
-            agentGrayUtils.setCanUpgradeAgents(listOf())
-            return
-        }
+        val watcher = Watcher("updateCanUpgradeAgentList")
+        logger.info("updateCanUpgradeAgentList start")
+        watcher.start("try lock")
+        val lock = RedisLock(redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = MINUTES_10)
+        try {
+            if (!lock.tryLock()) {
+                logger.info("get lock failed, skip")
+                return
+            }
+            watcher.start("get maxParallelCount")
+            val maxParallelCount = agentPropsScope.getMaxParallelUpgradeCount()
+            if (maxParallelCount < 1) {
+                logger.warn("parallel count set to zero")
+                agentScope.setCanUpgradeAgents(listOf())
+                return
+            }
 
-        val canUpgradeAgents = listCanUpdateAgents(
-            maxParallelCount = maxParallelCount
-        ) ?: return
+            watcher.start("listCanUpdateAgents")
+            val canUpgradeAgents = listCanUpdateAgents(maxParallelCount) ?: return
 
-        if (canUpgradeAgents.isNotEmpty()) {
-            agentGrayUtils.setCanUpgradeAgents(canUpgradeAgents.map { it.id })
+            if (canUpgradeAgents.isNotEmpty()) {
+                watcher.start("setCanUpgradeAgents")
+                agentScope.setCanUpgradeAgents(canUpgradeAgents.map { it.id })
+            }
+        } catch (ignore: Throwable) {
+            logger.warn("update can upgrade agent list failed", ignore)
+        } finally {
+            lock.unlock()
+            logger.info("updateCanUpgradeAgentList| $watcher")
         }
     }
 
-    private fun listCanUpdateAgents(
-        maxParallelCount: Int
-    ): List<TEnvironmentThirdpartyAgentRecord>? {
-        val currentVersion = upgradeService.getWorkerVersion().ifBlank {
+    private fun listCanUpdateAgents(maxParallelCount: Int): List<TEnvironmentThirdpartyAgentRecord>? {
+        val currentVersion = agentPropsScope.getWorkerVersion().ifBlank {
             logger.warn("invalid server agent version")
             return null
         }
 
-        val currentMasterVersion = upgradeService.getAgentVersion().ifBlank {
+        val currentMasterVersion = agentPropsScope.getAgentVersion().ifBlank {
             logger.warn("invalid server agent version")
             return null
         }
 
-        val currentDockerInitFileMd5 = upgradeService.getDockerInitFileMd5()
+        val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
 
         val importOKAgents = thirdPartyAgentDao.listByStatus(
             dslContext = dslContext,
@@ -131,8 +156,8 @@ class AgentUpgradeService @Autowired constructor(
                 }
 
                 AgentUpgradeType.JDK -> {
-                    val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
-                    val currentJdkVersion = upgradeService.getJdkVersion(record.os, props.arch) ?: return@forEach
+                    val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
+                    val currentJdkVersion = agentPropsScope.getJdkVersion(record.os, props.arch) ?: return@forEach
                     if (props.jdkVersion.size > 2) {
                         currentJdkVersion.trim() != props.jdkVersion.last().trim()
                     } else {
@@ -144,12 +169,12 @@ class AgentUpgradeService @Autowired constructor(
                     if (currentDockerInitFileMd5.isBlank()) {
                         return@forEach
                     }
-                    val props = upgradeService.parseAgentProps(record.agentProps) ?: return@forEach
+                    val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
                     if (props.dockerInitFileInfo?.needUpgrade != true) {
                         return@forEach
                     }
                     (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
-                            props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
+                        props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
                 }
             }
             if (res) {
@@ -157,17 +182,5 @@ class AgentUpgradeService @Autowired constructor(
             }
         }
         return false
-    }
-
-    fun setMaxParallelUpgradeCount(count: Int) {
-        agentGrayUtils.setMaxParallelUpgradeCount(count)
-    }
-
-    fun getMaxParallelUpgradeCount(): Int {
-        return agentGrayUtils.getMaxParallelUpgradeCount()
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgradeService::class.java)
     }
 }
