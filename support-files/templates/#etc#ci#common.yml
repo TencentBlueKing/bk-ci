@@ -321,3 +321,12 @@ bkrepo:
   staticRepoPrefixUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/generic/{0}/{1}
   staticUserName: __BK_REPO_USERNAME__
   staticPassword: __BK_REPO_PASSWORD__  
+  
+# 企业微信api配置
+wechatWork:
+  corpId: __BK_CI_WECHATWORK_CORPID__
+  serviceId: __BK_CI_WECHATWORK_SERVICEID__
+  secret: __BK_CI_WECHATWORK_SECRET__
+  token: __BK_CI_WECHATWORK_TOKEN__
+  aesKey: __BK_CI_WECHATWORK_AESKEY__
+  url: __BK_CI_WECHATWORK_URL__

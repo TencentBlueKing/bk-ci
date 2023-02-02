@@ -29,12 +29,13 @@ package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.BuildAgentThirdPartyAgentUpgradeResource
-import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
+import com.tencent.devops.environment.service.thirdPartyAgent.DownloadAgentInstallService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(private val upgradeService: UpgradeService) :
-    BuildAgentThirdPartyAgentUpgradeResource {
+class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(
+    private val downloadAgentInstallService: DownloadAgentInstallService
+) : BuildAgentThirdPartyAgentUpgradeResource {
 
     override fun downloadUpgrade(
         projectId: String,
@@ -42,5 +43,5 @@ class BuildAgentThirdPartyAgentUpgradeResourceImpl @Autowired constructor(privat
         secretKey: String,
         file: String,
         eTag: String?
-    ) = upgradeService.downloadUpgradeFile(projectId, agentId, secretKey, file, eTag)
+    ) = downloadAgentInstallService.downloadUpgradeFile(projectId, agentId, secretKey, file, eTag)
 }

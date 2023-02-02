@@ -473,7 +473,7 @@ object ScriptYmlUtils {
                     ifField = it.ifField,
                     ifModify = it.ifModify,
                     fastKill = it.fastKill ?: false,
-                    jobs = preJobs2Jobs(it.jobs as Map<String, PreJob>, transferData),
+                    jobs = preJobs2Jobs(it.jobs, transferData),
                     checkIn = formatStageCheck(it.checkIn),
                     checkOut = formatStageCheck(it.checkOut)
                 )
