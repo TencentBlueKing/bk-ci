@@ -52,17 +52,17 @@ spec:
               done
               # 导入数据库
               cat << EOF > iam.sql
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (1,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (2,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (3,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (4,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (5,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (6,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (9,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/task", "experience_task", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (10,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/experience/api/open/experience/callback/group", "experience_group", "ci");
-              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"{{- .Values.config.bkCiPublicUrl -}}", "/ms/project/api/open/project/callback/", "project", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (1,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/process/api/open/pipeline/callback/", "pipeline", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (2,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/repository/api/open/repository/callback/", "repertory", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (3,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/ticket/api/open/ticket/callback/credential/", "credential", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (4,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/ticket/api/open/ticket/callback/cert/", "cert", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (5,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/environment/api/open/environment/callback/env/", "environment", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (6,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/environment/api/open/environment/callback/node/", "env_node", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (7,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/quality/api/open/quality/callback/rule", "rule", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (8,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/quality/api/open/quality/callback/group", "quality_group", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (9,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/experience/api/open/experience/callback/task", "experience_task", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (10,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/experience/api/open/experience/callback/group", "experience_group", "ci");
+              INSERT IGNORE INTO T_AUTH_IAM_CALLBACK (ID,GATEWAY,PATH, RESOURCE,SYSTEM) VALUES (11,"http://{{ include "bkci.names.fullname" . }}-gateway", "/ms/project/api/open/project/callback/", "project", "ci");
               EOF
               mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} devops_ci_auth < iam.sql;
       restartPolicy: OnFailure
