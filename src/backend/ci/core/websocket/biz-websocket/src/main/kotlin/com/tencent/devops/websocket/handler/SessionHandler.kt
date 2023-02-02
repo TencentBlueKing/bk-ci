@@ -73,7 +73,7 @@ class SessionHandler @Autowired constructor(
         val uri = session.uri
         val remoteId = session.remoteAddress
         val sessionId = uri?.query?.split("&")
-            ?.firstOrNull { "sessionId".contains(it) }?.substringAfter("sessionId=")
+            ?.firstOrNull { it.contains("sessionId") }?.substringAfter("sessionId=")
         val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
         websocketService.addCacheSession(sessionId!!)
         logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")
