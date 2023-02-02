@@ -269,7 +269,7 @@ class WorkspaceService @Autowired constructor(
                 status = true,
                 anyMessage = WorkspaceResponse(
                     workspaceName = workspaceName,
-                    status = WorkspaceAction.CREATING
+                    status = WorkspaceAction.PREPARING
                 ),
                 projectId = "",
                 userId = userId,
@@ -289,7 +289,7 @@ class WorkspaceService @Autowired constructor(
 
         return WorkspaceResponse(
             workspaceName = workspaceName,
-            status = WorkspaceAction.CREATING
+            status = WorkspaceAction.PREPARING
         )
     }
 

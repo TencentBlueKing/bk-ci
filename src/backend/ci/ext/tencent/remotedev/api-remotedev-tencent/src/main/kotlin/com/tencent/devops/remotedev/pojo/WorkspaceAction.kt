@@ -33,7 +33,7 @@ enum class WorkspaceAction {
     SLEEP, // 2
     DELETE, // 3
     SHARE, // 4
-    CREATING,
+    PREPARING,
     STARTING,
     SLEEPING,
     DELETING
