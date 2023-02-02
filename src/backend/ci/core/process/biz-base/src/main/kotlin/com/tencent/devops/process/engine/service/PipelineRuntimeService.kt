@@ -780,6 +780,7 @@ class PipelineRuntimeService @Autowired constructor(
         context.currentBuildNo = buildNo
 //        var buildNoType: BuildNoType? = null
         // --- 第1层循环：Stage遍历处理 ---
+        var afterRetryStage = false
         fullModel.stages.forEachIndexed nextStage@{ index, stage ->
             context.needUpdateStage = stage.finally // final stage 每次重试都会参与执行检查
 
@@ -907,6 +908,7 @@ class PipelineRuntimeService @Autowired constructor(
 
             if (lastTimeBuildStages.isNotEmpty()) {
                 if (context.needUpdateStage) {
+                    afterRetryStage = true
                     stage.resetBuildOption(true)
                     run findHistoryStage@{
                         lastTimeBuildStages.forEach {
@@ -922,6 +924,9 @@ class PipelineRuntimeService @Autowired constructor(
                             }
                         }
                     }
+                }
+                if (afterRetryStage) {
+                    stage.executeCount?.let { count -> stage.executeCount = count + 1 }
                 }
             } else {
                 stage.resetBuildOption(true)

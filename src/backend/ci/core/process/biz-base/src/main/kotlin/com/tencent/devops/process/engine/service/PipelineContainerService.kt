@@ -943,7 +943,7 @@ class PipelineContainerService @Autowired constructor(
 
         ContainerUtils.setQueuingWaitName(container, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
-        container.executeCount = context.executeCount
+        container. executeCount = context.executeCount
 
         // TODO #7983 后续全换到record时保持同步刷新
 //        stageBuildRecords.add(
