@@ -91,4 +91,6 @@ object AuthMessageCode {
     const val GET_IAM_GROUP_FAIL = "2121507" // 权限系统: 获取用户组失败
 
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121601" // 用户{0}没有管理员权限
+
+    const val ITSM_CALLBACK_APPLICATION_FAIL = "2121701" // 查询不到有效的项目审批回调单
 }

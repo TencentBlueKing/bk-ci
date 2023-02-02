@@ -26,49 +26,10 @@
  *
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.PUT
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
+import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 
-@Api(tags = ["SERVICE_PROJECT_APPROVAL"], description = "项目审批接口")
-@Path("/service/projects/approval")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectApprovalResource {
-
-    @GET
-    @Path("/{projectId}")
-    @ApiOperation("查询指定项目审批信息")
-    fun get(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String
-    ): Result<ProjectApprovalInfo?>
-
-    @PUT
-    @Path("/{projectId}/updateApprovalStatus")
-    @ApiOperation("更新项目审批状态")
-    fun updateApprovalStatus(
-        @ApiParam("项目ID", required = true)
-        @PathParam("projectId")
-        projectId: String,
-        @ApiParam("审批人", required = true)
-        @QueryParam("approver")
-        approver: String,
-        @ApiParam("审批状态, 值为ProjectApproveStatus枚举", required = true)
-        @QueryParam("approvalStatus")
-        approvalStatus: Int
-    ): Result<Boolean>
+interface PermissionItsmCallbackService {
+    fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo)
 }

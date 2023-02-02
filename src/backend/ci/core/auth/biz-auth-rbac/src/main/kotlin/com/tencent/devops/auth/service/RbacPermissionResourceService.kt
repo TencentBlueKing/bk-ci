@@ -97,16 +97,19 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         }
-        authResourceService.create(
-            userId = userId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-            // 项目默认开启权限管理
-            enable = resourceType == AuthResourceType.PROJECT.value,
-            relationId = managerId.toString()
-        )
+        // 项目创建需要审批时,不需要保存资源信息
+        if (managerId != 0) {
+            authResourceService.create(
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                // 项目默认开启权限管理
+                enable = resourceType == AuthResourceType.PROJECT.value,
+                relationId = managerId.toString()
+            )
+        }
         return true
     }
 
