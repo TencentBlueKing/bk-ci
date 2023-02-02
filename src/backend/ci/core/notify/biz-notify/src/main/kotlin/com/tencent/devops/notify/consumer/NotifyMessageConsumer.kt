@@ -72,12 +72,16 @@ class NotifyMessageConsumer @Autowired constructor(
         private val logger = LoggerFactory.getLogger(NotifyMessageConsumer::class.java)
     }
 
-    @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
                 key = [ROUTE_RTX],
                 value = Queue(value = QUEUE_NOTIFY_RTX, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )
+        ]
+    )
     fun onReceiveRtxMessage(rtxNotifyMessageWithOperation: RtxNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(rtxNotifyMessageWithOperation.getReceivers())
@@ -89,12 +93,16 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
                 key = [ROUTE_EMAIL],
                 value = Queue(value = QUEUE_NOTIFY_EMAIL, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )
+        ]
+    )
     fun onReceiveEmailMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(emailNotifyMessageWithOperation.getReceivers())
@@ -114,12 +122,16 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
                 key = [ROUTE_SMS],
                 value = Queue(value = QUEUE_NOTIFY_SMS, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )
+        ]
+    )
     fun onReceiveSmsMessage(smsNotifyMessageWithOperation: SmsNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(smsNotifyMessageWithOperation.getReceivers())
@@ -131,12 +143,16 @@ class NotifyMessageConsumer @Autowired constructor(
         }
     }
 
-    @RabbitListener(containerFactory = "rabbitListenerContainerFactory",
+    @RabbitListener(
+        containerFactory = "rabbitListenerContainerFactory",
         bindings = [
             QueueBinding(
                 key = [ROUTE_WECHAT],
                 value = Queue(value = QUEUE_NOTIFY_WECHAT, durable = "true"),
-                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic"))])
+                exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
+            )
+        ]
+    )
     fun onReceiveWechatMessage(wechatNotifyMessageWithOperation: WechatNotifyMessageWithOperation) {
         try {
             val parseStaff = orgService.parseStaff(wechatNotifyMessageWithOperation.getReceivers())
@@ -155,7 +171,8 @@ class NotifyMessageConsumer @Autowired constructor(
                 key = [ROUTE_WEWORK],
                 value = Queue(value = QUEUE_NOTIFY_WEWORK, durable = "true"),
                 exchange = Exchange(value = EXCHANGE_NOTIFY, durable = "true", delayed = "true", type = "topic")
-            )]
+            )
+        ]
     )
     fun onReceiveWeworkMessage(weworkNotifyMessageWithOperation: WeworkNotifyMessageWithOperation) {
         try {
@@ -165,7 +182,11 @@ class NotifyMessageConsumer @Autowired constructor(
             val weworkNotifyTextMessage = WeworkNotifyTextMessage(
                 receivers = parseStaff,
                 receiverType = WeworkReceiverType.single,
-                textType = WeworkTextType.text,
+                textType = if (weworkNotifyMessageWithOperation.markdownContent) {
+                    WeworkTextType.markdown
+                } else {
+                    WeworkTextType.text
+                },
                 message = weworkNotifyMessageWithOperation.body
             )
             weworkService.sendTextMessage(weworkNotifyTextMessage)
