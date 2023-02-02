@@ -28,11 +28,15 @@
 
 package com.tencent.devops.project.service
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectApprovalDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -43,7 +47,9 @@ import org.springframework.stereotype.Service
 class ProjectApprovalService @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectApprovalDao: ProjectApprovalDao,
-    private val projectDao: ProjectDao
+    private val projectDao: ProjectDao,
+    private val projectService: ProjectService,
+    private val projectExtService: ProjectExtService
 ) {
 
     companion object {
@@ -69,21 +75,81 @@ class ProjectApprovalService @Autowired constructor(
         return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
     }
 
-    fun updateApprovalStatus(projectId: String, approver: String, approvalStatus: Int) {
-        logger.info("update project approval status|$projectId|$approver|$approvalStatus")
+    fun createApproved(projectId: String, applicant: String, approver: String) {
+        logger.info("project create approved|$projectId|$applicant|$approver")
+        val projectInfo = projectService.getByEnglishName(englishName = projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(projectId),
+            defaultMessage = "project $projectId is not exist"
+        )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             projectApprovalDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = approvalStatus
+                approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = approvalStatus
+                approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
+            )
+            val projectCreateInfo = with(projectInfo) {
+                ProjectCreateInfo(
+                    projectName = projectName,
+                    englishName = englishName,
+                    projectType = projectType ?: 0,
+                    description = description ?: "",
+                    bgId = bgId?.toLong() ?: 0L,
+                    bgName = bgName ?: "",
+                    deptId = deptId?.toLong() ?: 0L,
+                    deptName = deptName ?: "",
+                    centerId = centerId?.toLong() ?: 0L,
+                    centerName = centerName ?: "",
+                    secrecy = secrecy ?: false,
+                    kind = kind ?: 0,
+                    logoAddress = logoAddr
+                )
+            }
+            try {
+                projectExtService.createExtProjectInfo(
+                    userId = applicant,
+                    projectId = projectId,
+                    accessToken = null,
+                    projectCreateInfo = projectCreateInfo,
+                    createExtInfo = ProjectCreateExtInfo(needValidate = true, needAuth = true),
+                    logoAddress = projectInfo.logoAddr
+                )
+            } catch (ignore: Exception) {
+                logger.warn("fail to create the project[$projectId] ext info $projectInfo", ignore)
+                projectDao.delete(dslContext, projectId)
+                throw ignore
+            }
+        }
+    }
+
+    fun createReject(projectId: String, applicant: String, approver: String) {
+        logger.info("project create approved|$projectId|$applicant|$approver")
+        val projectInfo = projectService.getByEnglishName(englishName = projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(projectId),
+            defaultMessage = "project $projectId is not exist"
+        )
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            projectApprovalDao.updateApprovalStatus(
+                dslContext = context,
+                projectCode = projectId,
+                approver = approver,
+                approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
+            )
+            projectDao.updateApprovalStatus(
+                dslContext = context,
+                projectCode = projectId,
+                approver = approver,
+                approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
             )
         }
     }

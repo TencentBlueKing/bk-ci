@@ -28,7 +28,6 @@
 package com.tencent.devops.project.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.common.api.exception.OperationException
@@ -46,7 +45,6 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ApplicationInfo
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -72,7 +70,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
-    objectMapper: ObjectMapper
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -84,7 +83,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
-    objectMapper = objectMapper
+    objectMapper = objectMapper,
+    projectExtService = projectExtService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -98,16 +98,6 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
             groupId = "0",
             groupName = ""
         )
-    }
-
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {

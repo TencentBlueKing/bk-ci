@@ -26,39 +26,23 @@
  *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.service
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
-import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectApprovalService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 
-@RestResource
-class ServiceProjectApprovalResourceImpl @Autowired constructor(
-    private val projectApprovalService: ProjectApprovalService
-) : ServiceProjectApprovalResource {
+/**
+ * 外部项目服务类
+ */
+interface ProjectExtService {
 
-    override fun get(projectId: String): Result<ProjectApprovalInfo?> {
-        return Result(projectApprovalService.get(projectId = projectId))
-    }
-
-    override fun createApproved(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createApproved(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
-    }
-
-    override fun createReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createReject(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
-    }
+    @Suppress("LongParameterList")
+    fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo,
+        logoAddress: String?
+    )
 }

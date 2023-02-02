@@ -58,7 +58,6 @@ import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForList
-import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
 import com.tencent.devops.project.pojo.ProjectProperties
@@ -69,9 +68,9 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
-import com.tencent.devops.project.pojo.mq.ProjectCreateBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectExtPermissionService
+import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectTagService
@@ -111,7 +110,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectExtPermissionService: ProjectExtPermissionService,
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
-    objectMapper: ObjectMapper
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -123,7 +123,8 @@ class TxProjectServiceImpl @Autowired constructor(
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
-    objectMapper = objectMapper
+    objectMapper = objectMapper,
+    projectExtService = projectExtService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -228,39 +229,6 @@ class TxProjectServiceImpl @Autowired constructor(
                 groupName = ""
             )
         }
-    }
-
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        // 添加repo项目
-        val createSuccess = bkRepoClient.createBkRepoResource(userId, projectCreateInfo.englishName)
-        logger.info("create bkrepo project ${projectCreateInfo.englishName} success: $createSuccess")
-
-        if (createExtInfo.needAuth!!) {
-            val newAccessToken = if (accessToken.isNullOrBlank()) {
-                bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
-            } else accessToken
-            // 添加paas项目
-            projectPaasCCService.createPaasCCProject(
-                userId = userId,
-                projectId = projectId,
-                accessToken = newAccessToken,
-                projectCreateInfo = projectCreateInfo
-            )
-        }
-        // 工蜂CI项目不会添加paas项目，但也需要广播
-        projectDispatcher.dispatch(
-            ProjectCreateBroadCastEvent(
-                userId = userId,
-                projectId = projectId,
-                projectInfo = projectCreateInfo
-            )
-        )
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {

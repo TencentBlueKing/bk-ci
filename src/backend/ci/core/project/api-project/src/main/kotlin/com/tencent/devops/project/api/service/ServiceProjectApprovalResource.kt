@@ -58,17 +58,32 @@ interface ServiceProjectApprovalResource {
     ): Result<ProjectApprovalInfo?>
 
     @PUT
-    @Path("/{projectId}/updateApprovalStatus")
-    @ApiOperation("更新项目审批状态")
-    fun updateApprovalStatus(
+    @Path("/{projectId}/createApproved")
+    @ApiOperation("创建审批通过")
+    fun createApproved(
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
         @ApiParam("审批人", required = true)
+        @QueryParam("applicant")
+        applicant: String,
+        @ApiParam("审批人", required = true)
         @QueryParam("approver")
-        approver: String,
-        @ApiParam("审批状态, 值为ProjectApproveStatus枚举", required = true)
-        @QueryParam("approvalStatus")
-        approvalStatus: Int
+        approver: String
+    ): Result<Boolean>
+
+    @PUT
+    @Path("/{projectId}/createReject")
+    @ApiOperation("创建审批拒绝")
+    fun createReject(
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("审批人", required = true)
+        @QueryParam("applicant")
+        applicant: String,
+        @ApiParam("审批人", required = true)
+        @QueryParam("approver")
+        approver: String
     ): Result<Boolean>
 }
