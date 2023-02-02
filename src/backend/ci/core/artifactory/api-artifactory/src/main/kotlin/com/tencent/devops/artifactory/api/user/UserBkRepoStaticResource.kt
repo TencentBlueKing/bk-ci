@@ -35,89 +35,30 @@ import io.swagger.annotations.ApiParam
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
-import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
-import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.Context
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["USER_ARTIFACTORY"], description = "仓库-文件管理")
-@Path("/user/artifactories")
+@Api(tags = ["USER_BK_REPO"], description = "版本仓库-BkRepo静态文件")
+@Path("/user/bkrepo/statics")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserFileResource {
-
-    @ApiOperation("上传文件到指定自定义仓库路径")
+interface UserBkRepoStaticResource {
+    @ApiOperation("上传静态文件")
     @POST
-    @Path("/file/uploadToPath")
+    @Path("/file/upload")
     @Consumes(MediaType.MULTIPART_FORM_DATA)
-    fun uploadToPath(
+    fun uploadStaticFile(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam("项目代码", required = false)
-        @FormDataParam("projectId")
-        projectId: String,
-        @FormDataParam("path")
-        path: String,
         @ApiParam("文件", required = true)
         @FormDataParam("file")
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
     ): Result<String?>
-
-    @ApiOperation("下载文件到本地")
-    @GET
-    @Path("/file/download/local")
-    fun downloadFileToLocal(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String,
-        @Context
-        response: HttpServletResponse
-    )
-
-    @ApiOperation("下载文件")
-    @GET
-    @Path("/file/download")
-    fun downloadFile(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("文件路径", required = true)
-        @QueryParam("filePath")
-        filePath: String,
-        @ApiParam("是否为logo文件", required = false)
-        @QueryParam("logo")
-        logo: Boolean?,
-        @Context
-        response: HttpServletResponse
-    )
-
-    @ApiOperation("下载文件")
-    @GET
-    @Path("/file/download/{filePath}")
-    fun downloadFileExt(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("文件路径", required = true)
-        @PathParam("filePath")
-        filePath: String,
-        @ApiParam("是否为logo文件", required = false)
-        @QueryParam("logo")
-        logo: Boolean?,
-        @Context
-        response: HttpServletResponse
-    )
 }

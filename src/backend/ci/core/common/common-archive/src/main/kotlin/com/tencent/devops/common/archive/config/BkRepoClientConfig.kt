@@ -46,10 +46,6 @@ class BkRepoClientConfig {
     @Value("\${bkrepo.bkrepoApiUrl:}")
     val bkRepoApiUrl: String = ""
 
-    // 蓝盾新仓库静态资源仓库名称
-    @Value("\${bkrepo.staticRepoName:static}")
-    val bkRepoStaticRepoName: String = "static"
-
     // 蓝盾新仓库静态资源仓库前缀地址
     @Value("\${bkrepo.staticRepoPrefixUrl:}")
     val bkRepoStaticRepoPrefixUrl: String = ""

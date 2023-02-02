@@ -137,7 +137,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             )
             val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
             val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID, REPO_NAME_STATIC)
-            "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
+            val defaultUrl = "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
+            if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
+                "$defaultUrl&preview=true"
+            } else {
+                defaultUrl
+            }
         } else if (logo == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
