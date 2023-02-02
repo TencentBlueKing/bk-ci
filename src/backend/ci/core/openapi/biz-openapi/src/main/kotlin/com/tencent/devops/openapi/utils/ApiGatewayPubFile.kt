@@ -48,11 +48,7 @@ class ApiGatewayPubFile {
     @Value("\${api.gateway.pub.file.outer:#{null}}")
     private val pubFileOuter: String? = null
 
-    @Value("\${api.gateway.pub.file.inner:#{null}}")
-    private val pubFileInner: String? = null
-
     private var pubOuter: String? = null
-    private var pubInner: String? = null
 
     fun getPubOuter(): String {
         if (pubOuter == null) {
@@ -96,49 +92,5 @@ class ApiGatewayPubFile {
         }
 
         return pubOuter!!
-    }
-
-    fun getPubInner(): String {
-        if (pubInner == null) {
-            synchronized(this) {
-                if (pubInner != null) {
-                    return pubInner!!
-                }
-                if (pubFileInner == null) {
-                    throw InvalidConfigException(
-                        message = "Api gateway pub file is not settle",
-                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_SETTLE
-                    )
-                }
-
-                val file = File(pubFileInner)
-                if (!file.exists()) {
-                    throw InvalidConfigException(
-                        message = "The pub file (${file.absolutePath}) is not exist",
-                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_NOT_EXIST,
-                        params = arrayOf(file.absolutePath)
-                    )
-                }
-                pubInner = file.readText()
-                if (pubInner == null) {
-                    throw InvalidConfigException(
-                        message = "Can't read the pub content from ${file.absolutePath}",
-                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_READ_ERROR,
-                        params = arrayOf(file.absolutePath)
-                    )
-                }
-
-                if (pubInner!!.trim().isEmpty()) {
-                    throw InvalidConfigException(
-                        message = "The pub file is empty from ${file.absolutePath}",
-                        errorCode = ERROR_OPENAPI_APIGW_PUBFILE_CONTENT_EMPTY,
-                        params = arrayOf(file.absolutePath)
-                    )
-                }
-                logger.info("Get the pub($pubInner) from ${file.absolutePath}")
-            }
-        }
-
-        return pubInner!!
     }
 }

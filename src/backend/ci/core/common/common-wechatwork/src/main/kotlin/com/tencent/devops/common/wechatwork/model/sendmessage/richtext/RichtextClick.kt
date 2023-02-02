@@ -25,40 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.environment.service.thirdPartyAgent
+package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.scheduling.annotation.Scheduled
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.wechatwork.model.enums.RichtextContentType
 
-@Component
-@Suppress("ALL", "UNUSED")
-class AgentUpgrdeJob @Autowired constructor(
-    private val redisOperation: RedisOperation,
-    private val updateService: AgentUpgradeService
-) {
-    companion object {
-        private val logger = LoggerFactory.getLogger(AgentUpgrdeJob::class.java)
-        private const val LOCK_KEY = "env_cron_updateCanUpgradeAgentList"
-    }
-
-    @Scheduled(initialDelay = 10000, fixedDelay = 15000)
-    fun updateCanUpgradeAgentList() {
-        logger.info("updateCanUpgradeAgentList")
-        val lock = RedisLock(redisOperation = redisOperation, lockKey = LOCK_KEY, expiredTimeInSeconds = 600)
-        try {
-            if (!lock.tryLock()) {
-                logger.info("get lock failed, skip")
-                return
-            }
-            updateService.updateCanUpgradeAgentList()
-        } catch (ignore: Throwable) {
-            logger.warn("update can upgrade agent list failed", ignore)
-        } finally {
-            lock.unlock()
-        }
-    }
-}
+data class RichtextClick(
+    val link: RichtextClickLink = RichtextClickLink()
+) : RichtextContent(RichtextContentType.link)

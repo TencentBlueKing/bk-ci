@@ -113,6 +113,11 @@ spec:
           - mountPath: /data/workspace/openapi/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          {{ if .Values.openapi.secret.enabled }}
+          - mountPath: {{ .Values.config.bkCiOpenapiApiPubOuter | splitList "/" | initial | join "/" }}
+            name: bk-key-volume
+            readOnly: true
+          {{ end }}
           lifecycle:
               preStop:
                 exec:
@@ -124,4 +129,9 @@ spec:
       - hostPath:
           path: /data
         name: log-volume
+      {{ if .Values.openapi.secret.enabled }}
+      - name: bk-key-volume
+        secret:
+          secretName: openapi-bk-key
+      {{ end }}
 {{- end -}}
