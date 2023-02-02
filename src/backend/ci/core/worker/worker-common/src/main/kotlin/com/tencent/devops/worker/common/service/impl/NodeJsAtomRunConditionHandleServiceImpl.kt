@@ -158,7 +158,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         try {
             if (osType == OSType.WINDOWS) {
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
-                CommandLineUtils.execute("node -v", pkgFileDir.absoluteFile ,true)
+                CommandLineUtils.execute("node -v", pkgFileDir.absoluteFile, true)
             } else {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile, true)
