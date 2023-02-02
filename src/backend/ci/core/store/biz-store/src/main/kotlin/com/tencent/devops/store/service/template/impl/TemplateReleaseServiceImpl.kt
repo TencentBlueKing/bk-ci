@@ -188,7 +188,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         if (flag != true) {
             throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                defaultMessage = "模板镜像校验未通过，请检查后再试"
+                defaultMessage = "The template image fail to release"
             )
         }
         if (templateCount > 0) {
