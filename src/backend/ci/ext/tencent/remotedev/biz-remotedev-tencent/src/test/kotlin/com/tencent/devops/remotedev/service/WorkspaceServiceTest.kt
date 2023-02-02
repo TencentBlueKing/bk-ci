@@ -8,6 +8,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.test.BkCiAbstractTest
+import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -40,6 +41,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private var formatter: DateTimeFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")
     private val remoteDevSettingDao: RemoteDevSettingDao = mockk()
     private val redisHeartBeat: RedisHeartBeat = mockk()
+    private val webSocketDispatcher: WebSocketDispatcher = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -54,6 +56,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             client = client,
             dispatcher = dispatcher,
             remoteDevSettingDao = remoteDevSettingDao,
+            webSocketDispatcher = webSocketDispatcher,
             redisHeartBeat = redisHeartBeat
         ),
         recordPrivateCalls = true

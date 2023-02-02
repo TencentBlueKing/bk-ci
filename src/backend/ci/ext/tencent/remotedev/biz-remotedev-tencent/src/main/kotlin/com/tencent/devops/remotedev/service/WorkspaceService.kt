@@ -457,6 +457,8 @@ class WorkspaceService @Autowired constructor(
             val history = workspaceHistoryDao.fetchHistory(dslContext, event.workspaceName).firstOrNull()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
+                val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
+                    ?: throw CustomException(Response.Status.NOT_FOUND, "workspace ${event.workspaceName} not find")
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
                     status = WorkspaceStatus.RUNNING,
@@ -482,8 +484,6 @@ class WorkspaceService @Autowired constructor(
                         Duration.between(history.endTime, LocalDateTime.now()).seconds.toInt()
                     } else 0
                 )
-                val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
-                    ?: throw CustomException(Response.Status.NOT_FOUND, "workspace ${event.workspaceName} not find")
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
