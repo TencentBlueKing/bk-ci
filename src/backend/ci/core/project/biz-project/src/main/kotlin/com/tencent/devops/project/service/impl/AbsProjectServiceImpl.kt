@@ -75,6 +75,7 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
@@ -103,7 +104,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val authPermissionApi: AuthPermissionApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
-    private val objectMapper: ObjectMapper
+    private val objectMapper: ObjectMapper,
+    private val projectExtService: ProjectExtService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -230,11 +232,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     authSecrecy = projectCreateInfo.authSecrecy
                 )
                 if (!needApproval) {
-                    createExtProjectInfo(
+                    projectExtService.createExtProjectInfo(
                         userId = userId,
                         projectId = projectId,
                         accessToken = accessToken,
-                        projectInfo = projectInfo,
+                        projectCreateInfo = projectInfo,
                         createExtInfo = createExtInfo,
                         logoAddress = logoAddress
                     )
@@ -267,39 +269,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             throw ignored
         }
         return projectId
-    }
-
-    private fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo,
-        logoAddress: String?
-    ) {
-        try {
-            createExtProjectInfo(
-                userId = userId,
-                projectId = projectId,
-                accessToken = accessToken,
-                projectCreateInfo = projectInfo,
-                createExtInfo = createExtInfo
-            )
-            // 修改bcs的logo
-            if (logoAddress != null) {
-                projectDispatcher.dispatch(
-                    ProjectUpdateLogoBroadCastEvent(
-                        userId = userId,
-                        projectId = projectId,
-                        logoAddr = logoAddress
-                    )
-                )
-            }
-        } catch (e: Exception) {
-            logger.warn("fail to create the project[$projectId] ext info $projectInfo", e)
-            projectDao.delete(dslContext, projectId)
-            throw e
-        }
     }
 
     override fun createExtProject(
@@ -957,14 +926,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     abstract fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean
 
     abstract fun getDeptInfo(userId: String): UserDeptDetail
-
-    abstract fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    )
 
     abstract fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String
 

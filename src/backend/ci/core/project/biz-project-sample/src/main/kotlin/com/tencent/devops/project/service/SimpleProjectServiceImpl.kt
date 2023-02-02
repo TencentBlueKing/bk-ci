@@ -72,7 +72,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     authPermissionApi: AuthPermissionApi,
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
-    objectMapper: ObjectMapper
+    objectMapper: ObjectMapper,
+    projectExtService: ProjectExtService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -84,7 +85,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     authPermissionApi = authPermissionApi,
     projectAuthServiceCode = projectAuthServiceCode,
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
-    objectMapper = objectMapper
+    objectMapper = objectMapper,
+    projectExtService = projectExtService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -98,16 +100,6 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
             groupId = "0",
             groupName = ""
         )
-    }
-
-    override fun createExtProjectInfo(
-        userId: String,
-        projectId: String,
-        accessToken: String?,
-        projectCreateInfo: ProjectCreateInfo,
-        createExtInfo: ProjectCreateExtInfo
-    ) {
-        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 
     override fun saveLogoAddress(userId: String, projectCode: String, logoFile: File): String {

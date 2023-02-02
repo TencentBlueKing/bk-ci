@@ -94,16 +94,16 @@ class RbacPermissionItsmCallbackService constructor(
                 callBackId = callBackId,
                 currentStatus = currentStatus
             )
-            client.get(ServiceProjectApprovalResource::class).updateApprovalStatus(
+            client.get(ServiceProjectApprovalResource::class).createApproved(
                 projectId = englishName,
-                approver = itsmCallBackInfo.lastApprover,
-                approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
+                applicant = callBackInfo.applicant,
+                approver = itsmCallBackInfo.lastApprover
             )
         } else {
-            client.get(ServiceProjectApprovalResource::class).updateApprovalStatus(
+            client.get(ServiceProjectApprovalResource::class).createReject(
                 projectId = englishName,
-                approver = itsmCallBackInfo.lastApprover,
-                approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
+                applicant = callBackInfo.applicant,
+                approver = itsmCallBackInfo.lastApprover
             )
         }
     }

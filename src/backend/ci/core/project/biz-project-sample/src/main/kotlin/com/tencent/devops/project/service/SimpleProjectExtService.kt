@@ -26,39 +26,27 @@
  *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.project.service
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
-import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectApprovalService
+import com.tencent.devops.artifactory.api.service.ServiceBkRepoResource
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.pojo.ProjectCreateExtInfo
+import com.tencent.devops.project.pojo.ProjectCreateInfo
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceProjectApprovalResourceImpl @Autowired constructor(
-    private val projectApprovalService: ProjectApprovalService
-) : ServiceProjectApprovalResource {
-
-    override fun get(projectId: String): Result<ProjectApprovalInfo?> {
-        return Result(projectApprovalService.get(projectId = projectId))
-    }
-
-    override fun createApproved(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createApproved(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
-    }
-
-    override fun createReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createReject(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
+@Service
+class SimpleProjectExtService @Autowired constructor(
+    private val client: Client,
+) : ProjectExtService {
+    override fun createExtProjectInfo(
+        userId: String,
+        projectId: String,
+        accessToken: String?,
+        projectCreateInfo: ProjectCreateInfo,
+        createExtInfo: ProjectCreateExtInfo,
+        logoAddress: String?
+    ) {
+        client.get(ServiceBkRepoResource::class).createProjectResource(userId, projectCreateInfo.englishName)
     }
 }
