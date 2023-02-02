@@ -24,7 +24,7 @@ if bk_token == nil then
   bk_token = ngx.var.http_x_devops_bk_ticket
 end
 if bk_token == nil then
-  bk_token = ngx.var["arg_x-devops-bk-ticket"]
+  bk_token = urlUtil:parseUrl(ngx.var.request_uri)["x-devops-bk-ticket"]
 end
 local devops_access_token =  ngx.var.http_x_devops_access_token
 if bk_token == nil and devops_access_token == nil then
