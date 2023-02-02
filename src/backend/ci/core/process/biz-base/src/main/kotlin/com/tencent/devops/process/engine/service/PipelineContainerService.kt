@@ -362,8 +362,8 @@ class PipelineContainerService @Autowired constructor(
             container = container,
             containerSeq = context.containerSeq,
             startVMTaskSeq = startVMTaskSeq,
-            lastTimeBuildTaskRecords = listOf(),
-            updateExistsRecord = mutableListOf(),
+            lastTimeBuildTasks = listOf(),
+            updateExistsTask = mutableListOf(),
             buildTaskList = buildTaskList,
             executeCount = context.executeCount
         )
@@ -402,8 +402,8 @@ class PipelineContainerService @Autowired constructor(
         buildContainers: MutableList<PipelineBuildContainer>,
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<PipelineBuildContainer>,
-        lastTimeBuildContainerRecords: Collection<PipelineBuildContainer>,
-        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>
+        lastTimeBuildContainers: Collection<PipelineBuildContainer>,
+        lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
         var startVMTaskSeq = -1 // 启动构建机位置，解决如果在执行人工审核插件时，无编译环境不需要提前无意义的启动
         var needStartVM = false // 是否需要启动构建
@@ -434,7 +434,7 @@ class PipelineContainerService @Autowired constructor(
             }
 
             // 全新构建，其中构建矩阵不需要添加待执行插件
-            if (lastTimeBuildTaskRecords.isEmpty()) {
+            if (lastTimeBuildTasks.isEmpty()) {
                 if (container.matrixGroupFlag != true) {
                     context.taskCount++
                     addBuildTaskToList(
@@ -456,8 +456,8 @@ class PipelineContainerService @Autowired constructor(
             } else {
                 // 如果是失败的插件重试，并且当前插件不是要重试或跳过的插件，则检查其之前的状态，如果已经执行过，则跳过
                 if (context.needSkipTaskWhenRetry(stage, container, atomElement.id)) {
-                    val target = findTaskRecord(
-                        lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    val target = findLastTimeBuildTask(
+                        lastTimeBuildTasks = lastTimeBuildTasks,
                         container = container,
                         retryStartTaskId = atomElement.id!!
                     )
@@ -475,7 +475,7 @@ class PipelineContainerService @Autowired constructor(
 
                 // Rebuild/Stage-Retry/Fail-Task-Retry  重跑/Stage重试/失败的插件重试
                 val taskRecord = retryDetailModelStatus(
-                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
                     retryStartTaskId = atomElement.id!!,
                     executeCount = context.executeCount,
@@ -487,7 +487,7 @@ class PipelineContainerService @Autowired constructor(
                     updateExistsTask.add(taskRecord)
                     // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
                     if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
-                        val pair = findPostTask(lastTimeBuildTaskRecords, atomElement, containerElements)
+                        val pair = findPostTask(lastTimeBuildTasks, atomElement, containerElements)
                         if (pair != null) {
                             setRetryBuildTask(
                                 target = pair.first,
@@ -520,17 +520,17 @@ class PipelineContainerService @Autowired constructor(
                 container = container,
                 containerSeq = context.containerSeq,
                 startVMTaskSeq = startVMTaskSeq,
-                lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                updateExistsRecord = updateExistsTask,
+                lastTimeBuildTasks = lastTimeBuildTasks,
+                updateExistsTask = updateExistsTask,
                 buildTaskList = buildTaskList,
                 executeCount = context.executeCount
             )
         }
         if (needUpdateContainer) {
             container.resetBuildOption(context.executeCount)
-            if (lastTimeBuildContainerRecords.isNotEmpty()) {
+            if (lastTimeBuildContainers.isNotEmpty()) {
                 run findHistoryContainer@{
-                    lastTimeBuildContainerRecords.forEach { dbRecord ->
+                    lastTimeBuildContainers.forEach { dbRecord ->
                         if (dbRecord.containerId == container.id) { // #958 在Element.initStatus 位置确认重试插件
                             dbRecord.run {
                                 status = BuildStatus.QUEUE
@@ -587,14 +587,14 @@ class PipelineContainerService @Autowired constructor(
         }
     }
 
-    fun findTaskRecord(
-        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
+    fun findLastTimeBuildTask(
+        lastTimeBuildTasks: Collection<PipelineBuildTask>,
         container: Container,
         retryStartTaskId: String?
     ): PipelineBuildTask? {
         var target: PipelineBuildTask? = null
         run findOutRetryTask@{
-            lastTimeBuildTaskRecords.forEach {
+            lastTimeBuildTasks.forEach {
                 if (it.containerId == container.id && retryStartTaskId == it.taskId) {
                     target = it
                     logger.info("[${it.buildId}|found|j(${container.id})|${container.name}|retryId=$retryStartTaskId")
@@ -614,8 +614,8 @@ class PipelineContainerService @Autowired constructor(
         container: Container,
         containerSeq: Int,
         startVMTaskSeq: Int,
-        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
-        updateExistsRecord: MutableList<PipelineBuildTask>,
+        lastTimeBuildTasks: Collection<PipelineBuildTask>,
+        updateExistsTask: MutableList<PipelineBuildTask>,
         buildTaskList: MutableList<PipelineBuildTask>,
         executeCount: Int
     ) {
@@ -623,7 +623,7 @@ class PipelineContainerService @Autowired constructor(
             return
         }
 
-        if (lastTimeBuildTaskRecords.isEmpty()) {
+        if (lastTimeBuildTasks.isEmpty()) {
             buildTaskList.add(
                 vmOperatorTaskGenerator.makeStartVMContainerTask(
                     projectId = projectId,
@@ -652,13 +652,13 @@ class PipelineContainerService @Autowired constructor(
         } else {
             val startTaskVMId = VMUtils.genStartVMTaskId(container.id!!)
             var taskRecord = retryDetailModelStatus(
-                lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                lastTimeBuildTasks = lastTimeBuildTasks,
                 container = container,
                 executeCount = executeCount,
                 retryStartTaskId = startTaskVMId
             )
             if (taskRecord != null) {
-                updateExistsRecord.add(taskRecord)
+                updateExistsTask.add(taskRecord)
             } else {
                 logger.info("[$buildId]|RETRY| not found $startTaskVMId(${container.name})")
             }
@@ -667,22 +667,22 @@ class PipelineContainerService @Autowired constructor(
                 VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq - 1)
             )
             taskRecord = retryDetailModelStatus(
-                lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                lastTimeBuildTasks = lastTimeBuildTasks,
                 container = container,
                 executeCount = executeCount,
                 retryStartTaskId = endPointTaskId
             )
             if (taskRecord != null) {
-                updateExistsRecord.add(taskRecord)
+                updateExistsTask.add(taskRecord)
                 val stopVmTaskId = VMUtils.genStopVMTaskId(VMUtils.genVMTaskSeq(containerSeq, taskSeq = startVMTaskSeq))
                 taskRecord = retryDetailModelStatus(
-                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    lastTimeBuildTasks = lastTimeBuildTasks,
                     container = container,
                     executeCount = executeCount,
                     retryStartTaskId = stopVmTaskId
                 )
                 if (taskRecord != null) {
-                    updateExistsRecord.add(taskRecord)
+                    updateExistsTask.add(taskRecord)
                 } else {
                     logger.warn("[$buildId]|RETRY| not found $stopVmTaskId(${container.name})")
                 }
@@ -694,22 +694,22 @@ class PipelineContainerService @Autowired constructor(
 
     /**
      * 刷新要重试的任务，如果任务是在当前容器，需要将当前容器的状态一并刷新
-     * @param lastTimeBuildTaskRecords 之前重试任务记录列表
+     * @param lastTimeBuildTasks 之前重试任务记录列表
      * @param container 当前任务所在构建容器
      * @param retryStartTaskId 要重试的任务i
      * @param atomElement 需要重置状态的任务原子Element，可以为空。
      * @param initialStatus 插件在重试时的初始状态，默认是QUEUE，也可以指定
      */
     private fun retryDetailModelStatus(
-        lastTimeBuildTaskRecords: Collection<PipelineBuildTask>,
+        lastTimeBuildTasks: Collection<PipelineBuildTask>,
         container: Container,
         retryStartTaskId: String,
         executeCount: Int,
         atomElement: Element? = null,
         initialStatus: BuildStatus? = null
     ): PipelineBuildTask? {
-        val target: PipelineBuildTask? = findTaskRecord(
-            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+        val target: PipelineBuildTask? = findLastTimeBuildTask(
+            lastTimeBuildTasks = lastTimeBuildTasks,
             container = container,
             retryStartTaskId = retryStartTaskId
         )

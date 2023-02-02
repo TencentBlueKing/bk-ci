@@ -759,8 +759,8 @@ class PipelineRuntimeService @Autowired constructor(
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
 
-        val lastTimeBuildTaskRecords = pipelineTaskService.listByBuildId(projectId, buildId)
-        val lastTimeBuildContainerRecords = pipelineContainerService.listByBuildId(projectId, buildId)
+        val lastTimeBuildTasks = pipelineTaskService.listByBuildId(projectId, buildId)
+        val lastTimeBuildContainers = pipelineContainerService.listByBuildId(projectId, buildId)
         val lastTimeBuildStages = pipelineStageService.listStages(projectId, buildId)
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
@@ -826,10 +826,10 @@ class PipelineRuntimeService @Autowired constructor(
                     如果不属于，则表示该Job在本次重试不会被执行到，则不做处理，保持原状态, 跳过
                  */
                 if (context.needSkipContainerWhenFailRetry(stage, container) &&
-                    lastTimeBuildContainerRecords.isNotEmpty()
+                    lastTimeBuildContainers.isNotEmpty()
                 ) {
-                    if (null == pipelineContainerService.findTaskRecord(
-                            lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
+                    if (null == pipelineContainerService.findLastTimeBuildTask(
+                            lastTimeBuildTasks = lastTimeBuildTasks,
                             container = container,
                             retryStartTaskId = context.retryStartTaskId
                         )
@@ -878,8 +878,8 @@ class PipelineRuntimeService @Autowired constructor(
                     buildTaskList = buildTaskList,
                     updateExistsContainer = updateExistsContainer,
                     updateExistsTask = updateExistsTask,
-                    lastTimeBuildTaskRecords = lastTimeBuildTaskRecords,
-                    lastTimeBuildContainerRecords = lastTimeBuildContainerRecords
+                    lastTimeBuildTasks = lastTimeBuildTasks,
+                    lastTimeBuildContainers = lastTimeBuildContainers
                 )
                 context.containerSeq++
             }
