@@ -42,7 +42,6 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.config.ItsmConfig
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -64,6 +63,7 @@ import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 
 @Service
@@ -74,7 +74,6 @@ class PermissionGradeManagerService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
     private val permissionResourceGroupService: PermissionResourceGroupService,
-    private val itsmConfig: ItsmConfig,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService
@@ -85,6 +84,12 @@ class PermissionGradeManagerService @Autowired constructor(
         private const val DEPARTMENT = "department"
         private const val DEPARTMENT_TYPE = "depart"
     }
+
+    @Value("\${itsm.callback.update.url:#{null}}")
+    private val itsmUpdateCallBackUrl: String = ""
+
+    @Value("\${itsm.callback.create.url:#{null}}")
+    private val itsmCreateCallBackUrl: String = ""
 
     /**
      * 创建分级管理员
@@ -172,11 +177,11 @@ class PermissionGradeManagerService @Autowired constructor(
                 .applicant(userId)
                 .reason(IamGroupUtils.buildItsmDefaultReason(projectName, projectCode, true))
                 .callbackId(callbackId)
-                .callbackUrl(String.format(itsmConfig.itsmCreateCallBackUrl, projectCode))
+                .callbackUrl(itsmCreateCallBackUrl)
                 .content(itsmContentDTO)
                 .title("创建蓝盾项目申请")
                 .build()
-            logger.info("gradeManagerApplicationCreateDTO : $gradeManagerApplicationCreateDTO")
+            logger.info("create grade manager application|$projectCode|$name|$callbackId|$itsmCreateCallBackUrl")
             val createGradeManagerApplication =
                 iamV2ManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
             authItsmCallbackDao.create(
@@ -357,11 +362,11 @@ class PermissionGradeManagerService @Autowired constructor(
                     IamGroupUtils.buildItsmDefaultReason(projectCode, projectApprovalInfo.updator!!, false)
                 )
                 .callbackId(callbackId)
-                .callbackUrl(String.format(itsmConfig.itsmUpdateCallBackUrl, projectCode))
+                .callbackUrl(itsmUpdateCallBackUrl)
                 .content(itsmContentDTO)
                 .title("修改蓝盾项目申请")
                 .build()
-            logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
+            logger.info("update grade manager application|$projectCode|$name|$callbackId|$itsmUpdateCallBackUrl")
             val updateGradeManagerApplication =
                 iamV2ManagerService.updateGradeManagerApplication(gradeManagerId, gradeManagerApplicationUpdateDTO)
             authItsmCallbackDao.create(
