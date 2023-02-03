@@ -6,11 +6,6 @@ import com.tencent.devops.openapi.pojo.SwaggerDocParameterInfo
 import io.swagger.annotations.ApiModel
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
-import org.mockito.Mockito
-import org.mockito.creation.instance.InstantiationException
-import org.mockito.internal.configuration.plugins.Plugins
-import org.mockito.plugins.MemberAccessor
-import org.mockito.plugins.MemberAccessor.ConstructionDispatcher
 import org.reflections.Reflections
 import org.reflections.scanners.Scanners
 import org.reflections.util.ClasspathHelper
@@ -31,8 +26,6 @@ import kotlin.reflect.jvm.javaType
 class DocumentServiceTest @Autowired constructor(
     private val document: DocumentService
 ) {
-    private val mockitoConstruction = ThreadLocal.withInitial { false }
-
     @Test
     fun docInit() {
         try {
@@ -127,26 +120,11 @@ class DocumentServiceTest @Autowired constructor(
             arguments[i] = 0
         }
         if (syntheticInit != null) {
-            arguments[argumentsSize - 2] = offset.toInt()
+            arguments[argumentsSize - 2] = offset
             arguments[argumentsSize - 1] = null as DefaultConstructorMarker?
         }
-        val accessor: MemberAccessor = Plugins.getMemberAccessor()
-        val mock = try {
-            accessor.newInstance(
-                syntheticInit ?: constructor.javaConstructor,
-                { callback: ConstructionDispatcher ->
-                    mockitoConstruction.set(true)
-                    try {
-                        return@newInstance callback.newInstance()
-                    } finally {
-                        mockitoConstruction.set(false)
-                    }
-                },
-                *arguments
-            )
-        } catch (e: Exception) {
-            throw InstantiationException("Could not instantiate ", e)
-        }
+        val mock = (syntheticInit ?: constructor.javaConstructor)!!.newInstance()
+//        val mock = try {
         val res = mutableMapOf<String, SwaggerDocParameterInfo>()
         kClazz.memberProperties.forEach {
             // 编译后，属性默认是private,需要设置isAccessible  才可以读取到值
@@ -181,18 +159,23 @@ class DocumentServiceTest @Autowired constructor(
             Enum::class -> {
                 null
             }
+
             Set::class -> {
                 type.arguments.firstOrNull()?.let { setOf(makeStandardArgument(it.type!!, debug)) } ?: ""
             }
+
             List::class -> {
                 type.arguments.firstOrNull()?.let { listOf(makeStandardArgument(it.type!!, debug)) } ?: ""
             }
+
             ArrayList::class -> {
                 type.arguments.firstOrNull()?.let { arrayListOf(makeStandardArgument(it.type!!, debug)) } ?: ""
             }
+
             Array::class -> {
                 type.arguments.firstOrNull()?.let { arrayOf(makeStandardArgument(it.type!!, debug)) } ?: ""
             }
+
             Map::class -> {
                 mapOf(
                     makeStandardArgument(
@@ -201,9 +184,10 @@ class DocumentServiceTest @Autowired constructor(
                     ) to makeStandardArgument(type.arguments[1].type!!, debug)
                 )
             }
+
             else -> {
                 if (type.javaType is Class<*>) {
-                    Mockito.mock(type.javaType as Class<*>?)
+                    (type.javaType as Class<*>).newInstance()
                 } else {
                     null
                 }

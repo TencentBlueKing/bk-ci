@@ -1,7 +1,6 @@
 package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
@@ -28,6 +27,7 @@ import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.store.pojo.atom.GetRelyAtom
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 import org.springframework.core.io.ClassPathResource
@@ -36,13 +36,13 @@ import java.io.InputStream
 import java.io.InputStreamReader
 
 class TXPipelineExportServiceTest {
-    private val stageTagService: StageTagService = mock()
-    private val pipelineGroupService: PipelineGroupService = mock()
-    private val pipelinePermissionService: PipelinePermissionService = mock()
-    private val pipelineRepositoryService: PipelineRepositoryService = mock()
-    private val storeImageHelper: StoreImageHelper = mock()
-    private val scmProxyService: ScmProxyService = mock()
-    private val client: Client = mock()
+    private val stageTagService: StageTagService = mockk()
+    private val pipelineGroupService: PipelineGroupService = mockk()
+    private val pipelinePermissionService: PipelinePermissionService = mockk()
+    private val pipelineRepositoryService: PipelineRepositoryService = mockk()
+    private val storeImageHelper: StoreImageHelper = mockk()
+    private val scmProxyService: ScmProxyService = mockk()
+    private val client: Client = mockk()
 
     private val txPipelineExportService = TXPipelineExportService(
         stageTagService = stageTagService,
