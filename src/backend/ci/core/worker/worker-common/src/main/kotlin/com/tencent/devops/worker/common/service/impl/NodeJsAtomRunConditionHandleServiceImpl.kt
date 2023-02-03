@@ -163,7 +163,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile, true)
             }
-        }catch (e: Exception) {
+        } catch (e: Exception) {
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
@@ -172,7 +172,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 )
             }
             isUnzipSuccess(
-                retryNum = retryNum-1,
+                retryNum = retryNum - 1,
                 pkgFile = pkgFile,
                 pkgFileDir = pkgFileDir,
                 envDir = envDir,
