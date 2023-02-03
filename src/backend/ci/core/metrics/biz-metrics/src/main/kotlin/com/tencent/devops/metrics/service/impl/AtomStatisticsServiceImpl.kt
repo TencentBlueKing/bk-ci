@@ -184,8 +184,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)
         if (queryAtomComplianceInfo.isNotEmpty) {
             return ComplianceInfoDO(
-                (queryAtomComplianceInfo[0].get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal)?.toInt() ?: 0,
-                (queryAtomComplianceInfo[0].get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal)?.toInt() ?: 0
+                (queryAtomComplianceInfo[0].get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?)?.toInt() ?: 0,
+                (queryAtomComplianceInfo[0].get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?)?.toInt() ?: 0
             )
         }
         return null
