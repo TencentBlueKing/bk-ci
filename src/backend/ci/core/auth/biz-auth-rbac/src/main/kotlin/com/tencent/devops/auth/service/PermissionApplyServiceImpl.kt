@@ -9,14 +9,18 @@ import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthDefaultGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthJumpGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -34,7 +38,10 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
     val v2ManagerService: V2ManagerService,
-    val client: Client
+    val client: Client,
+    val permissionResourceService: PermissionResourceService,
+    val authDefaultGroupDao: AuthDefaultGroupDao,
+    val strategyService: StrategyService
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     val systemId = ""
@@ -98,6 +105,7 @@ class PermissionApplyServiceImpl @Autowired constructor(
         val searchGroupDTO = SearchGroupDTO
             .builder()
             .inherit(searchGroupInfo.inherit)
+            .id(searchGroupInfo.groupId)
             .actionId(searchGroupInfo.actionId)
             .resourceTypeSystemId(systemId)
             .resourceTypeId(searchGroupInfo.resourceType)
@@ -166,6 +174,53 @@ class PermissionApplyServiceImpl @Autowired constructor(
             )
         }
         return groupPermissionDetailVoList
+    }
+
+    override fun getJumpInformation(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String
+    ): AuthApplyJumpInfoVo {
+        val groupInfoList: ArrayList<AuthJumpGroupInfoVo> = ArrayList()
+        // 查询是否开启权限
+        val isEnablePermission = permissionResourceService.isEnablePermission(
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        if (isEnablePermission) {
+            // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
+            authDefaultGroupDao.get(dslContext, resourceType).forEach {
+                strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
+                    ?.get(resourceType)?.forEach { actionList ->
+                        if (actionList.contains(action)) {
+                            // 根据resourceType + resourceCode + it.group_Code ----> groupId+groupName
+                            // 加入到groupInfoList
+                            groupInfoList.add(
+                                AuthJumpGroupInfoVo(
+                                    url = "xxx",
+                                    groupName = "xxx"
+                                )
+                            )
+                        }
+                    }
+            }
+        } else {
+            // 根据resourceType + resourceCode + manager ----> groupId+groupName
+            // 加入到groupInfoList
+            groupInfoList.add(
+                AuthJumpGroupInfoVo(
+                    url = "xxx",
+                    groupName = "xxx"
+                )
+            )
+        }
+        return AuthApplyJumpInfoVo(
+            auth = isEnablePermission,
+            groupInfoList = groupInfoList
+        )
     }
 
     companion object {

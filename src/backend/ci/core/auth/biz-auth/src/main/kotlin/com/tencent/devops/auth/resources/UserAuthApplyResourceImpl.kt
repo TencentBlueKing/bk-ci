@@ -5,6 +5,7 @@ import com.tencent.devops.auth.api.user.UserAuthApplyResource
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
@@ -44,5 +45,23 @@ class UserAuthApplyResourceImpl @Autowired constructor(
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
         return Result(permissionApplyService.getGroupPermissionDetail(userId, groupId))
+    }
+
+    override fun getJumpInformation(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String
+    ): Result<AuthApplyJumpInfoVo> {
+        return Result(
+            permissionApplyService.getJumpInformation(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                action = action
+            )
+        )
     }
 }
