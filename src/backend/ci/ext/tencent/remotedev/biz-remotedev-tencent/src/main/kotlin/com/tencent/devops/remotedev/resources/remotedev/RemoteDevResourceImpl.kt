@@ -48,13 +48,13 @@ class RemoteDevResourceImpl @Autowired constructor(
     private val signSecret: String = ""
 
     override fun oauth(signature: String, key: String, userId: String, timestamp: String): Result<String> {
-//        if (!checkSignature(signature, key, timestamp)) {
-//            return Result(403, "Forbidden request", "")
-//        }
+        if (!checkSignature(signature, key, timestamp)) {
+            return Result(403, "Forbidden request", "")
+        }
         val rsaPublicKey = RsaUtil.generatePublicKey(Base64.getDecoder().decode(key))
 
         val oauth = gitTransferService.getAndCheckOauthToken(userId)
-        return Result(RsaUtil.rsaEncrypt(JsonUtil.toJson(oauth, false), rsaPublicKey))
+        return Result(RsaUtil.rsaEncrypt(oauth.accessToken, rsaPublicKey))
     }
 
     private fun checkSignature(signature: String, key: String, timestamp: String): Boolean {
