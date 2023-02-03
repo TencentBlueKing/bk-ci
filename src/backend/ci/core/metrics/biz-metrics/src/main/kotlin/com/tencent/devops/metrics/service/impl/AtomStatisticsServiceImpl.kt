@@ -180,7 +180,7 @@ class AtomStatisticsServiceImpl @Autowired constructor(
     ): ComplianceInfoDO? {
         val queryAtomComplianceInfo =
             atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)
-        if(queryAtomComplianceInfo != null) {
+        if (queryAtomComplianceInfo != null) {
             return ComplianceInfoDO(
                 queryAtomComplianceInfo.value1().toInt(),
                 queryAtomComplianceInfo.value2().toInt()
