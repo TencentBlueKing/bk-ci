@@ -40,7 +40,6 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.ApplicationInfo
@@ -109,7 +108,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         // 资源都在接入方本地，无需修改iam侧数据

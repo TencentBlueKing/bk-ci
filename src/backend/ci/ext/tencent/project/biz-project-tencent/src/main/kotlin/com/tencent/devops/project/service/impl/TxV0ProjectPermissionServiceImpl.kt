@@ -41,7 +41,6 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
@@ -116,7 +115,6 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         authResourceApi.modifyResource(

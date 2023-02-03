@@ -132,8 +132,8 @@ class ProjectCallBackSevice @Autowired constructor(
                     // 修改状态
                     projectDao.updateProjectStatusByEnglishName(
                         dslContext = context,
-                        projectCode = englishName,
-                        statusEnum = ProjectApproveStatus.CREATE_APPROVED
+                        englishName = englishName,
+                        approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
                     )
                     projectApprovalCallbackDao.updateCallbackBySn(
                         dslContext = context,
@@ -152,8 +152,8 @@ class ProjectCallBackSevice @Autowired constructor(
                 // 修改状态
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
-                    projectCode = englishName,
-                    statusEnum = ProjectApproveStatus.CREATE_REJECT
+                    englishName = englishName,
+                    approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
                 )
                 projectApprovalCallbackDao.updateCallbackBySn(
                     dslContext = context,
@@ -221,8 +221,8 @@ class ProjectCallBackSevice @Autowired constructor(
                 // 修改状态
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
-                    projectCode = englishName,
-                    statusEnum = ProjectApproveStatus.UPDATE_REJECT
+                    englishName = englishName,
+                    approvalStatus = ProjectApproveStatus.UPDATE_REJECT.status
                 )
             }
             projectApprovalCallbackDao.updateCallbackBySn(
