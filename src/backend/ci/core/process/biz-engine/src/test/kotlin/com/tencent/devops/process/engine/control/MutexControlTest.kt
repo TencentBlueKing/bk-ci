@@ -34,6 +34,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
@@ -41,8 +42,8 @@ import org.junit.jupiter.api.Test
 @Suppress("ALL", "UNUSED")
 class MutexControlTest {
 
-    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mock())
-    private val redisOperation: RedisOperation = RedisOperation(mock())
+    private val buildLogPrinter: BuildLogPrinter = BuildLogPrinter(mockk())
+    private val redisOperation: RedisOperation = RedisOperation(mockk())
     private val variables: Map<String, String> = mapOf(Pair("var1", "Test"))
     private val buildId: String = "b-12345678901234567890123456789012"
     private val containerId: String = "1"
@@ -74,9 +75,9 @@ class MutexControlTest {
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
-        containerBuildRecordService = mock(),
-        pipelineUrlBean = mock(),
-        pipelineContainerService = mock()
+        containerBuildRecordService = mockk(),
+        pipelineUrlBean = mockk(),
+        pipelineContainerService = mockk()
     )
 
     @Test

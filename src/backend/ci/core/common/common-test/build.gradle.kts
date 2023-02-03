@@ -26,8 +26,6 @@
  */
 
 dependencies {
-    api("org.mockito:mockito-all")
-    api("com.nhaarman:mockito-kotlin-kt1.1")
     api("io.mockk:mockk")
     api(project(":core:common:common-service"))
     api(project(":core:common:common-client"))

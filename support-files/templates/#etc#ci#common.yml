@@ -259,6 +259,8 @@ auth:
     enabled: __BK_CI_API_TOKEN_ENABLED__
     secret: __BK_CI_API_TOKEN_SECRET__
     expirationTime: __BK_CI_API_TOKEN_EXPIRED_MILLISECOND__
+  gateway:
+    devopsToken: __BK_CI_DEVOPS_TOKEN__
 
 #bk esb config for cd plugin in pipeline
 esb:
@@ -314,6 +316,13 @@ sharding:
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__
+
+# bkrepo仓库配置  
+bkrepo:
+  bkrepoApiUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/api/generic
+  staticRepoPrefixUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/generic/{0}/{1}
+  staticUserName: __BK_REPO_USERNAME__
+  staticPassword: __BK_REPO_PASSWORD__  
   
 # 企业微信api配置
 wechatWork:
