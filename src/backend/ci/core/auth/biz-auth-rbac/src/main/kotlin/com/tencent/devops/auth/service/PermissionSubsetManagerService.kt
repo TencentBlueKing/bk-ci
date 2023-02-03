@@ -126,7 +126,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ) {
+    ): Boolean {
         val managerDefaultGroup = authDefaultGroupDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
@@ -165,6 +165,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             subsetManagerId,
             updateSubsetManagerDTO
         )
+        return true
     }
 
     fun deleteSubsetManager(subsetManagerId: String) {

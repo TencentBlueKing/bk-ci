@@ -75,6 +75,7 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
+        logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
@@ -119,12 +120,13 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
+        logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
         val resourceInfo = getResourceInfo(
             projectId = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        if (resourceType == AuthResourceType.PROJECT.value) {
+        val updateAuthResource = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
@@ -143,12 +145,14 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         }
-        authResourceService.update(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-        )
+        if (updateAuthResource) {
+            authResourceService.update(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+            )
+        }
         return true
     }
 
@@ -157,6 +161,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         if (resourceType == AuthResourceType.PROJECT.value) {
             val projectInfo = getProjectInfo(projectCode)
             permissionGradeManagerService.deleteGradeManager(projectInfo.relationId!!)
