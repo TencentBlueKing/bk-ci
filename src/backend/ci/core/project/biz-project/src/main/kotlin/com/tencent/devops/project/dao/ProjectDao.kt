@@ -353,7 +353,6 @@ class ProjectDao {
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         subjectScopesStr: String,
-        needApproval: Boolean,
         logoAddress: String?,
         authSecrecy: Boolean?
     ): Int {
@@ -370,11 +369,10 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-            if (!needApproval) {
-                // todo 只有rbac集群并且需要审批的，才不立即落库 可授权人员范围和是否私密项目，得去判断是否是RBAC集群打过来的
-                update.set(SUBJECT_SCOPES, subjectScopesStr)
-                authSecrecy?.let { update.set(AUTH_SECRECY, authSecrecy) }
-            }
+                .set(APPROVAL_STATUS, ProjectApproveStatus.UPDATE_APPROVED.status)
+                .set(APPROVER, userId)
+                .set(SUBJECT_SCOPES, subjectScopesStr)
+            authSecrecy?.let { update.set(AUTH_SECRECY, authSecrecy) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
@@ -744,12 +742,12 @@ class ProjectDao {
 
     fun updateProjectStatusByEnglishName(
         dslContext: DSLContext,
-        projectCode: String,
-        statusEnum: ProjectApproveStatus
+        englishName: String,
+        approvalStatus: Int
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
-                .set(APPROVAL_STATUS, statusEnum.status).where(ENGLISH_NAME.eq(projectCode))
+                .set(APPROVAL_STATUS, approvalStatus).where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }

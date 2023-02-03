@@ -39,7 +39,8 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
-import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dispatcher.AuthItsmCallbackDispatcher
+import com.tencent.devops.auth.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionResourceGroupService
@@ -50,7 +51,17 @@ import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
-import org.jooq.DSLContext
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import org.springframework.amqp.core.Binding
+import org.springframework.amqp.core.BindingBuilder
+import org.springframework.amqp.core.DirectExchange
+import org.springframework.amqp.core.Queue
+import org.springframework.amqp.rabbit.connection.ConnectionFactory
+import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
+import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
+import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -60,6 +71,7 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+@Suppress("TooManyFunctions")
 class RbacAuthConfiguration {
 
     @Value("\${auth.url:}")
@@ -135,15 +147,9 @@ class RbacAuthConfiguration {
     @Bean
     @Primary
     fun permissionItsmCallbackService(
-        client: Client,
-        dslContext: DSLContext,
-        authItsmCallbackDao: AuthItsmCallbackDao,
-        permissionGradeManagerService: PermissionGradeManagerService
+        authItsmCallbackDispatcher: AuthItsmCallbackDispatcher
     ) = RbacPermissionItsmCallbackService(
-        client = client,
-        dslContext = dslContext,
-        authItsmCallbackDao = authItsmCallbackDao,
-        permissionGradeManagerService = permissionGradeManagerService
+        authItsmCallbackDispatcher
     )
 
     @Bean
@@ -153,4 +159,45 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         iamConfiguration: IamConfiguration
     ) = RbacPermissionService(authHelper, authResourceService, iamConfiguration)
+
+    @Bean
+    fun itsmCallbackExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_ITSM_CALLBACK_EVENT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun itsmCallbackQueue(): Queue {
+        return Queue(MQ.QUEUE_AUTH_ITSM_CALLBACK, true)
+    }
+
+    @Bean
+    fun itsmCallbackBind(
+        @Autowired itsmCallbackQueue: Queue,
+        @Autowired itsmCallbackExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(itsmCallbackQueue).to(itsmCallbackExchange).with(MQ.ROUTE_AUTH_ITSM_CALLBACK)
+    }
+
+    @Bean
+    fun itsmCallbackEventListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired itsmCallbackQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired itsmCallbackListener: AuthItsmCallbackListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val container = SimpleMessageListenerContainer(connectionFactory)
+        container.setQueueNames(itsmCallbackQueue.name)
+        container.setConcurrentConsumers(1)
+        container.setMaxConcurrentConsumers(10)
+        container.setAmqpAdmin(rabbitAdmin)
+        container.setStartConsumerMinInterval(5000)
+        container.setConsecutiveActiveTrigger(5)
+        val adapter = MessageListenerAdapter(itsmCallbackListener, itsmCallbackListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        container.setMessageListener(adapter)
+        return container
+    }
 }

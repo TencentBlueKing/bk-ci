@@ -26,26 +26,9 @@
  *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.pojo.enums
 
-import com.tencent.devops.auth.api.callback.ExternalAuthItsmCallbackResource
-import com.tencent.devops.auth.pojo.ItsmCallBackInfo
-import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ExternalAuthItsmCallbackResourceImpl @Autowired constructor(
-    private val permissionItsmCallbackService: PermissionItsmCallbackService
-) : ExternalAuthItsmCallbackResource {
-    override fun handleItsmProjectCreateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
-        permissionItsmCallbackService.createProjectCallBack(itsmCallBackInfo = itsmCallBackInfo)
-        return Result(true)
-    }
-
-    override fun handleItsmProjectUpdateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
-        permissionItsmCallbackService.updateProjectCallback(itsmCallBackInfo = itsmCallBackInfo)
-        return Result(true)
-    }
+enum class AuthItsmApprovalType {
+    CREATE,
+    UPDATE
 }

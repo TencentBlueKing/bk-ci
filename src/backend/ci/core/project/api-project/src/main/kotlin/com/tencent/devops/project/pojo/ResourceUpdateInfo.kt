@@ -15,5 +15,7 @@ data class ResourceUpdateInfo(
     @ApiModelProperty("是否需要审批（从页面调起）")
     val needApproval: Boolean,
     @ApiModelProperty("iamSubjectScopes")
-    val iamSubjectScopes: List<SubjectScopeInfo>
+    val subjectScopes: List<SubjectScopeInfo>,
+    @ApiModelProperty("审批状态")
+    val approvalStatus: Int
 )

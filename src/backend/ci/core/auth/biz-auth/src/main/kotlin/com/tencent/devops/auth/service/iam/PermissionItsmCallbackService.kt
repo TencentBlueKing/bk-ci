@@ -32,4 +32,6 @@ import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 
 interface PermissionItsmCallbackService {
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo)
+
+    fun updateProjectCallback(itsmCallBackInfo: ItsmCallBackInfo)
 }
