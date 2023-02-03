@@ -252,7 +252,7 @@ kubernetes-manager:
 
   redis:
     enabled: true
-    nameOverride: kubernetes-manager-mysql
+    nameOverride: kubernetes-manager-redis
     auth:
       password: bluking
     replica:
