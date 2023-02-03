@@ -219,7 +219,7 @@ class AtomStatisticsDao {
         dslContext: DSLContext,
         atomCode: String,
         queryProjectInfoVO: QueryProjectInfoVO
-    ): Record2<BigDecimal, BigDecimal>? {
+    ): Result<Record2<BigDecimal, BigDecimal>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             return dslContext.select(
                 sum(FAIL_EXECUTE_COUNT),
@@ -228,7 +228,7 @@ class AtomStatisticsDao {
                 .where(PROJECT_ID.`in`(queryProjectInfoVO.projectIds))
                 .and(ATOM_CODE.eq(atomCode))
                 .and(STATISTICS_TIME.between(queryProjectInfoVO.startDateTime, queryProjectInfoVO.endDateTime))
-                .fetchOne()
+                .fetch()
         }
     }
 }
