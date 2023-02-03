@@ -165,11 +165,4 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getDevfile(userId: String): Result<String> {
-        return Result(
-            workspaceService.getDevfile(
-                userId = userId
-            )
-        )
-    }
 }

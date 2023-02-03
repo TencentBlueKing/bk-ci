@@ -27,6 +27,7 @@
 
 package com.tencent.devops.remotedev.api.external
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import io.swagger.annotations.Api
@@ -40,6 +41,7 @@ import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @Api(tags = ["EXTERNAL_REMOTE_DEV"], description = "External-remoteDev")
 @Path("/external/remotedev/")
@@ -76,4 +78,13 @@ interface ExternalResource {
         @QueryParam("timestamp")
         timestamp: String
     ): Result<WorkspaceProxyDetail>
+
+    @ApiOperation("获取默认的devfile文件内容")
+    @POST
+    @Path("/devfile")
+    fun getDevfile(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Response
 }

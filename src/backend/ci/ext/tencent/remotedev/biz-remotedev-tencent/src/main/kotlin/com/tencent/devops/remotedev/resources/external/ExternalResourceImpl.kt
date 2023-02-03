@@ -37,6 +37,9 @@ import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.core.StreamingOutput
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(
@@ -73,6 +76,19 @@ class ExternalResourceImpl @Autowired constructor(
         }
 
         return true
+    }
+
+    override fun getDevfile(userId: String): Response {
+        logger.info("$userId download devFile")
+        val result = workspaceService.getDevfile(
+            userId = userId
+        )
+        return Response.ok(StreamingOutput { output ->
+            output.write(result.toByteArray())
+            output.flush()
+        }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .header("content-disposition", "attachment; filename = devfile")
+            .build()
     }
 
     companion object {
