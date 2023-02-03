@@ -80,8 +80,9 @@ interface ExternalResource {
     ): Result<WorkspaceProxyDetail>
 
     @ApiOperation("获取默认的devfile文件内容")
-    @POST
+    @GET
     @Path("/devfile")
+    @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun getDevfile(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
