@@ -27,14 +27,12 @@
 
 package com.tencent.devops.metrics.service
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
 import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
-import java.time.LocalDateTime
 
 interface AtomStatisticsManageService {
 
