@@ -19,7 +19,7 @@
 
 const prefix = 'store/api'
 const projectPrefix = 'project/api'
-const supportPrefix = 'support/api'
+const artifactoryPrefix = 'artifactory/api'
 const Vue = window.Vue
 const vue = new Vue()
 
@@ -355,7 +355,7 @@ export const actions = {
      * 上传文件
      */
     uploadFile ({ commit }, { formData, config }) {
-        return vue.$ajax.post(`${supportPrefix}/user/file/upload`, formData, config)
+        return vue.$ajax.post(`${artifactoryPrefix}/user/bkrepo/statics/file/upload`, formData, config)
     },
 
     /**
