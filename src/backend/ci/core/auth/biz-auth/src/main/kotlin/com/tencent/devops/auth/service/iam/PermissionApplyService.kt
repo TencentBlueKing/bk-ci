@@ -4,7 +4,7 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
-import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 
@@ -32,11 +32,11 @@ interface PermissionApplyService {
         groupId: Int
     ): List<GroupPermissionDetailVo>
 
-    fun getJumpInformation(
+    fun getRedirectInformation(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String,
         action: String
-    ): AuthApplyJumpInfoVo
+    ): AuthApplyRedirectInfoVo
 }

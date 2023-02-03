@@ -4,7 +4,7 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
-import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -88,8 +88,8 @@ interface UserAuthApplyResource {
 
     @GET
     @Path("getJumpInformation")
-    @ApiOperation("获取弹框跳转信息")
-    fun getJumpInformation(
+    @ApiOperation("获取权限申请重定向信息")
+    fun getRedirectInformation(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -105,5 +105,5 @@ interface UserAuthApplyResource {
         @ApiParam("动作", required = true)
         @QueryParam("action")
         action: String
-    ): Result<AuthApplyJumpInfoVo>
+    ): Result<AuthApplyRedirectInfoVo>
 }
