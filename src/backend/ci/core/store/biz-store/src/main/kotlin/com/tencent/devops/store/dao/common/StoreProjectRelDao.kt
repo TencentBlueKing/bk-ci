@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreMember
 import com.tencent.devops.model.store.tables.TStoreProjectRel
 import com.tencent.devops.model.store.tables.records.TStoreProjectRelRecord
+import com.tencent.devops.store.pojo.common.KEY_PROJECT_CODE
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -496,14 +498,16 @@ class StoreProjectRelDao {
     fun getInitProjectCodes(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
+        storeProjectTypeBytes: List<Byte>,
         storeCodeList: List<String>
     ): Result<Record2<String, String>> {
         with(TStoreProjectRel.T_STORE_PROJECT_REL) {
             val conditions = mutableListOf<Condition>()
             conditions.add(STORE_TYPE.eq(storeType.type.toByte()))
-            conditions.add(TYPE.eq(StoreProjectTypeEnum.INIT.type.toByte()))
+            conditions.add(TYPE.`in`(storeProjectTypeBytes))
             conditions.add(STORE_CODE.`in`(storeCodeList))
-            return dslContext.select(STORE_CODE, PROJECT_CODE).from(this).where(conditions).fetch()
+            return dslContext.select(STORE_CODE.`as`(KEY_STORE_CODE), PROJECT_CODE.`as`(KEY_PROJECT_CODE))
+                .from(this).where(conditions).fetch()
         }
     }
 }
