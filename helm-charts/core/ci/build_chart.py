@@ -59,7 +59,8 @@ default_value_dict = {
     'bkCiKubernetesMemory': '16048',
     'bkCiKubernetesHost': 'http://kubernetes-manager',
     'bkCiKubernetesToken': 'landun',
-    'bkCiDevopsToken': 'devops'
+    'bkCiDevopsToken': 'devops',
+    'bkCiAppToken': 'test'
 }
 
 if os.path.isfile(default_value_json):
