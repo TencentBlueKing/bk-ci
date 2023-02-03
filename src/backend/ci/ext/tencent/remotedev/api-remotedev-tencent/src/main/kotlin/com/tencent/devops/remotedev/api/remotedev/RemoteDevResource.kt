@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.api.remotedev
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -40,7 +41,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["REMOTE_DEV"], description = "remoteDev")
-@Path("/external/remotedev/")
+@Path("remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface RemoteDevResource {
@@ -57,8 +58,11 @@ interface RemoteDevResource {
         @ApiParam(value = "user id", required = true)
         @QueryParam("userId")
         userId: String,
+        @ApiParam(value = "workspace name", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
         @ApiParam(value = "时间戳", required = true)
         @QueryParam("timestamp")
         timestamp: String
-    ): Result<String>
+    ): Result<RemoteDevOauthBack>
 }

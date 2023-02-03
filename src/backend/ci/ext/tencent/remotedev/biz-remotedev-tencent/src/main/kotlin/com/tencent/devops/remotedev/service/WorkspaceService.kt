@@ -1174,6 +1174,12 @@ class WorkspaceService @Autowired constructor(
         return "${subUserId.replace("_", "-")}-${UUIDUtil.generate().takeLast(Constansts.workspaceNameSuffixLimitLen)}"
     }
 
+    fun getWorkspaceHost(workspaceName: String): String {
+        val url = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.url
+            ?: throw CustomException(Response.Status.NOT_FOUND, "not find workspaceName $workspaceName")
+        return GitUtils.getDomainAndRepoName(url).first
+    }
+
     fun getDevfile(userId: String): String {
         logger.info("$userId get devfile content")
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
