@@ -1175,7 +1175,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getWorkspaceHost(workspaceName: String): String {
-        val url = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName)?.url
+        val url = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)?.url
             ?: throw CustomException(Response.Status.NOT_FOUND, "not find workspaceName $workspaceName")
         return GitUtils.getDomainAndRepoName(url).first
     }
