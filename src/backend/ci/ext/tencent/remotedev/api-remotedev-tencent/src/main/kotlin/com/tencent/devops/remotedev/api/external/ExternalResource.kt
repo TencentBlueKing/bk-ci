@@ -84,8 +84,5 @@ interface ExternalResource {
     @Path("/devfile")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)
     fun getDevfile(
-        @ApiParam("userId", required = true)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String
     ): Response
 }
