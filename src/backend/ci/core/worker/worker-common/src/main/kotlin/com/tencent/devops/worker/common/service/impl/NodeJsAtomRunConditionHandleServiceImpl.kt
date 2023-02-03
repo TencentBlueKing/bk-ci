@@ -92,7 +92,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     File(envDir, NODEJS).absoluteFile
                 }
                 CommandLineUtils.execute(
-                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}${File.separator}node -v",
+                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
                     workspacePath,
                     true
                 )
@@ -173,13 +173,13 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             if (osType == OSType.WINDOWS) {
                 // ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute(
-                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}${File.separator}node -v",
+                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
                     pkgFileDir.absoluteFile,
                     true
                 )
             } else {
                 // CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}${File.separator}node -v",
+                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
                     File(envDir, NODEJS).absoluteFile,
                     true
                 )
