@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -74,7 +75,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
         val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
         logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
-
         storePkgRunEnvInfo?.let {
             // 判断nodejs安装包是否已经存在构建机上
             val pkgName = storePkgRunEnvInfo.pkgName
@@ -92,7 +92,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     File(envDir, NODEJS).absoluteFile
                 }
                 CommandLineUtils.execute(
-                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}${File.separator}node -v",
+                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
                     workspacePath,
                     true
                 )
@@ -173,14 +173,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
         try {
             if (osType == OSType.WINDOWS) {
-                // ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute(
                     command,
                     pkgFileDir.absoluteFile,
                     true
                 )
             } else {
-                // CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute(
                     command,
                     File(envDir, NODEJS).absoluteFile,
