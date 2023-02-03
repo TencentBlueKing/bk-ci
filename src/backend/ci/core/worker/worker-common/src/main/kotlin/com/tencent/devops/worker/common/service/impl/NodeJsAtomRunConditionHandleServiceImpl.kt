@@ -75,47 +75,53 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val storePkgRunEnvInfo = storePkgRunEnvInfoResult.data
         val envDir = WorkspaceUtils.getCommonEnvDir() ?: workspace
         logger.info("prepareRunEnv param:[$osType,$language,$runtimeVersion,$envDir,$storePkgRunEnvInfo]")
-        storePkgRunEnvInfo?.let {
-            // 判断nodejs安装包是否已经存在构建机上
-            val pkgName = storePkgRunEnvInfo.pkgName
-            val pkgFileFolderName = if (osType == OSType.WINDOWS) {
-                pkgName.removeSuffix(".zip")
+
+        val pkgName = storePkgRunEnvInfo?.pkgName
+        val pkgFileFolderName = if (osType == OSType.WINDOWS) {
+            pkgName?.removeSuffix(".zip")
+        } else {
+            pkgName?.removeSuffix(".tar.gz")
+        }
+        val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
+        // 判断是否需要下载解压
+        try {
+            if (osType == OSType.WINDOWS) {
+                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", pkgFileDir.absoluteFile, true)
             } else {
-                pkgName.removeSuffix(".tar.gz")
+                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", File(envDir, NODEJS).absoluteFile, true)
             }
-            val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
-            if (pkgFileDir.exists() && pkgFileDir.listFiles()?.isEmpty() == true) {
-                // 空文件夹需要删除
-                pkgFileDir.delete()
-            }
-            if (!pkgFileDir.exists()) {
-                // 把指定的nodejs安装包下载到构建机上
-                val pkgFile = File(envDir, "$NODEJS/$pkgName")
-                // 判断是否需要下载解压
-                try {
-                    if (osType == OSType.WINDOWS) {
-                        CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", pkgFileDir.absoluteFile, true)
-                    } else {
-                        CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", File(envDir, NODEJS).absoluteFile, true)
-                    }
-                } catch (e: Exception) {
+        } catch (e: Exception) {
+            storePkgRunEnvInfo?.let {
+                // 判断nodejs安装包是否已经存在构建机上
+                if (pkgFileDir.exists() && pkgFileDir.listFiles()?.isEmpty() == true) {
+                    // 空文件夹需要删除
+                    pkgFileDir.delete()
+                }
+                if (!pkgFileDir.exists()) {
+                    // 把指定的nodejs安装包下载到构建机上
+                    val pkgFile = File(envDir, "$NODEJS/$pkgName")
                     OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                     logger.info("prepareRunEnv download [$pkgName] success")
                     // 把nodejs安装包解压到构建机上
-                    isUnzipSuccess(
-                        retryNum = 3,
-                        pkgFile = pkgFile,
-                        pkgFileDir = pkgFileDir,
-                        envDir = envDir,
-                        osType = osType,
-                        pkgName = pkgName
-                    )
+                    if (pkgName != null) {
+                        isUnzipSuccess(
+                            retryNum = 3,
+                            pkgFile = pkgFile,
+                            pkgFileDir = pkgFileDir,
+                            envDir = envDir,
+                            osType = osType,
+                            pkgName = pkgName
+                        )
+                    }
                     // 删除安装包
                     pkgFile.delete()
                     logger.info("prepareRunEnv decompress [$pkgName] success")
-                    }
+
+                }
             }
         }
+
+
         return true
     }
 
