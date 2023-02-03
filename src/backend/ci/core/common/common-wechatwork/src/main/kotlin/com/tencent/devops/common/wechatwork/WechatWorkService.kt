@@ -83,9 +83,13 @@ class WechatWorkService @Autowired constructor(
 //            .readTimeout(60L, TimeUnit.SECONDS)
 //            .writeTimeout(60L, TimeUnit.SECONDS)
 //            .build()
-    private val wxcpt =
-        WXBizMsgCrypt(wechatWorkConfiguration.token, wechatWorkConfiguration.aesKey, wechatWorkConfiguration.serviceId)
-
+    private val wxcpt by lazy {
+        WXBizMsgCrypt(
+            wechatWorkConfiguration.token,
+            wechatWorkConfiguration.aesKey,
+            wechatWorkConfiguration.serviceId
+        )
+    }
     private val objectMapper = JacksonUtil.createObjectMapper()
     private val sendMessageApiURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send"
     private val uploadMediaApiURL = "$wechatWorkApiURL/cgi-bin/media/upload"
