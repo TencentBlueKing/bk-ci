@@ -38,11 +38,11 @@ import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
 
 @RestResource
 class ApigwLogResourceV3Impl @Autowired constructor(
@@ -51,6 +51,9 @@ class ApigwLogResourceV3Impl @Autowired constructor(
 
     @Value("\${devopsGateway.api:#{null}}")
     private val gatewayUrl: String? = ""
+
+    @Value("\${auth.gateway.devopsToken:#{null}}")
+    private val devopsToken: String? = null
 
     override fun getInitLogs(
         appCode: String?,
@@ -66,7 +69,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get init logs|$projectId|$pipelineId|$buildId|$debug|$elementId|$jobId" +
-                "|$executeCount"
+                    "|$executeCount"
         )
         return client.get(ServiceLogResource::class).getInitLogs(
             userId = userId,
@@ -98,7 +101,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get more logs|$projectId|$pipelineId|$buildId|$debug|$num|$fromStart" +
-                "|$start|$end|$tag|$jobId|$executeCount"
+                    "|$start|$end|$tag|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getMoreLogs(
             userId = userId,
@@ -131,7 +134,7 @@ class ApigwLogResourceV3Impl @Autowired constructor(
     ): Result<QueryLogs> {
         logger.info(
             "OPENAPI_LOG_V3|$userId|get after logs|$projectId|$pipelineId|$buildId|$start|$debug|$tag" +
-                "|$jobId|$executeCount"
+                    "|$jobId|$executeCount"
         )
         return client.get(ServiceLogResource::class).getAfterLogs(
             userId = userId,
@@ -165,9 +168,13 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
+        val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
         val response = OkhttpUtils.doLongGet(
             url = path.toString(),
-            headers = mapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+            headers = headers
         )
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)

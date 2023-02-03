@@ -47,6 +47,7 @@ import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 @Component
@@ -55,9 +56,12 @@ class DispatchClient @Autowired constructor(
     private val commonConfig: CommonConfig,
     private val bkTag: BkTag
 ) {
+    @Value("\${auth.gateway.devopsToken:#{null}}")
+    private val devopsToken: String? = null
+
     fun updateContainerId(buildLessTask: BuildLessTask, containerId: String) {
         val path = "/ms/dispatch-docker/api/service/dockerhost/builds/${buildLessTask.buildId}/vmseqs" +
-            "/${buildLessTask.vmSeqId}?containerId=$containerId"
+                "/${buildLessTask.vmSeqId}?containerId=$containerId"
 
         try {
             val url = buildUrl(path)
@@ -65,9 +69,11 @@ class DispatchClient @Autowired constructor(
                 .Builder()
                 .url(url)
                 .headers(Headers.of(makeHeaders()))
-                .put(RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    "")
+                .put(
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        ""
+                    )
                 )
                 .build()
 
@@ -78,7 +84,8 @@ class DispatchClient @Autowired constructor(
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
-                        errorMsg = "Update containerId $path fail")
+                        errorMsg = "Update containerId $path fail"
+                    )
                 }
             }
         } catch (e: Exception) {
@@ -121,9 +128,11 @@ class DispatchClient @Autowired constructor(
                 .Builder()
                 .url(url)
                 .headers(Headers.of(makeHeaders()))
-                .post(RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(dockerIpInfoVO))
+                .post(
+                    RequestBody.create(
+                        MediaType.parse("application/json; charset=utf-8"),
+                        JsonUtil.toJson(dockerIpInfoVO)
+                    )
                 )
                 .build()
 
@@ -135,7 +144,8 @@ class DispatchClient @Autowired constructor(
                     throw TaskExecuteException(
                         errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR,
                         errorType = ErrorType.SYSTEM,
-                        errorMsg = "Refresh buildLess status $url fail")
+                        errorMsg = "Refresh buildLess status $url fail"
+                    )
                 }
                 logger.info("End refreshDockerIpStatus.")
             }
@@ -170,7 +180,12 @@ class DispatchClient @Autowired constructor(
         } else {
             buildLessConfig.gatewayHeaderTag
         }
-        return mapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
+        val headers = mutableMapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
+        // 新增devopsToken给网关校验
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
+        return headers
     }
 
     companion object {

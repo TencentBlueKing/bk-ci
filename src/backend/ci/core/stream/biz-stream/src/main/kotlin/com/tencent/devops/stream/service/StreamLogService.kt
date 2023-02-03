@@ -58,6 +58,9 @@ class StreamLogService @Autowired constructor(
     @Value("\${gateway.url}")
     private lateinit var gatewayUrl: String
 
+    @Value("\${auth.gateway.devopsToken:#{null}}")
+    private val devopsToken: String? = null
+
     fun getInitLogs(
         userId: String,
         gitProjectId: Long,
@@ -126,7 +129,11 @@ class StreamLogService @Autowired constructor(
         if (!tag.isNullOrBlank()) path.append("&tag=$tag")
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
-        val response = OkhttpUtils.doLongGet(path.toString(), mapOf(AUTH_HEADER_USER_ID to userId))
+        val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
+        val response = OkhttpUtils.doLongGet(path.toString(), headers)
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = ${pipeline.pipelineId}-$buildId-log.txt")
