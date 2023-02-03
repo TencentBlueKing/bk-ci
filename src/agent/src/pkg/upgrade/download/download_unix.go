@@ -45,3 +45,9 @@ func DownloadJdkFile(saveDir string) (string, error) {
 		"jre/"+strings.TrimPrefix(getServerFileArch(), "_")+"/jre.zip", saveDir+"/"+config.JdkClientFile,
 	)
 }
+
+func DownloadDockerInitFile(saveDir string) (string, error) {
+	return api.DownloadUpgradeFile(
+		"script/linux/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
+	)
+}

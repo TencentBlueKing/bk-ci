@@ -29,6 +29,7 @@ package com.tencent.devops.process.service.pipeline
 
 import com.tencent.devops.common.api.constant.KEY_DEFAULT
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -43,7 +44,6 @@ import com.tencent.devops.process.pojo.config.PipelineCommonSettingConfig
 import com.tencent.devops.process.pojo.config.StageCommonSettingConfig
 import com.tencent.devops.process.pojo.config.TaskCommonSettingConfig
 import com.tencent.devops.process.pojo.setting.JobCommonSetting
-import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.process.pojo.setting.PipelineCommonSetting
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -54,6 +54,7 @@ import com.tencent.devops.process.pojo.setting.TaskComponentCommonSetting
 import com.tencent.devops.process.pojo.setting.UpdatePipelineModelRequest
 import com.tencent.devops.process.service.PipelineSettingVersionService
 import com.tencent.devops.process.service.label.PipelineGroupService
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -64,6 +65,7 @@ class PipelineSettingFacadeService @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val pipelineGroupService: PipelineGroupService,
     private val pipelineSettingVersionService: PipelineSettingVersionService,
+    private val pipelineViewGroupService: PipelineViewGroupService,
     private val pipelineCommonSettingConfig: PipelineCommonSettingConfig,
     private val stageCommonSettingConfig: StageCommonSettingConfig,
     private val jobCommonSettingConfig: JobCommonSettingConfig,
@@ -78,7 +80,8 @@ class PipelineSettingFacadeService @Autowired constructor(
         checkPermission: Boolean = true,
         version: Int = 0,
         updateLastModifyUser: Boolean? = true,
-        dispatchPipelineUpdateEvent: Boolean = true
+        dispatchPipelineUpdateEvent: Boolean = true,
+        updateLabels: Boolean = true
     ): String {
         if (checkPermission) {
             checkEditPermission(
@@ -104,12 +107,18 @@ class PipelineSettingFacadeService @Autowired constructor(
             )
         }
 
-        pipelineGroupService.updatePipelineLabel(
-            userId = userId,
-            projectId = setting.projectId,
-            pipelineId = setting.pipelineId,
-            labelIds = setting.labels
-        )
+        if (updateLabels) {
+            pipelineGroupService.updatePipelineLabel(
+                userId = userId,
+                projectId = setting.projectId,
+                pipelineId = setting.pipelineId,
+                labelIds = setting.labels
+            )
+        }
+
+        // 刷新流水线组
+        pipelineViewGroupService.updateGroupAfterPipelineUpdate(setting.projectId, setting.pipelineId, userId)
+
         if (dispatchPipelineUpdateEvent) {
             pipelineEventDispatcher.dispatch(
                 PipelineUpdateEvent(

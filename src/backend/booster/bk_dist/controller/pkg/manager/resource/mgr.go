@@ -154,7 +154,10 @@ func (m *Mgr) GetNewlyTaskID() string {
 // SetSpecificHosts set the specific worker list instead of applying
 func (m *Mgr) SetSpecificHosts(hostList []string) {
 	m.reslock.Lock()
-	defer m.reslock.Unlock()
+	defer func() {
+		m.reslock.Unlock()
+		m.onResChanged()
+	}()
 	m.resources = append(m.resources, &Res{
 		taskid: "",
 		status: ResourceSpecified,
@@ -169,7 +172,7 @@ func (m *Mgr) SetSpecificHosts(hostList []string) {
 		info.ResourceApplied()
 	}
 
-	m.onResChanged()
+	// m.onResChanged()
 }
 
 // GetHosts return the worker list

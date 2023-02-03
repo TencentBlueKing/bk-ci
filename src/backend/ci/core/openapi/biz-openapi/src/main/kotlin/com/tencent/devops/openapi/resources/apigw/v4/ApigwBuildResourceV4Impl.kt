@@ -166,7 +166,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String,
-        values: Map<String, String>,
+        values: Map<String, String>?,
         buildNo: Int?
     ): Result<BuildId> {
         logger.info("OPENAPI_BUILD_V4|$userId|start|$projectId|$pipelineId|$values|$buildNo")
@@ -174,7 +174,7 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            values = values,
+            values = values ?: emptyMap(),
             buildNo = buildNo,
             channelCode = apiGatewayUtil.getChannelCode(),
             startType = StartType.SERVICE

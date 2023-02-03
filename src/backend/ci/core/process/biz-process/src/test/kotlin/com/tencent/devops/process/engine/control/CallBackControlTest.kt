@@ -27,31 +27,31 @@
 
 package com.tencent.devops.process.engine.control
 
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.event.CallBackEvent
+import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.TestBase
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.ProjectPipelineCallBackService
-import com.tencent.devops.common.pipeline.event.ProjectPipelineCallBack
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class CallBackControlTest : TestBase() {
 
-    private val pipelineBuildDetailService: PipelineBuildDetailService = mock()
-    private val pipelineRepositoryService: PipelineRepositoryService = mock()
-    private val projectPipelineCallBackService: ProjectPipelineCallBackService = mock()
-    private val client: Client = mock()
-    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry = mock()
+    private val pipelineBuildDetailService: PipelineBuildDetailService = mockk()
+    private val pipelineRepositoryService: PipelineRepositoryService = mockk(relaxed = true)
+    private val projectPipelineCallBackService: ProjectPipelineCallBackService = mockk()
+    private val client: Client = mockk()
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry = mockk()
 
     private val callBackControl = CallBackControl(
         pipelineBuildDetailService = pipelineBuildDetailService,
@@ -91,8 +91,13 @@ class CallBackControlTest : TestBase() {
             executeTime = 100
         )
 
-        whenever(pipelineBuildDetailService.get(projectId = projectId, buildId = buildId, refreshStatus = false))
-            .thenReturn(modelDetail)
+        every {
+            pipelineBuildDetailService.get(
+                projectId = projectId,
+                buildId = buildId,
+                refreshStatus = false
+            )
+        } returns (modelDetail)
     }
 
     @Test
@@ -145,8 +150,12 @@ class CallBackControlTest : TestBase() {
             events.append(it.name)
             callbacks!!.addAll(genCallBackList(it))
         }
-        whenever(projectPipelineCallBackService.listProjectCallBack(projectId = projectId, events = events.toString()))
-            .thenReturn(callbacks)
+        every {
+            projectPipelineCallBackService.listProjectCallBack(
+                projectId = projectId,
+                events = events.toString()
+            )
+        } returns (callbacks!!)
     }
 
     @Test

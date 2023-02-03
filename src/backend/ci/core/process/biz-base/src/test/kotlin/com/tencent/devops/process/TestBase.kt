@@ -46,13 +46,14 @@ import com.tencent.devops.common.pipeline.pojo.element.RunCondition
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import org.junit.jupiter.api.BeforeEach
 import java.time.LocalDateTime
 
-open class TestBase {
+open class TestBase : BkCiAbstractTest() {
 
     var variables: MutableMap<String, String> = mutableMapOf()
 
@@ -130,6 +131,7 @@ open class TestBase {
                 )
                 jobs.add(TriggerContainer(id = "1", name = "trigger", elements = elements))
             }
+
             Int.MAX_VALUE -> { // finally
                 for (i in 1..jobSize) {
                     if (i % 2 == 0) {
@@ -139,15 +141,18 @@ open class TestBase {
                     }
                 }
             }
+
             else -> {
                 for (i in 1..jobSize) {
                     when {
                         i % 3 == 0 -> {
                             jobs.add(genVm(elementSize, baseOS = VMBaseOS.LINUX))
                         }
+
                         i % 3 == 2 -> {
                             jobs.add(genVm(elementSize, baseOS = VMBaseOS.WINDOWS))
                         }
+
                         else -> {
                             jobs.add(genVm(elementSize, baseOS = VMBaseOS.MACOS))
                         }
