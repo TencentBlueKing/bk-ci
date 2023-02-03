@@ -116,10 +116,14 @@ class ProjectPermissionConfiguration {
     fun rbacProjectPermissionService(
         authResourceApi: AuthResourceApi,
         projectAuthServiceCode: ProjectAuthServiceCode,
-        projectApprovalService: ProjectApprovalService
+        projectApprovalService: ProjectApprovalService,
+        dslContext: DSLContext,
+        projectDao: ProjectDao
     ): ProjectPermissionService = RbacProjectPermissionService(
         authResourceApi = authResourceApi,
         projectAuthServiceCode = projectAuthServiceCode,
-        projectApprovalService = projectApprovalService
+        projectApprovalService = projectApprovalService,
+        dslContext = dslContext,
+        projectDao = projectDao
     )
 }

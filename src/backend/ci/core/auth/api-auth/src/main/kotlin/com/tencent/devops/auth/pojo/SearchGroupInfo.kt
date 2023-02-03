@@ -19,6 +19,8 @@ data class SearchGroupInfo(
     val name: String?,
     @ApiModelProperty("用户组描述")
     val description: String?,
+    @ApiModelProperty("用户组id")
+    val groupId: Int?,
     @ApiModelProperty("page")
     val page: Int,
     @ApiModelProperty("pageSize")

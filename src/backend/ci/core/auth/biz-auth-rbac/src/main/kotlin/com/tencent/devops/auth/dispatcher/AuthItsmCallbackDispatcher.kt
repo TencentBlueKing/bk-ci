@@ -26,26 +26,40 @@
  *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.dispatcher
 
-import com.tencent.devops.auth.api.callback.ExternalAuthItsmCallbackResource
-import com.tencent.devops.auth.pojo.ItsmCallBackInfo
-import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.auth.pojo.event.AuthItsmCallbackEvent
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import org.slf4j.LoggerFactory
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Component
 
-@RestResource
-class ExternalAuthItsmCallbackResourceImpl @Autowired constructor(
-    private val permissionItsmCallbackService: PermissionItsmCallbackService
-) : ExternalAuthItsmCallbackResource {
-    override fun handleItsmProjectCreateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
-        permissionItsmCallbackService.createProjectCallBack(itsmCallBackInfo = itsmCallBackInfo)
-        return Result(true)
+@Component
+class AuthItsmCallbackDispatcher @Autowired constructor(
+    private val rabbitTemplate: RabbitTemplate
+) : EventDispatcher<AuthItsmCallbackEvent> {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthItsmCallbackDispatcher::class.java)
     }
 
-    override fun handleItsmProjectUpdateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
-        permissionItsmCallbackService.updateProjectCallback(itsmCallBackInfo = itsmCallBackInfo)
-        return Result(true)
+    override fun dispatch(vararg events: AuthItsmCallbackEvent) {
+        try {
+            events.forEach { event ->
+                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+                val routeKey = eventType.routeKey
+                logger.info("[${eventType.exchange}|$routeKey| dispatch itsm callback event")
+                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+                    if (eventType.delayMills > 0) { // 事件类型固化默认值
+                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                    }
+                    message
+                }
+            }
+        } catch (ignored: Exception) {
+            logger.error("Fail to dispatch the event($events)", ignored)
+        }
     }
 }

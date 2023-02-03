@@ -39,7 +39,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -144,11 +143,9 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     }
 
     override fun modifyProjectAuthResource(
-        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         projectPermissionService.modifyResource(
-            projectInfo = projectInfo,
             resourceUpdateInfo = resourceUpdateInfo
         )
     }

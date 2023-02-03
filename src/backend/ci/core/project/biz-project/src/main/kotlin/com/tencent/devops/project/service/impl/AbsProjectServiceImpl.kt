@@ -49,7 +49,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -329,7 +328,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         )
         val startEpoch = System.currentTimeMillis()
         var success = false
-        val subjectScopes = projectUpdateInfo.subjectScopes!!
+        val subjectScopes = projectUpdateInfo.subjectScopes!!.ifEmpty {
+            listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
+        }
+        val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
         validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
@@ -341,50 +343,59 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     dslContext = dslContext,
                     englishName = englishName
                 ) ?: throw NotFoundException("project - $englishName is not exist!")
+                // 判断是否需要审批,只有修改最大授权范围和权限敏感才需要审批
+                val finalNeedApproval = projectPermissionService.needApproval(needApproval) &&
+                    (projectInfo.subjectScopes != subjectScopesStr ||
+                        projectInfo.authSecrecy != projectUpdateInfo.authSecrecy)
+                val approvalStatus = if (finalNeedApproval) {
+                    ProjectApproveStatus.UPDATE_PENDING.status
+                } else {
+                    ProjectApproveStatus.UPDATE_APPROVED.status
+                }
                 val projectId = projectInfo.projectId
                 val logoAddress = projectUpdateInfo.logoAddress
-                logger.info("logoAddress : $logoAddress")
                 val resourceUpdateInfo = ResourceUpdateInfo(
                     userId = userId,
                     projectUpdateInfo = projectUpdateInfo,
                     needApproval = needApproval!!,
-                    iamSubjectScopes = subjectScopes
+                    subjectScopes = subjectScopes,
+                    approvalStatus = approvalStatus
                 )
-                modifyProjectAuthResource(projectInfo, resourceUpdateInfo)
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    // 修改时，若传递的可授权人员范围为空，则直接用全公司
-                    subjectScopes.ifEmpty {
-                        listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
-                    }
-                    val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
-                    logger.info("subjectScopesStr : $subjectScopesStr")
-                    projectDao.update(
-                        dslContext = context,
-                        userId = userId,
-                        projectId = projectId,
-                        projectUpdateInfo = projectUpdateInfo,
-                        subjectScopesStr = subjectScopesStr,
-                        needApproval = needApproval,
-                        logoAddress = logoAddress,
-                        authSecrecy = projectUpdateInfo.authSecrecy
+                modifyProjectAuthResource(resourceUpdateInfo)
+                if (finalNeedApproval) {
+                    projectDao.updateProjectStatusByEnglishName(
+                        dslContext = dslContext,
+                        englishName = englishName,
+                        approvalStatus = ProjectApproveStatus.UPDATE_PENDING.status
                     )
-                    projectDispatcher.dispatch(
-                        ProjectUpdateBroadCastEvent(
+                } else {
+                    dslContext.transaction { configuration ->
+                        val context = DSL.using(configuration)
+                        projectDao.update(
+                            dslContext = context,
                             userId = userId,
                             projectId = projectId,
-                            projectInfo = projectUpdateInfo
+                            projectUpdateInfo = projectUpdateInfo,
+                            subjectScopesStr = subjectScopesStr,
+                            logoAddress = logoAddress,
+                            authSecrecy = projectUpdateInfo.authSecrecy
                         )
-                    )
-                    if (logoAddress != null) {
-                        logger.info("logoAddress : $logoAddress")
                         projectDispatcher.dispatch(
-                            ProjectUpdateLogoBroadCastEvent(
+                            ProjectUpdateBroadCastEvent(
                                 userId = userId,
                                 projectId = projectId,
-                                logoAddr = logoAddress
+                                projectInfo = projectUpdateInfo
                             )
                         )
+                        if (logoAddress != null) {
+                            projectDispatcher.dispatch(
+                                ProjectUpdateLogoBroadCastEvent(
+                                    userId = userId,
+                                    projectId = projectId,
+                                    logoAddr = logoAddress
+                                )
+                            )
+                        }
                     }
                 }
                 if (!projectUpdateInfo.secrecy) {
@@ -865,8 +876,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             if (isIamCancelSuccess) {
                 projectDao.updateProjectStatusByEnglishName(
                     dslContext = dslContext,
-                    projectCode = projectInfo.englishName,
-                    statusEnum = ProjectApproveStatus.CANCEL_CREATE
+                    englishName = projectInfo.englishName,
+                    approvalStatus = ProjectApproveStatus.CANCEL_CREATE.status
                 )
             }
             success = true
@@ -941,7 +952,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): ProjectCreateInfo
 
     abstract fun modifyProjectAuthResource(
-        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     )
 
