@@ -78,11 +78,8 @@ class ExternalResourceImpl @Autowired constructor(
         return true
     }
 
-    override fun getDevfile(userId: String): Response {
-        logger.info("$userId download devFile")
-        val result = workspaceService.getDevfile(
-            userId = userId
-        )
+    override fun getDevfile(): Response {
+        val result = workspaceService.getDevfile()
         return Response.ok(StreamingOutput { output ->
             output.write(result.toByteArray())
             output.flush()

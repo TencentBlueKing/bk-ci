@@ -1180,8 +1180,7 @@ class WorkspaceService @Autowired constructor(
         return GitUtils.getDomainAndRepoName(url).first
     }
 
-    fun getDevfile(userId: String): String {
-        logger.info("$userId get devfile content")
+    fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
     }
 }
