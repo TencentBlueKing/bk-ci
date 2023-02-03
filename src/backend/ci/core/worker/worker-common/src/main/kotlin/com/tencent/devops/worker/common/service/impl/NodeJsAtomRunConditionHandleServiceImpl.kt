@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -157,13 +156,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
     ) {
         try {
             if (osType == OSType.WINDOWS) {
-                ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                //ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute("node -v", pkgFileDir.absoluteFile, true)
             } else {
-                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                //CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile, true)
             }
         } catch (e: Exception) {
+            logger.info("循环次数$retryNum")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
