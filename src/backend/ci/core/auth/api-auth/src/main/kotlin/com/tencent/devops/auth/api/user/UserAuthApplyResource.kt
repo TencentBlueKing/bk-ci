@@ -4,6 +4,7 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -84,4 +85,25 @@ interface UserAuthApplyResource {
         @PathParam("groupId")
         groupId: Int
     ): Result<List<GroupPermissionDetailVo>>
+
+    @GET
+    @Path("getJumpInformation")
+    @ApiOperation("获取弹框跳转信息")
+    fun getJumpInformation(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型", required = true)
+        @QueryParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源实例", required = true)
+        @QueryParam("resourceCode")
+        resourceCode: String,
+        @ApiParam("动作", required = true)
+        @QueryParam("action")
+        action: String
+    ): Result<AuthApplyJumpInfoVo>
 }
