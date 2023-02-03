@@ -40,6 +40,8 @@ import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE_FIELD_NAME_ENGLISH
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
+import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_FIELD_NAME_ENGLISH
@@ -182,8 +184,8 @@ class AtomStatisticsServiceImpl @Autowired constructor(
             atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)
         if (queryAtomComplianceInfo.isNotEmpty) {
             return ComplianceInfoDO(
-                queryAtomComplianceInfo[0].value1().toInt(),
-                queryAtomComplianceInfo[0].value2().toInt()
+                (queryAtomComplianceInfo[0].get(BK_FAIL_EXECUTE_COUNT) as BigDecimal).toInt(),
+                (queryAtomComplianceInfo[0].get(BK_FAIL_COMPLIANCE_COUNT) as BigDecimal).toInt()
             )
         }
         return null

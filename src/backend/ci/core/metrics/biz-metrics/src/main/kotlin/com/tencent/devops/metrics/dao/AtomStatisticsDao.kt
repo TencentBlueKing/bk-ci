@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.dao
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.service.utils.JooqUtils.productSum
 import com.tencent.devops.common.service.utils.JooqUtils.sum
+import com.tencent.devops.metrics.constant.Constants
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ATOM_NAME
 import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
@@ -222,8 +223,8 @@ class AtomStatisticsDao {
     ): Result<Record2<BigDecimal, BigDecimal>> {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             return dslContext.select(
-                sum(FAIL_EXECUTE_COUNT),
-                sum(FAIL_COMPLIANCE_COUNT)
+                sum(FAIL_EXECUTE_COUNT).`as`(Constants.BK_FAIL_EXECUTE_COUNT),
+                sum(FAIL_COMPLIANCE_COUNT).`as`(Constants.BK_FAIL_COMPLIANCE_COUNT)
             ).from(this)
                 .where(PROJECT_ID.`in`(queryProjectInfoVO.projectIds))
                 .and(ATOM_CODE.eq(atomCode))
