@@ -212,6 +212,8 @@ kubernetes-manager:
   # 内部数据源配置
   mysql:
     enabled: true
+    serviceAccount:
+      name: kubernetes-manager-mysql
     image:
       tag: 5.7.35
     auth:
@@ -251,6 +253,8 @@ kubernetes-manager:
 
   redis:
     enabled: true
+    serviceAccount:
+      name: kubernetes-manager-redis
     auth:
       password: bluking
     replica:
