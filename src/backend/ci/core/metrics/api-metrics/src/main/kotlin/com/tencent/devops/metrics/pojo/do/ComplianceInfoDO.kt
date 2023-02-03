@@ -25,44 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.metrics.pojo.`do`
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
-import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
-import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
-import com.tencent.devops.metrics.pojo.vo.ListPageVO
-import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
-import java.time.LocalDateTime
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface AtomStatisticsManageService {
-
-    /**
-     * 查询插件趋势信息
-     * @param queryAtomTrendInfoDTO 插件统计信息查询传输对象
-     * @return 插件趋势信息视图
-     */
-    fun queryAtomTrendInfo(
-        queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
-    ): AtomTrendInfoVO
-
-    /**
-     * 查询插件执行统计信息
-     * @param queryAtomTrendInfoDTO 插件统计信息查询传输对象
-     * @return 插件执行统计信息
-     */
-    fun queryAtomExecuteStatisticsInfo(
-        queryAtomTrendInfoDTO: QueryAtomStatisticsInfoDTO
-    ): ListPageVO<AtomExecutionStatisticsInfoDO>
-
-    /**
-     * 查询插件执行合规信息
-     * @return 插件合规信息
-     */
-    fun queryAtomComplianceInfo(
-        userId: String,
-        atomCode: String,
-        queryProjectInfoVO: QueryProjectInfoVO
-    ): ComplianceInfoDO?
-}
+@ApiModel("插件基本信息")
+data class ComplianceInfoDO(
+    @ApiModelProperty("失败执行次数")
+    val failExecuteCount: Int,
+    @ApiModelProperty("失败合规次数")
+    val failComplianceCount: Int
+)

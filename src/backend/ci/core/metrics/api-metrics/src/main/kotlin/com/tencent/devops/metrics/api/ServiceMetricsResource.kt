@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.PipelineSumInfoVO
 import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
@@ -89,7 +90,7 @@ interface ServiceMetricsResource {
         endTime: String?
     ): Result<ThirdPlatformOverviewInfoVO>
 
-    @ApiOperation("查询项目所属插件合规率信息")
+    @ApiOperation("查询插件合规率信息")
     @Path("/compliance_atom")
     @POST
     fun queryAtomComplianceInfo(
@@ -97,7 +98,10 @@ interface ServiceMetricsResource {
         @HeaderParam(AUTH_HEADER_USER_ID)
         @BkField(required = true)
         userId: String,
+        @ApiParam("插件code", required = true)
+        @QueryParam("atomCode")
+        atomCode: String,
         @ApiParam("查询项目列表视图", required = true)
         queryProjectInfoVO: QueryProjectInfoVO
-    ): Result<Map<String, Double>>
+    ): Result<ComplianceInfoDO?>
 }

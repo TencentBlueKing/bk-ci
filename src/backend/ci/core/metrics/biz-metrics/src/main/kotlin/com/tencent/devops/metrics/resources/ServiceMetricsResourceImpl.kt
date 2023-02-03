@@ -30,6 +30,7 @@ package com.tencent.devops.metrics.resources
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.ServiceMetricsResource
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineOverviewDTO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
@@ -97,13 +98,11 @@ class ServiceMetricsResourceImpl constructor(
 
     override fun queryAtomComplianceInfo(
         userId: String,
+        atomCode: String,
         queryProjectInfoVO: QueryProjectInfoVO
-    ): Result<Map<String, Double>> {
-        return atomStatisticsManageService.queryAtomComplianceInfo(
-            userId = userId,
-            projectIds = queryProjectInfoVO.projectIds,
-            startDateTime = queryProjectInfoVO.startDateTime,
-            endDateTime = queryProjectInfoVO.endDateTime
+    ): Result<ComplianceInfoDO?> {
+        return Result(
+            atomStatisticsManageService.queryAtomComplianceInfo(userId, atomCode, queryProjectInfoVO)
         )
     }
 }

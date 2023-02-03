@@ -60,11 +60,13 @@ import com.tencent.devops.metrics.pojo.`do`.AtomBaseInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomBaseTrendInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomExecutionStatisticsInfoDO
 import com.tencent.devops.metrics.pojo.`do`.AtomTrendInfoDO
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryAtomStatisticsInfoDTO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.metrics.pojo.vo.AtomTrendInfoVO
 import com.tencent.devops.metrics.pojo.vo.BaseQueryReqVO
 import com.tencent.devops.metrics.pojo.vo.ListPageVO
+import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.metrics.service.AtomStatisticsManageService
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getBetweenDate
 import com.tencent.devops.metrics.utils.QueryParamCheckUtil.getErrorTypeName
@@ -176,25 +178,15 @@ class AtomStatisticsServiceImpl @Autowired constructor(
 
     override fun queryAtomComplianceInfo(
         userId: String,
-        projectIds: List<String>,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime
-    ): Result<Map<String, Double>> {
-        val result = mutableMapOf<String, Double>()
-        projectIds.forEach { projectId ->
-            atomStatisticsDao.queryAtomComplianceInfo(
-                dslContext = dslContext,
-                projectId = projectId,
-                startDateTime = startDateTime,
-                endDateTime = endDateTime
-            ).forEach {
-                val failExecuteCount = (it[BK_FAIL_EXECUTE_COUNT] as BigDecimal).toDouble()
-                val failComplianceCount = it[BK_FAIL_COMPLIANCE_COUNT] as BigDecimal
-                result[it[BK_ATOM_CODE] as String] =
-                    if (failExecuteCount == 0.0) 0.0 else failComplianceCount.toDouble() / failExecuteCount
-            }
+        atomCode: String,
+        queryProjectInfoVO: QueryProjectInfoVO
+    ): ComplianceInfoDO? {
+        return atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)?.let {
+            ComplianceInfoDO(
+                it.value1().toInt(),
+                it.value2().toInt()
+            )
         }
-        return Result(result)
     }
 
     override fun queryAtomExecuteStatisticsInfo(

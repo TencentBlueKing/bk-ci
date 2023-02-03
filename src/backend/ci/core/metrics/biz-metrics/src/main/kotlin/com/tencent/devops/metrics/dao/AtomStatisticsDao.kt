@@ -43,12 +43,15 @@ import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SU
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
+import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
+import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
 import com.tencent.devops.model.metrics.tables.TAtomOverviewData
 import com.tencent.devops.model.metrics.tables.TProjectPipelineLabelInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record2
 import org.jooq.Record3
 import org.jooq.Record5
 import org.jooq.Record6
@@ -217,20 +220,18 @@ class AtomStatisticsDao {
 
     fun queryAtomComplianceInfo(
         dslContext: DSLContext,
-        projectId: String,
-        startDateTime: LocalDateTime,
-        endDateTime: LocalDateTime
-    ): Result<Record3<String, BigDecimal, BigDecimal>> {
+        atomCode: String,
+        queryProjectInfoVO: QueryProjectInfoVO
+    ): Record2<BigDecimal, BigDecimal>? {
         with(TAtomOverviewData.T_ATOM_OVERVIEW_DATA) {
             return dslContext.select(
-                ATOM_CODE.`as`(BK_ATOM_CODE),
-                sum(FAIL_EXECUTE_COUNT).`as`(BK_FAIL_EXECUTE_COUNT),
-                sum(FAIL_COMPLIANCE_COUNT).`as`(BK_FAIL_COMPLIANCE_COUNT)
+                sum(FAIL_EXECUTE_COUNT),
+                sum(FAIL_COMPLIANCE_COUNT)
             ).from(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(STATISTICS_TIME.between(startDateTime, endDateTime))
-                .groupBy(ATOM_CODE)
-                .fetch()
+                .where(PROJECT_ID.`in`(queryProjectInfoVO.projectIds))
+                .and(ATOM_CODE.eq(atomCode))
+                .and(STATISTICS_TIME.between(queryProjectInfoVO.startDateTime, queryProjectInfoVO.endDateTime))
+                .fetchOne()
         }
     }
 }
