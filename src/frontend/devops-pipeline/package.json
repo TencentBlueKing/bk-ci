@@ -32,7 +32,8 @@
         "vue-json-viewer": "^2.2.5",
         "vue-router": "^2.8.1",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0"
+        "vuex": "^2.4.0",
+        "mavon-editor": "^2.10.4"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",
