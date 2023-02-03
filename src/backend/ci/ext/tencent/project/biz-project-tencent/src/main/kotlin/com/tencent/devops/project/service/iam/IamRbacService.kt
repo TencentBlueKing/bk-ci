@@ -284,8 +284,8 @@ class IamRbacService @Autowired constructor(
             // 修改项目状态
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = context,
-                projectCode = projectInfo.englishName,
-                statusEnum = ProjectApproveStatus.UPDATE_PENDING
+                englishName = projectInfo.englishName,
+                approvalStatus = ProjectApproveStatus.UPDATE_PENDING.status
             )
             // 存储审批单
             projectApprovalCallbackDao.create(
@@ -411,8 +411,8 @@ class IamRbacService @Autowired constructor(
             // 修改状态
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
-                projectCode = projectCode,
-                statusEnum = ProjectApproveStatus.CREATE_PENDING
+                englishName = projectCode,
+                approvalStatus = ProjectApproveStatus.CREATE_PENDING.status
             )
         }
     }

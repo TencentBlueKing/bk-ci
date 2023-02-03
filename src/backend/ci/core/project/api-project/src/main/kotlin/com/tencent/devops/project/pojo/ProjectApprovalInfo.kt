@@ -73,6 +73,9 @@ data class ProjectApprovalInfo(
     @ApiModelProperty("logo地址")
     // @JsonProperty("logo_addr")
     val logoAddr: String?,
+    @ApiModelProperty("修改人")
+    // @JsonProperty("updated_at")
+    val updator: String?,
     @ApiModelProperty("修改时间")
     // @JsonProperty("updated_at")
     val updatedAt: String?,

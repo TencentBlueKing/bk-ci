@@ -28,22 +28,28 @@
 
 package com.tencent.devops.project.service.permission
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_UPDATE_FAIL
+import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectPermissionService
+import org.jooq.DSLContext
 
 class RbacProjectPermissionService(
     private val authResourceApi: AuthResourceApi,
     private val projectAuthServiceCode: ProjectAuthServiceCode,
-    private val projectApprovalService: ProjectApprovalService
+    private val projectApprovalService: ProjectApprovalService,
+    private val dslContext: DSLContext,
+    private val projectDao: ProjectDao
 ) : ProjectPermissionService {
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return true
@@ -86,8 +92,48 @@ class RbacProjectPermissionService(
 
     }
 
-    override fun modifyResource(projectInfo: TProjectRecord, resourceUpdateInfo: ResourceUpdateInfo) {
+    override fun modifyResource(resourceUpdateInfo: ResourceUpdateInfo) {
+        val englishName = resourceUpdateInfo.projectUpdateInfo.englishName
+        val projectInfo = projectDao.getByEnglishName(dslContext = dslContext, englishName = englishName)!!
 
+        val approvalStatus = projectInfo.approvalStatus
+        if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status ||
+            approvalStatus == ProjectApproveStatus.UPDATE_PENDING.status
+        ) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_UPDATE_FAIL,
+                params = arrayOf(englishName),
+                defaultMessage = "The project $englishName is under approval, modification is not allowed！"
+            )
+        }
+        with(resourceUpdateInfo) {
+            projectApprovalService.update(
+                userId = userId,
+                projectUpdateInfo = projectUpdateInfo,
+                approvalStatus = approvalStatus,
+                subjectScopes = subjectScopes
+            )
+        }
+
+        // 如果创建时被拒绝,修改后再创建,需要重新发起创建申请单
+        if (approvalStatus == ProjectApproveStatus.CREATE_REJECT.status) {
+            authResourceApi.createResource(
+                user = resourceUpdateInfo.userId,
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = englishName,
+                resourceCode = englishName,
+                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+            )
+        } else {
+            authResourceApi.modifyResource(
+                serviceCode = projectAuthServiceCode,
+                resourceType = AuthResourceType.PROJECT,
+                projectCode = englishName,
+                resourceCode = englishName,
+                resourceName = resourceUpdateInfo.projectUpdateInfo.projectName
+            )
+        }
     }
 
     override fun getUserProjects(userId: String): List<String> {

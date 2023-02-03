@@ -282,4 +282,9 @@ object MQ {
 
     const val ROUTE_PIPELINE_STREAM_ENABLED = "r.engine.pipeline.stream.enabled"
     const val QUEUE_PIPELINE_STREAM_ENABLED = "q.engine.pipeline.stream.enabled"
+
+    // itsm回调时间
+    const val EXCHANGE_AUTH_ITSM_CALLBACK_EVENT = "e.auth.itsm.callback.event"
+    const val ROUTE_AUTH_ITSM_CALLBACK = "r.auth.itsm.callback"
+    const val QUEUE_AUTH_ITSM_CALLBACK = "q.auth.itsm.callback"
 }

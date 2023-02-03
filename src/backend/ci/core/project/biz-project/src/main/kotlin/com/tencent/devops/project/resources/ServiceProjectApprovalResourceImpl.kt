@@ -61,4 +61,22 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         )
         return Result(true)
     }
+
+    override fun updateApproved(projectId: String, applicant: String, approver: String): Result<Boolean> {
+        projectApprovalService.updateApproved(
+            projectId = projectId,
+            applicant = applicant,
+            approver = approver,
+        )
+        return Result(true)
+    }
+
+    override fun updateReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
+        projectApprovalService.updateReject(
+            projectId = projectId,
+            applicant = applicant,
+            approver = approver,
+        )
+        return Result(true)
+    }
 }

@@ -51,7 +51,6 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -317,11 +316,9 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun modifyProjectAuthResource(
-        projectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
         projectPermissionService.modifyResource(
-            projectInfo = projectInfo,
             resourceUpdateInfo = resourceUpdateInfo
         )
     }

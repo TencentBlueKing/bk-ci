@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.CallbackApplicationDTO
 import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationCreateDTO
+import com.tencent.bk.sdk.iam.dto.GradeManagerApplicationUpdateDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmAttrs
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmColumn
@@ -125,7 +126,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.CREATE_APPROVED.status) {
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -189,7 +190,7 @@ class PermissionGradeManagerService @Autowired constructor(
         }
     }
 
-    fun handleItsmCallback(
+    fun handleItsmCreateCallback(
         userId: String,
         projectCode: String,
         projectName: String,
@@ -197,7 +198,7 @@ class PermissionGradeManagerService @Autowired constructor(
         callBackId: String,
         currentStatus: String
     ): Int {
-        logger.info("handle itsm callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
+        logger.info("handle itsm create callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
         val callbackApplicationDTO = CallbackApplicationDTO
             .builder()
             .sn(sn)
@@ -222,6 +223,29 @@ class PermissionGradeManagerService @Autowired constructor(
             projectName = projectName
         )
         return gradeManagerId
+    }
+
+    fun handleItsmUpdateCallback(
+        userId: String,
+        projectCode: String,
+        projectName: String,
+        sn: String,
+        callBackId: String,
+        currentStatus: String
+    ) {
+        logger.info("handle itsm update callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
+        val callbackApplicationDTO = CallbackApplicationDTO
+            .builder()
+            .sn(sn)
+            .currentStatus(currentStatus)
+            .approveResult(true).build()
+        iamV2ManagerService.handleCallbackApplication(callBackId, callbackApplicationDTO).roleId
+        authResourceService.update(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            resourceName = projectName
+        )
     }
 
     @Suppress("LongParameterList")
@@ -259,7 +283,7 @@ class PermissionGradeManagerService @Autowired constructor(
     /**
      * 修改分级管理员
      */
-    @SuppressWarnings("LongParameterList")
+    @SuppressWarnings("LongParameterList", "LongMethod")
     fun modifyGradeManager(
         gradeManagerId: String,
         projectCode: String,
@@ -268,6 +292,12 @@ class PermissionGradeManagerService @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ) {
+        val projectApprovalInfo = client.get(ServiceProjectApprovalResource::class).get(projectId = projectCode).data
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
+                params = arrayOf(projectCode),
+                defaultMessage = "the resource not exists, projectCode:$projectCode"
+            )
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = resourceName,
         )
@@ -279,16 +309,69 @@ class PermissionGradeManagerService @Autowired constructor(
             projectCode = projectCode,
             projectName = projectName
         )
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
-        val updateManagerDTO = UpdateManagerDTO.builder()
-            .name(name)
-            .members(gradeManagerDetail.members)
-            .description(gradeManagerDetail.description)
-            .authorizationScopes(authorizationScopes)
-            .subjectScopes(listOf(ManagerScopes("*", "*")))
-            .syncPerm(true)
-            .build()
-        iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
+        val subjectScopes = projectApprovalInfo.subjectScopes?.map {
+            when (it.type) {
+                DEPARTMENT_TYPE -> ManagerScopes(DEPARTMENT, it.id)
+                USER_TYPE -> ManagerScopes(it.type, it.name)
+                else -> ManagerScopes(it.type, it.id)
+            }
+        } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
+        if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.UPDATE_APPROVED.status) {
+            val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+            val updateManagerDTO = UpdateManagerDTO.builder()
+                .name(name)
+                .members(gradeManagerDetail.members)
+                .description(gradeManagerDetail.description)
+                .authorizationScopes(authorizationScopes)
+                .subjectScopes(subjectScopes)
+                .syncPerm(true)
+                .build()
+            iamV2ManagerService.updateManagerV2(gradeManagerId, updateManagerDTO)
+        } else {
+            val callbackId = UUIDUtil.generate()
+            val itsmContentDTO = buildItsmContentDTO(
+                projectName = projectName,
+                projectId = projectCode,
+                desc = projectApprovalInfo.description ?: "",
+                organization =
+                "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
+                authSecrecy = projectApprovalInfo.authSecrecy ?: false,
+                subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
+                    SubjectScopeInfo(
+                        id = ALL_MEMBERS,
+                        type = ALL_MEMBERS,
+                        name = ALL_MEMBERS_NAME
+                    )
+                )
+            )
+            val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
+            val gradeManagerApplicationUpdateDTO = GradeManagerApplicationUpdateDTO.builder()
+                .name(name)
+                .description(gradeManagerDetail.description)
+                .authorizationScopes(authorizationScopes)
+                .subjectScopes(subjectScopes)
+                .syncPerm(true)
+                .applicant(projectApprovalInfo.updator)
+                .members(gradeManagerDetail.members)
+                .reason(
+                    IamGroupUtils.buildItsmDefaultReason(projectCode, projectApprovalInfo.updator!!, false)
+                )
+                .callbackId(callbackId)
+                .callbackUrl(String.format(itsmConfig.itsmUpdateCallBackUrl, projectCode))
+                .content(itsmContentDTO)
+                .title("修改蓝盾项目申请")
+                .build()
+            logger.info("gradeManagerApplicationUpdateDTO : $gradeManagerApplicationUpdateDTO")
+            val updateGradeManagerApplication =
+                iamV2ManagerService.updateGradeManagerApplication(gradeManagerId, gradeManagerApplicationUpdateDTO)
+            authItsmCallbackDao.create(
+                dslContext = dslContext,
+                sn = updateGradeManagerApplication.sn,
+                englishName = projectCode,
+                callbackId = callbackId,
+                applicant = projectApprovalInfo.updator!!
+            )
+        }
     }
 
     fun deleteGradeManager(gradeManagerId: String) {

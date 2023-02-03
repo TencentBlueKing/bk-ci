@@ -28,7 +28,6 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.config.IamConfiguration
@@ -40,7 +39,6 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -48,7 +46,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.dao.ProjectApprovalCallbackDao
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -151,10 +148,9 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun modifyResource(
-        dbProjectInfo: TProjectRecord,
         resourceUpdateInfo: ResourceUpdateInfo
     ) {
-        val needApproval = resourceUpdateInfo.needApproval
+        /*val needApproval = resourceUpdateInfo.needApproval
         val iamSubjectScopes = resourceUpdateInfo.iamSubjectScopes
         val projectCode = resourceUpdateInfo.projectUpdateInfo.englishName
         val projectName = resourceUpdateInfo.projectUpdateInfo.projectName
@@ -240,7 +236,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
                     )
                 }
             }
-        }
+        }*/
     }
 
     private fun checkParams(
