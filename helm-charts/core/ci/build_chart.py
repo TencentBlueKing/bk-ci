@@ -60,7 +60,8 @@ default_value_dict = {
     'bkCiKubernetesHost': 'http://kubernetes-manager',
     'bkCiKubernetesToken': 'landun',
     'bkCiDevopsToken': 'devops',
-    'bkCiAppToken': 'test'
+    'bkCiAppToken': 'test',
+    'bkCiNotifyEmailSendChannel': 'blueking'
 }
 
 if os.path.isfile(default_value_json):
