@@ -26,39 +26,25 @@
  *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.resources
 
+import com.tencent.devops.auth.api.callback.ExternalAuthItsmCallbackResource
+import com.tencent.devops.auth.pojo.ItsmCallBackInfo
+import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
-import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectApprovalService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectApprovalResourceImpl @Autowired constructor(
-    private val projectApprovalService: ProjectApprovalService
-) : ServiceProjectApprovalResource {
-
-    override fun get(projectId: String): Result<ProjectApprovalInfo?> {
-        return Result(projectApprovalService.get(projectId = projectId))
-    }
-
-    override fun createApproved(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createApproved(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
+class ExternalAuthItsmCallbackResourceImpl @Autowired constructor(
+    private val permissionItsmCallbackService: PermissionItsmCallbackService
+) : ExternalAuthItsmCallbackResource {
+    override fun handleItsmProjectCreateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
+        permissionItsmCallbackService.createProjectCallBack(itsmCallBackInfo = itsmCallBackInfo)
         return Result(true)
     }
 
-    override fun createReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createReject(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
+    override fun handleItsmProjectUpdateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
         return Result(true)
     }
 }

@@ -26,39 +26,38 @@
  *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.api.callback
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
-import com.tencent.devops.project.pojo.ProjectApprovalInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectApprovalService
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.auth.pojo.ItsmCallBackInfo
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@RestResource
-class ServiceProjectApprovalResourceImpl @Autowired constructor(
-    private val projectApprovalService: ProjectApprovalService
-) : ServiceProjectApprovalResource {
+@Api(tags = ["EXTERNAL_AUTH_ITSM_CALLBACK"], description = "权限-itsm-回调")
+@Path("/external/auth/itsm")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface ExternalAuthItsmCallbackResource {
 
-    override fun get(projectId: String): Result<ProjectApprovalInfo?> {
-        return Result(projectApprovalService.get(projectId = projectId))
-    }
+    @Path("/create_callback")
+    @POST
+    @ApiOperation("处理Itsm项目创建回调")
+    fun handleItsmProjectCreateCallBack(
+        @ApiParam(value = "itsm回调内容", required = true)
+        itsmCallBackInfo: ItsmCallBackInfo
+    ): Result<Boolean>
 
-    override fun createApproved(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createApproved(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
-    }
-
-    override fun createReject(projectId: String, applicant: String, approver: String): Result<Boolean> {
-        projectApprovalService.createReject(
-            projectId = projectId,
-            applicant = applicant,
-            approver = approver,
-        )
-        return Result(true)
-    }
+    @Path("/update_callback")
+    @POST
+    @ApiOperation("处理Itsm项目编辑回调")
+    fun handleItsmProjectUpdateCallBack(
+        @ApiParam(value = "itsm回调内容", required = true)
+        itsmCallBackInfo: ItsmCallBackInfo
+    ): Result<Boolean>
 }
