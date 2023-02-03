@@ -92,7 +92,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     File(envDir, NODEJS).absoluteFile
                 }
                 CommandLineUtils.execute(
-                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
+                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}${File.separator}node -v",
                     workspacePath,
                     true
                 )
@@ -169,23 +169,26 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         pkgName: String
     ) {
+        val path = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+        val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
         try {
             if (osType == OSType.WINDOWS) {
                 // ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute(
-                    "${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
+                    command,
                     pkgFileDir.absoluteFile,
                     true
                 )
             } else {
                 // CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v",
+                CommandLineUtils.execute(
+                    command,
                     File(envDir, NODEJS).absoluteFile,
                     true
                 )
             }
         } catch (e: Exception) {
-            logger.info("retryNum: $retryNum, Cause of error: ${e.message}")
+            logger.info("retryNum: $retryNum, failScript Command: $command, Cause of error: ${e.message}")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
