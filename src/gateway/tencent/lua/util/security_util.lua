@@ -30,7 +30,7 @@ function _M:isSafe()
         and string.find(path, "/bkrepo/api/external/generic") == nil -- 仓库的external/generic路径
         and string.find(path, "/bkrepo/api/external/repository") == nil -- 仓库的external/repository路径
         and string.find(path, "/process/api/external/scm/codetgit/commit") == nil -- TGit回调
-        and string.find(path, "/external/api/external/github") == nil -- Github回调
+        and string.find(path, "/repository/api/external/github") == nil -- Github回调
         and string.find(path, "/process/api/external/pipelines/projects/.+/.+/badge") == nil -- 勋章
         and string.find(path, "/stream/api/external/stream/projects/.+/.+/badge") == nil -- stream勋章
         then
