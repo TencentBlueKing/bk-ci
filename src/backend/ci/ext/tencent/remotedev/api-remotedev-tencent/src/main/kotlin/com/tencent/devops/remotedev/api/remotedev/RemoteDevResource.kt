@@ -33,8 +33,8 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
-import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -46,7 +46,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface RemoteDevResource {
     @ApiOperation("获取oauth")
-    @POST
+    @GET
     @Path("/oauth")
     fun oauth(
         @ApiParam(value = "secretKey签名(sha256)", required = true)
