@@ -91,28 +91,30 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             if (!pkgFileDir.exists()) {
                 // 把指定的nodejs安装包下载到构建机上
                 val pkgFile = File(envDir, "$NODEJS/$pkgName")
-                OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
-                logger.info("prepareRunEnv download [$pkgName] success")
-                // 把nodejs安装包解压到构建机上
-                isUnzipSuccess(
-                    retryNum = 3,
-                    pkgFile = pkgFile,
-                    pkgFileDir = pkgFileDir,
-                    envDir = envDir,
-                    osType = osType,
-                    pkgName = pkgName
-                )
-                // 删除安装包
-                pkgFile.delete()
-                logger.info("prepareRunEnv decompress [$pkgName] success")
+                // 判断是否需要下载解压
+                try {
+                    if (osType == OSType.WINDOWS) {
+                        CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", pkgFileDir.absoluteFile, true)
+                    } else {
+                        CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", File(envDir, NODEJS).absoluteFile, true)
+                    }
+                } catch (e: Exception) {
+                    OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
+                    logger.info("prepareRunEnv download [$pkgName] success")
+                    // 把nodejs安装包解压到构建机上
+                    isUnzipSuccess(
+                        retryNum = 3,
+                        pkgFile = pkgFile,
+                        pkgFileDir = pkgFileDir,
+                        envDir = envDir,
+                        osType = osType,
+                        pkgName = pkgName
+                    )
+                    // 删除安装包
+                    pkgFile.delete()
+                    logger.info("prepareRunEnv decompress [$pkgName] success")
+                    }
             }
-            // 把nodejs执行路径写入系统变量
-            val nodejsPath = if (osType == OSType.WINDOWS) {
-                pkgFileDir.absolutePath
-            } else {
-                "${pkgFileDir.absolutePath}/bin"
-            }
-            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
         }
         return true
     }
@@ -155,15 +157,23 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         osType: OSType,
         pkgName: String
     ) {
+        // 把nodejs执行路径写入系统变量
+        val nodejsPath = if (osType == OSType.WINDOWS) {
+            pkgFileDir.absolutePath
+        } else {
+            "${pkgFileDir.absolutePath}/bin"
+        }
+        System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
         try {
             if (osType == OSType.WINDOWS) {
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
-                CommandLineUtils.execute("node -v", pkgFileDir.absoluteFile, true)
+                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", pkgFileDir.absoluteFile, true)
             } else {
                 CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
-                CommandLineUtils.execute("node -v", File(envDir, NODEJS).absoluteFile, true)
+                CommandLineUtils.execute("${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}/node -v", File(envDir, NODEJS).absoluteFile, true)
             }
         } catch (e: Exception) {
+            logger.info("retryNum: $retryNum, Cause of error: ${e.message}")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
