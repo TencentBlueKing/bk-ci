@@ -36,14 +36,11 @@ import com.tencent.devops.metrics.constant.Constants.BK_AVG_COST_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_CLASSIFY_CODE
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_ERROR_TYPE
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_COMPLIANCE_COUNT
-import com.tencent.devops.metrics.constant.Constants.BK_FAIL_EXECUTE_COUNT
 import com.tencent.devops.metrics.constant.Constants.BK_STATISTICS_TIME
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_EXECUTE_COUNT_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_SUCCESS_RATE
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_COST_TIME_SUM
 import com.tencent.devops.metrics.constant.Constants.BK_TOTAL_EXECUTE_COUNT_SUM
-import com.tencent.devops.metrics.pojo.`do`.ComplianceInfoDO
 import com.tencent.devops.metrics.pojo.qo.QueryAtomStatisticsQO
 import com.tencent.devops.metrics.pojo.vo.QueryProjectInfoVO
 import com.tencent.devops.model.metrics.tables.TAtomFailSummaryData
