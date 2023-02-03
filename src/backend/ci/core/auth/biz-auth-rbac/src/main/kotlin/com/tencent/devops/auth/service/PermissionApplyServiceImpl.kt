@@ -15,8 +15,8 @@ import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
-import com.tencent.devops.auth.pojo.vo.AuthApplyJumpInfoVo
-import com.tencent.devops.auth.pojo.vo.AuthJumpGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
+import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
@@ -43,8 +43,7 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val authDefaultGroupDao: AuthDefaultGroupDao,
     val strategyService: StrategyService
 ) : PermissionApplyService {
-    @Value("\${auth.iamSystem:}")
-    val systemId = ""
+
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(7L, TimeUnit.DAYS)
@@ -176,14 +175,14 @@ class PermissionApplyServiceImpl @Autowired constructor(
         return groupPermissionDetailVoList
     }
 
-    override fun getJumpInformation(
+    override fun getRedirectInformation(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String,
         action: String
-    ): AuthApplyJumpInfoVo {
-        val groupInfoList: ArrayList<AuthJumpGroupInfoVo> = ArrayList()
+    ): AuthApplyRedirectInfoVo {
+        val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
         // 查询是否开启权限
         val isEnablePermission = permissionResourceService.isEnablePermission(
             projectId = projectId,
@@ -193,38 +192,46 @@ class PermissionApplyServiceImpl @Autowired constructor(
         if (isEnablePermission) {
             // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
             authDefaultGroupDao.get(dslContext, resourceType).forEach {
-                strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
-                    ?.get(resourceType)?.forEach { actionList ->
+                val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
+                if (strategy != null) {
+                    strategy[resourceType]?.forEach { actionList ->
                         if (actionList.contains(action)) {
                             // 根据resourceType + resourceCode + it.group_Code ----> groupId+groupName
                             // 加入到groupInfoList
                             groupInfoList.add(
-                                AuthJumpGroupInfoVo(
-                                    url = "xxx",
-                                    groupName = "xxx"
+                                AuthRedirectGroupInfoVo(
+                                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
+                                    groupName = "groupName"
                                 )
                             )
                         }
                     }
+                }
             }
         } else {
             // 根据resourceType + resourceCode + manager ----> groupId+groupName
             // 加入到groupInfoList
             groupInfoList.add(
-                AuthJumpGroupInfoVo(
-                    url = "xxx",
-                    groupName = "xxx"
+                AuthRedirectGroupInfoVo(
+                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
+                    groupName = "groupName"
                 )
             )
         }
-        return AuthApplyJumpInfoVo(
+        return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
             groupInfoList = groupInfoList
         )
     }
 
     companion object {
+        @Value("\${auth.iamSystem:}")
+        val systemId = ""
+
+        @Value("\${devopsGateway.host:}")
+        val host = ""
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private const val ALL_RESOURCE = "all_resource"
+        private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?projectId=%s&groupId=%s"
     }
 }
