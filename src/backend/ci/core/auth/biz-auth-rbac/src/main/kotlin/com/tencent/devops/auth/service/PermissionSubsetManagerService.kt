@@ -32,10 +32,13 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.AuthDefaultGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dispatcher.AuthResourceGroupDispatcher
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
@@ -47,8 +50,8 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
-    private val authDefaultGroupDao: AuthDefaultGroupDao,
-    private val permissionResourceGroupService: PermissionResourceGroupService
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val authResourceGroupDispatcher: AuthResourceGroupDispatcher
 ) {
 
     /**
@@ -64,7 +67,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceCode: String,
         resourceName: String
     ): Int {
-        val managerDefaultGroup = authDefaultGroupDao.get(
+        val managerGroupConfig = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value
@@ -75,7 +78,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceName = resourceName,
-            groupName = managerDefaultGroup.groupName
+            groupName = managerGroupConfig.groupName
         )
         val description = IamGroupUtils.buildSubsetManagerDescription(
             resourceName = resourceName,
@@ -105,15 +108,16 @@ class PermissionSubsetManagerService @Autowired constructor(
             gradeManagerId,
             createSubsetManagerDTO
         )
-        permissionResourceGroupService.createSubsetManagerDefaultGroup(
-            subsetManagerId = subsetManagerId,
-            userId = userId,
-            projectCode = projectCode,
-            projectName = projectName,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-            createMode = false
+        authResourceGroupDispatcher.dispatch(
+            AuthResourceGroupEvent(
+                managerId = subsetManagerId,
+                userId = userId,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                resourceName = projectName
+            )
         )
         return subsetManagerId
     }
@@ -126,8 +130,8 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ) {
-        val managerDefaultGroup = authDefaultGroupDao.get(
+    ): Boolean {
+        val managerGroupConfig = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value
@@ -138,7 +142,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
             resourceName = resourceName,
-            groupName = managerDefaultGroup.groupName
+            groupName = managerGroupConfig.groupName
         )
         val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
             strategyName = IamGroupUtils.buildGroupStrategyName(
@@ -165,6 +169,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             subsetManagerId,
             updateSubsetManagerDTO
         )
+        return true
     }
 
     fun deleteSubsetManager(subsetManagerId: String) {

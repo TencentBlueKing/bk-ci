@@ -49,4 +49,10 @@ interface PermissionExtService {
         resourceType: String,
         resourceCode: String
     ): Boolean
+
+    fun resourceCancelRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean
 }

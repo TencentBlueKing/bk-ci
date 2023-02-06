@@ -64,9 +64,8 @@ interface ProjectPermissionService {
     ): Boolean
 
     fun cancelCreateAuthProject(
-        status: Int,
         projectCode: String
-    ): Boolean
+    )
 
     fun createRoleGroupApplication(
         userId: String,

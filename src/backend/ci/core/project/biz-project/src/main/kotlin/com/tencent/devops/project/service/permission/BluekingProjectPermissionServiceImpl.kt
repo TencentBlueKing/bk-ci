@@ -65,9 +65,7 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        return true
-    }
+    override fun cancelCreateAuthProject(projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,

@@ -273,6 +273,26 @@ interface ServicePermissionAuthResource {
         resourceCode: String
     ): Result<Boolean>
 
+    @Path("/projects/{projectCode}/cancel/relation")
+    @PUT
+    fun resourceCancelRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
+        @PathParam("projectCode")
+        @ApiParam("项目Id")
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        @QueryParam("resourceCode")
+        @ApiParam("资源Code")
+        resourceCode: String
+    ): Result<Boolean>
+
     @Path("/projects/{projectCode}/grant")
     @POST
     @ApiOperation("授权实例级别权限")

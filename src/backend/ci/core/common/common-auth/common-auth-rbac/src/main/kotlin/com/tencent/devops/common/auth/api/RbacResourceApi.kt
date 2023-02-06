@@ -126,6 +126,20 @@ class RbacResourceApi(
         )
     }
 
+    override fun cancelCreateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+        client.get(ServicePermissionAuthResource::class).resourceCancelRelation(
+            token = tokenService.getSystemToken(null)!!,
+            resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+            resourceCode = resourceCode,
+            projectCode = projectCode
+        )
+    }
+
     override fun createResource(
         scopeType: String,
         user: String,
@@ -134,8 +148,7 @@ class RbacResourceApi(
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun modifyResource(
         scopeType: String,
@@ -144,8 +157,7 @@ class RbacResourceApi(
         projectCode: String,
         resourceCode: String,
         resourceName: String
-    ) {
-    }
+    ) = Unit
 
     override fun deleteResource(
         scopeType: String,
@@ -153,8 +165,7 @@ class RbacResourceApi(
         resourceType: AuthResourceType,
         projectCode: String,
         resourceCode: String
-    ) {
-    }
+    ) = Unit
 
     override fun batchCreateResource(
         principalId: String,

@@ -41,17 +41,20 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.dispatcher.AuthItsmCallbackDispatcher
 import com.tencent.devops.auth.listener.AuthItsmCallbackListener
+import com.tencent.devops.auth.listener.AuthResourceGroupListener
+import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
-import com.tencent.devops.auth.service.PermissionResourceGroupService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
+import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -124,16 +127,32 @@ class RbacAuthConfiguration {
         client: Client,
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
-        permissionResourceGroupService: PermissionResourceGroupService,
+        authResourceGroupService: AuthResourceGroupService,
         permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService
     ) = RbacPermissionResourceService(
         client = client,
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
-        permissionResourceGroupService = permissionResourceGroupService,
+        authResourceGroupService = authResourceGroupService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService
+    )
+
+    @Bean
+    @SuppressWarnings("LongParameterList")
+    fun permissionResourceGroupService(
+        iamV2ManagerService: V2ManagerService,
+        authResourceService: AuthResourceService,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionSubsetManagerService: PermissionSubsetManagerService,
+        permissionResourceService: PermissionResourceService
+    ) = RbacPermissionResourceGroupService(
+        iamV2ManagerService = iamV2ManagerService,
+        authResourceService = authResourceService,
+        permissionGradeManagerService = permissionGradeManagerService,
+        permissionSubsetManagerService = permissionSubsetManagerService,
+        permissionResourceService = permissionResourceService
     )
 
     @Bean
@@ -161,8 +180,8 @@ class RbacAuthConfiguration {
     ) = RbacPermissionService(authHelper, authResourceService, iamConfiguration)
 
     @Bean
-    fun itsmCallbackExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_ITSM_CALLBACK_EVENT, true, false)
+    fun authRbacExchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, true, false)
         directExchange.isDelayed = true
         return directExchange
     }
@@ -175,9 +194,9 @@ class RbacAuthConfiguration {
     @Bean
     fun itsmCallbackBind(
         @Autowired itsmCallbackQueue: Queue,
-        @Autowired itsmCallbackExchange: DirectExchange
+        @Autowired authRbacExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(itsmCallbackQueue).to(itsmCallbackExchange).with(MQ.ROUTE_AUTH_ITSM_CALLBACK)
+        return BindingBuilder.bind(itsmCallbackQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_ITSM_CALLBACK)
     }
 
     @Bean
@@ -188,16 +207,52 @@ class RbacAuthConfiguration {
         @Autowired itsmCallbackListener: AuthItsmCallbackListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setQueueNames(itsmCallbackQueue.name)
-        container.setConcurrentConsumers(1)
-        container.setMaxConcurrentConsumers(10)
-        container.setAmqpAdmin(rabbitAdmin)
-        container.setStartConsumerMinInterval(5000)
-        container.setConsecutiveActiveTrigger(5)
         val adapter = MessageListenerAdapter(itsmCallbackListener, itsmCallbackListener::execute.name)
         adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = itsmCallbackQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
+    }
+
+    @Bean
+    fun authResourceGroupQueue(): Queue {
+        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP, true)
+    }
+
+    @Bean
+    fun authResourceGroupBind(
+        @Autowired authResourceGroupQueue: Queue,
+        @Autowired authRbacExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder.bind(authResourceGroupQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_RESOURCE_GROUP)
+    }
+
+    @Bean
+    fun authResourceGroupEventListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired authResourceGroupQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired authResourceGroupListener: AuthResourceGroupListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(authResourceGroupListener, authResourceGroupListener::execute.name)
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = authResourceGroupQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
     }
 }

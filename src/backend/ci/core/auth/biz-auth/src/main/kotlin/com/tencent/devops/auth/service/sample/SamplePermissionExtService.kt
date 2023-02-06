@@ -52,4 +52,10 @@ class SamplePermissionExtService : PermissionExtService {
         resourceType: String,
         resourceCode: String
     ) = true
+
+    override fun resourceCancelRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) = true
 }

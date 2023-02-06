@@ -30,14 +30,14 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthResourceGroupResourceImpl @Autowired constructor(
-    private val permissionResourceService: PermissionResourceService
+    private val permissionResourceGroupService: PermissionResourceGroupService
 ) : UserAuthResourceGroupResource {
     override fun getGroupPolicies(
         userId: String,
@@ -46,7 +46,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<List<String>> {
         return Result(
-            permissionResourceService.getGroupPolicies(
+            permissionResourceGroupService.getGroupPolicies(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
@@ -63,7 +63,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.renewal(
+            permissionResourceGroupService.renewal(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
@@ -80,7 +80,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.deleteMember(
+            permissionResourceGroupService.deleteGroupMember(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
@@ -96,7 +96,7 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
         groupId: Int
     ): Result<Boolean> {
         return Result(
-            permissionResourceService.deleteMember(
+            permissionResourceGroupService.deleteGroup(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,

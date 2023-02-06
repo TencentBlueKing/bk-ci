@@ -28,23 +28,13 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
-import com.tencent.devops.common.api.util.DateTimeUtil
-import com.tencent.devops.common.api.util.DateTimeUtil.YYYY_MM_DD_T_HH_MM_SSZ
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -58,7 +48,7 @@ class RbacPermissionResourceService(
     private val client: Client,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
+    private val authResourceGroupService: AuthResourceGroupService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService
 ) : PermissionResourceService {
@@ -75,6 +65,7 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
+        logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
@@ -119,12 +110,13 @@ class RbacPermissionResourceService(
         resourceCode: String,
         resourceName: String
     ): Boolean {
-        val resourceInfo = getResourceInfo(
-            projectId = projectCode,
+        logger.info("resource modify relation|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val resourceInfo = authResourceService.get(
+            projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        if (resourceType == AuthResourceType.PROJECT.value) {
+        val updateAuthResource = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
@@ -143,12 +135,14 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         }
-        authResourceService.update(
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-        )
+        if (updateAuthResource) {
+            authResourceService.update(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+            )
+        }
         return true
     }
 
@@ -157,12 +151,13 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         if (resourceType == AuthResourceType.PROJECT.value) {
             val projectInfo = getProjectInfo(projectCode)
             permissionGradeManagerService.deleteGradeManager(projectInfo.relationId!!)
         } else {
-            val resourceInfo = getResourceInfo(
-                projectId = projectCode,
+            val resourceInfo = authResourceService.get(
+                projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
@@ -176,6 +171,19 @@ class RbacPermissionResourceService(
         return true
     }
 
+    override fun resourceCancelRelation(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): Boolean {
+        logger.info("resource cancel relation|$projectCode|$resourceType|$resourceCode")
+        // 只有项目创建时才可以取消
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            permissionGradeManagerService.cancelCreateGradeManager(projectCode)
+        }
+        return true
+    }
+
     @Suppress("ReturnCount")
     override fun hasManagerPermission(
         userId: String,
@@ -184,9 +192,9 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         // 1. 先判断是否是项目管理员
-        val projectInfo = getResourceInfo(
-            projectId = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
             resourceCode = projectId
         )
         val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
@@ -195,8 +203,8 @@ class RbacPermissionResourceService(
         }
         if (resourceType != AuthResourceType.PROJECT.value) {
             // 2. 判断是否是资源管理员
-            val resourceInfo = getResourceInfo(
-                projectId = projectId,
+            val resourceInfo = authResourceService.get(
+                projectCode = projectId,
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
@@ -213,93 +221,11 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        return getResourceInfo(
-            projectId = projectId,
+        return authResourceService.get(
+            projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         ).enable
-    }
-
-    override fun listGroup(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo> {
-        val resourceInfo = getResourceInfo(
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        return if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.listGroup(resourceInfo.relationId)
-        } else {
-            permissionSubsetManagerService.listGroup(resourceInfo.relationId)
-        }
-    }
-
-    override fun listUserBelongGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupMemberInfoVo> {
-        val resourceInfo = getResourceInfo(
-            projectId = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
-        val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 10
-        val iamGroupInfos =
-            iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
-        val iamIds = iamGroupInfos.results.map { it.id }
-        val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
-        val verifyResult =
-            iamV2ManagerService.verifyGroupValidMember(userId, iamIds.joinToString(","))
-        return verifyResult.map { (iamGroupId, result) ->
-            val (status, createTime, expiredTime) = if (result.belong) {
-                val createTime = DateTimeUtil.toDateTime(
-                    dateTime = DateTimeUtil.stringToLocalDateTime(
-                        dateTimeStr = result.createdAt.replace("Z", " UTC"),
-                        formatStr = YYYY_MM_DD_T_HH_MM_SSZ
-                    )
-                )
-                val expiredAt = result.expiredAt * 1000
-                val expiredTime = DateTimeUtil.formatMilliTime(
-                    time = expiredAt,
-                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                )
-                val status = if (System.currentTimeMillis() >= expiredAt) {
-                    GroupMemberStatus.EXPIRED.name
-                } else {
-                    GroupMemberStatus.NORMAL.name
-                }
-                Triple(status, createTime, expiredTime)
-            } else {
-                val status = GroupMemberStatus.NOT_JOINED.name
-                val createTime = "--"
-                val expiredTime = "--"
-                Triple(status, createTime, expiredTime)
-            }
-            IamGroupMemberInfoVo(
-                userId = userId,
-                groupId = iamGroupId,
-                groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
-                createdTime = createTime,
-                status = status,
-                expiredTime = expiredTime
-            )
-        }
-    }
-
-    override fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<String> {
-        return iamV2ManagerService.getRoleGroupActionV2(groupId).map { it.id }
     }
 
     override fun enableResourcePermission(
@@ -310,7 +236,11 @@ class RbacPermissionResourceService(
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
         // 1. 先判断是否是项目管理员
-        val projectInfo = getProjectInfo(projectId)
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
         val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
         if (!gradeManagerDetail.members.contains(userId)) {
             throw PermissionForbiddenException(
@@ -318,8 +248,8 @@ class RbacPermissionResourceService(
             )
         }
         // 2. 判断是否是资源管理员
-        val resourceInfo = getResourceInfo(
-            projectId = projectId,
+        val resourceInfo = authResourceService.get(
+            projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
@@ -334,11 +264,11 @@ class RbacPermissionResourceService(
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        permissionResourceGroupService.createSubsetManagerDefaultGroup(
+        authResourceGroupService.createSubsetManagerDefaultGroup(
             subsetManagerId = resourceInfo.relationId.toInt(),
             userId = userId,
             projectCode = projectId,
-            projectName = projectInfo.projectName,
+            projectName = projectInfo.resourceName,
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
@@ -378,62 +308,6 @@ class RbacPermissionResourceService(
         )
     }
 
-    override fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean {
-        logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
-        val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-            .members(listOf(managerMember))
-            .expiredAt(memberRenewalDTO.expiredAt)
-            .build()
-        iamV2ManagerService.renewalRoleGroupMemberV2(
-            groupId,
-            managerMemberGroupDTO
-        )
-        return true
-    }
-
-    override fun deleteMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean {
-        logger.info("delete group member|$userId|$projectId|$resourceType|$groupId")
-        iamV2ManagerService.deleteRoleGroupMemberV2(
-            groupId,
-            ManagerScopesEnum.getType(ManagerScopesEnum.USER),
-            userId
-        )
-        return true
-    }
-
-    override fun deleteGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean {
-        logger.info("delete group|$userId|$projectId|$resourceType|$groupId")
-        if (!hasManagerPermission(
-                userId = userId,
-                projectId = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-        )) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
-        iamV2ManagerService.deleteRoleGroupV2(groupId)
-        return true
-    }
-
     override fun listResoureces(
         userId: String,
         projectId: String?,
@@ -471,21 +345,5 @@ class RbacPermissionResourceService(
             defaultMessage = "the resource not exists, projectCode:$projectCode"
         )
         return projectInfo
-    }
-
-    private fun getResourceInfo(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): AuthResourceInfo {
-        return authResourceService.get(
-            projectCode = projectId,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-            params = arrayOf(resourceCode),
-            defaultMessage = "the resource not exists, resourceCode:$resourceCode"
-        )
     }
 }

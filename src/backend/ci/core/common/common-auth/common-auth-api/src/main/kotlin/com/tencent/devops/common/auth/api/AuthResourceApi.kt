@@ -102,6 +102,20 @@ interface AuthResourceApi {
     )
 
     /**
+     * 取消资源
+     * @param serviceCode 服务模块
+     * @param resourceType 资源类型
+     * @param projectCode 项目英文id
+     * @param resourceCode 资源Code唯一标识
+     */
+    fun cancelCreateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    )
+
+    /**
      * 批量创建资源
      * @param serviceCode 服务模块
      * @param resourceType 资源类型
