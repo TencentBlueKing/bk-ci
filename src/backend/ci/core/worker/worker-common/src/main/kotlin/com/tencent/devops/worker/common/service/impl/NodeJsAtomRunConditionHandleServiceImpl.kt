@@ -173,14 +173,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
         try {
             if (osType == OSType.WINDOWS) {
-                ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                // ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute(
                     command,
                     pkgFileDir.absoluteFile,
                     true
                 )
             } else {
-                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                // CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute(
                     command,
                     File(envDir, NODEJS).absoluteFile,
