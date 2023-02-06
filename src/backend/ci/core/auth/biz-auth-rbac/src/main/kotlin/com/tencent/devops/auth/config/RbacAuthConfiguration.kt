@@ -44,10 +44,12 @@ import com.tencent.devops.auth.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.listener.AuthResourceGroupListener
 import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
+import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
@@ -255,4 +257,12 @@ class RbacAuthConfiguration {
             maxConcurrency = 20
         )
     }
+
+    @Bean
+    fun defaultPermissionProjectServiceImpl(
+        client: Client,
+        iamManagerService: V2ManagerService,
+        deptService: DeptService,
+        policyService: PolicyService
+    ) = RbacPermissionProjectService(client, iamManagerService, deptService, policyService)
 }
