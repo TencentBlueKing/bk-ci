@@ -10,6 +10,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -22,8 +23,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,16 +32,25 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
-class PermissionApplyServiceImpl @Autowired constructor(
+class RbacPermissionApplyService @Autowired constructor(
     val dslContext: DSLContext,
-    val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao,
     val v2ManagerService: V2ManagerService,
-    val client: Client,
     val permissionResourceService: PermissionResourceService,
+    val strategyService: StrategyService,
+    val authResourceService: AuthResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    val strategyService: StrategyService
+    val authResourceGroupDao: AuthResourceGroupDao,
+    val authResourceTypeDao: AuthResourceTypeDao,
+    val authActionDao: AuthActionDao
 ) : PermissionApplyService {
+    @Value("\${auth.iamSystem:}")
+    private val systemId = ""
+
+    @Value("\${devopsGateway.host:}")
+    private val host = ""
+
+    private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?" +
+        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
 
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -96,10 +104,10 @@ class PermissionApplyServiceImpl @Autowired constructor(
         projectId: String,
         searchGroupInfo: SearchGroupInfo
     ): V2ManagerRoleGroupVO {
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-            params = arrayOf(projectId),
-            defaultMessage = "权限系统：项目[$projectId]不存在"
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = "project",
+            resourceCode = projectId
         )
         val searchGroupDTO = SearchGroupDTO
             .builder()
@@ -183,55 +191,108 @@ class PermissionApplyServiceImpl @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
-        // 查询是否开启权限
         val isEnablePermission = permissionResourceService.isEnablePermission(
             projectId = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+
+        if (resourceTypesCache.getIfPresent(ALL_RESOURCE) == null) {
+            listResourceTypes(userId)
+        }
+        val resourceTypeName = resourceTypesCache.getIfPresent(ALL_RESOURCE)!!.filter { it.resourceType == resourceType }[0].name
+
+        if (actionCache.getIfPresent(resourceType) == null) {
+            listActions(userId, resourceType)
+        }
+        val actionName = actionCache.getIfPresent(resourceType)!!.filter { it.actionId == action }[0].actionName
+
+        val resourceName = authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ).resourceName
+
         if (isEnablePermission) {
-            // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
+            // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
-                    strategy[resourceType]?.forEach { actionList ->
-                        if (actionList.contains(action)) {
-                            // 根据resourceType + resourceCode + it.group_Code ----> groupId+groupName
-                            // 加入到groupInfoList
-                            groupInfoList.add(
-                                AuthRedirectGroupInfoVo(
-                                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
-                                    groupName = "groupName"
-                                )
-                            )
-                        }
+                    val isStrategyContainsAction = strategy[resourceType]?.contains(action)
+                    if (isStrategyContainsAction != null && isStrategyContainsAction) {
+                        buildGroupInfoList(
+                            groupInfoList = groupInfoList,
+                            projectId = projectId,
+                            userId = userId,
+                            resourceName = resourceName,
+                            action = action,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            groupCode = it.groupCode
+                        )
                     }
                 }
             }
         } else {
-            // 根据resourceType + resourceCode + manager ----> groupId+groupName
-            // 加入到groupInfoList
-            groupInfoList.add(
-                AuthRedirectGroupInfoVo(
-                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
-                    groupName = "groupName"
-                )
+            buildGroupInfoList(
+                groupInfoList = groupInfoList,
+                projectId = projectId,
+                userId = userId,
+                resourceName = resourceName,
+                action = action,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = "manager"
+            )
+        }
+        if (groupInfoList.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
+                defaultMessage = "权限系统: 获取权限申请跳转信息失败！"
             )
         }
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
+            resourceTypeName = resourceTypeName,
+            resourceName = resourceName,
+            actionName = actionName,
             groupInfoList = groupInfoList
         )
     }
 
-    companion object {
-        @Value("\${auth.iamSystem:}")
-        val systemId = ""
+    private fun buildGroupInfoList(
+        projectId: String,
+        groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
+        userId: String,
+        resourceName: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String,
+    ) {
+        val resourceGroup = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            groupCode = groupCode
+        )
+        if (resourceGroup != null) {
+            groupInfoList.add(
+                AuthRedirectGroupInfoVo(
+                    url = String.format(
+                        authApplyRedirectUrl, userId, projectId,
+                        resourceGroup.relationId, resourceType, resourceName, action
+                    ),
+                    groupName = resourceGroup.groupName
+                )
+            )
+        }
+    }
 
-        @Value("\${devopsGateway.host:}")
-        val host = ""
+
+    companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private const val ALL_RESOURCE = "all_resource"
-        private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?projectId=%s&groupId=%s"
     }
 }

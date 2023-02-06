@@ -7,6 +7,12 @@ import io.swagger.annotations.ApiModelProperty
 data class AuthApplyRedirectInfoVo(
     @ApiModelProperty("是否开启权限")
     val auth: Boolean,
+    @ApiModelProperty("资源类型名称")
+    val resourceTypeName: String,
+    @ApiModelProperty("资源实例名称")
+    val resourceName: String,
+    @ApiModelProperty("动作名称")
+    val actionName: String,
     @ApiModelProperty("用户组信息列表")
     val groupInfoList: ArrayList<AuthRedirectGroupInfoVo>
 )
