@@ -614,6 +614,7 @@
                     ...this.$route,
                     params: {
                         ...this.$route.params,
+                        type: this.$route.params.type ?? 'executeDetail',
                         executeCount
                     }
                 })
