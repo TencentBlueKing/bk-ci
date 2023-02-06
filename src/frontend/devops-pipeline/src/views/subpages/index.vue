@@ -11,7 +11,7 @@
 <script>
     export default {
         created () {
-            this.$store.dispatch('requestProjectDetail', { projectId: this.projectId })
+            this.$store.dispatch('requestProjectDetail', { projectId: this.$route.params.projectId })
         },
         beforeDestroy () {
             this.$store.commit('pipelines/updateCurPipeline', {})

@@ -1,20 +1,19 @@
 <template>
-    <draggable v-model="computedStage" v-bind="dragOptions" :move="checkMove" class="bk-pipeline">
+    <draggable v-model="computedStages" v-bind="dragOptions" :move="checkMove" class="bk-pipeline">
         <Stage
             class="list-item"
-            v-for="(stage, index) in computedStage"
+            v-for="(stage, index) in computedStages"
             :key="stage.id"
             :editable="editable"
             :stage="stage"
             :is-preview="isPreview"
             :is-exec-detail="isExecDetail"
-            :can-skip-element="!stage.isTrigger && canSkipElement"
             :has-finally-stage="hasFinallyStage"
             :stage-index="index"
             :cancel-user-id="cancelUserId"
             :handle-change="updatePipeline"
             :is-latest-build="isLatestBuild"
-            :stage-length="computedStage.length"
+            :stage-length="computedStages.length"
             :containers="stage.containers"
             :match-rules="matchRules"
             @[COPY_EVENT_NAME]="handleCopyStage"
@@ -142,12 +141,12 @@
             }
         },
         computed: {
-            computedStage: {
+            computedStages: {
                 get () {
-                    return this.pipeline.stages.map(stage => ({
+                    return this.pipeline?.stages?.map(stage => ({
                         ...stage,
                         isTrigger: this.checkIsTriggerStage(stage)
-                    }))
+                    })) ?? []
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
@@ -178,8 +177,8 @@
             },
             hasFinallyStage () {
                 try {
-                    const stageLength = this.computedStage.length
-                    const last = this.computedStage[stageLength - 1]
+                    const stageLength = this.computedStages.length
+                    const last = this.computedStages[stageLength - 1]
                     return last.finally
                 } catch (error) {
                     return false

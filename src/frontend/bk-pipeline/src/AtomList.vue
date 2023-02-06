@@ -152,7 +152,6 @@
             postActionStatus () {
                 if (this.hasHookAtom) {
                     const postAtoms = this.container.elements.filter(this.isHookAtom)
-                    console.log(postAtoms)
                     for (let i = 0; i < postAtoms.length; i++) {
                         const atom = postAtoms[i]
                         switch (atom.status) {

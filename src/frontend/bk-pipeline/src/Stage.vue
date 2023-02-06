@@ -31,7 +31,7 @@
             </span>
             <Logo v-if="isStageError" name="exclamation-triangle-shape" size="14" class="stage-entry-error-icon" />
             <span @click.stop v-if="reactiveData.canSkipElement" class="check-total-stage">
-                <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" :disabled="stageDisabled"></bk-checkbox>
+                <bk-checkbox class="atom-canskip-checkbox" v-model="stage.runStage" @change="handleStageRun" :disabled="stageDisabled"></bk-checkbox>
             </span>
             <span v-if="canStageRetry" @click.stop="triggerStageRetry" class="stage-single-retry">
                 {{ t('retry') }}
@@ -307,28 +307,8 @@
                 return this.stage?.executeCount < this.reactiveData.currentExecCount
             }
         },
-        watch: {
-            'stage.runStage' (newVal) {
-                const { containers } = this.stage
-                if (this.stageDisabled || !this.reactiveData.canSkipElement) return
-                containers.filter(container =>
-                    (container.jobControlOption === undefined || container.jobControlOption.enable)
-                )
-                    .forEach(container => {
-                        container.runContainer = newVal
-                    })
-                this.handleChange(this.stage, {
-                    containers
-                })
-            }
-        },
         mounted () {
             this.updateHeight()
-            if (this.reactiveData.canSkipElement) {
-                this.handleChange(this.stage, {
-                    runStage: !this.stageDisabled
-                })
-            }
             document.addEventListener('click', this.hideAddStage)
         },
         beforeDestroy () {
@@ -338,6 +318,19 @@
             this.updateHeight()
         },
         methods: {
+            handleStageRun (checked) {
+                const { containers } = this.stage
+                if (this.stageDisabled || !this.reactiveData.canSkipElement) return
+                containers.filter(container =>
+                    (container.jobControlOption === undefined || container.jobControlOption.enable)
+                )
+                    .forEach(container => {
+                        container.runContainer = checked
+                    })
+                this.handleChange(this.stage, {
+                    containers
+                })
+            },
             triggerStageRetry () {
                 eventBus.$emit(STAGE_RETRY, {
                     taskId: this.stage.id

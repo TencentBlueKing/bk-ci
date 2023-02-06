@@ -306,7 +306,6 @@
                 return this.execDetail?.cancelUserId ?? '--'
             },
             executeCount () {
-                console.log(this.$route.params.executeCount)
                 return this.$route.params.executeCount ?? this.execDetail?.executeCount ?? 1
             },
             curPipeline () {
@@ -411,7 +410,7 @@
                 'requestRetryPipeline'
             ]),
             isSkip (status) {
-                return ['SKIP', 'UNEXEC'].includes(status) || typeof status === 'undefined'
+                return ['SKIP'].includes(status)
             },
             toggleCompleteLog () {
                 this.showLog = !this.showLog
@@ -594,8 +593,6 @@
                     } else {
                         container = stage.containers.find(item => item.id === containerId)
                     }
-
-                    console.log(container)
                     const element = container.elements.find(element => element.id === taskId)
 
                     this.$set(element, 'locateActive', isLocate)

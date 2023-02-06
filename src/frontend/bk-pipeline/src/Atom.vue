@@ -311,7 +311,7 @@
                     'template-compare-atom': this.atom.templateModify,
                     'last-quality-atom': this.isLastQualityAtom,
                     'quality-prev-atom': this.isPrevAtomQuality,
-                    'un-exec-this-time': this.isExecDetail && this.isUnExecThisTime
+                    'un-exec-this-time': this.reactiveData.isExecDetail && this.isUnExecThisTime
                 }
             },
             svgAtomIcon () {

@@ -110,9 +110,6 @@
         },
         mounted () {
             this.updateCruveConnectHeight()
-            if (this.containerDisabled) {
-                this.handleChange(this.container, { runContainer: false })
-            }
         },
         updated () {
             this.updateCruveConnectHeight()

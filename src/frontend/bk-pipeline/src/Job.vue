@@ -217,11 +217,6 @@
                 this.handleChange(this.container, { elements })
             }
         },
-        mounted () {
-            if (this.disabled) {
-                this.handleChange(this.container, { runContainer: false })
-            }
-        },
         methods: {
             toggleShowAtom () {
                 this.showAtomList = !this.showAtomList
