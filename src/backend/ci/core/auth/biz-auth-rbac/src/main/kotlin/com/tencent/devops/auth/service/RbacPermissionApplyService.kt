@@ -218,9 +218,7 @@ class RbacPermissionApplyService @Autowired constructor(
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
-                    logger.info("strategy[resourceType] :${strategy[resourceType]}")
-                    val isStrategyContainsAction = strategy[resourceType]?.contains(action)
-                    logger.info("isStrategyContainsAction :$isStrategyContainsAction")
+                    val isStrategyContainsAction = strategy[resourceType]?.contains(action.substring(action.lastIndexOf("_")+1))
                     if (isStrategyContainsAction != null && isStrategyContainsAction) {
                         buildGroupInfoList(
                             groupInfoList = groupInfoList,
