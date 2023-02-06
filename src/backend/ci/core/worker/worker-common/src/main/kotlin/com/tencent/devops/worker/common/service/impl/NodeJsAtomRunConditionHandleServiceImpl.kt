@@ -78,6 +78,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         storePkgRunEnvInfo?.let {
             // 判断nodejs安装包是否已经存在构建机上
             val pkgName = storePkgRunEnvInfo.pkgName
+            logger.info("storePkgRunEnvInfo pkgName is $pkgName")
             val pkgFileFolderName = if (osType == OSType.WINDOWS) {
                 pkgName.removeSuffix(".zip")
             } else {
