@@ -30,16 +30,16 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.api.callback.AuthResourceCallBackResource
+import com.tencent.devops.auth.api.callback.ServiceAuthResourceCallBackResource
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.common.web.RestResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class AuthResourceCallBackResourceImpl @Autowired constructor(
+class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
     val resourceService: ResourceService
-) : AuthResourceCallBackResource {
+) : ServiceAuthResourceCallBackResource {
     override fun projectInfo(
         callBackInfo: CallbackRequestDTO,
         token: String
@@ -59,6 +59,6 @@ class AuthResourceCallBackResourceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(AuthResourceCallBackResourceImpl::class.java)
+        val logger = LoggerFactory.getLogger(ServiceAuthResourceCallBackResourceImpl::class.java)
     }
 }
