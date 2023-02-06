@@ -304,7 +304,11 @@ class PermissionGradeManagerService @Autowired constructor(
         iamV2ManagerService.deleteManagerV2(gradeManagerId)
     }
 
-    fun cancelCreateGradeManager(projectCode: String): Boolean {
+    fun cancelCreateGradeManager(callBackId: String): Boolean {
+        return iamV2ManagerService.cancelCallbackApplication(callBackId)
+    }
+
+    fun cancelCreateGradeManagerByEnglishName(projectCode: String): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
                 ?: return true

@@ -179,7 +179,7 @@ class RbacPermissionResourceService(
         logger.info("resource cancel relation|$projectCode|$resourceType|$resourceCode")
         // 只有项目创建时才可以取消
         if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.cancelCreateGradeManager(projectCode)
+            permissionGradeManagerService.cancelCreateGradeManagerByEnglishName(projectCode)
         }
         return true
     }
