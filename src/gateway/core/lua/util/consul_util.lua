@@ -30,7 +30,7 @@ function _M:getAllWhitelistIp()
         end
     end
 
-    if #ip_whitelist ~= 1 then
+    if #ip_whitelist > 1 then
         -- 获取灰度设置
         local ns_config = nil
         if ngx.var.devops_region ~= "DEVNET" then
