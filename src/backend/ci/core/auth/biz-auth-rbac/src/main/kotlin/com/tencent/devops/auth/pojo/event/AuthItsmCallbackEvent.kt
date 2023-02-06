@@ -31,12 +31,10 @@ package com.tencent.devops.auth.pojo.event
 import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.service.trace.TraceTag
-import org.slf4j.MDC
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 
 @Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_ITSM_CALLBACK)
 data class AuthItsmCallbackEvent(
     val approveType: String,
-    val itsmCallBackInfo: ItsmCallBackInfo,
-    val traceId: String? = MDC.get(TraceTag.BIZID)
-)
+    val itsmCallBackInfo: ItsmCallBackInfo
+): ITraceEvent()

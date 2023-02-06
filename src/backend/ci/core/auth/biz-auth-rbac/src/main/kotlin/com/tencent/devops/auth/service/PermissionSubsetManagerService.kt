@@ -33,7 +33,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
-import com.tencent.devops.auth.dispatcher.AuthResourceGroupDispatcher
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
@@ -41,6 +40,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -51,7 +51,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val authResourceGroupDispatcher: AuthResourceGroupDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher
 ) {
 
     /**
@@ -108,7 +108,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             gradeManagerId,
             createSubsetManagerDTO
         )
-        authResourceGroupDispatcher.dispatch(
+        traceEventDispatcher.dispatch(
             AuthResourceGroupEvent(
                 managerId = subsetManagerId,
                 userId = userId,

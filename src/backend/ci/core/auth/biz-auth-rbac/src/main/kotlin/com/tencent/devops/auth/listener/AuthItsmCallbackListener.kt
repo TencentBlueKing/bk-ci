@@ -37,14 +37,14 @@ import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.listener.Listener
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
@@ -53,14 +53,11 @@ class AuthItsmCallbackListener @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
-    private val permissionGradeManagerService: PermissionGradeManagerService
-) : Listener<AuthItsmCallbackEvent> {
+    private val permissionGradeManagerService: PermissionGradeManagerService,
+    traceEventDispatcher: TraceEventDispatcher
+) : BaseTraceListener<AuthItsmCallbackEvent>(traceEventDispatcher) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthItsmCallbackListener::class.java)
-    }
-
-    override fun execute(event: AuthItsmCallbackEvent) {
+    override fun run(event: AuthItsmCallbackEvent) {
         when (event.approveType) {
             AuthItsmApprovalType.CREATE.name ->
                 createProjectCallBack(itsmCallBackInfo = event.itsmCallBackInfo)

@@ -31,20 +31,17 @@ package com.tencent.devops.auth.listener
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.event.listener.Listener
-import org.slf4j.LoggerFactory
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 import org.springframework.stereotype.Component
 
 @Component
 class AuthResourceGroupListener(
-    private val authResourceGroupService: AuthResourceGroupService
-) : Listener<AuthResourceGroupEvent> {
+    private val authResourceGroupService: AuthResourceGroupService,
+    traceEventDispatcher: TraceEventDispatcher
+) : BaseTraceListener<AuthResourceGroupEvent>(traceEventDispatcher) {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthResourceGroupListener::class.java)
-    }
-
-    override fun execute(event: AuthResourceGroupEvent) {
+    override fun run(event: AuthResourceGroupEvent) {
         with(event) {
             logger.info("receive auth resource group event|$managerId|$resourceType|$resourceCode|$resourceName")
             if (resourceType == AuthResourceType.PROJECT.value) {

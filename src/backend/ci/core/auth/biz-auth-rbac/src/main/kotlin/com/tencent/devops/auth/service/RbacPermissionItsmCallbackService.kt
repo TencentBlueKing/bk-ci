@@ -28,15 +28,15 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.devops.auth.dispatcher.AuthItsmCallbackDispatcher
 import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 import com.tencent.devops.auth.pojo.enums.AuthItsmApprovalType
 import com.tencent.devops.auth.pojo.event.AuthItsmCallbackEvent
 import com.tencent.devops.auth.service.iam.PermissionItsmCallbackService
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.slf4j.LoggerFactory
 
 class RbacPermissionItsmCallbackService constructor(
-    private val authItsmCallbackDispatcher: AuthItsmCallbackDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionItsmCallbackService {
 
     companion object {
@@ -45,7 +45,7 @@ class RbacPermissionItsmCallbackService constructor(
 
     override fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create project callback info:$itsmCallBackInfo")
-        authItsmCallbackDispatcher.dispatch(
+        traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.CREATE.name,
                 itsmCallBackInfo = itsmCallBackInfo
@@ -55,7 +55,7 @@ class RbacPermissionItsmCallbackService constructor(
 
     override fun updateProjectCallback(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
-        authItsmCallbackDispatcher.dispatch(
+        traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.UPDATE.name,
                 itsmCallBackInfo = itsmCallBackInfo

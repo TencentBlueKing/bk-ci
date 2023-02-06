@@ -23,43 +23,47 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.dispatcher
+package com.tencent.devops.common.event.dispatcher.trace
 
-import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
-class AuthResourceGroupDispatcher @Autowired constructor(
+/**
+ * 基于MQ实现的trace事件下发器
+ *
+ * @version 1.0
+ */
+class TraceEventDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
-) : EventDispatcher<AuthResourceGroupEvent> {
+) : EventDispatcher<ITraceEvent> {
 
-    companion object {
-        private val logger = LoggerFactory.getLogger(AuthResourceGroupDispatcher::class.java)
-    }
-
-    override fun dispatch(vararg events: AuthResourceGroupEvent) {
-        try {
-            events.forEach { event ->
+    override fun dispatch(vararg events: ITraceEvent) {
+        events.forEach { event ->
+            try {
                 val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
-                logger.info("[${eventType.exchange}|$routeKey| dispatch itsm callback event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    if (eventType.delayMills > 0) { // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                rabbitTemplate.convertAndSend(eventType.exchange, eventType.routeKey, event) { message ->
+                    // 事件中的变量指定
+                    when {
+                        event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
+                        eventType.delayMills > 0 -> // 事件类型固化默认值
+                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                        else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
+                            message.messageProperties.expiration = "28800000"
                     }
                     message
                 }
+            } catch (ignored: Exception) {
+                logger.error("[TRACE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
             }
-        } catch (ignored: Exception) {
-            logger.error("Fail to dispatch the event($events)", ignored)
         }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TraceEventDispatcher::class.java)
     }
 }
