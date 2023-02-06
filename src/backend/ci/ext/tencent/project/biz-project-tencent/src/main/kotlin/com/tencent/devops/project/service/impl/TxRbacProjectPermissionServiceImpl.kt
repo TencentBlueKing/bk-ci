@@ -56,7 +56,6 @@ import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.iam.IamRbacService
@@ -329,18 +328,7 @@ class TxRbacProjectPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        var success = false
-        if (status == ProjectApproveStatus.CREATE_PENDING.status ||
-            status == ProjectApproveStatus.CREATE_REJECT.status
-        ) {
-            val callbackRecord = projectApprovalCallbackDao.getCallbackByEnglishName(
-                dslContext = dslContext,
-                projectCode = projectCode
-            ) ?: throw OperationException("callback application is not exist!")
-            success = iamManagerService.cancelCallbackApplication(callbackRecord.callbackId)
-        }
-        return success
+    override fun cancelCreateAuthProject(projectCode: String) {
     }
 
     override fun createRoleGroupApplication(

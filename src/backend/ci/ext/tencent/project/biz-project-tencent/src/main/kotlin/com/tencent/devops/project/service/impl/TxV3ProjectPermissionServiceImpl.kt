@@ -126,9 +126,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         return emptyMap()
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        return true
-    }
+    override fun cancelCreateAuthProject(projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,
