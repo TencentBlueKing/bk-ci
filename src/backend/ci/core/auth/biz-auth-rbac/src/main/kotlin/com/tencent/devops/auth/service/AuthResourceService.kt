@@ -28,8 +28,10 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -98,6 +100,24 @@ class AuthResourceService @Autowired constructor(
     }
 
     fun get(
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo {
+        val record = authResourceDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+            params = arrayOf(resourceCode),
+            defaultMessage = "the resource not exists, resourceCode:$resourceCode"
+        )
+        return authResourceDao.convert(record)
+    }
+
+    fun getOrNull(
         projectCode: String,
         resourceType: String,
         resourceCode: String

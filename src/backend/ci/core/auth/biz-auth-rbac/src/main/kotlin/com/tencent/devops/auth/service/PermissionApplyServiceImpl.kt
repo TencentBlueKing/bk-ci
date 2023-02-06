@@ -9,7 +9,7 @@ import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
-import com.tencent.devops.auth.dao.AuthDefaultGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -40,7 +40,7 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val v2ManagerService: V2ManagerService,
     val client: Client,
     val permissionResourceService: PermissionResourceService,
-    val authDefaultGroupDao: AuthDefaultGroupDao,
+    val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val strategyService: StrategyService
 ) : PermissionApplyService {
 
@@ -191,7 +191,7 @@ class PermissionApplyServiceImpl @Autowired constructor(
         )
         if (isEnablePermission) {
             // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
-            authDefaultGroupDao.get(dslContext, resourceType).forEach {
+            authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
                     strategy[resourceType]?.forEach { actionList ->

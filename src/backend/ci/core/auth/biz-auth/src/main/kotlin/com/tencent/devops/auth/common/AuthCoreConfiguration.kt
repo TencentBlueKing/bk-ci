@@ -43,6 +43,8 @@ import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionRoleMemberService
 import com.tencent.devops.auth.service.iam.PermissionRoleService
 import com.tencent.devops.auth.service.iam.PermissionService
@@ -54,6 +56,8 @@ import com.tencent.devops.auth.service.sample.SampleLocalManagerServiceImpl
 import com.tencent.devops.auth.service.sample.SampleOrganizationService
 import com.tencent.devops.auth.service.sample.SamplePermissionExtService
 import com.tencent.devops.auth.service.sample.SamplePermissionGradeService
+import com.tencent.devops.auth.service.sample.SamplePermissionResourceGroupService
+import com.tencent.devops.auth.service.sample.SamplePermissionResourceService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleService
 import com.tencent.devops.auth.service.sample.SamplePermissionUrlServiceImpl
@@ -205,4 +209,12 @@ class AuthCoreConfiguration {
     @Bean
     @ConditionalOnMissingBean(OrganizationService::class)
     fun sampleOrganizationService() = SampleOrganizationService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionResourceService::class)
+    fun samplePermissionResourceService() = SamplePermissionResourceService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionResourceGroupService::class)
+    fun samplePermissionResourceGroupService() = SamplePermissionResourceGroupService()
 }

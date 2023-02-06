@@ -44,6 +44,8 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dispatcher.AuthResourceGroupDispatcher
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -73,10 +75,10 @@ class PermissionGradeManagerService @Autowired constructor(
     private val permissionScopesService: PermissionScopesService,
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
-    private val permissionResourceGroupService: PermissionResourceGroupService,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
-    private val authResourceService: AuthResourceService
+    private val authResourceService: AuthResourceService,
+    private val authResourceGroupDispatcher: AuthResourceGroupDispatcher
 ) {
 
     companion object {
@@ -143,11 +145,16 @@ class PermissionGradeManagerService @Autowired constructor(
                 .build()
             logger.info("create grade manager|$name|$description|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
-            permissionResourceGroupService.createGradeDefaultGroup(
-                gradeManagerId = gradeManagerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName
+            authResourceGroupDispatcher.dispatch(
+                AuthResourceGroupEvent(
+                    managerId = gradeManagerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = AuthResourceType.PROJECT.value,
+                    resourceCode = projectCode,
+                    resourceName = projectName
+                )
             )
             gradeManagerId
         } else {
@@ -297,6 +304,14 @@ class PermissionGradeManagerService @Autowired constructor(
         iamV2ManagerService.deleteManagerV2(gradeManagerId)
     }
 
+    fun cancelCreateGradeManager(projectCode: String): Boolean {
+        val callbackRecord =
+            authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
+                ?: return true
+        logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
+        return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
+    }
+
     fun listGroup(
         gradeManagerId: String
     ): List<IamGroupInfoVo> {
@@ -345,11 +360,16 @@ class PermissionGradeManagerService @Autowired constructor(
             enable = true,
             relationId = gradeManagerId.toString()
         )
-        permissionResourceGroupService.createGradeDefaultGroup(
-            gradeManagerId = gradeManagerId,
-            userId = userId,
-            projectCode = projectCode,
-            projectName = projectName
+        authResourceGroupDispatcher.dispatch(
+            AuthResourceGroupEvent(
+                managerId = gradeManagerId,
+                userId = userId,
+                projectCode = projectCode,
+                projectName = projectName,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                resourceName = projectName
+            )
         )
         return gradeManagerId
     }

@@ -23,39 +23,31 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.auth.pojo.event
 
-import com.tencent.devops.auth.service.iam.PermissionExtService
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.service.trace.TraceTag
+import io.swagger.annotations.ApiModelProperty
+import org.slf4j.MDC
 
-class SamplePermissionExtService : PermissionExtService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
-
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
-
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-
-    override fun resourceCancelRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-}
+@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP)
+data class AuthResourceGroupEvent(
+    val traceId: String? = MDC.get(TraceTag.BIZID),
+    @ApiModelProperty("分级管理员ID或二级管理员ID")
+    val managerId: Int,
+    val userId: String,
+    @ApiModelProperty("项目ID")
+    val projectCode: String,
+    @ApiModelProperty("项目名")
+    val projectName: String,
+    @ApiModelProperty("资源类型")
+    val resourceType: String,
+    @ApiModelProperty("资源ID")
+    val resourceCode: String,
+    @ApiModelProperty("资源名")
+    val resourceName: String
+)

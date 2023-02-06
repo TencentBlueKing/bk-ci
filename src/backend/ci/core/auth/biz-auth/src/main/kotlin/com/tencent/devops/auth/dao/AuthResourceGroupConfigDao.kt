@@ -28,21 +28,21 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.model.auth.tables.TAuthDefaultGroup
-import com.tencent.devops.model.auth.tables.records.TAuthDefaultGroupRecord
+import com.tencent.devops.model.auth.tables.TAuthResourceGroupConfig
+import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupConfigRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-class AuthDefaultGroupDao {
+class AuthResourceGroupConfigDao {
 
     fun get(
         dslContext: DSLContext,
         resourceType: String,
         groupCode: String
-    ): TAuthDefaultGroupRecord? {
-        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+    ): TAuthResourceGroupConfigRecord? {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectFrom(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(GROUP_CODE.eq(groupCode))
@@ -53,8 +53,8 @@ class AuthDefaultGroupDao {
     fun get(
         dslContext: DSLContext,
         resourceType: String
-    ): Result<TAuthDefaultGroupRecord> {
-        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+    ): Result<TAuthResourceGroupConfigRecord> {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType)).fetch()
         }
     }
@@ -63,8 +63,8 @@ class AuthDefaultGroupDao {
         dslContext: DSLContext,
         resourceType: String,
         createMode: Boolean
-    ): Result<TAuthDefaultGroupRecord> {
-        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+    ): Result<TAuthResourceGroupConfigRecord> {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectFrom(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(CREATE_MODE.eq(createMode))
@@ -76,8 +76,8 @@ class AuthDefaultGroupDao {
         dslContext: DSLContext,
         resourceType: String,
         groupName: String
-    ): TAuthDefaultGroupRecord? {
-        return with(TAuthDefaultGroup.T_AUTH_DEFAULT_GROUP) {
+    ): TAuthResourceGroupConfigRecord? {
+        return with(TAuthResourceGroupConfig.T_AUTH_RESOURCE_GROUP_CONFIG) {
             dslContext.selectFrom(this)
                 .where(RESOURCE_TYPE.eq(resourceType))
                 .and(GROUP_NAME.eq(groupName))

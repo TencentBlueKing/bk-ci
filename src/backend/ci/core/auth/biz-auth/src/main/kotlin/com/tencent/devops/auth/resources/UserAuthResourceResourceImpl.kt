@@ -32,6 +32,7 @@ import com.tencent.devops.auth.api.user.UserAuthResourceResource
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.pojo.Result
@@ -40,7 +41,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserAuthResourceResourceImpl @Autowired constructor(
-    private val permissionResourceService: PermissionResourceService
+    private val permissionResourceService: PermissionResourceService,
+    private val permissionResourceGroupService: PermissionResourceGroupService
 ) : UserAuthResourceResource {
     override fun hasManagerPermission(
         userId: String,
@@ -79,7 +81,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         resourceCode: String
     ): Result<List<IamGroupInfoVo>> {
         return Result(
-            permissionResourceService.listGroup(
+            permissionResourceGroupService.listGroup(
                 projectId = projectId,
                 resourceType = resourceType,
                 resourceCode = resourceCode
@@ -94,7 +96,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         resourceCode: String
     ): Result<List<IamGroupMemberInfoVo>> {
         return Result(
-            permissionResourceService.listUserBelongGroup(
+            permissionResourceGroupService.listUserBelongGroup(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
