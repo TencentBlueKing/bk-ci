@@ -9,7 +9,7 @@ import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
-import com.tencent.devops.auth.dao.AuthDefaultGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -22,7 +22,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -37,9 +36,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
     val v2ManagerService: V2ManagerService,
-    val client: Client,
     val permissionResourceService: PermissionResourceService,
-    val authDefaultGroupDao: AuthDefaultGroupDao,
+    val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val strategyService: StrategyService,
     val authResourceService: AuthResourceService
 ) : PermissionApplyService {
@@ -119,7 +117,7 @@ class RbacPermissionApplyService @Autowired constructor(
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
         try {
-            return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo!!.relationId, searchGroupDTO, v2PageInfoDTO)
+            return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
@@ -193,7 +191,7 @@ class RbacPermissionApplyService @Autowired constructor(
         )
         if (isEnablePermission) {
             // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
-            authDefaultGroupDao.get(dslContext, resourceType).forEach {
+            authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
                     strategy[resourceType]?.forEach { actionList ->

@@ -26,101 +26,66 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.service.sample
 
-import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 
-/**
- * 权限资源操作
- */
-@SuppressWarnings("LongParameterList", "TooManyFunctions")
-interface PermissionResourceService {
+class SamplePermissionResourceGroupService : PermissionResourceGroupService {
 
-    /**
-     * 资源关联权限中心
-     */
-    fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean
-
-    /**
-     * 修改权限中心资源
-     */
-    fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean
-
-    /**
-     * 删除权限中心资源
-     */
-    fun resourceDeleteRelation(
-        projectCode: String,
+    override fun listGroup(
+        projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ): List<IamGroupInfoVo> {
+        return emptyList()
+    }
 
-    /**
-     * 取消权限中心资源
-     */
-    fun resourceCancelRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): Boolean
-
-    /**
-     * 是否有资源管理员权限
-     */
-    fun hasManagerPermission(
+    override fun listUserBelongGroup(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ): List<IamGroupMemberInfoVo> {
+        return emptyList()
+    }
 
-    /**
-     * 资源是否开启权限管理
-     */
-    fun isEnablePermission(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Boolean
-
-    /**
-     * 启用资源权限
-     */
-    fun enableResourcePermission(
+    override fun getGroupPolicies(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): Boolean
+        groupId: Int
+    ): List<String> {
+        return emptyList()
+    }
 
-    /**
-     * 关闭资源权限
-     */
-    fun disableResourcePermission(
+    override fun renewal(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): Boolean
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
+    ): Boolean {
+        return true
+    }
 
-    fun listResoureces(
+    override fun deleteGroupMember(
         userId: String,
-        projectId: String?,
-        resourceType: String?,
-        resourceName: String?,
-        page: Int,
-        pageSize: Int
-    ): Pagination<AuthResourceInfo>
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean {
+        return true
+    }
+
+    override fun deleteGroup(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean {
+        return true
+    }
 }

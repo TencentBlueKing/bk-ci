@@ -150,8 +150,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        return projectPermissionService.cancelCreateAuthProject(status, projectCode)
+    override fun cancelCreateAuthProject(projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(projectCode)
     }
 
     override fun createRoleGroupApplication(

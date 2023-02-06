@@ -28,70 +28,82 @@
 
 package com.tencent.devops.auth.dao
 
-import com.tencent.devops.model.auth.tables.TAuthItsmCallback
-import com.tencent.devops.model.auth.tables.records.TAuthItsmCallbackRecord
+import com.tencent.devops.model.auth.tables.TAuthResourceGroup
+import com.tencent.devops.model.auth.tables.records.TAuthResourceGroupRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
-class AuthItsmCallbackDao {
+class AuthResourceGroupDao {
 
     fun create(
         dslContext: DSLContext,
-        sn: String,
-        englishName: String,
-        callbackId: String,
-        applicant: String
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String,
+        groupName: String,
+        relationId: String
     ): Int {
-        with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
+        val now = LocalDateTime.now()
+        with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             return dslContext.insertInto(
                 this,
-                SN,
-                ENGLISH_NAME,
-                CALLBACK_ID,
-                APPLICANT
+                PROJECT_CODE,
+                RESOURCE_TYPE,
+                RESOURCE_CODE,
+                GROUP_CODE,
+                GROUP_NAME,
+                RELATION_ID,
+                CREATE_TIME,
+                UPDATE_TIME
             ).values(
-                sn,
-                englishName,
-                callbackId,
-                applicant
+                projectCode,
+                resourceType,
+                resourceCode,
+                groupCode,
+                groupName,
+                relationId,
+                now,
+                now,
             ).execute()
         }
     }
 
-    fun getCallbackBySn(
+    fun update(
         dslContext: DSLContext,
-        sn: String
-    ): TAuthItsmCallbackRecord? {
-        with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
-            return dslContext.selectFrom(this).where(SN.eq(sn)).fetchAny()
-        }
-    }
-
-    fun updateCallbackBySn(
-        dslContext: DSLContext,
-        sn: String,
-        approver: String,
-        approveResult: Boolean
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String,
+        groupName: String
     ): Int {
-        return with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
+        val now = LocalDateTime.now()
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.update(this)
-                .set(APPROVER, approver)
-                .set(APPROVE_RESULT, approveResult)
-                .where(SN.eq(sn)).execute()
+                .set(GROUP_NAME, groupName)
+                .set(GROUP_CODE, groupCode)
+                .set(UPDATE_TIME, now)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .execute()
         }
     }
 
-    fun getCallbackByEnglishName(
+    fun get(
         dslContext: DSLContext,
-        projectCode: String
-    ): TAuthItsmCallbackRecord? {
-        with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
-            return dslContext.selectFrom(this)
-                .where(ENGLISH_NAME.eq(projectCode))
-                .orderBy(CREATE_TIME.desc())
-                .fetchAny()
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetchOne()
         }
     }
 }

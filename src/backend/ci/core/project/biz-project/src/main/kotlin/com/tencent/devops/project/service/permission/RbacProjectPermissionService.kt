@@ -89,7 +89,12 @@ class RbacProjectPermissionService(
     }
 
     override fun deleteResource(projectCode: String) {
-
+        authResourceApi.deleteResource(
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = projectCode,
+            resourceCode = projectCode
+        )
     }
 
     override fun modifyResource(resourceUpdateInfo: ResourceUpdateInfo) {
@@ -144,8 +149,13 @@ class RbacProjectPermissionService(
         return emptyMap()
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        return true
+    override fun cancelCreateAuthProject(projectCode: String) {
+        authResourceApi.cancelCreateResource(
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = projectCode,
+            resourceCode = projectCode
+        )
     }
 
     override fun createRoleGroupApplication(

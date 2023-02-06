@@ -34,7 +34,8 @@ import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.dao.AuthDefaultGroupDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -45,11 +46,12 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @SuppressWarnings("LongParameterList")
-class PermissionResourceGroupService(
+class AuthResourceGroupService(
     private val dslContext: DSLContext,
-    private val authDefaultGroupDao: AuthDefaultGroupDao,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     private val iamV2ManagerService: V2ManagerService,
-    private val permissionScopesService: PermissionScopesService
+    private val permissionScopesService: PermissionScopesService,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     fun createGradeDefaultGroup(
@@ -58,17 +60,17 @@ class PermissionResourceGroupService(
         projectCode: String,
         projectName: String
     ) {
-        val defaultGroups = authDefaultGroupDao.get(
+        val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
             createMode = false
         )
-        defaultGroups.filter {
+        defaultGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
-        }.forEach { defaultGroup ->
+        }.forEach { groupConfig ->
             val name = IamGroupUtils.buildIamGroup(
                 projectName = projectName,
-                groupName = defaultGroup.groupName
+                groupName = groupConfig.groupName
             )
             val description = IamGroupUtils.buildDefaultDescription(
                 projectName = projectName,
@@ -78,10 +80,19 @@ class PermissionResourceGroupService(
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateRoleGroupV2(gradeManagerId, managerRoleGroupDTO)
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode,
+                groupName = name,
+                relationId = iamGroupId.toString()
+            )
             grantGradeManagerGroupPermission(
                 projectCode = projectCode,
                 projectName = projectName,
-                groupCode = defaultGroup.groupCode,
+                groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
             addGroupMember(userId = userId, iamGroupId = iamGroupId)
@@ -103,17 +114,17 @@ class PermissionResourceGroupService(
         resourceName: String,
         createMode: Boolean
     ) {
-        val defaultGroups = authDefaultGroupDao.get(
+        val resourceGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
             createMode = createMode
         )
-        defaultGroups.filter {
+        resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
-        }.forEach { defaultGroup ->
+        }.forEach { groupConfig ->
             val name = IamGroupUtils.buildSubsetManagerGroupName(
                 resourceName = resourceName,
-                groupName = defaultGroup.groupName
+                groupName = groupConfig.groupName
             )
             val description = IamGroupUtils.buildSubsetManagerGroupDescription(
                 resourceName = resourceName,
@@ -123,13 +134,22 @@ class PermissionResourceGroupService(
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
             val managerRoleGroupDTO = ManagerRoleGroupDTO.builder().groups(listOf(managerRoleGroup)).build()
             val iamGroupId = iamV2ManagerService.batchCreateSubsetRoleGroup(subsetManagerId, managerRoleGroupDTO)
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode,
+                groupName = name,
+                relationId = iamGroupId.toString()
+            )
             grantSubsetManagerGroupPermission(
                 projectCode = projectCode,
                 projectName = projectName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
-                groupCode = defaultGroup.groupCode,
+                groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
             addGroupMember(userId = userId, iamGroupId = iamGroupId)

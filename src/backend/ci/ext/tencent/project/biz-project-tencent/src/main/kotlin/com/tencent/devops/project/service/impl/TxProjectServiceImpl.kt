@@ -323,11 +323,8 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(status: Int, projectCode: String): Boolean {
-        return projectPermissionService.cancelCreateAuthProject(
-            status = status,
-            projectCode = projectCode
-        )
+    override fun cancelCreateAuthProject(projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(projectCode = projectCode)
     }
 
     override fun createRoleGroupApplication(

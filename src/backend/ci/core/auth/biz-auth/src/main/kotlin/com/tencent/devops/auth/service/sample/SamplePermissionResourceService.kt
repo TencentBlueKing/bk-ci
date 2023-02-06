@@ -26,101 +26,73 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.pojo.Pagination
 
-/**
- * 权限资源操作
- */
-@SuppressWarnings("LongParameterList", "TooManyFunctions")
-interface PermissionResourceService {
-
-    /**
-     * 资源关联权限中心
-     */
-    fun resourceCreateRelation(
+class SamplePermissionResourceService : PermissionResourceService {
+    override fun resourceCreateRelation(
         userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 修改权限中心资源
-     */
-    fun resourceModifyRelation(
+    override fun resourceModifyRelation(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
         resourceName: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 删除权限中心资源
-     */
-    fun resourceDeleteRelation(
+    override fun resourceDeleteRelation(
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 取消权限中心资源
-     */
-    fun resourceCancelRelation(
+    override fun resourceCancelRelation(
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 是否有资源管理员权限
-     */
-    fun hasManagerPermission(
+    override fun hasManagerPermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 资源是否开启权限管理
-     */
-    fun isEnablePermission(
+    override fun isEnablePermission(
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 启用资源权限
-     */
-    fun enableResourcePermission(
+    override fun enableResourcePermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    /**
-     * 关闭资源权限
-     */
-    fun disableResourcePermission(
+    override fun disableResourcePermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ) = true
 
-    fun listResoureces(
+    override fun listResoureces(
         userId: String,
         projectId: String?,
         resourceType: String?,
         resourceName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<AuthResourceInfo>
+    ): Pagination<AuthResourceInfo> = Pagination(hasNext = false, records = emptyList())
 }

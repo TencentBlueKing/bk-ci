@@ -851,46 +851,41 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun cancelCreateProject(userId: String, projectId: String): Boolean {
-        var success = false
-        val projectInfo = projectDao.get(dslContext, projectId) ?: throw InvalidParamException("项目不存在")
+        logger.info("$userId cancel create project($projectId)")
+        val projectInfo = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(projectId),
+            defaultMessage = "project - $projectId is not exist!"
+        )
         val status = projectInfo.approvalStatus
-        if (!(status == ProjectApproveStatus.CREATE_PENDING.status ||
-                status == ProjectApproveStatus.CREATE_REJECT.status
-                )) {
-            logger.warn(
-                "The project can't be cancel！ : ${projectInfo.englishName}"
-            )
-            throw OperationException(
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
-                    defaultMessage = "The project can be canceled only it under approval or " +
-                        "rejected during creation！| EnglishName=${projectInfo.englishName}"
-                )
+        if (status != ProjectApproveStatus.CREATE_PENDING.status ||
+            status != ProjectApproveStatus.CREATE_REJECT.status
+        ) {
+            logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                params = arrayOf(projectId),
+                defaultMessage = "The project can be canceled only it under approval or " +
+                    "rejected during creation！| EnglishName=${projectInfo.englishName}"
             )
         }
         try {
-            val isIamCancelSuccess = cancelCreateAuthProject(
-                status = projectInfo.approvalStatus,
-                projectCode = projectInfo.englishName
+            cancelCreateAuthProject(projectCode = projectInfo.englishName)
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = dslContext,
+                englishName = projectInfo.englishName,
+                approvalStatus = ProjectApproveStatus.CANCEL_CREATE.status
             )
-            if (isIamCancelSuccess) {
-                projectDao.updateProjectStatusByEnglishName(
-                    dslContext = dslContext,
-                    englishName = projectInfo.englishName,
-                    approvalStatus = ProjectApproveStatus.CANCEL_CREATE.status
-                )
-            }
-            success = true
         } catch (e: Exception) {
-            logger.warn("The project cancel creation failed ： ${projectInfo.englishName}", e)
+            logger.warn("The project cancel creation failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
-                    defaultMessage = "The project cancel creation failed ： ${projectInfo.englishName}"
+                    defaultMessage = "The project cancel creation failed: ${projectInfo.englishName}"
                 )
             )
         }
-        return success
+        return true
     }
 
     override fun applyToJoinProject(
@@ -956,9 +951,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     )
 
     abstract fun cancelCreateAuthProject(
-        status: Int,
         projectCode: String
-    ): Boolean
+    )
 
     abstract fun createRoleGroupApplication(
         userId: String,

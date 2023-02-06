@@ -28,99 +28,62 @@
 
 package com.tencent.devops.auth.service.iam
 
-import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 
-/**
- * 权限资源操作
- */
-@SuppressWarnings("LongParameterList", "TooManyFunctions")
-interface PermissionResourceService {
-
+interface PermissionResourceGroupService {
     /**
-     * 资源关联权限中心
+     * 资源关联的组列表
      */
-    fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean
-
-    /**
-     * 修改权限中心资源
-     */
-    fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ): Boolean
-
-    /**
-     * 删除权限中心资源
-     */
-    fun resourceDeleteRelation(
-        projectCode: String,
+    fun listGroup(
+        projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ): List<IamGroupInfoVo>
 
     /**
-     * 取消权限中心资源
+     * 获取用户所属组
      */
-    fun resourceCancelRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ): Boolean
-
-    /**
-     * 是否有资源管理员权限
-     */
-    fun hasManagerPermission(
+    fun listUserBelongGroup(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean
+    ): List<IamGroupMemberInfoVo>
 
     /**
-     * 资源是否开启权限管理
+     * 获取组策略
      */
-    fun isEnablePermission(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): Boolean
-
-    /**
-     * 启用资源权限
-     */
-    fun enableResourcePermission(
+    fun getGroupPolicies(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): Boolean
+        groupId: Int
+    ): List<String>
 
     /**
-     * 关闭资源权限
+     * 用户续期
      */
-    fun disableResourcePermission(
+    fun renewal(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
+        groupId: Int,
+        memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean
 
-    fun listResoureces(
+    fun deleteGroupMember(
         userId: String,
-        projectId: String?,
-        resourceType: String?,
-        resourceName: String?,
-        page: Int,
-        pageSize: Int
-    ): Pagination<AuthResourceInfo>
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean
+
+    fun deleteGroup(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): Boolean
 }

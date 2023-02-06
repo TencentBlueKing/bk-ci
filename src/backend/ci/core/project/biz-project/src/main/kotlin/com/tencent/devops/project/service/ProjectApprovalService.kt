@@ -221,7 +221,7 @@ class ProjectApprovalService @Autowired constructor(
             projectDao.update(
                 dslContext = context,
                 userId = applicant,
-                projectId = projectId,
+                projectId = projectInfo.projectId,
                 projectUpdateInfo = projectUpdateInfo,
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
                 logoAddress = logoAddress,
@@ -230,7 +230,7 @@ class ProjectApprovalService @Autowired constructor(
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
                     userId = applicant,
-                    projectId = projectId,
+                    projectId = projectInfo.projectId,
                     projectInfo = projectUpdateInfo
                 )
             )
@@ -238,7 +238,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectDispatcher.dispatch(
                     ProjectUpdateLogoBroadCastEvent(
                         userId = applicant,
-                        projectId = projectId,
+                        projectId = projectInfo.projectId,
                         logoAddr = logoAddress
                     )
                 )
