@@ -49,6 +49,8 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.repository.api.ServiceCommitResource
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -368,12 +370,26 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         search: String?,
         property: BuildFormProperty
     ): Result<List<BuildFormValue>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|manualStartupOptions|$projectId|$pipelineId|$search|$property")
         return client.get(ServiceBuildResource::class).manualSearchOptions(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             search = search,
             buildFormProperty = property
+        )
+    }
+
+    override fun getCommitsByBuildId(
+        userId: String,
+        projectId: String,
+        pipelineId: String?,
+        buildId: String
+    ): Result<List<CommitResponse>> {
+        logger.info("OPENAPI_BUILD_V4|$userId|getCommitsByBuildId|$projectId|$pipelineId|$buildId")
+        checkPipelineId(projectId, pipelineId, buildId)
+        return client.get(ServiceCommitResource::class).getCommitsByBuildId(
+            buildId = buildId
         )
     }
 

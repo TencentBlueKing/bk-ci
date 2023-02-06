@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.openapi.api.apigw.v4
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
@@ -48,6 +49,7 @@ import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.BuildTaskPauseInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.repository.pojo.commit.CommitResponse
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -501,4 +503,22 @@ interface ApigwBuildResourceV4 {
         @ApiParam("请求参数", required = true)
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>
+
+    @ApiOperation("根据构建ID获取提交记录")
+    @GET
+    @Path("/get_commits_by_build_id")
+    fun getCommitsByBuildId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID(项目英文名)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam(value = "构建ID", required = true)
+        @QueryParam("buildId")
+        buildId: String
+    ): Result<List<CommitResponse>>
 }

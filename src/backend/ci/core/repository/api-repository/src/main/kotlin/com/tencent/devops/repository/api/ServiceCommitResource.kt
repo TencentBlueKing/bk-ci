@@ -77,9 +77,6 @@ interface ServiceCommitResource {
     fun getCommitsByBuildId(
         @ApiParam(value = "构建ID", required = true)
         @HeaderParam(AUTH_HEADER_BUILD_ID)
-        buildId: String,
-        @ApiParam("Agent ID", required = true)
-        @HeaderParam(AUTH_HEADER_AGENT_ID)
-        agentId: String
+        buildId: String
     ): Result<List<CommitResponse>>
 }

@@ -56,7 +56,7 @@ class ServiceCommitResourceImpl @Autowired constructor(
         }
     }
 
-    override fun getCommitsByBuildId(buildId: String, agentId: String): Result<List<CommitResponse>> {
+    override fun getCommitsByBuildId(buildId: String): Result<List<CommitResponse>> {
         return Result(commitService.getCommit(buildId))
     }
 }
