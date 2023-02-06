@@ -64,7 +64,7 @@ interface UserAuthApplyResource {
     ): Result<V2ManagerRoleGroupVO>
 
     @POST
-    @Path("/applyToJoinGroup")
+    @Path("applyToJoinGroup")
     @ApiOperation("申请加入用户组")
     fun applyToJoinGroup(
         @ApiParam(name = "用户名", required = true)
@@ -87,7 +87,7 @@ interface UserAuthApplyResource {
     ): Result<List<GroupPermissionDetailVo>>
 
     @GET
-    @Path("getJumpInformation")
+    @Path("getRedirectInformation")
     @ApiOperation("获取权限申请重定向信息")
     fun getRedirectInformation(
         @ApiParam(name = "用户名", required = true)
