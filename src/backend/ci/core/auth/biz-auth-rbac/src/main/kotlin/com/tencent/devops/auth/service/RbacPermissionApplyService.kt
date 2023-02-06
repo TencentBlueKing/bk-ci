@@ -217,6 +217,7 @@ class RbacPermissionApplyService @Autowired constructor(
             // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
+                logger.info("strategy-1 :$strategy")
                 if (strategy != null) {
                     logger.info("strategy[resourceType] :${strategy[resourceType]}")
                     val isStrategyContainsAction = strategy[resourceType]?.contains(action)
