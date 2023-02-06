@@ -503,7 +503,7 @@ interface ApigwBuildResourceV4 {
         property: BuildFormProperty
     ): Result<List<BuildFormValue>>
 
-    @ApiOperation("根据构建ID获取提交记录")
+    @ApiOperation("根据构建ID获取提交记录", tags = ["v4_app_build_commits", "v4_user_build_commits"])
     @GET
     @Path("/get_commits_by_build_id")
     fun getCommitsByBuildId(
