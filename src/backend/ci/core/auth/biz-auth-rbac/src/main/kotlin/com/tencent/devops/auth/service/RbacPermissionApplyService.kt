@@ -33,7 +33,7 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
-class PermissionApplyServiceImpl @Autowired constructor(
+class RbacPermissionApplyService @Autowired constructor(
     val dslContext: DSLContext,
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
@@ -43,6 +43,8 @@ class PermissionApplyServiceImpl @Autowired constructor(
     val authDefaultGroupDao: AuthDefaultGroupDao,
     val strategyService: StrategyService
 ) : PermissionApplyService {
+    @Value("\${auth.iamSystem:}")
+    val systemId = ""
 
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -231,12 +233,10 @@ class PermissionApplyServiceImpl @Autowired constructor(
     }
 
     companion object {
-        @Value("\${auth.iamSystem:}")
-        val systemId = ""
+        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
 
         @Value("\${devopsGateway.host:}")
         val host = ""
-        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private const val ALL_RESOURCE = "all_resource"
         private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?projectId=%s&groupId=%s"
     }
