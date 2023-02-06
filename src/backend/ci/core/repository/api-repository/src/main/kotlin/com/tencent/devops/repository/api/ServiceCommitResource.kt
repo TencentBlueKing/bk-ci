@@ -27,7 +27,6 @@
 
 package com.tencent.devops.repository.api
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_AGENT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_BUILD_ID
 import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.pojo.Result
