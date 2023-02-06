@@ -1315,7 +1315,7 @@ class PipelineRuntimeService @Autowired constructor(
             saveStageRecords(buildStages, stageBuildRecords, resourceVersion)
         }
         pipelineBuildRecordService.batchSave(
-            dslContext, modelRecord, stageBuildRecords,
+            transactionContext, modelRecord, stageBuildRecords,
             containerBuildRecords, taskBuildRecords
         )
     }
