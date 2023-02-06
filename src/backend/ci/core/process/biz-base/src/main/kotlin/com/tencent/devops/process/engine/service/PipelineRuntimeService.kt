@@ -814,6 +814,43 @@ class PipelineRuntimeService @Autowired constructor(
                     }
                     stage.executeCount?.let { count -> stage.executeCount = count + 1 }
                 }
+                // record表需要记录被跳过的记录
+                if (stage.stageControlOption?.enable == false) {
+                    stageBuildRecords.add(
+                        BuildRecordStage(
+                            projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                            buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
+                            stageSeq = index, stageVar = mutableMapOf(), status = BuildStatus.SKIP.name,
+                            timestamps = mapOf()
+                        )
+                    )
+                    stage.containers.forEach { container ->
+                        containerBuildRecords.add(
+                            BuildRecordContainer(
+                                projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                                buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                                containerType = container.getClassType(), executeCount = context.executeCount,
+                                matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
+                                status = BuildStatus.SKIP.name, timestamps = mapOf(),
+                                containerVar = mutableMapOf(
+                                    Container::containerHashId.name to  container.containerHashId!!
+                                )
+                            )
+                        )
+                        container.elements.forEachIndexed { index, element ->
+                            taskBuildRecords.add(
+                                BuildRecordTask(
+                                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                                    stageId = stage.id!!, containerId = container.containerId!!,
+                                    taskId = element.id!!, classType = element.getClassType(),
+                                    atomCode = element.getTaskAtom(), executeCount = context.executeCount,
+                                    originClassType = null, resourceVersion = version, taskSeq = index,
+                                    status = BuildStatus.SKIP.name, timestamps = mapOf(), taskVar = mutableMapOf()
+                                )
+                            )
+                        }
+                    }
+                }
                 return@nextStage
             }
 
