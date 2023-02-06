@@ -53,6 +53,7 @@ import org.springframework.context.annotation.Configuration
 @Suppress("TooManyFunctions")
 class RbacMQConfiguration {
 
+    @Bean
     fun traceEventDispatcher(rabbitTemplate: RabbitTemplate) = TraceEventDispatcher(rabbitTemplate)
 
     @Bean

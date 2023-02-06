@@ -68,10 +68,7 @@ class AuthResourceGroupService(
         defaultGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
-            val name = IamGroupUtils.buildIamGroup(
-                projectName = projectName,
-                groupName = groupConfig.groupName
-            )
+            val name = groupConfig.groupName
             val description = IamGroupUtils.buildDefaultDescription(
                 projectName = projectName,
                 groupName = name,
