@@ -484,20 +484,20 @@ class PipelineContainerService @Autowired constructor(
                 )
 
                 if (taskRecord != null) {
-                    var updateTask = taskRecord
+                    updateExistsTask.add(taskRecord)
                     // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
                     if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
                         val pair = findPostTask(lastTimeBuildTasks, atomElement, containerElements)
-                        if (pair != null) {
+                        // 整体重试时，如果update列表已经包含post插件则不反复插入
+                        if (pair != null && updateExistsTask.find { it.taskId == pair.first.taskId } == null) {
                             setRetryBuildTask(
                                 target = pair.first,
                                 executeCount = context.executeCount,
                                 atomElement = pair.second
                             )
-                            updateTask = pair.first
+                            updateExistsTask.add(pair.first)
                         }
                     }
-                    updateExistsTask.add(updateTask)
                     needUpdateContainer = true
                 } else if (container.matrixGroupFlag == true && BuildStatus.parse(container.status).isFinish()) {
                     // 构建矩阵没有对应的重试插件，单独进行重试判断
