@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
@@ -112,7 +113,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 } else {
                     "${pkgFileDir.absolutePath}/bin"
                 }
-                System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
+                    System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
                 // 把nodejs安装包解压到构建机上
                     isUnzipSuccess(
                         retryNum = 3,
@@ -172,14 +173,14 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
         try {
             if (osType == OSType.WINDOWS) {
-                // ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
+                ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
                 CommandLineUtils.execute(
                     command,
                     pkgFileDir.absoluteFile,
                     true
                 )
             } else {
-                // CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
                 CommandLineUtils.execute(
                     command,
                     File(envDir, NODEJS).absoluteFile,
