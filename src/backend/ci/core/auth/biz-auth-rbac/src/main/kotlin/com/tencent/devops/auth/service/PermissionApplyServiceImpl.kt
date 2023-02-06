@@ -218,6 +218,12 @@ class PermissionApplyServiceImpl @Autowired constructor(
                 )
             )
         }
+        if (groupInfoList.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
+                defaultMessage = "权限系统: 获取权限申请跳转信息失败！"
+            )
+        }
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
             groupInfoList = groupInfoList
