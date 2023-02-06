@@ -24,7 +24,9 @@ function _M:getAllWhitelistIp()
         ip_whitelist = {config.service_ip_whitelist}
     else
         for k, v in ipairs(config.service_ip_whitelist) do
-            table.insert(ip_whitelist, v)
+            if v ~= "" then
+                table.insert(ip_whitelist, v)
+            end
         end
     end
 
