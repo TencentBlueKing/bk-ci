@@ -26,26 +26,16 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.event
+package com.tencent.devops.common.event.pojo.trace
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.service.trace.TraceTag
+import org.slf4j.MDC
 
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP)
-data class AuthResourceGroupEvent(
-    @ApiModelProperty("分级管理员ID或二级管理员ID")
-    val managerId: Int,
-    val userId: String,
-    @ApiModelProperty("项目ID")
-    val projectCode: String,
-    @ApiModelProperty("项目名")
-    val projectName: String,
-    @ApiModelProperty("资源类型")
-    val resourceType: String,
-    @ApiModelProperty("资源ID")
-    val resourceCode: String,
-    @ApiModelProperty("资源名")
-    val resourceName: String
-): ITraceEvent()
+/**
+ * 需要traceId事件
+ */
+open class ITraceEvent(
+    open var delayMills: Int = 0,
+    open var retryTime: Int = 1,
+    open var traceId: String? = MDC.get(TraceTag.BIZID)
+)

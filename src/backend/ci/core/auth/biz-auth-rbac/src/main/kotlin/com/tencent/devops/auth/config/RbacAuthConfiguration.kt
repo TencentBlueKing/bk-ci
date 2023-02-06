@@ -39,9 +39,6 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
-import com.tencent.devops.auth.dispatcher.AuthItsmCallbackDispatcher
-import com.tencent.devops.auth.listener.AuthItsmCallbackListener
-import com.tencent.devops.auth.listener.AuthResourceGroupListener
 import com.tencent.devops.auth.service.AuthResourceGroupService
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
@@ -53,18 +50,7 @@ import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
-import org.springframework.beans.factory.annotation.Autowired
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -166,9 +152,9 @@ class RbacAuthConfiguration {
     @Bean
     @Primary
     fun permissionItsmCallbackService(
-        authItsmCallbackDispatcher: AuthItsmCallbackDispatcher
+        traceEventDispatcher: TraceEventDispatcher
     ) = RbacPermissionItsmCallbackService(
-        authItsmCallbackDispatcher
+        traceEventDispatcher = traceEventDispatcher
     )
 
     @Bean
@@ -178,81 +164,4 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         iamConfiguration: IamConfiguration
     ) = RbacPermissionService(authHelper, authResourceService, iamConfiguration)
-
-    @Bean
-    fun authRbacExchange(): DirectExchange {
-        val directExchange = DirectExchange(MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, true, false)
-        directExchange.isDelayed = true
-        return directExchange
-    }
-
-    @Bean
-    fun itsmCallbackQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_ITSM_CALLBACK, true)
-    }
-
-    @Bean
-    fun itsmCallbackBind(
-        @Autowired itsmCallbackQueue: Queue,
-        @Autowired authRbacExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(itsmCallbackQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_ITSM_CALLBACK)
-    }
-
-    @Bean
-    fun itsmCallbackEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired itsmCallbackQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired itsmCallbackListener: AuthItsmCallbackListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(itsmCallbackListener, itsmCallbackListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = itsmCallbackQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun authResourceGroupQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP, true)
-    }
-
-    @Bean
-    fun authResourceGroupBind(
-        @Autowired authResourceGroupQueue: Queue,
-        @Autowired authRbacExchange: DirectExchange
-    ): Binding {
-        return BindingBuilder.bind(authResourceGroupQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_RESOURCE_GROUP)
-    }
-
-    @Bean
-    fun authResourceGroupEventListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired authResourceGroupQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired authResourceGroupListener: AuthResourceGroupListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(authResourceGroupListener, authResourceGroupListener::execute.name)
-        adapter.setMessageConverter(messageConverter)
-        return Tools.createSimpleMessageListenerContainerByAdapter(
-            connectionFactory = connectionFactory,
-            queue = authResourceGroupQueue,
-            rabbitAdmin = rabbitAdmin,
-            adapter = adapter,
-            startConsumerMinInterval = 5000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 10,
-            maxConcurrency = 20
-        )
-    }
 }
