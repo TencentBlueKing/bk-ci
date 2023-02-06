@@ -35,6 +35,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogLineNum
 import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.openapi.api.apigw.v3.ApigwLogResourceV3
@@ -51,9 +52,6 @@ class ApigwLogResourceV3Impl @Autowired constructor(
 
     @Value("\${devopsGateway.api:#{null}}")
     private val gatewayUrl: String? = ""
-
-    @Value("\${auth.gateway.devopsToken:#{null}}")
-    private val devopsToken: String? = null
 
     override fun getInitLogs(
         appCode: String?,
@@ -169,9 +167,12 @@ class ApigwLogResourceV3Impl @Autowired constructor(
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId, AUTH_HEADER_PROJECT_ID to projectId)
+
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         if (devopsToken != null) {
             headers["X-DEVOPS-TOKEN"] = devopsToken
         }
+
         val response = OkhttpUtils.doLongGet(
             url = path.toString(),
             headers = headers

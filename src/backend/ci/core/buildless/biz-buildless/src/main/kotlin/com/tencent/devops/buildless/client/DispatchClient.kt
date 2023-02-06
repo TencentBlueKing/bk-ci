@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
@@ -56,9 +57,6 @@ class DispatchClient @Autowired constructor(
     private val commonConfig: CommonConfig,
     private val bkTag: BkTag
 ) {
-    @Value("\${auth.gateway.devopsToken:#{null}}")
-    private val devopsToken: String? = null
-
     fun updateContainerId(buildLessTask: BuildLessTask, containerId: String) {
         val path = "/ms/dispatch-docker/api/service/dockerhost/builds/${buildLessTask.buildId}/vmseqs" +
                 "/${buildLessTask.vmSeqId}?containerId=$containerId"
@@ -182,6 +180,7 @@ class DispatchClient @Autowired constructor(
         }
         val headers = mutableMapOf(AUTH_HEADER_GATEWAY_TAG to gatewayHeaderTag)
         // 新增devopsToken给网关校验
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         if (devopsToken != null) {
             headers["X-DEVOPS-TOKEN"] = devopsToken
         }

@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.pojo.QueryLogs
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
@@ -57,9 +58,6 @@ class StreamLogService @Autowired constructor(
 
     @Value("\${gateway.url}")
     private lateinit var gatewayUrl: String
-
-    @Value("\${auth.gateway.devopsToken:#{null}}")
-    private val devopsToken: String? = null
 
     fun getInitLogs(
         userId: String,
@@ -130,9 +128,12 @@ class StreamLogService @Autowired constructor(
         if (!jobId.isNullOrBlank()) path.append("&jobId=$jobId")
 
         val headers = mutableMapOf(AUTH_HEADER_USER_ID to userId)
+
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         if (devopsToken != null) {
             headers["X-DEVOPS-TOKEN"] = devopsToken
         }
+
         val response = OkhttpUtils.doLongGet(path.toString(), headers)
         return Response
             .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
