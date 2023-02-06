@@ -23,7 +23,6 @@ import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -33,16 +32,18 @@ import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
-class PermissionApplyServiceImpl @Autowired constructor(
+class RbacPermissionApplyService @Autowired constructor(
     val dslContext: DSLContext,
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
     val v2ManagerService: V2ManagerService,
-    val client: Client,
     val permissionResourceService: PermissionResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    val strategyService: StrategyService
+    val strategyService: StrategyService,
+    val authResourceService: AuthResourceService
 ) : PermissionApplyService {
+    @Value("\${auth.iamSystem:}")
+    val systemId = ""
 
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -96,10 +97,10 @@ class PermissionApplyServiceImpl @Autowired constructor(
         projectId: String,
         searchGroupInfo: SearchGroupInfo
     ): V2ManagerRoleGroupVO {
-        val projectInfo = client.get(ServiceProjectResource::class).get(projectId).data ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-            params = arrayOf(projectId),
-            defaultMessage = "权限系统：项目[$projectId]不存在"
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = "project",
+            resourceCode = projectId
         )
         val searchGroupDTO = SearchGroupDTO
             .builder()
@@ -218,19 +219,26 @@ class PermissionApplyServiceImpl @Autowired constructor(
                 )
             )
         }
+        if (groupInfoList.isEmpty()) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
+                defaultMessage = "权限系统: 获取权限申请跳转信息失败！"
+            )
+        }
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
+            resourceTypeName = "resourceTypeName",
+            resourceName = "resourceName",
+            actionName = "actionName",
             groupInfoList = groupInfoList
         )
     }
 
     companion object {
-        @Value("\${auth.iamSystem:}")
-        val systemId = ""
+        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
 
         @Value("\${devopsGateway.host:}")
         val host = ""
-        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
         private const val ALL_RESOURCE = "all_resource"
         private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?projectId=%s&groupId=%s"
     }
