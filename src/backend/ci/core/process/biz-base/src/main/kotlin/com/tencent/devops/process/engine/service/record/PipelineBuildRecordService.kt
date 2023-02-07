@@ -50,6 +50,7 @@ import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.pojo.BuildInfo
@@ -91,6 +92,7 @@ class PipelineBuildRecordService @Autowired constructor(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     private val recordModelService: PipelineRecordModelService,
+    private val pipelineResDao: PipelineResDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineElementService: PipelineElementService,
     redisOperation: RedisOperation,
@@ -181,6 +183,11 @@ class PipelineBuildRecordService @Autowired constructor(
         val model = if (buildRecordPipeline != null && buildInfo.executeCount != null) {
             val resourceStr = pipelineResVersionDao.getVersionModelString(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
+            ) ?: pipelineResDao.getVersionModelString(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
             ) ?: throw ErrorCodeException(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                 params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")

@@ -40,6 +40,7 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -61,6 +62,7 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
+    private val pipelineResDao: PipelineResDao,
     private val pipelineResVersionDao: PipelineResVersionDao,
     private val pipelineElementService: PipelineElementService,
     private val dslContext: DSLContext
@@ -114,6 +116,11 @@ class PipelineRecordModelService @Autowired constructor(
             // 查出该次构建对应的流水线基本模型
             val version = buildRecordModel.resourceVersion
             val modelStr = pipelineResVersionDao.getVersionModelString(
+                dslContext = dslContext,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                version = version
+            ) ?: pipelineResDao.getVersionModelString(
                 dslContext = dslContext,
                 projectId = projectId,
                 pipelineId = pipelineId,
