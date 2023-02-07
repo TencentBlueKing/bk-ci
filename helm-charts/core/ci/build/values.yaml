@@ -64,6 +64,13 @@ init:
   turbo: true
   bkrepo: true
   defaultImage: true
+  plugin:
+    enabled: true
+    atoms:
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.12/checkout.zip
+      code: checkout
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.2/run-v1.0.2.zip
+      code: run
 
 # 多集群开关
 multiCluster:
