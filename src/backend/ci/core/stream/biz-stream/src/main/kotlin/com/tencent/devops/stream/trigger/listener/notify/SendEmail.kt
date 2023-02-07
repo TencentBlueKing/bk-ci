@@ -66,6 +66,16 @@ object SendEmail {
                 }
                 )
         )
+        val buildNum = build.buildNum.toString()
+        val startTime = DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm")
+        val totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0)
+        val trigger = build.userId
+        val webUrl = StreamPipelineUtils.genStreamV2BuildUrl(
+            homePage = streamUrl,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            buildId = build.id
+        )
         val bodyParams = mapOf(
             "content" to (
                 if (content.isNullOrBlank()) {
@@ -74,22 +84,24 @@ object SendEmail {
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName,
-                        buildNum = build.buildNum.toString(),
-                        startTime = DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm"),
-                        totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
-                        trigger = build.userId,
+                        buildNum = buildNum,
+                        startTime = startTime,
+                        totalTime = totalTime,
+                        trigger = trigger,
                         commitId = commitId,
-                        webUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                            homePage = streamUrl,
-                            gitProjectId = gitProjectId,
-                            pipelineId = pipelineId,
-                            buildId = build.id
-                        )
+                        webUrl = webUrl
                     )
                 } else {
                     content
                 }
-                )
+                ),
+            "buildNum" to buildNum,
+            "startTime" to startTime,
+            "totalTime" to totalTime,
+            "trigger" to trigger,
+            "branchName" to branchName,
+            "commitId" to commitId,
+            "webUrl" to webUrl
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = StreamNotifyTemplateEnum.STREAM_V2_BUILD_TEMPLATE.templateCode,

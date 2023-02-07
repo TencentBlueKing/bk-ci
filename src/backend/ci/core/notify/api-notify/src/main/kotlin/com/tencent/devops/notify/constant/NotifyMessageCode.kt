@@ -48,4 +48,5 @@ object NotifyMessageCode {
     const val ERROR_NOTIFY_INVALID_RECEIVERS = "2111003" // 通知服务：无效的接收者：{0}
     const val ERROR_NOTIFY_INVALID_NOTIFY_TYPE = "2111004" // 通知服务：无效的通知参数类型：{0}
     const val ERROR_NOTIFY_SEND_FAIL = "2111005" // 通知服务：通知发送失败
+    const val ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL = "2111006" // 通知服务：腾讯云邮件通知发送失败 返回错误码{0}
 }

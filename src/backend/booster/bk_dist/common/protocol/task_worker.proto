@@ -17,6 +17,9 @@ message PBFileDesc {
 	optional string targetrelativepath = 7;
 	optional uint32 filemode = 8;
 	optional bytes linktarget = 9;
+	optional int64 modifytime = 10;
+	optional int64 accesstime = 11;
+	optional int64 createtime = 12;
 }
 
 message PBFileResult {
@@ -55,6 +58,11 @@ message PBCacheParam {
     optional int64 size = 3;
     required bytes target = 4;
     optional int32 overwrite = 5;
+	optional uint32 filemode = 6;
+	optional bytes linktarget = 7;
+	optional int64 modifytime = 8;
+	optional int64 accesstime = 9;
+	optional int64 createtime = 10;
 }
 
 enum PBCacheStatus {
