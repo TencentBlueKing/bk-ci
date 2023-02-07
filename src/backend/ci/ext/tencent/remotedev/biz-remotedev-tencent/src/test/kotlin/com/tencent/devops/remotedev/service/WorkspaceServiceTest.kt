@@ -76,6 +76,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* hostName = */ "127.0.0.1",
         /* cpu = */ 8,
         /* memory = */ 16,
+        /* usageTime = */ 0,
+        /* sleepingTime = */ 0,
         /* disk = */ 100,
         /* creator = */ "user00",
         /* creatorBgName = */ "xx事业群",
@@ -84,43 +86,36 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* status = */ 1,
         /* createTime = */ LocalDateTime.parse("2022-11-14 20:00:36", formatter),
         /* updateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter),
-        /* lastStatusUpdateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter),
-        /* usageTime = */ 0,
-        /* sleepingTime = */ 0
+        /* lastStatusUpdateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter)
     )
 
     private val wsh4Default = TWorkspaceHistoryRecord(
         /* id = */ 1,
-        /* workspaceId = */ 8,
+        /* workspaceName = */ "",
         /* starter = */ "user00",
         /* stopper = */ "",
         /* startTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
         /* endTime = */ null,
         /* lastSleepTimeCost = */ 0,
         /* updateTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-        /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-        ""
-
+        /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter)
     )
 
     private val wsoh4Default = TWorkspaceOpHisRecord(
         /* id = */ 1,
-        /* workspaceId = */ 1,
+        /* workspaceName = */ "",
         /* operator = */ "user00",
         /* action = */ 0,
         /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
-        /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter),
-        ""
-
+        /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter)
     )
 
     private val wss4Default = TWorkspaceSharedRecord(
         /* id = */ 1,
-        /* workspaceId = */ 1,
+        /* workspaceName = */ "",
         /* operator = */ "user00",
         /* sharedUser = */ "user01",
-        /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter),
-        ""
+        /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter)
     )
 
     @Nested
