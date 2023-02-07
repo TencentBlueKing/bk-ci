@@ -25,7 +25,7 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local"
+              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local" > nohup
               do 
                 echo "waiting for {{ include "bkci.names.fullname" . }}-store";
                 sleep 2;

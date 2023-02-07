@@ -25,18 +25,19 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local"
+              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local" > nohup
               do 
                 echo "waiting for {{ include "bkci.names.fullname" . }}-store";
                 sleep 2;
               done
               echo "{{ include "bkci.names.fullname" . }}-store is available";
-              {{ range .Values.init.plugin.atom }}
+              {{ range .Values.init.plugin.atoms }}
               atom_url={{ .url }}
               atom_code={{ .code }}
               atom_file=${atom_code}.zip
-              if [ curl -s $atom_url -o $atom_file ]; then
-                curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/deploy" -H "X-DEVOPS-UID: admin" -F atomCode=$atom_code -F upload=@$atom_file
+              curl -s $atom_url -o $atom_file -L
+              if [ $? -eq 0 ]; then
+                curl "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/deploy" -H "X-DEVOPS-UID: admin" -F atomCode=$atom_code -F upload=@$atom_file
               fi
               {{ end }}
       restartPolicy: OnFailure
