@@ -313,7 +313,11 @@ class PipelineBuildRecordService @Autowired constructor(
 
     private fun fixDetailTimeCost(buildInfo: BuildInfo, detail: Model) {
         if (buildInfo.status.isFinish()) {
-            val queueCost = buildInfo.startTime?.let { buildInfo.queueTime - it } ?: 0
+            val queueCost = buildInfo.startTime?.let { startTime ->
+                (startTime - buildInfo.queueTime).let {
+                    if (it >= 0) it else null
+                }
+            } ?: 0
             detail.timeCost = BuildRecordTimeCost(
                 systemCost = 0,
                 executeCost = buildInfo.executeTime,
