@@ -208,7 +208,7 @@
     "分类不能为空": "Category cannot be empty",
     "功能标签": "Tag",
     "简介": "Introduction",
-    "插件一句话简介，不超过25个字符。": "Use one sentence to briefly describe the plugin, no more than 256 characters.",
+    "插件一句话简介，不超过256个字符。": "Use one sentence to briefly describe the plugin, no more than 256 characters.",
     "展示在插件市场以及流水线选择插件页面。": "Displayed in the plugin store page and the pipeline selection plugin page.",
     "详细描述": "Description",
     "atomRemark": "For detailed description of plugin, please describe plugin functions, use cases, usage restrictions and corresponding solutions [optional], common failure causes and solutions, and the contact info of person in charge",
