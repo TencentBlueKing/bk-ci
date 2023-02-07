@@ -50,37 +50,6 @@ import javax.ws.rs.core.Response
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ExternalResource {
-    @ApiOperation("提供给devopsremoting上报工作空间心跳")
-    @POST
-    @Path("/workspace/heartbeat")
-    fun workspaceHeartbeat(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
-        @HeaderParam("X-Signature")
-        signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
-        @QueryParam("timestamp")
-
-        timestamp: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取工作空间详情")
-    @GET
-    @Path("/workspace-proxy/detail")
-    fun getWorkspaceDetail(
-        @ApiParam(value = "secretKey签名(sha256)", required = true)
-        @HeaderParam("X-Signature")
-        signature: String,
-        @ApiParam(value = "工作空间ID", required = true)
-        @QueryParam("workspaceName")
-        workspaceName: String,
-        @ApiParam(value = "时间戳", required = true)
-        @QueryParam("timestamp")
-        timestamp: String
-    ): Result<WorkspaceProxyDetail>
-
     @ApiOperation("获取默认的devfile文件内容")
     @GET
     @Path("/devfile")

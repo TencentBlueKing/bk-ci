@@ -29,12 +29,14 @@ package com.tencent.devops.remotedev.api.remotedev
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
+import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -65,4 +67,35 @@ interface RemoteDevResource {
         @QueryParam("timestamp")
         timestamp: String
     ): Result<RemoteDevOauthBack>
+
+    @ApiOperation("提供给ws-proxy上报工作空间心跳")
+    @POST
+    @Path("/workspace/heartbeat")
+    fun workspaceHeartbeat(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+
+        timestamp: String
+    ): Result<Boolean>
+
+    @ApiOperation("获取工作空间详情")
+    @GET
+    @Path("/workspace-proxy/detail")
+    fun getWorkspaceDetail(
+        @ApiParam(value = "secretKey签名(sha256)", required = true)
+        @HeaderParam("X-Signature")
+        signature: String,
+        @ApiParam(value = "工作空间ID", required = true)
+        @QueryParam("workspaceName")
+        workspaceName: String,
+        @ApiParam(value = "时间戳", required = true)
+        @QueryParam("timestamp")
+        timestamp: String
+    ): Result<WorkspaceProxyDetail>
 }

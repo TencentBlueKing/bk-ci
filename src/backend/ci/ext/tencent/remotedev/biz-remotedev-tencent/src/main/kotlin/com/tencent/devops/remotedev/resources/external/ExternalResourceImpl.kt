@@ -50,23 +50,6 @@ class ExternalResourceImpl @Autowired constructor(
     @Value("\${remoteDev.callBackSignSecret:}")
     private val signSecret: String = ""
 
-    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
-        if (!checkSignature(signature, workspaceName, timestamp)) {
-            return Result(403, "Forbidden request", false)
-        }
-
-        redisHeartBeat.refreshHeartbeat(workspaceName)
-        return Result(true)
-    }
-
-    override fun getWorkspaceDetail(signature: String, workspaceName: String, timestamp: String): Result<WorkspaceProxyDetail> {
-        if (!checkSignature(signature, workspaceName, timestamp)) {
-            return Result(status = 403, message = "Forbidden request")
-        }
-
-        return Result(workspaceService.getWorkspaceProxyDetail(workspaceName))
-    }
-
     private fun checkSignature(signature: String, workspaceName: String, timestamp: String): Boolean {
         val genSignature = ShaUtils.hmacSha1(signSecret.toByteArray(), (workspaceName + timestamp).toByteArray())
         logger.info("signature($signature) and generate signature ($genSignature)")

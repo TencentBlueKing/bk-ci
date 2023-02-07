@@ -32,8 +32,10 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.remotedev.RemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
+import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
+import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.remotedev.utils.RsaUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -43,6 +45,7 @@ import java.util.Base64
 @RestResource
 class RemoteDevResourceImpl @Autowired constructor(
     private val gitTransferService: GitTransferService,
+    private val redisHeartBeat: RedisHeartBeat,
     private val workspaceService: WorkspaceService
 ) : RemoteDevResource {
 
@@ -69,6 +72,23 @@ class RemoteDevResourceImpl @Autowired constructor(
                 value = RsaUtil.rsaEncrypt(oauth.accessToken, rsaPublicKey)
             )
         )
+    }
+
+    override fun workspaceHeartbeat(signature: String, workspaceName: String, timestamp: String): Result<Boolean> {
+        if (!checkSignature(signature, workspaceName, timestamp)) {
+            return Result(403, "Forbidden request", false)
+        }
+
+        redisHeartBeat.refreshHeartbeat(workspaceName)
+        return Result(true)
+    }
+
+    override fun getWorkspaceDetail(signature: String, workspaceName: String, timestamp: String): Result<WorkspaceProxyDetail> {
+        if (!checkSignature(signature, workspaceName, timestamp)) {
+            return Result(status = 403, message = "Forbidden request")
+        }
+
+        return Result(workspaceService.getWorkspaceProxyDetail(workspaceName))
     }
 
     private fun checkSignature(signature: String, key: String, timestamp: String): Boolean {
