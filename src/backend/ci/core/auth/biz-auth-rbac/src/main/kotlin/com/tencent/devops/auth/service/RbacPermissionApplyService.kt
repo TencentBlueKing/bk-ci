@@ -24,6 +24,7 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -42,15 +43,13 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
     val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao
+    val authActionDao: AuthActionDao,
+    val config : CommonConfig
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
-    @Value("\${devopsGateway.host:}")
-    private val host = ""
-
-    private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?" +
+    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/applyPermission?" +
         "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
 
     private val actionCache = CacheBuilder.newBuilder()
