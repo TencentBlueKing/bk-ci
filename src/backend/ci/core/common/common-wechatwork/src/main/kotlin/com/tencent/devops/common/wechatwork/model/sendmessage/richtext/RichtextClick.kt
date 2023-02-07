@@ -25,18 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.test
+package com.tencent.devops.common.wechatwork.model.sendmessage.richtext
 
-import org.mockito.Mockito
+import com.tencent.devops.common.wechatwork.model.enums.RichtextContentType
 
-/**
- * 单元测试基类
- * @version 1.0
- */
-@Suppress("UNUSED")
-open class BaseTest {
-    /**
-     * 帮助mock出带泛型的任意对象
-     */
-    inline fun <reified T : Any> mock() = Mockito.mock(T::class.java)!!
-}
+data class RichtextClick(
+    val link: RichtextClickLink = RichtextClickLink()
+) : RichtextContent(RichtextContentType.link)

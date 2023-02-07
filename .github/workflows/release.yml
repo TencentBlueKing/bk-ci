@@ -157,7 +157,7 @@ jobs:
         run: |
           version="$(basename $GITHUB_REF)"
           echo "::set-output name=version::$version"
-          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
+          ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
       - name: Setup Docker -- CLOUD NATIVE
         uses: docker-practice/actions-setup-docker@master
       - name: Create Docker Image -- CLOUD NATIVE

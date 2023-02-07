@@ -32,6 +32,7 @@ import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildStatusBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.BS_QUALITY_ABORT_STAGE
 import com.tencent.devops.process.engine.common.BS_QUALITY_PASS_STAGE
 import com.tencent.devops.process.engine.common.BS_STAGE_CANCELED_END_SOURCE
@@ -91,7 +92,8 @@ class UpdateStateForStageCmdFinally(
 
         // Stage 暂停或者 插件暂停
         if (commandContext.buildStatus == BuildStatus.STAGE_SUCCESS) {
-            if (event.source != BS_STAGE_CANCELED_END_SOURCE) { // 不是 stage cancel，暂停
+            if (event.source != BS_STAGE_CANCELED_END_SOURCE && event.source != BS_CANCEL_BUILD_SOURCE) {
+                // 不是 stage cancel 或取消构建，则进行暂停逻辑
                 pipelineStageService.pauseStage(stage)
             } else {
                 nextOrFinish(event, stage, commandContext, false)

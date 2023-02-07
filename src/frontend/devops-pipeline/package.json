@@ -14,7 +14,7 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.0.9",
+        "@blueking/log": "2.0.10",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.15-beta.7",
@@ -32,7 +32,8 @@
         "vue-json-viewer": "^2.2.5",
         "vue-router": "^2.8.1",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0"
+        "vuex": "^2.4.0",
+        "mavon-editor": "^2.10.4"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",

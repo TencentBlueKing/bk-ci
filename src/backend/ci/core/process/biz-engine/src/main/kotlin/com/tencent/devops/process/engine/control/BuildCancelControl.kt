@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.common.BS_CANCEL_BUILD_SOURCE
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
@@ -188,7 +189,7 @@ class BuildCancelControl @Autowired constructor(
     private fun sendBuildFinishEvent(event: PipelineBuildCancelEvent) {
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildFinishEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
                 userId = event.userId,
@@ -202,7 +203,7 @@ class BuildCancelControl @Autowired constructor(
         // #3138 buildCancel支持finallyStage
         pipelineMQEventDispatcher.dispatch(
             PipelineBuildStageEvent(
-                source = "cancel_build",
+                source = BS_CANCEL_BUILD_SOURCE,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 userId = event.userId,

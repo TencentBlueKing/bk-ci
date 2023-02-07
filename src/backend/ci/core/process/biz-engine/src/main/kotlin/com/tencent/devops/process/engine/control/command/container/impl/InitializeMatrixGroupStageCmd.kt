@@ -191,6 +191,7 @@ class InitializeMatrixGroupStageCmd(
         // #4518 待生成的分裂后container表和task表记录
         val buildContainerList = mutableListOf<PipelineBuildContainer>()
         val buildTaskList = mutableListOf<PipelineBuildTask>()
+        val recordContainerList = mutableListOf<BuildRecordContainer>()
         val recordTaskList = mutableListOf<BuildRecordTask>()
 
         // #4518 根据当前上下文对每一个构建矩阵进行裂变
@@ -321,6 +322,29 @@ class InitializeMatrixGroupStageCmd(
                             mutexGroup = mutexGroup
                         )
                     )
+                    recordContainer?.let {
+                        recordContainerList.add(
+                            BuildRecordContainer(
+                                projectId = event.projectId,
+                                pipelineId = event.pipelineId,
+                                resourceVersion = recordContainer.resourceVersion,
+                                buildId = event.buildId,
+                                stageId = event.stageId,
+                                containerId = newContainer.containerId!!,
+                                containerType = recordContainer.containerType,
+                                executeCount = context.executeCount,
+                                matrixGroupFlag = false,
+                                matrixGroupId = matrixGroupId,
+                                containerVar = mutableMapOf(
+                                    "@type" to newContainer.getClassType(),
+                                    Container::containerHashId.name to (newContainer.containerHashId ?: ""),
+                                    Container::name.name to (newContainer.name)
+                                ),
+                                status = null,
+                                timestamps = mapOf()
+                            )
+                        )
+                    }
 
                     // 如为空就初始化，如有元素就直接追加
                     if (modelContainer.groupContainers.isNullOrEmpty()) {
@@ -474,10 +498,8 @@ class InitializeMatrixGroupStageCmd(
                 pipelineContainerService.batchSave(transactionContext, buildContainerList)
                 pipelineTaskService.batchSave(transactionContext, buildTaskList)
                 recordContainer?.let {
-                    saveBuildRecord(
-                        transactionContext = transactionContext, modelContainer = modelContainer,
-                        buildContainerList = buildContainerList, recordContainer = it,
-                        recordTaskList = recordTaskList, matrixGroupId = matrixGroupId
+                    containerBuildRecordService.batchSave(
+                        transactionContext, recordContainerList, recordTaskList
                     )
                 }
             }
@@ -521,44 +543,6 @@ class InitializeMatrixGroupStageCmd(
         )
 
         return buildContainerList.size
-    }
-
-    private fun saveBuildRecord(
-        transactionContext: DSLContext,
-        modelContainer: Container,
-        buildContainerList: MutableList<PipelineBuildContainer>,
-        recordContainer: BuildRecordContainer,
-        recordTaskList: List<BuildRecordTask>,
-        matrixGroupId: String
-    ) {
-        val containerVar = mutableMapOf<String, Any>(
-            "@type" to modelContainer.getClassType(),
-            Container::name.name to modelContainer.name
-        )
-        modelContainer.containerHashId?.let {
-            containerVar[Container::containerHashId.name] = it
-        }
-        containerBuildRecordService.batchSave(
-            transactionContext,
-            buildContainerList.map {
-                BuildRecordContainer(
-                    projectId = it.projectId,
-                    pipelineId = it.pipelineId,
-                    resourceVersion = recordContainer.resourceVersion,
-                    buildId = it.buildId,
-                    stageId = it.stageId,
-                    containerId = it.containerId,
-                    containerType = it.containerType,
-                    executeCount = it.executeCount,
-                    matrixGroupFlag = false,
-                    matrixGroupId = matrixGroupId,
-                    containerVar = containerVar,
-                    status = null,
-                    timestamps = mapOf()
-                )
-            },
-            recordTaskList
-        )
     }
 
     private fun generateMatrixElements(

@@ -122,7 +122,7 @@ class BuildRecordStageDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
-            val max = dslContext.select(
+            val max = DSL.select(
                 STAGE_ID.`as`(KEY_STAGE_ID),
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(STAGE_ID)

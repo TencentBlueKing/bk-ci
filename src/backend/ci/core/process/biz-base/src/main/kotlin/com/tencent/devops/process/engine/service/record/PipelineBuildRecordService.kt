@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.service.record
 
-import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -180,9 +179,8 @@ class PipelineBuildRecordService @Autowired constructor(
             dslContext, projectId, pipelineId, buildId, fixedExecuteCount
         )
 
-        // TODO #7983 当不传executeCount时使用原detail接口暂时兼容，后续全部切换到record进行
         val version = buildInfo.version
-        val model = executeCount?.let {
+        val model = if (buildRecordPipeline != null && buildInfo.executeCount != null) {
             val resourceStr = pipelineResVersionDao.getVersionModelString(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
             ) ?: pipelineResDao.getVersionModelString(
@@ -196,7 +194,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             try {
                 val recordMap = recordModelService.generateFieldRecordModelMap(
-                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline!!
+                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
                 )
                 val fullModel = JsonUtil.to(resourceStr, Model::class.java)
                 // 为model填充element
@@ -208,15 +206,14 @@ class PipelineBuildRecordService @Autowired constructor(
             } catch (t: Throwable) {
                 logger.warn("RECORD|parse record($buildId)-$executeCount with error: ", t)
                 // 遇到解析问题直接返回最新记录，表现为前端无法切换
-                fixedExecuteCount = buildInfo.executeCount ?: executeCount
+                fixedExecuteCount = buildInfo.executeCount!!
                 null
             }
+        } else {
+            null
         } ?: run {
-            // TODO #7983 临时填充流水线级的timeCost
             val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
-            buildRecordPipeline?.modelVar?.get(Model::timeCost.name)?.let {
-                detail.timeCost = JsonUtil.anyTo(it, object : TypeReference<BuildRecordTimeCost>() {})
-            }
+            fixDetailTimeCost(buildInfo, detail)
             detail
         }
 
@@ -312,6 +309,33 @@ class PipelineBuildRecordService @Autowired constructor(
             remark = buildInfo.remark,
             webhookInfo = buildInfo.webhookInfo
         )
+    }
+
+    private fun fixDetailTimeCost(buildInfo: BuildInfo, detail: Model) {
+        if (buildInfo.status.isFinish()) {
+            detail.timeCost = BuildRecordTimeCost(
+                systemCost = 0,
+                executeCost = buildInfo.executeTime,
+                waitCost = 0,
+                queueCost = buildInfo.queueTime,
+                totalCost = buildInfo.executeTime + buildInfo.queueTime
+            )
+        }
+        detail.stages.forEach { stage ->
+            stage.containers.forEach { container ->
+                container.timeCost = BuildRecordTimeCost(
+                    systemCost = container.systemElapsed ?: 0,
+                    executeCost = container.elementElapsed ?: 0,
+                    totalCost = (container.systemElapsed ?: 0) + (container.elementElapsed ?: 0)
+                )
+                container.elements.forEach { element ->
+                    element.timeCost = BuildRecordTimeCost(
+                        executeCost = element.elapsed ?: 0,
+                        totalCost = element.elapsed ?: 0
+                    )
+                }
+            }
+        }
     }
 
     // TODO #7983 代替detail能力

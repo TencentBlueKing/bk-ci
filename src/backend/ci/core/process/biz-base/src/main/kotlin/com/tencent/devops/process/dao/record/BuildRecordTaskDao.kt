@@ -130,7 +130,7 @@ class BuildRecordTaskDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
             // 获取每个最大执行次数
-            val max = dslContext.select(
+            val max = DSL.select(
                 TASK_ID.`as`(KEY_TASK_ID),
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(TASK_ID)
