@@ -160,6 +160,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
     `actionId` varchar(64) NOT NULL COMMENT '操作ID',
     `resourceType` varchar(64) NOT NULL COMMENT '资源类型',
     `actionName` varchar(64) NOT NULL COMMENT '操作名称',
+    `englishName` varchar(64) DEFAULT NULL  COMMENT '动作英文名称',
     `creator` varchar(32) DEFAULT NULL  COMMENT '创建者',
     `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
     `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
@@ -167,7 +168,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
     `actionType` varchar(32) DEFAULT NULL  COMMENT '操作类型',
     PRIMARY KEY (`actionId`),
     UNIQUE INDEX `UNI_INX_RESOURCE_TYPE_ACTION_ID`(`resourceType`, `actionId`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限操作表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='权限操作表';
 
 -- ----------------------------
 -- Table structure for T_AUTH_RESOURCE_TYPE
@@ -187,6 +188,6 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_RESOURCE_TYPE` (
     `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
     `delete` bit(1) DEFAULT NULL  COMMENT '是否删除',
     PRIMARY KEY (`resourceType`)
-    ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='权限资源类型表';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 COMMENT='权限资源类型表';
 
 SET FOREIGN_KEY_CHECKS = 1;

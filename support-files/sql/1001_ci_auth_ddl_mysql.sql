@@ -161,6 +161,7 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
     `actionId` varchar(64) NOT NULL COMMENT '操作ID',
     `resourceType` varchar(64) NOT NULL COMMENT '资源类型',
     `actionName` varchar(64) NOT NULL COMMENT '操作名称',
+    `englishName` varchar(64) DEFAULT NULL  COMMENT '动作英文名称',
     `creator` varchar(32) DEFAULT NULL  COMMENT '创建者',
     `createTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '创建时间',
     `updateTime` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP  COMMENT '修改时间',
