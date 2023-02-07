@@ -99,7 +99,7 @@ internal class MarketAtomTaskTest {
                 osType = osType,
                 pkgName = "node-v10.24.1-win-x64.zip"
             )
-        }finally {
+        } finally {
             // 删除安装包
             // pkgFile.delete()
             println("prepareRunEnv decompress [$pkgFile] success")
@@ -116,7 +116,7 @@ internal class MarketAtomTaskTest {
     ) {
         val path = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
         println("path:$path")
-        println("pkgFile.exists"+pkgFile.exists())
+        println("pkgFile.exists" + pkgFile.exists())
         val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
         println("command:$command")
         try {

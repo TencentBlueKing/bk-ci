@@ -124,7 +124,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                         osType = osType,
                         pkgName = pkgName
                     )
-                }finally {
+                } finally {
                     // 删除安装包
                     pkgFile.delete()
                     logger.info("prepareRunEnv decompress [$pkgName] success")
