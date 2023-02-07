@@ -484,7 +484,9 @@ class PipelineContainerService @Autowired constructor(
                 )
 
                 if (taskRecord != null) {
-                    updateExistsTask.add(taskRecord)
+                    if (updateExistsTask.find { it.taskId == taskRecord.taskId } == null) {
+                        updateExistsTask.add(taskRecord)
+                    }
                     // 新插件重试需要判断其是否有post操作,如果有那么post操作也需要重试
                     if (atomElement is MarketBuildAtomElement || atomElement is MarketBuildLessAtomElement) {
                         val pair = findPostTask(lastTimeBuildTasks, atomElement, containerElements)
