@@ -28,7 +28,7 @@
 dependencies {
     api(project(":core:common:common-api"))
     api(project(":core:common:common-web"))
-    api(project(":ext:tencent:common:common-wechatwork"))
+    api(project(":core:common:common-wechatwork"))
 }
 
 plugins {

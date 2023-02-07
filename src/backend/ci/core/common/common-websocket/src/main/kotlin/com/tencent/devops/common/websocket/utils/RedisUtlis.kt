@@ -99,7 +99,7 @@ object RedisUtlis {
     }
 
     // 删除该session对应的User记录
-    fun deleteUserSessionBySession(redisOperation: RedisOperation, sessionId: String) {
+    fun deleteUserSessionBySession(redisOperation: RedisOperation, sessionId: String): Boolean {
         return redisOperation.delete(SESSION_USER_REDIS_KEY + sessionId)
     }
 

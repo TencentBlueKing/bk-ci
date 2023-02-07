@@ -271,7 +271,8 @@
                         this.goList()
                     } else {
                         this.$refs.pipelineBox?.requestList?.({
-                            page: 1
+                            page: 1,
+                            pageSize: 50
                         })
                     }
                     this.checkHasCreatePermission()
@@ -323,6 +324,11 @@
                             viewId
                         }
                     })
+                } else {
+                    this.$refs.pipelineBox?.requestList?.({
+                        page: 1,
+                        pageSize: 50
+                    })
                 }
             },
             goPatchManage () {
@@ -345,6 +351,7 @@
                     sortType,
                     collation
                 }
+                
                 if (sortType === currentSort) {
                     newSortQuery.collation = collation === ORDER_ENUM.descending ? ORDER_ENUM.ascending : ORDER_ENUM.descending
                 } else {
@@ -359,7 +366,7 @@
                             break
                     }
                 }
-                
+                localStorage.setItem('pipelineSortType', sortType)
                 this.$router.push({
                     ...this.$route,
                     query: newSortQuery

@@ -32,23 +32,26 @@ import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
+import mavonEditor from 'mavon-editor'
+import 'mavon-editor/dist/css/index.css'
 import PortalVue from 'portal-vue' // eslint-disable-line
 import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
 import '@icon-cool/bk-icon-devops'
 
 import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
 
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css')
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css')
 
 const { i18n, setLocale } = createLocale(require.context('@locale/pipeline/', false, /\.json$/))
 
 Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
+Vue.use(mavonEditor)
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.

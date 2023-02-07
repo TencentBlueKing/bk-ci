@@ -27,111 +27,104 @@
 
 package com.tencent.devops.auth.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.nhaarman.mockito_kotlin.mock
-import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.test.BkCiAbstractTest
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
-class AuthDeptServiceImplTest {
-
-    private val redisOperation: RedisOperation = RedisOperation(mock())
-
-    private val objectMapper: ObjectMapper = mock()
-
+class AuthDeptServiceImplTest : BkCiAbstractTest() {
     private val authDeptServiceImpl = AuthDeptServiceImpl(redisOperation, objectMapper)
 
     @Test
     fun test() {
         val response = "{\n" +
-            "        \"count\": 162,\n" +
-            "        \"results\": [\n" +
-            "            {\n" +
-            "                \"status\": \"NORMAL\",\n" +
-            "                \"domain\": \"XXX.com\",\n" +
-            "                \"telephone\": \"XXX\",\n" +
-            "                \"create_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
-            "                \"country_code\": \"86\",\n" +
-            "                \"logo\": null,\n" +
-            "                \"iso_code\": \"CN\",\n" +
-            "                \"id\": 173169,\n" +
-            "                \"display_name\": \"abc\",\n" +
-            "                \"leader\": [\n" +
-            "                    {\n" +
-            "                        \"username\": \"abcv\",\n" +
-            "                        \"display_name\": \"abc\",\n" +
-            "                        \"id\": 2435\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"username\": \"abc\",\n" +
-            "                \"update_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
-            "                \"wx_userid\": \"\",\n" +
-            "                \"staff_status\": \"IN\",\n" +
-            "                \"password_valid_days\": -1,\n" +
-            "                \"qq\": \"\",\n" +
-            "                \"language\": \"zh-cn\",\n" +
-            "                \"enabled\": true,\n" +
-            "                \"time_zone\": \"Asia/Shanghai\",\n" +
-            "                \"departments\": [\n" +
-            "                    {\n" +
-            "                        \"order\": 1,\n" +
-            "                        \"id\": 6580,\n" +
-            "                        \"full_name\": \"123/345\",\n" +
-            "                        \"name\": \"应用开发组\"\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"email\": \"abc@XXX.com\",\n" +
-            "                \"extras\": {\n" +
-            "                    \"gender\": \"男\",\n" +
-            "                    \"postname\": \"应用开发组员工\"\n" +
-            "                },\n" +
-            "                \"position\": 0,\n" +
-            "                \"category_id\": 2\n" +
-            "            },\n" +
-            "            {\n" +
-            "                \"status\": \"NORMAL\",\n" +
-            "                \"domain\": \"XXX.com\",\n" +
-            "                \"telephone\": \"XXX\",\n" +
-            "                \"create_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
-            "                \"country_code\": \"86\",\n" +
-            "                \"logo\": null,\n" +
-            "                \"iso_code\": \"CN\",\n" +
-            "                \"id\": 173168,\n" +
-            "                \"display_name\": \"abc\",\n" +
-            "                \"leader\": [\n" +
-            "                    {\n" +
-            "                        \"username\": \"abc\",\n" +
-            "                        \"display_name\": \"abc\",\n" +
-            "                        \"id\": 2435\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"username\": \"def\",\n" +
-            "                \"update_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
-            "                \"wx_userid\": \"\",\n" +
-            "                \"staff_status\": \"IN\",\n" +
-            "                \"password_valid_days\": -1,\n" +
-            "                \"qq\": \"\",\n" +
-            "                \"language\": \"zh-cn\",\n" +
-            "                \"enabled\": true,\n" +
-            "                \"time_zone\": \"Asia/Shanghai\",\n" +
-            "                \"departments\": [\n" +
-            "                    {\n" +
-            "                        \"order\": 1,\n" +
-            "                        \"id\": 6580,\n" +
-            "                        \"full_name\": \"123/455\",\n" +
-            "                        \"name\": \"应用开发组\"\n" +
-            "                    }\n" +
-            "                ],\n" +
-            "                \"email\": \"XXX@126.com\",\n" +
-            "                \"extras\": {\n" +
-            "                    \"gender\": \"男\",\n" +
-            "                    \"postname\": \"应用开发组员工\"\n" +
-            "                },\n" +
-            "                \"position\": 0,\n" +
-            "                \"category_id\": 2\n" +
-            "            }\n" +
-            "        ]\n" +
-            "    }"
+                "        \"count\": 162,\n" +
+                "        \"results\": [\n" +
+                "            {\n" +
+                "                \"status\": \"NORMAL\",\n" +
+                "                \"domain\": \"XXX.com\",\n" +
+                "                \"telephone\": \"XXX\",\n" +
+                "                \"create_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
+                "                \"country_code\": \"86\",\n" +
+                "                \"logo\": null,\n" +
+                "                \"iso_code\": \"CN\",\n" +
+                "                \"id\": 173169,\n" +
+                "                \"display_name\": \"abc\",\n" +
+                "                \"leader\": [\n" +
+                "                    {\n" +
+                "                        \"username\": \"abcv\",\n" +
+                "                        \"display_name\": \"abc\",\n" +
+                "                        \"id\": 2435\n" +
+                "                    }\n" +
+                "                ],\n" +
+                "                \"username\": \"abc\",\n" +
+                "                \"update_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
+                "                \"wx_userid\": \"\",\n" +
+                "                \"staff_status\": \"IN\",\n" +
+                "                \"password_valid_days\": -1,\n" +
+                "                \"qq\": \"\",\n" +
+                "                \"language\": \"zh-cn\",\n" +
+                "                \"enabled\": true,\n" +
+                "                \"time_zone\": \"Asia/Shanghai\",\n" +
+                "                \"departments\": [\n" +
+                "                    {\n" +
+                "                        \"order\": 1,\n" +
+                "                        \"id\": 6580,\n" +
+                "                        \"full_name\": \"123/345\",\n" +
+                "                        \"name\": \"应用开发组\"\n" +
+                "                    }\n" +
+                "                ],\n" +
+                "                \"email\": \"abc@XXX.com\",\n" +
+                "                \"extras\": {\n" +
+                "                    \"gender\": \"男\",\n" +
+                "                    \"postname\": \"应用开发组员工\"\n" +
+                "                },\n" +
+                "                \"position\": 0,\n" +
+                "                \"category_id\": 2\n" +
+                "            },\n" +
+                "            {\n" +
+                "                \"status\": \"NORMAL\",\n" +
+                "                \"domain\": \"XXX.com\",\n" +
+                "                \"telephone\": \"XXX\",\n" +
+                "                \"create_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
+                "                \"country_code\": \"86\",\n" +
+                "                \"logo\": null,\n" +
+                "                \"iso_code\": \"CN\",\n" +
+                "                \"id\": 173168,\n" +
+                "                \"display_name\": \"abc\",\n" +
+                "                \"leader\": [\n" +
+                "                    {\n" +
+                "                        \"username\": \"abc\",\n" +
+                "                        \"display_name\": \"abc\",\n" +
+                "                        \"id\": 2435\n" +
+                "                    }\n" +
+                "                ],\n" +
+                "                \"username\": \"def\",\n" +
+                "                \"update_time\": \"2021-04-27T15:33:59.000000Z\",\n" +
+                "                \"wx_userid\": \"\",\n" +
+                "                \"staff_status\": \"IN\",\n" +
+                "                \"password_valid_days\": -1,\n" +
+                "                \"qq\": \"\",\n" +
+                "                \"language\": \"zh-cn\",\n" +
+                "                \"enabled\": true,\n" +
+                "                \"time_zone\": \"Asia/Shanghai\",\n" +
+                "                \"departments\": [\n" +
+                "                    {\n" +
+                "                        \"order\": 1,\n" +
+                "                        \"id\": 6580,\n" +
+                "                        \"full_name\": \"123/455\",\n" +
+                "                        \"name\": \"应用开发组\"\n" +
+                "                    }\n" +
+                "                ],\n" +
+                "                \"email\": \"XXX@126.com\",\n" +
+                "                \"extras\": {\n" +
+                "                    \"gender\": \"男\",\n" +
+                "                    \"postname\": \"应用开发组员工\"\n" +
+                "                },\n" +
+                "                \"position\": 0,\n" +
+                "                \"category_id\": 2\n" +
+                "            }\n" +
+                "        ]\n" +
+                "    }"
         val users = authDeptServiceImpl.findUserName(response)
         val mockUsers = mutableListOf<String>()
         mockUsers.add("abc")
@@ -142,30 +135,30 @@ class AuthDeptServiceImplTest {
     @Test
     fun test1() {
         val response = "[ {\n" +
-            "  \"id\" : \"29510\",\n" +
-            "  \"family\" : [ {\n" +
-            "    \"order\" : 1,\n" +
-            "    \"id\" : 123,\n" +
-            "    \"full_name\" : \"XXX公司\",\n" +
-            "    \"name\" : \"XXX公司\"\n" +
-            "  }, {\n" +
-            "    \"order\" : 1,\n" +
-            "    \"id\" : 12345,\n" +
-            "    \"full_name\" : \"XXX公司/XXX事业群\",\n" +
-            "    \"name\" : \"XXX事业群\"\n" +
-            "  }, {\n" +
-            "    \"order\" : 1,\n" +
-            "    \"id\" : 456,\n" +
-            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部\",\n" +
-            "    \"name\" : \"XXX部\"\n" +
-            "  }, {\n" +
-            "    \"order\" : 1,\n" +
-            "    \"id\" : 9878,\n" +
-            "    \"full_name\" : \"XXX公司/XXX事业群/XXX部/XXX中心\",\n" +
-            "    \"name\" : \"XXX中心\"\n" +
-            "  } ],\n" +
-            "  \"name\" : \"XXX组\"\n" +
-            "} ]"
+                "  \"id\" : \"29510\",\n" +
+                "  \"family\" : [ {\n" +
+                "    \"order\" : 1,\n" +
+                "    \"id\" : 123,\n" +
+                "    \"full_name\" : \"XXX公司\",\n" +
+                "    \"name\" : \"XXX公司\"\n" +
+                "  }, {\n" +
+                "    \"order\" : 1,\n" +
+                "    \"id\" : 12345,\n" +
+                "    \"full_name\" : \"XXX公司/XXX事业群\",\n" +
+                "    \"name\" : \"XXX事业群\"\n" +
+                "  }, {\n" +
+                "    \"order\" : 1,\n" +
+                "    \"id\" : 456,\n" +
+                "    \"full_name\" : \"XXX公司/XXX事业群/XXX部\",\n" +
+                "    \"name\" : \"XXX部\"\n" +
+                "  }, {\n" +
+                "    \"order\" : 1,\n" +
+                "    \"id\" : 9878,\n" +
+                "    \"full_name\" : \"XXX公司/XXX事业群/XXX部/XXX中心\",\n" +
+                "    \"name\" : \"XXX中心\"\n" +
+                "  } ],\n" +
+                "  \"name\" : \"XXX组\"\n" +
+                "} ]"
         val users = authDeptServiceImpl.getUserDeptTreeIds(response)
         val mockUsers = mutableSetOf<String>()
         mockUsers.add("29510")

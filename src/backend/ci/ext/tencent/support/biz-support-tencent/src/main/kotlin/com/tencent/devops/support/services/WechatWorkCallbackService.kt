@@ -487,7 +487,9 @@ class WechatWorkCallbackService @Autowired constructor(
     *
     * */
     fun processClickEventServiceHuman(userName: String) {
-        var newChatId = wechatWorkService.createChat("蓝盾DevOps平台咨询群", userName)
+        // 逻辑迁移
+        val userNameList = listOf("brandonliu", "zanyzhao", userName)
+        val newChatId = wechatWorkService.createChatByUserNames("蓝盾DevOps平台咨询群", userNameList)
         wechatWorkService.sendTextGroup("请描述您的问题，并带上相关的URL地址 [抱拳]", newChatId)
         wechatWorkService.sendTextSingle("已为您拉起新的咨询群，请关注会话列表。", userName)
     }

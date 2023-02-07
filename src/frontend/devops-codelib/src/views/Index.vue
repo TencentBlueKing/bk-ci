@@ -20,7 +20,7 @@
         <empty-tips v-else-if="codelibs && codelibs.hasCreatePermission" :title="$t('codelib.codelib')" :desc="$t('codelib.codelibDesc')">
             <template v-for="typeLabel in codelibTypes" theme="primary">
                 <bk-button v-if="!isExtendTx || typeLabel !== 'Gitlab' || isBlueKing" :key="typeLabel" @click="createCodelib(typeLabel)">
-                    {{ `${$t('codelib.link')}${typeLabel}${$t('codelib.codelib')}` }}
+                    {{ `${$t('codelib.link')} ${typeLabel} ${$t('codelib.codelib')}` }}
                 </bk-button>
             </template>
         </empty-tips>
