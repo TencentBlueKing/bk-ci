@@ -58,7 +58,12 @@ class UserQualityCountResourceImpl @Autowired constructor(
         return Result(countService.getDailyIntercept(userId, projectId))
     }
 
-    override fun getRuleIntercept(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<Page<QualityRuleIntercept>> {
+    override fun getRuleIntercept(
+        userId: String,
+        projectId: String,
+        page: Int?,
+        pageSize: Int?
+    ): Result<Page<QualityRuleIntercept>> {
         checkParams(userId, projectId)
         val pageNotNull = page ?: 1
         val pageSizeNotNull = page ?: 10
