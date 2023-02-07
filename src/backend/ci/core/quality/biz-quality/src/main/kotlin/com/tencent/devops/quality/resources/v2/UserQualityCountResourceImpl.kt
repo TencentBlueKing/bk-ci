@@ -58,13 +58,13 @@ class UserQualityCountResourceImpl @Autowired constructor(
         return Result(countService.getDailyIntercept(userId, projectId))
     }
 
-    override fun getRuleIntercept(userId: String, projectId: String): Result<Page<QualityRuleIntercept>> {
+    override fun getRuleIntercept(userId: String, projectId: String, page: Int?, pageSize: Int?): Result<Page<QualityRuleIntercept>> {
         checkParams(userId, projectId)
-        val page = 1
-        val pageSize = 10
-        val limit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val pageNotNull = page ?: 1
+        val pageSizeNotNull = page ?: 10
+        val limit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val result = historyService.userGetRuleIntercept(userId, projectId, limit.offset, limit.limit)
-        return Result(Page(page, pageSize, result.first, result.second))
+        return Result(Page(pageNotNull, pageNotNull, result.first, result.second))
     }
 
     private fun checkParams(userId: String, projectId: String) {

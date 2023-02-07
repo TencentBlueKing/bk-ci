@@ -1646,7 +1646,12 @@ class PipelineListFacadeService @Autowired constructor(
         watch.stop()
 
         watch.start("s_r_summary")
-        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(projectId, channelCode)
+        val buildPipelineRecords = pipelineRuntimeService.getBuildPipelineRecords(
+            projectId = projectId,
+            channelCode = channelCode,
+            page = page,
+            pageSize = pageSize
+        )
         watch.stop()
 
         watch.start("s_r_fav")

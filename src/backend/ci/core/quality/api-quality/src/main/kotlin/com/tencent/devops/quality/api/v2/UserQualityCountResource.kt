@@ -44,6 +44,7 @@ import javax.ws.rs.HeaderParam
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_COUNT_V2"], description = "质量红线-统计v2")
@@ -96,6 +97,12 @@ interface UserQualityCountResource {
         userId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
-        projectId: String
+        projectId: String,
+        @ApiParam("页目", required = false, defaultValue = "1")
+        @QueryParam("page")
+        page: Int?,
+        @ApiParam("每页数目", required = false, defaultValue = "20")
+        @QueryParam("pageSize")
+        pageSize: Int?
     ): Result<Page<QualityRuleIntercept>>
 }
