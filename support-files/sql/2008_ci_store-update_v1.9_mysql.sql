@@ -112,14 +112,6 @@ BEGIN
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = db
                 AND TABLE_NAME = 'T_STORE_DOCKING_PLATFORM'
-                AND COLUMN_NAME = 'OWNERS') THEN
-        ALTER TABLE T_STORE_DOCKING_PLATFORM ADD COLUMN `OWNERS` varchar(1024) NOT NULL COMMENT '运营负责人';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-            FROM information_schema.COLUMNS
-            WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_STORE_DOCKING_PLATFORM'
                 AND COLUMN_NAME = 'OWNER_DEPT_NAME') THEN
         ALTER TABLE T_STORE_DOCKING_PLATFORM ADD COLUMN `OWNER_DEPT_NAME` varchar(256) NOT NULL COMMENT '所属机构名称';
     END IF;
