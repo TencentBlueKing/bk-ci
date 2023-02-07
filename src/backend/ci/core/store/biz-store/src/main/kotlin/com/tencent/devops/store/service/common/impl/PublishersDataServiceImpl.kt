@@ -121,6 +121,7 @@ class PublishersDataServiceImpl @Autowired constructor(
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
         val addStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
         val delStorePublisherMemberRelRecords = mutableListOf<TStorePublisherMemberRelRecord>()
+        val createPublisherData = mutableListOf<PublishersRequest>()
         publishers.forEach {
             val publisherId = publishersDao.getPublisherId(dslContext, it.publishersCode)
             val deptInfos = analysisDept(userId, it.organization)
@@ -128,9 +129,9 @@ class PublishersDataServiceImpl @Autowired constructor(
                 logger.warn("update publisherData fail, analysis dept data error!")
                 return 0
             }
-            publisherId?.let { id ->
+            if (publisherId != null) {
                 val records = TStorePublisherInfoRecord()
-                records.id = id
+                records.id = publisherId
                 records.publisherCode = it.publishersCode
                 records.publisherName = it.name
                 records.firstLevelDeptName = deptInfos[0].name
@@ -156,11 +157,13 @@ class PublishersDataServiceImpl @Autowired constructor(
                 storePublisherInfoRecords.add(records)
                 updateMembers(
                     userId = userId,
-                    publisherId = id,
+                    publisherId = publisherId,
                     newMembers = it.members,
                     addRecords = addStorePublisherMemberRelRecords,
                     delRecords = delStorePublisherMemberRelRecords
                 )
+            } else {
+                createPublisherData.add(it)
             }
         }
         var count = 0
@@ -170,6 +173,7 @@ class PublishersDataServiceImpl @Autowired constructor(
             publisherMemberDao.batchCreatePublisherMemberRel(context, addStorePublisherMemberRelRecords)
             publisherMemberDao.batchDeletePublisherMemberByMemberIds(context, delStorePublisherMemberRelRecords)
         }
+        count += createPublisherData(userId, createPublisherData)
         return count
     }
 
