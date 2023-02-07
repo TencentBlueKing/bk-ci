@@ -1,7 +1,13 @@
 package com.tencent.devops.worker.common.task
 
+import com.tencent.devops.common.api.constant.NODEJS
+import com.tencent.devops.common.api.enums.OSType
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.script.CommandLineUtils
 import com.tencent.devops.common.expression.ExecutionContext
 import com.tencent.devops.common.expression.ExpressionParser
 import com.tencent.devops.common.expression.context.DictionaryContextData
@@ -10,11 +16,14 @@ import com.tencent.devops.common.expression.context.RuntimeNamedValue
 import com.tencent.devops.common.expression.context.StringContextData
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import com.tencent.devops.common.pipeline.EnvReplacementParser
+import com.tencent.devops.common.service.utils.ZipUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
+import com.tencent.devops.worker.common.BK_CI_ATOM_EXECUTE_ENV_PATH
 import com.tencent.devops.worker.common.expression.SpecialFunctions
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
+import java.io.File
 
 @Suppress("ALL")
 internal class MarketAtomTaskTest {
@@ -59,6 +68,91 @@ internal class MarketAtomTaskTest {
                 functions = SpecialFunctions.functions
             )
         )
+    }
+
+    @Test
+    fun test() {
+        val pkgFileDir = File(System.getProperty("user.dir") + "/src/test/file")
+        val osType = OSType.WINDOWS
+        val pkgFile = File(pkgFileDir, "node-v10.24.1-win-x64.zip")
+        println("pkgFile.exists() is : ${pkgFile.exists()}")
+        try {
+            CommandLineUtils.execute(
+                "${pkgFileDir.absolutePath}${File.separator}node${File.separator}node -v",
+                File("${pkgFileDir.absolutePath}${File.separator}node"),
+                true
+            )
+        } catch (e: Exception) {
+            // 把nodejs执行路径写入系统变量
+            val nodejsPath = if (osType == OSType.WINDOWS) {
+                "${pkgFileDir.absolutePath}${File.separator}node"
+            } else {
+                "${pkgFileDir}${pkgFileDir.absolutePath}/bin"
+            }
+            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, nodejsPath)
+            // 把nodejs安装包解压到构建机上
+            isUnzipSuccess(
+                retryNum = 3,
+                pkgFile = pkgFile,
+                pkgFileDir = pkgFileDir,
+                envDir = pkgFileDir,
+                osType = osType,
+                pkgName = "node-v10.24.1-win-x64.zip"
+            )
+        }finally {
+            // 删除安装包
+            // pkgFile.delete()
+            println("prepareRunEnv decompress [$pkgFile] success")
+        }
+    }
+
+    private fun isUnzipSuccess(
+        retryNum: Int,
+        pkgFile: File,
+        pkgFileDir: File,
+        envDir: File,
+        osType: OSType,
+        pkgName: String
+    ) {
+        val path = System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)
+        println("path:$path")
+        println("pkgFile.exists"+pkgFile.exists())
+        val command = if (path.endsWith(File.separator)) "${path}node -v" else "${path}${File.separator}node -v"
+        println("command:$command")
+        try {
+            if (osType == OSType.WINDOWS) {
+                ZipUtil.unZipFile(pkgFile, path, false)
+                CommandLineUtils.execute(
+                    command,
+                    pkgFileDir.absoluteFile,
+                    true
+                )
+            } else {
+                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                CommandLineUtils.execute(
+                    command,
+                    File(envDir, NODEJS).absoluteFile,
+                    true
+                )
+            }
+        } catch (ignored: Throwable) {
+            println("Start repeating retryNum: $retryNum, failScript Command: $command, Cause of error: ${ignored.message}")
+            if (retryNum == 0) {
+                throw TaskExecuteException(
+                    errorType = ErrorType.USER,
+                    errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
+                    errorMsg = "Script command execution failed because of ${ignored.message}"
+                )
+            }
+            isUnzipSuccess(
+                retryNum = retryNum - 1,
+                pkgFile = pkgFile,
+                pkgFileDir = pkgFileDir,
+                envDir = envDir,
+                osType = osType,
+                pkgName = pkgName
+            )
+        }
     }
 
     private fun originReplacement(

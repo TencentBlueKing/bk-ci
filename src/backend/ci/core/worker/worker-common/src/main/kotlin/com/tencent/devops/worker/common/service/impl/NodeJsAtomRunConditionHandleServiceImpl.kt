@@ -86,6 +86,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             }
             val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
             // 判断是否需要下载解压
+            val pkgFile = File(envDir, "$NODEJS/$pkgName")
             try {
                 val workspacePath = if (osType == OSType.WINDOWS) {
                     pkgFileDir.absoluteFile
@@ -102,7 +103,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     // 空文件夹需要删除
                     pkgFileDir.delete()
                 }
-                val pkgFile = File(envDir, "$NODEJS/$pkgName")
                 if (!pkgFileDir.exists()) {
                     // 把指定的nodejs安装包下载到构建机上
                     OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
@@ -124,9 +124,10 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                         osType = osType,
                         pkgName = pkgName
                     )
-                // 删除安装包
-                pkgFile.delete()
-                logger.info("prepareRunEnv decompress [$pkgName] success")
+                }finally {
+                    // 删除安装包
+                    pkgFile.delete()
+                    logger.info("prepareRunEnv decompress [$pkgName] success")
                 }
             }
         return true
@@ -188,13 +189,13 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     true
                 )
             }
-        } catch (e: Exception) {
-            logger.info("retryNum: $retryNum, failScript Command: $command, Cause of error: ${e.message}")
+        } catch (ignored: Throwable) {
+            logger.warn("Start repeating retryNum: $retryNum, failScript Command: $command, Cause of error: ${ignored.message}")
             if (retryNum == 0) {
                 throw TaskExecuteException(
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_SCRIPT_COMMAND_INVAILD,
-                    errorMsg = "Script command execution failed because of ${e.message}"
+                    errorMsg = "Script command execution failed because of ${ignored.message}"
                 )
             }
             isUnzipSuccess(
