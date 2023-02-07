@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.test.BkCiAbstractTest
-import com.tencent.devops.model.remotedev.tables.TWorkspaceTemplate.T_WORKSPACE_TEMPLATE
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceTemplateRecord
 import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
