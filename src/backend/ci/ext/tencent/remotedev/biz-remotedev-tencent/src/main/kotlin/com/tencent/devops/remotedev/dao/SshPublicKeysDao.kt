@@ -21,7 +21,7 @@ class SshPublicKeysDao {
                 dslContext.insertInto(
                     this,
                     USER,
-                    PUBLIC_KEY,
+                    PUBLIC_KEY
                 ).values(
                     sshPublicKey.user,
                     Base64Util.encode(sshPublicKey.publicKey.toByteArray())

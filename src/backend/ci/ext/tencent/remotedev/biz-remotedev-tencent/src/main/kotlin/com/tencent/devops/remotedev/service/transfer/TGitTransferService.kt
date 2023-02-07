@@ -119,7 +119,7 @@ class TGitTransferService @Autowired constructor(
     override fun getUserInfo(userId: String): GitUserInfo {
         return client.get(ServiceGitResource::class).getUserInfoByToken(
             token = getAndCheckOauthToken(userId).accessToken,
-            tokenType = TokenTypeEnum.OAUTH,
+            tokenType = TokenTypeEnum.OAUTH
         ).data!!
     }
 }

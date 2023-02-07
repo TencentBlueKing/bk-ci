@@ -1093,7 +1093,7 @@ class WorkspaceService @Autowired constructor(
                         usageTime = Duration.between(
                             lastHistory.startTime, LocalDateTime.now()
                         ).seconds.toInt(),
-                        dslContext = transactionContext,
+                        dslContext = transactionContext
                     )
                     workspaceHistoryDao.updateWorkspaceHistory(
                         dslContext = transactionContext,
@@ -1123,7 +1123,7 @@ class WorkspaceService @Autowired constructor(
                 status = status,
                 anyMessage = WorkspaceResponse(
                     workspaceName = workspaceName,
-                    status = WorkspaceAction.SLEEP,
+                    status = WorkspaceAction.SLEEP
                 ),
                 projectId = "",
                 userId = operator,

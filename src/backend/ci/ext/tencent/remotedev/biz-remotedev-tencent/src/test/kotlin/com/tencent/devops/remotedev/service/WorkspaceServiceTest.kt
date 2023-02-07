@@ -120,7 +120,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* operator = */ "user00",
         /* sharedUser = */ "user01",
         /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter),
-        "",
+        ""
     )
 
     @Nested

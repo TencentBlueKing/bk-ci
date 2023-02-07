@@ -92,7 +92,7 @@ class RemoteDevSettingDao {
                         it.envsForVariable,
                         object : TypeReference<Map<String, String>>() {}
                     ) ?: emptyMap(),
-                    envsForFile = emptyList(),
+                    envsForFile = emptyList()
                 )
             }
         }
