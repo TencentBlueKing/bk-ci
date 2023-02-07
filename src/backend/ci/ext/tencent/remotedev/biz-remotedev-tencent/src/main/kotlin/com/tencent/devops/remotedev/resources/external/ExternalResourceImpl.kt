@@ -27,11 +27,9 @@
 
 package com.tencent.devops.remotedev.resources.external
 
-import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.external.ExternalResource
-import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import org.slf4j.LoggerFactory
@@ -63,10 +61,13 @@ class ExternalResourceImpl @Autowired constructor(
 
     override fun getDevfile(): Response {
         val result = workspaceService.getDevfile()
-        return Response.ok(StreamingOutput { output ->
-            output.write(result.toByteArray())
-            output.flush()
-        }, MediaType.APPLICATION_OCTET_STREAM_TYPE)
+        return Response.ok(
+            StreamingOutput { output ->
+                output.write(result.toByteArray())
+                output.flush()
+            },
+            MediaType.APPLICATION_OCTET_STREAM_TYPE
+        )
             .header("content-disposition", "attachment; filename = devfile")
             .build()
     }

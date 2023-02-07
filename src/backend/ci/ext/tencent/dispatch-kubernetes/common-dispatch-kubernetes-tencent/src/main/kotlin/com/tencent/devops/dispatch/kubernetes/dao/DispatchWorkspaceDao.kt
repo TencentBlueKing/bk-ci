@@ -121,7 +121,9 @@ class DispatchWorkspaceDao {
     }
 
     fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-        return DSL.field("timestampdiff({0}, {1}, NOW())",
-                         Int::class.java, DSL.keyword(part.toSQL()), t1)
+        return DSL.field(
+            "timestampdiff({0}, {1}, NOW())",
+            Int::class.java, DSL.keyword(part.toSQL()), t1
+        )
     }
 }

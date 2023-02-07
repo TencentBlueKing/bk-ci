@@ -55,7 +55,7 @@ class SshPublicKeysService @Autowired constructor(
     fun createPublicKey(userId: String, sshPublicKey: SshPublicKey): Boolean {
         logger.info(
             "SshPublicKeysService|addSshPublicKey|userId" +
-                "|${userId}|sshPublicKey|${sshPublicKey}"
+                "|$userId|sshPublicKey|$sshPublicKey"
         )
         // 校验 user信息是否存在
         checkCommonUser(userId)
@@ -71,7 +71,7 @@ class SshPublicKeysService @Autowired constructor(
     fun getSshPublicKeysList(
         userIds: Set<String>
     ): List<SshPublicKey> {
-        logger.info("SshPublicKeysService|getSshPublicKeysList|userId|${userIds}")
+        logger.info("SshPublicKeysService|getSshPublicKeysList|userId|$userIds")
         userIds.forEach {
             checkCommonUser(it)
         }
@@ -94,7 +94,8 @@ class SshPublicKeysService @Autowired constructor(
         userIds: Set<String>
     ): String {
         val res = mapOf<String, List<String>>(
-            "keys" to getSshPublicKeysList(userIds).map { it.publicKey })
+            "keys" to getSshPublicKeysList(userIds).map { it.publicKey }
+        )
         logger.info("=======: ${JsonUtil.toJson(res, false)}")
         return Base64Util.encode(JsonUtil.toJson(res, false).toByteArray())
     }

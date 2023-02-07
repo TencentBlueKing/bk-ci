@@ -2312,7 +2312,7 @@ class GitService @Autowired constructor(
                         errorMessage = "(${response.code()})${response.message()}"
                     )
                 }
-                val data = response.body()?.string() ?: return@use
+val data = response.body()?.string() ?: return@use
                 val repoList = JsonParser().parse(data).asJsonArray
                 if (!repoList.isJsonNull) {
                     result = Result(JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {}))

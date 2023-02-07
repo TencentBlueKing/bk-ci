@@ -32,9 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.kubernetes.api.external.ExternalResource
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
 import com.tencent.devops.dispatch.kubernetes.service.RemoteDevService
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 
 @RestResource
 class ExternalResourceImpl @Autowired constructor(

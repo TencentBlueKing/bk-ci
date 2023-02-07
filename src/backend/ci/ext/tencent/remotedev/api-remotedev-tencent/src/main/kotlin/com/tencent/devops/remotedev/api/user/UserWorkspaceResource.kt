@@ -134,7 +134,7 @@ interface UserWorkspaceResource {
         @QueryParam("sharedUser")
         sharedUser: String
     ): Result<Boolean>
-    //todo 获取运行日志的接口
+    // todo 获取运行日志的接口
 
     @ApiOperation("获取指定工作空间详情")
     @GET
@@ -258,5 +258,4 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
-
 }

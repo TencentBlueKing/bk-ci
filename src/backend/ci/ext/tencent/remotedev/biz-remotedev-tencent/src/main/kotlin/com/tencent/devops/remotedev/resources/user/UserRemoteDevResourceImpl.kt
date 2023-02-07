@@ -37,7 +37,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserRemoteDevResourceImpl @Autowired constructor(
-val remoteDevSettingService:RemoteDevSettingService
+    val remoteDevSettingService: RemoteDevSettingService
 ) : UserRemoteDevResource {
     override fun getRemoteDevSettings(userId: String): Result<RemoteDevSettings> {
         return Result(remoteDevSettingService.getRemoteDevSettings(userId))

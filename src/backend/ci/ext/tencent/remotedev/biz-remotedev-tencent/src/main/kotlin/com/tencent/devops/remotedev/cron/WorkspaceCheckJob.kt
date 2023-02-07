@@ -40,10 +40,10 @@ class WorkspaceCheckJob @Autowired constructor(
                     MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
                     logger.info(
                         "workspace $workspaceName last active is ${
-                            DateTimeUtil.formatMilliTime(
-                                time.toLong(),
-                                DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                            )
+                        DateTimeUtil.formatMilliTime(
+                            time.toLong(),
+                            DateTimeUtil.YYYY_MM_DD_HH_MM_SS
+                        )
                         } ready to sleep"
                     )
                     kotlin.runCatching {

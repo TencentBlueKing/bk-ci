@@ -30,11 +30,8 @@ package com.tencent.devops.remotedev.resources.user
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserSshPublicKeysResource
-import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
 import com.tencent.devops.remotedev.pojo.SshPublicKey
-import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.SshPublicKeysService
-import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource

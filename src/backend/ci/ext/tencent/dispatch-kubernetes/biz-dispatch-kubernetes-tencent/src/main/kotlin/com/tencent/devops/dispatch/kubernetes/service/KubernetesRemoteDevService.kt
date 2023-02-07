@@ -31,8 +31,8 @@ import com.tencent.devops.dispatch.kubernetes.client.KubernetesRemoteDevClient
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import com.tencent.devops.dispatch.kubernetes.pojo.GitRepo
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import org.apache.commons.lang3.RandomStringUtils
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,16 +45,16 @@ class KubernetesRemoteDevService @Autowired constructor(
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         val workspaceId = getOnlyName(userId)
         val kubernetesWorkspace = KubernetesWorkspace(
-             workspaceId = workspaceId,
-             userId = userId,
-             gitRepo = GitRepo(
-                 gitRepoName = "go-test",
-                 gitRepoRef = "master"
-             ),
-             gitUserName = userId,
-             gitEmail = "ruotiantang@tencent.com",
-             remotingYamlName = "",
-             userFiles = emptyList()
+            workspaceId = workspaceId,
+            userId = userId,
+            gitRepo = GitRepo(
+                gitRepoName = "go-test",
+                gitRepoRef = "master"
+            ),
+            gitUserName = userId,
+            gitEmail = "ruotiantang@tencent.com",
+            remotingYamlName = "",
+            userFiles = emptyList()
         )
 
         val taskId = kubernetesRemoteDevClient.createWorkspace(userId, kubernetesWorkspace)

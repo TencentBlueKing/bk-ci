@@ -7,7 +7,6 @@ import org.jolokia.util.Base64Util
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.util.Base64
 @Repository
 class SshPublicKeysDao {
 
@@ -54,5 +53,4 @@ class SshPublicKeysDao {
                 .fetchOne()?.id
         }
     }
-
 }

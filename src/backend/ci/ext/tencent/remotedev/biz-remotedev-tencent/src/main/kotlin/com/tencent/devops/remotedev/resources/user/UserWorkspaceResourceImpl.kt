@@ -164,5 +164,4 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         redisHeartBeat.refreshHeartbeat(workspaceName)
         return Result(true)
     }
-
 }

@@ -53,7 +53,7 @@ class WorkspaceTemplateService @Autowired constructor(
     fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Boolean {
         logger.info(
             "WorkspaceTemplateService|addWorkspaceTemplate|userId" +
-                "|${userId}|workspaceTemplate|${workspaceTemplate}"
+                "|$userId|workspaceTemplate|$workspaceTemplate"
         )
         // 校验 user信息是否存在
         checkCommonUser(userId)
@@ -75,8 +75,8 @@ class WorkspaceTemplateService @Autowired constructor(
         workspaceTemplate: WorkspaceTemplate
     ): Boolean {
         logger.info(
-            "WorkspaceTemplateService|updateWorkspaceTemplate|userId|${userId}|" +
-                "workspaceTemplateId|${wsTemplateId}|workspaceTemplate|${workspaceTemplate}"
+            "WorkspaceTemplateService|updateWorkspaceTemplate|userId|$userId|" +
+                "workspaceTemplateId|$wsTemplateId|workspaceTemplate|$workspaceTemplate"
         )
         // 校验 user信息是否存在
         checkCommonUser(userId)
@@ -96,7 +96,7 @@ class WorkspaceTemplateService @Autowired constructor(
         userId: String,
         wsTemplateId: Long
     ): Boolean {
-        logger.info("WorkspaceTemplateService|deleteWorkspaceTemplate|userId|${userId}|wsTemplateId|${wsTemplateId}")
+        logger.info("WorkspaceTemplateService|deleteWorkspaceTemplate|userId|$userId|wsTemplateId|$wsTemplateId")
         // 校验 user信息是否存在
         checkCommonUser(userId)
         // 删除模板信息
@@ -112,7 +112,7 @@ class WorkspaceTemplateService @Autowired constructor(
     fun getWorkspaceTemplateList(
         userId: String
     ): List<WorkspaceTemplate> {
-        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|${userId}")
+        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
         checkCommonUser(userId)
         val result = mutableListOf<WorkspaceTemplate>()
         workspaceTemplateDao.queryWorkspaceTemplate(

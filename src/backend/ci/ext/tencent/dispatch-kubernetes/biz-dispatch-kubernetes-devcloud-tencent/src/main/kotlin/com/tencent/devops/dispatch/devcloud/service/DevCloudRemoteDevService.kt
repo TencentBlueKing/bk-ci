@@ -36,7 +36,6 @@ import com.tencent.devops.dispatch.devcloud.pojo.Environment
 import com.tencent.devops.dispatch.devcloud.pojo.EnvironmentSpec
 import com.tencent.devops.dispatch.devcloud.pojo.HTTPGetAction
 import com.tencent.devops.dispatch.devcloud.pojo.ImagePullCertificate
-import com.tencent.devops.dispatch.devcloud.pojo.ObjectMeta
 import com.tencent.devops.dispatch.devcloud.pojo.Probe
 import com.tencent.devops.dispatch.devcloud.pojo.ProbeHandler
 import com.tencent.devops.dispatch.devcloud.pojo.ResourceRequirements
@@ -46,10 +45,10 @@ import com.tencent.devops.dispatch.devcloud.pojo.VolumeSource
 import com.tencent.devops.dispatch.devcloud.utils.DevcloudWorkspaceRedisUtils
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchWorkspaceDao
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.WorkspaceInfo
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import org.jooq.DSLContext
@@ -279,7 +278,6 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_DEBUG_ENABLE = "DEVOPS_REMOTING_DEBUG_ENABLE"
         private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
         private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
-
 
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
         private const val INIT_CONTAINER_GIT_URL = "GIT_URL"

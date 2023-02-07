@@ -140,8 +140,10 @@ class KubernetesRemoteDevClient @Autowired constructor(
             }
         }
         val request = clientCommon.baseRequest(userId, url).get().build()
-        logger.info("Get job: $jobName logs request url: $url, jobName: $jobName, " +
-                        "sinceTime: $sinceTime, staffName: $userId")
+        logger.info(
+            "Get job: $jobName logs request url: $url, jobName: $jobName, " +
+                "sinceTime: $sinceTime, staffName: $userId"
+        )
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body()!!.string()
             logger.info("Get job: $jobName logs response: $responseContent")
@@ -162,7 +164,7 @@ class KubernetesRemoteDevClient @Autowired constructor(
         userId: String,
         workspaceName: String
     ): String? {
-        val url = "/api/remoting/workspaces/${workspaceName}/urls"
+        val url = "/api/remoting/workspaces/$workspaceName/urls"
         logger.info("$userId|$workspaceName Get workspaceUrl request url: $url")
 
         val request = clientCommon.baseRequest(userId, url).get().build()

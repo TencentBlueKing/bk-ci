@@ -954,7 +954,7 @@ class WorkspaceService @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.name} last active is ${
-                    it.updateTime
+                it.updateTime
                 } ready to delete"
             )
             heartBeatDeleteWS(it)

@@ -21,7 +21,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import java.net.URLEncoder
 
 class TGitTransferService @Autowired constructor(
-    private val client: Client,
+    private val client: Client
 ) : GitTransferService {
     override fun isOAuth(
         userId: String,
@@ -104,7 +104,7 @@ class TGitTransferService @Autowired constructor(
                 it.name.endsWith(Constansts.devFileExtensionYaml) || it.name.endsWith(
                     Constansts.devFileExtensionYml
                 )
-            )
+                )
         }?.map { it.name } ?: emptyList()
     }
 

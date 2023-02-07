@@ -1,6 +1,5 @@
 package com.tencent.devops.remotedev.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
@@ -100,7 +99,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* lastSleepTimeCost = */ 0,
         /* updateTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
         /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-                   "",
+        ""
 
     )
 
@@ -111,7 +110,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* action = */ 0,
         /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
         /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter),
-                   "",
+        "",
 
     )
 
@@ -121,7 +120,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* operator = */ "user00",
         /* sharedUser = */ "user01",
         /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter),
-                   "",
+        "",
     )
 
     @Nested

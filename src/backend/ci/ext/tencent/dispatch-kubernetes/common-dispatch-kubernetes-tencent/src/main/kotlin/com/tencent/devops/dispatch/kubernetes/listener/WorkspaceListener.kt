@@ -69,15 +69,17 @@ class WorkspaceListener @Autowired constructor(
             logger.error("Handle workspace create error.", t)
         } finally {
             // 业务逻辑处理完成回调remotedev事件
-            remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
-                traceId = event.traceId,
-                userId = event.userId,
-                workspaceName = event.workspaceName,
-                type = UpdateEventType.CREATE,
-                status = status,
-                environmentUid = devcloudEnvironmentUid,
-                environmentHost = devcloudEnvironmentHost
-            ))
+            remoteDevDispatcher.dispatch(
+                RemoteDevUpdateEvent(
+                    traceId = event.traceId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName,
+                    type = UpdateEventType.CREATE,
+                    status = status,
+                    environmentUid = devcloudEnvironmentUid,
+                    environmentHost = devcloudEnvironmentHost
+                )
+            )
         }
     }
 
@@ -99,7 +101,6 @@ class WorkspaceListener @Autowired constructor(
                     remoteDevService.deleteWorkspace(event.userId, event.workspaceName)
                 }
                 else -> {
-
                 }
             }
         } catch (t: Throwable) {
@@ -107,15 +108,17 @@ class WorkspaceListener @Autowired constructor(
             status = false
         } finally {
             // 业务逻辑处理完成回调remotedev事件
-            remoteDevDispatcher.dispatch(RemoteDevUpdateEvent(
-                traceId = event.traceId,
-                userId = event.userId,
-                workspaceName = event.workspaceName,
-                type = event.type,
-                status = status,
-                environmentHost = environmentHost,
-                environmentUid = ""
-            ))
+            remoteDevDispatcher.dispatch(
+                RemoteDevUpdateEvent(
+                    traceId = event.traceId,
+                    userId = event.userId,
+                    workspaceName = event.workspaceName,
+                    type = event.type,
+                    status = status,
+                    environmentHost = environmentHost,
+                    environmentUid = ""
+                )
+            )
         }
     }
 
