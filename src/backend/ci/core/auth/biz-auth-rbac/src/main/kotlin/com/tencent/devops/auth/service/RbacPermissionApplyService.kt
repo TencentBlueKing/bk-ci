@@ -44,7 +44,7 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceGroupDao: AuthResourceGroupDao,
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
-    val config : CommonConfig
+    val config: CommonConfig
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -205,7 +205,7 @@ class RbacPermissionApplyService @Autowired constructor(
             )
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = relatedResourceTypesDTO.name,
+                name = getResourceTypeName(userId, relatedResourceTypesDTO.type),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             groupPermissionDetailVoList.add(
