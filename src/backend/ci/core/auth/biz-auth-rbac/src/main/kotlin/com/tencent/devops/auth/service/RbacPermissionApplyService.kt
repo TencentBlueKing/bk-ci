@@ -64,17 +64,17 @@ class RbacPermissionApplyService @Autowired constructor(
     private val actionNameCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String,String>()
+        .build<String, String>()
     private val resourceTypeNameCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
         .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String,String>()
+        .build<String, String>()
 
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         if (resourceTypesCache.getIfPresent(ALL_RESOURCE) == null) {
             val resourceTypeList = authResourceTypeDao.list(dslContext).map {
-                resourceTypeNameCache.put(it.resourcetype,it.name)
+                resourceTypeNameCache.put(it.resourcetype, it.name)
                 ResourceTypeInfoVo(
                     resourceType = it.resourcetype,
                     name = it.name,
@@ -98,7 +98,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
             val actionInfoVoList = actionList.map {
-                actionNameCache.put(it.actionid,it.actionname)
+                actionNameCache.put(it.actionid, it.actionname)
                 ActionInfoVo(
                     actionId = it.actionid,
                     actionName = it.actionname,
@@ -112,10 +112,10 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun getActionName(
-        userId :String,
-        resourceType:String,
+        userId: String,
+        resourceType: String,
         actionId: String
-    ):String{
+    ): String {
         if (actionCache.getIfPresent(resourceType) == null) {
             listActions(userId, resourceType)
         }
@@ -123,9 +123,9 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun getResourceTypeName(
-        userId :String,
-        resourceType:String,
-    ):String{
+        userId: String,
+        resourceType: String,
+    ): String {
         if (resourceTypesCache.getIfPresent(ALL_RESOURCE) == null) {
             listResourceTypes(userId)
         }
@@ -214,7 +214,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     actionId = it.id,
                     name = getActionName(
                         userId = userId,
-                        resourceType = it.id.substring(it.id.lastIndexOf("_")+1),
+                        resourceType = it.id.substring(0, it.id.lastIndexOf("_")),
                         actionId = it.id
                     ),
                     relatedResourceInfo = relatedResourceInfo
@@ -225,18 +225,19 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun handleRelatedResourceTypesDTO(
-        instancesDTO : InstancesDTO,
+        instancesDTO: InstancesDTO,
         userId: String
-    ){
+    ) {
         instancesDTO.let {
-            it.name = getResourceTypeName(userId,it.type)
-            it.path.forEach{ element1 ->
+            it.name = getResourceTypeName(userId, it.type)
+            it.path.forEach { element1 ->
                 element1.forEach { element2 ->
-                    element2.typeName = getResourceTypeName(userId,element2.type)
+                    element2.typeName = getResourceTypeName(userId, element2.type)
                 }
             }
         }
     }
+
     override fun getRedirectInformation(
         userId: String,
         projectId: String,
@@ -251,9 +252,9 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceCode = resourceCode
         )
 
-        val resourceTypeName = getResourceTypeName(userId,resourceType)
+        val resourceTypeName = getResourceTypeName(userId, resourceType)
 
-        val actionName = getActionName(userId,resourceType,action)
+        val actionName = getActionName(userId, resourceType, action)
 
         val resourceName = authResourceService.get(
             projectCode = projectId,
@@ -266,7 +267,7 @@ class RbacPermissionApplyService @Autowired constructor(
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
-                    val isStrategyContainsAction = strategy[resourceType]?.contains(action.substring(action.lastIndexOf("_")+1))
+                    val isStrategyContainsAction = strategy[resourceType]?.contains(action.substring(action.lastIndexOf("_") + 1))
                     if (isStrategyContainsAction != null && isStrategyContainsAction) {
                         buildGroupInfoList(
                             groupInfoList = groupInfoList,
