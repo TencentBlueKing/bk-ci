@@ -21,6 +21,7 @@ spec:
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
           imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
           workingDir: /data/workspace/
+          {{ $mysqlData := split ":" (include "bkci.mysqlAddr" .) }}
           command:
             - "/bin/bash"
             - "-c"
@@ -31,6 +32,25 @@ spec:
                 sleep 2;
               done
               echo "{{ include "bkci.names.fullname" . }}-store is available";
+
+              cat << EOF > atom.sql
+              UPDATE devops_ci_store.T_ATOM SET DEFAULT_FLAG=true WHERE ATOM_CODE in ('uploadArtifact', 'uploadReport', 'AcrossProjectDistribution', 'downloadArtifact', 'run','CodeCCCheckAtom','checkout');
+              UPDATE devops_ci_store.T_ATOM SET ATOM_STATUS=10 WHERE ATOM_CODE in ('buildArchiveGet', 'reportArchive', 'customizeArchiveGet','singleArchive');
+              EOF
+
+              cat << EOF > atom.redis
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM uploadArtifact
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM uploadReport
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM AcrossProjectDistribution
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM downloadArtifact
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM run
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM CodeCCCheckAtom
+              SADD STORE_PUBLIC_FLAG_KEY:ATOM checkout
+              EOF
+
+              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} < atom.sql
+              redis -h {{ include "bkci.redisHost" . }} -a {{ include "bkci.redisPassword" . }} -p {{ include "bkci.redisPort" . }} < atom.redis
+
               {{ range .Values.init.plugin.atoms }}
               atom_url={{ .url }}
               atom_code={{ .code }}

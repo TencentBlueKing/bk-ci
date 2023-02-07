@@ -8,6 +8,7 @@ RUN ln -snf /usr/share/zoneinfo/Asia/Shanghai /etc/localtime && \
     echo 'Asia/Shanghai' > /etc/timezone && \
     yum update -y && \
     yum install mysql -y && \
+    yum install -y redis -y &&\
     yum install -y epel-release &&\
     yum install -y python3 &&\
     pip3 install requests 
