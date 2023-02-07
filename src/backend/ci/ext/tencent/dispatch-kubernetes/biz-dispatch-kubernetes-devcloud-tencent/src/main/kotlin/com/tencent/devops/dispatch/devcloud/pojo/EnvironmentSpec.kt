@@ -9,5 +9,5 @@ data class EnvironmentSpec(
     val activeDeadlineSeconds: Long = 230400, // 默认存活8天
     val dnsPolicy: String = "",
     val securityContext: EnvironmentSecurityContext? = null,
-    val imagePullCertificate: List<ImagePullCertificate>? = emptyList(),
+    val imagePullCertificate: List<ImagePullCertificate>? = emptyList()
 )

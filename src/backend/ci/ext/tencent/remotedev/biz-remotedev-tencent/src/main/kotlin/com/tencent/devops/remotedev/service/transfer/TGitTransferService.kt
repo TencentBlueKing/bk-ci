@@ -98,7 +98,7 @@ class TGitTransferService @Autowired constructor(
             token = getAndCheckOauthToken(userId).accessToken,
             ref = ref,
             recursive = recursive,
-            tokenType = TokenTypeEnum.OAUTH,
+            tokenType = TokenTypeEnum.OAUTH
         ).data?.filter {
             it.type == "blob" && (
                 it.name.endsWith(Constansts.devFileExtensionYaml) || it.name.endsWith(

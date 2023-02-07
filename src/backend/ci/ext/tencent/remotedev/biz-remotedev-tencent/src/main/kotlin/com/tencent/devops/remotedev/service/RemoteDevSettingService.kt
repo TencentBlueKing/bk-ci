@@ -40,7 +40,7 @@ import org.springframework.stereotype.Service
 class RemoteDevSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevFileDao: RemoteDevFileDao,
+    private val remoteDevFileDao: RemoteDevFileDao
 ) {
 
     companion object {

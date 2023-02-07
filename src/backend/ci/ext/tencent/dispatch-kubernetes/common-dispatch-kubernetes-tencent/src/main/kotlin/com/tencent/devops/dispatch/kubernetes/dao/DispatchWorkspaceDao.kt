@@ -59,7 +59,7 @@ class DispatchWorkspaceDao {
                 GIT_URL,
                 BRANCH,
                 IMAGE,
-                STATUS,
+                STATUS
             )
                 .values(
                     "",

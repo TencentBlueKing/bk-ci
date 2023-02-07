@@ -5,5 +5,5 @@ data class VolumeMount(
     val readOnly: Boolean? = null,
     val mountPath: String? = null,
     val subPath: String? = null,
-    val mountPropagation: String? = null,
+    val mountPropagation: String? = null
 )

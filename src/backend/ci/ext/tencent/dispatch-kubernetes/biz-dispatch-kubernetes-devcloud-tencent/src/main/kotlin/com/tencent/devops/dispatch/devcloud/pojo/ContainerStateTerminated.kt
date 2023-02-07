@@ -7,5 +7,5 @@ data class ContainerStateTerminated(
     val message: String,
     val startedAt: String,
     val finishedAt: String,
-    val containerID: String,
+    val containerID: String
 )

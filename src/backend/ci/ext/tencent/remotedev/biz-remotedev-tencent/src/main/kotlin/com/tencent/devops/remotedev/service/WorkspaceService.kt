@@ -784,7 +784,7 @@ class WorkspaceService @Autowired constructor(
             discountTime = discountTime,
             cpu = workspaces.sumOf { it.cpu },
             memory = workspaces.sumOf { it.memory },
-            disk = workspaces.sumOf { it.disk },
+            disk = workspaces.sumOf { it.disk }
         )
     }
 

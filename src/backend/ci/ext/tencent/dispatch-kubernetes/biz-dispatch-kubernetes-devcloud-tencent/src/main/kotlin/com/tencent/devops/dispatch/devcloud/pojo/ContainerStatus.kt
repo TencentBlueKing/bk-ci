@@ -9,5 +9,5 @@ data class ContainerStatus(
     val image: String,
     val imageID: String,
     val containerID: String,
-    val started: Boolean,
+    val started: Boolean
 )

@@ -110,7 +110,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* action = */ 0,
         /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
         /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter),
-        "",
+        ""
 
     )
 

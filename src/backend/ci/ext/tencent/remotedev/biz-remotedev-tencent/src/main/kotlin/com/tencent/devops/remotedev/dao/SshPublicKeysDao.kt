@@ -13,7 +13,7 @@ class SshPublicKeysDao {
     // 新增ssh key
     fun createSshKey(
         dslContext: DSLContext,
-        sshPublicKey: SshPublicKey,
+        sshPublicKey: SshPublicKey
     ): Long {
         // 先查询该用户SshPublicKey是否已存在，存在则返回已有ID，否则新增
         return getSshKeysRecord(dslContext, sshPublicKey)

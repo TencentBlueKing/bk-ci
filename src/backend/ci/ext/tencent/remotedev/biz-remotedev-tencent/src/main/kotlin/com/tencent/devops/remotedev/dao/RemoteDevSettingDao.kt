@@ -61,7 +61,7 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.gitAttached),
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     ByteUtils.bool2Byte(setting.githubAttached),
-                    JsonUtil.toJson(setting.envsForVariable, false),
+                    JsonUtil.toJson(setting.envsForVariable, false)
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
