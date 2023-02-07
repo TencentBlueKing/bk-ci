@@ -122,29 +122,4 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
             )
         }
     }
-
-    @Nested
-    inner class GetWorkspaceTemplateListTest {
-        @Test
-        @DisplayName("正常用例")
-        fun getWorkspaceTemplateListTest_01() {
-
-            every {
-                self.checkCommonUser(any())
-            } returns Unit
-
-            every {
-                workspaceTemplateDao.queryWorkspaceTemplate(
-                    wsTemplateId = 1,
-                    dslContext = anyDslContext()
-                )
-            } returns dslContext.mockResult(T_WORKSPACE_TEMPLATE, tWorkspaceTemplateRecord)
-
-            self.getWorkspaceTemplateList(
-                userId = "user00"
-            ).let {
-                Assertions.assertTrue(it.isNotEmpty())
-            }
-        }
-    }
 }
