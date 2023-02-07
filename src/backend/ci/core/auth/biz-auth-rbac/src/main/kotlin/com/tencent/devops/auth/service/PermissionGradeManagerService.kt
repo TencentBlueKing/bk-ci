@@ -44,7 +44,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
-import com.tencent.devops.auth.dispatcher.AuthResourceGroupDispatcher
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
@@ -59,6 +58,7 @@ import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS_NAME
 import com.tencent.devops.common.auth.callback.AuthConstants.USER_TYPE
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
@@ -78,7 +78,7 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
-    private val authResourceGroupDispatcher: AuthResourceGroupDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher
 ) {
 
     companion object {
@@ -145,7 +145,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .build()
             logger.info("create grade manager|$name|$description|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
-            authResourceGroupDispatcher.dispatch(
+            traceEventDispatcher.dispatch(
                 AuthResourceGroupEvent(
                     managerId = gradeManagerId,
                     userId = userId,
@@ -304,7 +304,11 @@ class PermissionGradeManagerService @Autowired constructor(
         iamV2ManagerService.deleteManagerV2(gradeManagerId)
     }
 
-    fun cancelCreateGradeManager(projectCode: String): Boolean {
+    fun cancelCreateGradeManager(callBackId: String): Boolean {
+        return iamV2ManagerService.cancelCallbackApplication(callBackId)
+    }
+
+    fun cancelCreateGradeManagerByEnglishName(projectCode: String): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
                 ?: return true
@@ -360,7 +364,7 @@ class PermissionGradeManagerService @Autowired constructor(
             enable = true,
             relationId = gradeManagerId.toString()
         )
-        authResourceGroupDispatcher.dispatch(
+        traceEventDispatcher.dispatch(
             AuthResourceGroupEvent(
                 managerId = gradeManagerId,
                 userId = userId,

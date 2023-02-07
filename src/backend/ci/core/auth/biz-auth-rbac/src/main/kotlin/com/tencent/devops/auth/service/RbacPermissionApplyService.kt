@@ -1,6 +1,7 @@
 package com.tencent.devops.auth.service
 
 import com.google.common.cache.CacheBuilder
+import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
@@ -10,6 +11,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
@@ -22,7 +24,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.client.Client
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -34,16 +35,23 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
     val dslContext: DSLContext,
-    val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao,
     val v2ManagerService: V2ManagerService,
     val permissionResourceService: PermissionResourceService,
-    val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val strategyService: StrategyService,
-    val authResourceService: AuthResourceService
+    val authResourceService: AuthResourceService,
+    val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    val authResourceGroupDao: AuthResourceGroupDao,
+    val authResourceTypeDao: AuthResourceTypeDao,
+    val authActionDao: AuthActionDao
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
-    val systemId = ""
+    private val systemId = ""
+
+    @Value("\${devopsGateway.host:}")
+    private val host = ""
+
+    private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?" +
+        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
 
     private val actionCache = CacheBuilder.newBuilder()
         .maximumSize(10000)
@@ -53,10 +61,20 @@ class RbacPermissionApplyService @Autowired constructor(
         .maximumSize(10000)
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String, List<ResourceTypeInfoVo>>()
+    private val actionNameCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(7L, TimeUnit.DAYS)
+        .build<String, String>()
+    private val resourceTypeNameCache = CacheBuilder.newBuilder()
+        .maximumSize(10000)
+        .expireAfterWrite(7L, TimeUnit.DAYS)
+        .build<String, String>()
+
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         if (resourceTypesCache.getIfPresent(ALL_RESOURCE) == null) {
             val resourceTypeList = authResourceTypeDao.list(dslContext).map {
+                resourceTypeNameCache.put(it.resourcetype, it.name)
                 ResourceTypeInfoVo(
                     resourceType = it.resourcetype,
                     name = it.name,
@@ -80,6 +98,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
             val actionInfoVoList = actionList.map {
+                actionNameCache.put(it.actionid, it.actionname)
                 ActionInfoVo(
                     actionId = it.actionid,
                     actionName = it.actionname,
@@ -90,6 +109,27 @@ class RbacPermissionApplyService @Autowired constructor(
         }
         return actionCache.getIfPresent(resourceType)!!
 
+    }
+
+    private fun getActionName(
+        userId: String,
+        resourceType: String,
+        actionId: String
+    ): String {
+        if (actionCache.getIfPresent(resourceType) == null) {
+            listActions(userId, resourceType)
+        }
+        return actionNameCache.getIfPresent(actionId)!!
+    }
+
+    private fun getResourceTypeName(
+        userId: String,
+        resourceType: String,
+    ): String {
+        if (resourceTypesCache.getIfPresent(ALL_RESOURCE) == null) {
+            listResourceTypes(userId)
+        }
+        return resourceTypeNameCache.getIfPresent(resourceType)!!
     }
 
     override fun listGroups(
@@ -160,6 +200,10 @@ class RbacPermissionApplyService @Autowired constructor(
         val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
         iamGroupPermissionDetailList.forEach {
             val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
+            handleRelatedResourceTypesDTO(
+                userId = userId,
+                instancesDTO = relatedResourceTypesDTO.condition[0].instances[0]
+            )
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
                 name = relatedResourceTypesDTO.name,
@@ -168,12 +212,30 @@ class RbacPermissionApplyService @Autowired constructor(
             groupPermissionDetailVoList.add(
                 GroupPermissionDetailVo(
                     actionId = it.id,
-                    name = it.name,
+                    name = getActionName(
+                        userId = userId,
+                        resourceType = it.id.substring(0, it.id.lastIndexOf("_")),
+                        actionId = it.id
+                    ),
                     relatedResourceInfo = relatedResourceInfo
                 )
             )
         }
         return groupPermissionDetailVoList
+    }
+
+    private fun handleRelatedResourceTypesDTO(
+        instancesDTO: InstancesDTO,
+        userId: String
+    ) {
+        instancesDTO.let {
+            it.name = getResourceTypeName(userId, it.type)
+            it.path.forEach { element1 ->
+                element1.forEach { element2 ->
+                    element2.typeName = getResourceTypeName(userId, element2.type)
+                }
+            }
+        }
     }
 
     override fun getRedirectInformation(
@@ -184,39 +246,52 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
-        // 查询是否开启权限
         val isEnablePermission = permissionResourceService.isEnablePermission(
             projectId = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+
+        val resourceTypeName = getResourceTypeName(userId, resourceType)
+
+        val actionName = getActionName(userId, resourceType, action)
+
+        val resourceName = authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ).resourceName
+
         if (isEnablePermission) {
-            // 若开启权限 则得根据 资源类型 去查询默认组 ，然后查询组的策略，看是否包含对应 资源+动作
+            // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
-                    strategy[resourceType]?.forEach { actionList ->
-                        if (actionList.contains(action)) {
-                            // 根据resourceType + resourceCode + it.group_Code ----> groupId+groupName
-                            // 加入到groupInfoList
-                            groupInfoList.add(
-                                AuthRedirectGroupInfoVo(
-                                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
-                                    groupName = "groupName"
-                                )
-                            )
-                        }
+                    val isStrategyContainsAction = strategy[resourceType]?.contains(action.substring(action.lastIndexOf("_") + 1))
+                    if (isStrategyContainsAction != null && isStrategyContainsAction) {
+                        buildGroupInfoList(
+                            groupInfoList = groupInfoList,
+                            projectId = projectId,
+                            userId = userId,
+                            resourceName = resourceName,
+                            action = action,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            groupCode = it.groupCode
+                        )
                     }
                 }
             }
         } else {
-            // 根据resourceType + resourceCode + manager ----> groupId+groupName
-            // 加入到groupInfoList
-            groupInfoList.add(
-                AuthRedirectGroupInfoVo(
-                    url = String.format(authApplyRedirectUrl, userId, projectId, "groupId"),
-                    groupName = "groupName"
-                )
+            buildGroupInfoList(
+                groupInfoList = groupInfoList,
+                projectId = projectId,
+                userId = userId,
+                resourceName = resourceName,
+                action = action,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = "manager"
             )
         }
         if (groupInfoList.isEmpty()) {
@@ -227,19 +302,46 @@ class RbacPermissionApplyService @Autowired constructor(
         }
         return AuthApplyRedirectInfoVo(
             auth = isEnablePermission,
-            resourceTypeName = "resourceTypeName",
-            resourceName = "resourceName",
-            actionName = "actionName",
+            resourceTypeName = resourceTypeName,
+            resourceName = resourceName,
+            actionName = actionName,
             groupInfoList = groupInfoList
         )
     }
 
+    private fun buildGroupInfoList(
+        projectId: String,
+        groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
+        userId: String,
+        resourceName: String,
+        action: String,
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String,
+    ) {
+        val resourceGroup = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            groupCode = groupCode
+        )
+        if (resourceGroup != null) {
+            groupInfoList.add(
+                AuthRedirectGroupInfoVo(
+                    url = String.format(
+                        authApplyRedirectUrl, userId, projectId,
+                        resourceGroup.relationId, resourceType, resourceName, action
+                    ),
+                    groupName = resourceGroup.groupName
+                )
+            )
+        }
+    }
+
+
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
-
-        @Value("\${devopsGateway.host:}")
-        val host = ""
         private const val ALL_RESOURCE = "all_resource"
-        private val authApplyRedirectUrl = "$host/console/permission/%s/applyPermission?projectId=%s&groupId=%s"
     }
 }
