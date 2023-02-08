@@ -68,13 +68,13 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.initContainer.image:mirrors.tencent.com/ci/workspace-init:v1.0.3}")
     var initContainerImage: String = "mirrors.tencent.com/ci/workspace-init:v1.0.3"
 
-    @Value("\${devCloud.initContainer.preCIGateWayUrl:")
+    @Value("\${devCloud.initContainer.preCIGateWayUrl:}")
     val preCIGateWayUrl: String = ""
 
-    @Value("\${devCloud.initContainer.preCIDownUrl:")
+    @Value("\${devCloud.initContainer.preCIDownUrl:}")
     val preCIDownUrl: String = ""
 
-    @Value("\${devCloud.initContainer.backendHost:")
+    @Value("\${devCloud.initContainer.backendHost:}")
     val backendHost: String = ""
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
