@@ -37,6 +37,8 @@ import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
@@ -85,7 +87,7 @@ class ProjectApprovalDao {
                 approvalStatus,
                 projectCreateInfo.logoAddress ?: "",
                 JsonUtil.toJson(subjectScopes, false),
-                projectCreateInfo.authSecrecy ?: false
+                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value
             ).execute()
         }
     }
@@ -130,14 +132,29 @@ class ProjectApprovalDao {
         dslContext: DSLContext,
         projectCode: String,
         approver: String,
-        approvalStatus: Int
+        approvalStatus: Int,
+        tipsStatus: Int = ProjectTipsStatus.NOT_SHOW.status
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             return dslContext.update(this)
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(APPROVER, approver)
                 .set(APPROVAL_TIME, LocalDateTime.now())
+                .set(TIPS_STATUS, tipsStatus)
                 .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateTipsStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        tipsStatus: Int
+    ): Int {
+        with(TProjectApproval.T_PROJECT_APPROVAL) {
+            return dslContext.update(this)
+                .set(TIPS_STATUS, tipsStatus)
+                .where(ENGLISH_NAME.eq(projectId))
                 .execute()
         }
     }
@@ -165,7 +182,8 @@ class ProjectApprovalDao {
                 },
                 authSecrecy = authSecrecy,
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
-                approver = approver
+                approver = approver,
+                tipsStatus = tipsStatus
             )
         }
     }

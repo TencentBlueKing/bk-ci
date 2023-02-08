@@ -23,25 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.pojo.enums
+package com.tencent.devops.common.auth.enums
 
-enum class ProjectApproveStatus(val status: Int) {
-    SUCCEED(0),
-
-    // 创建审批中
-    CREATE_PENDING(1),
-
-    // 创建中审批拒绝
-    CREATE_REJECT(2),
-
-    // 取消创建
-    CANCEL_CREATE(3),
-
-    // 修改审批中
-    UPDATE_PENDING(4),
-
-    // 修改审批拒绝
-    UPDATE_REJECT(5)
+/**
+ * 最大授权范围类型
+ */
+enum class SubjectScopeType(val value: String) {
+    // 部门
+    DEPARTMENT("depart"),
+    // 用户
+    USER("user")
 }

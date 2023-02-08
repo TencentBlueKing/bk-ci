@@ -35,6 +35,7 @@ import com.tencent.devops.project.api.user.UserProjectResource
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -81,6 +82,13 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(
             projectService.getByEnglishName(userId, projectId, accessToken)
+                ?: throw OperationException("项目不存在")
+        )
+    }
+
+    override fun diff(userId: String, projectId: String, accessToken: String?): Result<ProjectDiffVO> {
+        return Result(
+            projectService.diff(userId, projectId, accessToken)
                 ?: throw OperationException("项目不存在")
         )
     }
@@ -174,6 +182,15 @@ class UserProjectResourceImpl @Autowired constructor(
     override fun cancelCreateProject(userId: String, projectId: String): Result<Boolean> {
         return Result(
             projectService.cancelCreateProject(
+                userId = userId,
+                projectId = projectId
+            )
+        )
+    }
+
+    override fun cancelUpdateProject(userId: String, projectId: String): Result<Boolean> {
+        return Result(
+            projectService.cancelUpdateProject(
                 userId = userId,
                 projectId = projectId
             )

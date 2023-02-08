@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
+import com.tencent.devops.project.pojo.ProjectApprovalInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
 
@@ -100,6 +102,55 @@ object ProjectUtils {
                 JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
             },
             authSecrecy = tProjectRecord.authSecrecy
+        )
+    }
+
+    fun packagingBean(tProjectRecord: TProjectRecord, projectApprovalInfo: ProjectApprovalInfo?): ProjectDiffVO {
+        val subjectScopes = tProjectRecord.subjectScopes?.let {
+            JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
+        }
+        return ProjectDiffVO(
+            id = tProjectRecord.id,
+            projectId = tProjectRecord.projectId,
+            projectName = tProjectRecord.projectName,
+            afterProjectName = projectApprovalInfo?.projectName ?: tProjectRecord.projectName,
+            projectCode = tProjectRecord.englishName ?: "",
+            approvalStatus = tProjectRecord.approvalStatus ?: 0,
+            approvalTime = if (tProjectRecord.approvalTime == null) {
+                ""
+            } else {
+                DateTimeUtil.toDateTime(tProjectRecord.approvalTime, "yyyy-MM-dd'T'HH:mm:ssZ")
+            },
+            approver = tProjectRecord.approver ?: "",
+            bgId = tProjectRecord.bgId?.toString(),
+            afterBgId = projectApprovalInfo?.bgId ?: tProjectRecord.bgId?.toString(),
+            bgName = tProjectRecord.bgName ?: "",
+            afterBgName = projectApprovalInfo?.bgName ?: tProjectRecord.bgName ?: "",
+            centerId = tProjectRecord.centerId?.toString(),
+            afterCenterId = projectApprovalInfo?.centerId ?: tProjectRecord.centerId?.toString(),
+            centerName = tProjectRecord.centerName ?: "",
+            afterCenterName = projectApprovalInfo?.centerName ?: tProjectRecord.centerName ?: "",
+            createdAt = DateTimeUtil.toDateTime(tProjectRecord.createdAt, "yyyy-MM-dd"),
+            creator = tProjectRecord.creator ?: "",
+            deptId = tProjectRecord.deptId?.toString(),
+            afterDeptId = projectApprovalInfo?.deptId ?: tProjectRecord.deptId?.toString(),
+            deptName = tProjectRecord.deptName ?: "",
+            afterDeptName = projectApprovalInfo?.deptName ?: tProjectRecord.deptName ?: "",
+            description = tProjectRecord.description ?: "",
+            afterDescription = projectApprovalInfo?.description ?: tProjectRecord.description ?: "",
+            englishName = tProjectRecord.englishName ?: "",
+            logoAddr = tProjectRecord.logoAddr ?: "",
+            afterLogoAddr = projectApprovalInfo?.logoAddr ?: tProjectRecord.logoAddr ?: "",
+            remark = tProjectRecord.remark ?: "",
+            updatedAt = if (tProjectRecord.updatedAt == null) {
+                ""
+            } else {
+                DateTimeUtil.toDateTime(tProjectRecord.updatedAt, "yyyy-MM-dd")
+            },
+            subjectScopes = subjectScopes,
+            afterSubjectScopes = projectApprovalInfo?.subjectScopes ?: subjectScopes,
+            authSecrecy = tProjectRecord.authSecrecy,
+            afterAuthSecrecy = projectApprovalInfo?.authSecrecy ?: tProjectRecord.authSecrecy
         )
     }
 }
