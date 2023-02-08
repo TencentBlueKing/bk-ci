@@ -161,6 +161,7 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         } else {
+            permissionGradeManagerService.cancelCreateGradeManager(callBackId = callBackId)
             client.get(ServiceProjectApprovalResource::class).updateReject(
                 projectId = englishName,
                 applicant = callBackInfo.applicant,

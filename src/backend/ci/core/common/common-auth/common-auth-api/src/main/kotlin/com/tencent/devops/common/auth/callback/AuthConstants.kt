@@ -34,7 +34,6 @@ object AuthConstants {
     const val TOO_RESULT_DATA_MESSAGE = "not support, too much data found"
     const val MAX_LIMIT = 100
     const val KEYWORD_MIN_SIZE = 2
-    const val USER_TYPE = "user"
     const val ALL_MEMBERS = "*"
     const val ALL_MEMBERS_NAME = "全体成员"
 }

@@ -55,12 +55,13 @@ import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS
 import com.tencent.devops.common.auth.callback.AuthConstants.ALL_MEMBERS_NAME
-import com.tencent.devops.common.auth.callback.AuthConstants.USER_TYPE
+import com.tencent.devops.common.auth.enums.SubjectScopeType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,7 +85,6 @@ class PermissionGradeManagerService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionGradeManagerService::class.java)
         private const val DEPARTMENT = "department"
-        private const val DEPARTMENT_TYPE = "depart"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -128,12 +128,12 @@ class PermissionGradeManagerService @Autowired constructor(
         )
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
-                DEPARTMENT_TYPE -> ManagerScopes(DEPARTMENT, it.id)
-                USER_TYPE -> ManagerScopes(it.type, it.name)
+                SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.name)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.CREATE_APPROVED.status) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -165,7 +165,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 desc = projectApprovalInfo.description ?: "",
                 organization =
                 "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
-                authSecrecy = projectApprovalInfo.authSecrecy ?: false,
+                authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
                         id = ALL_MEMBERS,
@@ -234,12 +234,12 @@ class PermissionGradeManagerService @Autowired constructor(
         )
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
-                DEPARTMENT_TYPE -> ManagerScopes(DEPARTMENT, it.id)
-                USER_TYPE -> ManagerScopes(it.type, it.name)
+                SubjectScopeType.DEPARTMENT.value -> ManagerScopes(DEPARTMENT, it.id)
+                SubjectScopeType.USER.value -> ManagerScopes(it.type, it.name)
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.UPDATE_APPROVED.status) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
@@ -260,7 +260,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 desc = projectApprovalInfo.description ?: "",
                 organization =
                 "${projectApprovalInfo.bgName}-${projectApprovalInfo.deptName}-${projectApprovalInfo.deptName}",
-                authSecrecy = projectApprovalInfo.authSecrecy ?: false,
+                authSecrecy = projectApprovalInfo.authSecrecy,
                 subjectScopes = projectApprovalInfo.subjectScopes ?: listOf(
                     SubjectScopeInfo(
                         id = ALL_MEMBERS,
@@ -407,7 +407,7 @@ class PermissionGradeManagerService @Autowired constructor(
         projectId: String,
         desc: String,
         organization: String,
-        authSecrecy: Boolean,
+        authSecrecy: Int,
         subjectScopes: List<SubjectScopeInfo>
     ): ItsmContentDTO {
         val itsmColumns = listOf(
@@ -427,7 +427,8 @@ class PermissionGradeManagerService @Autowired constructor(
         value["projectId"] = ItsmStyle.builder().value(projectId).build()
         value["desc"] = ItsmStyle.builder().value(desc).build()
         value["organization"] = ItsmStyle.builder().value(organization).build()
-        value["authSecrecy"] = ItsmStyle.builder().value(if (authSecrecy) "私密项目" else "公开项目").build()
+        value["authSecrecy"] =
+            ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
         value["subjectScopes"] = ItsmStyle.builder().value(JsonUtil.toJson(subjectScopes)).build()
         val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()

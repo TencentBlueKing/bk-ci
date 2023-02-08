@@ -23,25 +23,24 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.project.pojo.enums
 
-enum class ProjectApproveStatus(val status: Int) {
-    SUCCEED(0),
+enum class ProjectAuthSecrecyStatus(val value: Int, val desc: String) {
+    PUBLIC(0, "公开项目"),
+    PRIVATE(1, "私有项目"),
+    CLASSIFIED(2, "机密项目");
 
-    // 创建审批中
-    CREATE_PENDING(1),
-
-    // 创建中审批拒绝
-    CREATE_REJECT(2),
-
-    // 取消创建
-    CANCEL_CREATE(3),
-
-    // 修改审批中
-    UPDATE_PENDING(4),
-
-    // 修改审批拒绝
-    UPDATE_REJECT(5)
+    companion object {
+        fun getStatus(status: Int): ProjectAuthSecrecyStatus? {
+            values().forEach {
+                if (it.value == status) {
+                    return it
+                }
+            }
+            return null
+        }
+    }
 }

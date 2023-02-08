@@ -158,6 +158,8 @@ class RbacProjectPermissionService(
         )
     }
 
+    override fun cancelUpdateAuthProject(projectCode: String) = Unit
+
     override fun createRoleGroupApplication(
         userId: String,
         applicationInfo: ApplicationInfo,

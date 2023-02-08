@@ -38,6 +38,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.util.ProjectUtils
@@ -103,7 +104,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .fetch()
         }
     }
@@ -127,7 +128,7 @@ class ProjectDao {
             dslContext.selectFrom(this)
                 .where(ENABLED.eq(true).and(CHANNEL.eq(channelCode.name)))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .limit(limit).offset(offset).fetch()
         }
     }
@@ -136,7 +137,7 @@ class ProjectDao {
         return with(TProject.T_PROJECT) {
             dslContext.selectCount().from(this).where(ENABLED.eq(true))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .fetchOne(0, Long::class.java)!!
         }
     }
@@ -262,7 +263,7 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ProjectApproveStatus.CREATE_APPROVED.status,
+                    ProjectApproveStatus.SUCCEED.status,
                     true
                 )
                 .execute()
@@ -284,8 +285,7 @@ class ProjectDao {
         projectId: String,
         channelCode: ProjectChannelCode? = ProjectChannelCode.BS,
         approvalStatus: Int,
-        subjectScopesStr: String,
-        authSecrecy: Boolean?
+        subjectScopesStr: String
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.insertInto(
@@ -342,7 +342,7 @@ class ProjectDao {
                     JsonUtil.toJson(it, false)
                 },
                 subjectScopesStr,
-                authSecrecy ?: false
+                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value
             ).execute()
         }
     }
@@ -353,8 +353,7 @@ class ProjectDao {
         projectId: String,
         projectUpdateInfo: ProjectUpdateInfo,
         subjectScopesStr: String,
-        logoAddress: String?,
-        authSecrecy: Boolean?
+        logoAddress: String?
     ): Int {
         with(TProject.T_PROJECT) {
             val update = dslContext.update(this)
@@ -369,10 +368,10 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .set(APPROVAL_STATUS, ProjectApproveStatus.UPDATE_APPROVED.status)
+                .set(APPROVAL_STATUS, ProjectApproveStatus.SUCCEED.status)
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
-            authSecrecy?.let { update.set(AUTH_SECRECY, authSecrecy) }
+            projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
             logoAddress?.let { update.set(LOGO_ADDR, logoAddress) }
             projectUpdateInfo.properties?.let { update.set(PROPERTIES, JsonUtil.toJson(it, false)) }
             return update.where(PROJECT_ID.eq(projectId)).execute()
@@ -383,23 +382,6 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
-                .where(ENGLISH_NAME.eq(projectCode))
-                .execute()
-        }
-    }
-
-    fun updateProjectByEnglishName(
-        dslContext: DSLContext,
-        subjectScopesStr: String,
-        authSecrecy: Boolean,
-        projectCode: String,
-        statusEnum: ProjectApproveStatus
-    ): Int {
-        with(TProject.T_PROJECT) {
-            return dslContext.update(this)
-                .set(SUBJECT_SCOPES, subjectScopesStr)
-                .set(AUTH_SECRECY, authSecrecy)
-                .set(APPROVAL_STATUS, statusEnum.status)
                 .where(ENGLISH_NAME.eq(projectCode))
                 .execute()
         }
@@ -539,7 +521,7 @@ class ProjectDao {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
                 .limit(limit)
@@ -670,7 +652,7 @@ class ProjectDao {
             return dslContext.selectFrom(this)
                 .where(PROJECT_NAME.like("%$projectName%"))
                 .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(false))
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
                 .limit(limit).offset(offset).fetch()
         }
     }
