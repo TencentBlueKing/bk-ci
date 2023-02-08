@@ -26,21 +26,21 @@
  *
  */
 
-package com.tencent.devops.project.listener
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.project.pojo.mq.ProjectBroadCastEvent
+enum class ProjectAuthSecrecyStatus(val value: Int, val desc: String) {
+    PUBLIC(0, "公开项目"),
+    PRIVATE(1, "私有项目"),
+    CLASSIFIED(2, "机密项目");
 
-@Event(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
-data class TxIamRbacCreateEvent(
-    override val userId: String,
-    override val projectId: String,
-    override var retryCount: Int = 0,
-    override var delayMills: Int = 0,
-    val resourceRegisterInfo: ResourceRegisterInfo,
-    var iamProjectId: String?,
-    val subjectScopes: List<SubjectScopeInfo>? = emptyList()
-) : ProjectBroadCastEvent(userId, projectId, retryCount, delayMills)
+    companion object {
+        fun getStatus(status: Int): ProjectAuthSecrecyStatus? {
+            values().forEach {
+                if (it.value == status) {
+                    return it
+                }
+            }
+            return null
+        }
+    }
+}

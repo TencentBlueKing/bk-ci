@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -78,6 +79,6 @@ data class ProjectUpdateInfo(
     val subjectScopes: List<SubjectScopeInfo>? = emptyList(),
     @ApiModelProperty("logo地址")
     val logoAddress: String? = null,
-    @ApiModelProperty("是否权限私密")
-    val authSecrecy: Boolean? = null
+    @ApiModelProperty("项目性质")
+    val authSecrecy: Int? = ProjectAuthSecrecyStatus.PUBLIC.value
 )

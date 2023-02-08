@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
@@ -116,6 +117,21 @@ interface UserProjectResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?
     ): Result<ProjectVO>
+
+    @GET
+    @Path("/{english_name}/diff")
+    @ApiOperation("获取项目编辑信息对比")
+    fun diff(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<ProjectDiffVO>
 
     @GET
     @Path("/{english_name}/containEmpty")
@@ -261,6 +277,18 @@ interface UserProjectResource {
     @Path("/{project_id}/cancelCreateProject")
     @PUT
     fun cancelCreateProject(
+        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("project_id")
+        projectId: String
+    ): Result<Boolean>
+
+    @ApiOperation("取消更新项目")
+    @Path("/{project_id}/cancelUpdateProject")
+    @PUT
+    fun cancelUpdateProject(
         @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -23,41 +23,13 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.api.callback
+package com.tencent.devops.project.pojo.enums
 
-import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
-import com.tencent.devops.project.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.POST
-import javax.ws.rs.Path
-import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
-import javax.ws.rs.core.MediaType
-
-@Api(tags = ["PROJECT_CALLBACK"], description = "项目-itsm-回调")
-@Path("/open/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface ProjectCallBackResource {
-
-    @Path("/create_callback")
-    @POST
-    @ApiOperation("处理Itsm项目创建回调")
-    fun handleItsmProjectCreateCallBack(
-        @ApiParam(value = "itsm回调内容", required = true)
-        itsmCallBackInfo: ItsmCallBackInfo
-    ): Result<Boolean>
-
-    @Path("/update_callback")
-    @POST
-    @ApiOperation("处理Itsm项目编辑回调")
-    fun handleItsmProjectUpdateCallBack(
-        @ApiParam(value = "itsm回调内容", required = true)
-        itsmCallBackInfo: ItsmCallBackInfo
-    ): Result<Boolean>
+enum class ProjectTipsStatus(val status: Int) {
+    NOT_SHOW(0),
+    SHOW_SUCCESSFUL_CREATE(1),
+    SHOW_SUCCESSFUL_UPDATE(2);
 }

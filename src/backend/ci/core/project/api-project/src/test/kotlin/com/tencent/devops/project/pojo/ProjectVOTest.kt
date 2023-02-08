@@ -30,6 +30,7 @@ package com.tencent.devops.project.pojo
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Test
 
@@ -83,7 +84,7 @@ class ProjectVOTest {
             relationId = "",
             properties = ProjectProperties(PipelineAsCodeSettings()),
             subjectScopes = emptyList(),
-            authSecrecy = false
+            authSecrecy = ProjectAuthSecrecyStatus.PUBLIC.value
         )
         val message = JsonUtil.toJson(p)
         println(message)
@@ -148,7 +149,7 @@ class ProjectVOTest {
             relationId = "",
             properties = ProjectProperties(PipelineAsCodeSettings()),
             subjectScopes = emptyList(),
-            authSecrecy = false
+            authSecrecy = ProjectAuthSecrecyStatus.PUBLIC.value
         )
         val message = JsonUtil.toJson(p)
         println(message)

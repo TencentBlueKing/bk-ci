@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
@@ -37,6 +38,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionScopesService
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
@@ -60,6 +62,7 @@ class AuthResourceGroupService(
         projectCode: String,
         projectName: String
     ) {
+        syncGradeManagerGroup(gradeManagerId = gradeManagerId, projectCode = projectCode)
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = AuthResourceType.PROJECT.value,
@@ -97,6 +100,34 @@ class AuthResourceGroupService(
     }
 
     /**
+     * 同步创建分级管理员时自动创建的组
+     */
+    fun syncGradeManagerGroup(
+        gradeManagerId: Int,
+        projectCode: String
+    ) {
+        val pageInfoDTO = V2PageInfoDTO()
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
+            gradeManagerId.toString(),
+            null,
+            pageInfoDTO
+        )
+        iamGroupInfoList.results.map { iamGroupInfo ->
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = DefaultGroupType.MANAGER.value,
+                groupName = iamGroupInfo.name,
+                relationId = iamGroupInfo.id.toString()
+            )
+        }
+    }
+
+    /**
      * 创建二级管理员默认分组
      *
      * @param createMode false-创建资源时就创建默认分组,true-启用资源时才创建
@@ -111,6 +142,12 @@ class AuthResourceGroupService(
         resourceName: String,
         createMode: Boolean
     ) {
+        syncSubsetManagerGroup(
+            subsetManagerId = subsetManagerId,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         val resourceGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
@@ -150,6 +187,33 @@ class AuthResourceGroupService(
                 iamGroupId = iamGroupId
             )
             addGroupMember(userId = userId, iamGroupId = iamGroupId)
+        }
+    }
+
+    /**
+     * 同步二级管理员创建时自动创建的用户组
+     */
+    fun syncSubsetManagerGroup(
+        subsetManagerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        val pageInfoDTO = V2PageInfoDTO()
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        val iamGroupInfoList =
+            iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId, pageInfoDTO)
+        iamGroupInfoList.results.map { iamGroupInfo ->
+            authResourceGroupDao.create(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = DefaultGroupType.MANAGER.value,
+                groupName = iamGroupInfo.name,
+                relationId = iamGroupInfo.id.toString()
+            )
         }
     }
 

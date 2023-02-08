@@ -67,6 +67,10 @@ interface ProjectPermissionService {
         projectCode: String
     )
 
+    fun cancelUpdateAuthProject(
+        projectCode: String
+    )
+
     fun createRoleGroupApplication(
         userId: String,
         applicationInfo: ApplicationInfo,

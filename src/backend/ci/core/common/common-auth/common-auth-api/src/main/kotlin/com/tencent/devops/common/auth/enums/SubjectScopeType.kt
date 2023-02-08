@@ -23,30 +23,17 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.common.auth.enums
 
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.callback.ProjectCallBackResource
-import com.tencent.devops.project.api.pojo.ItsmCallBackInfo
-import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.service.ProjectCallBackSevice
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class ProjectCallBackResourceImpl @Autowired constructor(
-    private val projectCallBackSevice: ProjectCallBackSevice
-) : ProjectCallBackResource {
-    override fun handleItsmProjectCreateCallBack(
-        itsmCallBackInfo: ItsmCallBackInfo,
-    ): Result<Boolean> {
-        projectCallBackSevice.createProjectCallBack(itsmCallBackInfo)
-        return Result(true)
-    }
-
-    override fun handleItsmProjectUpdateCallBack(itsmCallBackInfo: ItsmCallBackInfo): Result<Boolean> {
-        projectCallBackSevice.updateProjectCallBack(itsmCallBackInfo)
-        return Result(true)
-    }
+/**
+ * 最大授权范围类型
+ */
+enum class SubjectScopeType(val value: String) {
+    // 部门
+    DEPARTMENT("depart"),
+    // 用户
+    USER("user")
 }

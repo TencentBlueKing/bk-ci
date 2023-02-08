@@ -36,7 +36,6 @@ import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.service.ProjectPaasCCService
 import com.tencent.devops.project.service.iam.IamV3Service
-import com.tencent.devops.project.service.iam.IamRbacService
 import com.tencent.devops.project.service.impl.AbsOpProjectServiceImpl.Companion.logger
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -50,8 +49,7 @@ class TencentProjectEventListener @Autowired constructor(
     val bsAuthTokenApi: BSAuthTokenApi,
     val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     @Autowired(required = false)
-    val iamV3Service: IamV3Service?,
-    val iamRbacService: IamRbacService?
+    val iamV3Service: IamV3Service?
 ) : ProjectEventListener {
 
     override fun execute(event: ProjectBroadCastEvent) {
@@ -68,12 +66,6 @@ class TencentProjectEventListener @Autowired constructor(
                 }
                 is TxIamV3CreateEvent -> {
                     iamV3Service?.createIamV3Project(event)
-                }
-                is TxIamRbacCreateEvent -> {
-                    iamRbacService?.createIamRbacProject(event)
-                }
-                is TxIamRbacCreateApplicationEvent -> {
-                    iamRbacService?.createIamApplicationProject(event)
                 }
             }
         } catch (ex: Exception) {
