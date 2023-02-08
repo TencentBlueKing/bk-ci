@@ -68,6 +68,15 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.initContainer.image:mirrors.tencent.com/ci/workspace-init:v1.0.3}")
     var initContainerImage: String = "mirrors.tencent.com/ci/workspace-init:v1.0.3"
 
+    @Value("\${devCloud.initContainer.preCIGateWayUrl:")
+    val preCIGateWayUrl: String = ""
+
+    @Value("\${devCloud.initContainer.preCIDownUrl:")
+    val preCIDownUrl: String = ""
+
+    @Value("\${devCloud.initContainer.backendHost:")
+    val backendHost: String = ""
+
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.image?.imagePullCertificate != null) {
@@ -256,7 +265,10 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
-                EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName)
+                EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
+                EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
+                EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
+                EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost)
             )
         )
 
@@ -278,6 +290,9 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_DEBUG_ENABLE = "DEVOPS_REMOTING_DEBUG_ENABLE"
         private const val DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE = "DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE"
         private const val DEVOPS_REMOTING_WORKSPACE_ID = "DEVOPS_REMOTING_WORKSPACE_ID"
+        private const val DEVOPS_REMOTING_PRECI_DOWN_URL = "DEVOPS_REMOTING_PRECI_DOWN_URL"
+        private const val DEVOPS_REMOTING_PRECI_GATEWAY_URL = "DEVOPS_REMOTING_PRECI_GATEWAY_URL"
+        private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
 
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
         private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
