@@ -97,9 +97,7 @@ open class BkCiAbstractTest {
         fun mockRedisOperation() {
             every { redisOperation.execute(any<RedisCallback<*>>()) } answers {
                 val argStr = args[0]!!::class.toString()
-                if (argStr.contains("RedisLock\$set")) {
-                    return@answers "OK"
-                } else if (argStr.contains("RedisLock\$unlock")) {
+                if (argStr.contains("RedisLock")) {
                     return@answers true
                 } else {
                     throw Exception("redisOperation.execute must mock by self")
