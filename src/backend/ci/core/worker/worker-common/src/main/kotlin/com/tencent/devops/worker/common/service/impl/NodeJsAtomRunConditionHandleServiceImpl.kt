@@ -137,7 +137,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 // 空文件夹需要删除
                 pkgFileDir.delete()
             }
-            if (!pkgFileDir.exists()) {
+            if (!pkgFile.exists()) {
                 // 把指定的nodejs安装包下载到构建机上
                 OkhttpUtils.downloadFile(storePkgRunEnvInfo.pkgDownloadPath, pkgFile)
                 logger.info("prepareRunEnv download [$pkgName] success")
@@ -182,8 +182,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
             File(envDir, NODEJS).absoluteFile
         }
-        /* System.gc()
-        Thread.sleep(100) */
+         System.gc()
+        Thread.sleep(100)
         try {
             CommandLineUtils.execute(
                 command,
