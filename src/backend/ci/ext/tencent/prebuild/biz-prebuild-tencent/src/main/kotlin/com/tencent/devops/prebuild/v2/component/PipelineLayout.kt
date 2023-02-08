@@ -523,7 +523,8 @@ class PipelineLayout private constructor(
             return ThirdPartyAgentIDDispatchType(
                 displayName = agentId,
                 workspace = userLocalProjectInfo.workspace,
-                agentType = AgentType.ID
+                agentType = AgentType.ID,
+                dockerInfo = null
             )
         }
 
@@ -533,7 +534,8 @@ class PipelineLayout private constructor(
                 envName = job.runsOn.poolName,
                 envProjectId = null,
                 workspace = job.runsOn.workspace,
-                agentType = AgentType.NAME
+                agentType = AgentType.NAME,
+                dockerInfo = null
             )
         }
 

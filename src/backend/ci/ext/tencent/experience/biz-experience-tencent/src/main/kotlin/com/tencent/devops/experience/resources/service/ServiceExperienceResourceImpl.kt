@@ -27,7 +27,6 @@
 
 package com.tencent.devops.experience.resources.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
@@ -44,8 +43,6 @@ import com.tencent.devops.experience.pojo.enums.Source
 import com.tencent.devops.experience.service.ExperienceBaseService
 import com.tencent.devops.experience.service.ExperienceDownloadService
 import com.tencent.devops.experience.service.ExperienceService
-import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -140,14 +137,15 @@ class ServiceExperienceResourceImpl @Autowired constructor(
         if (experienceHashId.isBlank()) {
             throw ParamBlankException("Invalid experienceHashId")
         }
-        if (userId != null && client.get(ServiceProjectResource::class)
-                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
-        ) {
-            throw ErrorCodeException(
-                defaultMessage = "用户没有项目权限",
-                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION
-            )
-        }
+        // TODO 暂时不校验 , 否则外部用户无法下载构件
+//        if (userId != null && client.get(ServiceProjectResource::class)
+//                .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
+//        ) {
+//            throw ErrorCodeException(
+//                defaultMessage = "用户没有项目权限",
+//                errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION
+//            )
+//        }
     }
 
     companion object {

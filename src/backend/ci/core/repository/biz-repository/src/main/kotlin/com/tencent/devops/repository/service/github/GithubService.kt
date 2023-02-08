@@ -307,8 +307,9 @@ class GithubService @Autowired constructor(
             val code = response.code()
             val message = response.message()
             val body = response.body()?.string() ?: ""
-
-            logger.info("getBody operation($operation). response code($code) message($message) body($body)")
+            if (logger.isDebugEnabled) {
+                logger.debug("getBody operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }
@@ -321,8 +322,9 @@ class GithubService @Autowired constructor(
             val code = response.code()
             val message = response.message()
             val body = response.body()?.string() ?: ""
-
-            logger.info("callMethod operation($operation). response code($code) message($message) body($body)")
+            if (logger.isDebugEnabled) {
+                logger.debug("callMethod operation($operation). response code($code) message($message) body($body)")
+            }
             if (!response.isSuccessful) {
                 handException(operation, code)
             }

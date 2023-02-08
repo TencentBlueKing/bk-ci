@@ -28,49 +28,24 @@
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
-import com.tencent.devops.common.environment.agent.AgentUpgradeType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.OpThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineSeqId
-import com.tencent.devops.environment.service.thirdPartyAgent.AgentPipelineService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentMgrService
 import com.tencent.devops.environment.service.thirdPartyAgent.ThirdPartyAgentPipelineService
-import com.tencent.devops.environment.service.thirdPartyAgent.UpgradeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
-    private val upgradeService: UpgradeService,
-    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
-    private val agentPipelineService: AgentPipelineService,
-    private val agentGrayUtils: AgentGrayUtils
+    private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService
 ) : OpThirdPartyAgentResource {
 
     override fun listEnableProjects(): Result<List<String>> {
         return Result(thirdPartyAgentService.listEnableThirdPartyAgentProjects())
-    }
-
-    override fun setAgentUpgrade(version: String): Result<Boolean> {
-        upgradeService.setUpgrade(version)
-        return Result(true)
-    }
-
-    override fun setMasterVersion(version: String): Result<Boolean> {
-        upgradeService.setMasterVersion(version)
-        return Result(true)
-    }
-
-    override fun getAgentVersion(): Result<String> {
-        return Result(upgradeService.getWorkerVersion())
-    }
-
-    override fun getAgentMasterVersion(): Result<String> {
-        return Result(upgradeService.getAgentVersion())
     }
 
     override fun scheduleAgentPipeline(
@@ -84,44 +59,6 @@ class OpThirdPartyAgentResourceImpl @Autowired constructor(
 
     override fun getAgentPipelineResponse(projectId: String, nodeId: String, seqId: String): Result<PipelineResponse> {
         return Result(thirdPartyAgentPipelineService.getPipelineResult(projectId, nodeId, seqId))
-    }
-
-    override fun setForceUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.setForceUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
-    }
-
-    override fun unsetForceUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.unsetForceUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
-    }
-
-    override fun getAllForceUpgradeAgents(agentUpgradeType: String?): Result<List<Long>> {
-        return Result(agentGrayUtils.getAllForceUpgradeAgents(AgentUpgradeType.find(agentUpgradeType)))
-    }
-
-    override fun cleanAllForceUpgradeAgents(agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.cleanAllForceUpgradeAgents(AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
-    }
-
-    override fun setLockUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.setLockUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
-    }
-
-    override fun unsetLockUpdateAgents(agentIds: List<Long>, agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.unsetLockUpgradeAgents(agentIds, AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
-    }
-
-    override fun getAllLockUpgradeAgents(agentUpgradeType: String?): Result<List<Long>> {
-        return Result(agentGrayUtils.getAllLockUpgradeAgents(AgentUpgradeType.find(agentUpgradeType)))
-    }
-
-    override fun cleanAllLockUpgradeAgents(agentUpgradeType: String?): Result<Boolean> {
-        agentGrayUtils.cleanAllLockUpgradeAgents(AgentUpgradeType.find(agentUpgradeType))
-        return Result(true)
     }
 
     override fun enableProject(projectId: String, enable: Boolean): Result<Boolean> {

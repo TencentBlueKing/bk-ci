@@ -31,9 +31,9 @@ import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
 
 // 全量引入 bk-magic-vue
-import bkMagic from 'bk-magic-vue'
+import bkMagic from '@tencent/bk-magic-vue'
 // 全量引入 bk-magic-vue 样式
-require('bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
+require('@tencent/bk-magic-vue/dist/bk-magic-vue.min.css') // eslint-disable-line
 
 declare module 'vue/types/vue' {
     interface Vue {

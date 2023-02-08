@@ -1,6 +1,6 @@
 import VueI18n from 'vue-i18n'
 import Vue from 'vue'
-import { lang, locale } from 'bk-magic-vue'
+import { lang, locale } from '@tencent/bk-magic-vue'
 import axios from 'axios'
 import cookies from 'js-cookie'
 const DEFAULT_LOCALE = 'zh-CN'

@@ -50,7 +50,18 @@ default_value_dict = {
     'bkCiStreamHost': 'devops.example.com',
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
-    'bkCiRepositoryGithubServer':'repository',
+    'bkCiRepositoryGithubServer': 'repository',
+    'bkCiDockerRoutingType': 'KUBERNETES',
+    'bkCiDockerJobQuotaEnable': 'false',
+    'bkCiBcsCpu': '8.0',
+    'bkCiBcsMemory': '16048',
+    'bkCiKubernetesCpu': '8',
+    'bkCiKubernetesMemory': '16048',
+    'bkCiKubernetesHost': 'http://kubernetes-manager',
+    'bkCiKubernetesToken': 'landun',
+    'bkCiDevopsToken': 'devops',
+    'bkCiAppToken': 'test',
+    'bkCiNotifyEmailSendChannel': 'blueking'
 }
 
 if os.path.isfile(default_value_json):
@@ -79,7 +90,8 @@ include_dict = {
     '__BK_CI_INFLUXDB_ADDR__': 'http://{{ include "bkci.influxdbHost" . }}:{{ include "bkci.influxdbPort" . }}',
     '__BK_CI_VERSION__': '{{ .Chart.AppVersion }}',
     '__BK_CI_DISPATCH_KUBERNETES_NS__': '{{ .Release.Namespace }}',
-    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}'
+    '__BK_CI_CONSUL_DISCOVERY_TAG__': '{{ .Release.Namespace }}',
+    '__BK_CI_PRIVATE_URL__': '{{ if empty .Values.config.bkCiPrivateUrl }}{{ .Release.Name }}-bk-ci-gateway{{ else }}{{ .Values.config.bkCiPrivateUrl }}{{ end }}'
 }
 
 # 读取变量映射
@@ -140,8 +152,8 @@ for config_name in os.listdir(config_parent):
         config_file.close()
 
 # 生成网关的configmap
-gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
-                    "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__","__BK_REPO_HOST__"])  # frondend需要的变量
+gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__", "__BK_CI_PAAS_LOGIN_URL__",
+                    "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__", "__BK_REPO_HOST__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):

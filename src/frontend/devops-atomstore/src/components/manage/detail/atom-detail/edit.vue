@@ -56,7 +56,9 @@
                 />
             </bk-form-item>
             <bk-form-item :label="$t('store.发布者')" :rules="[requireRule($t('store.发布者'))]" :required="true" property="publisher" error-display-type="normal">
-                <bk-input v-model="formData.publisher" :placeholder="$t('store.请输入')"></bk-input>
+                <bk-select v-model="formData.publisher">
+                    <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                </bk-select>
             </bk-form-item>
             <bk-form-item :required="true" property="logoUrl" error-display-type="normal" class="edit-logo">
                 <select-logo :form="formData" type="ATOM" :is-err="false" ref="logoUrlError"></select-logo>
@@ -102,7 +104,14 @@
                     { label: this.$t('store.是'), value: 'LOGIN_PUBLIC' },
                     { label: this.$t('store.否'), value: 'PRIVATE', disable: true, title: this.$t('store.若有特殊原因无法开源，请联系蓝盾助手（务必联系蓝盾助手，自行修改工蜂项目配置会失效，每次升级插件时将根据插件配置自动刷新）') }
                 ],
-                hasChange: false
+                hasChange: false,
+                publishersList: []
+            }
+        },
+
+        computed: {
+            userName () {
+                return this.$store.state.user.username
             }
         },
 
@@ -117,7 +126,7 @@
 
         created () {
             this.hackData()
-            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true)]).finally(() => {
+            Promise.all([this.requestAtomlabels(true), this.requestAtomClassify(true), this.fetchPublishersList(this.detail.atomCode)]).finally(() => {
                 this.isLoading = false
             })
         },
@@ -214,6 +223,19 @@
                     })
                     this.$refs.mdHook.$refs.toolbar_left.$imgDel(pos)
                 }
+            },
+
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             }
         }
     }
