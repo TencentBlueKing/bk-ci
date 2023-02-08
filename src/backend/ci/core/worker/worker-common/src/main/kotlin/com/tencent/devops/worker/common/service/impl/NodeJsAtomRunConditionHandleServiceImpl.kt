@@ -182,8 +182,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
             File(envDir, NODEJS).absoluteFile
         }
-         System.gc()
-        Thread.sleep(100)
+        /* System.gc()
+        Thread.sleep(100) */
         try {
             CommandLineUtils.execute(
                 command,
