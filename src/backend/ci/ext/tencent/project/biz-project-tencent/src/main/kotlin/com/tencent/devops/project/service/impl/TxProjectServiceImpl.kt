@@ -68,6 +68,7 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPaasCCService
@@ -110,7 +111,8 @@ class TxProjectServiceImpl @Autowired constructor(
     private val projectTagService: ProjectTagService,
     private val bkTag: BkTag,
     objectMapper: ObjectMapper,
-    projectExtService: ProjectExtService
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -123,7 +125,8 @@ class TxProjectServiceImpl @Autowired constructor(
     projectAuthServiceCode = projectAuthServiceCode,
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
-    projectExtService = projectExtService
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService
 ) {
 
     @Value("\${iam.v0.url:#{null}}")
@@ -325,6 +328,10 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun cancelCreateAuthProject(projectCode: String) {
         projectPermissionService.cancelCreateAuthProject(projectCode = projectCode)
+    }
+
+    override fun cancelUpdateAuthProject(projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(projectCode = projectCode)
     }
 
     override fun createRoleGroupApplication(

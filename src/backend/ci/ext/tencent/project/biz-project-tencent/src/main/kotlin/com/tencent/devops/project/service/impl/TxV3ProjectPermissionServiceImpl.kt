@@ -128,6 +128,8 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelCreateAuthProject(projectCode: String) = Unit
 
+    override fun cancelUpdateAuthProject(projectCode: String) = Unit
+
     override fun createRoleGroupApplication(
         userId: String,
         applicationInfo: ApplicationInfo,
