@@ -268,7 +268,9 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
                 EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
-                EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost)
+                EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
+                EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_URL, event.repositoryUrl)
+
             )
         )
 
@@ -293,6 +295,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_PRECI_DOWN_URL = "DEVOPS_REMOTING_PRECI_DOWN_URL"
         private const val DEVOPS_REMOTING_PRECI_GATEWAY_URL = "DEVOPS_REMOTING_PRECI_GATEWAY_URL"
         private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
+        private const val DEVOPS_REMOTING_GIT_REMOTE_REPO_URL = "DEVOPS_REMOTING_GIT_REMOTE_REPO_URL"
 
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
         private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
