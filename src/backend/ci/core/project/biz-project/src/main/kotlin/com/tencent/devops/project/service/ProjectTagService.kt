@@ -121,7 +121,7 @@ class ProjectTagService @Autowired constructor(
     fun updateTagByProject(projectTagUpdateDTO: ProjectTagUpdateDTO): Result<Boolean> {
         logger.info("updateTagByProject: $projectTagUpdateDTO")
         checkRouteTag(projectTagUpdateDTO.routerTag)
-        checkProject(projectTagUpdateDTO.projectCodeList)
+        // checkProject(projectTagUpdateDTO.projectCodeList)
         projectTagDao.updateProjectTags(
             dslContext = dslContext,
             englishNames = projectTagUpdateDTO.projectCodeList!!,
