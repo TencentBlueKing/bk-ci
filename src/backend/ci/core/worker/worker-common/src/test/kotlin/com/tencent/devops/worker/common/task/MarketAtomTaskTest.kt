@@ -1,6 +1,5 @@
 package com.tencent.devops.worker.common.task
 
-
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.expression.ExecutionContext
