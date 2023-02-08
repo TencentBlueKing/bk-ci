@@ -125,6 +125,7 @@ allprojects {
         it.exclude("com.flipkart.zjsonpatch", "zjsonpatch")
         it.exclude("com.zaxxer", "HikariCP-java7")
         it.exclude("com.tencent.devops", "devops-boot-starter-plugin")
+        it.exclude("org.bouncycastle", "bcutil-jdk15on")
     }
     dependencies {
         // 兼容dom4j 的 bug : https://github.com/gradle/gradle/issues/13656
