@@ -1,0 +1,62 @@
+#wsproxy Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+spec:
+  selector:
+    matchLabels:
+      app.kubernetes.io/instance: {{ .Release.Name }}
+      app.kubernetes.io/component: {{ .Release.Name }}
+      app.kubernetes.io/name: {{ .Release.Name }}
+  replicas: {{ .Values.wsproxy.replicas }}
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/instance: {{ .Release.Name }}
+        app.kubernetes.io/component: {{ .Release.Name }}
+        app.kubernetes.io/name: {{ .Release.Name }}
+    spec:
+      containers:
+        - name: {{ .Release.Name }}
+          image: {{ .Values.wsproxy.image }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.wsproxy.resources }}
+          resources: {{- toYaml .Values.wsproxy.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: ssh
+              containerPort: 2200
+            - name: httpproxy
+              containerPort: 8081
+            - name: httpsproxy
+              containerPort: 9090    
+          workingDir: /data/workspace/wsproxy
+          volumeMounts:
+            - name: {{ .Release.Name }}-config
+              mountPath: /data/workspace/wsproxy/config
+              readOnly: true
+      volumes:
+        - name: {{ .Release.Name }}-config
+          configMap:
+            name: {{ .Release.Name }}-config
+            items:
+              - key: run.json
+                path: run.json
+              {{- if .Values.kubeConfig.useKubeConfig}}
+              - key: kubeConfig.yaml
+                path: kubeConfig.yaml
+              {{- end}}
+              - key: sshkey
+                path: host_keys/sshkey
+      {{- if .Values.wsproxy.affinity }}
+      affinity: {{- toYaml .Values.wsproxy.affinity | nindent 8 }}
+      {{- end }}          
+      {{- if .Values.wsproxy.tolerations }}
+      tolerations: {{- toYaml .Values.wsproxy.tolerations | nindent 8 }}
+      {{- end }}

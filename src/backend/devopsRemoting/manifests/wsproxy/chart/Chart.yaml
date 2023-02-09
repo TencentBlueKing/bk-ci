@@ -1,0 +1,7 @@
+apiVersion: v2
+name: wsproxy
+description: A Helm chart for BlueKing CI Remoting Workspace Proxy
+type: application
+version: 0.0.17
+appVersion: 0.0.23
+home: https://github.com/Tencent/bk-ci

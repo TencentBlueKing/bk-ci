@@ -1,0 +1,77 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Release.Name }}
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+  {{- if .Values.service.serviceAnnotations }}
+  annotations:
+    {{- range $key, $val := .Values.service.serviceAnnotations }}
+    {{ $key }}: {{ $val  }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- if eq .Values.service.serviceType "ClusterIP" }}
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+  ports:
+    - name: ssh
+      port: {{ .Values.service.sshPort }}
+      targetPort: 2200
+      protocol: TCP
+    - name: http-proxy
+      port: {{ .Values.service.httpProxyPort }}
+      targetPort: 8081
+      protocol: TCP
+    - name: https-proxy
+      port: {{ .Values.service.httpsProxyPort }}
+      targetPort: 9090
+      protocol: TCP    
+  {{- else if eq .Values.service.serviceType "LoadBalancer" }}
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+  ports:
+    - name: ssh
+      port: {{ .Values.service.sshPort }}
+      targetPort: 2200
+      protocol: TCP
+    - name: http-proxy
+      port: {{ .Values.service.httpProxyPort }}
+      targetPort: 8081
+      protocol: TCP
+    - name: https-proxy
+      port: {{ .Values.service.httpsProxyPort }}
+      targetPort: 9090
+      protocol: TCP   
+  {{- else }}
+  type: NodePort
+  selector:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+  ports:
+    - name: ssh
+      port: {{ .Values.service.sshPort }}
+      targetPort: 2200
+      nodePort: {{ .Values.service.sshNodePort }}
+      protocol: TCP
+    - name: httpproxy
+      port: {{ .Values.service.httpProxyPort }}
+      targetPort: 8081
+      nodePort: {{ .Values.service.httpProxyNodePort }}
+      protocol: TCP
+    - name: httpsproxy
+      port: {{ .Values.service.httpsProxyPort }}
+      targetPort: 9090
+      nodePort: {{ .Values.service.httpsProxyNodePort }}
+      protocol: TCP     
+  {{- end }}

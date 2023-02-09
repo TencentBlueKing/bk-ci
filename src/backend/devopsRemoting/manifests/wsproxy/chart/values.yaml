@@ -1,0 +1,44 @@
+kubeConfig:
+  useKubeConfig: true
+  # 配置的kubeConfig文件内容
+  content: |
+    # useKubeConfig开启时，这里需要填写kubeconfig
+
+wsproxy:
+  replicas: 1
+  image: mirrors.tencent.com/ruotiantang/wsproxy-demo:0.0.23-debug
+  resources:
+    requests:
+      cpu: 100m
+      memory: 1000Mi
+    limits:
+      cpu: 500m
+      memory: 1500Mi
+  # 获取kubernetes集群信息的类型  KUBE_API|BACKEND  
+  kubemanagerType: KUBE_API
+  # 监听的pod的命名空间    
+  namespace: blueking-dispatch
+  devRemotingBackend:
+    hostName: ""
+    workspaceHostSuffix: ""
+    sha1key: ""
+    oauthRedirectUrl: ""
+
+# 镜像配置
+backendImage:
+  pullPolicy: IfNotPresent
+
+# wsproxy service
+service:
+  # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+  serviceType: NodePort
+  # 部署的service的annotations:
+  serviceAnnotations:
+  # 部署的service对外暴露的端口
+  sshPort: 22
+  httpProxyPort: 8080
+  httpsProxyPort: 9090
+  # nodeport模式下nodeport的端口
+  sshNodePort: 30022
+  httpProxyNodePort: 30080
+  httpsProxyNodePort: 30090

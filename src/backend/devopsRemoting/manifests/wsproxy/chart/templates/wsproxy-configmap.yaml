@@ -1,0 +1,69 @@
+#wsproxy configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-config
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: {{ .Release.Name }}
+    app.kubernetes.io/component: {{ .Release.Name }}
+    app.kubernetes.io/name: {{ .Release.Name }}
+data:
+  run.json: |-
+    {
+      "ingress": {
+        "httpAddress": "0.0.0.0:8081",
+        "httpsAddress": "0.0.0.0:9090",
+        "header": "x-wsproxy-host"
+      },
+      "proxy": {
+        "https": {
+          "key": "",
+          "crt": ""
+        },
+        "transportConfig": {
+          "connectTimeout": "10s",
+          "idleConnTimeout": "60s",
+          "maxIdleConns": 0,
+          "maxIdleConnsPerHost": 100
+        },
+        "workspacePodConfig": {
+          "vscodePort": 23000,
+          "remotingPort": 22999
+        },
+        "builtinPages": {
+          "location": "/data/workspace/wsproxy/public"
+        }
+      },
+      "sshHostKeyPath": "/data/workspace/wsproxy/config/host_keys",
+      "kubemanagerType": "{{ .Values.wsproxy.kubemanagerType }}",
+      "kubeConfig": {
+        "namespace": "{{ .Values.wsproxy.namespace }}",
+        "kubeconfigfile": "/data/workspace/wsproxy/config/kubeConfig.yaml"
+      },
+      "devRemotingBackend": {
+        "scheme": "{{ .Values.wsproxy.devRemotingBackend.scheme }}",
+        "hostName": "{{ .Values.wsproxy.devRemotingBackend.hostName }}",
+        "workspaceHostSuffix": "{{ .Values.wsproxy.devRemotingBackend.workspaceHostSuffix }}",
+        "sha1key": "{{ .Values.wsproxy.devRemotingBackend.sha1key }}",
+        "oauthRedirectUrl": "{{ .Values.wsproxy.devRemotingBackend.oauthRedirectUrl }}"
+      }
+    }
+  
+  sshkey: |-
+    -----BEGIN OPENSSH PRIVATE KEY-----
+    b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAaAAAABNlY2RzYS
+    1zaGEyLW5pc3RwMjU2AAAACG5pc3RwMjU2AAAAQQRkmDFITfDehg1O8d5XswhFp+BFiQl/
+    hZ2jn/burKhvp/Jq+vYW9vf8opOFC1dH2DuM1B50XVHO05obquwvKlACAAAAsE4aMpNOGj
+    KTAAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBGSYMUhN8N6GDU7x
+    3lezCEWn4EWJCX+FnaOf9u6sqG+n8mr69hb29/yik4ULV0fYO4zUHnRdUc7Tmhuq7C8qUA
+    IAAAAhAPP/twAd2tXQ+xLKHUXy/S5zH7jGsZx2nvEkkzD6nQVXAAAAEXJvb3RAOTRmODUy
+    YmRkMjExAQIDBAUG
+    -----END OPENSSH PRIVATE KEY-----
+
+  {{ if .Values.kubeConfig.useKubeConfig -}}
+  kubeConfig.yaml: |
+    {{- .Values.kubeConfig.content | nindent 4 }}
+  {{- end -}}
+
+  

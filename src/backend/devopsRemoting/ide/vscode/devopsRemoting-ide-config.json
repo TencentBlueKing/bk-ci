@@ -1,0 +1,23 @@
+{
+    "entrypoint": "/ide/vscodehelper",
+    "entrypointArgs": [
+        "--port",
+        "{IDEPORT}",
+        "--host",
+        "0.0.0.0",
+        "--without-connection-token",
+        "\"${@}\"",
+        "--server-data-dir",
+        "/data/landun/workspace/.vscode-remote",
+        "--default-folder",
+        "{GITREPOPATH}"
+    ],
+    "readinessProbe": {
+        "type": "http",
+        "http": {
+            "path": "version"
+        }
+    }
+}
+
+
