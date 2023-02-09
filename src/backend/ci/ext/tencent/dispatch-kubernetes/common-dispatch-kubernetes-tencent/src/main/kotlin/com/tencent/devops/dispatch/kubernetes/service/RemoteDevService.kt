@@ -84,9 +84,9 @@ class RemoteDevService @Autowired constructor(
 
             if (workspaceInfo.status != EnvStatusEnum.running) {
                 throw BuildFailureException(
-                    ErrorCodeEnum.START_VM_ERROR.errorType,
-                    ErrorCodeEnum.START_VM_ERROR.errorCode,
-                    ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
+                    ErrorCodeEnum.CREATE_VM_ERROR.errorType,
+                    ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
+                    ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
                     "工作空间状态非RUNNING"
                 )
             }
@@ -132,10 +132,10 @@ class RemoteDevService @Autowired constructor(
             }
 
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "工作空间创建失败，错误信息:$failedMsg"
+                ErrorCodeEnum.CREATE_VM_ERROR.errorType,
+                ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
+                ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
+                "错误信息:$failedMsg"
             )
         }
     }
@@ -174,7 +174,7 @@ class RemoteDevService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "工作空间启动失败，错误信息:$failedMsg"
+                "错误信息:$failedMsg"
             )
         }
     }
@@ -195,10 +195,10 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "工作空间休眠失败，错误信息:$failedMsg"
+                ErrorCodeEnum.STOP_VM_ERROR.errorType,
+                ErrorCodeEnum.STOP_VM_ERROR.errorCode,
+                ErrorCodeEnum.STOP_VM_ERROR.formatErrorMessage,
+                "错误信息:$failedMsg"
             )
         }
     }
@@ -219,10 +219,10 @@ class RemoteDevService @Autowired constructor(
             return true
         } else {
             throw BuildFailureException(
-                ErrorCodeEnum.START_VM_ERROR.errorType,
-                ErrorCodeEnum.START_VM_ERROR.errorCode,
-                ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "工作空间删除失败，错误信息:$failedMsg"
+                ErrorCodeEnum.DELETE_VM_ERROR.errorType,
+                ErrorCodeEnum.DELETE_VM_ERROR.errorCode,
+                ErrorCodeEnum.DELETE_VM_ERROR.formatErrorMessage,
+                "错误信息:$failedMsg"
             )
         }
     }

@@ -126,7 +126,6 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
-        const val REDIS_UPDATE_EVENT_PREFIX = "remotedev:updateEvent:"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
     }
@@ -239,7 +238,7 @@ class WorkspaceService @Autowired constructor(
             }.email
         }
 
-        val workspaceId = workspaceDao.createWorkspace(
+        workspaceDao.createWorkspace(
             userId = userId,
             workspace = workspace,
             workspaceStatus = WorkspaceStatus.PREPARING,
@@ -351,7 +350,8 @@ class WorkspaceService @Autowired constructor(
                 anyMessage = WorkspaceResponse(
                     workspaceHost = event.environmentHost ?: "",
                     workspaceName = event.workspaceName,
-                    status = WorkspaceAction.START
+                    status = WorkspaceAction.START,
+                    errorMsg = event.errorMsg
                 ),
                 projectId = "",
                 userId = event.userId,
@@ -510,7 +510,8 @@ class WorkspaceService @Autowired constructor(
                 anyMessage = WorkspaceResponse(
                     workspaceHost = event.environmentHost ?: "",
                     workspaceName = event.workspaceName,
-                    status = WorkspaceAction.START
+                    status = WorkspaceAction.START,
+                    errorMsg = event.errorMsg
                 ),
                 projectId = "",
                 userId = event.userId,
@@ -596,7 +597,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
-        doStopWS(event.status, event.userId, event.workspaceName)
+        doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
     fun deleteWorkspace(userId: String, workspaceName: String): Boolean {
@@ -672,7 +673,7 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
-        doDeleteWS(event.status, event.userId, event.workspaceName)
+        doDeleteWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
     fun shareWorkspace(userId: String, workspaceName: String, sharedUser: String): Boolean {
@@ -954,7 +955,7 @@ class WorkspaceService @Autowired constructor(
             MDC.put(TraceTag.BIZID, TraceTag.buildBiz())
             logger.info(
                 "workspace ${it.name} last active is ${
-                it.updateTime
+                    it.updateTime
                 } ready to delete"
             )
             heartBeatDeleteWS(it)
@@ -1018,7 +1019,7 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    private fun doDeleteWS(status: Boolean, operator: String, workspaceName: String) {
+    private fun doDeleteWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String?) {
         if (status) {
             // 清心跳
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -1051,7 +1052,8 @@ class WorkspaceService @Autowired constructor(
                 status = status,
                 anyMessage = WorkspaceResponse(
                     workspaceName = workspaceName,
-                    status = WorkspaceAction.DELETE
+                    status = WorkspaceAction.DELETE,
+                    errorMsg = errorMsg
                 ),
                 projectId = "",
                 userId = operator,
@@ -1070,7 +1072,7 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    private fun doStopWS(status: Boolean, operator: String, workspaceName: String) {
+    private fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String?) {
         if (status) {
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
@@ -1123,7 +1125,8 @@ class WorkspaceService @Autowired constructor(
                 status = status,
                 anyMessage = WorkspaceResponse(
                     workspaceName = workspaceName,
-                    status = WorkspaceAction.SLEEP
+                    status = WorkspaceAction.SLEEP,
+                    errorMsg = errorMsg
                 ),
                 projectId = "",
                 userId = operator,

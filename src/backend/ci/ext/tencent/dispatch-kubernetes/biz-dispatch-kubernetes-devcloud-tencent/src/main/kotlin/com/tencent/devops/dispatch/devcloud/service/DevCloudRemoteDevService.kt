@@ -219,6 +219,7 @@ class DevCloudRemoteDevService @Autowired constructor(
     }
 
     override fun workspaceTaskCallback(taskStatus: TaskStatus): Boolean {
+        logger.info("workspaceTaskCallback|${taskStatus.uid}|$taskStatus")
         devcloudWorkspaceRedisUtils.refreshTaskStatus("devcloud", taskStatus.uid, taskStatus)
         return true
     }

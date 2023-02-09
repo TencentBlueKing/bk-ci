@@ -50,6 +50,7 @@ class WorkspaceListener @Autowired constructor(
         var status = false
         var devcloudEnvironmentUid = ""
         var devcloudEnvironmentHost = ""
+        var errorMsg: String? = null
         try {
             logger.info("Start to handle workspace create ($event)")
             val workspaceResponse = remoteDevService.createWorkspace(
@@ -63,9 +64,11 @@ class WorkspaceListener @Autowired constructor(
             status = true
         } catch (e: BuildFailureException) {
             status = false
+            errorMsg = e.formatErrorMessage + e.message
             logger.error("Handle workspace create error.", e)
         } catch (t: Throwable) {
             status = false
+            errorMsg  = t.message
             logger.error("Handle workspace create error.", t)
         } finally {
             // 业务逻辑处理完成回调remotedev事件
@@ -77,7 +80,8 @@ class WorkspaceListener @Autowired constructor(
                     type = UpdateEventType.CREATE,
                     status = status,
                     environmentUid = devcloudEnvironmentUid,
-                    environmentHost = devcloudEnvironmentHost
+                    environmentHost = devcloudEnvironmentHost,
+                    errorMsg = errorMsg
                 )
             )
         }
@@ -87,6 +91,7 @@ class WorkspaceListener @Autowired constructor(
     fun handleWorkspaceOperate(event: WorkspaceOperateEvent) {
         var environmentHost = ""
         var status = true
+        var errorMsg: String? = null
         try {
             logger.info("Start to handle workspace operate ($event)")
             when (event.type) {
@@ -103,7 +108,12 @@ class WorkspaceListener @Autowired constructor(
                 else -> {
                 }
             }
+        }catch (e: BuildFailureException) {
+            status = false
+            errorMsg = e.formatErrorMessage + e.message
+            logger.error("Handle workspace update error.", e)
         } catch (t: Throwable) {
+            errorMsg  = t.message
             logger.warn("Fail to handle workspace operate ($event)", t)
             status = false
         } finally {
@@ -116,7 +126,8 @@ class WorkspaceListener @Autowired constructor(
                     type = event.type,
                     status = status,
                     environmentHost = environmentHost,
-                    environmentUid = ""
+                    environmentUid = "",
+                    errorMsg = errorMsg
                 )
             )
         }
