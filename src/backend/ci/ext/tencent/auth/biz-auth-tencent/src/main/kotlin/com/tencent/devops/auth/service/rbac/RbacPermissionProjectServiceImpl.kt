@@ -194,11 +194,11 @@ class RbacPermissionProjectServiceImpl @Autowired constructor(
     }
 
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        TODO("Not yet implemented")
+        return false
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
