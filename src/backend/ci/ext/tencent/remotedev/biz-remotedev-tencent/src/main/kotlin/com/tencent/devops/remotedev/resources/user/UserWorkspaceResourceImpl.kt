@@ -168,6 +168,6 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     }
 
     override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
-        return Result( permissionService.checkUserPermission(userId, workspaceName))
+        return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 }
