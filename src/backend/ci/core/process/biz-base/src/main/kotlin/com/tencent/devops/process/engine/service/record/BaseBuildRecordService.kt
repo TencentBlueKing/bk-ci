@@ -97,6 +97,9 @@ open class BaseBuildRecordService(
             refreshOperation()
             watcher.stop()
 
+            watcher.start("dispatchEvent")
+            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
+
             watcher.start("updatePipelineRecord")
             val (change, finalStatus) = takeBuildStatus(record, buildStatus)
             if (!change) {
@@ -117,10 +120,6 @@ open class BaseBuildRecordService(
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
                 timestamps = null
             )
-
-            watcher.start("dispatchEvent")
-            // TODO #7983 暂时不在record进行推送，避免和detail重复
-            pipelineDetailChangeEvent(projectId, pipelineId, buildId, record.startUser, executeCount)
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
