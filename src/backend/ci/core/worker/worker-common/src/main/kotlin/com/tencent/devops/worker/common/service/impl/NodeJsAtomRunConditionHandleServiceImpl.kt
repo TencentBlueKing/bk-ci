@@ -133,6 +133,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 true
             )
             } catch (ignored: Throwable) {
+                logger.info("before downloading command : ${System.getProperty(BK_CI_ATOM_EXECUTE_ENV_PATH)}node -v")
             if (pkgFileDir.exists() && pkgFileDir.listFiles()?.isEmpty() == true) {
                 // 空文件夹需要删除
                 pkgFileDir.delete()
