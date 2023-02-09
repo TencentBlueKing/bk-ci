@@ -229,6 +229,8 @@ class AtomStatisticsDao {
                 .where(PROJECT_ID.`in`(queryProjectInfoVO.projectIds))
                 .and(ATOM_CODE.eq(atomCode))
                 .and(STATISTICS_TIME.between(queryProjectInfoVO.startDateTime, queryProjectInfoVO.endDateTime))
+                .and(FAIL_EXECUTE_COUNT.isNotNull)
+                .and(FAIL_COMPLIANCE_COUNT.isNotNull)
                 .fetch()
         }
     }
