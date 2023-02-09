@@ -107,6 +107,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                     pkgFileDir = pkgFileDir,
                     pkgDownloadPath = storePkgRunEnvInfo.pkgDownloadPath
                 )
+            } finally {
+                pkgFile.delete()
             }
         }
         return true
@@ -163,7 +165,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
         val pkgName = pkgFile.name
         val nodejsPath = getNodejsPath(osType, pkgFileDir)
         val command = "$nodejsPath${File.separator}node -v"
-        // 清除构建上的node安装包文件
+        // 清除构建机上的node安装包文件
         if (pkgFileDir.exists()) {
             pkgFileDir.delete()
         }
@@ -198,7 +200,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             logger.warn(
                 "unZip nodePkg[$pkgName] fail, retryNum: $retryNum, " +
                         "failScript Command: $command, " +
-                        "Cause of error: ${ignored.message}"
+                        "Cause of error: ${ignored.message}", ignored
             )
             prepareNodeJsEnv(
                 retryNum = retryNum - 1,

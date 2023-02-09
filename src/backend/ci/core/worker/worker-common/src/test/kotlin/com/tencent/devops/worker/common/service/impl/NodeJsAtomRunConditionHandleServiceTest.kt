@@ -50,7 +50,6 @@ class NodeJsAtomRunConditionHandleServiceTest {
         updateTime = ""
     )
 
-
     private val windowsErrorPkgRunEnvInfo = StorePkgRunEnvInfo(
         id = "1",
         storeType = StoreTypeEnum.ATOM.name,
@@ -134,15 +133,15 @@ class NodeJsAtomRunConditionHandleServiceTest {
     @Nested
     inner class PrepareRunEnv {
         private val osType = AgentEnv.getOS()
-        private val normalPkgRunEnvInfo = when(osType) {
+        private val normalPkgRunEnvInfo = when (osType) {
             OSType.WINDOWS -> windowsNormalPkgRunEnvInfo
             OSType.LINUX -> linuxNormalPkgRunEnvInfo
             else -> macNormalPkgRunEnvInfo
         }
-        private val errorPkgRunEnvInfo = when(osType) {
+        private val errorPkgRunEnvInfo = when (osType) {
             OSType.WINDOWS -> windowsErrorPkgRunEnvInfo
             OSType.LINUX -> linuxErrorPkgRunEnvInfo
-            else ->  macErrorPkgRunEnvInfo
+            else -> macErrorPkgRunEnvInfo
         }
 
         @Test
