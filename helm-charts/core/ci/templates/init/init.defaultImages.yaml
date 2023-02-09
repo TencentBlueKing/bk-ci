@@ -25,11 +25,17 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local" > nohup
-              do 
-                echo "waiting for {{ include "bkci.names.fullname" . }}-store";
-                sleep 2;
+              services="store project"
+              for service in $services
+              do
+                until curl -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done
+
               echo "{{ include "bkci.names.fullname" . }}-store is available";
               curl "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local/api/op/market/image/init" -X POST
       restartPolicy: OnFailure

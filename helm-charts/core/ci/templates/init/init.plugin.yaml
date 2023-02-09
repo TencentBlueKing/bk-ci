@@ -26,15 +26,16 @@ spec:
             - "/bin/bash"
             - "-c"
             - |
-              until curl -s "http://{{ include "bkci.names.fullname" . }}-store.{{ .Release.Namespace }}.svc.cluster.local" > nohup
-              do 
-                echo "waiting for {{ include "bkci.names.fullname" . }}-store";
-                sleep 2;
-              done
-              echo "{{ include "bkci.names.fullname" . }}-store is available";
-
-              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} < atom.sql
-              redis-cli -h {{ include "bkci.redisHost" . }} -a {{ include "bkci.redisPassword" . }} -p {{ include "bkci.redisPort" . }} < atom.redis
+              services="store artifactory"
+              for service in $services
+              do
+                until curl -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                do 
+                  echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
+                  sleep 2;
+                done
+                echo "{{ include "bkci.names.fullname" . }}-$service is available";
+              done 
 
               {{ range .Values.init.plugin.atoms }}
               atom_code={{ .code }}
@@ -66,5 +67,8 @@ spec:
               SADD STORE_PUBLIC_FLAG_KEY:ATOM CodeCCCheckAtom
               SADD STORE_PUBLIC_FLAG_KEY:ATOM checkout
               EOF
+
+              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} < atom.sql
+              redis-cli -h {{ include "bkci.redisHost" . }} -a {{ include "bkci.redisPassword" . }} -p {{ include "bkci.redisPort" . }} < atom.redis
       restartPolicy: OnFailure
 {{- end -}}
