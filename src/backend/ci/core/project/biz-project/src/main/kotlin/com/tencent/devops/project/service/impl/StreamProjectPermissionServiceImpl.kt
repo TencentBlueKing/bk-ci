@@ -99,7 +99,9 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
         ).data ?: false
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) = Unit
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,

@@ -23,29 +23,14 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
 package com.tencent.devops.project.pojo.enums
 
-enum class ApproveStatus(val status: Int) {
-    // 创建审批中
-    CREATE_PENDING(1),
-
-    // 审批通过
-    CREATE_APPROVED(2),
-
-    // 创建中审批拒绝
-    CREATE_REJECT(3),
-
-    // 修改审批中
-    UPDATE_PENDING(4),
-
-    // 修改审批拒绝
-    UPDATE_REJECT(5),
-
-    // 修改审批通过
-    UPDATE_APPROVED(6),
-
-    // 取消创建
-    CANCEL_CREATE(7)
+enum class ProjectTipsStatus(val status: Int) {
+    NOT_SHOW(0),
+    SHOW_SUCCESSFUL_CREATE(1),
+    SHOW_SUCCESSFUL_UPDATE(2),
+    SHOW_UPDATE_REJECT(3);
 }

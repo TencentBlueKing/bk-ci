@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo
 
 import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -159,5 +160,9 @@ data class ProjectVO(
     @ApiModelProperty("项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
     @ApiModelProperty("是否权限私密")
-    val authSecrecy: Boolean?
+    val authSecrecy: Int?,
+    @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
+    val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
+    @ApiModelProperty("项目审批message")
+    val approvalMsg: String? = ""
 )

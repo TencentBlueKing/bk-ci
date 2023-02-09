@@ -62,6 +62,7 @@ import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -70,10 +71,12 @@ import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectExtService
 import com.tencent.devops.project.service.ProjectPermissionService
 import com.tencent.devops.project.service.ProjectService
@@ -104,7 +107,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     private val projectAuthServiceCode: ProjectAuthServiceCode,
     private val shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     private val objectMapper: ObjectMapper,
-    private val projectExtService: ProjectExtService
+    private val projectExtService: ProjectExtService,
+    private val projectApprovalService: ProjectApprovalService
 ) : ProjectService {
 
     override fun validate(validateType: ProjectValidateType, name: String, projectId: String?) {
@@ -181,10 +185,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
         } else {
-            ProjectApproveStatus.CREATE_APPROVED.status
+            ProjectApproveStatus.SUCCEED.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
-        logger.info("create project : subjectScopes = $subjectScopes")
         try {
             if (createExtInfo.needAuth!!) {
                 val authProjectCreateInfo = AuthProjectCreateInfo(
@@ -227,8 +230,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectId = projectId,
                     channelCode = projectChannel,
                     approvalStatus = approvalStatus,
-                    subjectScopesStr = subjectScopesStr,
-                    authSecrecy = projectCreateInfo.authSecrecy
+                    subjectScopesStr = subjectScopesStr
                 )
                 if (!needApproval) {
                     projectExtService.createExtProjectInfo(
@@ -304,9 +306,45 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     // 内部版独立实现
-    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?,
+        needTips: Boolean
+    ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record)
+        return if (needTips) {
+            val tipsStatus = getTipsStatus(userId = userId, projectId = englishName)
+            ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
+        } else {
+            ProjectUtils.packagingBean(record)
+        }
+    }
+
+    private fun getTipsStatus(userId: String, projectId: String): Int {
+        val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
+        with(projectApprovalInfo) {
+            val showTips = approvalStatus == ProjectApproveStatus.SUCCEED.status && updator == userId
+            // 只有第一次进来需要展示,后面再进来不需要再展示
+            if (showTips && (tipsStatus != ProjectTipsStatus.NOT_SHOW.status)) {
+                projectApprovalService.updateTipsStatus(
+                    projectId = projectId,
+                    tipsStatus = ProjectTipsStatus.NOT_SHOW.status
+                )
+            }
+            logger.info("get tips status:$showTips|$tipsStatus")
+            return if (showTips) {
+                tipsStatus
+            } else {
+                ProjectTipsStatus.NOT_SHOW.status
+            }
+        }
+    }
+
+    override fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO? {
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val projectApprovalInfo = projectApprovalService.get(englishName)
+        return ProjectUtils.packagingBean(record, projectApprovalInfo)
     }
 
     override fun getByEnglishName(englishName: String): ProjectVO? {
@@ -350,7 +388,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val approvalStatus = if (finalNeedApproval) {
                     ProjectApproveStatus.UPDATE_PENDING.status
                 } else {
-                    ProjectApproveStatus.UPDATE_APPROVED.status
+                    ProjectApproveStatus.SUCCEED.status
                 }
                 val projectId = projectInfo.projectId
                 val logoAddress = projectUpdateInfo.logoAddress
@@ -377,8 +415,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                             projectId = projectId,
                             projectUpdateInfo = projectUpdateInfo,
                             subjectScopesStr = subjectScopesStr,
-                            logoAddress = logoAddress,
-                            authSecrecy = projectUpdateInfo.authSecrecy
+                            logoAddress = logoAddress
                         )
                         projectDispatcher.dispatch(
                             ProjectUpdateBroadCastEvent(
@@ -870,18 +907,50 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            cancelCreateAuthProject(projectCode = projectInfo.englishName)
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = dslContext,
-                englishName = projectInfo.englishName,
-                approvalStatus = ProjectApproveStatus.CANCEL_CREATE.status
-            )
+            cancelCreateAuthProject(userId = userId, projectCode = projectInfo.englishName)
+            projectDao.delete(dslContext = dslContext, projectId = projectId)
         } catch (e: Exception) {
             logger.warn("The project cancel creation failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
                     defaultMessage = "The project cancel creation failed: ${projectInfo.englishName}"
+                )
+            )
+        }
+        return true
+    }
+
+    override fun cancelUpdateProject(userId: String, projectId: String): Boolean {
+        logger.info("$userId cancel update project($projectId)")
+        val projectInfo = projectDao.get(dslContext, projectId) ?: throw ErrorCodeException(
+            errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+            params = arrayOf(projectId),
+            defaultMessage = "project - $projectId is not exist!"
+        )
+        val status = projectInfo.approvalStatus
+        if (status != ProjectApproveStatus.UPDATE_PENDING.status) {
+            logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
+            throw ErrorCodeException(
+                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                params = arrayOf(projectId),
+                defaultMessage = "The project can be canceled only it under approval or " +
+                    "rejected during creation！| EnglishName=${projectInfo.englishName}"
+            )
+        }
+        try {
+            cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
+            projectDao.updateProjectStatusByEnglishName(
+                dslContext = dslContext,
+                englishName = projectInfo.englishName,
+                approvalStatus = ProjectApproveStatus.SUCCEED.status
+            )
+        } catch (e: Exception) {
+            logger.warn("The project cancel update failed: ${projectInfo.englishName}", e)
+            throw OperationException(
+                MessageCodeUtil.getCodeLanMessage(
+                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    defaultMessage = "The project cancel update failed: ${projectInfo.englishName}"
                 )
             )
         }
@@ -951,6 +1020,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     )
 
     abstract fun cancelCreateAuthProject(
+        userId: String,
+        projectCode: String
+    )
+
+    abstract fun cancelUpdateAuthProject(
+        userId: String,
         projectCode: String
     )
 
@@ -960,32 +1035,13 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         gradeManagerId: String
     ): Boolean
 
-    private fun getLogoAddress(
-        userId: String,
-        logo: InputStream?,
-        englishName: String
-    ): String? {
-        var logoFile: File? = null
-        var logoAddress: String? = null
-        if (logo != null) {
-            try {
-                logoFile = FileUtil.convertTempFile(logo)
-                logoAddress = saveLogoAddress(userId, englishName, logoFile)
-            } catch (e: Exception) {
-                logger.warn("fail update projectLogo", e)
-                throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.UPDATE_LOGO_FAIL))
-            } finally {
-                logoFile?.delete()
-            }
-        }
-        return logoAddress
-    }
-
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
+        // 项目tips默认展示时间
+        private const val DEFAULT_TIPS_SHOW_TIME = 7
     }
 }

@@ -40,6 +40,7 @@ import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.mq.ProjectUpdateBroadCastEvent
 import com.tencent.devops.project.pojo.mq.ProjectUpdateLogoBroadCastEvent
 import org.jooq.DSLContext
@@ -91,6 +92,24 @@ class ProjectApprovalService @Autowired constructor(
         )
     }
 
+    fun updateApprovalStatus(
+        userId: String,
+        projectId: String,
+        approvalStatus: Int
+    ): Int {
+        return projectApprovalDao.updateApprovalStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            userId = userId,
+            approvalStatus = approvalStatus
+        )
+    }
+
+    fun delete(userId: String, projectId: String) {
+        logger.info("delete project approval info:$projectId, $userId")
+        projectApprovalDao.delete(dslContext = dslContext, projectId = projectId)
+    }
+
     fun get(projectId: String): ProjectApprovalInfo? {
         return projectApprovalDao.getByEnglishName(dslContext = dslContext, englishName = projectId)
     }
@@ -109,13 +128,14 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
+                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                tipsStatus = ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.CREATE_APPROVED.status
+                approvalStatus = ProjectApproveStatus.SUCCEED.status
             )
             val projectCreateInfo = with(projectInfo) {
                 ProjectCreateInfo(
@@ -216,7 +236,8 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.UPDATE_APPROVED.status
+                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                tipsStatus = ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
             )
             projectDao.update(
                 dslContext = context,
@@ -224,8 +245,7 @@ class ProjectApprovalService @Autowired constructor(
                 projectId = projectInfo.projectId,
                 projectUpdateInfo = projectUpdateInfo,
                 subjectScopesStr = JsonUtil.toJson(projectUpdateInfo.subjectScopes!!),
-                logoAddress = logoAddress,
-                authSecrecy = projectUpdateInfo.authSecrecy
+                logoAddress = logoAddress
             )
             projectDispatcher.dispatch(
                 ProjectUpdateBroadCastEvent(
@@ -259,14 +279,23 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.UPDATE_REJECT.status
+                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                tipsStatus = ProjectTipsStatus.SHOW_UPDATE_REJECT.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.UPDATE_REJECT.status
+                approvalStatus = ProjectApproveStatus.SUCCEED.status
             )
         }
+    }
+
+    fun updateTipsStatus(projectId: String, tipsStatus: Int) {
+        projectApprovalDao.updateTipsStatus(
+            dslContext = dslContext,
+            projectId = projectId,
+            tipsStatus = tipsStatus
+        )
     }
 }

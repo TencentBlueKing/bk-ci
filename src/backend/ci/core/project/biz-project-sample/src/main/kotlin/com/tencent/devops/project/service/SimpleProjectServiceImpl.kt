@@ -70,7 +70,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     projectAuthServiceCode: ProjectAuthServiceCode,
     shardingRoutingRuleAssignService: ShardingRoutingRuleAssignService,
     objectMapper: ObjectMapper,
-    projectExtService: ProjectExtService
+    projectExtService: ProjectExtService,
+    projectApprovalService: ProjectApprovalService
 ) : AbsProjectServiceImpl(
     projectPermissionService = projectPermissionService,
     dslContext = dslContext,
@@ -83,7 +84,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
     projectAuthServiceCode = projectAuthServiceCode,
     shardingRoutingRuleAssignService = shardingRoutingRuleAssignService,
     objectMapper = objectMapper,
-    projectExtService = projectExtService
+    projectExtService = projectExtService,
+    projectApprovalService = projectApprovalService
 ) {
 
     override fun getDeptInfo(userId: String): UserDeptDetail {
@@ -150,8 +152,8 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) {
-        projectPermissionService.cancelCreateAuthProject(projectCode)
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(userId = userId, projectCode = projectCode)
     }
 
     override fun createRoleGroupApplication(
@@ -160,6 +162,10 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         gradeManagerId: String
     ): Boolean {
         return projectPermissionService.createRoleGroupApplication(userId, applicationInfo, gradeManagerId)
+    }
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
     }
 
     override fun createProjectUser(projectId: String, createInfo: ProjectCreateUserInfo): Boolean {

@@ -37,6 +37,8 @@ import com.tencent.devops.model.project.tables.records.TProjectApprovalRecord
 import com.tencent.devops.project.pojo.ProjectApprovalInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import java.time.LocalDateTime
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -66,6 +68,8 @@ class ProjectApprovalDao {
                 CENTER_NAME,
                 CREATOR,
                 CREATED_AT,
+                UPDATOR,
+                UPDATED_AT,
                 APPROVAL_STATUS,
                 LOGO_ADDR,
                 SUBJECT_SCOPES,
@@ -82,10 +86,12 @@ class ProjectApprovalDao {
                 projectCreateInfo.centerName,
                 userId,
                 LocalDateTime.now(),
+                userId,
+                LocalDateTime.now(),
                 approvalStatus,
                 projectCreateInfo.logoAddress ?: "",
                 JsonUtil.toJson(subjectScopes, false),
-                projectCreateInfo.authSecrecy ?: false
+                projectCreateInfo.authSecrecy ?: ProjectAuthSecrecyStatus.PUBLIC.value
             ).execute()
         }
     }
@@ -118,6 +124,31 @@ class ProjectApprovalDao {
         }
     }
 
+    fun updateApprovalStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        approvalStatus: Int
+    ): Int {
+        return with(TProjectApproval.T_PROJECT_APPROVAL) {
+            dslContext.update(this)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .where(ENGLISH_NAME.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String
+    ) {
+        return with(TProjectApproval.T_PROJECT_APPROVAL) {
+            dslContext.delete(this).where(ENGLISH_NAME.eq(projectId)).execute()
+        }
+    }
+
     fun getByEnglishName(dslContext: DSLContext, englishName: String): ProjectApprovalInfo? {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             val record =
@@ -130,14 +161,29 @@ class ProjectApprovalDao {
         dslContext: DSLContext,
         projectCode: String,
         approver: String,
-        approvalStatus: Int
+        approvalStatus: Int,
+        tipsStatus: Int = ProjectTipsStatus.NOT_SHOW.status
     ): Int {
         with(TProjectApproval.T_PROJECT_APPROVAL) {
             return dslContext.update(this)
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(APPROVER, approver)
                 .set(APPROVAL_TIME, LocalDateTime.now())
+                .set(TIPS_STATUS, tipsStatus)
                 .where(ENGLISH_NAME.eq(projectCode))
+                .execute()
+        }
+    }
+
+    fun updateTipsStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        tipsStatus: Int
+    ): Int {
+        with(TProjectApproval.T_PROJECT_APPROVAL) {
+            return dslContext.update(this)
+                .set(TIPS_STATUS, tipsStatus)
+                .where(ENGLISH_NAME.eq(projectId))
                 .execute()
         }
     }
@@ -165,7 +211,8 @@ class ProjectApprovalDao {
                 },
                 authSecrecy = authSecrecy,
                 approvalTime = approvalTime?.let { DateTimeUtil.toDateTime(it, "yyyy-MM-dd'T'HH:mm:ssZ") },
-                approver = approver
+                approver = approver,
+                tipsStatus = tipsStatus
             )
         }
     }

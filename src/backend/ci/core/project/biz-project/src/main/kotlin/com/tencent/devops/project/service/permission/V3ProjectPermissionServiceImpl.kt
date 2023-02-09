@@ -149,7 +149,9 @@ class V3ProjectPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) = Unit
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,

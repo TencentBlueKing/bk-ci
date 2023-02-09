@@ -35,6 +35,7 @@ import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
+import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -77,9 +78,22 @@ interface ProjectService {
     /**
      * 根据项目ID/英文ID获取项目信息对象
      * @param englishName projectCode 英文ID
+     * @param needTips 前端是否需要tips弹框,目前只有项目详情页需要
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO?
+    fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?,
+        needTips: Boolean = false
+    ): ProjectVO?
+
+    /**
+     * 根据项目ID/英文ID获取项目审批中对比信息
+     * @param englishName projectCode 英文ID
+     * @return ProjectDiffVO 如果没有则为null
+     */
+    fun diff(userId: String, englishName: String, accessToken: String?): ProjectDiffVO?
 
     /**
      * 根据项目ID/英文ID获取项目信息对象
@@ -191,6 +205,8 @@ interface ProjectService {
     fun updateProjectProperties(userId: String, projectCode: String, properties: ProjectProperties): Boolean
 
     fun cancelCreateProject(userId: String, projectId: String): Boolean
+
+    fun cancelUpdateProject(userId: String, projectId: String): Boolean
 
     fun applyToJoinProject(
         userId: String,

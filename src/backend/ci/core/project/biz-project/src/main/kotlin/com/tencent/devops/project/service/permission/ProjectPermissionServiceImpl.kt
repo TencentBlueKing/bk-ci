@@ -131,7 +131,9 @@ class ProjectPermissionServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) = Unit
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
+
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,

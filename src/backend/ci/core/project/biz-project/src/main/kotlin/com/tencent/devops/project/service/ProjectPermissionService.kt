@@ -33,6 +33,7 @@ import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 
+@Suppress("TooManyFunctions")
 interface ProjectPermissionService {
 
     /**
@@ -64,6 +65,12 @@ interface ProjectPermissionService {
     ): Boolean
 
     fun cancelCreateAuthProject(
+        userId: String,
+        projectCode: String
+    )
+
+    fun cancelUpdateAuthProject(
+        userId: String,
         projectCode: String
     )
 
