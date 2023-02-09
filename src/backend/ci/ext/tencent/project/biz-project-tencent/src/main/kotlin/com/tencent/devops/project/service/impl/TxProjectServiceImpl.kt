@@ -153,7 +153,7 @@ class TxProjectServiceImpl @Autowired constructor(
         accessToken: String?,
         needTips: Boolean
     ): ProjectVO? {
-        val projectVO = getInfoByEnglishName(englishName)
+        val projectVO = getInfoByEnglishName(userId = userId, englishName = englishName, needTips = needTips)
         if (projectVO == null) {
             logger.warn("The projectCode $englishName is not exist")
             return null
@@ -351,9 +351,14 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    fun getInfoByEnglishName(englishName: String): ProjectVO? {
+    fun getInfoByEnglishName(userId: String, englishName: String, needTips: Boolean): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return ProjectUtils.packagingBean(record)
+        return if (needTips) {
+            val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
+            ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
+        } else {
+            ProjectUtils.packagingBean(record)
+        }
     }
 
     override fun hasCreatePermission(userId: String): Boolean {
