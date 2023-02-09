@@ -183,10 +183,14 @@ class AtomStatisticsServiceImpl @Autowired constructor(
         val queryAtomComplianceInfo =
             atomStatisticsDao.queryAtomComplianceInfo(dslContext, atomCode, queryProjectInfoVO)
         if (queryAtomComplianceInfo.isNotEmpty) {
-            return ComplianceInfoDO(
-                (queryAtomComplianceInfo[0].get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?)?.toInt() ?: 0,
-                (queryAtomComplianceInfo[0].get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?)?.toInt() ?: 0
-            )
+            val failExecuteCount = queryAtomComplianceInfo[0].get(BK_FAIL_EXECUTE_COUNT) as? BigDecimal?
+            val failComplianceCount = queryAtomComplianceInfo[0].get(BK_FAIL_COMPLIANCE_COUNT) as? BigDecimal?
+            if (failExecuteCount != null && failComplianceCount != null) {
+                return ComplianceInfoDO(
+                    failExecuteCount.toInt(),
+                    failComplianceCount.toInt()
+                )
+            }
         }
         return null
     }
