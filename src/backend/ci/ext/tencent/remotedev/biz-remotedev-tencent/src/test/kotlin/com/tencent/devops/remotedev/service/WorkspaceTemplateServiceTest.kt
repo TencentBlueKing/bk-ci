@@ -39,7 +39,7 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         "Blank",
         "test",
         "tencent_ci",
-        "https://staticfile.woa.com/file/png/5e3f994d68c146aa8449f45684a4e5b35326787972629483044.png",
+        "",
         "test desc",
         "user00",
         LocalDateTime.parse("2023-01-03 00:27:16", formatter),

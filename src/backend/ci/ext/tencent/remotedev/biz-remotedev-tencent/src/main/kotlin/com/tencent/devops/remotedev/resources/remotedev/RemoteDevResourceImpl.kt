@@ -83,7 +83,11 @@ class RemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getWorkspaceDetail(signature: String, workspaceName: String, timestamp: String): Result<WorkspaceProxyDetail> {
+    override fun getWorkspaceDetail(
+        signature: String,
+        workspaceName: String,
+        timestamp: String
+    ): Result<WorkspaceProxyDetail> {
         if (!checkSignature(signature, workspaceName, timestamp)) {
             return Result(status = 403, message = "Forbidden request")
         }
