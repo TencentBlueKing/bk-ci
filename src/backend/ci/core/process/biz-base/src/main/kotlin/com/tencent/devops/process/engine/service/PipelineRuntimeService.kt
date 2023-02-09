@@ -890,7 +890,9 @@ class PipelineRuntimeService @Autowired constructor(
                         buildId = buildId,
                         matrixGroupId = container.id!!
                     )
+                    // 去掉要重试的矩阵内部数据
                     updateExistsTask.removeIf { it.containerId == container.id }
+                    updateExistsContainer.removeIf { it.matrixGroupId == container.id }
                 }
                 // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
