@@ -37,6 +37,7 @@ import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
@@ -180,18 +181,19 @@ class PermissionSubsetManagerService @Autowired constructor(
         subsetManagerId: String
     ): List<IamGroupInfoVo> {
         val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 10
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
         val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId.toInt(), pageInfoDTO)
         return iamGroupInfoList.results.map {
             IamGroupInfoVo(
-                id = it.id,
+                managerId = subsetManagerId.toInt(),
+                groupId = it.id,
                 name = it.name,
                 displayName = IamGroupUtils.getGroupDisplayName(it.name),
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )
-        }.sortedBy { it.id }
+        }.sortedBy { it.groupId }
     }
 }

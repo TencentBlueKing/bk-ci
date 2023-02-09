@@ -140,6 +140,20 @@ class RbacResourceApi(
         )
     }
 
+    override fun cancelUpdateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) {
+        client.get(ServicePermissionAuthResource::class).resourceCancelRelation(
+            token = tokenService.getSystemToken(null)!!,
+            resourceType = RbacAuthUtils.extResourceType(authResourceType = resourceType),
+            resourceCode = resourceCode,
+            projectCode = projectCode
+        )
+    }
+
     override fun createResource(
         scopeType: String,
         user: String,

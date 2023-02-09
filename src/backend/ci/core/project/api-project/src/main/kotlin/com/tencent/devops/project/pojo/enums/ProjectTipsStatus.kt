@@ -31,5 +31,6 @@ package com.tencent.devops.project.pojo.enums
 enum class ProjectTipsStatus(val status: Int) {
     NOT_SHOW(0),
     SHOW_SUCCESSFUL_CREATE(1),
-    SHOW_SUCCESSFUL_UPDATE(2);
+    SHOW_SUCCESSFUL_UPDATE(2),
+    SHOW_UPDATE_REJECT(3);
 }

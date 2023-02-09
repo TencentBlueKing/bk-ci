@@ -68,6 +68,8 @@ class ProjectApprovalDao {
                 CENTER_NAME,
                 CREATOR,
                 CREATED_AT,
+                UPDATOR,
+                UPDATED_AT,
                 APPROVAL_STATUS,
                 LOGO_ADDR,
                 SUBJECT_SCOPES,
@@ -82,6 +84,8 @@ class ProjectApprovalDao {
                 projectCreateInfo.deptName,
                 projectCreateInfo.centerId,
                 projectCreateInfo.centerName,
+                userId,
+                LocalDateTime.now(),
                 userId,
                 LocalDateTime.now(),
                 approvalStatus,
@@ -117,6 +121,31 @@ class ProjectApprovalDao {
                 .set(UPDATOR, userId)
                 .where(ENGLISH_NAME.eq(projectUpdateInfo.englishName))
                 .execute()
+        }
+    }
+
+    fun updateApprovalStatus(
+        dslContext: DSLContext,
+        projectId: String,
+        userId: String,
+        approvalStatus: Int
+    ): Int {
+        return with(TProjectApproval.T_PROJECT_APPROVAL) {
+            dslContext.update(this)
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .set(UPDATOR, userId)
+                .where(ENGLISH_NAME.eq(projectId))
+                .execute()
+        }
+    }
+
+    fun delete(
+        dslContext: DSLContext,
+        projectId: String
+    ) {
+        return with(TProjectApproval.T_PROJECT_APPROVAL) {
+            dslContext.delete(this).where(ENGLISH_NAME.eq(projectId)).execute()
         }
     }
 

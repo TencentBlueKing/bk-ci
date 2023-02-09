@@ -162,5 +162,7 @@ data class ProjectVO(
     @ApiModelProperty("是否权限私密")
     val authSecrecy: Int?,
     @ApiModelProperty("项目提示状态,0-不展示,1-展示创建成功,2-展示编辑成功")
-    val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status
+    val tipsStatus: Int? = ProjectTipsStatus.NOT_SHOW.status,
+    @ApiModelProperty("项目审批message")
+    val approvalMsg: String? = ""
 )

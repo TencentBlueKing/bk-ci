@@ -48,7 +48,7 @@ import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -187,7 +187,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .callbackId(callbackId)
                 .callbackUrl(itsmCreateCallBackUrl)
                 .content(itsmContentDTO)
-                .title("创建蓝盾项目申请")
+                .title("创建蓝盾项目${projectName}申请")
                 .build()
             logger.info("create grade manager application|$projectCode|$name|$callbackId|$itsmCreateCallBackUrl")
             val createGradeManagerApplication =
@@ -284,7 +284,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 .callbackId(callbackId)
                 .callbackUrl(itsmUpdateCallBackUrl)
                 .content(itsmContentDTO)
-                .title("修改蓝盾项目申请")
+                .title("修改蓝盾项目${projectName}申请")
                 .build()
             logger.info("update grade manager application|$projectCode|$name|$callbackId|$itsmUpdateCallBackUrl")
             val updateGradeManagerApplication =
@@ -304,14 +304,21 @@ class PermissionGradeManagerService @Autowired constructor(
         iamV2ManagerService.deleteManagerV2(gradeManagerId)
     }
 
-    fun cancelCreateGradeManager(callBackId: String): Boolean {
+    /**
+     * 驳回取消申请
+     */
+    fun rejectCancelApplication(callBackId: String): Boolean {
         return iamV2ManagerService.cancelCallbackApplication(callBackId)
     }
 
-    fun cancelCreateGradeManagerByEnglishName(projectCode: String): Boolean {
+    /**
+     * 用户主动取消申请
+     */
+    fun userCancelApplication(projectCode: String): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
                 ?: return true
+        // TODO 调用itsm接口取消申请
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
     }
@@ -320,8 +327,8 @@ class PermissionGradeManagerService @Autowired constructor(
         gradeManagerId: String
     ): List<IamGroupInfoVo> {
         val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 10
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
             null,
@@ -329,13 +336,14 @@ class PermissionGradeManagerService @Autowired constructor(
         )
         return iamGroupInfoList.results.map {
             IamGroupInfoVo(
-                id = it.id,
+                managerId = gradeManagerId.toInt(),
+                groupId = it.id,
                 name = it.name,
                 displayName = IamGroupUtils.getGroupDisplayName(it.name),
                 userCount = it.userCount,
                 departmentCount = it.departmentCount
             )
-        }.sortedBy { it.id }
+        }.sortedBy { it.groupId }
     }
 
     fun handleItsmCreateCallback(
@@ -429,8 +437,12 @@ class PermissionGradeManagerService @Autowired constructor(
         value["organization"] = ItsmStyle.builder().value(organization).build()
         value["authSecrecy"] =
             ItsmStyle.builder().value(ProjectAuthSecrecyStatus.getStatus(authSecrecy)?.desc ?: "").build()
-        value["subjectScopes"] = ItsmStyle.builder().value(JsonUtil.toJson(subjectScopes)).build()
-        val itsmValue = ItsmValue.builder().scheme("content_table").lable("项目创建审批").value(listOf(value)).build()
+        value["subjectScopes"] = ItsmStyle.builder().value(subjectScopes.joinToString(",") { it.name }).build()
+        val itsmValue = ItsmValue.builder()
+            .scheme("content_table")
+            .lable("创建项目${projectName}审批")
+            .value(listOf(value))
+            .build()
         return ItsmContentDTO.builder().formData(Arrays.asList(itsmValue)).schemes(scheme).build()
     }
 }

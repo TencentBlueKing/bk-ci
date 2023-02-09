@@ -149,7 +149,11 @@ class RbacProjectPermissionService(
         return emptyMap()
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) {
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectApprovalService.delete(
+            userId = userId,
+            projectId = projectCode
+        )
         authResourceApi.cancelCreateResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
@@ -158,7 +162,19 @@ class RbacProjectPermissionService(
         )
     }
 
-    override fun cancelUpdateAuthProject(projectCode: String) = Unit
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectApprovalService.updateApprovalStatus(
+            userId = userId,
+            projectId = projectCode,
+            approvalStatus = ProjectApproveStatus.SUCCEED.status
+        )
+        authResourceApi.cancelUpdateResource(
+            serviceCode = projectAuthServiceCode,
+            resourceType = AuthResourceType.PROJECT,
+            projectCode = projectCode,
+            resourceCode = projectCode
+        )
+    }
 
     override fun createRoleGroupApplication(
         userId: String,

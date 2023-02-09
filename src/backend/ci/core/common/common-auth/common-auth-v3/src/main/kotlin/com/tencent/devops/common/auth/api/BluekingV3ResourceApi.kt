@@ -159,6 +159,13 @@ class BluekingV3ResourceApi @Autowired constructor(
         resourceCode: String
     ) = Unit
 
+    override fun cancelUpdateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
+
     override fun batchCreateResource(
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,

@@ -286,6 +286,13 @@ class BkAuthResourceApi constructor(
         resourceCode: String
     ) = Unit
 
+    override fun cancelUpdateResource(
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        resourceCode: String
+    ) = Unit
+
     // 批量删除资源权限
     private fun batchDeleteResource(
         scopeType: String,
