@@ -64,4 +64,13 @@ class PermissionService @Autowired constructor(
             throw CustomException(Response.Status.FORBIDDEN, "拒绝访问")
         }
     }
+
+    fun checkUserPermission(userId: String, workspaceName: String): Boolean {
+        if (!enablePermission) return true
+
+        if (!projectUserCache.get(workspaceName).contains(userId)) {
+            return false
+        }
+        return true
+    }
 }

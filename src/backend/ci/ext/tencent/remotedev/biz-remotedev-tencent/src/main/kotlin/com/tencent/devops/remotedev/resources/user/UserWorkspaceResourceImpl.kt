@@ -39,6 +39,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.GitTransferService
+import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
 import com.tencent.devops.repository.pojo.AuthorizeResult
@@ -50,7 +51,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class UserWorkspaceResourceImpl @Autowired constructor(
     private val gitTransferService: GitTransferService,
     private val workspaceService: WorkspaceService,
-    private val redisHeartBeat: RedisHeartBeat
+    private val redisHeartBeat: RedisHeartBeat,
+    private val permissionService: PermissionService
 ) : UserWorkspaceResource {
 
     override fun createWorkspace(userId: String, workspace: WorkspaceCreate): Result<WorkspaceResponse> {
@@ -163,5 +165,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun workspaceHeartbeat(userId: String, workspaceName: String): Result<Boolean> {
         redisHeartBeat.refreshHeartbeat(workspaceName)
         return Result(true)
+    }
+
+    override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
+        return Result( permissionService.checkUserPermission(userId, workspaceName))
     }
 }
