@@ -260,8 +260,8 @@ interface UserWorkspaceResource {
     ): Result<Boolean>
 
     @ApiOperation("校验用户操作工作空间权限")
-    @POST
-    @Path("/")
+    @GET
+    @Path("/checkPermission")
     fun checkUserPermission(
         @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_USER_ID)
