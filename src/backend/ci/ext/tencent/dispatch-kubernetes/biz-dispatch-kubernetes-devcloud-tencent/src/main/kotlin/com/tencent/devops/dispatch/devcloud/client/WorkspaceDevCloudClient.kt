@@ -287,7 +287,6 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境列表接口异常: ${response.code()}"
                     )
                 }
-                
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
                 if (200 == environmentListRsp.code) {
                     return environmentListRsp.data
