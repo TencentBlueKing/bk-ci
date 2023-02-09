@@ -118,6 +118,9 @@ data class ProjectVO(
     @ApiModelProperty("修改时间")
     // @JsonProperty("updated_at")
     val updatedAt: String?,
+    @ApiModelProperty("修改人")
+    // @JsonProperty("updated_at")
+    val updator: String?,
     @ApiModelProperty("useBK")
     // @JsonProperty("use_bk")
     val useBk: Boolean?,
