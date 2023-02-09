@@ -100,6 +100,8 @@ data class ProjectDiffVO(
     @ApiModelProperty("修改时间")
     // @JsonProperty("updated_at")
     val updatedAt: String?,
+    @ApiModelProperty("修改人")
+    val updator: String?,
     @ApiModelProperty("项目最大可授权人员范围")
     val subjectScopes: List<SubjectScopeInfo>?,
     @ApiModelProperty("审批中的项目最大可授权人员范围")

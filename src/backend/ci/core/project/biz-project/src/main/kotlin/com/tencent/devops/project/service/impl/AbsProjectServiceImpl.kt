@@ -321,7 +321,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    private fun getTipsStatus(userId: String, projectId: String): Int {
+    protected fun getTipsStatus(userId: String, projectId: String): Int {
         val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
         with(projectApprovalInfo) {
             val showTips = approvalStatus == ProjectApproveStatus.SUCCEED.status && updator == userId
@@ -403,6 +403,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 if (finalNeedApproval) {
                     projectDao.updateProjectStatusByEnglishName(
                         dslContext = dslContext,
+                        userId = userId,
                         englishName = englishName,
                         approvalStatus = ProjectApproveStatus.UPDATE_PENDING.status
                     )
@@ -942,6 +943,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
+                userId = userId,
                 englishName = projectInfo.englishName,
                 approvalStatus = ProjectApproveStatus.SUCCEED.status
             )

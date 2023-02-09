@@ -82,6 +82,7 @@ object ProjectUtils {
             kind = tProjectRecord.kind,
             logoAddr = tProjectRecord.logoAddr ?: "",
             remark = tProjectRecord.remark ?: "",
+            updator = tProjectRecord.updator,
             updatedAt = if (tProjectRecord.updatedAt == null) {
                 ""
             } else {
@@ -142,6 +143,7 @@ object ProjectUtils {
             logoAddr = tProjectRecord.logoAddr ?: "",
             afterLogoAddr = projectApprovalInfo?.logoAddr ?: tProjectRecord.logoAddr ?: "",
             remark = tProjectRecord.remark ?: "",
+            updator = tProjectRecord.updator,
             updatedAt = if (tProjectRecord.updatedAt == null) {
                 ""
             } else {

@@ -724,12 +724,16 @@ class ProjectDao {
 
     fun updateProjectStatusByEnglishName(
         dslContext: DSLContext,
+        userId: String,
         englishName: String,
         approvalStatus: Int
     ): Int {
         with(TProject.T_PROJECT) {
             return dslContext.update(this)
-                .set(APPROVAL_STATUS, approvalStatus).where(ENGLISH_NAME.eq(englishName))
+                .set(APPROVAL_STATUS, approvalStatus)
+                .set(UPDATOR, userId)
+                .set(UPDATED_AT, LocalDateTime.now())
+                .where(ENGLISH_NAME.eq(englishName))
                 .execute()
         }
     }
