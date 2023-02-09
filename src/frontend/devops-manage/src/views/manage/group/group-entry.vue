@@ -4,6 +4,7 @@
     :resource-code="projectCode"
     :project-code="projectCode"
     :group-list="groupList"
+    :is-loading="isLoading"
     :member-group-list="memberGroupList"
     :iam-iframe-path="iamIframePath"
     :has-permission="hasPermission"
@@ -32,6 +33,7 @@ export default {
       resourceType: 'project',
       groupList: [],
       memberGroupList: [],
+      isLoading: false,
     };
   },
 
@@ -59,6 +61,7 @@ export default {
      * 是否为资源的管理员
      */
     fetchHasManagerPermission() {
+      this.isLoading = true;
       const {
         projectCode,
         resourceType,
@@ -71,12 +74,15 @@ export default {
         resourceCode,
       }).then((res) => {
         this.hasPermission = res;
+      }).finally(() => {
+        this.isLoading = false;
       });
     },
     /**
      * 是否开启了权限管理
      */
     fetchEnablePermission() {
+      this.isLoading = true;
       const {
         projectCode,
         resourceType,
@@ -91,6 +97,8 @@ export default {
         })
         .then((res) => {
           this.isEnablePermission = res;
+        }).finally(() => {
+          this.isLoading = false;
         });
     },
     /**

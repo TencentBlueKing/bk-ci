@@ -10,10 +10,12 @@ export default async (response: Response, config: IFetchConfig) => {
   } = await response[config.responseType]();
   if (response.ok) {
     // 对应 HTTP 请求的状态码 200 到 299
-    // 校验接口返回的数据，status 为 0 表示业务成功
+    // 校验接口返回的数据，status 为 0 200 表示业务成功
     switch (status) {
       // 接口请求成功
       case 0:
+        return Promise.resolve(data);
+      case 200:
         return Promise.resolve(data);
       // 后端业务处理报错
       default:

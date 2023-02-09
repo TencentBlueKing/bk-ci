@@ -52,7 +52,7 @@ const handleChangeMenu = (menu: any) => {
           position="top-right"
           theme="danger"
           dot
-          :visible="false"
+          :visible="true"
           style="margin: 0 18px 0 25px"
         >
           <i class="permission-icon permission-icon-app-store-fill"></i>

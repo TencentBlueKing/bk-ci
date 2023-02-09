@@ -26,3 +26,21 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-app-store-fill:before {
 	content: "\e101";
 }
+.permission-icon-search:before {
+	content: "\e102";
+}
+.permission-icon-close:before {
+	content: "\e103";
+}
+.permission-icon-angle-right:before {
+	content: "\e104";
+}
+.permission-icon-close-circle-shape:before {
+	content: "\e105";
+}
+.permission-icon-close-samll:before {
+	content: "\e106";
+}
+.permission-icon-review:before {
+	content: "\e107";
+}

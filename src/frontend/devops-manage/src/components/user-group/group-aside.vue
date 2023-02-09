@@ -1,40 +1,42 @@
 <template>
   <article class="group-aside">
     <section class="group-list">
-      <div
-        :class="{ 'group-item': true, 'group-active': activeTab === group.name }"
-        v-for="(group, index) in groupList"
-        :key="index"
-        @click="handleChangeTab(group)">
-        <span class="group-name" :title="group.name">{{ group.name }}</span>
-        <span class="user-num">
-          <i class="manage-icon small-size manage-icon-user-shape"></i>
-          {{ group.userCount }}
-        </span>
-        <span class="group-num">
-          <i class="manage-icon small-size manage-icon-user-shape"></i>
-          {{ group.departmentCount }}
-        </span>
-        <bk-popover
-          v-if="resourceType === 'project'"
-          class="group-more-option"
-          placement="bottom"
-          theme="dot-menu light"
-          :arrow="false"
-          offset="15"
-          :distance="0">
-          <i class="more-icon manage-icon manage-icon-more-fill"></i>
-          <template #content>
-            <bk-button
-              class="btn"
-              :disabled="[1, 2].includes(group.id)"
-              text
-              @click="handleShowDeleteGroup(group)">
-              {{ $t('删除') }}
-            </bk-button>
-          </template>
-        </bk-popover>
-      </div>
+      <bk-loading :style="{ 'min-height': '100px' }" :loading="!groupList.length">
+        <div
+          :class="{ 'group-item': true, 'group-active': activeTab === group.name }"
+          v-for="(group, index) in groupList"
+          :key="index"
+          @click="handleChangeTab(group)">
+          <span class="group-name" :title="group.name">{{ group.name }}</span>
+          <span class="user-num">
+            <i class="manage-icon small-size manage-icon-user-shape"></i>
+            {{ group.userCount }}
+          </span>
+          <span class="group-num">
+            <i class="manage-icon small-size manage-icon-user-shape"></i>
+            {{ group.departmentCount }}
+          </span>
+          <bk-popover
+            v-if="resourceType === 'project'"
+            class="group-more-option"
+            placement="bottom"
+            theme="dot-menu light"
+            :arrow="false"
+            offset="15"
+            :distance="0">
+            <i class="more-icon manage-icon manage-icon-more-fill"></i>
+            <template #content>
+              <bk-button
+                class="btn"
+                :disabled="[1, 2].includes(group.id)"
+                text
+                @click="handleShowDeleteGroup(group)">
+                {{ $t('删除') }}
+              </bk-button>
+            </template>
+          </bk-popover>
+        </div>
+      </bk-loading>
       <div class="line-split" />
       <div
         :class="{ 'group-item': true, 'group-active': activeTab === '' }"

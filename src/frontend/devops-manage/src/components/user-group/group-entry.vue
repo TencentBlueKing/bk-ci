@@ -1,29 +1,31 @@
 <template>
-  <article class="group-wrapper">
-    <!-- 管理员 -->
-    <template v-if="hasPermission">
-      <div
-        v-if="isEnablePermission"
-        class="group-manage"
-      >
-        <group-aside
-          v-bind="$props"
-          :delete-group="handleDeleteGroup"
-          @choose-group="handleChooseGroup"
-          @create-group="handleCreateGroup"
-          @update-enable="handelUpdateEnable"
-        />
-        <iam-iframe
-          class="group-frame"
-          :path="path"
-        />
-      </div>
-      <!-- 普通成员 -->
-      <group-table v-else v-bind="$props" />
+  <bk-loading :loading="isLoading" class="group-wrapper">
+    <template v-if="!isLoading">
+      <!-- 管理员 -->
+      <template v-if="hasPermission">
+        <div
+          v-if="isEnablePermission"
+          class="group-manage"
+        >
+          <group-aside
+            v-bind="$props"
+            :delete-group="handleDeleteGroup"
+            @choose-group="handleChooseGroup"
+            @create-group="handleCreateGroup"
+            @update-enable="handelUpdateEnable"
+          />
+          <iam-iframe
+            class="group-frame"
+            :path="path"
+          />
+        </div>
+        <!-- 普通成员 -->
+        <group-table v-else v-bind="$props" />
+      </template>
+      <!-- 未开启权限管理 -->
+      <not-open-manage v-else-if="!hasPermission" v-bind="$props" />
     </template>
-    <!-- 未开启权限管理 -->
-    <not-open-manage v-else v-bind="$props" />
-  </article>
+  </bk-loading>
 </template>
 
 <script>
@@ -88,6 +90,10 @@ export default {
       type: Function,
       default: () => {},
     },
+    isLoading: {
+      type: Boolean,
+      default: false,
+    }
   },
 
   emits: ['delete-group'],
@@ -117,7 +123,7 @@ export default {
 
   methods: {
     handleChooseGroup(payload) {
-      this.path = `user-group-detail/${payload.id}`;
+      this.path = `user-group-detail/${payload.id}?role_id=${payload.managerId}`;
     },
 
     handleCreateGroup() {

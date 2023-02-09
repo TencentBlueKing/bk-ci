@@ -69,6 +69,7 @@ const goToUrl = (url) => {
 }
 .bk-breadcrumb-item {
   :deep(.nav-item) {
+    cursor: pointer;
     color: #3A84FF;
   }
   :deep(.bk-breadcrumb-item-inner) {
