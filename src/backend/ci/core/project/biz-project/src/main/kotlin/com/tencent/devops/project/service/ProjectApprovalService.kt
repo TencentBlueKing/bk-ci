@@ -68,12 +68,18 @@ class ProjectApprovalService @Autowired constructor(
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>
     ): Int {
+        val tipsStatus = if (approvalStatus == ProjectApproveStatus.CREATE_PENDING.status) {
+            ProjectTipsStatus.SHOW_CREATE_PENDING.status
+        } else {
+            ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
+        }
         return projectApprovalDao.create(
             dslContext = dslContext,
             userId = userId,
             projectCreateInfo = projectCreateInfo,
             approvalStatus = approvalStatus,
-            subjectScopes = subjectScopes
+            subjectScopes = subjectScopes,
+            tipsStatus = tipsStatus
         )
     }
 
@@ -83,25 +89,35 @@ class ProjectApprovalService @Autowired constructor(
         approvalStatus: Int,
         subjectScopes: List<SubjectScopeInfo>
     ): Int {
+        val tipsStatus = if (approvalStatus == ProjectApproveStatus.UPDATE_PENDING.status) {
+            ProjectTipsStatus.SHOW_UPDATE_PENDING.status
+        } else {
+            ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
+        }
         return projectApprovalDao.update(
             dslContext = dslContext,
             userId = userId,
             projectUpdateInfo = projectUpdateInfo,
             approvalStatus = approvalStatus,
-            subjectScopes = subjectScopes
+            subjectScopes = subjectScopes,
+            tipsStatus = tipsStatus
         )
     }
 
-    fun updateApprovalStatus(
+    /**
+     * 用户主动更新审批状态，如取消
+     */
+    fun cancelUpdate(
         userId: String,
         projectId: String,
         approvalStatus: Int
     ): Int {
-        return projectApprovalDao.updateApprovalStatus(
+        return projectApprovalDao.updateApprovalStatusByUser(
             dslContext = dslContext,
             projectId = projectId,
             userId = userId,
-            approvalStatus = approvalStatus
+            approvalStatus = approvalStatus,
+            tipsStatus = ProjectTipsStatus.NOT_SHOW.status
         )
     }
 
@@ -124,7 +140,7 @@ class ProjectApprovalService @Autowired constructor(
             )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            projectApprovalDao.updateApprovalStatus(
+            projectApprovalDao.updateApprovalStatusByCallback(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
@@ -179,11 +195,12 @@ class ProjectApprovalService @Autowired constructor(
         )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            projectApprovalDao.updateApprovalStatus(
+            projectApprovalDao.updateApprovalStatusByCallback(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.CREATE_REJECT.status
+                approvalStatus = ProjectApproveStatus.CREATE_REJECT.status,
+                tipsStatus = ProjectTipsStatus.SHOW_CREATE_REJECT.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
@@ -232,7 +249,7 @@ class ProjectApprovalService @Autowired constructor(
         val logoAddress = projectUpdateInfo.logoAddress
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            projectApprovalDao.updateApprovalStatus(
+            projectApprovalDao.updateApprovalStatusByCallback(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
@@ -275,7 +292,7 @@ class ProjectApprovalService @Autowired constructor(
         )
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
-            projectApprovalDao.updateApprovalStatus(
+            projectApprovalDao.updateApprovalStatusByCallback(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,

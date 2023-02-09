@@ -163,7 +163,7 @@ class RbacProjectPermissionService(
     }
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
-        projectApprovalService.updateApprovalStatus(
+        projectApprovalService.cancelUpdate(
             userId = userId,
             projectId = projectCode,
             approvalStatus = ProjectApproveStatus.SUCCEED.status

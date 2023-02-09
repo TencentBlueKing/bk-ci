@@ -336,21 +336,20 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
         val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
-        with(projectApprovalInfo) {
-            val showTips = approvalStatus == ProjectApproveStatus.SUCCEED.status && updator == userId
+        return with(projectApprovalInfo) {
+            // 项目创建成功和编辑审批成功,只有第一次进入页面需要展示tips,后面都不需要展示
+            val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.SUCCEED.status &&
+                updator == userId &&
+                tipsStatus != ProjectTipsStatus.NOT_SHOW.status
             // 只有第一次进来需要展示,后面再进来不需要再展示
-            if (showTips && (tipsStatus != ProjectTipsStatus.NOT_SHOW.status)) {
+            if (needUpdateTipsStatus) {
+                logger.info("update project tips status|$userId|$projectId")
                 projectApprovalService.updateTipsStatus(
                     projectId = projectId,
                     tipsStatus = ProjectTipsStatus.NOT_SHOW.status
                 )
             }
-            logger.info("get tips status:$showTips|$tipsStatus")
-            return if (showTips) {
-                tipsStatus
-            } else {
-                ProjectTipsStatus.NOT_SHOW.status
-            }
+            tipsStatus
         }
     }
 
