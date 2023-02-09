@@ -10,6 +10,7 @@ import io.mockk.spyk
 import org.apache.commons.lang3.reflect.MethodUtils
 import org.jooq.DSLContext
 import org.jooq.Record
+import org.jooq.Result
 import org.jooq.SQLDialect
 import org.jooq.Table
 import org.jooq.impl.DSL
