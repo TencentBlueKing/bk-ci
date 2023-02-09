@@ -30,8 +30,6 @@ allprojects {
         setApplyMavenExclusions(false)
         dependencies {
             dependency("org.json:json:${Versions.orgJson}")
-            dependency("org.mockito:mockito-all:${Versions.Mockito}")
-            dependency("com.nhaarman:mockito-kotlin-kt1.1:${Versions.MockitoKt}")
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.Jaxrs}")
             dependency("org.bouncycastle:bcprov-jdk15on:${Versions.BouncyCastle}")
             dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
@@ -110,6 +108,8 @@ allprojects {
                 entry("pinyin-plus")
             }
             dependency("com.perforce:p4java:${Versions.p4}")
+            dependency("com.fasterxml.jackson.datatype:jackson-datatype-jsr310:${Versions.JacksonDatatypeJsr}")
+            dependency("io.mockk:mockk:${Versions.mockk}")
             dependencySet("io.github.resilience4j:${Versions.Resilience4j}") {
                 entry("resilience4j-circuitbreaker")
             }

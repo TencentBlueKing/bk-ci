@@ -38,3 +38,7 @@ dependencies:
   version: 10.10.2
   repository: https://charts.bitnami.com/bitnami
   condition: mongodb.enabled
+- name: kubernetes-manager
+  version: 0.0.36
+  repository: https://charts.bitnami.com/bitnami
+  condition: kubernetes-manager.enabled

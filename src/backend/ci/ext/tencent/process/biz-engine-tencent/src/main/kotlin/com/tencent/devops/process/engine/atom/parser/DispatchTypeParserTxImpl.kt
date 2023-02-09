@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
@@ -43,12 +41,13 @@ import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
-import com.tencent.devops.common.pipeline.type.idc.IDCDispatchType
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -105,16 +104,12 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
                             false, dispatchType.performanceConfigId)
                         dispatchType.image = JsonUtil.toJson(pool)
-                    } else if (dispatchType is IDCDispatchType) {
-                        dispatchType.image = dispatchType.value.removePrefix("paas/")
                     }
                 } else {
                     // 第三方镜像
                     if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的第三方源镜像，带凭证
                         genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
-                    } else if (dispatchType is IDCDispatchType) {
-                        dispatchType.image = dispatchType.value
                     } else {
                         dispatchType.dockerBuildVersion = dispatchType.value
                     }

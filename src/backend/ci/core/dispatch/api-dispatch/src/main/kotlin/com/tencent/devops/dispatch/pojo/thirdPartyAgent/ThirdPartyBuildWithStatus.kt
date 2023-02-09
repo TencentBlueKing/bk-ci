@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
+import com.tencent.devops.common.api.pojo.Error
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -45,5 +46,7 @@ data class ThirdPartyBuildWithStatus(
     @ApiModelProperty("是否成功")
     val success: Boolean,
     @ApiModelProperty("message信息")
-    val message: String?
+    val message: String?,
+    @ApiModelProperty("错误信息")
+    val error: Error?
 )

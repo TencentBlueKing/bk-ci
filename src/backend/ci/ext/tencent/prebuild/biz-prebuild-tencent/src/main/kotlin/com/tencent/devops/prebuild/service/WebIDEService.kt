@@ -50,14 +50,14 @@ import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.NodeType
-import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
-import com.tencent.devops.prebuild.pojo.IDEInfo
 import com.tencent.devops.prebuild.pojo.DevcloudUserRes
+import com.tencent.devops.prebuild.pojo.IDEInfo
 import com.tencent.devops.prebuild.pojo.UserResItem
+import com.tencent.devops.prebuild.pojo.ide.IdeDirInfo
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.user.UserPipelineResource
@@ -72,7 +72,6 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.StringBuilder
 import java.text.SimpleDateFormat
 import java.util.concurrent.Executors
 
@@ -367,7 +366,7 @@ class WebIDEService @Autowired constructor(
                 thirdPartyWorkspace = null,
                 dockerBuildVersion = null,
                 tstackAgentId = null,
-                dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID)
+                dispatchType = ThirdPartyAgentIDDispatchType(agentId, null, AgentType.ID, null)
         )
         val stage2 = Stage(listOf(vmContainer), "stage-2")
         stageList.add(stage2)

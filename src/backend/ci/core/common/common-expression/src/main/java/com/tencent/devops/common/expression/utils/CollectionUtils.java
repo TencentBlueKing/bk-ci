@@ -16,9 +16,8 @@
 
 package com.tencent.devops.common.expression.utils;
 
-import org.jetbrains.annotations.Nullable;
-
 import java.util.Collection;
+import org.jetbrains.annotations.Nullable;
 
 @SuppressWarnings("all")
 public abstract class CollectionUtils {

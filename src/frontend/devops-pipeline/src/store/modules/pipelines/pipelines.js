@@ -50,7 +50,16 @@ const state = {
     hasCreatePermission: false,
     pipelineSetting: {},
     projectGroupAndUsers: [],
-    pipelineAuthority: {}
+    pipelineAuthority: {},
+    pipelineActionState: {
+        activePipeline: null,
+        isConfirmShow: false,
+        confirmType: '',
+        activePipelineList: [],
+        isSaveAsTemplateShow: false,
+        isCopyDialogShow: false,
+        addToDialogShow: false
+    }
 }
 
 const getters = {
@@ -207,6 +216,9 @@ const mutations = {
      */
     updateCurAtomPrams (state, res) {
         state.curPipelineAtomParams = res
+    },
+    updatePipelineActionState (state, params) {
+        Object.assign(state.pipelineActionState, params)
     }
 }
 
@@ -352,7 +364,7 @@ const actions = {
     },
     searchPipelineList ({ commit, state, dispatch }, { projectId, searchName = '' }) {
         const url = `/${PROCESS_API_URL_PREFIX}/user/pipelineInfos/${projectId}/searchByName?pipelineName=${encodeURIComponent(searchName)}`
-        
+
         return ajax.get(url).then(response => {
             return response.data
         })
@@ -363,20 +375,13 @@ const actions = {
             return response.data
         })
     },
-    requestAllPipelinesListByFilter ({ commit, state, dispatch }, data) {
-        const projectId = data.projectId
-        const viewId = data.viewId
-        let url = `${prefix}projects/${projectId}/listViewPipelines?viewId=${viewId}`
-        let str = ''
-        for (const obj in data) {
-            if (obj !== 'viewId' && data[obj]) {
-                str += `&${obj}=${data[obj]}`
-            }
-        }
-        url += str
-        return ajax.get(url).then(response => {
-            return response.data
+    async requestAllPipelinesListByFilter ({ commit }, body) {
+        const { projectId, ...query } = body
+        const url = `${prefix}projects/${projectId}/listViewPipelines`
+        const { data } = await ajax.get(url, {
+            params: query
         })
+        return data
     },
     /**
      * 获取流水线最近构建状态
@@ -408,6 +413,11 @@ const actions = {
     deletePipeline ({ commit, state, dispatch }, { projectId, pipelineId }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}`).then(response => {
             return response.data
+        })
+    },
+    patchDeletePipelines (_ctx, body) {
+        return ajax.delete(`${prefix}batchDelete`, {
+            data: body
         })
     },
     /**
@@ -546,6 +556,11 @@ const actions = {
     // 删除流水线历史版本
     deletePipelineVersion (_, { projectId, pipelineId, version }) {
         return ajax.delete(`${prefix}${projectId}/${pipelineId}/${version}`)
+    },
+    renamePipeline (_, { projectId, pipelineId, name }) {
+        return ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}`, {
+            name
+        })
     }
 }
 

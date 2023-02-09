@@ -8,16 +8,15 @@ import com.tencent.devops.openapi.api.apigw.v4.ApigwStreamResourceV4
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
-import com.tencent.devops.stream.api.service.v1.GitCIDetailResource
-import com.tencent.devops.stream.api.service.v1.GitCIHistoryResource
-import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.api.service.ServiceGitCIProjectResource
 import com.tencent.devops.stream.api.service.ServiceStreamTriggerResource
+import com.tencent.devops.stream.api.service.v1.GitCIDetailResource
+import com.tencent.devops.stream.api.service.v1.GitCIHistoryResource
+import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
 import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
-import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.GitCIBasicSetting
 import com.tencent.devops.stream.pojo.openapi.GitCIProjectType
@@ -25,6 +24,7 @@ import com.tencent.devops.stream.pojo.openapi.GitCIUpdateSetting
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateRequest
 import com.tencent.devops.stream.pojo.openapi.GitUserValidateResult
 import com.tencent.devops.stream.pojo.openapi.ProjectCIInfo
+import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.pojo.V1GitCIModelDetail

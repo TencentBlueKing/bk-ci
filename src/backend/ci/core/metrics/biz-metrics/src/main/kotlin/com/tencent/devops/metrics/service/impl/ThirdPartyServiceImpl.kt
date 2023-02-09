@@ -33,13 +33,13 @@ import com.tencent.devops.metrics.constant.Constants.BK_REPO_CODECC_AVG_SCORE
 import com.tencent.devops.metrics.constant.Constants.BK_RESOLVED_DEFECT_NUM
 import com.tencent.devops.metrics.constant.Constants.BK_TURBO_SAVE_TIME
 import com.tencent.devops.metrics.dao.ThirdPartyOverviewInfoDao
-import com.tencent.devops.metrics.service.ThirdPartyManageService
 import com.tencent.devops.metrics.pojo.`do`.CodeCheckInfoDO
 import com.tencent.devops.metrics.pojo.`do`.QualityInfoDO
 import com.tencent.devops.metrics.pojo.`do`.TurboInfoDO
 import com.tencent.devops.metrics.pojo.dto.QueryPipelineSummaryInfoDTO
 import com.tencent.devops.metrics.pojo.qo.ThirdPartyOverviewInfoQO
 import com.tencent.devops.metrics.pojo.vo.ThirdPlatformOverviewInfoVO
+import com.tencent.devops.metrics.service.ThirdPartyManageService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -78,7 +78,7 @@ class ThirdPartyServiceImpl @Autowired constructor(
         val qualityInterceptionRate =
             if (executeNum == null || interceptionCount == null || executeNum == 0) null
         else {
-            if (executeNum == interceptionCount) 0.0
+            if (executeNum == interceptionCount) 100.0
             else String.format("%.2f", interceptionCount.toDouble() * 100 / executeNum.toDouble()).toDouble()
         }
             return ThirdPlatformOverviewInfoVO(

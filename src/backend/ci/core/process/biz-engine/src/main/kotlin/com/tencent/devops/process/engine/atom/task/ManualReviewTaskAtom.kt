@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.agent.ManualReviewUserTaskElement
@@ -127,7 +127,7 @@ class ManualReviewTaskAtom(
                 source = "ManualReviewTaskAtom", projectId = projectCode, pipelineId = pipelineId,
                 userId = task.starter, buildId = buildId,
                 receivers = reviewUsers.split(","),
-                notifyType = checkNotifyType(param.notifyType),
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(
                     "content" to notifyTitle
                 ),
@@ -138,7 +138,9 @@ class ManualReviewTaskAtom(
                     "dataTime" to DateTimeUtil.formatDate(Date(), "yyyy-MM-dd HH:mm:ss"),
                     "reviewDesc" to reviewDesc,
                     "manualReviewParam" to JsonUtil.toJson(param.params),
-                    "checkParams" to param.params.isNotEmpty().toString()
+                    "checkParams" to param.params.isNotEmpty().toString(),
+                    // 企业微信组
+                    NotifyUtils.WEWORK_GROUP_KEY to (param.notifyGroup?.joinToString(separator = ",") ?: "")
                 ),
                 position = null,
                 stageId = null,
@@ -149,7 +151,8 @@ class ManualReviewTaskAtom(
                     "elementId" to (param.id ?: ""),
                     "reviewUsers" to reviewUsers,
                     "signature" to ShaUtils.sha256(projectCode + buildId + (param.id ?: "") + appSecret)
-                )
+                ),
+                markdownContent = param.markdownContent
             )
         )
 
@@ -226,7 +229,7 @@ class ManualReviewTaskAtom(
                 source = "ManualReviewTaskAtomFinish", projectId = task.projectId, pipelineId = task.pipelineId,
                 userId = task.starter, buildId = buildId,
                 receivers = reviewUsers.split(","),
-                notifyType = checkNotifyType(param.notifyType),
+                notifyType = NotifyUtils.checkNotifyType(param.notifyType),
                 titleParams = mutableMapOf(),
                 bodyParams = mutableMapOf(),
                 position = null,
@@ -310,15 +313,6 @@ class ManualReviewTaskAtom(
             tag = task.taskId, jobId = task.containerHashId, executeCount = task.executeCount ?: 1
         )
         return suggestContent
-    }
-
-    private fun checkNotifyType(notifyType: MutableList<String>?): MutableSet<String>? {
-        if (notifyType != null) {
-            val allTypeSet = NotifyType.values().map { it.name }.toMutableSet()
-            allTypeSet.remove(NotifyType.SMS.name)
-            return (notifyType.toSet() intersect allTypeSet).toMutableSet()
-        }
-        return notifyType
     }
 
     companion object {

@@ -42,6 +42,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.type.DispatchType
 import com.tencent.devops.common.pipeline.type.agent.AgentType
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfo
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcType
@@ -51,6 +52,7 @@ import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.ResourcesPools
 import com.tencent.devops.process.yaml.v2.models.job.Container
@@ -61,6 +63,7 @@ import com.tencent.devops.scm.api.ServiceGitCiResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
+import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
 
 @Suppress("NestedBlockDepth", "ComplexMethod")
 object TXStreamDispatchUtils {
@@ -124,12 +127,43 @@ object TXStreamDispatchUtils {
 
         // 第三方构建机
         if (job.runsOn.selfHosted == true) {
-            val envName = getEnvName(client, poolName, resources?.pools)
+            if (job.runsOn.container == null) {
+                return ThirdPartyAgentEnvDispatchType(
+                    envProjectId = null,
+                    envName = poolName,
+                    workspace = workspace,
+                    agentType = AgentType.NAME,
+                    dockerInfo = null
+                )
+            }
+
+            val (image, userName, password) = StreamDispatchUtils.parseRunsOnContainer(
+                client = client,
+                job = job,
+                projectCode = projectCode,
+                context = context,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
+            )
+
+            val dockerInfo = ThirdPartyAgentDockerInfo(
+                image = image,
+                credential = if (userName.isBlank() || password.isBlank()) {
+                    null
+                } else {
+                    thirdPartDockerCredential(
+                        user = userName,
+                        password = password
+                    )
+                },
+                envs = job.env
+            )
+
             return ThirdPartyAgentEnvDispatchType(
-                envName = envName,
                 envProjectId = null,
+                envName = poolName,
                 workspace = workspace,
-                agentType = AgentType.NAME
+                agentType = AgentType.NAME,
+                dockerInfo = dockerInfo
             )
         }
 
@@ -162,6 +196,7 @@ object TXStreamDispatchUtils {
                         performanceConfigId = "0"
                     )
                 }
+
                 else -> {}
             }
 
@@ -184,9 +219,11 @@ object TXStreamDispatchUtils {
                     return ThirdPartyAgentIDDispatchType(
                         displayName = "",
                         workspace = "",
-                        agentType = AgentType.ID
+                        agentType = AgentType.ID,
+                        dockerInfo = null
                     )
                 }
+
                 JobRunsOnType.DEV_CLOUD.type -> {
                     return PoolType.DockerOnDevCloud.toDispatchType(
                         makeContainerPool(
@@ -200,6 +237,7 @@ object TXStreamDispatchUtils {
                         )
                     )
                 }
+
                 JobRunsOnType.DOCKER.type -> {
                     return PoolType.DockerOnVm.toDispatchType(
                         makeContainerPool(
@@ -213,6 +251,7 @@ object TXStreamDispatchUtils {
                         )
                     )
                 }
+
                 else -> {}
             }
         }
@@ -224,6 +263,7 @@ object TXStreamDispatchUtils {
                     imageType = ImageType.THIRD,
                     performanceConfigId = "0"
                 )
+
                 else -> GitCIDispatchType(defaultImage)
             }
         } else {

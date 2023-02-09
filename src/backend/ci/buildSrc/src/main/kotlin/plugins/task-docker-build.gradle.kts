@@ -33,7 +33,7 @@ val toImageTag = System.getProperty("to.image.tag")
 var toImage = System.getProperty("jib.to.image")
 
 if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.isNullOrBlank())) {
-    val service = name.split("-")[1]
+    val service = name.replace("boot-", "").replace("-tencent", "")
     if (toImage.isNullOrBlank() && !toImageTemplate.isNullOrBlank()) {
         // 替换掉模板的__service__和__tag__
         toImage = toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag)

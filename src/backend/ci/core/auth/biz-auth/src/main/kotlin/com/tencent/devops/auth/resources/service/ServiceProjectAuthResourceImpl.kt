@@ -85,6 +85,12 @@ class ServiceProjectAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun checkManager(token: String, userId: String, projectId: String): Result<Boolean> {
+        val result = permissionProjectService.checkProjectManager(userId, projectId) ||
+                permissionProjectService.isProjectUser(userId, projectId, BkAuthGroup.CI_MANAGER)
+        return Result(result)
+    }
+
     override fun checkProjectManager(
         token: String,
         type: String?,
