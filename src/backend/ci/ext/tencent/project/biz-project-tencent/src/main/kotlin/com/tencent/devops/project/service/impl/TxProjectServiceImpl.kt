@@ -65,7 +65,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
-import com.tencent.devops.project.pojo.enums.ApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.user.UserDeptDetail
 import com.tencent.devops.project.service.ProjectApprovalService
@@ -147,7 +147,12 @@ class TxProjectServiceImpl @Autowired constructor(
     @Value("\${tag.prod:#{null}}")
     private val prodTag: String? = null
 
-    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?,
+        needTips: Boolean
+    ): ProjectVO? {
         val projectVO = getInfoByEnglishName(englishName)
         if (projectVO == null) {
             logger.warn("The projectCode $englishName is not exist")
@@ -167,8 +172,8 @@ class TxProjectServiceImpl @Autowired constructor(
         }
         // 若该项目是该用户创建，并且还未创建成功，并不需要鉴权，直接返回项目详情
         val isNotCreateSuccess = projectVO.creator == userId
-            && (projectVO.approvalStatus == ApproveStatus.CREATE_PENDING.status
-            || projectVO.approvalStatus == ApproveStatus.CREATE_REJECT.status)
+            && (projectVO.approvalStatus == ProjectApproveStatus.CREATE_PENDING.status
+            || projectVO.approvalStatus == ProjectApproveStatus.CREATE_REJECT.status)
         if (isNotCreateSuccess)
             return projectVO
         val englishNames = getProjectFromAuth(userId, accessToken)
@@ -326,12 +331,12 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun cancelCreateAuthProject(projectCode: String) {
-        projectPermissionService.cancelCreateAuthProject(projectCode = projectCode)
+    override fun cancelCreateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelCreateAuthProject(userId = userId, projectCode = projectCode)
     }
 
-    override fun cancelUpdateAuthProject(projectCode: String) {
-        projectPermissionService.cancelUpdateAuthProject(projectCode = projectCode)
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
+        projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
     }
 
     override fun createRoleGroupApplication(
