@@ -79,121 +79,19 @@ multiCluster:
 
 # 内部数据源配置
 mysql:
-  image: 
-    tag: 5.7.35
   enabled: false
-  auth:
-    # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
-    rootPassword: blueking
-  primary:
-    persistence:
-      size: 10Gi
-    configuration: |-
-      [mysqld]
-      default_authentication_plugin=mysql_native_password
-      skip-name-resolve
-      explicit_defaults_for_timestamp
-      basedir=/opt/bitnami/mysql
-      plugin_dir=/opt/bitnami/mysql/lib/plugin
-      port=3306
-      socket=/opt/bitnami/mysql/tmp/mysql.sock
-      datadir=/bitnami/mysql/data
-      tmpdir=/opt/bitnami/mysql/tmp
-      max_allowed_packet=16M
-      bind-address=0.0.0.0
-      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
-      log-error=/opt/bitnami/mysql/logs/mysqld.log
-      character-set-server=UTF8
-      collation-server=utf8_general_ci
-      max_connections=2000
-      default-time-zone='+08:00'
-      [client]
-      port=3306
-      socket=/opt/bitnami/mysql/tmp/mysql.sock
-      default-character-set=UTF8
-      plugin_dir=/opt/bitnami/mysql/lib/plugin
-      [manager]
-      port=3306
-      socket=/opt/bitnami/mysql/tmp/mysql.sock
-      pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
 redis:
   enabled: false
-  auth:
-    password: bluking
-  replica:
-    replicaCount: 1
-    persistence: 
-      size: 10Gi
-  master:
-    persistence: 
-      size: 10Gi 
 elasticsearch:
   enabled: false
-  master:
-    replicas: 1
-    persistence:
-      size: 10Gi
-  coordinating:
-    replicas: 1
-  data:
-    replicas: 1
-    persistence:
-      size: 10Gi
 rabbitmq:
   enabled: false
-  persistence:
-    size: 10Gi
-  auth:
-    username: admin
-    password: blueking
-    # 修改此选项必须删除rabbitmq的pvc , 否则会创建rabbitmq失败
-    erlangCookie: blueking
-  communityPlugins: "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
-  extraPlugins: "rabbitmq_delayed_message_exchange"
-  extraConfiguration: |-
-    default_vhost = default-vhost
-    default_permissions.configure = .*
-    default_permissions.read = .*
-    default_permissions.write = .*
 influxdb:
   enabled: false
-  image:
-    tag: 1.8.3-debian-10-r88
-  architecture: high-availability
-  auth:
-    admin:
-      username: admin
-      password: blueking
-      token: GnnsHwEcQ07sqpidcX2s
-  persistence:
-    size: 10Gi
-  influxdb:
-    initdbScripts: 
-      creata_db.sh: |
-        influx -host 127.0.0.1 -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
 mongodb:
-  # 是否部署mongodb
-  # 如果需要使用外部数据库，设置为false并配置external.mongodb
   enabled: false
-  useStatefulSet: true
-  auth:
-    enabled: true
-    username: admin
-    password: blueking
-    rootPassword: blueking
-    database: blueking
-  persistence:
-    subPath: mongodb
-    size: 10Gi
-  initdbScripts:
-    create_admin_user.sh: |
-      $MONGODB_BIN_DIR/mongo admin --host 127.0.0.1 --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
-      use db_turbo
-      db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
-      use db_quartz
-      db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
-      EOF
-
+kubernetes-manager::
+  enabled: false
 
 #外部数据库
 externalMysql:
