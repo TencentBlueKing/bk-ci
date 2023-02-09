@@ -43,7 +43,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/auth/resource")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface AuthResourceCallBackResource {
+interface ServiceAuthResourceCallBackResource {
 
     @POST
     @Path("/projects")
