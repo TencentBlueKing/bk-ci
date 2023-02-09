@@ -123,7 +123,7 @@ export default {
 
   methods: {
     handleChooseGroup(payload) {
-      this.path = `user-group-detail/${payload.id}?role_id=${payload.managerId}`;
+      this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}`;
     },
 
     handleCreateGroup() {
