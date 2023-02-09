@@ -80,7 +80,7 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
-                                <LoadingIcon v-if="row.approvalStatus === 1" />
+                                <LoadingIcon v-if="[1, 2].includes(row.approvalStatus)" />
                                 <icon
                                     v-else-if="!row.enabled"
                                     class="devops-icon status-icon"
@@ -93,10 +93,12 @@
                                     :size="20"
                                     name="normal"
                                 />
-                                {{ approvalStatusMap[row.approvalStatus] }}
+                                <span>
+                                    {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
+                                </span>
                                 <icon
                                     v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
-                                    v-if="[3, 6].includes(row.approvalStatus)"
+                                    v-if="row.approvalStatus === 2"
                                     class="devops-icon status-icon"
                                     :size="20"
                                     name="warning-circle"
@@ -186,18 +188,16 @@
                 ],
                 inputValue: '',
                 approvalStatusMap: {
+                    0: this.$t('启用中'),
                     1: this.$t('创建中'),
-                    2: this.$t('启用中'),
-                    3: this.$t('启用中'),
+                    2: this.$t('创建中'),
                     4: this.$t('启用中'),
-                    5: this.$t('启用中'),
-                    6: this.$t('启用中')
+                    5: this.$t('启用中')
                 },
                 statusTips: {
                     1: this.$t('新建项目申请审批中'),
-                    4: this.$t('项目信息修改审批中'),
-                    3: this.$t('新建项目申请已拒绝'),
-                    6: this.$t('项目信息修改已拒绝')
+                    2: this.$t('新建项目申请已拒绝'),
+                    4: this.$t('项目信息修改申请审批中'),
                 }
             }
         },
