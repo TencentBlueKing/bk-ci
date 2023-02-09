@@ -25,11 +25,35 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.store.service.common.impl
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
+import com.tencent.devops.artifactory.api.service.ServiceFileResource
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.store.utils.StoreUtils
+import org.springframework.stereotype.Service
+import java.io.File
+import java.net.URLEncoder
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
+@Service
+class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
+    override fun getPropertiesFileStr(
+        projectCode: String,
+        filePathPrefix: String,
+        fileName: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): String? {
+        val filePath = URLEncoder.encode("$projectCode/$filePathPrefix/$fileName", "UTF-8")
+        return client.get(ServiceFileResource::class).getFileContent(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = "",
+            repoName = BK_CI_ATOM_DIR,
+            filePath = filePath
+        ).data
+    }
+}

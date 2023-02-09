@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.dao.FileDao
@@ -316,7 +317,7 @@ abstract class ArchiveAtomServiceImpl : ArchiveAtomService {
             val path = file.path.removePrefix("${getAtomArchiveBasePath()}/$BK_CI_ATOM_DIR")
             logger.info("updateArchiveFile path:$path")
             bkRepoClient.uploadLocalFile(
-                userId = BkRepoUtils.BKREPO_DEFAULT_USER,
+                userId = BKREPO_DEFAULT_USER,
                 projectId = BkRepoUtils.BKREPO_STORE_PROJECT_ID,
                 repoName = BkRepoUtils.REPO_NAME_PLUGIN,
                 path = path,

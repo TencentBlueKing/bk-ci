@@ -25,11 +25,24 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.store.service.common
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+interface StoreI18nMessageService {
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
+    /**
+     * 解析map集合，把map字段的值替换成蓝盾默认语言对应的值
+     * @param projectCode 项目代码
+     * @param jsonMap map集合
+     * @param filePathPrefix 资源文件路径前缀
+     * @param locale map集合字段值对应的语言环境
+     * @param repositoryHashId 代码库哈希ID
+     * @return 替换成蓝盾默认语言对应的值的map集合
+     */
+    fun parseJsonMap(
+        projectCode: String,
+        jsonMap: Map<String, Any>,
+        filePathPrefix: String,
+        locale: String? = null,
+        repositoryHashId: String? = null
+    ): Map<String, Any>
+}

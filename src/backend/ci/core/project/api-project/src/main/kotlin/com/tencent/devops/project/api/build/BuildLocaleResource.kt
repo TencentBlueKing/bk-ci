@@ -25,11 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.project.api.build
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.project.pojo.LocaleInfo
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
+@Api(tags = ["BUILD_LOCALE"], description = "BUILD-国际化")
+@Path("/build/locales")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface BuildLocaleResource {
+
+    @GET
+    @Path("/users/{userId}/get")
+    @ApiOperation("获取用户国际化信息")
+    fun getUserLocale(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
+    ): Result<LocaleInfo>
+}

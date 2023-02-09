@@ -44,7 +44,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 object BkRepoUtils {
-    const val BKREPO_DEFAULT_USER = "admin"
     const val BKREPO_DEVOPS_PROJECT_ID = "devops"
     const val BKREPO_STORE_PROJECT_ID = "bk-store"
     const val BKREPO_COMMOM_REPO = "common"

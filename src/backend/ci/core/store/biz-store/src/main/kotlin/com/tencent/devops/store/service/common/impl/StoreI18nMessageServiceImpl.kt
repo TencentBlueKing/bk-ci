@@ -24,12 +24,50 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.store.service.common.impl
 
-package com.tencent.devops.artifactory.constant
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.store.service.common.StoreI18nMessageService
+import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+@Service
+abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
+    @Autowired
+    lateinit var dslContext: DSLContext
+
+    @Autowired
+    lateinit var client: Client
+
+    @Autowired
+    lateinit var commonConfig: CommonConfig
+    override fun parseJsonMap(
+        projectCode: String,
+        jsonMap: Map<String, Any>,
+        filePathPrefix: String,
+        locale: String?,
+        repositoryHashId: String?
+    ): Map<String, Any> {
+        // 获取蓝盾默认语言信息
+        val devopsDefaultLocale = commonConfig.devopsDefaultLocale
+        if (locale == devopsDefaultLocale) {
+            // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
+            return jsonMap
+        } else {
+            // 获取蓝盾默认语言的资源文件
+
+        }
+        return jsonMap
+    }
+
+    abstract fun getPropertiesFileStr(
+        projectCode: String,
+        filePathPrefix: String,
+        fileName: String,
+        repositoryHashId: String? = null,
+        branch: String? = null
+    ): String?
+}

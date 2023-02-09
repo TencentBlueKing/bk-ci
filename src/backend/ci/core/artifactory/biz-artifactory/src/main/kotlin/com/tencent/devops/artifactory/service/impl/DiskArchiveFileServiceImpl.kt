@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -36,6 +37,7 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
+import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -49,6 +51,7 @@ import com.tencent.devops.common.archive.FileDigestUtils
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import org.apache.commons.io.FileUtils
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -618,6 +621,39 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         modifiedTime: Boolean?
     ): Page<FileInfo> {
         TODO("Not yet implemented")
+    }
+
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): String {
+        if (filePath.contains("../")) {
+            throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
+        }
+        val bkRepoName = if (repoName == BkRepoUtils.REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
+        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        return if (file.exists()) file.readText((Charsets.UTF_8)) else ""
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): List<String> {
+        val bkRepoName = if (repoName == BkRepoUtils.REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
+        val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
+        val fileNames = mutableListOf<String>()
+        file.listFiles()?.forEach { tmpFile ->
+            if (tmpFile.isFile) {
+                fileNames.add(file.name)
+            }
+        }
+        return fileNames
     }
 
     companion object {

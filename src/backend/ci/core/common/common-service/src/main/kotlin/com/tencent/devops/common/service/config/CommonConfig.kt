@@ -119,4 +119,10 @@ class CommonConfig {
      */
     @Value("\${sharding.routing.cacheSize:50000}")
     val shardingRoutingCacheSize: Long = 50000
+
+    /**
+     * 蓝盾默认语言
+     */
+    @Value("\${bkci.defaultLocale:zh_CN}")
+    val devopsDefaultLocale: String = "zh_CN"
 }
