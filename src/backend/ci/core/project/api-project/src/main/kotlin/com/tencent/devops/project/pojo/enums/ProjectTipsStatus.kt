@@ -28,9 +28,22 @@
 
 package com.tencent.devops.project.pojo.enums
 
+/**
+ * 项目详情页tips展示状态
+ */
 enum class ProjectTipsStatus(val status: Int) {
+    // 不展示
     NOT_SHOW(0),
-    SHOW_SUCCESSFUL_CREATE(1),
-    SHOW_SUCCESSFUL_UPDATE(2),
-    SHOW_UPDATE_REJECT(3);
+    // 项目创建审批中
+    SHOW_CREATE_PENDING(1),
+    // 项目审批成功
+    SHOW_SUCCESSFUL_CREATE(2),
+    // 项目创建波驳回
+    SHOW_CREATE_REJECT(3),
+    // 编辑审批中
+    SHOW_UPDATE_PENDING(4),
+    // 编辑审批成功
+    SHOW_SUCCESSFUL_UPDATE(5),
+    // 编辑审批驳回
+    SHOW_UPDATE_REJECT(6);
 }
