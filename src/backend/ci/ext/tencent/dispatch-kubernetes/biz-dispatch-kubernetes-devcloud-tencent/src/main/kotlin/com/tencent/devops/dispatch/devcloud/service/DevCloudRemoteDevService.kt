@@ -228,7 +228,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
-            environmentIP = environmentStatus.EnvironmentIP,
+            environmentIP = environmentStatus.environmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
             environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName)

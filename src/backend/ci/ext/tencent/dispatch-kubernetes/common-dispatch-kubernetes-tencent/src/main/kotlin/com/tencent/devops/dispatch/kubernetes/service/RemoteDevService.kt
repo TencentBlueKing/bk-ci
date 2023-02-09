@@ -58,7 +58,7 @@ class RemoteDevService @Autowired constructor(
     companion object {
         private val logger = LoggerFactory.getLogger(RemoteDevService::class.java)
 
-        private const val WORKSPACE_PROJECT = "test-sawyer2"
+        private const val WORKSPACE_PROJECT = ""
     }
 
     fun createWorkspace(userId: String, event: WorkspaceCreateEvent): WorkspaceResponse {

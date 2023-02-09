@@ -88,19 +88,45 @@ class DevcloudContainerService @Autowired constructor(
 
     override val helpUrl: String? = ""
 
-    override fun getBuilderStatus(buildId: String, vmSeqId: String, userId: String, builderName: String, retryTime: Int): Result<DispatchBuildBuilderStatus> {
+    override fun getBuilderStatus(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        builderName: String,
+        retryTime: Int
+    ): Result<DispatchBuildBuilderStatus> {
         TODO("Not yet implemented")
     }
 
-    override fun operateBuilder(buildId: String, vmSeqId: String, userId: String, builderName: String, param: DispatchBuildOperateBuilderParams): String {
+    override fun operateBuilder(
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        builderName: String,
+        param: DispatchBuildOperateBuilderParams
+    ): String {
         TODO("Not yet implemented")
     }
 
-    override fun createAndStartBuilder(dispatchMessages: DispatchMessage, containerPool: Pool, poolNo: Int, cpu: Double, mem: String, disk: String): Pair<String, String> {
+    override fun createAndStartBuilder(
+        dispatchMessages: DispatchMessage,
+        containerPool: Pool,
+        poolNo: Int,
+        cpu: Double,
+        mem: String,
+        disk: String
+    ): Pair<String, String> {
         TODO("Not yet implemented")
     }
 
-    override fun startBuilder(dispatchMessages: DispatchMessage, builderName: String, poolNo: Int, cpu: Double, mem: String, disk: String): String {
+    override fun startBuilder(
+        dispatchMessages: DispatchMessage,
+        builderName: String,
+        poolNo: Int,
+        cpu: Double,
+        mem: String,
+        disk: String
+    ): String {
         TODO("Not yet implemented")
     }
 
@@ -136,15 +162,32 @@ class DevcloudContainerService @Autowired constructor(
         TODO("Not yet implemented")
     }
 
-    override fun waitDebugBuilderRunning(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, userId: String, builderName: String): DispatchBuilderDebugStatus {
+    override fun waitDebugBuilderRunning(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        vmSeqId: String,
+        userId: String,
+        builderName: String
+    ): DispatchBuilderDebugStatus {
         TODO("Not yet implemented")
     }
 
-    override fun getDebugWebsocketUrl(projectId: String, pipelineId: String, staffName: String, builderName: String): String {
+    override fun getDebugWebsocketUrl(
+        projectId: String,
+        pipelineId: String,
+        staffName: String,
+        builderName: String
+    ): String {
         TODO("Not yet implemented")
     }
 
-    override fun buildAndPushImage(userId: String, projectId: String, buildId: String, dispatchBuildImageReq: DispatchBuildImageReq): DispatchTaskResp {
+    override fun buildAndPushImage(
+        userId: String,
+        projectId: String,
+        buildId: String,
+        dispatchBuildImageReq: DispatchBuildImageReq
+    ): DispatchTaskResp {
         TODO("Not yet implemented")
     }
 

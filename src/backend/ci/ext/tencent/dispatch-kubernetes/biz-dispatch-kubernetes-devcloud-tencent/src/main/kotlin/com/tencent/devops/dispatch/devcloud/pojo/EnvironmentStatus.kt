@@ -8,7 +8,7 @@ data class EnvironmentStatus(
     val message: String,
     val reason: String,
     val hostIP: String,
-    val EnvironmentIP: String,
+    val environmentIP: String,
     val clusterId: String,
     val namespace: String,
     val startTime: String ? = null,
