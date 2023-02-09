@@ -75,6 +75,13 @@ class LabelDao {
         }
     }
 
+    fun getIdsByCodes(dslContext: DSLContext, labelCodes: List<String>, type: Byte): List<String> {
+        with(TLabel.T_LABEL) {
+            return dslContext.select(ID).from(this).where(LABEL_CODE.`in`(labelCodes).and(TYPE.eq(type)))
+                .fetchInto(String::class.java)
+        }
+    }
+
     fun delete(dslContext: DSLContext, id: String) {
         with(TLabel.T_LABEL) {
             dslContext.deleteFrom(this)

@@ -27,6 +27,7 @@
 
 package com.tencent.devops.stream.dao
 
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.model.stream.tables.TGitPipelineRepoResource
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
@@ -44,7 +45,7 @@ import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 
-@Suppress("ComplexCondition")
+@Suppress("ComplexCondition", "ComplexMethod")
 @Repository
 class GitRequestEventBuildDao {
     fun save(
@@ -500,7 +501,8 @@ class GitRequestEventBuildDao {
         buildStatus: Set<String>?,
         limit: Int,
         offset: Int,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): List<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             return getRequestEventBuildListMultiple(
@@ -513,7 +515,8 @@ class GitRequestEventBuildDao {
                 event = event,
                 commitMsg = commitMsg,
                 buildStatus = buildStatus,
-                pipelineIds = pipelineIds
+                pipelineIds = pipelineIds,
+                buildIds = buildIds
             ).orderBy(EVENT_ID.desc(), CREATE_TIME.desc()).limit(limit).offset(offset).fetch()
         }
     }
@@ -528,7 +531,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): Int {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectCount().from(this)
@@ -568,6 +572,9 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
+            }
             return dsl.fetchOne(0, Int::class.java)!!
         }
     }
@@ -582,7 +589,8 @@ class GitRequestEventBuildDao {
         event: Set<String>?,
         commitMsg: String?,
         buildStatus: Set<String>?,
-        pipelineIds: Set<String>?
+        pipelineIds: Set<String>?,
+        buildIds: Set<String>?
     ): SelectConditionStep<TGitRequestEventBuildRecord> {
         with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
             val dsl = dslContext.selectFrom(this)
@@ -622,7 +630,29 @@ class GitRequestEventBuildDao {
             if (!pipelineIds.isNullOrEmpty()) {
                 dsl.and(PIPELINE_ID.`in`(pipelineIds))
             }
+            if (!buildIds.isNullOrEmpty()) {
+                dsl.and(BUILD_ID.`in`(buildIds))
+            }
             return dsl
+        }
+    }
+
+    fun getProjectLocalBranches(
+        dslContext: DSLContext,
+        projectId: Long,
+        branchName: String?,
+        pageNotNull: Int,
+        pageSizeNotNull: Int
+    ): List<String> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = pageNotNull, pageSize = pageSizeNotNull)
+        with(TGitRequestEventBuild.T_GIT_REQUEST_EVENT_BUILD) {
+            val dsl = dslContext.select(BRANCH).from(this)
+                .where(GIT_PROJECT_ID.eq(projectId))
+            if (!branchName.isNullOrBlank()) {
+                dsl.and(BRANCH.like("%$branchName%"))
+            }
+            return dsl.groupBy(BRANCH).orderBy(ID).limit(sqlLimit.limit).offset(sqlLimit.offset).fetch()
+                .map { it.value1() }
         }
     }
 
@@ -720,6 +750,7 @@ class GitRequestEventBuildDao {
                 .execute()
         }
     }
+
     fun getPipelinesLastBuild(
         dslContext: DSLContext,
         gitProjectId: Long,
@@ -732,6 +763,7 @@ class GitRequestEventBuildDao {
                 .fetch()
         }
     }
+
     fun getLastEventBuildIds(
         dslContext: DSLContext,
         pipelineIds: Set<String>

@@ -37,8 +37,8 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.model.stream.tables.TGitRequestEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
-import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.ChangeYamlList
+import com.tencent.devops.stream.pojo.GitRequestEvent
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record

@@ -95,7 +95,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 30
@@ -104,7 +104,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 60
+            initialDelaySeconds: 90
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 30
@@ -113,6 +113,13 @@ spec:
           - mountPath: /data/workspace/store/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          lifecycle:
+              preStop:
+                exec:
+                  command:
+                  - /bin/bash
+                  - -c
+                  - ps -ef|grep java|grep -v grep|awk '{print $2}'|xargs kill -15
       volumes:
       - hostPath:
           path: /data

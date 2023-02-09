@@ -29,10 +29,6 @@ package com.tencent.devops.dispatch.docker.client
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.buildless.api.service.ServiceBuildlessResource
-import com.tencent.devops.buildless.pojo.BuildLessEndInfo
-import com.tencent.devops.buildless.pojo.BuildLessStartInfo
-import com.tencent.devops.buildless.pojo.RejectedExecutionType
 import com.tencent.devops.common.api.pojo.Zone
 import com.tencent.devops.common.api.util.ApiUtil
 import com.tencent.devops.common.api.util.HashUtil
@@ -113,11 +109,7 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = dispatchMessage.vmSeqId.toInt(),
             secretKey = dispatchMessage.secretKey,
             status = PipelineTaskStatus.RUNNING,
-            zone = if (null == dispatchMessage.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                dispatchMessage.zone!!.name
-            },
+            zone = Zone.SHENZHEN.name,
             dockerIp = dockerIp,
             poolNo = poolNo,
             startupMessage = JsonUtil.toJson(Pool(
@@ -181,11 +173,7 @@ class DockerHostClient @Autowired constructor(
             vmSeqId = event.vmSeqId.toInt(),
             secretKey = secretKey,
             status = PipelineTaskStatus.RUNNING,
-            zone = if (null == event.zone) {
-                Zone.SHENZHEN.name
-            } else {
-                event.zone!!.name
-            },
+            zone = Zone.SHENZHEN.name,
             dockerIp = agentLessDockerIp,
             poolNo = 0
         )
@@ -246,33 +234,7 @@ class DockerHostClient @Autowired constructor(
             customBuildEnv = event.customBuildEnv
         )
 
-        // 测试
-        if (event.projectId == "test-sawyer2") {
-            startBuildLessBuild(agentId, secretKey, event)
-        } else {
-            dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
-        }
-    }
-
-    private fun startBuildLessBuild(
-        agentId: String,
-        secretKey: String,
-        event: PipelineBuildLessStartupDispatchEvent
-    ) {
-        with(event) {
-            client.get(ServiceBuildlessResource::class).startBuild(
-                BuildLessStartInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = Integer.valueOf(vmSeqId),
-                    executionCount = event.executeCount ?: 1,
-                    agentId = agentId,
-                    secretKey = secretKey,
-                    rejectedExecutionType = RejectedExecutionType.ABORT_POLICY
-                )
-            )
-        }
+        dockerBuildStart(agentLessDockerIp, agentLessDockerPort, requestBody, "", DockerHostClusterType.AGENT_LESS)
     }
 
     fun endBuild(
@@ -285,21 +247,6 @@ class DockerHostClient @Autowired constructor(
         poolNo: Int,
         clusterType: DockerHostClusterType = DockerHostClusterType.COMMON
     ) {
-        if (clusterType == DockerHostClusterType.AGENT_LESS) {
-            client.get(ServiceBuildlessResource::class).endBuild(
-                BuildLessEndInfo(
-                    projectId = projectId,
-                    pipelineId = pipelineId,
-                    buildId = buildId,
-                    vmSeqId = vmSeqId,
-                    poolNo = poolNo,
-                    containerId = containerId
-                )
-            )
-
-            return
-        }
-
         val requestBody = DockerHostBuildInfo(
             projectId = projectId,
             agentId = "",

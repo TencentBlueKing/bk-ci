@@ -84,6 +84,9 @@ class GitWebhookElementParams : ScmWebhookElementParams<CodeGitWebHookTriggerEle
         params.fromBranches = EnvUtils.parseEnv(element.fromBranches ?: "", variables)
         params.includeMrAction = joinToString(element.includeMrAction)
         params.includePushAction = joinToString(element.includePushAction)
+        params.enableThirdFilter = element.enableThirdFilter
+        params.thirdUrl = EnvUtils.parseEnv(element.thirdUrl ?: "", variables)
+        params.thirdSecretToken = EnvUtils.parseEnv(element.thirdSecretToken ?: "", variables)
         return params
     }
 

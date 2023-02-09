@@ -36,4 +36,8 @@ var (
 	ErrorNotSupportConftest     = fmt.Errorf("tmp.conftest. must be local")
 	ErrorNotSupportOutputStdout = fmt.Errorf("output with - to stdout, must be local")
 	ErrorNotSupportGch          = fmt.Errorf("output with .gch, must be local")
+	ErrorNoPumpHeadFile         = fmt.Errorf("pump head file not exist")
+	ErrorNoDependFile           = fmt.Errorf("depend file not exist")
+	ErrorNotSupportRemote       = fmt.Errorf("not support to remote execute")
+	ErrorInPumpBlack            = fmt.Errorf("in pump black list")
 )

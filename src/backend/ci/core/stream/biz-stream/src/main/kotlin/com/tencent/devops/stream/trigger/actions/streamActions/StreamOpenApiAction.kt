@@ -103,6 +103,8 @@ class StreamOpenApiAction(
 
     override fun needSendCommitCheck() = false
 
+    override fun needUpdateLastModifyUser(filePath: String) = false
+
     override fun sendCommitCheck(
         buildId: String,
         gitProjectName: String,

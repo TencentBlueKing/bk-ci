@@ -41,7 +41,6 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
-import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider
@@ -59,7 +58,7 @@ class CodeGitScmImpl constructor(
     private val event: String? = null
 ) : IScm {
 
-    private val apiUrl = GitUtils.getGitApiUrl(apiUrl = gitConfig.gitApiUrl, repoUrl = url)
+    private val apiUrl = gitConfig.gitApiUrl
 
     override fun getLatestRevision(): RevisionInfo {
         val branch = branchName ?: "master"

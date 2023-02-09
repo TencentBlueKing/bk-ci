@@ -79,7 +79,7 @@ class SamplePipelineBuildArtifactoryService @Autowired constructor(
             metadata = mapOf("pipelineId" to pipelineId, "buildId" to buildId),
             page = 1,
             pageSize = 1000
-        )
+        ).records
         return nodeList.map { FileInfo(
             name = it.name,
             fullName = it.name,

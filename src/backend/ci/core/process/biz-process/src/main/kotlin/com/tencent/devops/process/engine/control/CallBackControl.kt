@@ -209,6 +209,7 @@ class CallBackControl @Autowired constructor(
             pipelineName = modelDetail.pipelineName,
             userId = modelDetail.userId,
             triggerUser = modelDetail.triggerUser,
+            cancelUserId = modelDetail.cancelUserId,
             status = modelDetail.status,
             startTime = modelDetail.startTime,
             endTime = modelDetail.endTime ?: 0,

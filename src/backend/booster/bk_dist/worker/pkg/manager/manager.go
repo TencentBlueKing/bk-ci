@@ -48,18 +48,23 @@ const (
 	cmdCheckIntervalTime     = 100 // time.Millisecond
 	maxWaitConnectionSeconds = 600
 
-	maxCpuUsed = 90.00
+	maxCpuUsed      = 90.00
+	maxCpuSampleNum = 20
 )
 
 // NewManager return Manager interface
 func NewManager(conf *config.ServerConfig) (Manager, error) {
 	o := &tcpManager{
-		conf:        conf,
-		buffedcmds:  nil,
-		curjobs:     0,
-		whiteips:    make([]string, 0),
-		allowallips: false,
-		memperjob:   1024 * 1024 * 1024 * 2, // 2G
+		conf:         conf,
+		buffedcmds:   nil,
+		curjobs:      0,
+		whiteips:     make([]string, 0),
+		allowallips:  false,
+		memperjob:    1024 * 1024 * 1024 * 2, // 2G
+		cpusamplenum: maxCpuSampleNum,
+		cpusample:    make([]float64, maxCpuSampleNum),
+		cpuindex:     0,
+		cpulast:      0.0,
 	}
 
 	if err := o.init(); err != nil {
@@ -111,6 +116,12 @@ type tcpManager struct {
 	filelist        []string
 	filelistlogfile string
 	defaultworkdir  string
+
+	// to smooth cpu
+	cpusample    []float64
+	cpulast      float64
+	cpuindex     int32
+	cpusamplenum int32
 }
 
 func (o *tcpManager) init() error {
@@ -529,13 +540,13 @@ func waitConnection(client *protocol.TCPClient, timeoutsecs int) {
 }
 
 func (o *tcpManager) dealBufferedCmd(cmd *buffedcmd) error {
-	blog.Infof("deal cmd in...")
+	// blog.Infof("deal cmd in...")
 	defer func() {
 		debug.FreeOSMemory() // free memory anyway
 		// wait until connection closed by client or timeout
 		waitConnection(cmd.client, maxWaitConnectionSeconds)
 
-		blog.Infof("ready to close tcp connection after deal this cmd")
+		// blog.Infof("ready to close tcp connection after deal this cmd")
 		_ = cmd.client.Close()
 		if o.conf.CleanTempFiles {
 			// remove basedir here
@@ -548,14 +559,20 @@ func (o *tcpManager) dealBufferedCmd(cmd *buffedcmd) error {
 
 	_ = os.MkdirAll(cmd.basedir, os.ModePerm)
 	err := cmd.handler.Handle(cmd.client, cmd.head, cmd.body, cmd.receivedtime, cmd.basedir, o.conf.CmdReplaceRules)
-	nextcmd := o.popcmd()
-	if nextcmd != nil {
-		go func() {
-			_ = o.dealBufferedCmd(nextcmd)
-		}()
-	} else {
-		o.freeChance()
-	}
+
+	// nextcmd := o.popcmd()
+	// if nextcmd != nil {
+	// 	go func() {
+	// 		_ = o.dealBufferedCmd(nextcmd)
+	// 	}()
+	// } else {
+	// 	o.freeChance()
+	// }
+
+	// to ensure check chance before select new cmd
+	o.freeChance()
+	o.checkCmds()
+
 	return err
 }
 
@@ -572,7 +589,7 @@ func (o *tcpManager) checkCmds() {
 				_ = o.dealBufferedCmd(vv)
 			}(v)
 
-			blog.Infof("deal cmd from cmd buf...")
+			// blog.Infof("remove job from waiting jobs...")
 			// delete from array
 			newbuff = o.buffedcmds[i+1:]
 		} else {
@@ -583,55 +600,67 @@ func (o *tcpManager) checkCmds() {
 }
 
 func (o *tcpManager) obtainChance() bool {
-	blog.Infof("obtain chance in...")
+	// blog.Infof("obtain chance in...")
 	o.joblock.Lock()
 	defer func() {
 		o.joblock.Unlock()
-		blog.Infof("obtain chance out...")
+		// blog.Infof("obtain chance out...")
 	}()
 
 	if o.curjobs < o.maxjobs {
 		// we will launch docker with 8 jobs on linux
-		if o.curjobs < int(math.Min(float64(o.maxjobs/2), 4)) {
-			blog.Infof("got chance")
+		if o.curjobs < int(math.Min(float64(o.maxjobs/3), 4)) {
+			// blog.Infof("got chance directly for current running jobs less than min jobs")
 			o.curjobs++
-			blog.Infof("current jobs %d", o.curjobs)
+			blog.Infof("current running jobs %d after direct got chance", o.curjobs)
 			return true
 		} else {
+			var available, total uint64
+			var cpuper float64
 			// check avaiable resource now
 			// it's maybe system resource, not docker, but harmless
 			v, err := mem.VirtualMemory()
 			if err == nil {
+				available = v.Available
+				total = v.Total
 				maybetotalused := uint64(o.curjobs) * o.memperjob
 				if maybetotalused >= v.Total {
-					blog.Infof("current total used mem:%d greater than total mem:%d", maybetotalused, v.Total)
+					blog.Infof("ignore for current total used mem:%d greater than total mem:%d", maybetotalused, v.Total)
 					return false
 				}
 
 				if v.Available < o.memperjob {
-					blog.Infof("current available mem:%d less than mem per job:%d", v.Available, o.memperjob)
+					blog.Infof("ignore for current available mem:%d less than mem per job:%d", v.Available, o.memperjob)
 					return false
 				}
 
 				avgmem := (v.Total - v.Free) / uint64(o.curjobs)
 				if v.Available < avgmem {
-					blog.Infof("current available mem:%d less than avg mem:%d", v.Available, avgmem)
+					blog.Infof("ignore for current available mem:%d less than avg mem:%d", v.Available, avgmem)
 					return false
 				}
 			}
 
 			per, err := cpu.Percent(0, false)
 			if err == nil {
-				if per[0] > maxCpuUsed {
-					blog.Infof("current cpu usage:%d over max cpu usage:%d", per[0], maxCpuUsed)
+				cpuper = per[0]
+				scpu := o.smoothcpu(per[0])
+				if per[0] <= 0.0 {
+					per[0] = o.cpulast
+				} else {
+					o.cpulast = per[0]
+				}
+				curcpu := math.Max(scpu, per[0])
+				if curcpu > maxCpuUsed {
+					blog.Infof("ignore for current smooth cpu usage:%f(or curcpu:%f) over max allowed cpu usage:%f", scpu, per[0], maxCpuUsed)
 					return false
 				}
 			}
 
 			// failed to get resource info or has enought resource, return ok
-			blog.Infof("got chance")
+			// blog.Infof("got chance for enought resource cpu:%f total mem:%d,available mem:%d", cpuper, total, available)
 			o.curjobs++
-			blog.Infof("current jobs %d", o.curjobs)
+			blog.Infof("current running jobs %d for enought resource cpu:%f total mem:%d available mem:%d", o.curjobs, cpuper, total, available)
 			return true
 		}
 	}
@@ -640,25 +669,25 @@ func (o *tcpManager) obtainChance() bool {
 }
 
 func (o *tcpManager) freeChance() {
-	blog.Infof("free chance in...")
+	// blog.Infof("free chance in...")
 	o.joblock.Lock()
 	defer func() {
 		o.joblock.Unlock()
-		blog.Infof("free chance out...")
+		// blog.Infof("free chance out...")
 	}()
 
 	o.curjobs--
-	blog.Infof("after freed chance,current jobs %d", o.curjobs)
+	blog.Infof("current running jobs %d after one job finished", o.curjobs)
 	if o.curjobs < 0 {
 		o.curjobs = 0
 	}
 }
 
 func (o *tcpManager) appendcmd(cmd *buffedcmd) {
-	blog.Infof("append cmd in...")
+	// blog.Infof("append cmd in...")
 	o.bufflock.Lock()
 	defer func() {
-		blog.Infof("append cmd out, current buffered cmd length %d", len(o.buffedcmds))
+		blog.Infof("current waiting jobs %d after append one job", len(o.buffedcmds))
 		o.bufflock.Unlock()
 	}()
 
@@ -679,4 +708,25 @@ func (o *tcpManager) popcmd() *buffedcmd {
 	}
 
 	return cmd
+}
+
+// return average of last 10 cpu
+func (o *tcpManager) smoothcpu(now float64) float64 {
+	o.cpusample[o.cpuindex] = now
+	o.cpuindex = (o.cpuindex + 1) % o.cpusamplenum
+
+	var total float64
+	num := 0
+	for _, v := range o.cpusample {
+		if v > 0 {
+			total += v
+			num++
+		}
+	}
+
+	if num > 0 {
+		return total / float64(num)
+	}
+
+	return 0.0
 }

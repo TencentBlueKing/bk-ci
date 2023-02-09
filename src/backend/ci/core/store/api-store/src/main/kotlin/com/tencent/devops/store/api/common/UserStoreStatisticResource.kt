@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.annotation.BkField
 import com.tencent.devops.common.web.constant.BkStyleEnum
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -89,4 +90,20 @@ interface UserStoreStatisticResource {
         @QueryParam("endTime")
         endTime: String
     ): Result<StoreStatisticTrendData>
+
+    @ApiOperation("获取store组件错误码信息")
+    @Path("/types/{storeType}/codes/{storeCode}/errorCode")
+    @GET
+    fun getStoreErrorCodeInfo(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("组件类型", required = true)
+        @PathParam("storeType")
+        @BkField(patternStyle = BkStyleEnum.CODE_STYLE)
+        storeType: StoreTypeEnum,
+        @ApiParam("组件标识", required = true)
+        @PathParam("storeCode")
+        storeCode: String
+    ): Result<StoreErrorCodeInfo>
 }

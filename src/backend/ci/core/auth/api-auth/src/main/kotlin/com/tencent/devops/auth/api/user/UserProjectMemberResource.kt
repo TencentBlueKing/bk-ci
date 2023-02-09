@@ -144,4 +144,16 @@ interface UserProjectMemberResource {
         @ApiParam(name = "待搜用户", required = true)
         searchUserId: String
     ): Result<List<ManagerRoleGroupInfo>?>
+
+    @GET
+    @Path("/projectIds/{projectId}/checkManager")
+    @ApiOperation("判断是否是项目管理员或CI管理员")
+    fun checkManager(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        @ApiParam("项目Id", required = true)
+        projectId: String
+    ): Result<Boolean>
 }

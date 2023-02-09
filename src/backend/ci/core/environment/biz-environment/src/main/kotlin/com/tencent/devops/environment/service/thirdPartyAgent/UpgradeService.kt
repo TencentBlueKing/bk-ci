@@ -27,123 +27,34 @@
 
 package com.tencent.devops.environment.service.thirdPartyAgent
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.pojo.AgentResult
-import com.tencent.devops.common.api.pojo.OS
-import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.pojo.agent.UpgradeItem
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.SecurityUtil
-import com.tencent.devops.common.environment.agent.AgentGrayUtils
 import com.tencent.devops.common.environment.agent.AgentUpgradeType
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.model.AgentProps
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
-import com.tencent.devops.environment.utils.FileMD5CacheUtils
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentScope
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.ProjectScope
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
-import javax.ws.rs.core.MediaType
-import javax.ws.rs.core.Response
 
-@Suppress("ComplexMethod")
+@Suppress("ComplexMethod", "LongMethod")
 @Service
 class UpgradeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val redisOperation: RedisOperation,
-    private val downloadAgentInstallService: DownloadAgentInstallService,
-    private val agentGrayUtils: AgentGrayUtils,
-    private val objectMapper: ObjectMapper
+    private val agentPropsScope: AgentPropsScope,
+    private val agentScope: AgentScope,
+    private val projectScope: ProjectScope
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(UpgradeService::class.java)
-    }
-
-    private val stringCache = CacheBuilder.newBuilder()
-        .maximumSize(100)
-        .expireAfterWrite(30, TimeUnit.SECONDS)
-        .build<String, String>()
-
-    fun getRedisValueWithCache(redisKey: String): String {
-        var value = stringCache.getIfPresent(redisKey)
-        if (value != null) {
-            return value
-        }
-        synchronized(this) {
-            value = stringCache.getIfPresent(redisKey)
-            if (value != null) {
-                return value!!
-            }
-            logger.info("refresh $redisKey from redis")
-            value = redisOperation.get(key = redisKey, isDistinguishCluster = true) ?: ""
-            stringCache.put(redisKey, value ?: "")
-        }
-        return value!!
-    }
-
-    fun setUpgrade(agentVersion: String) =
-        redisOperation.set(
-            key = agentGrayUtils.getAgentVersionKey(),
-            value = agentVersion,
-            expired = false,
-            isDistinguishCluster = true
-        )
-
-    fun setMasterVersion(masterVersion: String) =
-        redisOperation.set(
-            key = agentGrayUtils.getAgentMasterVersionKey(),
-            value = masterVersion,
-            expired = false,
-            isDistinguishCluster = true
-        )
-
-    fun getWorkerVersion() = getRedisValueWithCache(agentGrayUtils.getAgentVersionKey())
-
-    fun getAgentVersion() = getRedisValueWithCache(agentGrayUtils.getAgentMasterVersionKey())
-
-    fun getJdkVersion(os: String?, arch: String?): String? {
-        if (os.isNullOrBlank()) {
-            return null
-        }
-
-        val osE = when (os) {
-            OS.WINDOWS.name -> return getRedisValueWithCache(
-                //  win目前只有一个架构随便填即可
-                agentGrayUtils.getJdkVersionKey(OS.WINDOWS, AgentArchType.AMD64)
-            )
-
-            OS.MACOS.name -> OS.MACOS
-            else -> OS.LINUX
-        }
-        // 这里的arch需要和go的编译脚本中的GOARCH统一，因为上报是根据go runtime上报的
-        return when (arch) {
-            AgentArchType.ARM64.arch -> getRedisValueWithCache(
-                agentGrayUtils.getJdkVersionKey(osE, AgentArchType.ARM64)
-            )
-
-            AgentArchType.MIPS64.arch -> getRedisValueWithCache(
-                agentGrayUtils.getJdkVersionKey(osE, AgentArchType.MIPS64)
-            )
-
-            AgentArchType.AMD64.arch -> getRedisValueWithCache(
-                agentGrayUtils.getJdkVersionKey(osE, AgentArchType.AMD64)
-            )
-
-            else -> null
-        }
-    }
-
-    fun getGatewayMapping(): Map<String, String> {
-        val mappingConfig = getRedisValueWithCache("environment.thirdparty.gateway.mapping")
-        return objectMapper.readValue(mappingConfig)
     }
 
     fun checkUpgrade(
@@ -153,19 +64,22 @@ class UpgradeService @Autowired constructor(
         agentVersion: String?,
         masterVersion: String?
     ): AgentResult<Boolean> {
-
         val (status, _) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
             return AgentResult(status, false)
         }
 
-        val currentVersion = getWorkerVersion()
+        if (!checkProjectUpgrade(projectId)) {
+            return AgentResult(status = AgentStatus.IMPORT_OK, data = false)
+        }
+
+        val currentVersion = agentPropsScope.getWorkerVersion()
         if (currentVersion.isBlank()) {
             logger.warn("The current agent version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
         }
-        val currentMasterVersion = getAgentVersion()
+        val currentMasterVersion = agentPropsScope.getAgentVersion()
         if (currentMasterVersion.isBlank()) {
             logger.warn("The current agent master version is not exist")
             return AgentResult(AgentStatus.IMPORT_OK, false)
@@ -178,9 +92,9 @@ class UpgradeService @Autowired constructor(
         }
 
         val upgrade = when {
-            agentGrayUtils.checkLockUpgrade(agentId, null) -> false
-            agentGrayUtils.checkForceUpgrade(agentId, null) -> true
-            else -> agentNeedUpgrade && agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
+            agentScope.checkLockUpgrade(agentId, null) -> false
+            agentScope.checkForceUpgrade(agentId, null) -> true
+            else -> agentNeedUpgrade && agentScope.checkCanUpgrade(agentId)
         }
 
         return AgentResult(AgentStatus.IMPORT_OK, upgrade)
@@ -195,14 +109,41 @@ class UpgradeService @Autowired constructor(
         val (status, props, os) = checkAgent(projectId, agentId, secretKey)
         if (status != AgentStatus.IMPORT_OK) {
             logger.warn("The agent($agentId) status($status) is not OK")
-            return AgentResult(status, UpgradeItem(false, false, false))
+            return AgentResult(
+                status = status,
+                data = UpgradeItem(
+                    agent = false,
+                    worker = false,
+                    jdk = false,
+                    dockerInitFile = false
+                )
+            )
         }
 
-        val currentWorkerVersion = getWorkerVersion()
-        val currentGoAgentVersion = getAgentVersion()
-        val currentJdkVersion = getJdkVersion(os, props?.arch)
+        if (!checkProjectUpgrade(projectId)) {
+            return AgentResult(
+                AgentStatus.IMPORT_OK,
+                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false)
+            )
+        }
 
-        val canUpgrade = agentGrayUtils.getCanUpgradeAgents().contains(HashUtil.decodeIdToLong(agentId))
+        val currentWorkerVersion = agentPropsScope.getWorkerVersion()
+        val currentGoAgentVersion = agentPropsScope.getAgentVersion()
+        val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
+        val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
+
+        val canUpgrade = agentScope.checkCanUpgrade(agentId)
+
+        if (logger.isDebugEnabled) {
+            logger.debug(
+                "$projectId|$agentId|canUpgrade=$canUpgrade" +
+                    "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
+                    "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
+                    "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
+                    "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
+                    "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
+            )
+        }
 
         val workerVersion = when {
             currentWorkerVersion.isBlank() -> {
@@ -210,8 +151,8 @@ class UpgradeService @Autowired constructor(
                 false
             }
 
-            agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.WORKER) -> false
-            agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.WORKER) -> true
+            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.WORKER) -> false
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.WORKER) -> true
             else -> canUpgrade && (info.workerVersion.isNullOrBlank() || (currentWorkerVersion != info.workerVersion))
         }
 
@@ -221,8 +162,8 @@ class UpgradeService @Autowired constructor(
                 false
             }
 
-            agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
-            agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> true
+            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> false
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.GO_AGENT) -> true
             else -> canUpgrade &&
                     (info.goAgentVersion.isNullOrBlank() || (currentGoAgentVersion != info.goAgentVersion))
         }
@@ -233,60 +174,39 @@ class UpgradeService @Autowired constructor(
                 false
             }
 
-            agentGrayUtils.checkLockUpgrade(agentId, AgentUpgradeType.JDK) -> false
-            agentGrayUtils.checkForceUpgrade(agentId, AgentUpgradeType.JDK) -> true
+            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.JDK) -> false
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.JDK) -> true
             else -> canUpgrade &&
                     (info.jdkVersion.isNullOrEmpty() ||
                             ((info.jdkVersion?.size ?: 0) > 2 &&
                                     currentJdkVersion.trim() != info.jdkVersion?.get(2)?.trim()))
         }
 
+        val dockerInitFile = when {
+            info.dockerInitFileInfo == null -> false
+            // 目前存在非linux系统的不支持，旧数据或agent不使用docker构建机，所以不校验升级
+            info.dockerInitFileInfo?.needUpgrade != true -> false
+            currentDockerInitFileMd5.isBlank() -> {
+                logger.warn(
+                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}| docker init md5 is null"
+                )
+                false
+            }
+
+            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> false
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.DOCKER_INIT_FILE) -> true
+            else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
+        }
+
         return AgentResult(
-            AgentStatus.IMPORT_OK, UpgradeItem(
+            status = AgentStatus.IMPORT_OK,
+            data = UpgradeItem(
                 agent = goAgentVersion,
                 worker = workerVersion,
-                jdk = jdkVersion
+                jdk = jdkVersion,
+                dockerInitFile = dockerInitFile
             )
         )
-    }
-
-    fun downloadUpgradeFile(
-        projectId: String,
-        agentId: String,
-        secretKey: String,
-        file: String,
-        md5: String?
-    ): Response {
-        val (status, _) = checkAgent(projectId, agentId, secretKey)
-        if (status == AgentStatus.DELETE) {
-            logger.warn("The agent($agentId)'s status($status) is DELETE")
-            return Response.status(Response.Status.NOT_FOUND).build()
-        }
-
-        val upgradeFile = getUpgradeFile(file)
-        val fileName = upgradeFile.name
-
-        var modify = true
-        val existMD5 = FileMD5CacheUtils.getFileMD5(upgradeFile)
-        if (!upgradeFile.exists()) {
-            logger.warn("The upgrade of agent($agentId) file(${upgradeFile.absolutePath}) is not exist")
-            modify = false
-        } else {
-            if (md5 != null) {
-                if (existMD5 == md5) {
-                    modify = false
-                }
-            }
-        }
-        return if (modify) {
-            logger.info("upgrade file($file) changed, server file md5: $existMD5")
-            Response.ok(upgradeFile.inputStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
-                .header("content-disposition", "attachment; filename = $fileName")
-                .header("X-Checksum-Md5", existMD5)
-                .build()
-        } else {
-            Response.status(Response.Status.NOT_MODIFIED).build()
-        }
     }
 
     private fun checkAgent(
@@ -303,19 +223,22 @@ class UpgradeService @Autowired constructor(
             return Triple(AgentStatus.DELETE, null, null)
         }
 
-        val props = if (agentRecord.agentProps.isNullOrBlank()) {
-            null
-        } else {
-            try {
-                JsonUtil.to(agentRecord.agentProps, AgentProps::class.java)
-            } catch (e: Exception) {
-                // 兼容老数据格式不对的情况
-                null
-            }
-        }
+        val props = agentPropsScope.parseAgentProps(agentRecord.agentProps)
 
         return Triple(AgentStatus.fromStatus(agentRecord.status), props, agentRecord.os)
     }
 
-    private fun getUpgradeFile(file: String) = downloadAgentInstallService.getUpgradeFile(file)
+    /**
+     * 校验这个agent所属的项目是否可以进行升级或者其他属性
+     * @return true 可以升级 false 不能进行升级
+     */
+    private fun checkProjectUpgrade(projectId: String): Boolean {
+        // 校验不升级项目，这些项目不参与Agent升级
+        if (projectScope.checkDenyUpgradeProject(projectId)) {
+            return false
+        }
+
+        // 校验是否在优先升级的项目列表中，如果不在里面并且优先升级项目的列表为空也允许Agent升级。
+        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId)
+    }
 }

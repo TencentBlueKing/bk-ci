@@ -29,16 +29,16 @@ package com.tencent.devops.stream.trigger.listener.notify
 
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyTemplateEnum
 import com.tencent.devops.stream.util.StreamPipelineUtils
 import java.util.Date
 
 object SendEmail {
     fun getEmailSendRequest(
-        state: StreamCommitCheckState,
+        status: BuildStatus,
         receivers: Set<String>,
         ccs: MutableSet<String>?,
         projectName: String,
@@ -52,12 +52,11 @@ object SendEmail {
         streamUrl: String,
         gitProjectId: String
     ): SendNotifyMessageTemplateRequest {
-        val isSuccess = state == StreamCommitCheckState.SUCCESS
         val titleParams = mapOf(
             "title" to (
                 if (title.isNullOrBlank()) {
                     V2NotifyTemplate.getEmailTitle(
-                        isSuccess = isSuccess,
+                        status = status,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName, buildNum = build.buildNum.toString()
@@ -67,30 +66,42 @@ object SendEmail {
                 }
                 )
         )
+        val buildNum = build.buildNum.toString()
+        val startTime = DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm")
+        val totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0)
+        val trigger = build.userId
+        val webUrl = StreamPipelineUtils.genStreamV2BuildUrl(
+            homePage = streamUrl,
+            gitProjectId = gitProjectId,
+            pipelineId = pipelineId,
+            buildId = build.id
+        )
         val bodyParams = mapOf(
             "content" to (
                 if (content.isNullOrBlank()) {
                     V2NotifyTemplate.getEmailContent(
-                        isSuccess = isSuccess,
+                        status = status,
                         projectName = projectName,
                         branchName = branchName,
                         pipelineName = pipelineName,
-                        buildNum = build.buildNum.toString(),
-                        startTime = DateTimeUtil.formatDate(Date(build.startTime), "yyyy-MM-dd HH:mm"),
-                        totalTime = DateTimeUtil.formatMillSecond(build.totalTime ?: 0),
-                        trigger = build.userId,
+                        buildNum = buildNum,
+                        startTime = startTime,
+                        totalTime = totalTime,
+                        trigger = trigger,
                         commitId = commitId,
-                        webUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                            homePage = streamUrl,
-                            gitProjectId = gitProjectId,
-                            pipelineId = pipelineId,
-                            buildId = build.id
-                        )
+                        webUrl = webUrl
                     )
                 } else {
                     content
                 }
-                )
+                ),
+            "buildNum" to buildNum,
+            "startTime" to startTime,
+            "totalTime" to totalTime,
+            "trigger" to trigger,
+            "branchName" to branchName,
+            "commitId" to commitId,
+            "webUrl" to webUrl
         )
         return SendNotifyMessageTemplateRequest(
             templateCode = StreamNotifyTemplateEnum.STREAM_V2_BUILD_TEMPLATE.templateCode,

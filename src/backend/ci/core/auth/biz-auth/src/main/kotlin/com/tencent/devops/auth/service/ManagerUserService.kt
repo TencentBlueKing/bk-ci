@@ -122,11 +122,7 @@ class ManagerUserService @Autowired constructor(
 
         if (record != null) {
             LOG.warn("createManagerUser user has this manager $userId $managerInfo $record")
-            throw ErrorCodeException(
-                defaultMessage = MessageCodeUtil.getCodeMessage(messageCode = AuthMessageCode.MANAGER_USER_EXIST,
-                    params = arrayOf(managerInfo.userId)),
-                errorCode = AuthMessageCode.MANAGER_USER_EXIST
-            )
+            return 0
         }
 
         val id = managerUserDao.create(dslContext, managerInfo)

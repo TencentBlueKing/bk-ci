@@ -62,6 +62,8 @@ data class BuildHistoryWithVars(
     val material: List<PipelineBuildMaterial>?,
     @ApiModelProperty("排队于", required = false)
     val queueTime: Long?,
+    @ApiModelProperty("排队位置", required = false)
+    val currentQueuePosition: Int = 0,
     @ApiModelProperty("构件列表", required = false)
     val artifactList: List<FileInfo>?,
     @ApiModelProperty("备注", required = false)

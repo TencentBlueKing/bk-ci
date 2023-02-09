@@ -34,6 +34,7 @@ dependencies {
     api(project(":core:project:api-project"))
     api(project(":core:process:api-process"))
     api(project(":core:quality:api-quality"))
+    api(project(":core:auth:api-auth"))
     api(project(":core:monitoring:api-monitoring"))
     api(project(":core:artifactory:api-artifactory-store"))
     api(project(":core:store:model-store"))

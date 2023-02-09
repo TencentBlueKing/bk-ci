@@ -53,7 +53,7 @@ abstract class BasePathFilter(
         return includedPaths.isEmpty() && excludedPaths.isEmpty()
     }
 
-    @SuppressWarnings("NestedBlockDepth", "ReturnCount")
+    @SuppressWarnings("NestedBlockDepth", "ReturnCount", "ComplexMethod")
     private fun hashPathSpecs(response: WebhookFilterResponse): Boolean {
         val matchIncludePaths = mutableSetOf<String>()
         if (includedPaths.isNotEmpty()) {
@@ -67,7 +67,9 @@ abstract class BasePathFilter(
                     }
                 }
             }
-            response.addParam(MATCH_PATHS, matchUserPaths.joinToString(","))
+            if (matchUserPaths.isNotEmpty()) {
+                response.addParam(MATCH_PATHS, matchUserPaths.joinToString(","))
+            }
         } else {
             matchIncludePaths.addAll(triggerOnPath)
         }

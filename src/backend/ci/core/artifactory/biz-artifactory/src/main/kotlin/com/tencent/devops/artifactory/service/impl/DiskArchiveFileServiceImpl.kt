@@ -359,8 +359,9 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         logger.info("uploadFile|filePath=$filePath|fileName=$fileName|props=$props")
         val uploadFileName = fileName ?: file.name
         val fileTypeStr = fileType?.fileType ?: "file"
+        val fileTypeName = file.name.substring(file.name.indexOf(".") + 1)
         val destPath = if (null == filePath) {
-            "${getBasePath()}$fileSeparator$fileTypeStr$fileSeparator$${DefaultPathUtils.randomFileName()}"
+            "${getBasePath()}$fileSeparator$fileTypeStr$fileSeparator$${DefaultPathUtils.randomFileName(fileTypeName)}"
         } else {
             // #5176 修正未对上传类型来决定存放路径的问题，统一在此生成归档路径，而不是由外部指定会存在内部路径泄露风险
             if (fileType != null && !projectId.isNullOrBlank()) {
@@ -613,7 +614,8 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTime: Boolean?
     ): Page<FileInfo> {
         TODO("Not yet implemented")
     }

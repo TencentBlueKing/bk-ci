@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.docker.pojo
 
-import com.tencent.devops.dispatch.docker.pojo.enums.DockerRoutingType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -36,5 +35,5 @@ data class DockerRoutingVO(
     @ApiModelProperty("项目id")
     val projectId: String,
     @ApiModelProperty("路由类型")
-    val dockerRoutingType: DockerRoutingType
+    val dockerRoutingType: String
 )

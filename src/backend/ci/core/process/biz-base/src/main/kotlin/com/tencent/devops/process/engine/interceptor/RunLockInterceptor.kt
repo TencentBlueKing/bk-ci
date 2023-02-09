@@ -72,12 +72,23 @@ class RunLockInterceptor @Autowired constructor(
                 Response(BuildStatus.RUNNING)
             }
         } else if (runLockType == PipelineRunLockType.GROUP_LOCK) {
-            val concurrencyGroupRunningCount = concurrencyGroup?.let {
-                pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            val concurrencyGroupNotNull = concurrencyGroup ?: pipelineId
+            val concurrencyGroupRunningCount = concurrencyGroupNotNull.let {
+                var size = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                     projectId = projectId,
                     concurrencyGroup = it,
                     status = listOf(BuildStatus.RUNNING)
                 ).size
+
+                // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 # 8143
+                if (it == pipelineId) {
+                    size += pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        status = listOf(BuildStatus.RUNNING)
+                    ).size
+                }
+                return@let size
             } ?: 0
             if (concurrencyGroupRunningCount >= 1) {
                 logger.info("[$pipelineId] 当前互斥组[$concurrencyGroup]同时只能运行一个构建任务，开始排队！")

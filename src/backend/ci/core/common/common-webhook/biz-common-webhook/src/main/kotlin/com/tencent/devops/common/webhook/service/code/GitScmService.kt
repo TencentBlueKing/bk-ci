@@ -323,30 +323,34 @@ class GitScmService @Autowired constructor(
         return if (authType == TokenTypeEnum.OAUTH) {
             client.get(ServiceOauthResource::class).gitGet(userName).data?.accessToken ?: ""
         } else {
-            val pair = DHUtil.initKey()
-            val encoder = Base64.getEncoder()
-            val decoder = Base64.getDecoder()
-            val credentialResult = client.get(ServiceCredentialResource::class).get(
-                projectId = projectId, credentialId = credentialId,
-                publicKey = encoder.encodeToString(pair.publicKey)
-            )
-            if (credentialResult.isNotOk() || credentialResult.data == null) {
-                throw ErrorCodeException(
-                    errorCode = credentialResult.status.toString(),
-                    defaultMessage = credentialResult.message
-                )
-            }
+            getCredential(projectId, credentialId)
+        }
+    }
 
-            val credential = credentialResult.data!!
-
-            String(
-                DHUtil.decrypt(
-                    data = decoder.decode(credential.v1),
-                    partBPublicKey = decoder.decode(credential.publicKey),
-                    partAPrivateKey = pair.privateKey
-                )
+    fun getCredential(projectId: String, credentialId: String): String {
+        val pair = DHUtil.initKey()
+        val encoder = Base64.getEncoder()
+        val decoder = Base64.getDecoder()
+        val credentialResult = client.get(ServiceCredentialResource::class).get(
+            projectId = projectId, credentialId = credentialId,
+            publicKey = encoder.encodeToString(pair.publicKey)
+        )
+        if (credentialResult.isNotOk() || credentialResult.data == null) {
+            throw ErrorCodeException(
+                errorCode = credentialResult.status.toString(),
+                defaultMessage = credentialResult.message
             )
         }
+
+        val credential = credentialResult.data!!
+
+        return String(
+            DHUtil.decrypt(
+                data = decoder.decode(credential.v1),
+                partBPublicKey = decoder.decode(credential.publicKey),
+                partAPrivateKey = pair.privateKey
+            )
+        )
     }
 
     private fun getType(repo: Repository): Pair<RepoAuthType?, ScmType>? {

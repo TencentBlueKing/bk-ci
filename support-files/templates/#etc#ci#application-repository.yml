@@ -63,3 +63,6 @@ tapd:
     callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/repo/tapd/callback
     serverUrl: __BK_CI_REPOSITORY_TAPD_SERVER_URL__
     apiUrl: __BK_CI_REPOSITORY_TAPD_API_URL__
+
+aes:
+  git: __BK_CI_REPOSITORY_AES_GIT__

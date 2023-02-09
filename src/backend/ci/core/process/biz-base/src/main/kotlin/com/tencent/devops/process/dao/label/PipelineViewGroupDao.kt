@@ -30,7 +30,6 @@ package com.tencent.devops.process.dao.label
 import com.tencent.devops.model.process.tables.TPipelineViewGroup
 import com.tencent.devops.model.process.tables.records.TPipelineViewGroupRecord
 import org.jooq.DSLContext
-import org.jooq.Result
 import org.jooq.impl.DSL.count
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

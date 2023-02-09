@@ -27,6 +27,7 @@ func NewIdleLoop() *IdleLoop {
 // IdleLoop 空循环, 目的是保持运行以维持心跳和资源的存在
 type IdleLoop struct {
 	ppid int32
+
 	// bk-booster -> cmd -> bk-idle-loop, so we should care about the pid of bk-booster
 	pppid int32
 }
@@ -37,6 +38,8 @@ func (l *IdleLoop) Run(ctx context.Context) (int, error) {
 }
 
 func (l *IdleLoop) run(pCtx context.Context) (int, error) {
+	defer blog.CloseLogs()
+
 	l.ppid = int32(os.Getppid())
 	p, err := process.NewProcess(l.ppid)
 	if err == nil {

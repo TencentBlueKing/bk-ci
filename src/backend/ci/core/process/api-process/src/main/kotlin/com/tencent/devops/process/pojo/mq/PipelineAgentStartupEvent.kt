@@ -47,19 +47,24 @@ data class PipelineAgentStartupEvent(
     val taskName: String,
     val os: String,
     val vmNames: String,
-    val startTime: Long,
+    @Deprecated("废弃字段")
+    val startTime: Long? = null,
     val channelCode: String,
     val dispatchType: DispatchType,
-    val zone: Zone?,
-    val stageId: String,
+    @Deprecated("废弃字段")
+    val zone: Zone? = null,
+    @Deprecated("废弃字段")
+    val stageId: String? = null,
     val containerId: String,
     val containerHashId: String?,
     val queueTimeoutMinutes: Int? = null,
-    val containerType: String,
+    @Deprecated("废弃字段")
+    val containerType: String? = null,
     val atoms: Map<String, String> = mapOf(), // 用插件框架开发的插件信息 key为插件code，value为下载路径
+    val executeCount: Int?,
+    val customBuildEnv: Map<String, String>? = null,
+    val dockerRoutingType: String? = "VM",
     override var actionType: ActionType = ActionType.REFRESH,
     override var delayMills: Int = 0,
-    val executeCount: Int?,
-    override var routeKeySuffix: String? = null,
-    val customBuildEnv: Map<String, String>? = null
+    override var routeKeySuffix: String? = null
 ) : IPipelineRoutableEvent(routeKeySuffix, actionType, source, projectId, pipelineId, userId, delayMills)

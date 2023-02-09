@@ -50,12 +50,6 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.SocketException
 import java.util.Enumeration
-import kotlin.collections.HashMap
-import kotlin.collections.Map
-import kotlin.collections.component1
-import kotlin.collections.component2
-import kotlin.collections.listOf
-import kotlin.collections.set
 
 object CommonUtils {
 
