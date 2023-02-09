@@ -7,7 +7,7 @@ import {
 } from './constants';
 export default {
   getUser() {
-    return http.get(`${PROJECT_PERFIX}/users`);
+    return http.get(`${PROJECT_PERFIX}/user/users`);
   },
   /** *
    * 获取已安装的扩展列表
@@ -60,6 +60,14 @@ export default {
   requestDiffProjectData(params: any) {
     const { englishName } = params;
     return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/diff`);
+  },
+
+  /**
+   * 取消更新项目信息
+   */
+  cancelUpdateProject(params: any) {
+    const { projectId } = params;
+    return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}/cancelUpdateProject`);
   },
 
   /**

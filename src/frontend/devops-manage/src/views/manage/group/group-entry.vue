@@ -172,7 +172,7 @@ export default {
         })
         .then((res) => {
           this.groupList = res;
-          this.iamIframePath = `user-group-detail/${res[0]?.id}`;
+          this.iamIframePath = `user-group-detail/${res[0]?.groupId}?role_id=${res[0]?.managerId}`;
         });
     },
 

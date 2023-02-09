@@ -47,9 +47,9 @@
         </span>
       </div>
     </section>
-    <div class="close-btn">
+    <!-- <div class="close-btn">
       <bk-button @click="handleShowDeleteGroup">{{ $t('关闭权限管理') }}</bk-button>
-    </div>
+    </div> -->
     <bk-dialog
       header-align="center"
       theme="danger"
