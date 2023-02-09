@@ -140,14 +140,18 @@ class PipelinePermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacPipelinePermissionService(
-        authProjectApi: AuthProjectApi,
-        authResourceApi: AuthResourceApi,
         authPermissionApi: AuthPermissionApi,
-        pipelineAuthServiceCode: PipelineAuthServiceCode
+        authProjectApi: AuthProjectApi,
+        pipelineAuthServiceCode: PipelineAuthServiceCode,
+        dslContext: DSLContext,
+        pipelineInfoDao: PipelineInfoDao,
+        authResourceApi: AuthResourceApi
     ): PipelinePermissionService = RbacPipelinePermissionService(
-        authProjectApi = authProjectApi,
-        authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
-        pipelineAuthServiceCode = pipelineAuthServiceCode
+        authProjectApi = authProjectApi,
+        pipelineAuthServiceCode = pipelineAuthServiceCode,
+        dslContext = dslContext,
+        pipelineInfoDao = pipelineInfoDao,
+        authResourceApi = authResourceApi
     )
 }
