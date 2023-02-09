@@ -301,6 +301,11 @@ func (b *Booster) getWorkersEnv() map[string]string {
 	requiredEnv[env.KeyExecutorPumpCacheDir] = b.config.Works.PumpCacheDir
 	requiredEnv[env.KeyExecutorPumpCacheSizeMaxMB] = strconv.Itoa(int(b.config.Works.PumpCacheSizeMaxMB))
 
+	if len(b.config.Works.PumpBlackList) > 0 {
+		requiredEnv[env.KeyExecutorPumpBlackKeys] = strings.Join(b.config.Works.PumpBlackList, env.CommonBKEnvSepKey)
+	}
+	requiredEnv[env.KeyExecutorPumpMinActionNum] = strconv.Itoa(int(b.config.Works.PumpMinActionNum))
+
 	if b.config.Works.IOTimeoutSecs > 0 {
 		requiredEnv[env.KeyExecutorIOTimeout] = strconv.Itoa(b.config.Works.IOTimeoutSecs)
 	}

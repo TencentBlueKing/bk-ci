@@ -20,7 +20,7 @@ import (
 )
 
 func getFileDetailsFromExecuteRequest(req *types.RemoteTaskExecuteRequest) []*types.FilesDetails {
-	fd := make([]*types.FilesDetails, 0, 100)
+	fd := make([]*types.FilesDetails, 0, len(req.Req.Commands[0].Inputfiles))
 	for _, c := range req.Req.Commands {
 		for _, f := range c.Inputfiles {
 			fd = append(fd, &types.FilesDetails{
@@ -30,6 +30,25 @@ func getFileDetailsFromExecuteRequest(req *types.RemoteTaskExecuteRequest) []*ty
 		}
 	}
 	return fd
+}
+
+func getMaxSizeFile(req *types.RemoteTaskExecuteRequest, threshold int64) (string, int64) {
+	var maxsize int64
+	fpath := ""
+	for _, c := range req.Req.Commands {
+		for _, v := range c.Inputfiles {
+			if v.FileSize > maxsize {
+				fpath = v.FilePath
+				maxsize = v.FileSize
+			}
+		}
+	}
+
+	if maxsize > threshold {
+		return fpath, maxsize
+	}
+
+	return "", 0
 }
 
 // updateTaskRequestInputFilesReady 根据给定的baseDirs, 标记request中对应index的文件为"已经发送", 可以直接使用
