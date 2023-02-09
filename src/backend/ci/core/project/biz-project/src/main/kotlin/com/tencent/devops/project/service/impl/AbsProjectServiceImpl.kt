@@ -319,10 +319,19 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     // 内部版独立实现
-    override fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO? {
+    override fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?,
+        needTips: Boolean
+    ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        val tipsStatus = getTipsStatus(userId = userId, projectId = englishName)
-        return ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
+        return if (needTips) {
+            val tipsStatus = getTipsStatus(userId = userId, projectId = englishName)
+            ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
+        } else {
+            ProjectUtils.packagingBean(record)
+        }
     }
 
     private fun getTipsStatus(userId: String, projectId: String): Int {
@@ -336,6 +345,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     tipsStatus = ProjectTipsStatus.NOT_SHOW.status
                 )
             }
+            logger.info("get tips status:$showTips|$tipsStatus")
             return if (showTips) {
                 tipsStatus
             } else {
@@ -910,12 +920,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            cancelCreateAuthProject(projectCode = projectInfo.englishName)
-            projectDao.updateProjectStatusByEnglishName(
-                dslContext = dslContext,
-                englishName = projectInfo.englishName,
-                approvalStatus = ProjectApproveStatus.CANCEL_CREATE.status
-            )
+            cancelCreateAuthProject(userId = userId, projectCode = projectInfo.englishName)
+            projectDao.delete(dslContext = dslContext, projectId = projectId)
         } catch (e: Exception) {
             logger.warn("The project cancel creation failed: ${projectInfo.englishName}", e)
             throw OperationException(
@@ -946,7 +952,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             )
         }
         try {
-            cancelUpdateAuthProject(projectCode = projectInfo.englishName)
+            cancelUpdateAuthProject(userId = userId, projectCode = projectInfo.englishName)
             projectDao.updateProjectStatusByEnglishName(
                 dslContext = dslContext,
                 englishName = projectInfo.englishName,
@@ -1027,10 +1033,12 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     )
 
     abstract fun cancelCreateAuthProject(
+        userId: String,
         projectCode: String
     )
 
     abstract fun cancelUpdateAuthProject(
+        userId: String,
         projectCode: String
     )
 

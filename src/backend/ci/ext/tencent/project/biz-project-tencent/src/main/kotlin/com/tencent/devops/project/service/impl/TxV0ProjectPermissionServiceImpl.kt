@@ -183,10 +183,11 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     }
 
     override fun cancelCreateAuthProject(
+        userId: String,
         projectCode: String
     ) = Unit
 
-    override fun cancelUpdateAuthProject(projectCode: String) = Unit
+    override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun createRoleGroupApplication(
         userId: String,

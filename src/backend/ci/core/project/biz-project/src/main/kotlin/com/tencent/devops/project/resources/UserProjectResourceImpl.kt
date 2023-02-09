@@ -81,7 +81,12 @@ class UserProjectResourceImpl @Autowired constructor(
 
     override fun get(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
         return Result(
-            projectService.getByEnglishName(userId, projectId, accessToken)
+            projectService.getByEnglishName(
+                userId = userId,
+                englishName = projectId,
+                accessToken = accessToken,
+                needTips = true
+            )
                 ?: throw OperationException("项目不存在")
         )
     }
