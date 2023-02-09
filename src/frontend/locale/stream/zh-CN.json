@@ -64,6 +64,7 @@
         "goToGit": "查看代码库"
     },
     "pipeline": {
+        "commitMsgWithEnter": "请输入提交消息后按回车键搜索",
         "queue": "排队中",
         "queueTimeout": "排队超时",
         "running": "运行中",

@@ -39,8 +39,11 @@ import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
+import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STATIC_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PIPELINE
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.parseArtifactoryType
@@ -53,12 +56,14 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.archive.config.BkRepoClientConfig
 import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.MimeUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
@@ -67,17 +72,22 @@ import java.io.File
 import java.io.OutputStream
 import java.net.URLDecoder
 import java.net.URLEncoder
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.NotFoundException
 
 @Service
-@Suppress("TooManyFunctions", "MagicNumber")
+@Suppress("TooManyFunctions", "MagicNumber", "ComplexMethod")
 @ConditionalOnProperty(prefix = "artifactory", name = ["realm"], havingValue = "bkrepo")
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
+    private val bkRepoClientConfig: BkRepoClientConfig,
     private val bkRepoClient: BkRepoClient
 ) : ArchiveFileServiceImpl() {
+
+    @Value("\${bkrepo.dockerRegistry:#{null}}")
+    private val dockerRegistry: String? = null
 
     override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         val nodeDetail = bkRepoClient.getFileDetail(userId = userId,
@@ -99,7 +109,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileChannelType: FileChannelTypeEnum,
         logo: Boolean?
     ): String {
-        val destPath = filePath ?: DefaultPathUtils.randomFileName()
+        val pathSplit = file.name.split('.')
+        val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
         val metadata = mutableMapOf<String, String>()
         metadata["shaContent"] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
@@ -111,7 +122,28 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             projectId!!
         }
         val repoName = BkRepoUtils.getRepoName(fileType)
-        return if (logo == true) {
+        return if (fileType == FileTypeEnum.BK_STATIC) {
+            bkRepoClient.uploadLocalFile(
+                userId = userId,
+                projectId = BKREPO_STATIC_PROJECT_ID,
+                repoName = REPO_NAME_STATIC,
+                path = destPath,
+                file = file,
+                gatewayFlag = false,
+                bkrepoApiUrl = bkRepoClientConfig.bkRepoApiUrl,
+                userName = bkRepoClientConfig.bkRepoStaticUserName,
+                password = bkRepoClientConfig.bkRepoStaticPassword,
+                properties = metadata
+            )
+            val configUrl = bkRepoClientConfig.bkRepoStaticRepoPrefixUrl
+            val staticRepoPrefixUrl = MessageFormat.format(configUrl, BKREPO_STATIC_PROJECT_ID, REPO_NAME_STATIC)
+            val defaultUrl = "$staticRepoPrefixUrl/$destPath?v=${System.currentTimeMillis() / 1000}"
+            if (fileChannelType == FileChannelTypeEnum.WEB_SHOW) {
+                "$defaultUrl&preview=true"
+            } else {
+                defaultUrl
+            }
+        } else if (logo == true) {
             bkRepoClient.uploadLocalFile(
                 userId = BKREPO_DEFAULT_USER,
                 projectId = BKREPO_STORE_PROJECT_ID,
@@ -220,7 +252,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+            repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM, REPO_NAME_IMAGE),
             fileNames = listOf(),
             metadata = searchProps.props,
             page = page ?: 1,
@@ -256,7 +288,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                         .timestamp(),
                     folder = false,
                     artifactoryType = ArtifactoryType.IMAGE,
-                    properties = metadata.map { m -> Property(m["key"].toString(), m["value"].toString()) }
+                    properties = metadata.map { m -> Property(m["key"].toString(), m["value"].toString()) },
+                    registry = dockerRegistry
                 )
             }
         } else {

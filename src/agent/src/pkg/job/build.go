@@ -36,6 +36,7 @@ import (
 	"io/ioutil"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
@@ -47,6 +48,17 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 )
+
+type BuildTotalManagerType struct {
+	// Lock 多协程修改时的执行锁，这个锁主要用来判断当前是否还有任务，所以添加了任务就可以解锁了
+	Lock sync.Mutex
+}
+
+var BuildTotalManager *BuildTotalManagerType
+
+func init() {
+	BuildTotalManager = new(BuildTotalManagerType)
+}
 
 const buildIntervalInSeconds = 5
 
@@ -95,39 +107,83 @@ func DoPollAndBuild() {
 			continue
 		}
 
-		instanceCount := GBuildManager.GetInstanceCount()
-		if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
-			logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
-				"ParallelTaskCount config: %d, instance count: %d",
-				config.GAgentConfig.ParallelTaskCount, instanceCount))
+		dockerCanRun, normalCanRun := checkParallelTaskCount()
+		if !dockerCanRun && !normalCanRun {
 			continue
 		}
 
-		// 在接取任务先获取锁，防止与其他任务产生干扰
-		GBuildManager.Lock.Lock()
+		// 在接取任务先获取锁，防止与其他操作产生干扰
+		BuildTotalManager.Lock.Lock()
 
 		buildInfo, err := getBuild()
 		if err != nil {
 			logs.Error("get build failed, retry, err", err.Error())
-			GBuildManager.Lock.Unlock()
+			BuildTotalManager.Lock.Unlock()
 			continue
 		}
 
 		if buildInfo == nil {
 			logs.Info("no build to run, skip")
-			GBuildManager.Lock.Unlock()
+			BuildTotalManager.Lock.Unlock()
+			continue
+		}
+
+		logs.Info("build info ", buildInfo, " dockerCanRun ", dockerCanRun)
+
+		if buildInfo.DockerBuildInfo != nil && dockerCanRun {
+			// 接取job任务之后才可以解除总任务锁解锁
+			GBuildDockerManager.AddBuild(buildInfo.BuildId, &api.ThirdPartyDockerTaskInfo{
+				ProjectId: buildInfo.ProjectId,
+				BuildId:   buildInfo.BuildId,
+				VmSeqId:   buildInfo.VmSeqId,
+			})
+			BuildTotalManager.Lock.Unlock()
+
+			runDockerBuild(buildInfo)
+			continue
+		}
+
+		if !normalCanRun {
+			BuildTotalManager.Lock.Unlock()
 			continue
 		}
 
 		// 接取任务之后解锁
 		GBuildManager.AddPreInstance(buildInfo.BuildId)
-		GBuildManager.Lock.Unlock()
+		BuildTotalManager.Lock.Unlock()
 
 		err = runBuild(buildInfo)
 		if err != nil {
 			logs.Error("start build failed: ", err.Error())
 		}
 	}
+}
+
+// checkParallelTaskCount 检查当前运行的最大任务数
+func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
+	// 检查docker任务
+	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
+	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
+		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
+			"maxJob config: %d, instance count: %d",
+			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))
+		dockerCanRun = false
+	} else {
+		dockerCanRun = true
+	}
+
+	// 检查普通任务
+	instanceCount := GBuildManager.GetInstanceCount()
+	if config.GAgentConfig.ParallelTaskCount != 0 && instanceCount >= config.GAgentConfig.ParallelTaskCount {
+		logs.Info(fmt.Sprintf("parallel task count exceed , wait job done, "+
+			"ParallelTaskCount config: %d, instance count: %d",
+			config.GAgentConfig.ParallelTaskCount, instanceCount))
+		normalCanRun = false
+	} else {
+		normalCanRun = true
+	}
+
+	return dockerCanRun, normalCanRun
 }
 
 // getBuild 从服务器认领要构建的信息
@@ -176,7 +232,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 						"\nRestore %s failed, `run install.sh` or `unzip agent.zip` in %s.",
 					agentJarPath, workDir, agentJarPath, workDir)
 				logs.Error(errorMsg)
-				workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+				workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.RecoverRunFileErrorEnum))
 			} else { // #5806 替换后修正版本号
 				if config.GAgentEnv.SlaveVersion != upgradeWorkerFileVersion {
 					config.GAgentEnv.SlaveVersion = upgradeWorkerFileVersion
@@ -188,7 +244,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 					"\nMissing %s, `run install.sh` or `unzip agent.zip` in %s.",
 				agentJarPath, workDir, agentJarPath, workDir)
 			logs.Error(errorMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errorMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errorMsg, api.LoseRunFileErrorEnum))
 		}
 	}
 
@@ -216,7 +272,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 	if tmpMkErr != nil {
 		errMsg := fmt.Sprintf("创建临时目录失败(create tmp directory failed): %s", tmpMkErr.Error())
 		logs.Error(errMsg)
-		workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+		workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.MakeTmpDirErrorEnum))
 		return tmpMkErr
 	}
 	if systemutil.IsWindows() {
@@ -236,7 +292,7 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "start worker process failed: " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
 		// 添加需要构建结束后删除的文件
@@ -250,14 +306,14 @@ func runBuild(buildInfo *api.ThirdPartyBuildInfo) error {
 		if err != nil {
 			errMsg := "准备构建脚本生成失败(create start script failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.PrepareScriptCreateErrorEnum))
 			return err
 		}
 		pid, err := command.StartProcess(startScriptFile, []string{}, workDir, goEnv, runUser)
 		if err != nil {
 			errMsg := "启动构建进程失败(start worker process failed): " + err.Error()
 			logs.Error(errMsg)
-			workerBuildFinish(&api.ThirdPartyBuildWithStatus{ThirdPartyBuildInfo: *buildInfo, Message: errMsg})
+			workerBuildFinish(buildInfo.ToFinish(false, errMsg, api.BuildProcessStartErrorEnum))
 			return err
 		}
 		GBuildManager.AddBuild(pid, buildInfo)

@@ -583,15 +583,17 @@ func (o *processManager) startCommand(dir, cmdPath, processName string, params [
 			index++
 		}
 
-		// to ensure the process has running
-		processID := strconv.Itoa(cmd.Process.Pid)
-		existed := o.processExistedByNameAndPid(processName, processID)
-		if existed {
-			return cmd.Process.Pid, nil
-		}
+		// // to ensure the process has running
+		// processID := strconv.Itoa(cmd.Process.Pid)
+		// existed := o.processExistedByNameAndPid(processName, processID)
+		// if existed {
+		// 	return cmd.Process.Pid, nil
+		// }
 
-		err = fmt.Errorf("not found running process for[%s %s]", processName, processID)
-		blog.Infof("%v", err)
+		// err = fmt.Errorf("not found running process for[%s %s]", processName, processID)
+		// blog.Infof("%v", err)
+		// return 0, err
+		// do not check process name now, for it does not exist for *.bat
 		return 0, err
 	}
 	return 0, nil

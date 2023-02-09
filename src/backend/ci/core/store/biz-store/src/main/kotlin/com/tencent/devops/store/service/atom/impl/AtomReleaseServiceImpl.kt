@@ -178,7 +178,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
 
     private fun validateAddMarketAtomReq(
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String>? {
         val atomCode = marketAtomCreateRequest.atomCode
         // 判断插件代码是否存在
         val codeCount = atomDao.countByCode(dslContext, atomCode)
@@ -186,8 +186,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomCode),
-                false
+                arrayOf(atomCode)
             )
         }
         val atomName = marketAtomCreateRequest.name
@@ -197,23 +196,22 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             // 抛出错误提示
             return MessageCodeUtil.generateResponseDataObject(
                 CommonMessageCode.PARAMETER_IS_EXIST,
-                arrayOf(atomName),
-                false
+                arrayOf(atomName)
             )
         }
-        return Result(true)
+        return null
     }
 
     @BkTimed(extraTags = ["publish", "addMarketAtom"], value = "store_publish_pipeline_atom")
     override fun addMarketAtom(
         userId: String,
         marketAtomCreateRequest: MarketAtomCreateRequest
-    ): Result<Boolean> {
+    ): Result<String> {
         logger.info("addMarketAtom userId is :$userId,marketAtomCreateRequest is :$marketAtomCreateRequest")
         val atomCode = marketAtomCreateRequest.atomCode
         val validateResult = validateAddMarketAtomReq(marketAtomCreateRequest)
-        logger.info("the validateResult is :$validateResult")
-        if (validateResult.isNotOk()) {
+        if (validateResult != null) {
+            logger.info("the validateResult is :$validateResult")
             return validateResult
         }
         val handleAtomPackageResult = handleAtomPackage(marketAtomCreateRequest, userId, atomCode)
@@ -222,9 +220,9 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             return Result(handleAtomPackageResult.status, handleAtomPackageResult.message, null)
         }
         val handleAtomPackageMap = handleAtomPackageResult.data
+        val id = UUIDUtil.generate()
         dslContext.transaction { t ->
             val context = DSL.using(t)
-            val id = UUIDUtil.generate()
             // 添加插件基本信息
             marketAtomDao.addMarketAtom(
                 dslContext = context,
@@ -278,7 +276,7 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 storeType = StoreTypeEnum.ATOM.type.toByte()
             )
         }
-        return Result(true)
+        return Result(id)
     }
 
     abstract fun handleAtomPackage(

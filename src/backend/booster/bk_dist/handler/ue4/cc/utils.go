@@ -11,11 +11,13 @@ package cc
 
 import (
 	"bufio"
+	"crypto/md5"
 	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 
 	dcFile "github.com/Tencent/bk-ci/src/booster/bk_dist/common/file"
@@ -223,6 +225,126 @@ func replaceWithNextExclude(s string, old byte, new string, nextExcludes []byte)
 	}
 
 	return string(targetslice)
+}
+
+// ensure compiler exist in args.
+func ensureCompilerRaw(args []string, workdir string) (string, []string, bool, string, string, string, error) {
+	responseFile := ""
+	sourcedependfile := ""
+	objectfile := ""
+	pchfile := ""
+	showinclude := false
+	if len(args) == 0 {
+		blog.Warnf("cc: ensure compiler got empty arg")
+		return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+	}
+
+	if args[0] == "/" || args[0] == "@" || isSourceFile(args[0]) || isObjectFile(args[0]) {
+		return responseFile, append([]string{defaultCompiler}, args...), showinclude, sourcedependfile, objectfile, pchfile, nil
+	}
+
+	for _, v := range args {
+		if strings.HasPrefix(v, "@") {
+			responseFile = strings.Trim(v[1:], "\"")
+
+			data := ""
+			if responseFile != "" {
+				var err error
+				data, err = readResponse(responseFile, workdir)
+				if err != nil {
+					blog.Infof("cc: failed to read response file:%s,err:%v", responseFile, err)
+					return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, err
+				}
+			}
+			// options, sources, err := parseArgument(data)
+			options, err := shlex.Split(replaceWithNextExclude(string(data), '\\', "\\\\", []byte{'"'}))
+			if err != nil {
+				blog.Infof("cc: failed to parse response file:%s,err:%v", responseFile, err)
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, err
+			}
+
+			args = []string{args[0]}
+			args = append(args, options...)
+
+		} else if v == "/showIncludes" {
+			showinclude = true
+		}
+	}
+
+	firstinclude := true
+	for i := range args {
+		if strings.HasPrefix(args[i], "-MF") {
+			if len(args[i]) > 3 {
+				sourcedependfile = args[i][3:]
+				continue
+			}
+
+			i++
+			if i >= len(args) {
+				blog.Warnf("cc: scan args: no output file found after -MF")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			sourcedependfile = args[i]
+		} else if strings.HasPrefix(args[i], "-o") {
+			// if -o just a prefix, the output file is also in this index, then skip the -o.
+			if len(args[i]) > 2 {
+				objectfile = args[i][2:]
+				blog.Infof("cc: got objectfile file:%s", objectfile)
+				continue
+			}
+
+			i++
+			if i >= len(args) {
+				blog.Warnf("cc: scan args: no output file found after -o")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			objectfile = args[i]
+			blog.Infof("cc: got objectfile file:%s", objectfile)
+		} else if strings.HasPrefix(args[i], "-include-pch") {
+			firstinclude = false
+			if len(args[i]) > 12 {
+				pchfile = args[i][12:]
+				continue
+			}
+
+			i++
+			if i >= len(args) {
+				blog.Warnf("cc: scan args: no output file found after -include-pch")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			pchfile = args[i]
+		} else if firstinclude && strings.HasPrefix(args[i], "-include") {
+			firstinclude = false
+			i++
+			if i >= len(args) {
+				blog.Warnf("cc: scan args: no output file found after -include")
+				return responseFile, nil, showinclude, sourcedependfile, objectfile, pchfile, ErrorMissingOption
+			}
+			pchfile = args[i] + ".gch"
+			blog.Infof("cc: ready check gch file of %s", pchfile)
+		}
+	}
+
+	if responseFile != "" && !filepath.IsAbs(responseFile) {
+		responseFile, _ = filepath.Abs(filepath.Join(workdir, responseFile))
+	}
+
+	if sourcedependfile != "" && !filepath.IsAbs(sourcedependfile) {
+		sourcedependfile, _ = filepath.Abs(filepath.Join(workdir, sourcedependfile))
+	}
+
+	if objectfile != "" && !filepath.IsAbs(objectfile) {
+		objectfile, _ = filepath.Abs(filepath.Join(workdir, objectfile))
+	}
+
+	if pchfile != "" && !filepath.IsAbs(pchfile) {
+		pchfile, _ = filepath.Abs(filepath.Join(workdir, pchfile))
+		if !dcFile.Stat(pchfile).Exist() {
+			pchfile = ""
+		}
+	}
+
+	return responseFile, args, showinclude, sourcedependfile, objectfile, pchfile, nil
 }
 
 // ensure compiler exist in args.
@@ -715,7 +837,7 @@ func scanArgs(args []string) (*ccArgs, error) {
 			r.inputFile = arg
 			continue
 		} else {
-			blog.Infof("cc: arg[%s] is not source file", arg)
+			blog.Debugf("cc: arg[%s] is not source file", arg)
 		}
 
 		// if this file is end with .o, it must be the output file.
@@ -949,6 +1071,43 @@ func makeTmpFile(tmpDir, prefix, ext string) (string, error) {
 	}
 
 	return "", fmt.Errorf("cc: create tmp file failed: %s", target)
+}
+
+func getPumpIncludeFile(tmpDir, prefix, ext string, args []string) (string, error) {
+	fullarg := strings.Join(args, " ")
+	md5str := md5.Sum([]byte(fullarg))
+	target := filepath.Join(tmpDir, fmt.Sprintf("%s_%x%s", prefix, md5str, ext))
+
+	return target, nil
+}
+
+func createFile(target string) error {
+	for i := 0; i < 3; i++ {
+		f, err := os.Create(target)
+		if err != nil {
+			blog.Errorf("cl: failed to create tmp file \"%s\": %s", target, err)
+			continue
+		}
+
+		if err = f.Close(); err != nil {
+			blog.Errorf("cl: failed to close tmp file \"%s\": %s", target, err)
+			return err
+		}
+
+		blog.Infof("cl: success to make tmp file \"%s\"", target)
+		return nil
+	}
+
+	return fmt.Errorf("cl: create tmp file failed: %s", target)
+}
+
+// only genegerate file name, do not create really
+func makeTmpFileName(tmpDir, prefix, ext string) string {
+	pid := os.Getpid()
+
+	return filepath.Join(tmpDir,
+		fmt.Sprintf("%s_%d_%s_%d%s",
+			prefix, pid, commonUtil.RandomString(8), time.Now().UnixNano(), ext))
 }
 
 // Remove "-o" options from argument list.
@@ -1213,4 +1372,115 @@ func MakeCmdLine(args []string) string {
 		s += EscapeArg(v)
 	}
 	return s
+}
+
+// 根据 clang 命令，获取相应的 resource-dir
+type clangResourceDirInfo struct {
+	clangcommandfullpath string
+	clangResourceDirpath string
+}
+
+var (
+	clangResourceDirlock sync.RWMutex
+	clangResourceDirs    []clangResourceDirInfo
+)
+
+func getResourceDir(cmd string) (string, error) {
+	var err error
+	exepfullath := cmd
+	if !filepath.IsAbs(cmd) {
+		exepfullath, err = dcUtil.CheckExecutable(cmd)
+		if err != nil {
+			return "", err
+		}
+	}
+
+	// search from cache
+	clangResourceDirlock.RLock()
+	resourcedir := ""
+	for _, v := range clangResourceDirs {
+		if exepfullath == v.clangcommandfullpath {
+			resourcedir = v.clangResourceDirpath
+			clangResourceDirlock.RUnlock()
+			return resourcedir, nil
+		}
+	}
+	clangResourceDirlock.RUnlock()
+
+	// try get resource-dir with clang exe path
+	clangResourceDirlock.Lock()
+	maxversion := ""
+	appended := false
+	defer func() {
+		// append to cache if not
+		if !appended {
+			clangResourceDirs = append(clangResourceDirs, clangResourceDirInfo{
+				clangcommandfullpath: exepfullath,
+				clangResourceDirpath: maxversion,
+			})
+		}
+
+		clangResourceDirlock.Unlock()
+	}()
+
+	// search from cache again, maybe append by others
+	for _, v := range clangResourceDirs {
+		if exepfullath == v.clangcommandfullpath {
+			resourcedir = v.clangResourceDirpath
+			appended = true
+			return resourcedir, nil
+		}
+	}
+
+	// real compute resource-dir now
+	exedir := filepath.Dir(exepfullath)
+	exeparentdir := filepath.Dir(exedir)
+	foundclangdir := false
+	target := filepath.Join(exeparentdir, "lib", "clang")
+	if dcFile.Stat(target).Exist() {
+		blog.Infof("cc: found clang dir:%s by exe dir:%s", target, exepfullath)
+		foundclangdir = true
+	} else {
+		target = filepath.Join(exeparentdir, "lib64", "clang")
+		if dcFile.Stat(target).Exist() {
+			blog.Infof("cc: found clang dir:%s by exe dir:%s", target, exepfullath)
+			foundclangdir = true
+		}
+	}
+
+	if !foundclangdir {
+		return resourcedir, fmt.Errorf("not found clang dir")
+	}
+
+	// get all version dirs, and select the max
+	files, err := ioutil.ReadDir(target)
+	if err != nil {
+		blog.Warnf("failed to get version dirs from dir:%s", target)
+		return resourcedir, err
+	}
+
+	versiondirs := []string{}
+	for _, file := range files {
+		if file.IsDir() {
+			nums := strings.Split(file.Name(), ".")
+			if len(nums) > 1 {
+				versiondirs = append(versiondirs, filepath.Join(target, file.Name()))
+			}
+		}
+	}
+	blog.Infof("cc: found all clang version dir:%v", versiondirs)
+
+	if len(versiondirs) == 0 {
+		return resourcedir, fmt.Errorf("not found any clang's version dir")
+	}
+
+	maxversion = versiondirs[0]
+	for _, v := range versiondirs {
+		if v > maxversion {
+			maxversion = v
+		}
+	}
+
+	blog.Infof("cc: found final resource dir:%s by exe dir:%s", maxversion, exepfullath)
+	return maxversion, nil
 }

@@ -153,12 +153,14 @@ func (o *operator) getServerStatus(clusterID, namespace, name string) (*op.Servi
 	info := &op.ServiceInfo{}
 
 	if err := o.getApplication(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("get server status, get application failed: %v", err)
+		blog.Errorf("get server status, clusterId(%s), ns(%s), name(%s) get application failed: %v",
+			clusterID, namespace, name, err)
 		return nil, err
 	}
 
 	if err := o.getTaskGroup(clusterID, namespace, name, info); err != nil {
-		blog.Errorf("get server status, get taskGroup failed: %v", err)
+		blog.Errorf("get server status,  clusterId(%s), ns(%s), name(%s) get taskGroup failed: %v",
+			clusterID, namespace, name, err)
 		return nil, err
 	}
 

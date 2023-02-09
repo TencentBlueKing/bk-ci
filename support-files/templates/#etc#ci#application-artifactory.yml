@@ -25,3 +25,6 @@ artifactory:
       clear:
         enable: false
         expireTimeDays: 7
+
+bkrepo:
+  dockerRegistry: __BK_REPO_DOCKER_REGISTRY__

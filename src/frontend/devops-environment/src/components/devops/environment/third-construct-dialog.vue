@@ -125,7 +125,7 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${DOCS_URL_PREFIX}/services/pools/self-hosted-agents`
+                installDocsLink: `${DOCS_URL_PREFIX}/Services/Resource/bkci-hosted-windows-agent.md`
             }
         },
         methods: {

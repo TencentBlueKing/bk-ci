@@ -68,6 +68,12 @@ interface UserStreamUserMessageResource {
         @ApiParam(value = "是否已读")
         @QueryParam("haveRead")
         haveRead: Boolean?,
+        @ApiParam(value = "消息唯一id")
+        @QueryParam("messageId")
+        messageId: String?,
+        @ApiParam(value = "触发人")
+        @QueryParam("triggerUserId")
+        triggerUserId: String?,
         @ApiParam(value = "页码")
         @QueryParam("page")
         page: Int?,

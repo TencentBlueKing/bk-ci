@@ -570,6 +570,26 @@ interface ServiceBuildResource {
         endBeginTime: String? = null
     ): Result<List<BuildHistory>>
 
+    @ApiOperation("获取流水线构建历史, 返回buildid")
+    @GET
+    @Path("/{projectId}/batch_get_builds")
+    fun getBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("状态id", required = false)
+        @QueryParam("buildStatus")
+        buildStatus: Set<BuildStatus>? = null,
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS
+    ): Result<List<String>>
+
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST
     // @Path("/projects/{projectId}/getPipelineLatestBuild")
