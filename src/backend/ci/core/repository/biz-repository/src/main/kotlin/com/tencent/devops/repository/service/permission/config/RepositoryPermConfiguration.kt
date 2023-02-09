@@ -133,12 +133,18 @@ class RepositoryPermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacRepositoryPermissionService(
+        repositoryDao: RepositoryDao,
+        dslContext: DSLContext,
+        client: Client,
+        tokenService: ClientTokenService,
         authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
         codeAuthServiceCode: CodeAuthServiceCode
     ): RepositoryPermissionService = RbacRepositoryPermissionService(
+        repositoryDao = repositoryDao,
+        dslContext = dslContext,
+        client = client,
+        tokenService = tokenService,
         authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
         codeAuthServiceCode = codeAuthServiceCode
     )
 }
