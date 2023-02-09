@@ -263,7 +263,7 @@ class ProjectDao {
                     paasProject.remark,
                     paasProject.updated_at?.time,
                     paasProject.use_bk,
-                    ProjectApproveStatus.SUCCEED.status,
+                    ProjectApproveStatus.APPROVED.status,
                     true
                 )
                 .execute()
@@ -368,7 +368,7 @@ class ProjectDao {
                 .set(ENGLISH_NAME, projectUpdateInfo.englishName)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
-                .set(APPROVAL_STATUS, ProjectApproveStatus.SUCCEED.status)
+                .set(APPROVAL_STATUS, ProjectApproveStatus.APPROVED.status)
                 .set(APPROVER, userId)
                 .set(SUBJECT_SCOPES, subjectScopesStr)
             projectUpdateInfo.authSecrecy?.let { update.set(AUTH_SECRECY, it) }
@@ -757,8 +757,7 @@ class ProjectDao {
     companion object {
         private val UNSUCCESSFUL_CREATE_STATUS = listOf(
             ProjectApproveStatus.CREATE_PENDING.status,
-            ProjectApproveStatus.CREATE_REJECT.status,
-            ProjectApproveStatus.CANCEL_CREATE.status
+            ProjectApproveStatus.CREATE_REJECT.status
         )
     }
 }

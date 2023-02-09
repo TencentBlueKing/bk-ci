@@ -166,7 +166,7 @@ class RbacProjectPermissionService(
         projectApprovalService.cancelUpdate(
             userId = userId,
             projectId = projectCode,
-            approvalStatus = ProjectApproveStatus.SUCCEED.status
+            approvalStatus = ProjectApproveStatus.APPROVED.status
         )
         authResourceApi.cancelUpdateResource(
             serviceCode = projectAuthServiceCode,

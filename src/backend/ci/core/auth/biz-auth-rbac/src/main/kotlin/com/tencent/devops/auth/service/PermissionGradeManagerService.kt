@@ -133,7 +133,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             val createManagerDTO = CreateManagerDTO.builder()
                 .system(iamConfiguration.systemId)
                 .name(name)
@@ -239,7 +239,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 else -> ManagerScopes(it.type, it.id)
             }
         } ?: listOf(ManagerScopes(ALL_MEMBERS, ALL_MEMBERS))
-        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
+        return if (projectApprovalInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(gradeManagerId)
             val updateManagerDTO = UpdateManagerDTO.builder()
                 .name(name)
