@@ -47,6 +47,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.dispatch.kubernetes.api.service.ServiceRemoteDevResource
+import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.EnvStatusEnum
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceCreateEvent
 import com.tencent.devops.dispatch.kubernetes.pojo.mq.WorkspaceOperateEvent
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
@@ -382,7 +383,7 @@ class WorkspaceService @Autowired constructor(
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
-            if (status.isRunning()) {
+            if (status.checkRunning()) {
                 logger.info("${workspace.name} is running.")
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
@@ -393,12 +394,35 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceAction.START
                 )
             }
+
+            if (status.notOk2doNextAction()) {
+                logger.info("${workspace.name} is $status, return error.")
+                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't start now.")
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
                 action = WorkspaceAction.START,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.NOT_FIRST_START)
+            )
+
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.STARTING
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.START,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    WorkspaceStatus.values()[workspace.status].name,
+                    WorkspaceStatus.STARTING.name
+                )
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -453,12 +477,25 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun afterStartWorkspace(event: RemoteDevUpdateEvent) {
+        if (!event.status) {
+            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
+            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+            when (workspaceInfo.status) {
+                EnvStatusEnum.running -> event.status = true
+                else -> logger.warn(
+                    "start workspace callback with error|" +
+                        "${event.workspaceName}|${workspaceInfo.status}"
+                )
+            }
+        }
+
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace ${event.workspaceName} not find")
         if (event.status) {
             val history = workspaceHistoryDao.fetchHistory(dslContext, event.workspaceName).firstOrNull()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
-                val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
-                    ?: throw CustomException(Response.Status.NOT_FOUND, "workspace ${event.workspaceName} not find")
                 workspaceDao.updateWorkspaceStatus(
                     workspaceName = event.workspaceName,
                     status = WorkspaceStatus.RUNNING,
@@ -499,8 +536,25 @@ class WorkspaceService @Autowired constructor(
 
             redisHeartBeat.refreshHeartbeat(event.workspaceName)
         } else {
-            // 启动失败
+            // 启动失败,记录为EXCEPTION
             logger.warn("start workspace ${event.workspaceName} failed")
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = event.workspaceName,
+                status = WorkspaceStatus.EXCEPTION,
+                dslContext = dslContext
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = event.workspaceName,
+                operator = event.userId,
+                action = WorkspaceAction.START,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    WorkspaceStatus.values()[workspace.status].name,
+                    WorkspaceStatus.EXCEPTION.name
+                )
+            )
         }
 
         webSocketDispatcher.dispatch(
@@ -543,17 +597,39 @@ class WorkspaceService @Autowired constructor(
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
-            if (status.isSleeping()) {
+            if (status.checkSleeping()) {
                 logger.info("${workspace.name} has been stopped, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been stopped")
             }
 
+            if (status.notOk2doNextAction()) {
+                logger.info("${workspace.name} is $status, return error.")
+                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't stop now.")
+            }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
                 operator = userId,
                 action = WorkspaceAction.SLEEP,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.MANUAL_STOP)
+            )
+
+            workspaceDao.updateWorkspaceStatus(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.SLEEPING
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = userId,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    WorkspaceStatus.values()[workspace.status].name,
+                    WorkspaceStatus.SLEEPING.name
+                )
             )
 
             val bizId = MDC.get(TraceTag.BIZID)
@@ -597,6 +673,18 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun afterStopWorkspace(event: RemoteDevUpdateEvent) {
+        if (!event.status) {
+            // 调devcloud接口查询是否已经启动成功，如果成功还是走成功的逻辑.
+            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+            when (workspaceInfo.status) {
+                EnvStatusEnum.stopped -> event.status = true
+                else -> logger.warn(
+                    "stop workspace callback with error|" +
+                        "${event.workspaceName}|${workspaceInfo.status}"
+                )
+            }
+        }
         doStopWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
@@ -612,9 +700,14 @@ class WorkspaceService @Autowired constructor(
                 ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
-            if (status.isDeleted()) {
+            if (status.checkDeleted()) {
                 logger.info("${workspace.name} has been deleted, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been deleted")
+            }
+
+            if (status.notOk2doNextAction()) {
+                logger.info("${workspace.name} is $status, return error.")
+                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't delete now.")
             }
 
             dslContext.transaction { configuration ->
@@ -631,6 +724,24 @@ class WorkspaceService @Autowired constructor(
                     workspaceName = workspaceName,
                     status = WorkspaceStatus.DELETED,
                     dslContext = transactionContext
+                )
+
+                workspaceDao.updateWorkspaceStatus(
+                    dslContext = transactionContext,
+                    workspaceName = workspaceName,
+                    status = WorkspaceStatus.DELETING
+                )
+
+                workspaceOpHistoryDao.createWorkspaceHistory(
+                    dslContext = transactionContext,
+                    workspaceName = workspaceName,
+                    operator = userId,
+                    action = WorkspaceAction.DELETING,
+                    actionMessage = String.format(
+                        getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                        WorkspaceStatus.values()[workspace.status].name,
+                        WorkspaceStatus.DELETING.name
+                    )
                 )
             }
 
@@ -673,6 +784,18 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun afterDeleteWorkspace(event: RemoteDevUpdateEvent) {
+        if (!event.status) {
+            // 调devcloud接口查询是否已经成功，如果成功还是走成功的逻辑.
+            val workspaceInfo = client.get(ServiceRemoteDevResource::class)
+                .getWorkspaceInfo(event.userId, event.workspaceName).data!!
+            when (workspaceInfo.status) {
+                EnvStatusEnum.deleted -> event.status = true
+                else -> logger.warn(
+                    "delete workspace callback with error|" +
+                        "${event.workspaceName}|${workspaceInfo.status}"
+                )
+            }
+        }
         doDeleteWS(event.status, event.userId, event.workspaceName, event.errorMsg)
     }
 
@@ -736,7 +859,7 @@ class WorkspaceService @Autowired constructor(
                     wsTemplateId = it.templateId,
                     status = status,
                     lastStatusUpdateTime = it.lastStatusUpdateTime.timestamp(),
-                    sleepingTime = if (status.isSleeping()) it.lastStatusUpdateTime.timestamp() else null,
+                    sleepingTime = if (status.checkSleeping()) it.lastStatusUpdateTime.timestamp() else null,
                     createUserId = it.creator,
                     workPath = it.workPath,
                     hostName = it.hostName
@@ -753,22 +876,24 @@ class WorkspaceService @Autowired constructor(
         // 查出所有正在运行ws的最新历史记录
         val latestHistory = workspaceHistoryDao.fetchLatestHistory(
             dslContext,
-            workspaces.asSequence().filter { WorkspaceStatus.values()[it.status].isRunning() }.map { it.name }.toSet()
+            workspaces.asSequence()
+                .filter { WorkspaceStatus.values()[it.status].checkRunning() }.map { it.name }.toSet()
         ).associateBy { it.workspaceName }
 
         // 查出所有已休眠状态ws的最新历史记录
         val latestSleepHistory = workspaceHistoryDao.fetchLatestHistory(
             dslContext,
-            workspaces.asSequence().filter { WorkspaceStatus.values()[it.status].isSleeping() }.map { it.name }.toSet()
+            workspaces.asSequence()
+                .filter { WorkspaceStatus.values()[it.status].checkSleeping() }.map { it.name }.toSet()
         ).associateBy { it.workspaceName }
         val usageTime = workspaces.sumOf {
-            it.usageTime + if (WorkspaceStatus.values()[it.status].isRunning()) {
+            it.usageTime + if (WorkspaceStatus.values()[it.status].checkRunning()) {
                 // 如果正在运行，需要加上目前距离该次启动的时间
                 Duration.between(latestHistory[it.name]?.startTime ?: LocalDateTime.now(), LocalDateTime.now()).seconds
             } else 0
         }
         val sleepingTime = workspaces.sumOf {
-            it.sleepingTime + if (WorkspaceStatus.values()[it.status].isSleeping()) {
+            it.sleepingTime + if (WorkspaceStatus.values()[it.status].checkSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
                 Duration.between(latestSleepHistory[it.name]?.endTime, LocalDateTime.now()).seconds
             } else 0
@@ -776,9 +901,9 @@ class WorkspaceService @Autowired constructor(
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toLong()
         return WorkspaceUserDetail(
-            runningCount = status.count { it.isRunning() },
-            sleepingCount = status.count { it.isSleeping() },
-            deleteCount = status.count { it.isDeleted() },
+            runningCount = status.count { it.checkRunning() },
+            sleepingCount = status.count { it.checkSleeping() },
+            deleteCount = status.count { it.checkDeleted() },
             chargeableTime = (usageTime - discountTime).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
@@ -800,12 +925,12 @@ class WorkspaceService @Autowired constructor(
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
 
-        val usageTime = workspace.usageTime + if (workspaceStatus.isRunning()) {
+        val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
             Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds
         } else 0
 
-        val sleepingTime = workspace.sleepingTime + if (workspaceStatus.isSleeping()) {
+        val sleepingTime = workspace.sleepingTime + if (workspaceStatus.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
             Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds
         } else 0
@@ -890,7 +1015,7 @@ class WorkspaceService @Autowired constructor(
             ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workSpaceName not find")
         // 校验状态
         val status = WorkspaceStatus.values()[workspace.status]
-        if (status.isSleeping()) {
+        if (status.checkSleeping()) {
             logger.info("$workspace has been stopped, return error.")
             throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
         }
@@ -966,7 +1091,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("heart beat delete workspace ${workspace.name}")
         // 校验状态
         val status = WorkspaceStatus.values()[workspace.status]
-        if (status.isDeleted()) {
+        if (status.checkDeleted()) {
             logger.info("$workspace has been deleted, return error.")
             throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
         }
@@ -1020,10 +1145,10 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun doDeleteWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String?) {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
         if (status) {
             // 清心跳
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -1044,6 +1169,24 @@ class WorkspaceService @Autowired constructor(
                     )
                 )
             }
+        } else {
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.EXCEPTION,
+                dslContext = dslContext
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.DELETE,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    WorkspaceStatus.values()[workspace.status].name,
+                    WorkspaceStatus.EXCEPTION.name
+                )
+            )
         }
 
         webSocketDispatcher.dispatch(
@@ -1073,11 +1216,11 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String?) {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
+            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
         if (status) {
             // 清心跳
             redisHeartBeat.deleteWorkspaceHeartbeat(operator, workspaceName)
-            val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
@@ -1117,6 +1260,24 @@ class WorkspaceService @Autowired constructor(
                     )
                 )
             }
+        } else {
+            workspaceDao.updateWorkspaceStatus(
+                workspaceName = workspaceName,
+                status = WorkspaceStatus.EXCEPTION,
+                dslContext = dslContext
+            )
+
+            workspaceOpHistoryDao.createWorkspaceHistory(
+                dslContext = dslContext,
+                workspaceName = workspaceName,
+                operator = operator,
+                action = WorkspaceAction.SLEEP,
+                actionMessage = String.format(
+                    getOpHistory(OpHistoryCopyWriting.ACTION_CHANGE),
+                    WorkspaceStatus.values()[workspace.status].name,
+                    WorkspaceStatus.EXCEPTION.name
+                )
+            )
         }
 
         webSocketDispatcher.dispatch(

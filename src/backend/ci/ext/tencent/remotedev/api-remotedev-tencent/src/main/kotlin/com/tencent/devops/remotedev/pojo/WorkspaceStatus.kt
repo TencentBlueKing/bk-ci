@@ -36,11 +36,19 @@ enum class WorkspaceStatus {
     STOPPED,
     SLEEP,
     DELETED,
-    EXCEPTION;
+    EXCEPTION,
+    STARTING,
+    SLEEPING,
+    DELETING;
 
-    fun isRunning() = this == RUNNING
+    fun checkRunning() = this == RUNNING
 
-    fun isDeleted() = this == DELETED
+    fun checkDeleted() = this == DELETED
 
-    fun isSleeping() = this == SLEEP || this == STOPPED
+    fun checkSleeping() = this == SLEEP || this == STOPPED
+
+    /**
+     * 当正在做某事时，不能新建任务去执行
+     */
+    fun notOk2doNextAction() = this == PREPARING || this == STARTING || this == SLEEPING || this == DELETING
 }

@@ -39,7 +39,8 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 
-@Component@Suppress("ALL")
+@Component
+@Suppress("ALL")
 class WorkspaceListener @Autowired constructor(
     private val remoteDevService: RemoteDevService,
     private val remoteDevDispatcher: RemoteDevDispatcher
@@ -68,7 +69,7 @@ class WorkspaceListener @Autowired constructor(
             logger.error("Handle workspace create error.", e)
         } catch (t: Throwable) {
             status = false
-            errorMsg  = t.message
+            errorMsg = t.message
             logger.error("Handle workspace create error.", t)
         } finally {
             // 业务逻辑处理完成回调remotedev事件
@@ -108,12 +109,12 @@ class WorkspaceListener @Autowired constructor(
                 else -> {
                 }
             }
-        }catch (e: BuildFailureException) {
+        } catch (e: BuildFailureException) {
             status = false
             errorMsg = e.formatErrorMessage + e.message
             logger.error("Handle workspace update error.", e)
         } catch (t: Throwable) {
-            errorMsg  = t.message
+            errorMsg = t.message
             logger.warn("Fail to handle workspace operate ($event)", t)
             status = false
         } finally {

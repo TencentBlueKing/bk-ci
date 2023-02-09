@@ -13,7 +13,7 @@ data class RemoteDevUpdateEvent(
     override val traceId: String = MDC.get(TraceTag.BIZID),
     override val workspaceName: String,
     val type: UpdateEventType,
-    val status: Boolean,
+    var status: Boolean,
     val environmentUid: String? = null,
     val environmentHost: String? = null,
     val errorMsg: String? = null,
