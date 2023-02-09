@@ -43,12 +43,15 @@ class RemoteDevUpdateListener @Autowired constructor(
 
     override fun execute(event: RemoteDevUpdateEvent) {
         logger.info("A message is received from dispatch k8s $event")
-
-        when (event.type) {
-            UpdateEventType.CREATE -> workspaceService.afterCreateWorkspace(event)
-            UpdateEventType.START -> workspaceService.afterStartWorkspace(event)
-            UpdateEventType.STOP -> workspaceService.afterStopWorkspace(event)
-            UpdateEventType.DELETE -> workspaceService.afterDeleteWorkspace(event)
+        kotlin.runCatching {
+            when (event.type) {
+                UpdateEventType.CREATE -> workspaceService.afterCreateWorkspace(event)
+                UpdateEventType.START -> workspaceService.afterStartWorkspace(event)
+                UpdateEventType.STOP -> workspaceService.afterStopWorkspace(event)
+                UpdateEventType.DELETE -> workspaceService.afterDeleteWorkspace(event)
+            }
+        }.onFailure {
+            logger.warn("RemoteDevUpdateEvent call back error", it)
         }
     }
 
