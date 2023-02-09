@@ -78,9 +78,15 @@ interface ProjectService {
     /**
      * 根据项目ID/英文ID获取项目信息对象
      * @param englishName projectCode 英文ID
+     * @param needTips 前端是否需要tips弹框,目前只有项目详情页需要
      * @return ProjectVO 如果没有则为null
      */
-    fun getByEnglishName(userId: String, englishName: String, accessToken: String?): ProjectVO?
+    fun getByEnglishName(
+        userId: String,
+        englishName: String,
+        accessToken: String?,
+        needTips: Boolean = false
+    ): ProjectVO?
 
     /**
      * 根据项目ID/英文ID获取项目审批中对比信息

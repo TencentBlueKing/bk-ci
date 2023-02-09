@@ -111,7 +111,7 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         } else {
-            permissionGradeManagerService.cancelCreateGradeManager(callBackId = callBackId)
+            permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
             client.get(ServiceProjectApprovalResource::class).createReject(
                 projectId = englishName,
                 applicant = callBackInfo.applicant,
@@ -138,6 +138,10 @@ class AuthItsmCallbackListener @Autowired constructor(
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )
             )
+        if (projectInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
+            logger.info("The project is already in normal state and cannot be updated|englishName = $englishName")
+            return
+        }
         val callBackId = callBackInfo.callbackId
         val currentStatus = itsmCallBackInfo.currentStatus
         authItsmCallbackDao.updateCallbackBySn(
@@ -161,7 +165,7 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         } else {
-            permissionGradeManagerService.cancelCreateGradeManager(callBackId = callBackId)
+            permissionGradeManagerService.rejectCancelApplication(callBackId = callBackId)
             client.get(ServiceProjectApprovalResource::class).updateReject(
                 projectId = englishName,
                 applicant = callBackInfo.applicant,
