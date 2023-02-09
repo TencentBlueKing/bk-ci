@@ -70,6 +70,7 @@ init:
   turbo: false
   bkrepo: false
   defaultImage: false
+  plugin: false
 
 # 多集群开关
 multiCluster:
