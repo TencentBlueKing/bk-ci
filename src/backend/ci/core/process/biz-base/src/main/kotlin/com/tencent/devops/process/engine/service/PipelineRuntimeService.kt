@@ -890,6 +890,7 @@ class PipelineRuntimeService @Autowired constructor(
                         buildId = buildId,
                         matrixGroupId = container.id!!
                     )
+                    updateExistsTask.removeIf { it.containerId == container.id }
                 }
                 // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
@@ -1327,7 +1328,6 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         buildTaskList.forEach {
             // 自动填充的构建机控制插件不需要存入Record
-            if (it.taskType == EnvControlTaskType.VM.name) return@forEach
             taskBuildRecords.add(
                 BuildRecordTask(
                     projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
