@@ -37,5 +37,7 @@ data class WorkspaceResponse(
     @ApiModelProperty("工作空间HOST")
     val workspaceHost: String? = null,
     @ApiModelProperty("工作空间状态")
-    val status: WorkspaceAction
+    val status: WorkspaceAction,
+    @ApiModelProperty("错误信息")
+    val errorMsg: String? = null
 )
