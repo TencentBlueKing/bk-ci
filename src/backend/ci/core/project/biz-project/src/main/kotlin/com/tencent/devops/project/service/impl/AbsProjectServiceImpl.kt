@@ -314,14 +314,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     ): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         return if (needTips) {
-            val tipsStatus = getTipsStatus(userId = userId, projectId = englishName)
+            val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
             ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
         } else {
             ProjectUtils.packagingBean(record)
         }
     }
 
-    protected fun getTipsStatus(userId: String, projectId: String): Int {
+    protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
         val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
         with(projectApprovalInfo) {
             val showTips = approvalStatus == ProjectApproveStatus.SUCCEED.status && updator == userId
