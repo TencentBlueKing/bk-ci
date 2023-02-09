@@ -26,7 +26,7 @@ const i18n = createI18n({
   },
 });
 
-createApp(App)
+const app = createApp(App)
   .use(router)
   .use(createPinia())
   .use(bkui)

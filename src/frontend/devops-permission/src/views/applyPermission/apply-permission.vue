@@ -1,20 +1,30 @@
 <script setup lang="ts">
+import http from '@/http/api';
 import PermissionHeader from '@/components/permission-header.vue';
 import GroupSearch from './group-search.vue';
 import {
   ref,
-  computed,
+  onMounted,
   nextTick,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
+import { Message } from 'bkui-vue';
+import { useRouter } from 'vue-router';
 const { t } = useI18n();
+const router = useRouter();
 
+const groupList = ref([]);
+const projectList = ref([]);
+const userName = ref('');
 const navs = ref([
-  { name: '我的权限', url: `/permission/${'hwweng'}` },
+  { name: '我的权限', url: `/permission/${'hwweng'}/permission` },
   { name: '权限申请' }
 ]);
 const formData = ref<any>({
-  expireTime: '',
+  projectCode: '',
+  applicant: '',
+  groupIds: [],
+  expiredAt: '2592000',
   reason: '',
 });
 const customTime = ref(1);
@@ -25,10 +35,12 @@ const timeFilters = ref({
   15552000: t('6个月'),
   31104000: t('12个月'),
 });
+const formRef = ref();
+const isLoading = ref(false);
 
 const handleChangeTime = (value) => {
-    currentActive.value = Number(value)
-    formData.value.expireTime = formatTimes(value)
+  currentActive.value = Number(value)
+  formData.value.expiredAt = formatTimes(value)
 };
 
 const formatTimes = (value) => {
@@ -55,12 +67,53 @@ const handleChangeCustomTime = (value) => {
 };
 
 const handleSubmit = () => {
-  if (currentActive.value === 'custom') {
-    const timestamp = customTime.value * 24 * 3600
-    formData.value.expireTime = formatTimes(timestamp)
-  }
-  console.log(formData.value)
-}
+  formRef.value.validate().then(async () => {
+    isLoading.value = true;
+    if (currentActive.value === 'custom') {
+      const timestamp = customTime.value * 24 * 3600
+      formData.value.expiredAt = formatTimes(timestamp)
+    }
+    formData.value.groupIds = groupList.value.map(i => i.id);
+    await http.applyToJoinGroup(formData.value).then(res => {
+      Message({
+        theme: 'success',
+        message: t('提交成功'),
+      });
+      router.push({
+        name: 'apply',
+        params: {
+          projectCode: formData.value.projectCode,
+        }
+      })
+    })
+    isLoading.value = false;
+  });
+};
+
+const handleChangeGroup = (values) => {
+  groupList.value = values;
+};
+const handleGroupClear = (index) => {
+  groupList.value.splice(index, 1);
+};
+
+const getUserInfo = () => {
+  http.getUser().then(res => {
+    formData.value.applicant = res.username;
+  });
+};
+
+const getAllProjectList = () => {
+  http.getAllProjectList().then(res => {
+    projectList.value = res;
+  });
+};
+onMounted(() => {
+  formData.value.expiredAt = formatTimes(2592000);
+  getUserInfo();
+  getAllProjectList();
+});
+
 </script>
 
 <template>
@@ -68,20 +121,43 @@ const handleSubmit = () => {
     <permission-header :navs="navs"></permission-header>
     <section class="apply-from-content">
       <bk-form
+        ref="formRef"
         class="group-form"
         :model="formData"
         label-width="150">
         <div class="form-group">
-          <bk-form-item :label="t('项目')">
-            <bk-select class="project-select"></bk-select>
+          <bk-form-item :label="t('项目')" required property="projectCode">
+            <bk-select
+              v-model="formData.projectCode"
+              filterable
+              :input-search="false"
+              class="project-select"
+            >
+              <bk-option
+                v-for="(project, index) in projectList"
+                :key="index"
+                :value="project.projectCode"
+                :label="project.projectName"
+              />
+            </bk-select>
           </bk-form-item>
-          <bk-form-item :label="t('选择用户组')">
-            <group-search></group-search>
+          <bk-form-item :label="t('选择用户组')" required property="groupIds">
+            <group-search
+              :groupList="groupList"
+              :project-code="formData.projectCode"
+              @handle-change-select-group="handleChangeGroup"
+            ></group-search>
           </bk-form-item>
         </div>
         <div class="form-group">
           <bk-form-item :label="t('已选用户组')">
-            <span class="empty-group">{{ t('请先从上方选择用户组') }}</span>
+            <span class="empty-group" v-if="!groupList.length">{{ t('请先从上方选择用户组') }}</span>
+            <div v-else class="selected-group">
+              <span class="group-item" v-for="(group, index) in groupList" :key="group.id">
+                {{ group.name }} 
+                <span @click="handleGroupClear(index)" class="permission-icon permission-icon-close-samll clear-icon"></span>
+              </span>
+            </div>
           </bk-form-item>
           <bk-form-item :label="t('申请期限')">
             <div class="bk-button-group deadline-wrapper">
@@ -135,12 +211,14 @@ const handleSubmit = () => {
             <bk-button
               class="form-btn"
               theme="primary"
+              :loading="isLoading"
               @click="handleSubmit"
             >
               {{ t('提交') }}
             </bk-button>
             <bk-button
               class="form-btn"
+              :loading="isLoading"
               @click="handleCancel"
             >
               {{ t('取消') }}
@@ -214,6 +292,21 @@ const handleSubmit = () => {
       justify-content: center;
       width: 35px;
       background: #fff;
+    }
+  }
+  .group-item {
+    display: inline-block;
+    height: 22px;
+    line-height: 22px;
+    font-size: 12px;
+    padding: 0 6px;
+    margin-right: 10px;
+    background: #F0F1F5;
+    border-radius: 2px;
+    .clear-icon {
+      cursor: pointer;
+      color: #989ca7;
+      font-size: 16px;
     }
   }
 </style>

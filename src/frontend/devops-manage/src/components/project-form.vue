@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {
   ref,
+  watch,
   onBeforeUnmount,
   computed,
   onMounted,
@@ -15,7 +16,7 @@ import http from '@/http/api';
 const {
   t,
 } = useI18n();
-const emits = defineEmits(['change']);
+const emits = defineEmits(['change', 'approvedChange']);
 
 const props = defineProps({
   data: Object,
@@ -217,6 +218,12 @@ const handleMessage = (event: any) => {
   }
 };
 
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () =>{
+  emits('approvedChange', true);
+}, {
+  deep: true,
+})
+
 onMounted(() => {
   fetchDepartmentList();
   window.addEventListener('message', handleMessage);
@@ -326,12 +333,12 @@ onBeforeUnmount(() => {
         v-model="projectData.authSecrecy"
         @change="handleChangeForm"
       >
-        <bk-radio class="mr10" :label="false">
+        <bk-radio class="mr10" :label="0">
           <Popover :content="t('非项目成员可通过`申请加入项目`申请加入')">
             <span class="authSecrecy-item">{{ t('私有项目') }}</span>
           </Popover>
         </bk-radio>
-        <bk-radio :label="true">
+        <bk-radio :label="1">
           <Popover :content="t('非项目成员不可通过`申请加入项目`申请加入')">
             <span class="authSecrecy-item">{{ t('保密项目') }}</span>
           </Popover>
