@@ -132,7 +132,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 workspacePath,
                 true
             )
-        } catch (e: Exception) {
+            } catch (ignored: Throwable) {
             if (pkgFileDir.exists() && pkgFileDir.listFiles()?.isEmpty() == true) {
                 // 空文件夹需要删除
                 pkgFileDir.delete()
@@ -189,7 +189,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 false
             )
         } catch (ignored: Throwable) {
-            logger.warn(
+            println(
                 "Start repeating retryNum: $retryNum, " +
                     "failScript Command: $command, " +
                         "Cause of error: ${ignored.message}"
