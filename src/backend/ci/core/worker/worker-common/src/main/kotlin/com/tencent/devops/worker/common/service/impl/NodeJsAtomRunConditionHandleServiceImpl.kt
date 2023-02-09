@@ -189,7 +189,7 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 false
             )
         } catch (ignored: Throwable) {
-            println(
+            logger.info(
                 "Start repeating retryNum: $retryNum, " +
                     "failScript Command: $command, " +
                         "Cause of error: ${ignored.message}"
