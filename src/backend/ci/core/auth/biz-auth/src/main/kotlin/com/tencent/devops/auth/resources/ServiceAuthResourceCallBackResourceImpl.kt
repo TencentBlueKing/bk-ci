@@ -23,22 +23,42 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.artifactory.pojo.enums
+package com.tencent.devops.auth.resources
 
-enum class FileTypeEnum(val fileType: String) {
-    BK_ARCHIVE("bk-archive"), // 根据每次构建有独立的存储
-    BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
-    BK_REPORT("bk-report"), // 报告产出物
-    BK_PLUGIN_FE("bk-plugin-fe"), // 插件自定义UI前端文件
-    BK_STATIC("bk-static"); // 静态文件
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.auth.api.callback.ServiceAuthResourceCallBackResource
+import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.common.web.RestResource
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-    fun toArtifactoryType(): ArtifactoryType {
-        return when (this) {
-            BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
+@RestResource
+class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
+    val resourceService: ResourceService
+) : ServiceAuthResourceCallBackResource {
+    override fun projectInfo(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO {
+        return resourceService.getProject(callBackInfo, token)
+    }
+
+    override fun resourceList(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO? {
+        logger.info("resourceList: $callBackInfo, token: $token")
+        return resourceService.getInstanceByResource(
+                callBackInfo = callBackInfo,
+                token = token
+            )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(ServiceAuthResourceCallBackResourceImpl::class.java)
     }
 }

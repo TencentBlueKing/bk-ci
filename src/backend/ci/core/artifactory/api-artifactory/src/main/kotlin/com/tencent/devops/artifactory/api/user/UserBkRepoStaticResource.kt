@@ -25,20 +25,40 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.pojo.enums
+package com.tencent.devops.artifactory.api.user
 
-enum class FileTypeEnum(val fileType: String) {
-    BK_ARCHIVE("bk-archive"), // 根据每次构建有独立的存储
-    BK_CUSTOM("bk-custom"), // 指定了自定义路径的归档类型，会覆盖
-    BK_REPORT("bk-report"), // 报告产出物
-    BK_PLUGIN_FE("bk-plugin-fe"), // 插件自定义UI前端文件
-    BK_STATIC("bk-static"); // 静态文件
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
+import java.io.InputStream
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-    fun toArtifactoryType(): ArtifactoryType {
-        return when (this) {
-            BK_ARCHIVE -> ArtifactoryType.PIPELINE
-            BK_CUSTOM -> ArtifactoryType.CUSTOM_DIR
-            else -> ArtifactoryType.CUSTOM_DIR
-        }
-    }
+@Api(tags = ["USER_BK_REPO"], description = "版本仓库-BkRepo静态文件")
+@Path("/user/bkrepo/statics")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserBkRepoStaticResource {
+    @ApiOperation("上传静态文件")
+    @POST
+    @Path("/file/upload")
+    @Consumes(MediaType.MULTIPART_FORM_DATA)
+    fun uploadStaticFile(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("文件", required = true)
+        @FormDataParam("file")
+        inputStream: InputStream,
+        @FormDataParam("file")
+        disposition: FormDataContentDisposition
+    ): Result<String?>
 }
