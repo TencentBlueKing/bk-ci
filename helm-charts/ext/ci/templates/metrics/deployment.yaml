@@ -1,15 +1,15 @@
 #metrics Deployment
-  {{ if .Values.metrics.enabled -}}
+{{ if .Values.metrics.enabled -}}
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   name: {{ include "bkci.names.fullname" . }}-metrics
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     {{- if .Values.commonLabels }}
-    {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
-            app.kubernetes.io/component: microservice
-            app.kubernetes.io/name: metrics
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: metrics
 spec:
   selector:
     matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
@@ -24,8 +24,8 @@ spec:
         {{- if .Values.metrics.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.metrics.podLabels "context" $) | nindent 8 }}
         {{- end }}
-                app.kubernetes.io/component: microservice
-                app.kubernetes.io/name: metrics
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: metrics
     spec:
       serviceAccountName: {{ .Values.rbac.serviceAccount }}
       {{- if .Values.metrics.hostAliases }}
@@ -50,7 +50,7 @@ spec:
       {{- end }}
       {{- if .Values.metrics.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.metrics.podSecurityContext "enabled" | toYaml | nindent 8 }}
-      {{- end }}
+      {{- end }}        
       containers:
         - name: metrics
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
@@ -102,11 +102,11 @@ spec:
             failureThreshold: 20
             successThreshold: 1
           volumeMounts:
-            - mountPath: /data/workspace/metrics/jvm
-              name: log-volume
-              subPathExpr: bkci/jvm/$(POD_NAME)
+          - mountPath: /data/workspace/metrics/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
       volumes:
-        - hostPath:
-            path: /data
-          name: log-volume
-  {{- end -}}
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

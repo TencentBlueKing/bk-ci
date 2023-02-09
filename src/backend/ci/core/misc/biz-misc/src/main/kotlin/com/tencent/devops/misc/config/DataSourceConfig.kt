@@ -224,8 +224,8 @@ class DataSourceConfig {
             username = datasourceUsername
             password = datasourcePassword
             driverClassName = Driver::class.java.name
-            minimumIdle = 10
-            maximumPoolSize = 50
+            minimumIdle = 1
+            maximumPoolSize = 8
             idleTimeout = 60000
             connectionInitSql = datasourceInitSql
             leakDetectionThreshold = datasouceLeakDetectionThreshold

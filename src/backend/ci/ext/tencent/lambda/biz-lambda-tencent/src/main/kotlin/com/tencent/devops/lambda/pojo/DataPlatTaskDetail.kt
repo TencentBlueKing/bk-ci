@@ -52,5 +52,8 @@ data class DataPlatTaskDetail(
     val centerId: String,
     val bgName: String,
     val deptName: String,
-    val centerName: String
+    val centerName: String,
+    val platformCode: String?,
+    val platformErrorCode: Int?,
+    val platformName: String?
 )

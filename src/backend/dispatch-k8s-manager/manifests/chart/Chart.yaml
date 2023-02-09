@@ -1,0 +1,17 @@
+apiVersion: v2
+name: kubernetes-manager
+description: A Helm chart for BlueKing CI Kubernetes Manager
+type: application
+version: 0.0.36
+appVersion: 0.0.31
+home: https://github.com/Tencent/bk-ci
+
+dependencies:
+  - name: mysql
+    version: 8.8.3
+    repository: https://charts.bitnami.com/bitnami
+    condition: mysql.enabled
+  - name: redis
+    version: 14.8.8
+    repository: https://charts.bitnami.com/bitnami
+    condition: redis.enabled

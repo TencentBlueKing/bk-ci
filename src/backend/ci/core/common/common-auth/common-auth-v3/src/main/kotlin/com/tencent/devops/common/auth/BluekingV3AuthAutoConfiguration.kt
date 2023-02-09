@@ -33,10 +33,10 @@ import com.tencent.bk.sdk.iam.service.impl.DefaultHttpClientServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.PolicyServiceImpl
 import com.tencent.bk.sdk.iam.service.impl.TokenServiceImpl
-import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
-import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
-import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
 import com.tencent.devops.common.auth.api.BluekingV3AuthPermissionApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthProjectApi
+import com.tencent.devops.common.auth.api.BluekingV3AuthTokenApi
+import com.tencent.devops.common.auth.api.BluekingV3ResourceApi
 import com.tencent.devops.common.auth.code.BluekingV3ArtifactoryAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3BcsAuthServiceCode
 import com.tencent.devops.common.auth.code.BluekingV3CodeAuthServiceCode
@@ -49,6 +49,7 @@ import com.tencent.devops.common.auth.code.BluekingV3TicketAuthServiceCode
 import com.tencent.devops.common.auth.service.IamEsbService
 import com.tencent.devops.common.redis.RedisOperation
 import org.springframework.beans.factory.annotation.Value
+import org.springframework.boot.autoconfigure.AutoConfigureBefore
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -63,6 +64,7 @@ import org.springframework.core.Ordered
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "bk_login_v3")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@AutoConfigureBefore(name = ["com.tencent.devops.common.auth.MockAuthAutoConfiguration"])
 class BluekingV3AuthAutoConfiguration {
 
     @Value("\${auth.url:}")

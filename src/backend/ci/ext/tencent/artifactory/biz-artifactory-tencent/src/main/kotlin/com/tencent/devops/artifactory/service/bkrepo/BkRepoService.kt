@@ -70,6 +70,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
@@ -89,6 +90,10 @@ class BkRepoService @Autowired constructor(
     val client: Client,
     val shortUrlService: ShortUrlService
 ) : RepoService {
+
+    @Value("\${bkrepo.dockerRegistry:#{null}}")
+    private val dockerRegistry: String? = null
+
     override fun list(
         userId: String,
         projectId: String,
@@ -100,6 +105,7 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.PIPELINE -> {
                 bkRepoPipelineDirService.list(userId, projectId, path)
             }
+
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
@@ -161,8 +167,10 @@ class BkRepoService @Autowired constructor(
         argPath: String,
         properties: Map<String, String>
     ) {
-        logger.info("setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
-            "argPath: $argPath, properties: $properties")
+        logger.info(
+            "setProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType, " +
+                    "argPath: $argPath, properties: $properties"
+        )
         if (properties.isEmpty()) {
             logger.info("property empty")
             return
@@ -177,8 +185,10 @@ class BkRepoService @Autowired constructor(
         artifactoryType: ArtifactoryType,
         path: String
     ): List<Property> {
-        logger.info("getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
-            " path: $path")
+        logger.info(
+            "getProperties, userId: $userId, projectId: $projectId, artifactoryType: $artifactoryType," +
+                    " path: $path"
+        )
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val matadataMap =
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
@@ -279,7 +289,7 @@ class BkRepoService @Autowired constructor(
                 metadata = mapOf(),
                 page = 0,
                 pageSize = 10000
-            ).forEach {
+            ).records.forEach {
                 resultList.add(RepoUtils.toFileDetail(it))
             }
         }
@@ -303,8 +313,10 @@ class BkRepoService @Autowired constructor(
         pipelineId: String,
         buildId: String
     ): List<AppFileInfo> {
-        logger.info("getBuildFileList, userId: $userId, projectId: $projectId," +
-                " pipelineId: $pipelineId, buildId: $buildId")
+        logger.info(
+            "getBuildFileList, userId: $userId, projectId: $projectId," +
+                    " pipelineId: $pipelineId, buildId: $buildId"
+        )
         pipelineService.validatePermission(
             userId,
             projectId,
@@ -326,7 +338,7 @@ class BkRepoService @Autowired constructor(
                 metadata = mapOf(ARCHIVE_PROPS_PIPELINE_ID to pipelineId, ARCHIVE_PROPS_BUILD_ID to buildId),
                 page = 0,
                 pageSize = 10000
-            )
+            ).records
 
             val fileInfoList = transferFileInfo(projectId, nodeList, listOf(), false)
             val pipelineCanDownloadList = pipelineService.filterPipeline(userId, projectId)
@@ -344,9 +356,11 @@ class BkRepoService @Autowired constructor(
                         }
                         flag
                     }
+
                     it.name.endsWith(".shell.apk") -> {
                         true
                     }
+
                     it.name.endsWith(".ipa") && !it.name.endsWith("_enterprise_sign.ipa") -> {
                         val enterpriseSignFileName = "${it.path.removeSuffix(".ipa")}_enterprise_sign.ipa"
                         var flag = true
@@ -357,9 +371,11 @@ class BkRepoService @Autowired constructor(
                         }
                         flag
                     }
+
                     it.name.endsWith("_enterprise_sign.ipa") -> {
                         true
                     }
+
                     else -> {
                         false
                     }
@@ -571,7 +587,8 @@ class BkRepoService @Autowired constructor(
                     DateTimeFormatter.ISO_DATE_TIME
                 ).timestamp(),
                 artifactoryType = ArtifactoryType.IMAGE,
-                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) }
+                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) },
+                registry = dockerRegistry
             )
         }
     }
@@ -608,7 +625,7 @@ class BkRepoService @Autowired constructor(
             metadata = condition.properties,
             page = 0,
             pageSize = 10000
-        )
+        ).records
 
         return fileList.sortedByDescending { it.lastModifiedDate }.map { it.fullPath }
     }
@@ -673,7 +690,7 @@ class BkRepoService @Autowired constructor(
             metadata = mapOf(),
             page = 0,
             pageSize = 10000
-        ).map { it.fullPath }
+        ).records.map { it.fullPath }
         logger.info("match files: $srcFiles")
 
         val destPathFolder = "/share/$projectId/${PathUtils.normalize(targetPath).removePrefix("/")}"
@@ -703,8 +720,10 @@ class BkRepoService @Autowired constructor(
         fullPath: String,
         ttl: Int
     ): String {
-        logger.info("externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
-                " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl")
+        logger.info(
+            "externalDownloadUrl, creatorId: $creatorId, userId: $userId," +
+                    " projectId: $projectId, artifactoryType: $artifactoryType, fullPath: $fullPath, ttl: $ttl"
+        )
         val shareUri = bkRepoClient.createShareUri(
             creatorId = creatorId,
             projectId = projectId,

@@ -35,8 +35,7 @@ export default {
 
     getDownloadLogFromArtifactory ({ projectId, pipelineId, buildId, tag, executeCount }) {
         return api.get(`${ARTIFACTORY_PREFIX}/user/artifactories/log/plugin/${projectId}/${pipelineId}/${buildId}/${tag}/${executeCount}`).then((res) => {
-            const data = res.data || {}
-            return data.url || ''
+            return res.url || ''
         })
     },
 
@@ -102,6 +101,10 @@ export default {
 
     getPipelineBranches (params) {
         return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/branches`, { params })
+    },
+
+    getPipelineBuildBranches (params) {
+        return api.get(`${STREAM_PERFIX}/user/gitcode/projects/repository/local_branches`, { params })
     },
 
     getPipelineCommits (params) {

@@ -31,7 +31,6 @@ import com.tencent.devops.common.pipeline.enums.BuildScriptType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Deprecated("无用，待删除")
 @Suppress("UNUSED")
 @ApiModel("CodeCC代码检查任务", description = LinuxPaasCodeCCScriptElement.classType)
 data class LinuxPaasCodeCCScriptElement(

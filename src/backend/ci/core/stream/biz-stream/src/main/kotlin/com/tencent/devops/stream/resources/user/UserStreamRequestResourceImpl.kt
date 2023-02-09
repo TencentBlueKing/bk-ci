@@ -30,9 +30,11 @@ package com.tencent.devops.stream.resources.user
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.stream.api.user.UserStreamRequestResource
+import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.EventTypeConf
 import com.tencent.devops.stream.pojo.StreamGitRequestHistory
 import com.tencent.devops.stream.service.StreamRequestService
@@ -41,7 +43,8 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class UserStreamRequestResourceImpl @Autowired constructor(
-    private val streamRequestService: StreamRequestService
+    private val streamRequestService: StreamRequestService,
+    private val permissionService: StreamPermissionService
 ) : UserStreamRequestResource {
     override fun getMergeBuildList(
         userId: String,
@@ -51,6 +54,11 @@ class UserStreamRequestResourceImpl @Autowired constructor(
     ): Result<Page<StreamGitRequestHistory>> {
         val gitProjectId = GitCommonUtils.getGitProjectId(projectId)
         checkParam(userId)
+        permissionService.checkStreamPermission(
+            userId = userId,
+            projectId = projectId,
+            permission = AuthPermission.VIEW
+        )
         return Result(streamRequestService.getRequestList(userId, gitProjectId, page, pageSize))
     }
 

@@ -28,19 +28,20 @@
 package com.tencent.devops.common.dispatch.sdk.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.service.DispatchService
+import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
+import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQEventDispatcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
-import com.tencent.devops.common.dispatch.sdk.utils.ChannelUtils
 
 @Configuration
 class SDKConfiguration {
@@ -65,6 +66,12 @@ class SDKConfiguration {
         @Autowired buildLogPrinter: BuildLogPrinter
     ) =
         JobQuotaService(client, buildLogPrinter)
+
+    @Bean
+    fun dockerRoutingSdkService(
+        @Autowired redisOperation: RedisOperation
+    ) =
+        DockerRoutingSdkService(redisOperation)
 
     @Bean
     fun pipelineEventDispatcher(@Autowired rabbitTemplate: RabbitTemplate): PipelineEventDispatcher {

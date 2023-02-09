@@ -32,6 +32,7 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -49,10 +50,9 @@ import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
-import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -75,7 +75,6 @@ object LoggerService {
     private val running = AtomicBoolean(true)
     private var currentTaskLineNo = 0
     private val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss:SSS")
-    private const val SENSITIVE_MIXER = "******"
 
     /**
      * 构建日志处理的异步线程池
@@ -245,7 +244,7 @@ object LoggerService {
         }
 
         // #4273 敏感信息过滤，遍历所有敏感信息是否存在日志中
-        realMessage = fixSensitiveContent(realMessage)
+        realMessage = SensitiveValueService.fixSensitiveContent(realMessage)
 
         val logMessage = LogMessage(
             message = realMessage,
@@ -284,16 +283,6 @@ object LoggerService {
         } catch (ignored: InterruptedException) {
             logger.error("写入 $logType 日志行失败：", ignored)
         }
-    }
-
-    private fun fixSensitiveContent(message: String): String {
-        var realMessage = message
-        SensitiveValueService.sensitiveStringSet.forEach { sensitiveStr ->
-            if (realMessage.contains(sensitiveStr)) {
-                realMessage = realMessage.replace(sensitiveStr, SENSITIVE_MIXER)
-            }
-        }
-        return realMessage
     }
 
     fun addWarnLine(message: String) {

@@ -37,8 +37,8 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
@@ -695,17 +695,44 @@ class ServiceGitResourceImpl @Autowired constructor(
         )
     }
 
+    override fun enableCi(
+        projectName: String,
+        token: String,
+        tokenType: TokenTypeEnum,
+        enable: Boolean?
+    ): Result<Boolean> {
+        return gitService.enableCi(projectName = projectName, token = token, tokenType = tokenType, enable = enable)
+    }
+
     override fun gitCreateFile(
         gitProjectId: String,
         token: String,
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         tokenType: TokenTypeEnum
     ): Result<Boolean> {
         return Result(
             gitService.gitCreateFile(
                 gitProjectId = gitProjectId,
                 token = token,
-                gitCreateFile = gitCreateFile,
+                gitOperationFile = gitOperationFile,
+                tokenType = tokenType
+            )
+        )
+    }
+
+    override fun tGitUpdateFile(
+        repoUrl: String?,
+        repoName: String,
+        token: String,
+        gitOperationFile: GitOperationFile,
+        tokenType: TokenTypeEnum
+    ): Result<Boolean> {
+        return Result(
+            gitService.tGitUpdateFile(
+                repoUrl = repoUrl,
+                repoName = repoName,
+                token = token,
+                gitOperationFile = gitOperationFile,
                 tokenType = tokenType
             )
         )

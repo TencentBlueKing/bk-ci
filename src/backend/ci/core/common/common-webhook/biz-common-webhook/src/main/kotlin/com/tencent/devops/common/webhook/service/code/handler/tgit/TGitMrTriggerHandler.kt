@@ -71,12 +71,13 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PathFilterConfig
 import com.tencent.devops.common.webhook.pojo.code.WebHookParams
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
-import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.EventCacheService
+import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.filter.BranchFilter
 import com.tencent.devops.common.webhook.service.code.filter.ContainsFilter
 import com.tencent.devops.common.webhook.service.code.filter.PathFilterFactory
 import com.tencent.devops.common.webhook.service.code.filter.SkipCiFilter
+import com.tencent.devops.common.webhook.service.code.filter.ThirdFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilter
 import com.tencent.devops.common.webhook.service.code.filter.WebhookFilterResponse
 import com.tencent.devops.common.webhook.service.code.handler.GitHookTriggerHandler
@@ -89,14 +90,19 @@ import com.tencent.devops.repository.pojo.CodeGitlabRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.WebhookCommit
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import java.util.Date
 
 @CodeWebhookHandler
 @Suppress("TooManyFunctions")
 class TGitMrTriggerHandler(
     private val gitScmService: GitScmService,
-    private val eventCacheService: EventCacheService
+    private val eventCacheService: EventCacheService,
+    // stream没有这个配置
+    @Autowired(required = false)
+    private val callbackCircuitBreakerRegistry: CircuitBreakerRegistry? = null
 ) : GitHookTriggerHandler<GitMergeRequestEvent> {
 
     companion object {
@@ -196,6 +202,7 @@ class TGitMrTriggerHandler(
                 included = convert(includeMrAction)
             )
 
+            var mrChangeFiles: Set<String>? = null
             // 懒加载请求修改的路径,只有前面所有匹配通过,再去查询
             val pathFilter = object : WebhookFilter {
                 override fun doFilter(response: WebhookFilterResponse): Boolean {
@@ -210,6 +217,7 @@ class TGitMrTriggerHandler(
                         }
                         eventCacheService.getMergeRequestChangeInfo(projectId, mrId, repository)
                     }?.toList() ?: emptyList()
+                    mrChangeFiles = changeFiles.toSet()
                     return PathFilterFactory.newPathFilter(
                         PathFilterConfig(
                             pathFilterType = pathFilterType,
@@ -227,7 +235,18 @@ class TGitMrTriggerHandler(
                 event.object_attributes.last_commit.message,
                 pipelineId
             )
-            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter)
+            val thirdFilter = ThirdFilter(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                event = event,
+                changeFiles = mrChangeFiles,
+                enableThirdFilter = enableThirdFilter,
+                thirdUrl = thirdUrl,
+                thirdSecretToken = thirdSecretToken,
+                gitScmService = gitScmService,
+                callbackCircuitBreakerRegistry = callbackCircuitBreakerRegistry
+            )
+            return listOf(sourceBranchFilter, skipCiFilter, pathFilter, commitMessageFilter, actionFilter, thirdFilter)
         }
     }
 
@@ -244,18 +263,6 @@ class TGitMrTriggerHandler(
                 repository = repository
             )
         )
-        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = event.object_attributes.source_branch
-        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = event.object_attributes.target_branch
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = event.object_attributes.target.http_url
-        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = event.object_attributes.source.http_url
-        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = event.object_attributes.target_branch
-        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = event.object_attributes.source_branch
-        startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = event.object_attributes.source_project_id
-        startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = event.object_attributes.target_project_id
-        startParams[PIPELINE_WEBHOOK_SOURCE_REPO_NAME] =
-            GitUtils.getProjectName(event.object_attributes.source.http_url)
-        startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
-            GitUtils.getProjectName(event.object_attributes.target.http_url)
         startParams[BK_REPO_GIT_WEBHOOK_MR_URL] = event.object_attributes.url ?: ""
         val lastCommit = event.object_attributes.last_commit
         startParams[BK_REPO_GIT_WEBHOOK_MR_LAST_COMMIT] = lastCommit.id
@@ -267,27 +274,52 @@ class TGitMrTriggerHandler(
         startParams[PIPELINE_GIT_REPO_URL] = event.object_attributes.target.http_url
         startParams[PIPELINE_GIT_BASE_REPO_URL] = event.object_attributes.source.http_url
         startParams[PIPELINE_GIT_HEAD_REPO_URL] = event.object_attributes.target.http_url
-        startParams[PIPELINE_GIT_MR_URL] = event.object_attributes.url ?: ""
         startParams[PIPELINE_GIT_EVENT] = GitMergeRequestEvent.classType
+
+        // HEAD_REF 和 BASE_REF 不符合github规范 但是已经按此规则用了，所以target和source相关的上下文暂时不计划改动
         startParams[PIPELINE_GIT_HEAD_REF] = event.object_attributes.target_branch
         startParams[PIPELINE_GIT_BASE_REF] = event.object_attributes.source_branch
-        startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
         startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] = event.object_attributes.target_branch
         startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_TARGET_PROJECT_ID] = event.object_attributes.target_project_id
+        startParams[PIPELINE_WEBHOOK_SOURCE_PROJECT_ID] = event.object_attributes.source_project_id
+        startParams[BK_REPO_GIT_WEBHOOK_MR_TARGET_URL] = event.object_attributes.target.http_url
+        startParams[BK_REPO_GIT_WEBHOOK_MR_SOURCE_URL] = event.object_attributes.source.http_url
+        startParams[PIPELINE_WEBHOOK_TARGET_BRANCH] = event.object_attributes.target_branch
+        startParams[PIPELINE_WEBHOOK_SOURCE_BRANCH] = event.object_attributes.source_branch
+        startParams[PIPELINE_WEBHOOK_TARGET_REPO_NAME] =
+            GitUtils.getProjectName(event.object_attributes.target.http_url)
+        startParams[PIPELINE_WEBHOOK_SOURCE_REPO_NAME] =
+            GitUtils.getProjectName(event.object_attributes.source.http_url)
+
+        startParams[PIPELINE_WEBHOOK_EVENT_TYPE] = CodeEventType.MERGE_REQUEST.name
         startParams[PIPELINE_WEBHOOK_SOURCE_URL] = event.object_attributes.source.http_url
         startParams[PIPELINE_WEBHOOK_TARGET_URL] = event.object_attributes.target.http_url
-        startParams[PIPELINE_GIT_MR_ID] = event.object_attributes.id.toString()
-        startParams[PIPELINE_GIT_MR_IID] = event.object_attributes.iid.toString()
         startParams[PIPELINE_GIT_COMMIT_AUTHOR] = event.object_attributes.last_commit.author.name
-        startParams[PIPELINE_GIT_MR_TITLE] = event.object_attributes.title
-        if (!event.object_attributes.description.isNullOrBlank()) {
-            startParams[PIPELINE_GIT_MR_DESC] = event.object_attributes.description!!
-        }
-        startParams[PIPELINE_GIT_MR_PROPOSER] = event.user.username
         startParams[PIPELINE_GIT_MR_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_ACTION] = event.object_attributes.action ?: ""
         startParams[PIPELINE_GIT_EVENT_URL] = event.object_attributes.url ?: ""
+
+        // 有覆盖风险的上下文做二次确认
+        startParams.putIfEmpty(PIPELINE_GIT_MR_ID, event.object_attributes.id.toString())
+        startParams.putIfEmpty(PIPELINE_GIT_MR_URL, event.object_attributes.url ?: "")
+        startParams.putIfEmpty(PIPELINE_GIT_MR_IID, event.object_attributes.iid.toString())
+        startParams.putIfEmpty(PIPELINE_GIT_MR_TITLE, event.object_attributes.title)
+        if (!event.object_attributes.description.isNullOrBlank()) {
+            startParams.putIfEmpty(PIPELINE_GIT_MR_DESC, event.object_attributes.description!!)
+        }
+        startParams.putIfEmpty(PIPELINE_GIT_MR_PROPOSER, event.user.username)
+
         return startParams
+    }
+
+    private fun <K, V> MutableMap<K, V>.putIfEmpty(key: K, value: V): V {
+        val v = get(key)
+        if (v != null && v.toString().isNotEmpty()) {
+            return v
+        }
+        this[key] = value
+        return value
     }
 
     override fun getWebhookCommitList(
@@ -342,11 +374,11 @@ class TGitMrTriggerHandler(
         }
         // MR提交人
         val mrInfo = eventCacheService.getMergeRequestInfo(projectId, mrRequestId, repository)
-        val reviewers = eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)?.reviewers
+        val reviewInfo = eventCacheService.getMergeRequestReviewersInfo(projectId, mrRequestId, repository)
 
         return WebhookUtils.mrStartParam(
             mrInfo = mrInfo,
-            reviewers = reviewers,
+            reviewInfo = reviewInfo,
             mrRequestId = mrRequestId
         )
     }

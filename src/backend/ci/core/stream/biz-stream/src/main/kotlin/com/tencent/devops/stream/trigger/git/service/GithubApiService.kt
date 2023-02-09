@@ -188,7 +188,7 @@ class GithubApiService @Autowired constructor(
             ),
             token = cred.toToken()
         ).data?.let {
-            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.permission).level, it.user.login)
+            GithubProjectUserInfo(GithubAccessLevelEnum.getGithubAccessLevel(it.roleName).level, it.user.login)
         } ?: GithubProjectUserInfo(GithubAccessLevelEnum.GUEST.level, "no_user")
     }
 

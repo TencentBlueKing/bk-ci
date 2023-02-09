@@ -64,6 +64,12 @@
         "goToGit": "查看代码库"
     },
     "pipeline": {
+        "commitMsgWithEnter": "请输入提交消息后按回车键搜索",
+        "queue": "排队中",
+        "queueTimeout": "排队超时",
+        "running": "运行中",
+        "reviewing": "审批中",
+        "stageSuccess": "阶段性完成",
         "pipeline": "流水线",
         "allPipelines": "所有流水线",
         "nameRule": "由大写和小写英文字母、数字、下划线、下划线和点组成",
@@ -244,6 +250,9 @@
         "crossRepoUse": "允许跨项目使用",
         "crossRepoUseTips": "仅支持通过模板共享凭据。如当前代码库下管理的模板A引用此凭据，其它项目下的流水线B引用模板A的场景下，流水线B运行时才能使用此凭据",
         "ticket": {
+            "credentialDesc": "在 YAML 中通过上下文 settings.&lt;key&gt;.xxx 的方式引用凭据，xxx 根据凭据类型不同而有不同的字段名称",
+            "credentialType": "凭证类型",
+            "credentialKey": "凭据标识（key）",
             "addCredential": "新增凭据",
             "editCredential": "编辑凭据",
             "emptyCredential": "暂无凭据",

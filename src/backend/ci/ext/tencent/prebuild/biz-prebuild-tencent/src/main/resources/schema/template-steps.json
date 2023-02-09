@@ -1,4 +1,6 @@
 {
+  "$schema" : "http://json-schema.org/draft-07/schema",
+  "$comment" : "https://iwiki.woa.com/pages/viewpage.action?pageId=686380000",
   "additionalProperties" : false,
   "required" : [ "steps" ],
   "properties" : {
@@ -87,7 +89,7 @@
       "additionalProperties" : false,
       "properties" : {
         "repositories" : {
-          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：补充文档/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
+          "description" : "引用其他代码库下的模板：可以在单独的代码库里管理模板文件，然后在其他多个代码库下引用模板。详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380021#Stream%E6%A8%A1%E6%9D%BF-%E5%BC%95%E7%94%A8%E5%85%B6%E4%BB%96%E4%BB%A3%E7%A0%81%E5%BA%93%E4%B8%8B%E7%9A%84%E6%A8%A1%E6%9D%BF",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -122,7 +124,7 @@
           }
         },
         "pools" : {
-          "description" : "引用第三方构建机池，详见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
+          "description" : "引用第三方构建机池，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E8%B7%A8%E5%B7%A5%E7%A8%8B%E5%BC%95%E7%94%A8%E7%AC%AC%E4%B8%89%E6%96%B9%E6%9E%84%E5%BB%BA%E8%B5%84%E6%BA%90%E6%B1%A0",
           "type" : "array",
           "items" : {
             "type" : "object",
@@ -130,7 +132,7 @@
             "additionalProperties" : false,
             "properties" : {
               "from" : {
-                "description" : "语法和使用方方式，详见：补充文档/pages/viewpage.action?pageId=914642753",
+                "description" : "语法和使用方方式，详见：https://iwiki.woa.com/pages/viewpage.action?pageId=914642753",
                 "type" : "string"
               },
               "name" : {
@@ -154,7 +156,8 @@
           "properties" : {
             "uses" : {
               "description" : "指定当前 step 使用的流水线插件标识和版本，值格式为：<atomCode>@<atomVersion>，<atomCode> 为插件标识，<atomVersion> 为插件对应的版本，支持设置始终使用指定大版本下的最新版本，如1.*，支持的插件有：从蓝盾研发商店上架的所有插件，不包括：蓝盾很早以前的旧版插件，这些插件目前已设置为不推荐使用人工审核：暂不支持",
-              "type" : "string"
+              "type" : "string",
+              "pattern" : "^.*@.*$"
             },
             "name" : {
               "description" : "step 的名称",
@@ -194,15 +197,19 @@
               "$ref" : "#/definitions/env"
             },
             "run" : {
-              "description" : "特殊属性，和 uses、checkout不共存，最常用的脚本插件，可以直接配置需要执行的单行或多行命令，当在类 linux 系统下时，使用 bash，当在 windows 系统下时，使用 cmd 或者 git 自带的命令行工具执行，预留自定义执行引擎的入口  shell 属性，后续可以支持 python、nodejs 等，如何设置输出参数见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0",
+              "description" : "特殊属性，和 uses、checkout不共存，最常用的脚本插件，可以直接配置需要执行的单行或多行命令，当在类 linux 系统下时，使用 bash，当在 windows 系统下时，使用 cmd 或者 git 自带的命令行工具执行，预留自定义执行引擎的入口  shell 属性，后续可以支持 python、nodejs 等，如何设置输出参数见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-%E5%A6%82%E4%BD%95%E8%AE%BE%E7%BD%AE%E8%BE%93%E5%87%BA%E5%8F%82%E6%95%B0",
               "type" : "string"
             },
             "checkout" : {
-              "description" : "特殊属性，和 uses、run 不共存，拉取 git 代码插件，可以拉取工蜂当前库的代码，或拉取工蜂其他库的代码，也可以拉取 gitlab、github的代码，默认使用 开启CI 的用户的OAUTH权限拉取代码，语法为：checkout: self | repo url 详见：补充文档/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-checkout",
+              "description" : "特殊属性，和 uses、run 不共存，拉取 git 代码插件，可以拉取工蜂当前库的代码，或拉取工蜂其他库的代码，也可以拉取 gitlab、github的代码，默认使用 开启CI 的用户的OAUTH权限拉取代码，语法为：checkout: self | repo url 详见：https://iwiki.woa.com/pages/viewpage.action?pageId=686380000#Stream%E5%AE%8C%E6%95%B4%E8%AF%AD%E6%B3%95-checkout",
               "type" : "string"
             },
             "if-modify" : {
               "$ref" : "#/definitions/ifModify"
+            },
+            "shell" : {
+              "description" : "run 自定义引擎入口",
+              "type" : "string"
             }
           },
           "allOf" : [ {
@@ -279,7 +286,7 @@
     },
     "env" : {
       "type" : "object",
-      "maxProperties" : 20
+      "maxProperties" : 100
     },
     "template" : {
       "description" : "模板引用，支持传入 array[string]|string 引用模板对象",
@@ -330,7 +337,5 @@
         "type" : "string"
       }
     }
-  },
-  "$schema" : "http://json-schema.org/draft-07/schema",
-  "$comment" : "补充文档/pages/viewpage.action?pageId=686380000"
+  }
 }

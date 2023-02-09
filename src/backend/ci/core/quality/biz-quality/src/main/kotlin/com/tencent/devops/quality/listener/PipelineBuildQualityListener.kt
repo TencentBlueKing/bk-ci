@@ -32,11 +32,11 @@ import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
-import com.tencent.devops.quality.constant.MQ as QualityMQ
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
 import com.tencent.devops.quality.dao.HistoryDao
+import com.tencent.devops.quality.dao.v2.QualityHisMetadataDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleReviewerDao
 import org.jooq.DSLContext
@@ -48,6 +48,7 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding
 import org.springframework.amqp.rabbit.annotation.RabbitListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import com.tencent.devops.quality.constant.MQ as QualityMQ
 
 @Service
 @Suppress("NestedBlockDepth")
@@ -55,7 +56,8 @@ class PipelineBuildQualityListener @Autowired constructor(
     private val dslContext: DSLContext,
     private val qualityRuleBuildHisDao: QualityRuleBuildHisDao,
     private val qualityHistoryDao: HistoryDao,
-    private val qualityRuleReviewerDao: QualityRuleReviewerDao
+    private val qualityRuleReviewerDao: QualityRuleReviewerDao,
+    private val qualityHisMetadataDao: QualityHisMetadataDao
 ) {
 
     companion object {
@@ -106,6 +108,7 @@ class PipelineBuildQualityListener @Autowired constructor(
         try {
             logger.info("QUALITY|pipelineRetryListener retryEvent: ${pipelineRetryStartEvent.buildId}")
             if (pipelineRetryStartEvent.actionType.isRetry()) {
+                qualityHisMetadataDao.deleteHisMetaByBuildId(dslContext, pipelineRetryStartEvent.buildId)
                 val ruleIdList = qualityRuleBuildHisDao.listBuildHisRules(
                     dslContext = dslContext,
                     projectId = pipelineRetryStartEvent.projectId,

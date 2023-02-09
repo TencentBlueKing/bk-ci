@@ -258,7 +258,7 @@
                     } else if (this.isEnvVar(this.value)) {
                         this.displayName = this.value
                     } else {
-                        this.displayName = this.getDisplayName(this.value || this.displayName)
+                        this.displayName = this.getDisplayName(this.value ?? this.displayName)
                     }
                 }
             },

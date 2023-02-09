@@ -55,7 +55,7 @@ import javax.sql.DataSource
 class JooqConfiguration {
 
     private val regex =
-        "\\.(tsource|ttarget|process|project)".toRegex()
+        "\\.(tsource|ttarget|process|project|store)".toRegex()
 
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
@@ -108,6 +108,15 @@ class JooqConfiguration {
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
     ): DefaultConfiguration {
         return generateDefaultConfiguration(projectDataSource, bkJooqExecuteListenerProvider)
+    }
+    @Bean
+    fun storeJooqConfiguration(
+        @Qualifier("storeDataSource")
+        storeDataSource: DataSource,
+        @Qualifier("bkJooqExecuteListenerProvider")
+        bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider
+    ): DefaultConfiguration {
+        return generateDefaultConfiguration(storeDataSource, bkJooqExecuteListenerProvider)
     }
 
     @Bean

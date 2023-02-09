@@ -67,7 +67,7 @@ class BkRepoPipelineDirService @Autowired constructor(
             includeFolders = true,
             page = 1,
             pageSize = pageSize
-        ).map {
+        ).records.map {
             it.toFileInfo()
         }
 

@@ -29,6 +29,8 @@ package com.tencent.devops.stream.v1.dao
 
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.model.stream.tables.TGitUserMessage
+import com.tencent.devops.model.stream.tables.records.TGitUserMessageRecord
+import com.tencent.devops.stream.pojo.message.UserMessageType
 import com.tencent.devops.stream.v1.pojo.enums.V1UserMessageType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
@@ -80,6 +82,48 @@ class V1StreamUserMessageDao {
             }
             return dsl.and(MESSAGE_ID.eq(messageId))
                 .fetchOne(0, Int::class.java)!! > 0
+        }
+    }
+
+    fun selectMessageCount(
+        dslContext: DSLContext,
+        projectId: String,
+        messageType: UserMessageType?,
+        haveRead: Boolean?
+    ): Int {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            val dsl = dslContext.selectCount().from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (messageType != null) {
+                dsl.and(MESSAGE_TYPE.eq(messageType.name))
+            }
+            if (haveRead != null) {
+                dsl.and(HAVE_READ.eq(haveRead))
+            }
+            return dsl.fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun getMessages(
+        dslContext: DSLContext,
+        projectId: String,
+        messageType: UserMessageType?,
+        haveRead: Boolean?,
+        offset: Int,
+        limit: Int
+    ): List<TGitUserMessageRecord>? {
+        with(TGitUserMessage.T_GIT_USER_MESSAGE) {
+            val dsl = dslContext.selectFrom(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (messageType != null) {
+                dsl.and(MESSAGE_TYPE.eq(messageType.name))
+            }
+            if (haveRead != null) {
+                dsl.and(HAVE_READ.eq(haveRead))
+            }
+            return dsl.orderBy(ID.desc())
+                .limit(limit).offset(offset)
+                .fetch()
         }
     }
 }

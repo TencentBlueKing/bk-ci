@@ -219,7 +219,6 @@ class TXManualTriggerService @Autowired constructor(
             displayName = existsPipeline.displayName,
             enabled = existsPipeline.enabled,
             creator = existsPipeline.creator,
-            latestBuildInfo = null,
             latestBuildBranch = null
         )
 

@@ -55,7 +55,7 @@
       var ajax = new XMLHttpRequest()
       ajax.open(
         'GET',
-        '/svg-sprites/devops_sprite.svg?t=' + Math.random(),
+        '//staticfile.woa.com/bkdevops/bkdevops-icon/latest/bkdevops_sprite.svg',
         true
       )
       ajax.send()
@@ -185,8 +185,9 @@
         try {
           var topDomain = document.domain.split('.').slice(-2).join('.')
           if (projectId) {
-            removeCookie(X_DEVOPS_PROJECT_ID, topDomain)
-            setCookie(X_DEVOPS_PROJECT_ID, projectId, location.hostname)
+            removeCookie(X_DEVOPS_PROJECT_ID, 'woa.com')
+            removeCookie(X_DEVOPS_PROJECT_ID, location.hostname)
+            setCookie(X_DEVOPS_PROJECT_ID, projectId, 'devops.woa.com')
             window.GLOBAL_PID = projectId
           }
         } catch (e) {

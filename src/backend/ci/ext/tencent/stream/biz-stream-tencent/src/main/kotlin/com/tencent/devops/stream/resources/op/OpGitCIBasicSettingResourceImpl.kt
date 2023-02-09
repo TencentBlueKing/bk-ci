@@ -51,4 +51,18 @@ class OpGitCIBasicSettingResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun updateGitDomain(
+        oldGitDomain: String,
+        newGitDomain: String,
+        limitNumber: Int
+    ): Result<Boolean> {
+        return Result(
+            txStreamBasicSettingService.updateGitDomain(
+                oldGitDomain = oldGitDomain,
+                newGitDomain = newGitDomain,
+                limitNumber = limitNumber
+            )
+        )
+    }
 }

@@ -51,4 +51,14 @@ class TxArchiveAtomServiceImpl(
             path = atomCode
         )
     }
+
+    override fun updateArchiveFile(
+        projectCode: String,
+        atomCode: String,
+        version: String,
+        fileName: String,
+        content: String
+    ): Boolean {
+        throw UnsupportedOperationException()
+    }
 }

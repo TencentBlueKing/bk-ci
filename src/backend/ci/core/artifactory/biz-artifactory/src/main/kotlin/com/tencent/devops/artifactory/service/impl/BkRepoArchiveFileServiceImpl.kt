@@ -41,6 +41,8 @@ import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PIPELINE
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
 import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.parseArtifactoryType
@@ -59,6 +61,7 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
@@ -78,6 +81,9 @@ import javax.ws.rs.NotFoundException
 class BkRepoArchiveFileServiceImpl @Autowired constructor(
     private val bkRepoClient: BkRepoClient
 ) : ArchiveFileServiceImpl() {
+
+    @Value("\${bkrepo.dockerRegistry:#{null}}")
+    private val dockerRegistry: String? = null
 
     override fun show(userId: String, projectId: String, artifactoryType: ArtifactoryType, path: String): FileDetail {
         val nodeDetail = bkRepoClient.getFileDetail(userId = userId,
@@ -99,7 +105,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         fileChannelType: FileChannelTypeEnum,
         logo: Boolean?
     ): String {
-        val destPath = filePath ?: DefaultPathUtils.randomFileName()
+        val pathSplit = file.name.split('.')
+        val destPath = filePath ?: DefaultPathUtils.randomFileName(pathSplit[pathSplit.size - 1])
         val metadata = mutableMapOf<String, String>()
         metadata["shaContent"] = file.inputStream().use { ShaUtils.sha1InputStream(it) }
         props?.forEach {
@@ -220,12 +227,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+            repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM, REPO_NAME_IMAGE),
             fileNames = listOf(),
             metadata = searchProps.props,
             page = page ?: 1,
             pageSize = pageSize ?: DEFAULT_PAGESIZE
-        )
+        ).records
         return Page(
             count = nodeList.size.toLong(),
             page = page ?: 1,
@@ -256,7 +263,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
                         .timestamp(),
                     folder = false,
                     artifactoryType = ArtifactoryType.IMAGE,
-                    properties = metadata.map { m -> Property(m["key"].toString(), m["value"].toString()) }
+                    properties = metadata.map { m -> Property(m["key"].toString(), m["value"].toString()) },
+                    registry = dockerRegistry
                 )
             }
         } else {
@@ -351,7 +359,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = mapOf(),
             page = 1,
             pageSize = DOWNLOAD_FILE_URL_LIMIT
-        ).map {
+        ).records.map {
             generateFileDownloadUrl(fileChannelType, "${artifactoryInfo.projectId}/$repoName/${it.fullPath}", fullUrl)
         }
         if (fileUrls.isEmpty()) {
@@ -377,7 +385,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             metadata = emptyMap(),
             page = 1,
             pageSize = ACROSS_PROJECT_COPY_LIMIT
-        )
+        ).records
 
         fileNodes.forEach {
             bkRepoClient.copy(
@@ -457,7 +465,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         includeFolder: Boolean?,
         deep: Boolean?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        modifiedTimeDesc: Boolean?
     ): Page<FileInfo> {
         val data = bkRepoClient.listFilePage(
             userId = userId,
@@ -467,7 +476,8 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             includeFolders = includeFolder ?: true,
             deep = deep ?: false,
             page = page ?: 1,
-            pageSize = pageSize ?: 20
+            pageSize = pageSize ?: 20,
+            modifiedTimeDesc = modifiedTimeDesc ?: false
         )
         val fileInfoList = data.records.map { it.toFileInfo() }
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)

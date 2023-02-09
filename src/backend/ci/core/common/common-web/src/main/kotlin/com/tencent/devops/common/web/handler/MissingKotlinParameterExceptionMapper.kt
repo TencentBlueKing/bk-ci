@@ -49,7 +49,7 @@ class MissingKotlinParameterExceptionMapper : ExceptionMapper<MissingKotlinParam
         val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
             exception.message
         } else {
-            "请求体内容参数错误"
+            "请求体内容参数错误。温馨提示：请确认${exception.parameter.name}是否符合要求"
         }
         return Response.status(status).type(MediaType.APPLICATION_JSON_TYPE)
             .entity(Result(status = status.statusCode, message = message, data = exception.message)).build()

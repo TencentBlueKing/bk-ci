@@ -29,17 +29,21 @@ package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.service.StreamScmService
+import com.tencent.devops.stream.util.GitCommonUtils
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventNotBuildDao
+import com.tencent.devops.stream.v1.dao.V1StreamUserMessageDao
 import com.tencent.devops.stream.v1.pojo.V1GitCIBuildHistory
 import com.tencent.devops.stream.v1.pojo.V1GitRequestEventReq
 import com.tencent.devops.stream.v1.pojo.V1GitRequestHistory
@@ -58,10 +62,12 @@ class V1GitCIRequestService @Autowired constructor(
     private val streamBasicSettingService: V1StreamBasicSettingService,
     private val gitRequestEventDao: V1GitRequestEventDao,
     private val gitRequestEventBuildDao: V1GitRequestEventBuildDao,
+    private val streamUserMessageDao: V1StreamUserMessageDao,
     private val gitRequestEventNotBuildDao: V1GitRequestEventNotBuildDao,
     private val pipelineResourceDao: V1GitPipelineResourceDao,
     private val streamGitProjectInfoCache: V1StreamGitProjectInfoCache,
-    private val streamScmService: StreamScmService
+    private val streamScmService: StreamScmService,
+    private val streamGitConfig: StreamGitConfig
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(V1GitCIRequestService::class.java)
@@ -75,13 +81,26 @@ class V1GitCIRequestService @Autowired constructor(
         logger.info("get request list, gitProjectId: $gitProjectId")
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
             ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
-
-        val count = gitRequestEventDao.getRequestCount(dslContext, gitProjectId)
-        val requestList = gitRequestEventDao.getRequestList(
+        val projectId = GitCommonUtils.getCiProjectId(gitProjectId, streamGitConfig.getScmType())
+        val count = streamUserMessageDao.selectMessageCount(
             dslContext = dslContext,
-            gitProjectId = gitProjectId,
-            page = pageNotNull,
-            pageSize = pageSizeNotNull
+            projectId = projectId,
+            messageType = null,
+            haveRead = null
+        ).toLong()
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page = page, pageSize = pageSize)
+        val messageData = streamUserMessageDao.getMessages(
+            dslContext = dslContext,
+            projectId = projectId,
+            messageType = null,
+            haveRead = null,
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
+        )
+        val requestList = gitRequestEventDao.getRequestsById(
+            dslContext = dslContext,
+            requestIds = messageData?.map { it.messageId.toInt() }?.toSet() ?: emptySet(),
+            hasEvent = false
         )
         if (requestList.isEmpty() || count == 0L) {
             logger.info("Get request build list return empty, gitProjectId: $gitProjectId")
@@ -95,16 +114,27 @@ class V1GitCIRequestService @Autowired constructor(
         val resultList = mutableListOf<V1GitRequestHistory>()
         requestList.forEach { event ->
             // 如果是来自fork库的分支，单独标识
-            val gitProjectInfoCache = event.sourceGitProjectId?.let {
-                lazy {
-                    streamGitProjectInfoCache.getAndSaveGitProjectInfo(
-                        gitProjectId = it,
+            val realEvent =
+                if (gitProjectId == event.gitProjectId) {
+                    val gitProjectInfoCache = event.sourceGitProjectId?.let {
+                        lazy {
+                            streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                                gitProjectId = it,
+                                useAccessToken = true,
+                                getProjectInfo = streamScmService::getProjectInfoRetry
+                            )
+                        }
+                    }
+                    V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
+                } else {
+                    // 当gitProjectId与event的不同时，说明是远程仓库触发的
+                    val pathWithNamespace = streamGitProjectInfoCache.getAndSaveGitProjectInfo(
+                        gitProjectId = event.gitProjectId,
                         useAccessToken = true,
                         getProjectInfo = streamScmService::getProjectInfoRetry
-                    )
+                    )?.pathWithNamespace
+                    V1GitCommonUtils.checkAndGetRepoBranch(event, pathWithNamespace)
                 }
-            }
-            val realEvent = V1GitCommonUtils.checkAndGetForkBranch(event, gitProjectInfoCache)
 
             val requestHistory = V1GitRequestHistory(
                 id = realEvent.id ?: return@forEach,
@@ -125,7 +155,7 @@ class V1GitCIRequestService @Autowired constructor(
             )
 
             // 已触发的所有记录
-            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!)
+            val buildsList = gitRequestEventBuildDao.getRequestBuildsByEventId(dslContext, realEvent.id!!, gitProjectId)
             logger.info("Get build list requestBuildsList: $buildsList, gitProjectId: $gitProjectId")
             val builds = buildsList.map { it.buildId }.toSet()
             val buildList = client.get(ServiceBuildResource::class).getBatchBuildStatus(
@@ -167,7 +197,11 @@ class V1GitCIRequestService @Autowired constructor(
             // -------
 
             // 未触发的所有记录
-            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(dslContext, event.id!!)
+            val noBuildList = gitRequestEventNotBuildDao.getRequestNoBuildsByEventId(
+                dslContext = dslContext,
+                eventId = event.id!!,
+                gitProjectId = gitProjectId
+            )
             logger.info("Get no build list requestBuildsList: $noBuildList, gitProjectId: $gitProjectId")
             val records = mutableListOf<V1GitCIBuildHistory>()
 

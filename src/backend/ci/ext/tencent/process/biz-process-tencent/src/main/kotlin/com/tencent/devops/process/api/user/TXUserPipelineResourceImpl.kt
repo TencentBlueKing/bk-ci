@@ -34,8 +34,8 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.DockerBuildService
-import com.tencent.devops.process.service.TXPipelineExportService
 import com.tencent.devops.process.service.TXPipelineService
+import com.tencent.devops.process.service.pipelineExport.TXPipelineExportService
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX
 import com.tencent.devops.process.utils.PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN
 import com.tencent.devops.process.utils.PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX

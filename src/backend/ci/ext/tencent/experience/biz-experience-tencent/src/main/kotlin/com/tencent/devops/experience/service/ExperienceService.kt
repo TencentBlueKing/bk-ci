@@ -52,6 +52,9 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.consul.ConsulConstants
+import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
@@ -112,7 +115,6 @@ class ExperienceService @Autowired constructor(
     private val experienceInnerDao: ExperienceInnerDao,
     private val experienceOuterDao: ExperienceOuterDao,
     private val groupDao: GroupDao,
-    private val groupService: GroupService,
     private val experienceDownloadService: ExperienceDownloadService,
     private val wechatWorkService: WechatWorkService,
     private val client: Client,
@@ -120,7 +122,9 @@ class ExperienceService @Autowired constructor(
     private val experienceBaseService: ExperienceBaseService,
     private val experiencePermissionService: ExperiencePermissionService,
     private val experiencePushService: ExperiencePushService,
-    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao
+    private val experiencePushSubscribeDao: ExperiencePushSubscribeDao,
+    private val redisOperation: RedisOperation,
+    private val bkTag: BkTag
 ) {
     private val taskResourceType = AuthResourceType.EXPERIENCE_TASK
     private val regex = Pattern.compile("[,;]")
@@ -130,35 +134,40 @@ class ExperienceService @Autowired constructor(
         userId: String,
         projectId: String,
         path: String,
-        artifactoryType: ArtifactoryType
+        artifactoryType: ArtifactoryType,
+        permission: Permission = Permission.EXECUTE
     ): Boolean {
-        val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
-        if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
-            throw ErrorCodeException(
-                statusCode = 404,
-                defaultMessage = "文件不存在",
-                errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
-            )
-        }
+        val projectConsulTag = redisOperation.hget(ConsulConstants.PROJECT_TAG_REDIS_KEY, projectId)
+        return bkTag.invokeByTag(projectConsulTag) {
+            val type = com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(artifactoryType.name)
+            if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
+                throw ErrorCodeException(
+                    statusCode = 404,
+                    defaultMessage = "文件不存在",
+                    errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
+                )
+            }
 
-        val properties = client.get(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
-        val propertyMap = mutableMapOf<String, String>()
-        properties.forEach {
-            propertyMap[it.key] = it.value
+            val properties =
+                client.get(ServiceArtifactoryResource::class).properties(userId, projectId, type, path).data!!
+            val propertyMap = mutableMapOf<String, String>()
+            properties.forEach {
+                propertyMap[it.key] = it.value
+            }
+            if (!propertyMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
+                throw ErrorCodeException(
+                    defaultMessage = "体验未与流水线绑定",
+                    errorCode = ExperienceMessageCode.EXP_META_DATA_PIPELINE_ID_NOT_EXISTS
+                )
+            }
+            val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
+            client.get(ServicePipelineArtifactoryResource::class).hasPermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = permission
+            ).data!!
         }
-        if (!propertyMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID)) {
-            throw ErrorCodeException(
-                defaultMessage = "体验未与流水线绑定",
-                errorCode = ExperienceMessageCode.EXP_META_DATA_PIPELINE_ID_NOT_EXISTS
-            )
-        }
-        val pipelineId = propertyMap[ARCHIVE_PROPS_PIPELINE_ID]!!
-        return client.get(ServicePipelineArtifactoryResource::class).hasPermission(
-            userId = userId,
-            projectId = projectId,
-            pipelineId = pipelineId,
-            permission = Permission.EXECUTE
-        ).data!!
     }
 
     fun list(userId: String, projectId: String, expired: Boolean?): List<ExperienceSummaryWithPermission> {
@@ -264,17 +273,7 @@ class ExperienceService @Autowired constructor(
     fun create(userId: String, projectId: String, experience: ExperienceCreate) {
         val isPublic = isPublicGroupAndCheck(experience.experienceGroups) // 是否有公开体验组
 
-        if (!hasArtifactoryPermission(userId, projectId, experience.path, experience.artifactoryType)) {
-            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
-                defaultMessage = AuthPermission.EXECUTE.alias
-            )
-            throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
-                params = arrayOf(permissionMsg)
-            )
-        }
+        checkCreatePermission(userId, projectId, experience.path, experience.artifactoryType)
 
         val artifactoryType =
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
@@ -298,7 +297,7 @@ class ExperienceService @Autowired constructor(
             if (HashUtil.decodeIdToLong(it) == ExperienceConstant.PUBLIC_GROUP) {
                 isPublic = true
             } else {
-                if (!groupService.serviceCheck(it)) {
+                if (!serviceCheck(it)) {
                     throw ErrorCodeException(
                         statusCode = Response.Status.NOT_FOUND.statusCode,
                         defaultMessage = "体验组($it)不存在",
@@ -309,6 +308,10 @@ class ExperienceService @Autowired constructor(
             }
         }
         return isPublic
+    }
+
+    private fun serviceCheck(groupHashId: String): Boolean {
+        return groupDao.getOrNull(dslContext, HashUtil.decodeIdToLong(groupHashId)) != null
     }
 
     private fun getArtifactoryPropertiesMap(
@@ -349,6 +352,10 @@ class ExperienceService @Autowired constructor(
         isPublic: Boolean,
         artifactoryType: com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
     ): Long {
+        experience.experienceName?.let {
+            experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
+        }
+
         val fileDetail =
             client.get(ServiceArtifactoryResource::class).show(userId, projectId, artifactoryType, experience.path).data
 
@@ -365,9 +372,11 @@ class ExperienceService @Autowired constructor(
             GroupScopeEnum.PUBLIC.id -> {
                 setOf(encodePublicGroup)
             }
+
             null -> {
                 experience.experienceGroups
             }
+
             else -> {
                 experience.experienceGroups.filterNot { it == encodePublicGroup }.toSet()
             }
@@ -394,12 +403,15 @@ class ExperienceService @Autowired constructor(
             StringUtils.isNotBlank(experience.experienceName) -> {
                 experience.experienceName!!
             }
+
             StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_NAME]) -> {
                 propertyMap[ARCHIVE_PROPS_APP_NAME]!!
             }
+
             StringUtils.isNotBlank(propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]) -> {
                 propertyMap[ARCHIVE_PROPS_APP_APP_TITLE]!!
             }
+
             else -> {
                 projectId
             }
@@ -512,6 +524,10 @@ class ExperienceService @Autowired constructor(
     }
 
     fun edit(userId: String, projectId: String, experienceHashId: String, experience: ExperienceUpdate) {
+        experience.experienceName?.let {
+            experience.experienceName = it.substring(0, it.length.coerceAtMost(90))
+        }
+
         val experienceRecord = getExperienceId4Update(experienceHashId, userId, projectId)
         val endDate = if (experience.expireDate != null) {
             LocalDateTime.ofInstant(Instant.ofEpochSecond(experience.expireDate!!), ZoneId.systemDefault())
@@ -655,7 +671,14 @@ class ExperienceService @Autowired constructor(
         return experienceId
     }
 
-    fun serviceCreate(userId: String, projectId: String, experience: ExperienceServiceCreate): ExperienceCreateResp {
+    fun serviceCreate(
+        userId: String,
+        projectId: String,
+        experience: ExperienceServiceCreate,
+        source: Source
+    ): ExperienceCreateResp {
+        checkCreatePermission(userId, projectId, experience.path, experience.artifactoryType)
+
         val isPublic = experience.experienceGroups.contains(HashUtil.encodeLongId(ExperienceConstant.PUBLIC_GROUP))
 
         val path = experience.path
@@ -697,7 +720,7 @@ class ExperienceService @Autowired constructor(
             projectId,
             experienceCreate,
             propertyMap,
-            Source.PIPELINE,
+            source,
             userId,
             isPublic,
             artifactoryType
@@ -707,6 +730,25 @@ class ExperienceService @Autowired constructor(
             url = getShortExternalUrl(experienceId),
             experienceHashId = HashUtil.encodeLongId(experienceId)
         )
+    }
+
+    private fun checkCreatePermission(
+        userId: String,
+        projectId: String,
+        artifactoryPath: String,
+        artifactoryType: ArtifactoryType
+    ) {
+        if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
+                defaultMessage = AuthPermission.EXECUTE.alias
+            )
+            throw ErrorCodeException(
+                defaultMessage = "用户没有流水线执行权限",
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                params = arrayOf(permissionMsg)
+            )
+        }
     }
 
     private fun sendNotification(experienceId: Long) {
@@ -771,7 +813,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给外部人员
      */
-    private fun sendMessageToOuterReceivers(
+    fun sendMessageToOuterReceivers(
         outerReceivers: MutableSet<String>,
         experienceRecord: TExperienceRecord
     ) {
@@ -809,7 +851,7 @@ class ExperienceService @Autowired constructor(
     /**
      * 发给内部人员
      */
-    private fun sendMessageToInnerReceivers(
+    fun sendMessageToInnerReceivers(
         notifyTypeList: Set<NotifyType>,
         projectName: String,
         innerReceivers: MutableSet<String>,
@@ -887,13 +929,13 @@ class ExperienceService @Autowired constructor(
         return ShaUtils.sha1((artifactoryType.name + path).toByteArray())
     }
 
-    private fun getPcUrl(projectId: String, experienceId: Long): String {
+    fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
                 "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
-    private fun getShortExternalUrl(experienceId: Long): String {
+    fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
@@ -916,9 +958,11 @@ class ExperienceService @Autowired constructor(
             name.endsWith(".apk") -> {
                 PlatformEnum.ANDROID
             }
+
             name.endsWith(".ipa") -> {
                 PlatformEnum.IOS
             }
+
             else -> {
                 return null
             }

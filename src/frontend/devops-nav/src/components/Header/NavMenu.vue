@@ -1,7 +1,7 @@
 <template>
     <nav
         v-clickoutside="hideNavMenu"
-        :class="{ &quot;devops-header-nav&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-header-nav': true, 'active': show }"
     >
         <p
             class="nav-entry"
@@ -163,7 +163,7 @@
             return name.replace(/^\S+?\(([\s\S]+?)\)\S*$/, '$1')
         }
 
-        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl }) {
+        gotoPage ({ link_new: linkNew, newWindow = false, newWindowUrl = '' }) {
             const cAlias = this.currentPage && getServiceAliasByPath(this.currentPage.link_new)
             const nAlias = getServiceAliasByPath(linkNew)
             const destUrl = this.addConsole(linkNew)
@@ -175,7 +175,7 @@
             if (nAlias === 'bcs' && newWindowUrl.indexOf('ieg.') > -1) {
              window.open(`${newWindowUrl}/bcs/${getProjectId(this.$route.params)}`, '_blank')
              return
-           }
+            }
             newWindow ? window.open(newWindowUrl, '_blank') : this.$router.push(destUrl)
        }
 

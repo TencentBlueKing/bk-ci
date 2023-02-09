@@ -81,6 +81,74 @@ class OPRepositoryService @Autowired constructor(
         logger.info("addhashid time cost: ${System.currentTimeMillis() - startTime}")
     }
 
+    @SuppressWarnings("NestedBlockDepth", "MagicNumber")
+    fun updateGitDomain(
+        oldGitDomain: String,
+        newGitDomain: String,
+        grayProject: String?,
+        grayWeight: Int?,
+        grayWhiteProject: String?
+    ): Boolean {
+        logger.info(
+            "start to update gitDomain|oldGitDomain:$oldGitDomain,newGitDomain:$newGitDomain," +
+                "grayProject:$grayProject,grayWeight:$grayWeight,grayWhiteProject:$grayWhiteProject"
+        )
+        var offset = 0
+        val limit = 1000
+        val grayWhiteProjects = grayWhiteProject?.split(",") ?: emptyList()
+        val grayProjects = grayProject?.split(",") ?: emptyList()
+        try {
+            do {
+                logger.info("update gitDomain project range,offset:$offset,limit:$limit")
+                val projectIds = repositoryDao.getProjectIdByGitDomain(
+                    dslContext = dslContext,
+                    gitDomain = oldGitDomain,
+                    limit = limit,
+                    offset = offset
+                )
+                val projectSize = projectIds.size
+                logger.info("update gitDomain projectSize:$projectSize")
+                projectIds.forEach { projectId ->
+                    if (isGrayProject(
+                            projectId = projectId,
+                            grayProjects = grayProjects,
+                            grayWhiteProjects = grayWhiteProjects,
+                            grayWeight = grayWeight
+                        )
+                    ) {
+                        logger.info("update gitDomain projectId:$projectId")
+                        repositoryDao.updateGitDomainByProjectId(
+                            dslContext = dslContext,
+                            oldGitDomain = oldGitDomain,
+                            newGitDomain = newGitDomain,
+                            projectId = projectId
+                        )
+                    }
+                }
+                offset += limit
+            } while (projectSize == 1000)
+        } catch (ignore: Exception) {
+            logger.warn("Failed to update gitDomain", ignore)
+        }
+        return true
+    }
+
+    @SuppressWarnings("MagicNumber")
+    private fun isGrayProject(
+        projectId: String,
+        grayProjects: List<String>,
+        grayWhiteProjects: List<String>,
+        grayWeight: Int?
+    ): Boolean {
+        val hash = (projectId.hashCode() and Int.MAX_VALUE) % 100
+        return when {
+            grayWhiteProjects.contains(projectId) -> false
+            grayProjects.contains(projectId) -> true
+            hash <= (grayWeight ?: -1) -> true
+            else -> false
+        }
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(OPRepositoryService::class.java)
     }

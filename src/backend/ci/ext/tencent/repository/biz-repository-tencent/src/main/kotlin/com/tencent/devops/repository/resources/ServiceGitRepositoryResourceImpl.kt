@@ -36,6 +36,7 @@ import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.RepositoryInfo
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
+import com.tencent.devops.repository.pojo.git.GitOperationFile
 import com.tencent.devops.repository.pojo.git.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.RepoFileService
@@ -103,6 +104,19 @@ class ServiceGitRepositoryResourceImpl @Autowired constructor(
 
     override fun getFileContent(repoId: String, filePath: String, reversion: String?, branch: String?, repositoryType: RepositoryType?): Result<String> {
         return Result(repoFileService.getFileContent(RepositoryConfigUtils.buildConfig(repoId, repositoryType), filePath, reversion, branch))
+    }
+
+    override fun updateTGitFileContent(
+        userId: String,
+        repoId: String,
+        repositoryType: RepositoryType?,
+        gitOperationFile: GitOperationFile
+    ): Result<Boolean> {
+        return repoFileService.updateTGitFileContent(
+            RepositoryConfigUtils.buildConfig(repoId, repositoryType),
+            userId,
+            gitOperationFile
+        )
     }
 
     override fun delete(

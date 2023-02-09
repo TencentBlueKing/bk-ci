@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.stream.pojo.ManualTriggerInfo
 import com.tencent.devops.stream.pojo.OpenapiTriggerReq
+import com.tencent.devops.stream.pojo.StreamGitProjectPipeline
 import com.tencent.devops.stream.pojo.TriggerBuildResult
 import com.tencent.devops.stream.pojo.openapi.StreamTriggerBuildReq
 import com.tencent.devops.stream.pojo.openapi.StreamYamlCheck
@@ -93,10 +94,7 @@ interface ServiceStreamTriggerResource {
         commitId: String?
     ): Result<ManualTriggerInfo>
 
-    @ApiOperation(
-        "openapi 触发",
-        tags = ["v4_stream_app_openapi_trigger", "v4_stream_user_openapi_trigger"]
-    )
+    @ApiOperation("openapi 触发")
     @POST
     @Path("/projects/{projectId}/pipelines/{pipelineId}/openapi_trigger")
     fun openapiTrigger(
@@ -113,7 +111,7 @@ interface ServiceStreamTriggerResource {
         triggerBuildReq: OpenapiTriggerReq
     ): Result<TriggerBuildResult>
 
-    @ApiOperation("yaml schema check", tags = ["v4_stream_app_check_yaml", "v4_stream_user_check_yaml"])
+    @ApiOperation("yaml schema check")
     @POST
     @Path("/check_yaml")
     fun checkYaml(
@@ -123,4 +121,19 @@ interface ServiceStreamTriggerResource {
         @ApiParam(value = "yaml 文件体", required = true)
         yamlCheck: StreamYamlCheck
     ): Result<String>
+
+    @ApiOperation("通过yaml文件的路径获取到流水线信息")
+    @GET
+    @Path("/projects/{projectId}/name_to_pipelineInfo")
+    fun nameToPipelineId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "蓝盾项目ID(带前缀 如git_xxx)", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam(value = "yaml文件地址", required = true)
+        @QueryParam("yamlPath")
+        yamlPath: String
+    ): Result<StreamGitProjectPipeline>
 }

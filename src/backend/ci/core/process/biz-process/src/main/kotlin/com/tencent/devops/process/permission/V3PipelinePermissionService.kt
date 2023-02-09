@@ -166,7 +166,7 @@ class V3PipelinePermissionService constructor(
             val projectCreator = projectVo.creator
             logger.info("pipeline permission get ProjectOwner $projectId | $projectCreator| $userId")
             return if (!projectCreator.isNullOrEmpty()) {
-                redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator!!)
+                redisOperation.set(OwnerUtils.getOwnerRedisKey(projectId), projectCreator)
                 userId == projectCreator
             } else {
                 false

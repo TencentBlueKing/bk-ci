@@ -172,7 +172,7 @@ class PipelinePauseBuildFacadeService(
         // issues_6210 若原input为空,新input不为空。则直接返回有变化
         val oldInputData = ParameterUtils.getParamInputs(oldTask.taskParams) ?: emptyMap()
 
-        if (newInputData!!.toString() != oldInputData.toString()) {
+        if (newInputData.toString() != oldInputData.toString()) {
             logger.info("pause continue value diff,new| $newInputData, old|$oldInputData")
             isDiff = true
         }

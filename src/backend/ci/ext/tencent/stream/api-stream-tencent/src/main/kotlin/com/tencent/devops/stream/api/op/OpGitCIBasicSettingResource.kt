@@ -77,4 +77,21 @@ interface OpGitCIBasicSettingResource {
         @Valid
         limitNumber: Int
     ): Result<Boolean>
+
+    @ApiOperation("修改工蜂老域名")
+    @POST
+    @Path("/updateGitDomain")
+    fun updateGitDomain(
+        @ApiParam(value = "git老域名", required = true)
+        @QueryParam("oldGitDomain")
+        oldGitDomain: String,
+        @ApiParam(value = "git新域名", required = true)
+        @QueryParam("newGitDomain")
+        newGitDomain: String,
+        @ApiParam(value = "更新的数量", required = true)
+        @QueryParam("limitNumber")
+        @Range(min = 1, max = 1000, message = "修改的数量不能小于1、大于1000")
+        @Valid
+        limitNumber: Int
+    ): Result<Boolean>
 }

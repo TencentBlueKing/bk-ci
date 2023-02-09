@@ -7,14 +7,13 @@ import com.tencent.devops.process.yaml.v2.models.GitNotices
 import com.tencent.devops.stream.config.StreamBuildFinishConfig
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.data.context.getGitCommitCheckState
+import com.tencent.devops.stream.trigger.actions.data.context.getBuildStatus
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.listener.notify.RtxCustomApi
 import com.tencent.devops.stream.trigger.listener.notify.SendEmail
 import com.tencent.devops.stream.trigger.listener.notify.TXSendRtx
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
-import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyType
 import com.tencent.devops.stream.trigger.pojo.rtxCustom.ReceiverType
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -76,12 +75,12 @@ class TXSendNotify @Autowired constructor(
         if (realReceivers.isEmpty()) {
             realReceivers = mutableSetOf(action.data.eventCommon.userId)
         }
-        val state = action.data.context.finishData!!.getGitCommitCheckState()
+        val status = action.data.context.finishData!!.getBuildStatus()
 
         when (notifyType) {
             StreamNotifyType.EMAIL -> {
                 val request = SendEmail.getEmailSendRequest(
-                    state = state,
+                    status = status,
                     receivers = realReceivers,
                     projectName = projectName,
                     branchName = branchName,
@@ -113,7 +112,7 @@ class TXSendNotify @Autowired constructor(
                     receivers = rtxReceivers,
                     receiverType = receiversType,
                     rtxUrl = config.rtxUrl!!,
-                    isSuccess = state == StreamCommitCheckState.SUCCESS,
+                    status = status,
                     projectName = projectName,
                     branchName = branchName,
                     pipelineName = pipelineName,

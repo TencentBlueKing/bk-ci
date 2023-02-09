@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelCreate
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
@@ -37,6 +38,7 @@ import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DependOnType
 import com.tencent.devops.common.pipeline.enums.JobRunCondition
+import com.tencent.devops.common.pipeline.enums.VMBaseOS
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
 import com.tencent.devops.common.pipeline.matrix.MatrixConfig.Companion.MATRIX_CONTEXT_KEY_PREFIX
 import com.tencent.devops.common.pipeline.option.JobControlOption
@@ -51,8 +53,10 @@ import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.Mutex
+import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
 
 @Component
 class ModelContainer @Autowired(required = false) constructor(
@@ -73,6 +77,7 @@ class ModelContainer @Autowired(required = false) constructor(
         resources: Resources? = null,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
+        doSomeCheck(job, StreamDispatchUtils.getBaseOs(job))
         val defaultImage = inner!!.defaultImage
         val dispatchInfo = if (JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")) {
             StreamDispatchInfo(
@@ -111,6 +116,25 @@ class ModelContainer @Autowired(required = false) constructor(
             matrixControlOption = getMatrixControlOption(job, dispatchInfo)
         )
         containerList.add(vmContainer)
+    }
+
+    fun doSomeCheck(job: Job, os: VMBaseOS) {
+        if (os == VMBaseOS.ALL) {
+            // all 不检查
+            return
+        }
+        // 检查挂载版本是否支持(此处只检查未使用上下文的方式, 使用了上下文就将在引擎执行时检查)
+        job.runsOn.needs?.forEach { env ->
+            if (env.value.startsWith("$")) return@forEach
+            client.get(ServiceContainerAppResource::class).getBuildEnv(
+                name = env.key,
+                version = env.value,
+                os = os.name.toLowerCase()
+            ).data ?: throw CustomException(
+                // 说明用户填写的name或version不对，直接抛错
+                Response.Status.BAD_REQUEST, "尚未支持 ${env.key} ${env.value}，请联系 DevOps-helper 添加对应版本"
+            )
+        }
     }
 
     protected fun getMatrixControlOption(

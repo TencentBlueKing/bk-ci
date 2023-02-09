@@ -63,7 +63,7 @@ class StreamTXInnerModelCreatorImpl @Autowired constructor(
         params: String
     ): ServiceJobDevCloudInput {
         val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-            ?: throw RuntimeException("Git CI没有此镜像版本记录. $image")
+            ?: throw RuntimeException("没有此镜像版本记录. $image")
         if (!record.enable) {
             throw RuntimeException("镜像版本不可用")
         }

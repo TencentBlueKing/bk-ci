@@ -27,6 +27,7 @@
 
 package com.tencent.devops.environment.service
 
+import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
@@ -44,6 +45,10 @@ class TencentGITCIAgentUrlServiceImpl constructor(
 
     override fun genAgentUrl(agentRecord: TEnvironmentThirdpartyAgentRecord): String {
         val agentHashId = HashUtil.encodeLongId(agentRecord.id)
-        return "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}&arch=\${ARCH}"
+        return if (agentRecord.os == OS.WINDOWS.name) {
+            "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}"
+        } else {
+            "$v2GitUrl/external/agents/$agentHashId/agent?x-devops-project-id=${agentRecord.projectId}&arch=\${ARCH}"
+        }
     }
 }

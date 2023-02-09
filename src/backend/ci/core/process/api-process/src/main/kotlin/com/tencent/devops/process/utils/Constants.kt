@@ -79,8 +79,11 @@ const val BK_CI_BUILD_FAIL_TASKS = "BK_CI_BUILD_FAIL_TASKS"
 const val BK_CI_BUILD_FAIL_TASKNAMES = "BK_CI_BUILD_FAIL_TASKNAMES"
 
 const val PIPELINE_VIEW_MY_PIPELINES = "myPipeline"
+const val PIPELINE_VIEW_MY_LIST_PIPELINES = "myListPipeline" // 兼容APP , 后面需要干掉
 const val PIPELINE_VIEW_FAVORITE_PIPELINES = "collect"
 const val PIPELINE_VIEW_ALL_PIPELINES = "allPipeline"
+const val PIPELINE_VIEW_UNCLASSIFIED = "unclassified"
+const val PIPELINE_VIEW_RECENT_USE = "recentUse"
 
 const val PIPELINE_MATERIAL_URL = "BK_CI_PIEPLEINE_MATERIAL_URL" // pipeline.material.url
 const val PIPELINE_MATERIAL_BRANCHNAME = "BK_CI_PIPELINE_MATERIAL_BRANCHNAME" // pipeline.material.branchName
@@ -108,15 +111,18 @@ const val PIPELINE_ATOM_CODE = "BK_CI_ATOM_CODE" // "流水线插件代码"
 const val PIPELINE_ATOM_VERSION = "BK_CI_ATOM_VERSION" // "流水线插件版本"
 const val PIPELINE_TASK_NAME = "BK_CI_TASK_NAME" // "流水线任务名称（步骤名称）"
 const val PIPELINE_STEP_ID = "BK_CI_STEP_ID" // "用户自定义ID（上下文标识）"
+const val PIPELINE_ATOM_TIMEOUT = "BK_CI_ATOM_TIMEOUT" // "流水线插件超时时间"
 
 /**
  * 流水线设置-最大排队数量-默认值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_DEFAULT = 10
+
 /**
  * 流水线插件设置-失败重试最大值
  */
 const val TASK_FAIL_RETRY_MAX_COUNT = 5
+
 /**
  * 流水线插件设置-失败重试最小值
  */
@@ -126,14 +132,17 @@ const val TASK_FAIL_RETRY_MIN_COUNT = 1
  * 流水线设置-最大排队数量-最小值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MIN = 0
+
 /**
  * 流水线设置-最大排队数量-最大值
  */
 const val PIPELINE_SETTING_MAX_QUEUE_SIZE_MAX = 20
+
 /**
  * 流水线设置-最大并发数量-默认值
  */
 const val PIPELINE_SETTING_MAX_CON_QUEUE_SIZE_DEFAULT = 50
+
 /**
  * 流水线设置-最大并发数量-最大值
  */
@@ -163,18 +172,22 @@ const val PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX = 4000
  * 流水线设置-流水线错误信息入库长度最大值 单位:分钟
  */
 const val PIPELINE_MESSAGE_STRING_LENGTH_MAX = 30000
+
 /**
  * 流水线设置-流水线最大任务并发数量-最大值
  */
 const val PIPELINE_CON_RUNNING_CONTAINER_SIZE_MAX = 30
+
 /**
  * 流水线设置-矩阵内最大并发数量-默认值
  */
 const val PIPELINE_MATRIX_MAX_CON_RUNNING_SIZE_DEFAULT = 5
+
 /**
  * 流水线设置-矩阵内最大并发数量-最大值
  */
 const val PIPELINE_MATRIX_CON_RUNNING_SIZE_MAX = 20
+
 /**
  * 流水线设置-Stage内最大分裂后Job数量-最大值
  */
@@ -190,10 +203,12 @@ const val PIPELINE_TIME_START = "BK_CI_BUILD_START_TIME" // "pipeline.time.start
 const val PIPELINE_TIME_END = "BK_CI_BUILD_END_TIME" // "pipeline.time.end"
 
 const val PIPELINE_BUILD_MSG = "BK_CI_BUILD_MSG"
+
 /**
  * 流水线设置-CONCURRENCY GROUP 并发组-默认值
  */
 const val PIPELINE_SETTING_CONCURRENCY_GROUP_DEFAULT = "\${{ci.pipeline_id}}"
+
 /**
  * 保存流水线编排的最大个数
  */

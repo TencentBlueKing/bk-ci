@@ -68,6 +68,7 @@ import com.tencent.devops.lambda.pojo.DataPlatJobDetail
 import com.tencent.devops.lambda.pojo.DataPlatTaskDetail
 import com.tencent.devops.lambda.pojo.MakeUpBuildVO
 import com.tencent.devops.lambda.pojo.ProjectOrganize
+import com.tencent.devops.lambda.service.store.LambdaStoreService
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildTaskRecord
@@ -75,16 +76,16 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import java.time.Duration
-import java.time.LocalDateTime
-import java.time.format.DateTimeFormatter
-import java.util.concurrent.TimeUnit
-import java.util.regex.Pattern
 import org.jooq.DSLContext
 import org.json.simple.JSONObject
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.time.Duration
+import java.time.LocalDateTime
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.TimeUnit
+import java.util.regex.Pattern
 
 @Service
 @Suppress("ALL")
@@ -99,7 +100,8 @@ class LambdaDataService @Autowired constructor(
     private val lambdaPipelineLabelDao: LambdaPipelineLabelDao,
     private val kafkaClient: KafkaClient,
     private val lambdaKafkaTopicConfig: LambdaKafkaTopicConfig,
-    private val lambdaBuildCommitDao: LambdaBuildCommitDao
+    private val lambdaBuildCommitDao: LambdaBuildCommitDao,
+    private val lambdaStoreService: LambdaStoreService
 ) {
 
     fun onBuildFinish(event: PipelineBuildFinishBroadCastEvent) {
@@ -229,7 +231,10 @@ class LambdaDataService @Autowired constructor(
             val startTime = task.startTime?.timestampmilli() ?: 0
             val endTime = task.endTime?.timestampmilli() ?: 0
             val taskAtom = task.taskAtom
+            val platformCode = task.platformCode
+            val platformErrorCode = task.platformErrorCode
             val taskParamMap = JsonUtil.toMap(task.taskParams)
+            val platformName = lambdaStoreService.getPlatName(platformCode)
 
             if (task.taskType == "VM" || task.taskType == "NORMAL") {
                 if (taskAtom == "dispatchVMShutdownTaskAtom") {
@@ -338,7 +343,10 @@ class LambdaDataService @Autowired constructor(
                     centerId = projectInfo.centerId,
                     bgName = projectInfo.bgName,
                     deptName = projectInfo.deptName,
-                    centerName = projectInfo.centerName
+                    centerName = projectInfo.centerName,
+                    platformCode = platformCode,
+                    platformErrorCode = platformErrorCode,
+                    platformName = platformName
                 )
                 logger.info("pushTaskDetail buildId: ${dataPlatTaskDetail.buildId}| taskId: ${dataPlatTaskDetail.itemId}")
                 val taskDetailTopic = checkParamBlank(lambdaKafkaTopicConfig.taskDetailTopic, "taskDetailTopic")

@@ -32,7 +32,6 @@ import com.tencent.devops.common.pipeline.pojo.element.Element
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@Deprecated("无用，待删除")
 @Suppress("UNUSED")
 @ApiModel("CodeCC代码检查任务(service端)", description = LinuxCodeCCScriptElement.classType)
 open class LinuxCodeCCScriptElement(

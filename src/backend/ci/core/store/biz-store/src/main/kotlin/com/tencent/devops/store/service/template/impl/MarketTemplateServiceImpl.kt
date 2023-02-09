@@ -631,18 +631,31 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             return Result(addMarketTemplateResult.status, addMarketTemplateResult.message ?: "")
         }
 
+        val addMarketTemplateResultKeys = addMarketTemplateResult.data?.keys ?: emptySet()
+        projectCodeList.removeAll(addMarketTemplateResultKeys)
         // 更新生成的模板的红线规则
-        copyQualityRule(userId, templateCode, projectCodeList, addMarketTemplateResult.data ?: mapOf())
-
-        return storeProjectService.installStoreComponent(
+        copyQualityRule(userId, templateCode, addMarketTemplateResultKeys, addMarketTemplateResult.data ?: mapOf())
+        val installStoreComponentResult = storeProjectService.installStoreComponent(
             userId = userId,
-            projectCodeList = projectCodeList,
+            projectCodeList = ArrayList(addMarketTemplateResultKeys),
             storeId = template.id,
             storeCode = templateCode,
             storeType = StoreTypeEnum.TEMPLATE,
             publicFlag = template.publicFlag,
             channelCode = channelCode
         )
+        return if (projectCodeList.isNullOrEmpty()) {
+            installStoreComponentResult
+        } else {
+            MessageCodeUtil.generateResponseDataObject(
+                messageCode = StoreMessageCode.USER_INSTALL_TEMPLATE_CODE_IS_INVALID,
+                params = arrayOf(
+                    template.templateName,
+                    projectCodeList.joinToString(",")
+                ),
+                data = false
+            )
+        }
     }
 
     override fun validateUserTemplateComponentVisibleDept(
@@ -662,7 +675,7 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
             userId = userId,
             model = templateModel,
             projectCodeList = projectCodeList,
-            templateCode = templateCode
+            templateCode = templateDetail.templateCode
         )
     }
 

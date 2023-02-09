@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.docker.controller
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.dispatch.docker.api.op.OPDockerRoutingResource
 import com.tencent.devops.dispatch.docker.pojo.DockerRoutingVO
@@ -47,7 +48,7 @@ class OpDockerRoutingResourceImpl @Autowired constructor(
         return Result(dockerRoutingService.addDockerRoutingType(
             userId = userId,
             projectId = projectId,
-            dockerRoutingType = dockerRoutingVO.dockerRoutingType
+            dockerRoutingType = DockerRoutingType.valueOf(dockerRoutingVO.dockerRoutingType)
         ))
     }
 

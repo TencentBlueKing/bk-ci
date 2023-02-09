@@ -50,6 +50,7 @@ import com.tencent.devops.common.pipeline.utils.RepositoryConfigUtils
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -99,7 +100,8 @@ class BuildStartControl @Autowired constructor(
     private val buildVariableService: BuildVariableService,
     private val scmProxyService: ScmProxyService,
     private val buildLogPrinter: BuildLogPrinter,
-    private val meterRegistry: MeterRegistry
+    private val meterRegistry: MeterRegistry,
+    private val pipelineUrlBean: PipelineUrlBean
 ) {
 
     companion object {
@@ -249,7 +251,7 @@ class BuildStartControl @Autowired constructor(
         executeCount: Int
     ): Boolean {
         var checkStart = true
-        val concurrencyGroup = buildInfo.concurrencyGroup ?: return true
+        val concurrencyGroup = buildInfo.concurrencyGroup ?: pipelineId
         ConcurrencyGroupLock(redisOperation, projectId, concurrencyGroup).use { groupLock ->
             groupLock.lock()
             if (buildInfo.status != BuildStatus.QUEUE_CACHE) {
@@ -261,20 +263,41 @@ class BuildStartControl @Autowired constructor(
                 )?.buildId == buildId
             }
             // #6521 并发组中需要等待其他流水线
-            val concurrencyGroupRunningCount = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
+            val concurrencyGroupRunning = pipelineRuntimeService.getBuildInfoListByConcurrencyGroup(
                 projectId = projectId,
                 concurrencyGroup = concurrencyGroup,
                 status = listOf(BuildStatus.RUNNING)
-            ).size
+            ).toMutableList()
 
-            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|$concurrencyGroupRunningCount")
-            if (concurrencyGroupRunningCount > 0) {
+            // #8143 兼容旧流水线版本 TODO 待模板设置补上漏洞，后期下掉 #8143
+            if (concurrencyGroup == pipelineId) {
+                concurrencyGroupRunning.addAll(
+                    0,
+                    pipelineRuntimeService.getBuildInfoListByConcurrencyGroupNull(
+                        projectId = projectId,
+                        pipelineId = pipelineId,
+                        status = listOf(BuildStatus.RUNNING)
+                    )
+                )
+            }
+
+            LOG.info("ENGINE|$buildId|$source|CHECK_GROUP_TYPE|$concurrencyGroup|${concurrencyGroupRunning.count()}")
+            if (concurrencyGroupRunning.isNotEmpty()) {
                 // 需要重新入队等待
                 pipelineRuntimeService.updateBuildInfoStatus2Queue(projectId, buildId, BuildStatus.QUEUE_CACHE)
+                val detailUrl = pipelineUrlBean.genBuildDetailUrl(
+                    projectCode = projectId,
+                    pipelineId = concurrencyGroupRunning.first().first,
+                    buildId = concurrencyGroupRunning.first().second,
+                    position = null,
+                    stageId = null,
+                    needShortUrl = false
+                )
                 buildLogPrinter.addLine(
                     message = "Mode: ${setting.runLockType}," +
-                        "concurrency for group(${setting.concurrencyGroup}[$concurrencyGroup]) " +
-                        "and queue: $concurrencyGroupRunningCount",
+                        "concurrency for group($concurrencyGroup) " +
+                        "and queue: ${concurrencyGroupRunning.count()}, now waiting for " +
+                        "<a target='_blank' href='$detailUrl'>${concurrencyGroupRunning.first().second}</a>",
                     buildId = buildId, tag = TAG, jobId = JOB_ID, executeCount = executeCount
                 )
                 checkStart = false

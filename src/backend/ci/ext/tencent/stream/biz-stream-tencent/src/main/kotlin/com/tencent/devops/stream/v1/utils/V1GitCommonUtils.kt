@@ -120,6 +120,18 @@ object V1GitCommonUtils {
     }
 
     // 判断是否为远程库的请求并返回带远程库信息的event
+    fun checkAndGetRepoBranch(gitRequestEvent: V1GitRequestEvent, pathWithNamespace: String?): V1GitRequestEvent {
+        return gitRequestEvent.copy(
+            // name_with_namespace: git_namespace/project_name , 要的是  git_namespace/project_name:branch
+            branch = if (pathWithNamespace != null) {
+                "$pathWithNamespace:${gitRequestEvent.branch}"
+            } else {
+                gitRequestEvent.branch
+            }
+        )
+    }
+
+    // 判断是否为远程库的请求并返回带远程库信息的event
     fun checkAndGetRepoBranch(
         gitRequestEvent: V1GitRequestEvent,
         gitProjectCache: V1GitProjectCache

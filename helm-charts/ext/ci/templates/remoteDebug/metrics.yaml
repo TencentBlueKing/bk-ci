@@ -1,18 +1,18 @@
 #metrics debug
 {{ if .Values.metrics.enabled -}}
-  {{ if .Values.remoteDebug.enabled -}}
+{{ if .Values.remoteDebug.enabled -}}
 apiVersion: v1
 kind: Service
 metadata:
   name: debug-metrics
-  labels:
+  labels: 
     app.kubernetes.io/name: metrics
     app.kubernetes.io/component: microservice
   annotations:
     service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-2mgq2ka8
 spec:
   type: LoadBalancer
-  selector:
+  selector: 
     app.kubernetes.io/component: microservice
     app.kubernetes.io/name: metrics
   ports:
@@ -20,5 +20,5 @@ spec:
       port: 8080
       targetPort: 8080
       protocol: TCP
-  {{- end -}}
-  {{- end -}}
+{{- end -}}
+{{- end -}}

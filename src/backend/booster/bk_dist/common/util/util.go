@@ -338,6 +338,28 @@ func ProcessExist(target string) bool {
 	return false
 }
 
+// ListProcess list process by process name
+func ListProcess(target string) ([]*process.Process, error) {
+	processes, err := process.Processes()
+	if err != nil {
+		return nil, err
+	}
+
+	procs := []*process.Process{}
+	for _, p := range processes {
+		name, err := p.Name()
+		if err != nil {
+			continue
+		}
+
+		if target == name {
+			procs = append(procs, p)
+		}
+	}
+
+	return procs, nil
+}
+
 // ProcessExistTimeoutAndKill check target process with name, and kill it after timeout
 func ProcessExistTimeoutAndKill(target string, timeout time.Duration) bool {
 	processes, err := process.Processes()

@@ -297,7 +297,7 @@ class BuildEndControl @Autowired constructor(
             if (task.errorType != null) {
                 errorInfoList.add(
                     ErrorInfo(
-                        stageId = task.taskId,
+                        stageId = task.stageId,
                         jobId = task.containerId,
                         taskId = task.taskId,
                         taskName = task.taskName,

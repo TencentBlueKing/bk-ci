@@ -210,6 +210,7 @@ server:
       enabled: true
       pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
       dir: ${service.log.dir}
+  shutdown: graceful
 
 # gateway for system
 devopsGateway:
@@ -313,3 +314,12 @@ sharding:
 
 cluster:
   tag: __BK_CI_CLUSTER_TAG__
+  
+# 企业微信api配置
+wechatWork:
+  corpId: __BK_CI_WECHATWORK_CORPID__
+  serviceId: __BK_CI_WECHATWORK_SERVICEID__
+  secret: __BK_CI_WECHATWORK_SECRET__
+  token: __BK_CI_WECHATWORK_TOKEN__
+  aesKey: __BK_CI_WECHATWORK_AESKEY__
+  url: __BK_CI_WECHATWORK_URL__

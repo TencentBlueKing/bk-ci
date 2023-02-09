@@ -158,7 +158,12 @@ class AtomBuildArchiveTask : ITask() {
             minVersion = atomEnv.minVersion,
             target = target ?: atomEnv.target,
             shaContent = fileSha,
-            preCmd = atomRunConditionHandleService.handleAtomPreCmd(preCmd, osName ?: "", packageName),
+            preCmd = atomRunConditionHandleService.handleAtomPreCmd(
+                preCmd = preCmd,
+                osName = osName ?: "",
+                pkgName = packageName,
+                runtimeVersion = atomEnv.runtimeVersion
+            ),
             atomPostInfo = atomEnv.atomPostInfo,
             osName = finalOsName,
             osArch = finalOsArch

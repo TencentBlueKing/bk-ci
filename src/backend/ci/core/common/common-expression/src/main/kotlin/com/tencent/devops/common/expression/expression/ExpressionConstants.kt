@@ -29,6 +29,7 @@ package com.tencent.devops.common.expression.expression
 
 import com.tencent.devops.common.expression.expression.functions.Contains
 import com.tencent.devops.common.expression.expression.functions.EndsWith
+import com.tencent.devops.common.expression.expression.functions.Format
 import com.tencent.devops.common.expression.expression.functions.FromJson
 import com.tencent.devops.common.expression.expression.functions.Join
 import com.tencent.devops.common.expression.expression.functions.StartsWith
@@ -45,6 +46,7 @@ object ExpressionConstants {
         addFunction(StartsWith.name, 2, 2, StartsWith())
         addFunction(FromJson.name, 1, 1, FromJson())
         addFunction(Join.name, 1, 2, Join())
+        addFunction(Format.name, 1, Byte.MAX_VALUE.toInt(), Format())
     }
 
     private fun addFunction(name: String, minParameters: Int, maxParameters: Int, f: Function) {

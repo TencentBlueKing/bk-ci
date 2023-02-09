@@ -27,15 +27,19 @@
 
 package com.tencent.devops.dispatch.dao
 
+import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.TDispatchThirdpartyAgentBuild
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import org.jooq.DSLContext
+import org.jooq.JSON
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
-@Repository@Suppress("ALL")
+@Repository
+@Suppress("ALL")
 class ThirdPartyAgentBuildDao {
 
     fun get(dslContext: DSLContext, buildId: String, vmSeqId: String): TDispatchThirdpartyAgentBuildRecord? {
@@ -67,7 +71,10 @@ class ThirdPartyAgentBuildDao {
         buildNum: Int,
         taskName: String,
         agentIp: String,
-        nodeId: Long
+        nodeId: Long,
+        dockerInfo: ThirdPartyAgentDockerInfoDispatch?,
+        executeCount: Int?,
+        containerHashId: String?
     ): Int {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             val now = LocalDateTime.now()
@@ -85,6 +92,15 @@ class ThirdPartyAgentBuildDao {
                     .set(STATUS, PipelineTaskStatus.QUEUE.status)
                     .set(AGENT_IP, agentIp)
                     .set(NODE_ID, nodeId)
+                    .set(
+                        DOCKER_INFO, if (dockerInfo == null) {
+                            null
+                        } else {
+                            JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
+                        }
+                    )
+                    .set(EXECUTE_COUNT, executeCount)
+                    .set(CONTAINER_HASH_ID, containerHashId)
                     .where(ID.eq(preRecord.id)).execute()
             }
             return dslContext.insertInto(
@@ -102,7 +118,10 @@ class ThirdPartyAgentBuildDao {
                 BUILD_NUM,
                 TASK_NAME,
                 AGENT_IP,
-                NODE_ID
+                NODE_ID,
+                DOCKER_INFO,
+                EXECUTE_COUNT,
+                CONTAINER_HASH_ID
             ).values(
                 projectId,
                 agentId,
@@ -117,7 +136,14 @@ class ThirdPartyAgentBuildDao {
                 buildNum,
                 taskName,
                 agentIp,
-                nodeId
+                nodeId,
+                if (dockerInfo == null) {
+                    null
+                } else {
+                    JSON.json(JsonUtil.toJson(dockerInfo, formatted = false))
+                },
+                executeCount,
+                containerHashId
             ).execute()
         }
     }
@@ -195,6 +221,20 @@ class ThirdPartyAgentBuildDao {
         with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
             return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
                 .where(AGENT_ID.eq(agentId))
+                .and(DOCKER_INFO.isNull)
+                .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
+                .fetch()
+        }
+    }
+
+    fun getDockerRunningAndQueueBuilds(
+        dslContext: DSLContext,
+        agentId: String
+    ): Result<TDispatchThirdpartyAgentBuildRecord> {
+        with(TDispatchThirdpartyAgentBuild.T_DISPATCH_THIRDPARTY_AGENT_BUILD) {
+            return dslContext.selectFrom(this.forceIndex("IDX_AGENTID_STATUS_UPDATE"))
+                .where(AGENT_ID.eq(agentId))
+                .and(DOCKER_INFO.isNotNull)
                 .and(STATUS.`in`(PipelineTaskStatus.RUNNING.status, PipelineTaskStatus.QUEUE.status))
                 .fetch()
         }

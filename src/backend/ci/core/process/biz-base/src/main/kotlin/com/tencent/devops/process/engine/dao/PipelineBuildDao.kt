@@ -33,11 +33,11 @@ import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
-import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.service.utils.JooqUtils
 import com.tencent.devops.model.process.Tables.T_PIPELINE_BUILD_HISTORY
 import com.tencent.devops.model.process.tables.TPipelineBuildHistory
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
@@ -48,13 +48,13 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.DatePart
+import org.jooq.Record2
 import org.jooq.Result
+import org.jooq.SelectConditionStep
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
-import org.jooq.Record2
-import org.jooq.SelectConditionStep
 
 @Suppress("ALL")
 @Repository
@@ -181,7 +181,23 @@ class PipelineBuildDao {
             dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(STATUS.`in`(statusSet.map { it.ordinal }))
-                .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
+                .and(CONCURRENCY_GROUP.eq(concurrencyGroup)).orderBy(START_TIME.asc())
+                .fetch()
+        }
+    }
+
+    fun getBuildTasksByConcurrencyGroupNull(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        statusSet: List<BuildStatus>
+    ): List<Record2<String, String>> {
+        return with(T_PIPELINE_BUILD_HISTORY) {
+            dslContext.select(PIPELINE_ID, BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(STATUS.`in`(statusSet.map { it.ordinal }))
+                .and(CONCURRENCY_GROUP.isNull).orderBy(START_TIME.asc())
                 .fetch()
         }
     }
@@ -308,7 +324,7 @@ class PipelineBuildDao {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
-                .and(STATUS.eq(BuildStatus.QUEUE.ordinal))
+                .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
                 .orderBy(BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
@@ -317,14 +333,18 @@ class PipelineBuildDao {
     fun getOneConcurrencyQueueBuild(
         dslContext: DSLContext,
         projectId: String,
-        concurrencyGroup: String
+        concurrencyGroup: String,
+        pipelineId: String? = null
     ): TPipelineBuildHistoryRecord? {
         return with(T_PIPELINE_BUILD_HISTORY) {
             val select = dslContext.selectFrom(this)
                 .where(PROJECT_ID.eq(projectId))
                 .and(CONCURRENCY_GROUP.eq(concurrencyGroup))
                 .and(STATUS.`in`(setOf(BuildStatus.QUEUE.ordinal, BuildStatus.QUEUE_CACHE.ordinal)))
-                .orderBy(QUEUE_TIME.asc()).limit(1)
+            if (pipelineId != null) {
+                select.and(PIPELINE_ID.eq(pipelineId))
+            }
+            select.orderBy(QUEUE_TIME.asc()).limit(1)
             select.fetchAny()
         }
     }
@@ -831,6 +851,25 @@ class PipelineBuildDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_NUM.eq(buildNo))
                 .fetchAny()
+        }
+    }
+
+    fun getBuilds(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String?,
+        buildStatus: Set<BuildStatus>?
+    ): List<String> {
+        with(T_PIPELINE_BUILD_HISTORY) {
+            val dsl = dslContext.select(BUILD_ID).from(this)
+                .where(PROJECT_ID.eq(projectId))
+            if (!pipelineId.isNullOrBlank()) {
+                dsl.and(PIPELINE_ID.eq(pipelineId))
+            }
+            if (!buildStatus.isNullOrEmpty()) {
+                dsl.and(STATUS.`in`(buildStatus.map { it.ordinal }))
+            }
+            return dsl.fetch(BUILD_ID)
         }
     }
 

@@ -45,9 +45,11 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.web.RestResource
 import io.micrometer.core.annotation.Timed
 import org.springframework.beans.factory.annotation.Autowired
+import java.time.LocalDateTime
 import javax.ws.rs.BadRequestException
 
 @RestResource
@@ -96,7 +98,13 @@ class UserArtifactoryResourceImpl @Autowired constructor(
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10000
         val result = bkRepoSearchService.search(userId, projectId, searchProps, pageNotNull, pageSizeNotNull)
-        return Result(FileInfoPage(0L, pageNotNull, pageSizeNotNull, result.second, result.first))
+        return Result(FileInfoPage(
+            count = result.first,
+            page = pageNotNull,
+            pageSize = pageSizeNotNull,
+            records = result.second,
+            timestamp = LocalDateTime.now().timestamp()
+        ))
     }
 
     override fun searchFileAndProperty(

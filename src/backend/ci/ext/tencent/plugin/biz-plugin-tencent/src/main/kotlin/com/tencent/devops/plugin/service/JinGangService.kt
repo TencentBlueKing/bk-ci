@@ -46,7 +46,6 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BSAuthPermissionApi
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.auth.code.VSAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -88,7 +87,6 @@ class JinGangService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authProjectApi: AuthProjectApi,
     private val pipelineServiceCode: PipelineAuthServiceCode,
-    private val vsServiceCode: VSAuthServiceCode,
     private val bkRepoClient: BkRepoClient
 ) {
 
@@ -350,7 +348,7 @@ class JinGangService @Autowired constructor(
     }
 
     private fun getProjectManager(projectId: String): List<StarUser> {
-        val manager = authProjectApi.getProjectUsers(vsServiceCode, projectId, BkAuthGroup.MANAGER)
+        val manager = authProjectApi.getProjectUsers(pipelineServiceCode, projectId, BkAuthGroup.MANAGER)
         return listOf(StarUser(roleName = "项目管理员", roleId = "37", user = manager.joinToString(";")))
     }
 

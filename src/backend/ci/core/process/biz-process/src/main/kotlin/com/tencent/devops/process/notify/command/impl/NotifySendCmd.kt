@@ -4,24 +4,23 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
-import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.notify.command.BuildNotifyContext
+import com.tencent.devops.process.notify.command.NotifyCmd
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.IllegalArgumentException
 
 @Service
 class NotifySendCmd @Autowired constructor(
     val client: Client
 ) : NotifyCmd {
-    override fun canExecute(commandContextBuild: BuildNotifyContext): Boolean {
+    override fun canExecute(commandContext: BuildNotifyContext): Boolean {
         return true
     }
 
-    override fun execute(commandContextBuild: BuildNotifyContext) {
-        val buildStatus = commandContextBuild.buildStatus
-        val setting = commandContextBuild.pipelineSetting
+    override fun execute(commandContext: BuildNotifyContext) {
+        val buildStatus = commandContext.buildStatus
+        val setting = commandContext.pipelineSetting
         val shutdownType = when {
             buildStatus.isCancel() -> TYPE_SHUTDOWN_CANCEL
             buildStatus.isFailure() -> TYPE_SHUTDOWN_FAILURE
@@ -30,7 +29,7 @@ class NotifySendCmd @Autowired constructor(
 
         var templateCode = ""
         var notifyType = mutableSetOf<String>()
-        var settingDetailFlag = false
+        val settingDetailFlag: Boolean
         var sendMsg = false
 
         when {
@@ -52,10 +51,10 @@ class NotifySendCmd @Autowired constructor(
         if (sendMsg) {
             sendNotifyByTemplate(
                 templateCode = templateCode,
-                receivers = commandContextBuild.receivers,
+                receivers = commandContext.receivers,
                 notifyType = notifyType,
-                titleParams = commandContextBuild.notifyValue,
-                bodyParams = commandContextBuild.notifyValue
+                titleParams = commandContext.notifyValue,
+                bodyParams = commandContext.notifyValue
             )
         }
     }

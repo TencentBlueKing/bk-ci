@@ -67,6 +67,7 @@ class TXModelContainer @Autowired(required = false) constructor(
         resources: Resources?,
         buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
     ) {
+        doSomeCheck(job, TXStreamDispatchUtils.getBaseOs(job))
         val defaultImage = inner!!.defaultImage
         val containsMatrix = JsonUtil.toJson(job.runsOn).contains("\${{ $MATRIX_CONTEXT_KEY_PREFIX")
         val dispatchInfo = (inner as TXInnerModelCreator).getDispatchInfo(

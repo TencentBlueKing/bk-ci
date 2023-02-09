@@ -67,12 +67,6 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchTy
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.pojo.StartUpReq
-import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
-import com.tencent.devops.store.pojo.atom.InstallAtomReq
-import javax.ws.rs.core.Response
-import org.slf4j.LoggerFactory
-import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
-import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
 import com.tencent.devops.process.yaml.v2.models.IfType
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.job.Container2
@@ -80,7 +74,13 @@ import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.process.yaml.v2.models.step.Step
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
+import com.tencent.devops.store.pojo.atom.InstallAtomReq
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
+import javax.ws.rs.core.Response
+import com.tencent.devops.process.yaml.v2.models.job.Container as V2Container
+import com.tencent.devops.process.yaml.v2.models.stage.Stage as V2Stage
 
 /**
  * 流水线编排
@@ -523,7 +523,8 @@ class PipelineLayout private constructor(
             return ThirdPartyAgentIDDispatchType(
                 displayName = agentId,
                 workspace = userLocalProjectInfo.workspace,
-                agentType = AgentType.ID
+                agentType = AgentType.ID,
+                dockerInfo = null
             )
         }
 
@@ -533,7 +534,8 @@ class PipelineLayout private constructor(
                 envName = job.runsOn.poolName,
                 envProjectId = null,
                 workspace = job.runsOn.workspace,
-                agentType = AgentType.NAME
+                agentType = AgentType.NAME,
+                dockerInfo = null
             )
         }
 

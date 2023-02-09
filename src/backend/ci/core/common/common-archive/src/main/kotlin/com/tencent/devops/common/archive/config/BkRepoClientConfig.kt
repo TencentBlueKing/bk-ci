@@ -39,12 +39,6 @@ class BkRepoClientConfig {
     @Value("\${artifactory.realm:}")
     lateinit var artifactoryRealm: String
 
-    @Value("\${artifactory.bkrepo.baseUrl:}")
-    lateinit var bkRepoBaseUrl: String
-
-    @Value("\${artifactory.bkrepo.authorization:}")
-    lateinit var bkRepoAuthorization: String
-
     @Value("\${bkrepo.logRepoCredentialsKey:}")
     lateinit var logRepoCredentialsKey: String
 }

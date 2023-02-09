@@ -29,10 +29,12 @@ package main
 
 import (
 	"fmt"
+	"math/rand"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strings"
+	"time"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/agent"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
@@ -45,6 +47,14 @@ const (
 )
 
 func main() {
+	rand.Seed(time.Now().UnixNano())
+
+	defer func() {
+		if err := recover(); err != nil {
+			logs.Error("agent main panic: ", err)
+		}
+	}()
+
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsAgent.log")
 	err := logs.Init(logFilePath)
@@ -75,12 +85,6 @@ func main() {
 		logs.Info("change work dir failed, err: ", err.Error())
 		systemutil.ExitProcess(1)
 	}
-
-	defer func() {
-		if err := recover(); err != nil {
-			logs.Error("panic: ", err)
-		}
-	}()
 
 	if ok := systemutil.CheckProcess(agentProcess); !ok {
 		logs.Warn("get process lock failed, exit")

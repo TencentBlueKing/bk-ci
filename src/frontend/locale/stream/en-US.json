@@ -64,6 +64,12 @@
         "goToGit": "go to git"
     },
     "pipeline": {
+        "commitMsgWithEnter": "Please enter the submission message and press the Enter key to search",
+        "queue": "Queue",
+        "queueTimeout": "Queue Timeout",
+        "running": "Running",
+        "reviewing": "Reviewing",
+        "stageSuccess": "Stage Success",
         "pipeline": "Pipeline",
         "allPipelines": "All pipelines",
         "nameRule": "Consists of uppercase and lowercase English letters, numbers, underscores, underscores and dots",
@@ -244,6 +250,9 @@
         "crossRepoUse": "Allow cross-repository use",
         "crossRepoUseTips": "Credential can be referenced across repositories when it's used in template.",
         "ticket": {
+            "credentialDesc": "The credentials are referenced in YAML by means of the context settings.&lt;key&gt;.xxx, which has a different field name depending on the credential type",
+            "credentialType": "Credential type",
+            "credentialKey": "Credential identification (key)",
             "addCredential": "Add Credential",
             "editCredential": "Edit Credential",
             "emptyCredential": "No credential",

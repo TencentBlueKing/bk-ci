@@ -64,7 +64,7 @@ class SendCommitCheck @Autowired constructor(
         private const val BUILD_RUNNING_DESC = "Running."
         private const val BUILD_STAGE_SUCCESS_DESC =
             "Warning: your pipeline「%s」 is stage succeed. Rejected by %s, reason is %s."
-        private const val BUILD_SUCCESS_DESC = "Successful in %sm."
+        private const val BUILD_SUCCESS_DESC = "Successful in %s."
         private const val BUILD_CANCEL_DESC = "Your pipeline「%s」 was cancelled."
         private const val BUILD_FAILED_DESC = "Failing after %sm."
         private const val BUILD_GATE_REVIEW_DESC =
@@ -100,7 +100,7 @@ class SendCommitCheck @Autowired constructor(
             gitProjectName = streamGitProjectInfo.name,
             state = finishData.getGitCommitCheckState(),
             block = action.metaData.isStreamMr() && action.data.setting.enableMrBlock &&
-                !finishData.isSuccess(),
+                    !finishData.isSuccess(),
             context = "${action.data.context.pipeline!!.filePath}@${action.metaData.streamObjectKind.name}",
             targetUrl = getTargetUrl(action),
             description = getDescByBuildStatus(
@@ -159,21 +159,33 @@ class SendCommitCheck @Autowired constructor(
                 val (name, reason) = getReviewInfo(finishData)
                 BUILD_STAGE_SUCCESS_DESC.format(pipelineName, name, reason)
             } else {
-                BUILD_SUCCESS_DESC.format(getFinishTime(finishData.startTime).toString())
+                BUILD_SUCCESS_DESC.format(getFinishTime(finishData.startTime))
             }
         }
         finishData.getBuildStatus().isCancel() -> {
             BUILD_CANCEL_DESC.format(pipelineName)
         }
         else -> {
-            BUILD_FAILED_DESC.format(getFinishTime(finishData.startTime).toString())
+            BUILD_FAILED_DESC.format(getFinishTime(finishData.startTime))
         }
     }
 
-    private fun getFinishTime(startTimeTimeStamp: Long?): Long {
+    private fun getFinishTime(startTimeTimeStamp: Long?): String {
         val zoneId = ZoneId.systemDefault()
         val startTime = LocalDateTime.ofInstant(startTimeTimeStamp?.let { Instant.ofEpochMilli(it) }, zoneId)
-        return startTime.between(LocalDateTime.now()).toMinutes()
+        return startTime.between(LocalDateTime.now()).format()
+    }
+
+    private fun Duration.format(): String {
+        if (this === Duration.ZERO) {
+            return "0s"
+        }
+        val day = (seconds / 86400).toInt()
+        val hours = ((seconds / 3600) % 24).toInt()
+        val minutes = (seconds % 3600 / 60).toInt()
+        val secs = (seconds % 60).toInt()
+        fun join(int: Int, name: String) = if (int > 0) " $int$name" else ""
+        return join(day, "d") + join(hours, "h") + join(minutes, "m") + join(secs, "s")
     }
 
     private fun getTargetUrl(

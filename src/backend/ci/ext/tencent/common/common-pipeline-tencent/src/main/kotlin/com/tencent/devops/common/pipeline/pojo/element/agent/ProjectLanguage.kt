@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.pipeline.pojo.element.agent
 
-@Deprecated("无用，待删除")
 @Suppress("UNUSED")
 enum class ProjectLanguage(val value: String) {
     C("c"),

@@ -17,7 +17,8 @@ RUN yum install -y procps && \
     yum install -y vi && \
     yum install -y vim && \
     yum install -y less && \
-    yum install -y wget
+    yum install -y wget && \
+    yum install -y lrzsz
 
 # 第三方工具
 RUN mkdir -p /data/tools && \
