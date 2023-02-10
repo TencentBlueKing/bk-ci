@@ -33,18 +33,18 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceBcsLimitRangeConfig {
 
-    @Value("\${store.extService.bcs.limitRange.default.cpu}")
+    @Value("\${store.extService.kubernetes.limitRange.default.cpu}")
     val defaultCpu: String = ""
 
-    @Value("\${store.extService.bcs.limitRange.default.memory}")
+    @Value("\${store.extService.kubernetes.limitRange.default.memory}")
     val defaultMemory: String = ""
 
-    @Value("\${store.extService.bcs.limitRange.defaultRequest.cpu}")
+    @Value("\${store.extService.kubernetes.limitRange.defaultRequest.cpu}")
     val defaultRequestCpu: String = ""
 
-    @Value("\${store.extService.bcs.limitRange.defaultRequest.memory}")
+    @Value("\${store.extService.kubernetes.limitRange.defaultRequest.memory}")
     val defaultRequestMemory: String = ""
 
-    @Value("\${store.extService.bcs.limitRange.type}")
+    @Value("\${store.extService.kubernetes.limitRange.type}")
     val limitType: String = ""
 }
