@@ -144,14 +144,14 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                approvalStatus = ProjectApproveStatus.APPROVED.status,
                 tipsStatus = ProjectTipsStatus.SHOW_SUCCESSFUL_CREATE.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status
+                approvalStatus = ProjectApproveStatus.APPROVED.status
             )
             val projectCreateInfo = with(projectInfo) {
                 ProjectCreateInfo(
@@ -253,7 +253,7 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                approvalStatus = ProjectApproveStatus.APPROVED.status,
                 tipsStatus = ProjectTipsStatus.SHOW_SUCCESSFUL_UPDATE.status
             )
             projectDao.update(
@@ -296,14 +296,14 @@ class ProjectApprovalService @Autowired constructor(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status,
+                approvalStatus = ProjectApproveStatus.APPROVED.status,
                 tipsStatus = ProjectTipsStatus.SHOW_UPDATE_REJECT.status
             )
             projectDao.updateApprovalStatus(
                 dslContext = context,
                 projectCode = projectId,
                 approver = approver,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status
+                approvalStatus = ProjectApproveStatus.APPROVED.status
             )
         }
     }

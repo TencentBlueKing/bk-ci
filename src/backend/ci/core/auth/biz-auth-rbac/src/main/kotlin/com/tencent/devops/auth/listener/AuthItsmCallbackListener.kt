@@ -84,8 +84,8 @@ class AuthItsmCallbackListener @Autowired constructor(
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )
             )
-        if (projectInfo.approvalStatus == ProjectApproveStatus.CANCEL_CREATE.status) {
-            logger.info("This project has been canceled create! englishName = $englishName")
+        if (projectInfo.approvalStatus != ProjectApproveStatus.CREATE_PENDING.status) {
+            logger.info("This project status not create pending! englishName = $englishName")
             return
         }
         val callBackId = callBackInfo.callbackId
@@ -138,7 +138,7 @@ class AuthItsmCallbackListener @Autowired constructor(
                     defaultMessage = "The project does not exist! | englishName = $englishName"
                 )
             )
-        if (projectInfo.approvalStatus == ProjectApproveStatus.SUCCEED.status) {
+        if (projectInfo.approvalStatus == ProjectApproveStatus.APPROVED.status) {
             logger.info("The project is already in normal state and cannot be updated|englishName = $englishName")
             return
         }
