@@ -42,7 +42,7 @@ data class MarketAtomCreateRequest(
     @field:BkField(patternStyle = BkStyleEnum.CODE_STYLE)
     var atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.ATOM_NAME_STYLE)
+    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     var name: String,
     @ApiModelProperty("开发语言", required = true)
     @field:BkField(patternStyle = BkStyleEnum.LANGUAGE_STYLE)

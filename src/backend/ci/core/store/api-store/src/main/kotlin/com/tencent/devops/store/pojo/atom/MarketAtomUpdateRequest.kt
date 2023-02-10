@@ -41,7 +41,7 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.ATOM_NAME_STYLE)
+    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
     @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: AtomCategoryEnum,
