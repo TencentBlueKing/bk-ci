@@ -252,7 +252,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),
                 EnvVar(DEVOPS_REMOTING_PRECI_GATEWAY_URL, preCIGateWayUrl),
                 EnvVar(DEVOPS_REMOTING_BACKEND_HOST, backendHost),
-                EnvVar(BK_PRE_BUILD_GATEWAY, backendHost),
+                EnvVar(BK_PRE_BUILD_GATEWAY, preCIGateWayUrl),
                 EnvVar(DEVOPS_REMOTING_GIT_REMOTE_REPO_URL, event.repositoryUrl)
 
             )
