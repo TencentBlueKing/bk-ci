@@ -90,7 +90,7 @@
                 <div class="bk-form-item introduction-form-item is-required">
                     <label class="bk-label"> {{ $t('store.简介') }} </label>
                     <div class="bk-form-content atom-item-content is-tooltips">
-                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过70个字符')"
+                        <input type="text" class="bk-form-input atom-introduction-input" :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
                             maxlength="70"
                             v-model="atomForm.summary"
@@ -102,7 +102,7 @@
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
+                                <p> {{ $t('store.插件一句话简介，不超过256个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
                             </template>
                         </bk-popover>

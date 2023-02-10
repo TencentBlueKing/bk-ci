@@ -24,11 +24,13 @@ function _M:getAllWhitelistIp()
         ip_whitelist = {config.service_ip_whitelist}
     else
         for k, v in ipairs(config.service_ip_whitelist) do
-            table.insert(ip_whitelist, v)
+            if v ~= "" then
+                table.insert(ip_whitelist, v)
+            end
         end
     end
 
-    if #ip_whitelist ~= 1 then
+    if #ip_whitelist > 1 then
         -- 获取灰度设置
         local ns_config = nil
         if ngx.var.devops_region ~= "DEVNET" then

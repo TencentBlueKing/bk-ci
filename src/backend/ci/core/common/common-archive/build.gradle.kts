@@ -36,4 +36,5 @@ dependencies {
     api(project(":core:common:common-pipeline"))
     api("com.tencent.bk.repo:api-generic")
     api("com.tencent.bk.repo:api-repository")
+    api(project(":core:common:common-security"))
 }
