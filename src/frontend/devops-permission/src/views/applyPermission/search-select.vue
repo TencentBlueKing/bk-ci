@@ -122,7 +122,7 @@
                         </div>
                       </ul>
                     </div>
-                    <div v-if="showMenu && !isLoading && !resourceList.length" class="loading-panel">{{ $t('查询无数据') }}</div>
+                    <div v-if="showMenu && !isLoading && !resourceActionsList.length" class="loading-panel">{{ $t('查询无数据') }}</div>
                     <div v-if="isLoading" class="loading-panel">{{ $t('正在加载中...') }}</div>
                   </div>
                 </section>
