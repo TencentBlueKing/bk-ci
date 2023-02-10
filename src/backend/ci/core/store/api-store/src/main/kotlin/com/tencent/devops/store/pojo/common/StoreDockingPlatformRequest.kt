@@ -56,8 +56,5 @@ data class StoreDockingPlatformRequest(
     val logoUrl: String?,
     @ApiModelProperty("所属机构名称", required = true)
     @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
-    val ownerDeptName: String,
-    @ApiModelProperty("运营负责人", required = true)
-    @field:BkField(minLength = 1, maxLength = 50)
-    val owner: String
+    val ownerDeptName: String
 )
