@@ -178,13 +178,13 @@ class NodeJsAtomRunConditionHandleServiceTest {
                 ApiFactory.create(AtomArchiveSDKApi::class)
             } returns atomApi
             every {
-                    atomApi.getStorePkgRunEnvInfo(
-                        language = any(),
-                        osName = osType.name,
-                        osArch = any(),
-                        runtimeVersion = any()
-                    )
-                } returns Result(errorPkgRunEnvInfo)
+                atomApi.getStorePkgRunEnvInfo(
+                    language = any(),
+                    osName = osType.name,
+                    osArch = any(),
+                    runtimeVersion = any()
+                )
+            } returns Result(errorPkgRunEnvInfo)
             val workspace = Files.createTempDirectory(UUIDUtil.generate()).toFile()
             try {
                 self.prepareRunEnv(
