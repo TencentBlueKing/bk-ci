@@ -25,6 +25,7 @@ const navs = ref([
   .permission-home {
     display: flex;
     flex: 1;
+    overflow: auto;
   }
   .permission-main {
     flex: 1;
