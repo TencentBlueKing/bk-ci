@@ -60,7 +60,6 @@ class StoreDockingPlatformDao {
                 CREATOR,
                 MODIFIER,
                 OWNER_DEPT_NAME,
-                OWNERS,
                 LABELS
             )
                 .values(
@@ -74,7 +73,6 @@ class StoreDockingPlatformDao {
                     userId,
                     userId,
                     storeDockingPlatformRequest.ownerDeptName,
-                    storeDockingPlatformRequest.principal,
                     storeDockingPlatformRequest.labels?.joinToString(",")
                 ).execute()
         }
