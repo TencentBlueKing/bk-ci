@@ -60,6 +60,7 @@ class StoreDockingPlatformDao {
                 CREATOR,
                 MODIFIER,
                 OWNER_DEPT_NAME,
+                OWNERS,
                 LABELS
             )
                 .values(
@@ -73,6 +74,7 @@ class StoreDockingPlatformDao {
                     userId,
                     userId,
                     storeDockingPlatformRequest.ownerDeptName,
+                    storeDockingPlatformRequest.owner,
                     storeDockingPlatformRequest.labels?.joinToString(",")
                 ).execute()
         }
@@ -97,6 +99,7 @@ class StoreDockingPlatformDao {
                     CREATOR,
                     MODIFIER,
                     OWNER_DEPT_NAME,
+                    OWNERS,
                     LABELS
                 )
                     .values(
@@ -110,6 +113,7 @@ class StoreDockingPlatformDao {
                         userId,
                         userId,
                         storeDockingPlatformRequest.ownerDeptName,
+                        storeDockingPlatformRequest.owner,
                         storeDockingPlatformRequest.labels?.joinToString(",")
                     )
             }
@@ -135,6 +139,7 @@ class StoreDockingPlatformDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                .set(OWNERS, storeDockingPlatformRequest.owner)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -156,6 +161,7 @@ class StoreDockingPlatformDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(MODIFIER, userId)
                     .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                    .set(OWNERS, storeDockingPlatformRequest.owner)
                 if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
                     step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
                 }
@@ -318,7 +324,8 @@ class StoreDockingPlatformDao {
                 modifier = modifier,
                 createTime = DateTimeUtil.toDateTime(createTime),
                 updateTime = DateTimeUtil.toDateTime(updateTime),
-                ownerDeptName = record.ownerDeptName
+                ownerDeptName = record.ownerDeptName,
+                owner = record.owners
             )
         }
     }
