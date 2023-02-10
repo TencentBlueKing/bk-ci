@@ -142,12 +142,20 @@ class EnvironmentPermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacEnvironmentPermissionService(
+        dslContext: DSLContext,
+        client: Client,
+        envDao: EnvDao,
+        nodeDao: NodeDao,
+        tokenCheckService: ClientTokenService,
         authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
         environmentAuthServiceCode: EnvironmentAuthServiceCode
     ): EnvironmentPermissionService = RbacEnvironmentPermissionService(
+        dslContext = dslContext,
+        client = client,
+        envDao = envDao,
+        nodeDao = nodeDao,
+        tokenCheckService = tokenCheckService,
         authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
         environmentAuthServiceCode = environmentAuthServiceCode
     )
 }

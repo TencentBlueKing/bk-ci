@@ -103,10 +103,10 @@ class RbacRepositoryPermissionService(
                 value.map { it.toLong() }
             }
             resultMap[key] = ids
-            // todo 这里到时候多了List类型，是否需要判断是view类型，直接加到resultMap[AuthPermission.LIST]中
-            if (key == AuthPermission.VIEW) {
+            // todo 再确定一下，这里要去掉，因为rbac有  list权限，会拿 list动作，去获取资源，所以不会拉到 list动作的权限
+            /*if (key == AuthPermission.VIEW) {
                 resultMap[AuthPermission.LIST] = ids
-            }
+            }*/
         }
         return resultMap
     }

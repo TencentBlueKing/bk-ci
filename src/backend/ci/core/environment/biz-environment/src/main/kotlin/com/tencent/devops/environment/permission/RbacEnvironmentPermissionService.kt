@@ -27,24 +27,272 @@
 
 package com.tencent.devops.environment.permission
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceApi
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.environment.dao.EnvDao
+import com.tencent.devops.environment.dao.NodeDao
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 class RbacEnvironmentPermissionService(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    environmentAuthServiceCode: EnvironmentAuthServiceCode
-) : AbstractEnvironmentPermissionService(
-    authResourceApi = authResourceApi,
-    authPermissionApi = authPermissionApi,
-    environmentAuthServiceCode = environmentAuthServiceCode
-) {
-    override fun supplierForEnvFakePermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    private val dslContext: DSLContext,
+    private val client: Client,
+    private val envDao: EnvDao,
+    private val nodeDao: NodeDao,
+    private val tokenCheckService: ClientTokenService,
+    private val authResourceApi: AuthResourceApi,
+    private val environmentAuthServiceCode: EnvironmentAuthServiceCode
+) : EnvironmentPermissionService {
+    val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
+    val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
+
+    override fun listEnvByPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Set<Long> {
+        val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            action = buildEnvAction(permission),
+            projectCode = projectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value
+        ).data ?: emptyList()
+        val projectAllId = mutableListOf<String>()
+        envDao.list(dslContext, projectId).map {
+            projectAllId.add(HashUtil.encodeLongId(it.envId))
+        }
+        return getAllEnvInstance(resourceInstances, projectAllId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
-    override fun supplierForNodeFakePermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+        val actions = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
+        val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            action = actions
+        ).data ?: emptyMap()
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        val projectAllId = mutableListOf<String>()
+        // iam存储的为hashId,故全量数据需要转hash
+        envDao.list(dslContext, projectId).map {
+            projectAllId.add(HashUtil.encodeLongId(it.envId))
+        }
+        instanceResourcesMap.forEach { (key, value) ->
+            val envs = getAllEnvInstance(value, projectAllId).toList()
+
+            instanceMap[key] = envs.map { it }
+            // todo 再确定一下，这里要去掉，因为rbac有  list权限，会拿 list动作，去获取资源，所以不会拉到 list动作的权限
+            /*if (key == AuthPermission.VIEW) {
+                instanceMap[AuthPermission.LIST] = envs.map { it }
+            }*/
+        }
+        logger.info("listEnvByPermissions Rbac [$userId] [$projectId] [$instanceMap]")
+        return instanceMap
+    }
+
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        envId: Long,
+        permission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
+            resourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT.value,
+            relationResourceType = null,
+            action = buildEnvAction(permission)
+        ).data ?: false
+    }
+
+    override fun checkEnvPermission(
+        userId: String,
+        projectId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            relationResourceType = null,
+            action = buildEnvAction(permission)
+        ).data ?: false
+    }
+
+    override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = environmentAuthServiceCode,
+            resourceType = envResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(envId),
+            resourceName = envName
+        )
+    }
+
+    override fun updateEnv(userId: String, projectId: String, envId: Long, envName: String) {
+        authResourceApi.modifyResource(
+            serviceCode = environmentAuthServiceCode,
+            resourceType = envResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(envId),
+            resourceName = envName
+        )
+    }
+
+    override fun deleteEnv(projectId: String, envId: Long) {
+        authResourceApi.deleteResource(
+            serviceCode = environmentAuthServiceCode,
+            resourceType = envResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(envId)
+        )
+    }
+
+    override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
+        val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            action = buildNodeAction(permission),
+            projectCode = projectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value
+        ).data ?: emptyList()
+
+        val instanceIds = mutableListOf<String>()
+        nodeDao.listNodes(dslContext, projectId).map {
+            instanceIds.add(HashUtil.encodeLongId(it.nodeId))
+        }
+
+        return getAllNodeInstance(resourceInstances, instanceIds).map { HashUtil.decodeIdToLong(it) }.toSet()
+    }
+
+    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+        val actions = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
+
+        val instanceResourcesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+            action = actions
+        ).data ?: emptyMap()
+
+        // iam存储的为hashId,故全量数据需要转hash
+        val instanceIds = mutableListOf<String>()
+        nodeDao.listNodes(dslContext, projectId).map {
+            instanceIds.add(HashUtil.encodeLongId(it.nodeId))
+        }
+
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        instanceResourcesMap.forEach { (key, value) ->
+            val nodes = getAllNodeInstance(value, instanceIds).map { it }
+            logger.info("listNodeByPermissions Rbac [$nodes] ")
+            instanceMap[key] = nodes
+        }
+        logger.info("listNodeByPermissions Rbac [$userId] [$projectId] [$instanceMap]")
+        return instanceMap
+    }
+
+    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(nodeId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
+            resourceType = AuthResourceType.ENVIRONMENT_ENV_NODE.value,
+            relationResourceType = null,
+            action = buildNodeAction(permission)
+        ).data ?: false
+    }
+
+    override fun checkNodePermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            relationResourceType = null,
+            action = buildNodeAction(permission)
+        ).data ?: false
+    }
+
+    override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+        authResourceApi.createResource(
+            user = userId,
+            serviceCode = environmentAuthServiceCode,
+            resourceType = nodeResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(nodeId),
+            resourceName = nodeName
+        )
+    }
+
+    override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
+        authResourceApi.modifyResource(
+            serviceCode = environmentAuthServiceCode,
+            resourceType = nodeResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(nodeId),
+            resourceName = nodeName
+        )
+    }
+
+    override fun deleteNode(projectId: String, nodeId: Long) {
+        authResourceApi.deleteResource(
+            serviceCode = environmentAuthServiceCode,
+            resourceType = nodeResourceType,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(nodeId)
+        )
+    }
+
+    // 拿到的数据统一为加密后的id
+    private fun getAllNodeInstance(resourceCodeList: List<String>, projectAllResourceId: List<String>): List<String> {
+        val instanceIds = mutableListOf<String>()
+        if (resourceCodeList.contains("*")) {
+            return projectAllResourceId
+        }
+        resourceCodeList.map { instanceIds.add(it) }
+        return instanceIds
+    }
+
+    private fun getAllEnvInstance(
+        resourceCodeList: List<String>,
+        projectAllResourceId: List<String>
+    ): Set<String> {
+        val instanceIds = mutableSetOf<String>()
+
+        if (resourceCodeList.contains("*")) {
+            return projectAllResourceId.toSet()
+        }
+        resourceCodeList.map { instanceIds.add(it) }
+        return instanceIds
+    }
+
+    private fun buildNodeAction(authPermission: AuthPermission): String {
+        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENV_NODE)
+    }
+
+    private fun buildEnvAction(authPermission: AuthPermission): String {
+        return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(RbacEnvironmentPermissionService::class.java)
     }
 }
