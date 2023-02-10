@@ -122,7 +122,7 @@ class NodeJsAtomRunConditionHandleServiceTest {
         osArch = "",
         runtimeVersion = "16.*",
         pkgName = "node-v16.18.1-darwin-x64.tar.gz",
-        pkgDownloadPath = "https://registry.npmmirror.com/-/binary/node/latest-v16.x/node123-v16.18.1-darwin-x64.tar.gz",
+        pkgDownloadPath = "https://registry.npmmirror.com/-/binary/node/latest-v16.x/node1-v16.18.1-darwin-x64.tar.gz",
         defaultFlag = true,
         creator = "admin",
         modifier = "admin",
