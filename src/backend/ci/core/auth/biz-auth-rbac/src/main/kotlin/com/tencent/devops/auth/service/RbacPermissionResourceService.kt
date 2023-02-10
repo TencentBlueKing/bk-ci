@@ -32,20 +32,14 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.ProjectMessageCode
-import com.tencent.devops.project.pojo.ProjectVO
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
-    private val client: Client,
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
     private val authResourceGroupService: AuthResourceGroupService,
@@ -77,12 +71,16 @@ class RbacPermissionResourceService(
             )
         } else {
             // 获取项目管理的权限资源
-            val projectInfo = getProjectInfo(projectCode = projectCode)
+            val projectInfo = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
             permissionSubsetManagerService.createSubsetManager(
-                gradeManagerId = projectInfo.relationId!!,
+                gradeManagerId = projectInfo.relationId,
                 userId = userId,
                 projectCode = projectCode,
-                projectName = projectInfo.projectName,
+                projectName = projectInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName
@@ -153,8 +151,12 @@ class RbacPermissionResourceService(
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         if (resourceType == AuthResourceType.PROJECT.value) {
-            val projectInfo = getProjectInfo(projectCode)
-            permissionGradeManagerService.deleteGradeManager(projectInfo.relationId!!)
+            val projectInfo = authResourceService.get(
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+            permissionGradeManagerService.deleteGradeManager(projectInfo.relationId)
         } else {
             val resourceInfo = authResourceService.get(
                 projectCode = projectCode,
@@ -330,20 +332,5 @@ class RbacPermissionResourceService(
             hasNext = resourceList.size == pageSize,
             records = resourceList
         )
-    }
-
-    private fun getProjectInfo(projectCode: String): ProjectVO {
-        val projectInfo =
-            client.get(ServiceProjectResource::class).get(englishName = projectCode).data ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                params = arrayOf(projectCode),
-                defaultMessage = "项目[$projectCode]不存在"
-            )
-        projectInfo.relationId ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RELATED_RESOURCE_EMPTY,
-            params = arrayOf(projectCode),
-            defaultMessage = "the resource not exists, projectCode:$projectCode"
-        )
-        return projectInfo
     }
 }
