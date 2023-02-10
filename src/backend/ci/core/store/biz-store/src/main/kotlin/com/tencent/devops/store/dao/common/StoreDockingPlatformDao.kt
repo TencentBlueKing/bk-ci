@@ -86,37 +86,37 @@ class StoreDockingPlatformDao {
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-                return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                    dslContext.insertInto(
-                        this,
-                        ID,
-                        PLATFORM_CODE,
-                        PLATFORM_NAME,
-                        WEBSITE,
-                        SUMMARY,
-                        PRINCIPAL,
-                        LOGO_URL,
-                        CREATOR,
-                        MODIFIER,
-                        OWNER_DEPT_NAME,
-                        OWNERS,
-                        LABELS
+            return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
+                dslContext.insertInto(
+                    this,
+                    ID,
+                    PLATFORM_CODE,
+                    PLATFORM_NAME,
+                    WEBSITE,
+                    SUMMARY,
+                    PRINCIPAL,
+                    LOGO_URL,
+                    CREATOR,
+                    MODIFIER,
+                    OWNER_DEPT_NAME,
+                    OWNERS,
+                    LABELS
+                )
+                    .values(
+                        UUIDUtil.generate(),
+                        storeDockingPlatformRequest.platformCode,
+                        storeDockingPlatformRequest.platformName,
+                        storeDockingPlatformRequest.website,
+                        storeDockingPlatformRequest.summary,
+                        storeDockingPlatformRequest.principal,
+                        storeDockingPlatformRequest.logoUrl,
+                        userId,
+                        userId,
+                        storeDockingPlatformRequest.ownerDeptName,
+                        storeDockingPlatformRequest.owner,
+                        storeDockingPlatformRequest.labels?.joinToString(",")
                     )
-                        .values(
-                            UUIDUtil.generate(),
-                            storeDockingPlatformRequest.platformCode,
-                            storeDockingPlatformRequest.platformName,
-                            storeDockingPlatformRequest.website,
-                            storeDockingPlatformRequest.summary,
-                            storeDockingPlatformRequest.principal,
-                            storeDockingPlatformRequest.logoUrl,
-                            userId,
-                            userId,
-                            storeDockingPlatformRequest.ownerDeptName,
-                            storeDockingPlatformRequest.owner,
-                            storeDockingPlatformRequest.labels?.joinToString(",")
-                        )
-                }
+            }
             ).execute().size
         }
     }
@@ -165,7 +165,7 @@ class StoreDockingPlatformDao {
                 if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
                     step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
                 }
-                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+                step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
             }
             ).execute().size
         }
