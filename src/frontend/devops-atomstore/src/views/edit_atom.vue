@@ -168,20 +168,19 @@
                         <input
                             type="text"
                             class="bk-form-input atom-introduction-input"
-                            :placeholder="$t('store.插件一句话简介，不超过70个字符')"
+                            :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
-                                required: true,
-                                max: 70
+                                required: true
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }"
                         >
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
+                                <p> {{ $t('store.插件一句话简介，不超过256个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
                             </template>
                         </bk-popover>
