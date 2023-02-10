@@ -33,18 +33,18 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceDeploymentConfig {
 
-    @Value("\${store.extService.bcs.deployment.pullImageSecretName}")
+    @Value("\${store.extService.kubernetes.deployment.pullImageSecretName}")
     val pullImageSecretName: String = ""
 
-    @Value("\${store.extService.bcs.deployment.grayPullImageSecretName}")
+    @Value("\${store.extService.kubernetes.deployment.grayPullImageSecretName}")
     val grayPullImageSecretName: String = ""
 
-    @Value("\${store.extService.bcs.deployment.replicas}")
+    @Value("\${store.extService.kubernetes.deployment.replicas}")
     val replicas: String = ""
 
-    @Value("\${store.extService.bcs.deployment.grayReplicas}")
+    @Value("\${store.extService.kubernetes.deployment.grayReplicas}")
     val grayReplicas: String = ""
 
-    @Value("\${store.extService.bcs.deployment.containerPort}")
+    @Value("\${store.extService.kubernetes.deployment.containerPort}")
     val containerPort: String = ""
 }
