@@ -126,25 +126,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                             env = generateContainerEnvVar(userId, gitRepoRootPath, event)
                         )
                     ),
-                    initContainers = listOf(
-                        Container(
-                            name = event.workspaceName + "-init",
-                            image = initContainerImage,
-                            resource = ResourceRequirements(2000, 4096),
-                            volumeMounts = listOf(
-                                VolumeMount(
-                                    name = VOLUME_MOUNT_NAME,
-                                    mountPath = WORKSPACE_PATH
-                                )
-                            ),
-                            env = listOf(
-                                EnvVar(INIT_CONTAINER_GIT_TOKEN, event.gitOAuth),
-                                EnvVar(INIT_CONTAINER_GIT_URL, event.repositoryUrl),
-                                EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
-                                EnvVar(INIT_CONTAINER_GIT_BRANCH, event.branch)
-                            )
-                        )
-                    ),
+                    initContainers = emptyList(),
                     imagePullCertificate = imagePullCertificateList,
                     volumes = listOf(
                         Volume(
