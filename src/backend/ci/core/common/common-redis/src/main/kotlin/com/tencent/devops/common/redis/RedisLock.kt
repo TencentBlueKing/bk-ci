@@ -86,7 +86,8 @@ open class RedisLock(
 
     fun tryLock(): Boolean {
         // 不存在则添加 且设置过期时间（单位ms）
-        return set(lockKey, lockValue, expiredTimeInSeconds)
+        locked = set(lockKey, lockValue, expiredTimeInSeconds)
+        return locked
     }
 
     /**
