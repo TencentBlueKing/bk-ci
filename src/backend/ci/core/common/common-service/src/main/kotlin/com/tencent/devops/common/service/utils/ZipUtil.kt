@@ -56,8 +56,6 @@ object ZipUtil {
         }
         // 开始解压
         var zipFile: ZipFile? = null
-        var inputStream: InputStream? = null
-        var fos: OutputStream? = null
         try {
             zipFile = ZipFile(srcFile, Charset.forName("UTF-8"))
             val entries = zipFile.entries()
@@ -68,14 +66,12 @@ object ZipUtil {
                     entryName = entryName.substring(entryName.indexOf("/") + 1) // 去掉根目录
                 }
                 // 如果是文件夹则需创建文件目录
-                val pair = handleZipFile(entry, destDirPath, entryName, zipFile)
-                fos = pair.first
-                inputStream = pair.second
+                handleZipFile(entry, destDirPath, entryName, zipFile)
             }
         } catch (e: IOException) {
             logger.error("UNZIP file[${srcFile.canonicalPath}] with error: ", e)
         } finally {
-            closeUnzipFileStream(fos, inputStream, zipFile)
+            closeZipFile(zipFile)
         }
     }
 
@@ -153,7 +149,7 @@ object ZipUtil {
         destDirPath: String,
         entryName: String?,
         zipFile: ZipFile
-    ): Pair<OutputStream?, InputStream?> {
+    ) {
         var inputStream: InputStream? = null
         var fos: OutputStream? = null
         if (entry.isDirectory) {
@@ -167,12 +163,15 @@ object ZipUtil {
                 targetFile.parentFile.mkdirs()
             }
             targetFile.createNewFile()
-            // 将压缩文件内容写入到这个文件中
-            inputStream = zipFile.getInputStream(entry)
-            fos = FileOutputStream(targetFile)
-            copyUnzipFile(inputStream, fos)
+            try {
+                // 将压缩文件内容写入到这个文件中
+                inputStream = zipFile.getInputStream(entry)
+                fos = FileOutputStream(targetFile)
+                copyUnzipFile(inputStream, fos)
+            } finally {
+                closeStream(fos, inputStream)
+            }
         }
-        return Pair(fos, inputStream)
     }
 
     private fun copyUnzipFile(inputStream: InputStream, fos: FileOutputStream) {
@@ -182,28 +181,27 @@ object ZipUtil {
             fos.write(buf, 0, len)
             len = inputStream.read(buf)
         }
+        fos.flush()
     }
 
-    private fun closeUnzipFileStream(fos: OutputStream?, inputStream: InputStream?, zipFile: ZipFile?) {
+    private fun closeStream(fos: OutputStream?, inputStream: InputStream?) {
         if (null != fos) {
             try {
                 fos.close()
             } catch (e: IOException) {
                 logger.error("outputStream close error!", e)
             } finally {
-                closeInputStream(inputStream, zipFile)
+                closeInputStream(inputStream)
             }
         }
     }
 
-    private fun closeInputStream(inputStream: InputStream?, zipFile: ZipFile?) {
+    private fun closeInputStream(inputStream: InputStream?) {
         if (null != inputStream) {
             try {
                 inputStream.close()
             } catch (e: IOException) {
                 logger.error("inputStream close error!", e)
-            } finally {
-                closeZipFile(zipFile)
             }
         }
     }
