@@ -40,10 +40,9 @@ object Versions {
     const val p4 = "2021.1.2163843"
     const val YamlSchema = "1.0.49"
     const val Pulsar = "2.7.2"
-    const val JacksonDatatypeJsr = "2.11.4"
     const val reflections = "0.10.2"
     const val mockk = "1.12.2"
     const val Resilience4j = "1.7.1"
     const val jjwt = "0.11.5"
-    const val KubernetesDiscovery = "2.0.6"
+    const val jgit = "5.13.1.202206130422-r"
 }
