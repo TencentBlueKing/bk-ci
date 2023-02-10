@@ -27,17 +27,66 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 
-class RbacAuthProjectApi : AuthProjectApi {
+class RbacAuthProjectApi @Autowired constructor(
+    private val client: Client,
+    private val tokenService: ClientTokenService
+) : AuthProjectApi {
 
-    override fun getProjectUsers(serviceCode: AuthServiceCode, projectCode: String, group: BkAuthGroup?): List<String> {
-        return emptyList()
+    override fun getProjectUsers(
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        group: BkAuthGroup?
+    ): List<String> {
+        return client.get(ServiceProjectAuthResource::class).getProjectUsers(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectCode,
+            group = group
+        ).data ?: emptyList()
+    }
+
+    override fun getProjectGroupAndUserList(
+        serviceCode: AuthServiceCode,
+        projectCode: String
+    ): List<BkAuthGroupAndUserList> {
+        return client.get(ServiceProjectAuthResource::class).getProjectGroupAndUserList(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectCode
+        ).data ?: emptyList()
+    }
+
+    override fun getUserProjects(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        supplier: (() -> List<String>)?
+    ): List<String> {
+        return client.get(ServiceProjectAuthResource::class).getUserProjects(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId
+        ).data ?: emptyList()
+    }
+
+    override fun getUserProjectsAvailable(
+        serviceCode: AuthServiceCode,
+        userId: String,
+        supplier: (() -> List<String>)?
+    ): Map<String, String> {
+        val projectList = getUserProjects(serviceCode, userId, supplier)
+        val projectMap = mutableMapOf<String, String>()
+        projectList.map {
+            projectMap[it] = it
+        }
+        return projectMap
     }
 
     override fun isProjectUser(
@@ -46,38 +95,28 @@ class RbacAuthProjectApi : AuthProjectApi {
         projectCode: String,
         group: BkAuthGroup?
     ): Boolean {
-        return true
+        return client.get(ServiceProjectAuthResource::class).isProjectUser(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode,
+            group = group
+        ).data ?: false
     }
 
     override fun checkProjectUser(user: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
-        return true
+        return client.get(ServiceProjectAuthResource::class).isProjectUser(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode
+        ).data ?: false
     }
 
     override fun checkProjectManager(userId: String, serviceCode: AuthServiceCode, projectCode: String): Boolean {
-        return true
-    }
-
-    override fun getProjectGroupAndUserList(
-        serviceCode: AuthServiceCode,
-        projectCode: String
-    ): List<BkAuthGroupAndUserList> {
-        return emptyList()
-    }
-
-    override fun getUserProjects(
-        serviceCode: AuthServiceCode,
-        userId: String,
-        supplier: (() -> List<String>)?
-    ): List<String> {
-        return emptyList()
-    }
-
-    override fun getUserProjectsAvailable(
-        serviceCode: AuthServiceCode,
-        userId: String,
-        supplier: (() -> List<String>)?
-    ): Map<String, String> {
-        return emptyMap()
+        return client.get(ServiceProjectAuthResource::class).checkProjectManager(
+            userId = userId,
+            projectCode = projectCode,
+            token = tokenService.getSystemToken(null)!!
+        ).data ?: false
     }
 
     override fun createProjectUser(
@@ -86,7 +125,12 @@ class RbacAuthProjectApi : AuthProjectApi {
         projectCode: String,
         role: String
     ): Boolean {
-        return true
+        return client.get(ServiceProjectAuthResource::class).createProjectUser(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode,
+            roleCode = role
+        ).data ?: false
     }
 
     override fun getProjectRoles(
@@ -94,15 +138,18 @@ class RbacAuthProjectApi : AuthProjectApi {
         projectCode: String,
         projectId: String
     ): List<BKAuthProjectRolesResources> {
-        return emptyList()
+        return client.get(ServiceProjectAuthResource::class).getProjectRoles(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectCode,
+            projectId = projectId
+        ).data ?: emptyList()
     }
 
-    override fun getProjectInfo(serviceCode: AuthServiceCode, projectId: String): BkAuthProjectInfoResources? {
+    override fun getProjectInfo(
+        serviceCode: AuthServiceCode,
+        projectCode: String
+    ): BkAuthProjectInfoResources? {
         return null
-    }
-
-    private fun checkAction(projectCode: String, actionType: String, userId: String): Boolean {
-        return true
     }
 
     companion object {

@@ -188,7 +188,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val approvalStatus = if (needApproval) {
             ProjectApproveStatus.CREATE_PENDING.status
         } else {
-            ProjectApproveStatus.SUCCEED.status
+            ProjectApproveStatus.APPROVED.status
         }
         val projectInfo = organizationMarkUp(projectCreateInfo, userDeptDetail)
         try {
@@ -338,7 +338,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val projectApprovalInfo = projectApprovalService.get(projectId) ?: return ProjectTipsStatus.NOT_SHOW.status
         return with(projectApprovalInfo) {
             // 项目创建成功和编辑审批成功,只有第一次进入页面需要展示tips,后面都不需要展示
-            val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.SUCCEED.status &&
+            val needUpdateTipsStatus = approvalStatus == ProjectApproveStatus.APPROVED.status &&
                 updator == userId &&
                 tipsStatus != ProjectTipsStatus.NOT_SHOW.status
             // 只有第一次进来需要展示,后面再进来不需要再展示
@@ -400,7 +400,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 val approvalStatus = if (finalNeedApproval) {
                     ProjectApproveStatus.UPDATE_PENDING.status
                 } else {
-                    ProjectApproveStatus.SUCCEED.status
+                    ProjectApproveStatus.APPROVED.status
                 }
                 val projectId = projectInfo.projectId
                 val logoAddress = projectUpdateInfo.logoAddress
@@ -908,7 +908,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             defaultMessage = "project - $projectId is not exist!"
         )
         val status = projectInfo.approvalStatus
-        if (status != ProjectApproveStatus.CREATE_PENDING.status ||
+        if (status != ProjectApproveStatus.CREATE_PENDING.status &&
             status != ProjectApproveStatus.CREATE_REJECT.status
         ) {
             logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
@@ -957,7 +957,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 userId = userId,
                 englishName = projectInfo.englishName,
-                approvalStatus = ProjectApproveStatus.SUCCEED.status
+                approvalStatus = ProjectApproveStatus.APPROVED.status
             )
         } catch (e: Exception) {
             logger.warn("The project cancel update failed: ${projectInfo.englishName}", e)

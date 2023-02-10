@@ -28,20 +28,12 @@
 package com.tencent.devops.project.pojo.enums
 
 enum class ProjectApproveStatus(val status: Int) {
-    SUCCEED(0),
-
     // 创建审批中
     CREATE_PENDING(1),
-
+    // 审批通过
+    APPROVED(2),
     // 创建中审批拒绝
-    CREATE_REJECT(2),
-
-    // 取消创建
-    CANCEL_CREATE(3),
-
+    CREATE_REJECT(3),
     // 修改审批中
-    UPDATE_PENDING(4),
-
-    // 修改审批拒绝
-    UPDATE_REJECT(5)
+    UPDATE_PENDING(4)
 }
