@@ -109,6 +109,8 @@ type BoosterWorks struct {
 	PumpCacheDir         string
 	PumpCacheSizeMaxMB   int32
 	PumpCacheRemoveAll   bool
+	PumpBlackList        []string
+	PumpMinActionNum     int32
 
 	ForceLocalList []string
 
