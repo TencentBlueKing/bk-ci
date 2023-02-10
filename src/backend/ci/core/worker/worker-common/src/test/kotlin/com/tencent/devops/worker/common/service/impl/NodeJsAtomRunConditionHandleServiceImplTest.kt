@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import java.nio.file.Files
 
-class NodeJsAtomRunConditionHandleServiceTest {
+internal class NodeJsAtomRunConditionHandleServiceImplTest {
 
     private val atomApi: AtomArchiveSDKApi = mockk()
 
