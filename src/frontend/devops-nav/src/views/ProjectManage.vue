@@ -80,7 +80,7 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
-                                <LoadingIcon v-if="[1, 2].includes(row.approvalStatus)" />
+                                <LoadingIcon v-if="[1, 3].includes(row.approvalStatus)" />
                                 <icon
                                     v-else-if="!row.enabled"
                                     class="devops-icon status-icon"
@@ -98,7 +98,7 @@
                                 </span>
                                 <icon
                                     v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
-                                    v-if="row.approvalStatus === 2"
+                                    v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
                                     :size="20"
                                     name="warning-circle"

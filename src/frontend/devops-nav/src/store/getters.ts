@@ -19,11 +19,11 @@ const getters: GetterTree<RootState, any> = {
     },
 
     enableProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => [0, 4].includes(project.approvalStatus) && project.enabled)
+        return state.projectList.filter((project: ObjectMap) => [2, 4].includes(project.approvalStatus) && project.enabled)
     },
 
     disableProjectList: (state: RootState) => {
-        return state.projectList.filter((project: ObjectMap) => [0, 4].includes(project.approvalStatus) && !project.enabled)
+        return state.projectList.filter((project: ObjectMap) => [2, 4].includes(project.approvalStatus) && !project.enabled)
     },
 
     approvalingProjectList: (state: RootState) => {
