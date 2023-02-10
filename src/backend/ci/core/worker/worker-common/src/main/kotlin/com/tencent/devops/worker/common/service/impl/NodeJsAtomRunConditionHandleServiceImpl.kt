@@ -199,8 +199,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             }
             logger.warn(
                 "unZip nodePkg[$pkgName] fail, retryNum: $retryNum, " +
-                        "failScript Command: $command, " +
-                        "Cause of error: ${ignored.message}", ignored
+                    "failScript Command: $command, " +
+                    "Cause of error: ${ignored.message}", ignored
             )
             prepareNodeJsEnv(
                 retryNum = retryNum - 1,
