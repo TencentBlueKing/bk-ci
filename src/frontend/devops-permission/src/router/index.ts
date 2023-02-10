@@ -19,27 +19,28 @@ const router = createRouter({
       component: HomeEntry,
       children: [
         {
-          path: 'apply',
-          name: 'apply',
-          component: ApplyPermission,
-        },
-        {
           path: '/:projectCode',
           component: PermissionEntry,
+          redirect: () => ({ name: 'my-permission' }),
           children: [
-            {
-              path: 'permission',
-              name: 'permission',
-              component: MyPermission,
-            },
             {
               path: 'apply',
               name: 'apply',
+              component: ApplyPermission,
+            },
+            {
+              path: 'my-permission',
+              name: 'my-permission',
+              component: MyPermission,
+            },
+            {
+              path: 'my-apply',
+              name: 'my-apply',
               component: MyApply,
             },
             {
-              path: 'approval',
-              name: 'approval',
+              path: 'my-approval',
+              name: 'my-approval',
               component: MyApproval,
             },
             {
