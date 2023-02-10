@@ -159,7 +159,7 @@ class StageBuildRecordService(
             checkOut?.let { stageVar[Stage::checkOut.name] = checkOut }
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                stageId = stageId, executeCount = executeCount, stageVar = mutableMapOf(),
+                stageId = stageId, executeCount = executeCount, stageVar = stageVar,
                 buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
             )
         }
