@@ -56,12 +56,6 @@ interface BuildBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
-        @ApiParam("当前项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        authProjectId: String,
-        @ApiParam(value = "当前构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        authBuildId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -80,12 +74,6 @@ interface BuildBuildResource {
     @GET
     @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
     fun getLatestSuccessBuild(
-        @ApiParam("当前项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        authProjectId: String,
-        @ApiParam(value = "当前构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        authBuildId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
@@ -102,12 +90,6 @@ interface BuildBuildResource {
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
-        @ApiParam("当前项目ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        authProjectId: String,
-        @ApiParam(value = "当前构建ID", required = true)
-        @HeaderParam(AUTH_HEADER_DEVOPS_BUILD_ID)
-        authBuildId: String,
         @ApiParam("项目ID", required = true)
         @PathParam("projectId")
         projectId: String,
