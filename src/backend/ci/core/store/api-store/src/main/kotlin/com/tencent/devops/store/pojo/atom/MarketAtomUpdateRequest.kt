@@ -29,7 +29,6 @@ package com.tencent.devops.store.pojo.atom
 
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.web.annotation.BkField
-import com.tencent.devops.common.web.constant.BkStyleEnum
 import com.tencent.devops.store.pojo.atom.enums.AtomCategoryEnum
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
@@ -41,7 +40,6 @@ data class MarketAtomUpdateRequest(
     @ApiModelProperty("插件代码", required = true)
     val atomCode: String,
     @ApiModelProperty("插件名称", required = true)
-    @field:BkField(patternStyle = BkStyleEnum.NAME_STYLE)
     val name: String,
     @ApiModelProperty("插件所属范畴，TRIGGER：触发器类插件 TASK：任务类插件", required = true)
     val category: AtomCategoryEnum,
