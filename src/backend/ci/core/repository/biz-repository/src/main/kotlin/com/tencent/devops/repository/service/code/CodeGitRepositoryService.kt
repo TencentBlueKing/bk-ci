@@ -37,7 +37,6 @@ import com.tencent.devops.repository.dao.RepositoryCodeGitDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeGitRepository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
-import com.tencent.devops.repository.pojo.credential.OauthCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
@@ -272,12 +271,8 @@ class CodeGitRepositoryService @Autowired constructor(
     fun getCredentialInfo(repository: CodeGitRepository): RepoCredentialInfo {
         // 凭证信息
         return if (repository.authType == RepoAuthType.OAUTH) {
-            OauthCredentialInfo(
-                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: StringUtils.EMPTY,
-                privateKey = StringUtils.EMPTY,
-                passPhrase = StringUtils.EMPTY,
-                password = StringUtils.EMPTY,
-                username = StringUtils.EMPTY
+            RepoCredentialInfo(
+                token = gitOauthService.getAccessToken(repository.userName)?.accessToken ?: StringUtils.EMPTY
             )
         } else {
             credentialService.getCredentialInfo(

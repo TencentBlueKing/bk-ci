@@ -35,11 +35,7 @@ import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.Repository
-import com.tencent.devops.repository.pojo.credential.AccessTokenCredentialInfo
-import com.tencent.devops.repository.pojo.credential.EmptyCredentialInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
-import com.tencent.devops.repository.pojo.credential.SshCredentialInfo
-import com.tencent.devops.repository.pojo.credential.UserNamePasswordCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
@@ -126,19 +122,21 @@ class CredentialService @Autowired constructor(
             CredentialType.USERNAME_PASSWORD -> {
                 checkUsername(credentialInfo.v1)
                 checkPassword(credentialInfo.v2)
-                UserNamePasswordCredentialInfo(
+                RepoCredentialInfo(
                     token = StringUtils.EMPTY,
                     username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                    password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    credentialInfoType = credentialType.name
                 )
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
                 checkUsername(credentialInfo.v2)
                 checkPassword(credentialInfo.v3)
-                UserNamePasswordCredentialInfo(
+                RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     username = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
-                    password = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                    password = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey),
+                    credentialInfoType = credentialType.name
                 )
             }
             CredentialType.SSH_PRIVATEKEY -> {
@@ -151,12 +149,11 @@ class CredentialService @Autowired constructor(
                 if (!credentialInfo.v2.isNullOrBlank()) {
                     passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
                 }
-                SshCredentialInfo(
+                RepoCredentialInfo(
                     token = StringUtils.EMPTY,
                     privateKey = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     passPhrase = passPhrase,
-                    username = StringUtils.EMPTY,
-                    password = StringUtils.EMPTY
+                    credentialInfoType = credentialType.name
                 )
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
@@ -165,25 +162,21 @@ class CredentialService @Autowired constructor(
                 if (!credentialInfo.v3.isNullOrBlank()) {
                     passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
                 }
-                SshCredentialInfo(
+                RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     privateKey = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     passPhrase = passPhrase,
-                    username = StringUtils.EMPTY,
-                    password = StringUtils.EMPTY
+                    credentialInfoType = credentialType.name
                 )
             }
             CredentialType.ACCESSTOKEN -> {
-                AccessTokenCredentialInfo(
+                RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    privateKey = StringUtils.EMPTY,
-                    passPhrase = StringUtils.EMPTY,
-                    username = StringUtils.EMPTY,
-                    password = StringUtils.EMPTY
+                    credentialInfoType = credentialType.name
                 )
             }
             else -> {
-                EmptyCredentialInfo(token = StringUtils.EMPTY)
+                RepoCredentialInfo(token = StringUtils.EMPTY)
             }
         }
     }

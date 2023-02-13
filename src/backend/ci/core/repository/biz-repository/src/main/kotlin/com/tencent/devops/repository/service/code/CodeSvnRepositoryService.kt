@@ -39,13 +39,12 @@ import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
-import com.tencent.devops.repository.pojo.credential.SshCredentialInfo
-import com.tencent.devops.repository.pojo.credential.UserNamePasswordCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -149,11 +148,11 @@ class CodeSvnRepositoryService @Autowired constructor(
         repository: CodeSvnRepository
     ): TokenCheckResult {
         // 根据凭证类型匹配私钥
-        val privateKey = when (repoCredentialInfo) {
-            is SshCredentialInfo -> {
+        val privateKey = when (repoCredentialInfo.credentialInfoType) {
+            CredentialType.TOKEN_SSH_PRIVATEKEY.name -> {
                 repoCredentialInfo.privateKey
             }
-            is UserNamePasswordCredentialInfo -> {
+            CredentialType.TOKEN_USERNAME_PASSWORD.name,CredentialType.USERNAME_PASSWORD.name -> {
                 repoCredentialInfo.password
             }
             else -> {

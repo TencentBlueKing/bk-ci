@@ -171,9 +171,15 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 )
             }
             else -> {
-                throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
-                    params = arrayOf(repository.authType!!.name)
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repository.projectName,
+                    url = repository.getFormatURL(),
+                    type = ScmType.CODE_GITLAB,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = repoCredentialInfo.token,
+                    region = null,
+                    userName = repository.userName
                 )
             }
         }
