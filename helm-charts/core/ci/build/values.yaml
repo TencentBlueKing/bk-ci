@@ -768,7 +768,10 @@ notify:
 
 # openapi Deployment
 openapi:
-  enabled: true
+  enabled: false
+  secret:
+    enabled: false
+    content: ""
   replicas: 1
   podLabels: {}
   resources:
