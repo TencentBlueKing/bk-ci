@@ -24,6 +24,8 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -254,10 +256,10 @@ class RbacPermissionApplyService @Autowired constructor(
         val resourceTypeName = getResourceTypeName(userId, resourceType)
 
         val actionName = getActionName(userId, resourceType, action)
-
+        val actionId = action.substring(action.lastIndexOf("_") + 1)
         val resourceName = authResourceService.get(
             projectCode = projectId,
-            resourceType = resourceType,
+            resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
             resourceCode = resourceCode
         ).resourceName
 
@@ -266,7 +268,7 @@ class RbacPermissionApplyService @Autowired constructor(
             authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
-                    val isStrategyContainsAction = strategy[resourceType]?.contains(action.substring(action.lastIndexOf("_") + 1))
+                    val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
                     if (isStrategyContainsAction != null && isStrategyContainsAction) {
                         buildGroupInfoList(
                             groupInfoList = groupInfoList,
