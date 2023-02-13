@@ -88,5 +88,10 @@ enum class ThreadPoolName {
     /**
      * 任务认领线程池
      */
-    CLAIM_TASK
+    CLAIM_TASK,
+
+    /**
+     * 构建结束处理线程池
+     */
+    BUILD_END
 }
