@@ -98,6 +98,10 @@
                         label: this.$t('projectManage')
                     },
                     {
+                        to: '/console/permission/my-permission',
+                        label: this.$t('myPermission')
+                    },
+                    {
                         cb: this.logout,
                         label: this.$t('logout')
                     }

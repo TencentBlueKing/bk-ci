@@ -16,7 +16,7 @@ import http from '@/http/api';
 const {
   t,
 } = useI18n();
-const emits = defineEmits(['change', 'approvedChange']);
+const emits = defineEmits(['change', 'approvedChange', 'initProjectForm']);
 
 const props = defineProps({
   data: Object,
@@ -34,39 +34,18 @@ const logoFiles = computed(() => {
   }
   return files;
 });
-const projectFrom = ref();
+const projectForm = ref(null);
 const rules = {
-  projectName: [
-    {
-      required: true,
-      message: t('请填写项目名称'),
-      trigger: 'blur',
-    },
-  ],
-  englishName: [
-    {
-      required: true,
-      message: t('请填写项目ID'),
-      trigger: 'blur',
-    },
-  ],
-  description: [
-    {
-      required: true,
-      message: t('请填写项目描述'),
-      trigger: 'blur',
-    },
-  ],
   bgId: [
     {
-      required: true,
+      validator: () => projectData.value.bgId && projectData.value.deptId,
       message: t('请选择项目所属组织'),
       trigger: 'blur',
     },
   ],
   subjectScopes: [
     {
-      validator: () => projectData.value.subjectScopes.length >= 1,
+      validator: () => projectData.value.subjectScopes.length > 0,
       message: t('请选择项目项目最大可授权人员范围'),
       trigger: 'change',
     },
@@ -122,7 +101,9 @@ const setOrgName = (type: string, id: any) => {
 const handleChangeBg = (type: string, id: any) => {
   handleChangeForm();
   projectData.value.deptId = '';
+  projectData.value.deptName = '';
   projectData.value.centerId = '';
+  projectData.value.centerName = '';
   curDepartmentInfo.value.dept = [];
   curDepartmentInfo.value.center = [];
   if (id) {
@@ -133,6 +114,7 @@ const handleChangeBg = (type: string, id: any) => {
 const handleChangeDept = (type: string, id: any) => {
   handleChangeForm();
   projectData.value.centerId = '';
+  projectData.value.centerName = '';
   curDepartmentInfo.value.center = [];
   if (id) {
     setOrgName(type, id);
@@ -147,16 +129,14 @@ const handleChangeCenter = (type: string, id: any) => {
   };
 };
 
-const formValidate = () => projectFrom.value.validate();
-
-const fetchDepartmentList = () => {
-  const { bgId, deptId } = projectData.value;
-  getDepartment('bg', 0);
+const fetchDepartmentList = async () => {
+  const { bgId, deptId, centerId } = projectData.value;
+  await getDepartment('bg', 0);
   if (bgId) {
-    getDepartment('dept', bgId);
+    await getDepartment('dept', bgId);
   }
   if (deptId) {
-    getDepartment('center', deptId);
+    await getDepartment('center', deptId);
   }
 };
 
@@ -217,15 +197,28 @@ const handleMessage = (event: any) => {
     }
   }
 };
+const fetchUserDetail = async () => {
+  if (props.type !== 'apply') return
+  await http.getUserDetail().then(res => {
+    const { bgId, centerId, deptId } = res;
+    projectData.value.bgId = bgId;
+    projectData.value.centerId = centerId;
+    projectData.value.deptId = deptId;
+  })
+};
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () =>{
+  projectForm.value.validate();
   emits('approvedChange', true);
 }, {
   deep: true,
+  immediate: false,
 })
 
-onMounted(() => {
-  fetchDepartmentList();
+onMounted(async () => {
+  await fetchUserDetail();
+  await fetchDepartmentList();
+  emits('initProjectForm', projectForm.value);
   window.addEventListener('message', handleMessage);
 });
 
@@ -236,7 +229,8 @@ onBeforeUnmount(() => {
 
 <template>
   <bk-form
-    ref="projectFrom"
+    ref="projectForm"
+    :rules="rules"
     :model="projectData"
     :label-width="160"
   >

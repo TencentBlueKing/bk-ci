@@ -31,7 +31,9 @@ const fetchProjectData = async () => {
   await http.requestProjectData({
     englishName: projectCode,
   }).then((res) => {
+    console.log(res, 123)
     projectData.value = res;
+    if (projectData.value.centerId === '0') projectData.value.centerId = ''
   });
   isLoading.value = false;
 };
@@ -72,6 +74,7 @@ const handleFormChange = (val: boolean) => {
 };
 
 const handleApprovedChange = (val: boolean) => {
+  console.log(123, 'handleApprovedChange')
   isToBeApproved.value = val;
 };
 

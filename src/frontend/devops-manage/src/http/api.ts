@@ -9,6 +9,10 @@ export default {
   getUser() {
     return http.get(`${PROJECT_PERFIX}/user/users`);
   },
+
+  getUserDetail() {
+    return http.get(`${PROJECT_PERFIX}/user/users/detail/`);
+  },
   /** *
    * 获取已安装的扩展列表
    */
@@ -69,6 +73,14 @@ export default {
     const { projectId } = params;
     return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}/cancelUpdateProject`);
   },
+
+  /**
+   * 停用/启用项目 
+   */
+  enabledProject(params: any) {
+    const { projectId, enable } = params;
+    return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}/enable?enabled=${enable}`);
+  };
 
   /**
    * 取消创建项目
