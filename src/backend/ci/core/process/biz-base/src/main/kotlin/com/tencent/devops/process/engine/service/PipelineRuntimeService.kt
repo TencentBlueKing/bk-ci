@@ -1329,8 +1329,8 @@ class PipelineRuntimeService @Autowired constructor(
         resourceVersion: Int
     ) {
         buildTaskList.forEach {
-            // 自动填充的构建机控制插件不需要存入Record
-            if (it.taskType == EnvControlTaskType.VM.name) return@forEach
+            // 自动填充的构建机控制插件，不需要存入Record
+            if (EnvControlTaskType.parse(it.taskType) != null) return@forEach
             taskBuildRecords.add(
                 BuildRecordTask(
                     projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
