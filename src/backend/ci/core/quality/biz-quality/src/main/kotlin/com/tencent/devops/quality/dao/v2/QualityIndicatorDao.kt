@@ -213,7 +213,7 @@ class QualityIndicatorDao {
                 if (enable != null) update.set(ENABLE, enable)
                 if (type != null) update.set(TYPE, type.toString())
                 if (!tag.isNullOrBlank()) update.set(TAG, tag)
-                if (!logPrompt.isNullOrBlank()) update.set(LOG_PROMPT, logPrompt)
+                if (!logPrompt.isNullOrBlank()) update.set(LOG_PROMPT, logPrompt) else update.set(LOG_PROMPT, "")
             }
             update.set(UPDATE_TIME, LocalDateTime.now())
                 .set(UPDATE_USER, userId)
