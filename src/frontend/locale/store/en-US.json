@@ -328,7 +328,7 @@
   "请输入": "Please enter here",
   "插件编辑": "Edit plugin",
   "名称": "Name",
-  "插件名称不超过20个字符": "Plugin name cannot exceed 20 characters",
+  "插件名称不超过40个字符": "Plugin name cannot exceed 40 characters",
   "分类": "Category",
   "分类不能为空": "Category cannot be empty",
   "功能标签": "Tag",
