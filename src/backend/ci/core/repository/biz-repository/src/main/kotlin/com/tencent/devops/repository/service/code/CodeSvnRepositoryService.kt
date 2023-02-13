@@ -152,7 +152,7 @@ class CodeSvnRepositoryService @Autowired constructor(
             CredentialType.TOKEN_SSH_PRIVATEKEY.name -> {
                 repoCredentialInfo.privateKey
             }
-            CredentialType.TOKEN_USERNAME_PASSWORD.name,CredentialType.USERNAME_PASSWORD.name -> {
+            CredentialType.TOKEN_USERNAME_PASSWORD.name, CredentialType.USERNAME_PASSWORD.name -> {
                 repoCredentialInfo.password
             }
             else -> {
