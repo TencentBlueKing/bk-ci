@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.pojo.PipelineId
+import com.tencent.devops.process.pojo.SubPipelineRefTree
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
@@ -109,6 +110,14 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
 
     override fun getPipelineByName(projectId: String, pipelineName: String): Result<List<PipelineId?>> {
         return subPipeService.getPipelineByName(projectId, pipelineName)
+    }
+
+    override fun getSubPipelinesStatus(
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ): Result<SubPipelineRefTree?> {
+        return subPipeService.getSubPipelinesStatus(projectId, pipelineId, buildId)
     }
 
     private fun checkParam(userId: String) {
