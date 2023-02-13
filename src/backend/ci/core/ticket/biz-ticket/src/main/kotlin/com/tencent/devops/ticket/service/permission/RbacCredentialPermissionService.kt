@@ -152,9 +152,9 @@ class RbacCredentialPermissionService constructor(
                 }
             credentialMap[key] = ids
             //TODO 待删除 RBAC中有list类型
-            if (key == AuthPermission.VIEW) {
+            /*if (key == AuthPermission.VIEW) {
                 credentialMap[AuthPermission.LIST] = ids
-            }
+            }*/
         }
         return credentialMap
     }
