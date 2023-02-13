@@ -16,7 +16,7 @@
                                 v-model="atomForm.name"
                                 v-validate="{
                                     required: true,
-                                    max: 20
+                                    max: 40
                                 }"
                                 :class="{ 'is-danger': errors.has('atomName') }">
                             <p :class="errors.has('atomName') ? 'error-tips' : 'normal-tips'">{{ errors.first("atomName") }}</p>
@@ -24,7 +24,7 @@
                         <bk-popover placement="right">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件名称不超过20个字符') }} </p>
+                                <p> {{ $t('store.插件名称不超过40个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
