@@ -6,7 +6,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 object RbacAuthUtils {
 
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
-        // V3统一把list替换成view
+        // todo 这里要修改，rbac 有list类型，但是v3的数据怎么办？
         val action = if (authPermission == AuthPermission.LIST) {
             AuthPermission.VIEW.value
         } else {
