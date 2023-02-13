@@ -257,6 +257,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
         val actionName = getActionName(userId, resourceType, action)
         val actionId = action.substring(action.lastIndexOf("_") + 1)
+        logger.info("actionId:$actionId,${actionId == AuthPermission.CREATE.value}")
         val resourceName = authResourceService.get(
             projectCode = projectId,
             resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
