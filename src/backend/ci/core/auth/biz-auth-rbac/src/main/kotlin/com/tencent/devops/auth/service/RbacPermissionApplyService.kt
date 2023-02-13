@@ -270,6 +270,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
                 if (strategy != null) {
                     val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
+                    logger.info("isStrategyContainsAction:$isStrategyContainsAction,${strategy[resourceType]},$actionId")
                     if (isStrategyContainsAction != null && isStrategyContainsAction) {
                         buildGroupInfoList(
                             groupInfoList = groupInfoList,
