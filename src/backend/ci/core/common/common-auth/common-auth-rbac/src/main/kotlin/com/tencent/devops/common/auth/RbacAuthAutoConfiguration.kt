@@ -69,7 +69,10 @@ class RbacAuthAutoConfiguration {
     ) = RbacResourceApi(client = client, tokenService = tokenService)
 
     @Bean
-    fun authProjectApi() = RbacAuthProjectApi()
+    fun authProjectApi(
+        client: Client,
+        tokenService: ClientTokenService
+    ) = RbacAuthProjectApi(client = client, tokenService = tokenService)
 
     @Bean
     fun authPermissionApi(

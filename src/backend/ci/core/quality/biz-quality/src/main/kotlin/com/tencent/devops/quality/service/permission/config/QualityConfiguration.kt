@@ -124,12 +124,16 @@ class QualityConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacQualityPermissionService(
-        authPermissionApi: AuthPermissionApi,
-        authResourceApi: AuthResourceApi,
-        qualityAuthServiceCode: QualityAuthServiceCode
+        client: Client,
+        dslContext: DSLContext,
+        ruleDao: QualityRuleDao,
+        groupDao: QualityNotifyGroupDao,
+        tokenService: ClientTokenService
     ): QualityPermissionService = RbacQualityPermissionServiceImpl(
-        authPermissionApi = authPermissionApi,
-        authResourceApi = authResourceApi,
-        qualityAuthServiceCode = qualityAuthServiceCode
+        client = client,
+        dslContext = dslContext,
+        ruleDao = ruleDao,
+        groupDao = groupDao,
+        tokenService = tokenService
     )
 }

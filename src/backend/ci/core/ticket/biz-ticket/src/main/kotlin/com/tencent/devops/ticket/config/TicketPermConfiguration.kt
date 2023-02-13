@@ -102,8 +102,8 @@ class TicketPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         ticketAuthServiceCode = ticketAuthServiceCode,
-            client = client,
-            redisOperation = redisOperation
+        client = client,
+        redisOperation = redisOperation
     )
 
     @Bean
@@ -122,8 +122,8 @@ class TicketPermConfiguration {
         authResourceApi = authResourceApi,
         authPermissionApi = authPermissionApi,
         ticketAuthServiceCode = ticketAuthServiceCode,
-            client = client,
-            redisOperation = redisOperation
+        client = client,
+        redisOperation = redisOperation
     )
 
     @Bean
@@ -217,24 +217,28 @@ class TicketPermConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacCertPermissionService(
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        ticketAuthServiceCode: TicketAuthServiceCode
+        client: Client,
+        certDao: CertDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
     ): CertPermissionService = RbacCertPermissionService(
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        ticketAuthServiceCode = ticketAuthServiceCode
+        client = client,
+        certDao = certDao,
+        dslContext = dslContext,
+        tokenService = tokenService
     )
 
     @Bean
     @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
     fun rbacCredentialPermissionService(
-        authResourceApi: AuthResourceApi,
-        authPermissionApi: AuthPermissionApi,
-        ticketAuthServiceCode: TicketAuthServiceCode
+        client: Client,
+        credentialDao: CredentialDao,
+        dslContext: DSLContext,
+        tokenService: ClientTokenService
     ): CredentialPermissionService = RbacCredentialPermissionService(
-        authResourceApi = authResourceApi,
-        authPermissionApi = authPermissionApi,
-        ticketAuthServiceCode = ticketAuthServiceCode
+        client = client,
+        credentialDao = credentialDao,
+        dslContext = dslContext,
+        tokenService = tokenService
     )
 }

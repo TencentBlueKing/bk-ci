@@ -136,15 +136,11 @@ class RepositoryPermConfiguration {
         repositoryDao: RepositoryDao,
         dslContext: DSLContext,
         client: Client,
-        tokenService: ClientTokenService,
-        authResourceApi: AuthResourceApi,
-        codeAuthServiceCode: CodeAuthServiceCode
+        tokenService: ClientTokenService
     ): RepositoryPermissionService = RbacRepositoryPermissionService(
         repositoryDao = repositoryDao,
         dslContext = dslContext,
         client = client,
-        tokenService = tokenService,
-        authResourceApi = authResourceApi,
-        codeAuthServiceCode = codeAuthServiceCode
+        tokenService = tokenService
     )
 }

@@ -50,7 +50,6 @@ import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -111,14 +110,12 @@ class RbacAuthConfiguration {
     @Bean
     @SuppressWarnings("LongParameterList")
     fun permissionResourceService(
-        client: Client,
         iamV2ManagerService: V2ManagerService,
         authResourceService: AuthResourceService,
         authResourceGroupService: AuthResourceGroupService,
         permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService
     ) = RbacPermissionResourceService(
-        client = client,
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
         authResourceGroupService = authResourceGroupService,

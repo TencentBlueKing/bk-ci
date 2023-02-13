@@ -28,21 +28,178 @@
 
 package com.tencent.devops.ticket.service.permission
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.TicketAuthServiceCode
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.ticket.dao.CredentialDao
+import com.tencent.devops.ticket.service.CredentialPermissionService
+import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 class RbacCredentialPermissionService constructor(
-    authResourceApi: AuthResourceApi,
-    authPermissionApi: AuthPermissionApi,
-    ticketAuthServiceCode: TicketAuthServiceCode
-) : AbstractCredentialPermissionService(
-    authResourceApi = authResourceApi,
-    authPermissionApi = authPermissionApi,
-    ticketAuthServiceCode = ticketAuthServiceCode
-) {
+    val client: Client,
+    val credentialDao: CredentialDao,
+    val dslContext: DSLContext,
+    val tokenService: ClientTokenService
+) : CredentialPermissionService {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!validatePermission(userId, projectId, authPermission)) {
+            throw PermissionForbiddenException(message)
+        }
+    }
 
-    override fun supplierForFakePermission(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            action = buildCredentialAction(authPermission),
+            relationResourceType = null
+        ).data ?: false
+    }
+
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        resourceCode: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = resourceCode,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            action = buildCredentialAction(authPermission),
+            relationResourceType = null
+        ).data ?: false
+    }
+
+    override fun filterCredential(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): List<String> {
+        val credentialList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = buildCredentialAction(authPermission),
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value
+        ).data ?: emptyList()
+
+        logger.info("filterCredential user[$userId] project[$projectId] auth[$authPermission] list[$credentialList]")
+        return if (credentialList.contains("*")) {
+            getAllCredentialsByProject(projectId)
+        } else {
+            credentialList
+        }
+    }
+
+    override fun filterCredentials(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        val actions = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL)
+
+        val credentialAuthResult = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = actions,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value
+        ).data ?: emptyMap()
+        val credentialMap = mutableMapOf<AuthPermission, List<String>>()
+
+        val projectAllCertIds: List<String> by lazy { getAllCredentialsByProject(projectId) }
+
+        credentialAuthResult.forEach { (key, value) ->
+            val ids =
+                if (value.contains("*")) {
+                    logger.info("filterCredential user[$userId] project[$projectId] auth[$key] list[$value]")
+                    projectAllCertIds
+                } else {
+                    value
+                }
+            credentialMap[key] = ids
+            //TODO RBAC中有list类型
+            /*if (key == AuthPermission.VIEW) {
+                credentialMap[AuthPermission.LIST] = ids
+            }*/
+        }
+        return credentialMap
+    }
+
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        credentialId: String,
+        authGroupList: List<BkAuthGroup>?
+    ) {
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            resourceCode = credentialId,
+            resourceName = credentialId
+        )
+    }
+
+    override fun deleteResource(
+        projectId: String,
+        credentialId: String
+    ) {
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
+            resourceCode = credentialId
+        )
+    }
+
+    private fun getAllCredentialsByProject(projectId: String): List<String> {
+        val idList = mutableListOf<String>()
+        val count = credentialDao.countByProject(dslContext, projectId)
+        credentialDao.listByProject(dslContext, projectId, 0, count.toInt())
+            .filter { idList.add(it.credentialId) }
+        return idList
+    }
+
+    private fun buildCredentialAction(permission: AuthPermission): String {
+        return RbacAuthUtils.buildAction(permission, AuthResourceType.TICKET_CREDENTIAL)
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(RbacCredentialPermissionService::class.java)
     }
 }
