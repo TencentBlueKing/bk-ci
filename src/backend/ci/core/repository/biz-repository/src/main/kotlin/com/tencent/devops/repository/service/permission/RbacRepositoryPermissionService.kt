@@ -100,9 +100,9 @@ class RbacRepositoryPermissionService(
             }
             resultMap[key] = ids
             // todo 再确定一下，这里要去掉，因为rbac有  list权限，会拿 list动作，去获取资源，所以不会拉到 list动作的权限
-            if (key == AuthPermission.VIEW) {
+            /*if (key == AuthPermission.VIEW) {
                 resultMap[AuthPermission.LIST] = ids
-            }
+            }*/
         }
         return resultMap
     }
