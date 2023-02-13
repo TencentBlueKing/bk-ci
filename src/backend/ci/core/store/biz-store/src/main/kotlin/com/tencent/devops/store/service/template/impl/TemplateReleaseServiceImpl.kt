@@ -185,7 +185,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         logger.info("templateCode is $templateCode")
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
         logger.info("templateCount is $templateCount")
-        val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(templateCode, userId)
+        val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(userId, templateCode)
         val flag = releaseResult.data
         logger.info("releaseResult is  $releaseResult")
         if (flag != true) {
