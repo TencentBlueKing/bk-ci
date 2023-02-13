@@ -1,7 +1,5 @@
 package com.tencent.devops.process.annotation
 
-import org.springframework.stereotype.Component
-
 /**
  * BuildAPI权限校验
  *
@@ -10,5 +8,4 @@ import org.springframework.stereotype.Component
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
-@Component
 annotation class BuildApiPermission
