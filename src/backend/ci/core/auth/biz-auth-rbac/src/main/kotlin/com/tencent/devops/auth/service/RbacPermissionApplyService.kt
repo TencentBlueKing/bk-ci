@@ -247,16 +247,17 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
+        val actionId = action.substring(action.lastIndexOf("_") + 1)
         val isEnablePermission = permissionResourceService.isEnablePermission(
             projectId = projectId,
-            resourceType = resourceType,
+            resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
             resourceCode = resourceCode
         )
 
         val resourceTypeName = getResourceTypeName(userId, resourceType)
 
         val actionName = getActionName(userId, resourceType, action)
-        val actionId = action.substring(action.lastIndexOf("_") + 1)
+
         val resourceName = authResourceService.get(
             projectCode = projectId,
             resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
