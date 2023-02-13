@@ -26,10 +26,21 @@
  */
 package com.tencent.devops.repository.pojo.credential
 
-interface RepoCredentialInfo {
-    val token: String
-    val privateKey: String
-    val passPhrase: String?
-    val username: String
-    val password: String
-}
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
+
+@ApiModel("仓库授权信息")
+data class RepoCredentialInfo(
+    @ApiModelProperty("授权Token")
+    val token: String,
+    @ApiModelProperty("授权私钥")
+    val privateKey: String = "",
+    @ApiModelProperty("私钥密码")
+    val passPhrase: String? = "",
+    @ApiModelProperty("用户名")
+    val username: String = "",
+    @ApiModelProperty("密码")
+    val password: String = "",
+    @ApiModelProperty("凭证类型")
+    val credentialInfoType: String = ""
+)

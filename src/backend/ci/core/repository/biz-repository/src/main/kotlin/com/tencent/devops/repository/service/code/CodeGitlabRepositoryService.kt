@@ -28,7 +28,6 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -171,9 +170,15 @@ class CodeGitlabRepositoryService @Autowired constructor(
                 )
             }
             else -> {
-                throw ErrorCodeException(
-                    errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
-                    params = arrayOf(repository.authType!!.name)
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repository.projectName,
+                    url = repository.getFormatURL(),
+                    type = ScmType.CODE_GITLAB,
+                    privateKey = null,
+                    passPhrase = null,
+                    token = repoCredentialInfo.token,
+                    region = null,
+                    userName = repository.userName
                 )
             }
         }
