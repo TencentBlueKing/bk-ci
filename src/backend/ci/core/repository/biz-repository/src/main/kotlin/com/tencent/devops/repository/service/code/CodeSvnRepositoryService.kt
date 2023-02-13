@@ -149,7 +149,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     ): TokenCheckResult {
         // 根据凭证类型匹配私钥
         val privateKey = when (repoCredentialInfo.credentialInfoType) {
-            CredentialType.TOKEN_SSH_PRIVATEKEY.name -> {
+            CredentialType.TOKEN_SSH_PRIVATEKEY.name , CredentialType.SSH_PRIVATEKEY.name -> {
                 repoCredentialInfo.privateKey
             }
             CredentialType.TOKEN_USERNAME_PASSWORD.name, CredentialType.USERNAME_PASSWORD.name -> {
