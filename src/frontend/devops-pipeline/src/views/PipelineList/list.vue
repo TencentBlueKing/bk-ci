@@ -62,6 +62,9 @@
                     .search-pipeline-input {
                         flex: 1;
                         background: white;
+                        ::placeholder {
+                            color: #c4c6cc;
+                        }
                     }
                 }
             }

@@ -53,17 +53,20 @@
                 const originList = [
                     {
                         id: PIPELINE_FILTER_PIPELINENAME,
+                        default: true,
                         name: this.$t('pipelineName')
 
                     },
                     {
                         id: PIPELINE_FILTER_CREATOR,
+                        default: true,
                         name: this.$t('creator')
 
                     },
                     {
                         id: PIPELINE_FILTER_VIEWIDS,
                         name: this.$t('projectViewList'),
+                        default: true,
                         multiable: true,
                         children: Object.values(this.groupMap).filter(item => item.projected && item.viewType === 2).map(item => ({
                             id: item.id,
@@ -75,6 +78,7 @@
                     ).map(item => ({
                         id: item.id,
                         name: item.name,
+                        default: true,
                         multiable: true,
                         children: item.labels
                     }))
