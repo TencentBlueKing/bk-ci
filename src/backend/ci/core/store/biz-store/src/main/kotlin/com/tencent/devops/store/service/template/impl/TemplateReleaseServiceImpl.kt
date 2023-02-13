@@ -182,15 +182,18 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
     ): Result<String?> {
         logger.info("updateMarketTemplate params:[$userId|$marketTemplateUpdateRequest]")
         val templateCode = marketTemplateUpdateRequest.templateCode
+        logger.info("templateCode is $templateCode")
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
         val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(templateCode, userId)
         val flag = releaseResult.data
+        logger.info("flag is  $releaseResult")
         if (flag != true) {
             throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "The template image fail to release"
             )
         }
+        logger.info("templateCount is $templateCount")
         if (templateCount > 0) {
             val templateName = marketTemplateUpdateRequest.templateName
             // 判断更新的名称是否已存在
@@ -201,6 +204,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
                 )
             }
             val templateRecord = marketTemplateDao.getUpToDateTemplateByCode(dslContext, templateCode)!!
+            logger.info("templateRecord is $templateRecord")
             // 判断最近一个模板版本的状态，如果不是首次发布，则只有处于审核驳回、已发布、上架中止和已下架的插件状态才允许添加新的版本
             val templateFinalStatusList = mutableListOf(
                     TemplateStatusEnum.AUDIT_REJECT.status.toByte(),

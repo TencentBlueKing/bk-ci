@@ -808,13 +808,12 @@ abstract class ImageService @Autowired constructor() {
     ): String {
         logger.info("getImageStatusByCodeAndVersion:Input:($imageCode,$imageVersion)")
         val imageRecord =
-                imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
+            imageDao.getImage(dslContext, imageCode, imageVersion) ?: throw ErrorCodeException(
                 errorCode = USER_IMAGE_VERSION_NOT_EXIST,
                 defaultMessage = "image is null,imageCode=$imageCode, imageVersion=$imageVersion",
                 params = arrayOf(imageCode, imageVersion)
             )
-        val imageStatus = ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
-        return imageStatus
+        return ImageStatusEnum.getImageStatus(imageRecord.imageStatus.toInt())
     }
 
     fun getLatestImageDetailByCode(
