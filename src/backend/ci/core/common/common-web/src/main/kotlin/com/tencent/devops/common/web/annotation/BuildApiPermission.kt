@@ -1,4 +1,4 @@
-package com.tencent.devops.process.annotation
+package com.tencent.devops.common.web.annotation
 
 /**
  * BuildAPI权限校验

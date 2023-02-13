@@ -25,9 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.init
+package com.tencent.devops.common.web
 
-import com.tencent.devops.process.aspect.BuildApiAspect
+import com.tencent.devops.common.web.aop.BuildApiAspect
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import org.springframework.beans.factory.annotation.Autowired
@@ -35,9 +35,11 @@ import org.springframework.beans.factory.annotation.Configurable
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.PropertySource
 import org.springframework.core.Ordered
 
 @Configurable
+@PropertySource("classpath:/common-web.properties")
 @ConditionalOnWebApplication
 @AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 class BuildApiAutoConfiguration {

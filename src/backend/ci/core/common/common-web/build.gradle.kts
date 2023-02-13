@@ -43,4 +43,5 @@ dependencies {
     if (assemblyMode == null || assemblyMode.toUpperCase() == "CONSUL") {
         api("org.springframework.cloud:spring-cloud-starter-config")
     }
+    api(project(":core:process:api-process"))
 }
