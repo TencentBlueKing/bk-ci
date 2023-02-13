@@ -146,16 +146,12 @@ class EnvironmentPermConfiguration {
         client: Client,
         envDao: EnvDao,
         nodeDao: NodeDao,
-        tokenCheckService: ClientTokenService,
-        authResourceApi: AuthResourceApi,
-        environmentAuthServiceCode: EnvironmentAuthServiceCode
+        tokenCheckService: ClientTokenService
     ): EnvironmentPermissionService = RbacEnvironmentPermissionService(
         dslContext = dslContext,
         client = client,
         envDao = envDao,
         nodeDao = nodeDao,
-        tokenCheckService = tokenCheckService,
-        authResourceApi = authResourceApi,
-        environmentAuthServiceCode = environmentAuthServiceCode
+        tokenCheckService = tokenCheckService
     )
 }

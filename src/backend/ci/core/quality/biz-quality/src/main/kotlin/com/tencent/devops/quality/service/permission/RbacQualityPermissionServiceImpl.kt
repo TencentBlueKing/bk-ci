@@ -27,32 +27,190 @@
 
 package com.tencent.devops.quality.service.permission
 
-import com.tencent.devops.common.auth.api.AuthPermissionApi
-import com.tencent.devops.common.auth.api.AuthResourceApi
-import com.tencent.devops.common.auth.code.QualityAuthServiceCode
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.quality.dao.QualityNotifyGroupDao
+import com.tencent.devops.quality.dao.v2.QualityRuleDao
+import com.tencent.devops.quality.service.QualityPermissionService
+import org.jooq.DSLContext
 
 class RbacQualityPermissionServiceImpl(
-    override val authPermissionApi: AuthPermissionApi,
-    override val authResourceApi: AuthResourceApi,
-    override val qualityAuthServiceCode: QualityAuthServiceCode
-) : AbsQualityPermissionServiceImpl(
-    authPermissionApi = authPermissionApi,
-    authResourceApi = authResourceApi,
-    qualityAuthServiceCode = qualityAuthServiceCode
-) {
-    override fun supplierForPermissionGroup(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    val client: Client,
+    val dslContext: DSLContext,
+    val ruleDao: QualityRuleDao,
+    val groupDao: QualityNotifyGroupDao,
+    val tokenService: ClientTokenService
+) : QualityPermissionService {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        groupId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(groupId),
+            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+            relationResourceType = null,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+        ).data ?: false
+        if (!permissionCheck) {
+            throw PermissionForbiddenException(message)
+        }
     }
 
-    override fun supplierForPermissionRule(projectId: String): () -> MutableList<String> {
-        return { mutableListOf() }
+    override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceName = groupName
+        )
     }
 
-    override fun supplierPermissionRule(projectId: String): List<Long> {
-        return listOf()
+    override fun modifyGroupResource(projectId: String, groupId: Long, groupName: String) {
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceName = groupName
+        )
     }
 
-    override fun supplierPermissionGroup(projectId: String): List<Long> {
-        return listOf()
+    override fun deleteGroupResource(projectId: String, groupId: Long) {
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
+            resourceCode = HashUtil.encodeLongId(groupId),
+        )
+    }
+
+    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val actions = mutableListOf<String>()
+        authPermissions.forEach {
+            actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_GROUP))
+        }
+        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectId,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
+            action = actions
+        ).data ?: emptyMap<AuthPermission, List<Long>>()
+        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+        instancesMap.forEach { (key, value) ->
+            val instanceLongIds = mutableListOf<Long>()
+            if (value.contains("*")) {
+                val count = groupDao.count(dslContext, projectId)
+                groupDao.list(dslContext, projectId, 0, count.toInt()).map { instanceLongIds.add(it.id) }
+            } else {
+                value.forEach {
+                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
+                }
+            }
+            resultMap[key] = instanceLongIds
+        }
+        return resultMap
+    }
+
+    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
+            resourceCode = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE)
+        ).data ?: false
+    }
+
+    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!validateRulePermission(userId, projectId, authPermission)) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
+    override fun validateRulePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
+        val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+            relationResourceType = null
+        ).data ?: false
+        if (!checkPermission) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
+    override fun createRuleResource(userId: String, projectId: String, ruleId: Long, ruleName: String) {
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceName = ruleName
+        )
+    }
+
+    override fun modifyRuleResource(projectId: String, ruleId: Long, ruleName: String) {
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceName = ruleName
+        )
+    }
+
+    override fun deleteRuleResource(projectId: String, ruleId: Long) {
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(null)!!,
+            projectCode = projectId,
+            resourceType = AuthResourceType.QUALITY_RULE.value,
+            resourceCode = HashUtil.encodeLongId(ruleId),
+        )
+    }
+
+    override fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+        val actions = mutableListOf<String>()
+        bkAuthPermissionSet.forEach {
+            actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_RULE))
+        }
+        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+            action = actions
+        ).data ?: emptyMap<AuthPermission, List<Long>>()
+        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+        instancesMap.forEach { (key, value) ->
+            val instanceLongIds = mutableListOf<Long>()
+            if (value.contains("*")) {
+                ruleDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
+            } else {
+                value.forEach {
+                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
+                }
+            }
+            resultMap[key] = instanceLongIds
+        }
+        return resultMap
     }
 }

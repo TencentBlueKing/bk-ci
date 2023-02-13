@@ -46,9 +46,7 @@ class RbacEnvironmentPermissionService(
     private val client: Client,
     private val envDao: EnvDao,
     private val nodeDao: NodeDao,
-    private val tokenCheckService: ClientTokenService,
-    private val authResourceApi: AuthResourceApi,
-    private val environmentAuthServiceCode: EnvironmentAuthServiceCode
+    private val tokenCheckService: ClientTokenService
 ) : EnvironmentPermissionService {
     val envResourceType = AuthResourceType.ENVIRONMENT_ENVIRONMENT
     val nodeResourceType = AuthResourceType.ENVIRONMENT_ENV_NODE
@@ -134,32 +132,32 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = environmentAuthServiceCode,
-            resourceType = envResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = envResourceType.value,
             resourceCode = HashUtil.encodeLongId(envId),
             resourceName = envName
         )
     }
 
     override fun updateEnv(userId: String, projectId: String, envId: Long, envName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = environmentAuthServiceCode,
-            resourceType = envResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = envResourceType.value,
             resourceCode = HashUtil.encodeLongId(envId),
             resourceName = envName
         )
     }
 
     override fun deleteEnv(projectId: String, envId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = environmentAuthServiceCode,
-            resourceType = envResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(envId)
+            resourceType = envResourceType.value,
+            resourceCode = HashUtil.encodeLongId(envId),
         )
     }
 
@@ -232,32 +230,32 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun createNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = envResourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
     override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = envResourceType.value,
             resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
 
     override fun deleteNode(projectId: String, nodeId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = environmentAuthServiceCode,
-            resourceType = nodeResourceType,
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(nodeId)
+            resourceType = envResourceType.value,
+            resourceCode = HashUtil.encodeLongId(nodeId),
         )
     }
 

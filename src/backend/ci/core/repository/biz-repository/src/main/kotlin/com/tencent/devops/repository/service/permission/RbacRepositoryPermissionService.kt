@@ -30,9 +30,7 @@ package com.tencent.devops.repository.service.permission
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
-import com.tencent.devops.common.auth.code.CodeAuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
@@ -44,9 +42,7 @@ class RbacRepositoryPermissionService(
     private val repositoryDao: RepositoryDao,
     private val dslContext: DSLContext,
     private val client: Client,
-    private val tokenService: ClientTokenService,
-    private val authResourceApi: AuthResourceApi,
-    private val codeAuthServiceCode: CodeAuthServiceCode
+    private val tokenService: ClientTokenService
 ) : RepositoryPermissionService {
     override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?, message: String) {
         if (!hasPermission(userId, projectId, authPermission, repositoryId)) {
@@ -121,7 +117,6 @@ class RbacRepositoryPermissionService(
             resourceCode = projectId
             resourceType = AuthResourceType.PROJECT.value
         }
-
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -134,31 +129,31 @@ class RbacRepositoryPermissionService(
     }
 
     override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.createResource(
-            user = userId,
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
+        client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
+            userId = userId,
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = repositoryId.toString(),
             resourceName = repositoryName
         )
     }
 
     override fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
-        authResourceApi.modifyResource(
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
+        client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = repositoryId.toString(),
             resourceName = repositoryName
         )
     }
 
     override fun deleteResource(projectId: String, repositoryId: Long) {
-        authResourceApi.deleteResource(
-            serviceCode = codeAuthServiceCode,
-            resourceType = AuthResourceType.CODE_REPERTORY,
+        client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
+            token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
+            resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = repositoryId.toString()
         )
     }
