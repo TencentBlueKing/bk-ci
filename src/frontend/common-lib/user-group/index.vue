@@ -115,7 +115,7 @@
   
         methods: {
             handleChooseGroup (payload) {
-                this.path = `user-group-detail/${payload.id}`
+                this.path = `user-group-detail/${payload.groupId}?role_id=${payload.managerId}`
             },
   
             handleCreateGroup () {

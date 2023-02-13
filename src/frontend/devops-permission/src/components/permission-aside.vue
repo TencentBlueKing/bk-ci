@@ -9,22 +9,22 @@ const route = useRoute();
 const menuList = [
   {
     name: t('我的权限'),
-    code: 'permission',
+    code: 'my-permission',
     icon: '',
   },
   {
     name: t('我的申请'),
-    code: 'apply',
+    code: 'my-apply',
     icon: '',
   },
   {
     name: t('我的审批'),
-    code: 'approval',
+    code: 'my-approval',
     icon: '',
   },
   {
     name: t('申请权限'),
-    code: 'apply-permission',
+    code: 'apply',
     icon: '',
   },
 ];

@@ -48,7 +48,7 @@ const handleCancel = () => {
   };
   if (isChange.value) {
     InfoBox({
-      type: 'warning',
+      infoType: 'warning',
       title: t('确认离开当前页面吗?'),
       subTitle: t('离开将会丢失未保存的信息，建议保存后离开'),
       contentAlign: 'center',

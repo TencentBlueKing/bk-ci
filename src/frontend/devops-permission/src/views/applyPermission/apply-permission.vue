@@ -80,7 +80,7 @@ const handleSubmit = () => {
         message: t('提交成功'),
       });
       router.push({
-        name: 'apply',
+        name: 'my-apply',
         params: {
           projectCode: formData.value.projectCode,
         }
@@ -118,7 +118,6 @@ onMounted(() => {
 
 <template>
   <article class="apply-permission">
-    <permission-header :navs="navs"></permission-header>
     <section class="apply-from-content">
       <bk-form
         ref="formRef"

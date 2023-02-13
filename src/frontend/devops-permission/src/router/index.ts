@@ -9,7 +9,6 @@ const PermissionEntry = () => import(/* webpackChunkName: "Permission" */ '../vi
 const MyApply = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-apply.vue');
 const MyApproval = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-approval.vue');
 const MyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/my-permission.vue');
-const MyApplyPermission = () => import(/* webpackChunkName: "Permission" */ '../views/my-permission/apply-permission.vue');
 
 const router = createRouter({
   history: createWebHistory('permission'),
@@ -42,11 +41,6 @@ const router = createRouter({
               path: 'my-approval',
               name: 'my-approval',
               component: MyApproval,
-            },
-            {
-              path: 'apply-permission',
-              name: 'apply-permission',
-              component: MyApplyPermission,
             },
           ],
         },

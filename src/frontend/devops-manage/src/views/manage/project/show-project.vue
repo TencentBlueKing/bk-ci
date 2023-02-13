@@ -21,7 +21,6 @@ const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
 const isLoading = ref(false);
 const userName = ref('');
-const showStatusTips = computed(() => [1, 3, 4, 6].includes(projectData.value.approvalStatus));
 const fetchProjectData = async () => {
   isLoading.value = true;
   await http.requestProjectData({
@@ -49,6 +48,19 @@ const fieldMap = [
     current: 'logoAddr',
     after: 'afterLogoAddr',
   },
+  {
+    current: 'bgName',
+    after: 'afterBgName',
+  },
+  {
+    current: 'deptName',
+    after: 'afterDeptName',
+  },
+  {
+    current: 'centerName',
+    after: 'afterCenterName',
+  },
+  
 ]
 
 const fetchDiffProjectData = () => {
@@ -95,6 +107,34 @@ const handleToApprovalDetails = () => {
 };
 
 /**
+ * 取消更新项目 
+ */
+const handleCancelUpdate = () => {
+  const onConfirm = async () => {
+    const result = await http.cancelUpdateProject({
+      projectId: projectData.value.project_id,
+    });
+    if (result) {
+      Message({
+        theme: 'success',
+        message: t('取消更新成功'),
+      });
+      const { origin } = window.location;
+      window.location.reload();
+    }
+  };
+
+  InfoBox({
+    infoType: 'warning',
+    title: t('确定取消更新项目'),
+    contentAlign: 'center',
+    headerAlign: 'center',
+    footerAlign: 'center',
+    onConfirm,
+  });
+}
+
+/**
  * 取消创建项目
  */
 const handleCancelCreation = () => {
@@ -113,7 +153,7 @@ const handleCancelCreation = () => {
   };
 
   InfoBox({
-    type: 'warning',
+    infoType: 'warning',
     title: t('确定取消创建项目'),
     contentAlign: 'center',
     headerAlign: 'center',
@@ -129,16 +169,16 @@ const statusDisabledTips = {
 
 const tipsStatusMap = {
   1: {
-    type: 'success',
+    type: 'info',
     message: t('新建项目申请目前正在审批中，可前往查看'),
   },
   2: {
-    type: 'error',
-    message: t('新建项目申请被拒绝'),
+    type: 'success',
+    message: t('新建项目申请已通过'),
   },
   3: {
-    type: 'success',
-    message: t('新建项目申请已取消'),
+    type: 'error',
+    message: t('新建项目申请被拒绝。'),
   },
   4: {
     type: 'info',
@@ -146,7 +186,11 @@ const tipsStatusMap = {
   },
   5: {
     type: 'success',
-    message: t('更新项目信息审批被拒绝'),
+    message: t('更新项目信息已通过'),
+  },
+  6: {
+    type: 'error',
+    message: t('更新项目信息审批被拒绝。'),
   },
 };
 
@@ -157,17 +201,19 @@ watch(() => projectData.value.approvalStatus, (status) => {
 });
 
 onMounted(async () => {
+  await getUserInfo();
   await fetchProjectData();
 });
 </script>
 
 <template>
   <bk-loading class="content-wrapper" :loading="isLoading">
-    <article class="project-info-content" v-if="!isLoading">
-      <bk-alert :theme="tipsStatusMap[projectData.approvalStatus].type" closable v-if="showStatusTips">
+    <article class="project-info-content" v-if="projectData.projectCode">
+      <bk-alert v-if="projectData.tipsStatus !== 0" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
         <template #title>
-          {{ tipsStatusMap[projectData.approvalStatus].message || '--' }}
-          <a class="approval-details" @click="handleToApprovalDetails">{{ t('审批详情') }}</a>
+          {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
+          <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails">{{ t('审批详情') }}</a>
+          <span v-if="projectData.approvalMsg">{{ t('拒绝理由：') }}{{ projectData.approvalMsg }}</span>
         </template>
       </bk-alert>
       <section class="content-main">
@@ -179,9 +225,9 @@ onMounted(async () => {
             </div>
             <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
               <p class="update-title">{{ t('本次更新：') }}</p>
-              <div>
-                <img class="project-logo" :src="projectData.afterLogoAddr" alt="">
-                <span class="item-value">{{ projectData.afterProjectName }}</span>
+              <div class="project-logo-name">
+                <img v-if="projectData.afterLogoAddr" class="project-logo" :src="projectData.afterLogoAddr" alt="">
+                <span class="item-value">{{ projectData.afterProjectName || projectData.projectName }}</span>
               </div>
             </div>
           </bk-form-item>
@@ -197,6 +243,14 @@ onMounted(async () => {
           </bk-form-item>
           <bk-form-item :label="t('项目所属组织')" property="bg">
             <span>{{ projectData.bgName }} - {{ projectData.deptName }} - {{ projectData.centerName }}</span>
+            <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
+              <p class="update-title">
+                {{ t('本次更新：') }}
+              </p>
+            <span>
+              {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} - {{ projectData.afterCenterName }}
+            </span>
+            </div>
           </bk-form-item>
           <bk-form-item :label="t('项目性质')" property="authSecrecy">
             <span class="item-value">{{ projectData.authSecrecy ? t('保密项目') : t('私有项目') }}</span>
@@ -242,17 +296,31 @@ onMounted(async () => {
             -->
             <Popover
               :content="statusDisabledTips[projectData.approvalStatus]"
-              :disabled="![1, 4].includes(projectData.approvalStatus)">
+              :disabled="projectData.approvalStatus === 2">
               <span>
                 <bk-button
                   class="btn mr10"
                   theme="primary"
-                  :disabled="[1, 4].includes(projectData.approvalStatus)"
+                  :disabled="projectData.approvalStatus !== 2"
                   @click="handleEdit"
                 >
                   {{ t('编辑') }}
                 </bk-button>
               </span>
+            </Popover>
+
+            <Popover
+              :content="t('仅更新人可撤销更新')"
+              :disabled="userName === projectData.updator">
+              <bk-button
+                v-if="projectData.approvalStatus === 4"
+                class="btn"
+                theme="default"
+                :disabled="userName !== projectData.updator"
+                @click="handleCancelUpdate"
+              >
+                {{ t('撤销更新') }}
+              </bk-button>
             </Popover>
             
             <bk-button
@@ -263,14 +331,14 @@ onMounted(async () => {
             >
               {{ t('取消创建') }}
             </bk-button>
-
+            
             <bk-button
-              v-if="projectData.approvalStatus === 1"
+              v-if="projectData.approvalStatus === 2"
               class="btn"
               theme="default"
               @click="handleCancelCreation"
             >
-              {{ t('取消创建') }}
+              {{ t('停用项目') }}
             </bk-button>
           </bk-form-item>
         </bk-form>
@@ -365,6 +433,9 @@ onMounted(async () => {
     .update-title {
       color: #63656E;
       font-weight: 700;
+    }
+    .project-logo-name {
+      display: flex;
     }
     .inApproval {
       font-size: 12px;

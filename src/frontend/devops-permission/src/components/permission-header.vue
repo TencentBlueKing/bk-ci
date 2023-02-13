@@ -43,7 +43,7 @@ const goToUrl = (url) => {
           </template>
         </bk-breadcrumb-item>
       </bk-breadcrumb>
-      <bk-button text theme="primary">{{ t('返回旧版') }}</bk-button>
+      <!-- <bk-button text theme="primary">{{ t('返回旧版') }}</bk-button> -->
     </div>
   </section>
 </template>
