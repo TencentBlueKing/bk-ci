@@ -1,19 +1,16 @@
 <template>
-    <bk-search-select
+    <search-select
         class="search-pipeline-input"
-        clearable
-        :show-condition="false"
-        :filter="true"
         :data="dropList"
         :placeholder="$t('searchPipelinePlaceholder')"
-        :value="value"
         :values="initValues"
         @change="handleChange"
-        v-on="$listeners"
-    />
+    >
+    </search-select>
 </template>
 
 <script>
+    import SearchSelect from '@blueking/search-select'
     import { mapState, mapGetters, mapActions } from 'vuex'
     import {
         PIPELINE_FILTER_PIPELINENAME,
@@ -21,13 +18,16 @@
         PIPELINE_FILTER_VIEWIDS,
         PIPELINE_FILTER_LABELS
     } from '@/utils/pipelineConst'
-
+    import '@blueking/search-select/dist/styles/index.css'
     export default {
-        name: 'pipeline-searcher',
+        name: 'PipelineSearcher',
+        components: {
+            SearchSelect
+        },
         props: {
             value: {
                 type: Array,
-                default: () => ({})
+                default: () => ([])
             }
         },
         data () {
@@ -53,19 +53,16 @@
                 const originList = [
                     {
                         id: PIPELINE_FILTER_PIPELINENAME,
-                        classify: PIPELINE_FILTER_PIPELINENAME,
                         name: this.$t('pipelineName')
 
                     },
                     {
                         id: PIPELINE_FILTER_CREATOR,
-                        classify: PIPELINE_FILTER_CREATOR,
                         name: this.$t('creator')
 
                     },
                     {
                         id: PIPELINE_FILTER_VIEWIDS,
-                        classify: PIPELINE_FILTER_VIEWIDS,
                         name: this.$t('projectViewList'),
                         multiable: true,
                         children: Object.values(this.groupMap).filter(item => item.projected && item.viewType === 2).map(item => ({
@@ -76,7 +73,6 @@
                     ...this.tagGroupList.filter(item =>
                         Array.isArray(item.labels) && item.labels.length > 0
                     ).map(item => ({
-                        classify: PIPELINE_FILTER_LABELS,
                         id: item.id,
                         name: item.name,
                         multiable: true,
@@ -123,7 +119,7 @@
             async init () {
                 await this.requestTagList(this.$route.params)
             },
-            getFilterLabelValues (keyName, ids) {
+            getFilterLabelValues (ids) {
                 const tagGroupIdMap = ids.reduce((acc, id) => {
                     const label = this.labelMap[id]
                     if (label) {
@@ -137,7 +133,6 @@
 
                 return Object.entries(tagGroupIdMap).map(([key, value]) => {
                     return {
-                        classify: keyName,
                         id: key,
                         name: this.tagGroupMap[key].name,
                         values: value
@@ -147,15 +142,14 @@
             parseQuery (query) {
                 return this.filterKeys.map(key => {
                     const item = query[key]
-
                     if (item) {
                         const values = item.split(',')
                         switch (key) {
                             case PIPELINE_FILTER_LABELS:
-                                return this.getFilterLabelValues(key, values)
+                                return this.getFilterLabelValues(values)
                             case PIPELINE_FILTER_VIEWIDS:
+                               
                                 return {
-                                    classify: key,
                                     id: key,
                                     name: this.searchConditions[key],
                                     values: values.map(id => ({
@@ -165,7 +159,7 @@
                                 }
                             default:
                                 return {
-                                    classify: key,
+                                    id: key,
                                     name: this.searchConditions[key],
                                     values: values.map(name => ({
                                         id: name,
@@ -179,14 +173,10 @@
             },
             formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
-                    if (acc[filter.classify]) {
-                        acc[filter.classify] += `,${filter.values.map(val => val.id).join(',')}`
-                    } else if (filter.classify) {
-                        acc[filter.classify] = filter.values.map(val => val.id).join(',')
+                    if (this.tagGroupMap[filter.id]) {
+                        acc[PIPELINE_FILTER_LABELS] = filter.values.map(val => val.id).join(',')
                     } else {
-                        acc[PIPELINE_FILTER_PIPELINENAME] = (acc[PIPELINE_FILTER_PIPELINENAME]
-                            ? `${acc[PIPELINE_FILTER_PIPELINENAME]},`
-                            : '') + filter.id
+                        acc[filter.id] = filter.values.map(val => val.id).join(',')
                     }
                     return acc
                 }, {})

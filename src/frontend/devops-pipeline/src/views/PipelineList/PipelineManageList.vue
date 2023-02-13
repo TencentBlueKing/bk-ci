@@ -35,6 +35,7 @@
                 </div>
                 <div class="pipeline-list-main-header-right-area">
                     <pipeline-searcher
+                        v-if="allPipelineGroup.length"
                         v-model="filters"
                     />
                     <bk-dropdown-menu trigger="click" class="pipeline-sort-dropdown-menu" align="right">
@@ -195,6 +196,7 @@
         },
         computed: {
             ...mapState('pipelines', [
+                'allPipelineGroup',
                 'pipelineActionState',
                 'isManage'
             ]),
