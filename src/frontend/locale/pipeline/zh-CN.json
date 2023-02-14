@@ -138,6 +138,9 @@
   "fileUploadSuccess": "上传成功",
   "empty": "暂无数据",
   "link": "链接",
+  "downloadLog": "下载日志",
+  "hideDebugLog": "隐藏调试日志",
+  "showDebugLog": "展示调试日志",
   "stageReview": {
     "stageInConditions": "准入规则",
     "approvalFlow": "审核流",
