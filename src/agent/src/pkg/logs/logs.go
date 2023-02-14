@@ -99,6 +99,10 @@ func Warn(f interface{}, v ...interface{}) {
 	logs.Warn(formatLog(f, v...))
 }
 
+func Warnf(format string, args ...interface{}) {
+	logs.Warnf(format, args...)
+}
+
 func Error(f interface{}, v ...interface{}) {
 	logs.Error(formatLog(f, v...))
 }

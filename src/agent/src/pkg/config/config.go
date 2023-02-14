@@ -33,7 +33,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"gopkg.in/ini.v1"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -42,7 +41,10 @@ import (
 	"strings"
 	"sync"
 
+	"gopkg.in/ini.v1"
+
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/types"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
@@ -68,6 +70,7 @@ const (
 	KeyJdkDirPath        = "devops.agent.jdk.dir.path"
 	KeyDockerTaskCount   = "devops.docker.parallel.task.count"
 	keyEnableDockerBuild = "devops.docker.enable"
+	KeyLanguage          = "devops.language"
 )
 
 // AgentConfig Agent 配置
@@ -90,6 +93,7 @@ type AgentConfig struct {
 	JdkDirPath              string
 	DockerParallelTaskCount int
 	EnableDockerBuild       bool
+	Language                string
 }
 
 // AgentEnv Agent 环境配置
@@ -313,6 +317,25 @@ func LoadAgentConfig() error {
 		}
 	}
 
+	language := types.Chinese.String()
+	if conf.Section("").HasKey(KeyLanguage) {
+		language = conf.Section("").Key(KeyLanguage).String()
+		// 在这里校验language的合法性
+		if language == "" || !func() bool {
+			if len(types.SupportAgentLanguage) == 0 {
+				return false
+			}
+			for _, lang := range types.SupportAgentLanguage {
+				if language == lang.String() {
+					return true
+				}
+			}
+			return false
+		}() {
+			language = types.Chinese.String()
+		}
+	}
+
 	enableDocker := conf.Section("").Key(keyEnableDockerBuild).MustBool(false)
 
 	GAgentConfig.LogsKeepHours = logsKeepHours
@@ -354,6 +377,8 @@ func LoadAgentConfig() error {
 	logs.Info("DockerParallelTaskCount: ", GAgentConfig.DockerParallelTaskCount)
 	GAgentConfig.EnableDockerBuild = enableDocker
 	logs.Info("EnableDockerBuild: ", GAgentConfig.EnableDockerBuild)
+	GAgentConfig.Language = language
+	logs.Info("Language:", GAgentConfig.Language)
 	// 初始化 GAgentConfig 写入一次配置, 往文件中写入一次程序中新添加的 key
 	return GAgentConfig.SaveConfig()
 }
@@ -386,6 +411,7 @@ func (a *AgentConfig) SaveConfig() error {
 	content.WriteString(KeyJdkDirPath + "=" + GAgentConfig.JdkDirPath + "\n")
 	content.WriteString(KeyDockerTaskCount + "=" + strconv.Itoa(GAgentConfig.DockerParallelTaskCount) + "\n")
 	content.WriteString(keyEnableDockerBuild + "=" + strconv.FormatBool(GAgentConfig.EnableDockerBuild) + "\n")
+	content.WriteString(KeyLanguage + "=" + GAgentConfig.Language + "\n")
 
 	err := os.WriteFile(filePath, []byte(content.String()), 0666)
 	if err != nil {

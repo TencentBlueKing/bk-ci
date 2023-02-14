@@ -28,16 +28,21 @@
 package i18n
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
+	"sync"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/i18n/translation"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/types"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
 	"golang.org/x/text/language"
-	"sync"
 )
 
 //go:generate go run ../../cmd/translation_generator/translation_generator.go
 
 var localizer *localizerType
+
+var defaultLocalTag = language.Make(types.Chinese.String())
 
 type localizerType struct {
 	nowLocalizer language.Tag
@@ -46,7 +51,15 @@ type localizerType struct {
 }
 
 func (l *localizerType) getLocalizer() *i18n.Localizer {
-	return l.localizers[l.nowLocalizer]
+	l.rwLock.RLock()
+	defer l.rwLock.RUnlock()
+	local, ok := l.localizers[l.nowLocalizer]
+	if !ok {
+		// 未找到对应的本地化时默认使用中文
+		logs.Warnf("not found nowLocalizer %s", l.nowLocalizer.String())
+		return l.localizers[defaultLocalTag]
+	}
+	return local
 }
 
 func InitAgentI18n() {
@@ -64,7 +77,7 @@ func InitAgentI18n() {
 
 	localizer = &localizerType{
 		// 初始化时默认为中文
-		nowLocalizer: language.Make("zh_CN"),
+		nowLocalizer: defaultLocalTag,
 		rwLock:       sync.RWMutex{},
 		localizers:   localizers,
 	}
@@ -94,11 +107,7 @@ func Localize(messageId string, templateData map[string]interface{}) string {
 
 // CheckLocalizer 检查并且切换国际化语言
 func CheckLocalizer() {
-
-	// TODO: 目前先写死中文
-	_, _ = api.GetUserLanguage()
-
-	newLocal := language.Make("zh_CN")
+	newLocal := language.Make(config.GAgentConfig.Language)
 
 	// 先用读锁看一眼，如果一样就不换了
 	localizer.rwLock.RLock()

@@ -120,6 +120,11 @@ func agentHeartbeat() error {
 		configChanged = true
 	}
 
+	if config.GAgentConfig.Language != heartbeatResponse.Language {
+		config.GAgentConfig.Language = heartbeatResponse.Language
+		configChanged = true
+	}
+
 	if configChanged {
 		_ = config.GAgentConfig.SaveConfig()
 	}
