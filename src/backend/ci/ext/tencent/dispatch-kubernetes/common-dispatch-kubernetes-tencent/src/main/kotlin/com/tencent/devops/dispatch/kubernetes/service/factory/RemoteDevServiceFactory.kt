@@ -30,6 +30,7 @@ package com.tencent.devops.dispatch.kubernetes.service.factory
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
 import com.tencent.devops.dispatch.kubernetes.interfaces.RemoteDevInterface
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -38,11 +39,19 @@ import org.springframework.stereotype.Service
 class RemoteDevServiceFactory @Autowired constructor(
     private val dockerRoutingSdkService: DockerRoutingSdkService
 ) {
-    fun load(projectId: String): RemoteDevInterface {
+    fun loadRemoteDevService(projectId: String): RemoteDevInterface {
         val dockerRoutingType = DockerRoutingType.DEVCLOUD
         return SpringContextUtil.getBean(
             RemoteDevInterface::class.java,
             dockerRoutingType.name.toLowerCase() + "RemoteDevService"
+        )
+    }
+
+    fun loadContainerService(projectId: String): ContainerService {
+        val dockerRoutingType = DockerRoutingType.DEVCLOUD
+        return SpringContextUtil.getBean(
+            ContainerService::class.java,
+            dockerRoutingType.name.toLowerCase() + "ContainerService"
         )
     }
 }
