@@ -349,15 +349,14 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.delete,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.DELETE
+                    }
+                )
             }
         },
         /**
@@ -384,22 +383,14 @@ export default {
                 })
                 return true
             } catch (err) {
-                this.handleError(err, [{
-                    actionId: this.$permissionActionMap.create,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }]
-                }, {
-                    actionId: this.$permissionActionMap.edit,
-                    resourceId: this.$permissionResourceMap.pipeline,
-                    instanceId: [{
-                        id: pipelineId,
-                        name: pipelineName
-                    }],
-                    projectId
-                }])
+                this.handleError(
+                    err,
+                    {
+                        projectId: projectId,
+                        resourceCode: pipelineId,
+                        action: this.$permissionResourceAction.EDIT
+                    }
+                )
             }
         },
         /** *
@@ -443,17 +434,6 @@ export default {
                     })
                 }
             })
-        },
-        applyPermission ({ pipelineName, pipelineId }) {
-            this.setPermissionConfig(
-                this.$permissionResourceMap.pipeline,
-                this.$permissionActionMap.view,
-                [{
-                    id: pipelineId,
-                    name: pipelineName
-                }],
-                this.$route.params.projectId
-            )
         }
     }
 }

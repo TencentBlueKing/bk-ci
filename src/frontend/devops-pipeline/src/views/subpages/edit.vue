@@ -30,6 +30,10 @@
     import { navConfirm } from '@/utils/util'
     import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -61,9 +65,10 @@
                             theme: 'success',
                             size: 'normal',
                             handler: () => {
-                                this.toApplyPermission(this.$permissionActionMap.edit, {
-                                    id: this.pipelineId,
-                                    name: this.pipelineId
+                                handlePipelineNoPermission({
+                                    projectId: this.$route.params.projectId,
+                                    resourceCode: this.pipelineId,
+                                    action: RESOURCE_ACTION.EDIT
                                 })
                             },
                             text: this.$t('applyPermission')

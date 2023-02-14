@@ -113,6 +113,10 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import Logo from '@/components/Logo'
     import { statusColorMap } from '@/utils/pipelineStatus'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -136,10 +140,6 @@
             collectPipeline: {
                 type: Function,
                 default: () => () => ({})
-            },
-            applyPermission: {
-                type: Function,
-                default: () => () => ({})
             }
         },
         computed: {
@@ -160,6 +160,13 @@
             exec () {
                 if (this.pipeline.disabled) return
                 this.execPipeline(this.pipeline)
+            },
+            applyPermission (pipeline) {
+                handlePipelineNoPermission({
+                    projectId: this.$route.params.projectId,
+                    resourceCode: pipeline.pipelineId,
+                    action: RESOURCE_ACTION.DOWNLOAD
+                })
             }
         }
     }

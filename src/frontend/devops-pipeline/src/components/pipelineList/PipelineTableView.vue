@@ -220,6 +220,10 @@
     } from '@/store/constants'
     import { convertTime, isShallowEqual } from '@/utils/util'
     import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -431,6 +435,13 @@
                     }
                     return acc
                 }, {})
+            },
+            applyPermission (row) {
+                handlePipelineNoPermission({
+                    projectId: this.$route.params.projectId,
+                    resourceCode: row.pipelineId,
+                    action: RESOURCE_ACTION.LIST
+                })
             }
         }
     }

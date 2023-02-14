@@ -1,0 +1,64 @@
+.permission-dialog .bk-dialog-sub-header {
+    padding: 0 !important;
+}
+
+.permission-exception .bk-exception-text {
+    margin: -5px 0 25px 0;
+}
+
+.permission-table {
+    padding: 0 25px;
+}
+
+.permission-table.bk-table:before {
+    background: #dfe0e5;
+    left: 25px;
+    width: calc(100% - 50px);
+}
+
+.permission-table .bk-table-empty-block {
+    width: auto;
+}
+
+.permission-footer {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    background: #FAFBFD;
+    box-shadow: 0 -1px 0 0 #DCDEE5;
+    justify-content: flex-end;
+}
+
+.permission-confirm {
+    margin-right: 5px;
+}
+
+.permission-cancel {
+    margin-right: 25px;
+}
+
+.permission-list {
+    width: 94px;
+    height: 32px;
+    background: #3A84FF;
+    border-radius: 2px;
+    margin-right: 5px;
+}
+
+.permission-list .bk-dropdown-trigger {
+    display: flex;
+    align-items: center;
+    color: #FFFFFF;
+    height: 100%;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.permission-list .bk-dropdown-list {
+    width: auto;
+}
+
+.permission-list .icon-angle-down {
+    font-size: 20px;
+}
