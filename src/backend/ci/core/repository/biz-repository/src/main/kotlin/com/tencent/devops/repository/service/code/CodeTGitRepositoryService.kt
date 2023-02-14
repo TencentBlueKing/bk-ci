@@ -40,10 +40,10 @@ import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
-import com.tencent.devops.repository.service.scm.IGitService
 import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -57,7 +57,6 @@ class CodeTGitRepositoryService @Autowired constructor(
     private val repositoryCodeGitDao: RepositoryCodeGitDao,
     private val dslContext: DSLContext,
     private val scmService: IScmService,
-    private val gitService: IGitService,
     private val credentialService: CredentialService
 ) : CodeRepositoryService<CodeTGitRepository> {
     override fun repositoryType(): String {
@@ -65,8 +64,8 @@ class CodeTGitRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeTGitRepository): Long {
-        repository.projectId = projectId
-        val credentialInfo = checkCredentialInfo(repository = repository)
+        repository.projectName = checkProjectName(repository)
+        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -81,7 +80,7 @@ class CodeTGitRepositoryService @Autowired constructor(
             // Git项目ID
             val gitProjectId = getGitProjectId(repo = repository, token = credentialInfo.token)
             repositoryCodeGitDao.create(
-                dslContext = dslContext,
+                dslContext = transactionContext,
                 repositoryId = repositoryId,
                 projectName = GitUtils.getProjectName(repository.url),
                 userName = repository.userName,
@@ -104,8 +103,9 @@ class CodeTGitRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
         }
+        repository.projectName = checkProjectName(repository)
         // 凭证信息
-        val credentialInfo = checkCredentialInfo(repository = repository)
+        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         var gitProjectId = 0L
         // 需要更新gitProjectId
@@ -172,6 +172,10 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTP -> {
+                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                    logger.info("TGit check type is username+password,don't check, return")
+                    return TokenCheckResult(result = true, message = "")
+                }
                 scmService.checkUsernameAndPassword(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
@@ -184,6 +188,10 @@ class CodeTGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTPS -> {
+                if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                    logger.info("TGit check type is username+password,don't check, return")
+                    return TokenCheckResult(result = true, message = "")
+                }
                 scmService.checkUsernameAndPassword(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
@@ -205,15 +213,12 @@ class CodeTGitRepositoryService @Autowired constructor(
         return checkResult
     }
 
-    fun needCheckToken(repository: CodeTGitRepository): Boolean {
-        return true
-    }
-
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(repository: CodeTGitRepository): RepoCredentialInfo {
+    private fun checkCredentialInfo(projectId: String, repository: CodeTGitRepository): RepoCredentialInfo {
         val repoCredentialInfo = getCredentialInfo(
+            projectId = projectId,
             repository = repository
         )
         val checkResult = checkToken(
@@ -254,12 +259,30 @@ class CodeTGitRepositoryService @Autowired constructor(
     /**
      * 获取凭证信息
      */
-    fun getCredentialInfo(repository: CodeTGitRepository): RepoCredentialInfo {
+    fun getCredentialInfo(projectId: String, repository: CodeTGitRepository): RepoCredentialInfo {
         // 凭证信息
         return credentialService.getCredentialInfo(
-            projectId = repository.projectId!!,
+            projectId = projectId,
             repository = repository
         )
+    }
+
+    /**
+     * 校验ProjectName
+     */
+    fun checkProjectName(repository: CodeTGitRepository): String {
+        var targetProjectName = repository.projectName
+        if (targetProjectName.isBlank()) {
+            throw OperationException("Invalid projectName field of [${repository.projectName}]")
+        }
+        val regex = Regex("((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}/")
+        val host = regex.find(targetProjectName)?.value
+        if (!host.isNullOrBlank()) {
+            targetProjectName = targetProjectName.substring(
+                targetProjectName.indexOf(host) + host.length
+            )
+        }
+        return targetProjectName
     }
 
     companion object {

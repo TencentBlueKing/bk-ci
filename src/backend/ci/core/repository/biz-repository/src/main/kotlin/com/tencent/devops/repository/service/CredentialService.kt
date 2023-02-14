@@ -123,10 +123,9 @@ class CredentialService @Autowired constructor(
                 checkUsername(credentialInfo.v1)
                 checkPassword(credentialInfo.v2)
                 RepoCredentialInfo(
-                    token = StringUtils.EMPTY,
                     username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
@@ -136,47 +135,44 @@ class CredentialService @Autowired constructor(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     username = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     password = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.SSH_PRIVATEKEY -> {
-                if (credentialInfo.v1.isNullOrEmpty()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
-                    )
-                }
-                var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v2.isNullOrBlank()) {
-                    passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                checkPrivateKey(credentialInfo.v1)
+                val passPhrase = if (!credentialInfo.v2.isNullOrBlank()) {
+                    decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
                 }
                 RepoCredentialInfo(
-                    token = StringUtils.EMPTY,
                     privateKey = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     passPhrase = passPhrase,
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                checkUsername(credentialInfo.v2)
-                var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v3.isNullOrBlank()) {
-                    passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                checkPrivateKey(credentialInfo.v2)
+                val passPhrase = if (!credentialInfo.v3.isNullOrBlank()) {
+                    decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
                 }
                 RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     privateKey = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     passPhrase = passPhrase,
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.ACCESSTOKEN -> {
                 RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             else -> {
-                RepoCredentialInfo(token = StringUtils.EMPTY)
+                RepoCredentialInfo()
             }
         }
     }
@@ -193,6 +189,14 @@ class CredentialService @Autowired constructor(
         if (password.isNullOrBlank()) {
             throw OperationException(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+            )
+        }
+    }
+
+    fun checkPrivateKey(privateKey: String?) {
+        if (privateKey.isNullOrBlank()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
             )
         }
     }

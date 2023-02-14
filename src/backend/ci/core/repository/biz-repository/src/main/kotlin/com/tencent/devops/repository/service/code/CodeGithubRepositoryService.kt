@@ -65,7 +65,7 @@ class CodeGithubRepositoryService @Autowired constructor(
                 url = repository.getFormatURL(),
                 type = ScmType.GITHUB
             )
-            repositoryGithubDao.create(dslContext, repositoryId, repository.projectName, userId)
+            repositoryGithubDao.create(transactionContext, repositoryId, repository.projectName, userId)
         }
         return repositoryId
     }

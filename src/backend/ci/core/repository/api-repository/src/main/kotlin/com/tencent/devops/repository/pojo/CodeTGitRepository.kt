@@ -41,7 +41,7 @@ data class CodeTGitRepository(
     @ApiModelProperty("凭据id", required = true)
     override val credentialId: String,
     @ApiModelProperty("tGit项目名称", example = "xx/yy_ci_example_proj", required = true)
-    override val projectName: String,
+    override var projectName: String,
     @ApiModelProperty("用户名", required = true)
     override var userName: String,
     @ApiModelProperty("仓库认证类型", required = false)
