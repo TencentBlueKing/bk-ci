@@ -44,7 +44,6 @@ import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.enums.DockerHostClusterType
 import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
