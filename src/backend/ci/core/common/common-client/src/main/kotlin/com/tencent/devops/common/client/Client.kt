@@ -28,9 +28,8 @@
 package com.tencent.devops.common.client
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
-import com.google.common.cache.LoadingCache
+import com.github.benmanes.caffeine.cache.Caffeine
+import com.github.benmanes.caffeine.cache.LoadingCache
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -88,19 +87,16 @@ class Client @Autowired constructor(
         private val logger = LoggerFactory.getLogger(Client::class.java)
         private const val readWriteTimeoutSeconds = 15L
         private const val connectTimeoutSeconds = 5L
+        private const val CACHE_SIZE = 1000L
+        private val longTimeOptions = Request.Options(10L, TimeUnit.SECONDS, 30L, TimeUnit.MINUTES, true)
     }
 
-    private val beanCaches: LoadingCache<KClass<*>, *> = CacheBuilder.newBuilder()
-        .maximumSize(1000).build(object : CacheLoader<KClass<*>, Any>() {
-            override fun load(p0: KClass<*>): Any {
-                return getImpl(p0)
-            }
-        })
+    private val beanCaches: LoadingCache<KClass<*>, *> = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE).build { key -> getImpl(key) }
 
     private val interfaces = ConcurrentHashMap<KClass<*>, String>()
 
-    private val trustAllCerts: Array<TrustManager> = arrayOf(object :
-        X509TrustManager {
+    private val trustAllCerts: Array<TrustManager> = arrayOf(object : X509TrustManager {
         @Throws(CertificateException::class)
         override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) = Unit
 
@@ -117,8 +113,8 @@ class Client @Autowired constructor(
             val sslContext = SSLContext.getInstance("SSL")
             sslContext.init(null, trustAllCerts, java.security.SecureRandom())
             return sslContext.socketFactory
-        } catch (ingored: Exception) {
-            throw RemoteServiceException(ingored.message!!)
+        } catch (ignored: Exception) {
+            throw RemoteServiceException(ignored.message!!)
         }
     }
 
@@ -187,28 +183,21 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
-            .retryer(object : Retryer {
-                override fun clone(): Retryer {
-                    return this
-                }
-
-                override fun continueOrPropagate(e: RetryableException) {
-                    throw e
-                }
-            })
+            .options(longTimeOptions) // 可复用常量对象不重复创建
+            .retryer(WithoutRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    findServiceName(clz),
-                    clz.java,
-                    compositeDiscoveryClient!!,
-                    bkTag
+                    serviceName = findServiceName(clz),
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
                 )
             )
     }
 
     fun <T : Any> getExternalServiceWithoutRetry(serviceName: String, clz: KClass<T>): T {
         val requestInterceptor = SpringContextUtil.getBean(RequestInterceptor::class.java) // 获取为feign定义的拦截器
+
         return Feign.builder()
             .client(longRunClient)
             .errorDecoder(clientErrorDecoder)
@@ -216,17 +205,16 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(clientContract)
             .requestInterceptor(requestInterceptor)
-            .options(Request.Options(10 * 1000, 30 * 60 * 1000))
-            .retryer(object : Retryer {
-                override fun clone(): Retryer {
-                    return this
-                }
-
-                override fun continueOrPropagate(e: RetryableException) {
-                    throw e
-                }
-            })
-            .target(MicroServiceTarget(serviceName, clz.java, compositeDiscoveryClient!!, bkTag))
+            .options(longTimeOptions) // 可复用常量对象不重复创建
+            .retryer(WithoutRetry()) // 优化重复创建的匿名类
+            .target(
+                MicroServiceTarget(
+                    serviceName = serviceName,
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
+                )
+            )
     }
 
     /**
@@ -280,35 +268,23 @@ class Client @Autowired constructor(
             .decoder(jacksonDecoder)
             .contract(contract)
             .requestInterceptor(requestInterceptor)
-            .retryer(object : Retryer.Default() {
-                override fun clone(): Retryer {
-                    return this
-                }
-
-                override fun continueOrPropagate(e: RetryableException) {
-                    if (e.method() != Request.HttpMethod.GET) {
-                        throw e
-                    } else {
-                        super.continueOrPropagate(e)
-                    }
-                }
-            })
+            .retryer(HttpGetRetry()) // 优化重复创建的匿名类
             .target(
                 MicroServiceTarget(
-                    findServiceName(clz),
-                    clz.java,
-                    compositeDiscoveryClient!!,
-                    bkTag
+                    serviceName = findServiceName(clz),
+                    type = clz.java,
+                    compositeDiscoveryClient = compositeDiscoveryClient!!,
+                    bkTag = bkTag
                 )
             )
     }
 
     fun getServiceUrl(clz: KClass<*>): String {
         return MicroServiceTarget(
-            findServiceName(clz),
-            clz.java,
-            compositeDiscoveryClient!!,
-            bkTag
+            serviceName = findServiceName(clz),
+            type = clz.java,
+            compositeDiscoveryClient = compositeDiscoveryClient!!,
+            bkTag = bkTag
         ).url()
     }
 
@@ -324,7 +300,8 @@ class Client @Autowired constructor(
             } else {
                 val packageName = clz.qualifiedName.toString()
                 val regex = Regex("""com.tencent.devops.([a-z]+).api.([a-zA-Z]+)""")
-                val matches = regex.find(packageName) ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
+                val matches = regex.find(packageName)
+                    ?: throw ClientException("无法根据接口\"$packageName\"分析所属的服务")
                 matches.groupValues[1]
             }
         }
@@ -349,12 +326,29 @@ class Client @Autowired constructor(
                 GatewayType.IDC_PROXY -> commonConfig.devopsIdcProxyGateway!!
                 GatewayType.OSS -> commonConfig.devopsOssGateway!!
                 GatewayType.OSS_PROXY -> commonConfig.devopsOssProxyGateway!!
-                else -> commonConfig.devopsIdcGateway!!
             }
             if (gateway.startsWith("http://") || gateway.startsWith("https://")) {
                 "$gateway/${path.removePrefix("/")}"
             } else {
                 "http://$gateway/${path.removePrefix("/")}"
+            }
+        }
+    }
+
+    private class WithoutRetry : Retryer.Default() {
+        override fun clone(): Retryer = this
+
+        override fun continueOrPropagate(e: RetryableException): Unit = throw e
+    }
+
+    private class HttpGetRetry : Retryer.Default() {
+        override fun clone(): Retryer = this
+
+        override fun continueOrPropagate(e: RetryableException) {
+            if (e.method() != Request.HttpMethod.GET) {
+                throw e
+            } else {
+                super.continueOrPropagate(e)
             }
         }
     }

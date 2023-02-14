@@ -28,18 +28,35 @@
 package com.tencent.devops.stream.trigger.actions
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.stream.trigger.actions.streamActions.StreamDeleteAction
+import io.mockk.mockk
 import org.junit.jupiter.api.Test
 
 internal class EventActionFactoryTest {
 
     private val factory = EventActionFactory(
-        mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(), mock(),
-        mock(), mock(), mock(), RedisOperation(mock()), mock()
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        mockk(),
+        RedisOperation(mockk()),
+        mockk()
     )
 
     private val objectMapper = JsonUtil.getObjectMapper()
