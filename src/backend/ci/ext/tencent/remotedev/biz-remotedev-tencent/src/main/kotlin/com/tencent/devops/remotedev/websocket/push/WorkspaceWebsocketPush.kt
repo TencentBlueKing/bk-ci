@@ -67,7 +67,7 @@ data class WorkspaceWebsocketPush(
     override fun findSession(page: String): List<String> {
         val userSession = mutableSetOf<String>()
         userIds.forEach {
-            userSession.plus(
+            userSession.addAll(
                 RedisUtlis.getSessionIdByUserId(redisOperation, it)?.split(",") ?: emptyList()
             )
         }
