@@ -29,6 +29,7 @@ package com.tencent.devops.repository.utils
 
 import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 
@@ -63,6 +64,38 @@ object CredentialUtils {
                 null
             }
             return Credential(username = repository.userName, privateKey = privateKey, passPhrase = passPhrase)
+        }
+    }
+
+    fun getCredential(repository: Repository, repoCredentialInfo: RepoCredentialInfo): Credential {
+        return if (repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
+            if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
+                if (repoCredentialInfo.username.isBlank()) {
+                    Credential(
+                        username = repository.userName,
+                        privateKey = repoCredentialInfo.password,
+                        passPhrase = null
+                    )
+                } else {
+                    Credential(
+                        username = repoCredentialInfo.username,
+                        privateKey = repoCredentialInfo.password,
+                        passPhrase = null
+                    )
+                }
+            } else {
+                Credential(
+                    username = repository.userName,
+                    privateKey = repoCredentialInfo.password,
+                    passPhrase = null
+                )
+            }
+        } else {
+            Credential(
+                username = repository.userName,
+                privateKey = repoCredentialInfo.privateKey,
+                passPhrase = repoCredentialInfo.passPhrase
+            )
         }
     }
 

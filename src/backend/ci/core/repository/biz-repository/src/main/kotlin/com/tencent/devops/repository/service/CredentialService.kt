@@ -34,7 +34,6 @@ import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -55,16 +54,7 @@ class CredentialService @Autowired constructor(
     }
 
     fun getCredential(projectId: String, repository: Repository): List<String> {
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val result = client.get(ServiceCredentialResource::class)
-            .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
-        if (result.isNotOk() || result.data == null) {
-            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
-        }
-
-        val credential = result.data!!
-        logger.info("Get the credential($credential)")
+        val (pair, credential) = get(projectId, repository)
         return buildCredentialList(credential, pair)
     }
 
@@ -72,6 +62,11 @@ class CredentialService @Autowired constructor(
      * 获取凭证基础信息
      */
     fun getCredentialInfo(projectId: String, repository: Repository): RepoCredentialInfo {
+        val (pair, credential: CredentialInfo) = get(projectId, repository)
+        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+    }
+
+    fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)
@@ -79,9 +74,9 @@ class CredentialService @Autowired constructor(
         if (result.isNotOk() || result.data == null) {
             throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
         }
-        val credential: CredentialInfo = result.data!!
+        val credential = result.data!!
         logger.info("Get the credential($credential)")
-        return buildRepoCredentialInfo(credential, credential.credentialType, pair, repository)
+        return Pair(pair, credential)
     }
 
     /**
@@ -105,7 +100,7 @@ class CredentialService @Autowired constructor(
         return list
     }
 
-    private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
+    fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
     }
@@ -113,28 +108,24 @@ class CredentialService @Autowired constructor(
     /**
      * 构建授权信息实体
      */
-    private fun buildRepoCredentialInfo(
+    fun buildRepoCredentialInfo(
         credentialInfo: CredentialInfo,
         credentialType: CredentialType,
-        pair: DHKeyPair,
-        repository: Repository
+        pair: DHKeyPair
     ): RepoCredentialInfo {
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
-                // 兼容Svn代码库的旧数据
-                if (isOldData(credentialInfo, repository)) {
-                    logger.warn("Fail to get the username($credentialInfo) of the svn repo $repository")
-                    return RepoCredentialInfo(
-                        username = repository.userName,
-                        password = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                        passPhrase = null
-                    )
-                }
-                checkUsername(credentialInfo.v1)
-                checkPassword(credentialInfo.v2)
                 RepoCredentialInfo(
-                    username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    username = if (credentialInfo.v1.isNotBlank()) {
+                        decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey)
+                    } else {
+                        ""
+                    },
+                    password = if (!credentialInfo.v2.isNullOrBlank()) {
+                        decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                    } else {
+                        ""
+                    },
                     credentialType = credentialType.name
                 )
             }
@@ -184,7 +175,6 @@ class CredentialService @Autowired constructor(
             CredentialType.PASSWORD -> {
                 checkPassword(credentialInfo.v1)
                 RepoCredentialInfo(
-                    username = repository.userName,
                     password = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     credentialType = credentialType.name
                 )
@@ -217,15 +207,5 @@ class CredentialService @Autowired constructor(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
             )
         }
-    }
-
-    /**
-     * 兼容为旧数据
-     */
-    fun isOldData(credentialInfo: CredentialInfo, repository: Repository): Boolean {
-        return repository is CodeSvnRepository &&
-            repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
-            credentialInfo.v1.isNotBlank() &&
-            credentialInfo.v2.isNullOrBlank()
     }
 }

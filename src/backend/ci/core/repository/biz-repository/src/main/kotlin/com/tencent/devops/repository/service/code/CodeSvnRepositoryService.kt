@@ -28,7 +28,6 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -42,8 +41,10 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
@@ -147,28 +148,19 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
-        // 根据凭证类型匹配私钥
-        val privateKey = when (repoCredentialInfo.credentialType) {
-            CredentialType.TOKEN_SSH_PRIVATEKEY.name, CredentialType.SSH_PRIVATEKEY.name -> {
-                repoCredentialInfo.privateKey
-            }
-            CredentialType.TOKEN_USERNAME_PASSWORD.name, CredentialType.USERNAME_PASSWORD.name -> {
-                repoCredentialInfo.password
-            }
-            else -> {
-                throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
-            }
-        }
-
+        val credential = CredentialUtils.getCredential(
+            repository = repository,
+            repoCredentialInfo = repoCredentialInfo
+        )
         return scmService.checkPrivateKeyAndToken(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
             type = ScmType.CODE_SVN,
-            privateKey = privateKey,
-            passPhrase = repoCredentialInfo.passPhrase,
+            privateKey = credential.privateKey,
+            passPhrase = credential.passPhrase,
             token = null,
             region = repository.region,
-            userName = repoCredentialInfo.username
+            userName = credential.username
         )
     }
 
@@ -214,6 +206,16 @@ class CodeSvnRepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
+    }
+
+    /**
+     * 兼容为旧数据
+     */
+    fun isOldData(credentialInfo: CredentialInfo, repository: Repository): Boolean {
+        return repository is CodeSvnRepository &&
+            repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
+            credentialInfo.v2.isNullOrBlank() &&
+            credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD
     }
 
     companion object {
