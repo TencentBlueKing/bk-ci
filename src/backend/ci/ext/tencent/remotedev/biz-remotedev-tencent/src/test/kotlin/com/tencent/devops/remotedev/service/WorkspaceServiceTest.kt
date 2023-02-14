@@ -12,6 +12,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -41,6 +42,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val remoteDevSettingDao: RemoteDevSettingDao = mockk()
     private val redisHeartBeat: RedisHeartBeat = mockk()
     private val webSocketDispatcher: WebSocketDispatcher = mockk()
+    private val remoteDevBillingDao: RemoteDevBillingDao = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -56,7 +58,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             dispatcher = dispatcher,
             remoteDevSettingDao = remoteDevSettingDao,
             webSocketDispatcher = webSocketDispatcher,
-            redisHeartBeat = redisHeartBeat
+            redisHeartBeat = redisHeartBeat,
+            remoteDevBillingDao = remoteDevBillingDao
         ),
         recordPrivateCalls = true
     )
