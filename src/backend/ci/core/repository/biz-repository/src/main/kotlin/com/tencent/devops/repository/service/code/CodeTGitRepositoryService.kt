@@ -272,9 +272,6 @@ class CodeTGitRepositoryService @Autowired constructor(
      */
     fun checkProjectName(repository: CodeTGitRepository): String {
         var targetProjectName = repository.projectName
-        if (targetProjectName.isBlank()) {
-            throw OperationException("Invalid projectName field of [${repository.projectName}]")
-        }
         val regex = Regex("((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}/")
         val host = regex.find(targetProjectName)?.value
         if (!host.isNullOrBlank()) {
