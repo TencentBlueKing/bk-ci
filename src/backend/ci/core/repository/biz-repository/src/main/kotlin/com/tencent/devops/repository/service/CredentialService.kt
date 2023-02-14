@@ -122,14 +122,11 @@ class CredentialService @Autowired constructor(
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
                 // 兼容Svn代码库的旧数据
-                if (repository is CodeSvnRepository &&
-                    repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
-                    !credentialInfo.v1.isBlank() &&
-                    credentialInfo.v2.isNullOrBlank()) {
+                if (isOldData(credentialInfo, repository)) {
                     logger.warn("Fail to get the username($credentialInfo) of the svn repo $repository")
                     return RepoCredentialInfo(
                         username = repository.userName,
-                        password = credentialInfo.v1,
+                        password = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                         passPhrase = null
                     )
                 }
@@ -188,7 +185,7 @@ class CredentialService @Autowired constructor(
                 checkPassword(credentialInfo.v1)
                 RepoCredentialInfo(
                     username = repository.userName,
-                    password = credentialInfo.v1,
+                    password = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     credentialType = credentialType.name
                 )
             }
@@ -220,5 +217,15 @@ class CredentialService @Autowired constructor(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
             )
         }
+    }
+
+    /**
+     * 兼容为旧数据
+     */
+    fun isOldData(credentialInfo: CredentialInfo, repository: Repository): Boolean {
+        return repository is CodeSvnRepository &&
+            repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
+            credentialInfo.v1.isNotBlank() &&
+            credentialInfo.v2.isNullOrBlank()
     }
 }
