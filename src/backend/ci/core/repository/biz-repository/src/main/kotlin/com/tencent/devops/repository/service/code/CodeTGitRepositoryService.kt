@@ -278,9 +278,7 @@ class CodeTGitRepositoryService @Autowired constructor(
         val regex = Regex("((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}/")
         val host = regex.find(targetProjectName)?.value
         if (!host.isNullOrBlank()) {
-            targetProjectName = targetProjectName.substring(
-                targetProjectName.indexOf(host) + host.length
-            )
+            targetProjectName = GitUtils.getProjectName(targetProjectName)
         }
         return targetProjectName
     }
