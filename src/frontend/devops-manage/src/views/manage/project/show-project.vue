@@ -166,7 +166,7 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      window.top.devops.$router.push({
+      window.parent.devops.$router.push({
         name: 'pm'
       })
     }
