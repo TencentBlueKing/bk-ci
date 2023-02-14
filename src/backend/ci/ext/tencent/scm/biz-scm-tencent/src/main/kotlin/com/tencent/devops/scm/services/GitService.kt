@@ -165,9 +165,9 @@ class GitService @Autowired constructor(
     fun doRetryHttp(request: Request): okhttp3.Response {
         return HttpRetryUtils.retry(retryPeriodMills = 2000) {
             val response = OkhttpUtils.doHttp(request)
-            if (RETRY_CODE.contains(response.code())) {
-                logger.info("request will be retry |${response.code()}|${request.url().url()}")
-                throw HttpRetryException(response.message(), response.code())
+            if (RETRY_CODE.contains(response.code)) {
+                logger.info("request will be retry |${response.code}|${request.url.toUrl()}")
+                throw HttpRetryException(response.message, response.code)
             }
             response
         }
