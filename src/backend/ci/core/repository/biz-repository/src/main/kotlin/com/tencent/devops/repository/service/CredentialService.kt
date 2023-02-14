@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.DHKeyPair
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.repository.pojo.CodeSvnRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -80,7 +81,7 @@ class CredentialService @Autowired constructor(
         }
         val credential: CredentialInfo = result.data!!
         logger.info("Get the credential($credential)")
-        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        return buildRepoCredentialInfo(credential, credential.credentialType, pair, repository)
     }
 
     /**
@@ -115,10 +116,23 @@ class CredentialService @Autowired constructor(
     private fun buildRepoCredentialInfo(
         credentialInfo: CredentialInfo,
         credentialType: CredentialType,
-        pair: DHKeyPair
+        pair: DHKeyPair,
+        repository: Repository
     ): RepoCredentialInfo {
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
+                // 兼容Svn代码库的旧数据
+                if (repository is CodeSvnRepository &&
+                    repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
+                    !credentialInfo.v1.isBlank() &&
+                    credentialInfo.v2.isNullOrBlank()) {
+                    logger.warn("Fail to get the username($credentialInfo) of the svn repo $repository")
+                    return RepoCredentialInfo(
+                        username = repository.userName,
+                        password = credentialInfo.v1,
+                        passPhrase = null
+                    )
+                }
                 checkUsername(credentialInfo.v1)
                 checkPassword(credentialInfo.v2)
                 RepoCredentialInfo(
@@ -167,6 +181,14 @@ class CredentialService @Autowired constructor(
             CredentialType.ACCESSTOKEN -> {
                 RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    credentialType = credentialType.name
+                )
+            }
+            CredentialType.PASSWORD -> {
+                checkPassword(credentialInfo.v1)
+                RepoCredentialInfo(
+                    username = repository.userName,
+                    password = credentialInfo.v1,
                     credentialType = credentialType.name
                 )
             }
