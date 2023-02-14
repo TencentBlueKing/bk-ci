@@ -64,7 +64,6 @@ class CodeTGitRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeTGitRepository): Long {
-        repository.projectName = checkProjectName(repository)
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
@@ -103,7 +102,6 @@ class CodeTGitRepositoryService @Autowired constructor(
         if (!StringUtils.equals(record.type, ScmType.CODE_TGIT.name)) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.TGIT_INVALID))
         }
-        repository.projectName = checkProjectName(repository)
         // 凭证信息
         val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
@@ -161,7 +159,7 @@ class CodeTGitRepositoryService @Autowired constructor(
         val checkResult: TokenCheckResult = when (repository.authType) {
             RepoAuthType.SSH -> {
                 scmService.checkPrivateKeyAndToken(
-                    projectName = repository.projectName,
+                    projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_TGIT,
                     privateKey = repoCredentialInfo.privateKey,
@@ -177,7 +175,7 @@ class CodeTGitRepositoryService @Autowired constructor(
                     return TokenCheckResult(result = true, message = "")
                 }
                 scmService.checkUsernameAndPassword(
-                    projectName = repository.projectName,
+                    projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_TGIT,
                     username = repoCredentialInfo.username,
@@ -193,7 +191,7 @@ class CodeTGitRepositoryService @Autowired constructor(
                     return TokenCheckResult(result = true, message = "")
                 }
                 scmService.checkUsernameAndPassword(
-                    projectName = repository.projectName,
+                    projectName = GitUtils.getProjectName(repository.getFormatURL()),
                     url = repository.getFormatURL(),
                     type = ScmType.CODE_TGIT,
                     username = repoCredentialInfo.username,
@@ -265,19 +263,6 @@ class CodeTGitRepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
-    }
-
-    /**
-     * 校验ProjectName
-     */
-    fun checkProjectName(repository: CodeTGitRepository): String {
-        var targetProjectName = repository.projectName
-        val regex = Regex("((?!-)[A-Za-z0-9-]{1,63}(?<!-)\\.)+[A-Za-z]{2,6}/")
-        val host = regex.find(targetProjectName)?.value
-        if (!host.isNullOrBlank()) {
-            targetProjectName = GitUtils.getProjectName(repository.url)
-        }
-        return targetProjectName
     }
 
     companion object {
