@@ -44,8 +44,6 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.ticket.pojo.CredentialInfo
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
