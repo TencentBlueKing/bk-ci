@@ -124,7 +124,7 @@ class RbacPipelinePermissionService @Autowired constructor(
         if (iamInstanceList.contains("*")) {
             pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
         } else {
-            val ids = iamInstanceList.map { it.toInt() }
+            val ids = iamInstanceList.map { it.toLong() }
             pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
         }
         return pipelineIds
