@@ -25,19 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.web.aop.BuildApiAspect
-import org.springframework.beans.factory.annotation.Configurable
-import org.springframework.boot.autoconfigure.AutoConfigureOrder
-import org.springframework.context.annotation.Bean
-import org.springframework.core.Ordered
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
+import org.springframework.beans.factory.annotation.Autowired
 
-@Configurable
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
-class BuildApiAutoConfiguration {
+@RestResource
+class ServiceBuildApiPermissionResourceImpl @Autowired constructor(
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelinePermissionService: PipelinePermissionService
+) : ServiceBuildApiPermissionResource {
+    override fun getTriggerUser(projectId: String, buildId: String): Result<String?> {
+        return Result(pipelineRuntimeService.getTriggerUser(projectId, buildId))
+    }
 
-    @Bean
-    fun buildApiAspect(cline: Client) = BuildApiAspect(cline)
+    override fun verifyApi(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        )
+    }
 }

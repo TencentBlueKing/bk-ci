@@ -29,27 +29,20 @@ package com.tencent.devops.common.web.aop
 import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.process.engine.service.PipelineRuntimeService
-import com.tencent.devops.process.permission.PipelinePermissionService
-import io.lettuce.core.MigrateArgs.Builder.auth
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.annotation.BuildApiPermission
+import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.annotation.Pointcut
 import org.aspectj.lang.reflect.MethodSignature
-import org.glassfish.jersey.internal.inject.Bindings.service
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.security.auth.AuthPermission
 
 @Aspect
-@ServiceInterface("process")
-class BuildApiAspect constructor(
-    private val pipelineRuntimeService: PipelineRuntimeService,
-    private val pipelinePermissionService: PipelinePermissionService
-) {
+class BuildApiAspect constructor(private val client: Client) {
 
     @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
     fun pointCut() = Unit
@@ -65,15 +58,28 @@ class BuildApiAspect constructor(
      */
     @Before("pointCut()")
     fun doBefore(jp: JoinPoint) {
+        val method = (jp.signature as MethodSignature).method
+        val methodName: String = method.name
+        val types = method.getAnnotation(BuildApiPermission::class.java)?.values
+        logger.info("[doBefore] the method 【$methodName】")
+        types?.forEach {
+            when(it) {
+                "auth" -> {
+                    // 参数value
+                    val parameterValue = jp.args
+                    // 参数key
+                    val parameterNames = (jp.signature as MethodSignature).parameterNames
+                    authPermission(parameterNames, parameterValue)
+                }
+            }
+        }
+
+    }
+
+    private fun authPermission(parameterNames: Array<String>, parameterValue: Array<Any>) {
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
         val authBuildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
         val authProjectId = request.getHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        val methodName: String = jp.signature.name
-        logger.info("[doBefore] the method 【$methodName】")
-        // 参数value
-        val parameterValue = jp.args
-        // 参数key
-        val parameterNames = (jp.signature as MethodSignature).parameterNames
         if (!parameterNames.contains("authProjectId") || !parameterNames.contains("authBuildId")) return
         var projectId: String? = null
         var pipelineId: String? = null
@@ -87,27 +93,26 @@ class BuildApiAspect constructor(
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "projectId" -> {
-                    projectId = parameterValue[index]?.toString()
+                    projectId = parameterValue[index].toString()
                 }
                 "pipelineId" -> {
-                    pipelineId = parameterValue[index]?.toString()
+                    pipelineId = parameterValue[index].toString()
                 }
-                else -> null
             }
         }
         logger.info("Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
                 "user pipeline param[$pipelineId]")
         if (projectId != null && pipelineId != null) {
-            val buildTriggerUser = pipelineRuntimeService.getTriggerUser(authProjectId!!, authBuildId!!)
+            val buildTriggerUser = client.get(ServiceBuildApiPermissionResource::class)
+                .getTriggerUser(authProjectId!!, authBuildId!!).data!!
             logger.info("verify that user [$buildTriggerUser] has permission to access information " +
                     "in pipeline [$pipelineId] under project [$projectId].")
-            val checkPipelinePermissionResult = pipelinePermissionService.checkPipelinePermission(
-                userId = buildTriggerUser!!,
+            val checkPipelinePermissionResult = client.get(ServiceBuildApiPermissionResource::class).verifyApi(
+                userId = buildTriggerUser,
                 projectId = projectId,
-                pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE
-            )
-            if (checkPipelinePermissionResult) {
+                pipelineId = pipelineId
+            ).data
+            if (checkPipelinePermissionResult == true) {
                 logger.info("verify that user [$buildTriggerUser] has permission to access information " +
                         "in pipeline [$pipelineId] under project [$projectId].【verify succeed】")
             } else {
