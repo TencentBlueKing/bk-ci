@@ -341,7 +341,7 @@ onBeforeUnmount(() => {
     </bk-form-item>
     <bk-form-item
       :label="t('项目最大可授权人员范围')"
-      :description="t('该范围表示您可以给哪些人员分配权限，同时也只有他们才能申请到您创建的用户组')"
+      :description="t('该设置表示可以加入项目的成员的最大范围，范围内的用户才可以成功加入项目下的任意用户组')"
       property="subjectScopes"
       :required="true">
       <bk-tag
