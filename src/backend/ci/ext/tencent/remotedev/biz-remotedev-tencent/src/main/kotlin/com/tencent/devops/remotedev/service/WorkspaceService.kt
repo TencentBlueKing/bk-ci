@@ -1436,12 +1436,11 @@ class WorkspaceService @Autowired constructor(
         params["user"] = userId
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(params)))
-
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             val dataMap = JsonUtil.toMap(data)
             val status = dataMap["status"]
             return (status == 0)
