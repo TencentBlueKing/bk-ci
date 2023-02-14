@@ -80,6 +80,10 @@ class OpNotifyMessageTemplateResourceImpl @Autowired constructor(
         )
     }
 
+    override fun updateTXSESTemplateId(userId: String, templateId: String, sesTemplateId: Int?): Result<Boolean> {
+        return notifyMessageTemplateService.updateTXSESTemplateId(userId, templateId, sesTemplateId)
+    }
+
     override fun deleteNotifyMessageTemplate(templateId: String, notifyType: String): Result<Boolean> {
         return notifyMessageTemplateService.deleteNotifyMessageTemplate(templateId, notifyType)
     }

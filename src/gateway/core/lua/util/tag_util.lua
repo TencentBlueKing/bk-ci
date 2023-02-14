@@ -107,6 +107,9 @@ end
 
 -- 获取前端目录
 function _M:get_frontend_path(tag, project)
+    if string.find(tag, '^kubernetes-') then
+        tag = string.sub(tag, 12) -- 去掉 "kubernetes-" 头部
+    end
     local frontend_path_cache = ngx.shared.tag_frontend_path_store
     local local_cache_key = "ci_" .. tag
     if project == "codecc" then

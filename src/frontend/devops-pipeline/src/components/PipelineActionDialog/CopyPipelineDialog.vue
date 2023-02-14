@@ -3,11 +3,12 @@
         width="480"
         v-model="isCopyDialogShow"
         ext-cls="auto-height-dialog"
+        header-position="left"
+        render-directive="if"
         :title="$t('newlist.copyPipeline')"
         :mask-close="false"
         :close-icon="false"
         :auto-close="false"
-        header-position="left"
         :loading="isSubmiting"
         @confirm="submit"
         @cancel="cancel"
@@ -29,9 +30,9 @@
         </bk-form>
         <PipelineGroupSelector
             class="pipeline-group-selector-form"
+            ref="pipelineGroupSelector"
             v-model="groupValue"
             :has-manage-permission="isManage"
-            ref="pipelineGroupSelector"
             :pipeline-name="model.name"
         />
     </bk-dialog>

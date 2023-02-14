@@ -44,11 +44,14 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.core.io.ClassPathResource
 
 @Suppress("ALL")
+@DisabledOnOs(OS.WINDOWS)
 internal class HashFilesFunctionTest {
 
     @DisplayName("HashFiles相关异常测试")

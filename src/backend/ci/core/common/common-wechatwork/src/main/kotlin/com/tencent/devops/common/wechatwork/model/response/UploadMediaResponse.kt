@@ -25,18 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.test
+package com.tencent.devops.common.wechatwork.model.response
 
-import org.mockito.Mockito
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.common.wechatwork.model.enums.UploadMediaType
 
-/**
- * 单元测试基类
- * @version 1.0
- */
-@Suppress("UNUSED")
-open class BaseTest {
-    /**
-     * 帮助mock出带泛型的任意对象
-     */
-    inline fun <reified T : Any> mock() = Mockito.mock(T::class.java)!!
-}
+data class UploadMediaResponse(
+    @JsonProperty("errcode")
+    val errCode: Int,
+    @JsonProperty("errmsg")
+    val errMsg: String,
+    val type: UploadMediaType,
+    @JsonProperty("media_id")
+    val mediaId: String,
+    @JsonProperty("created_at")
+    val createdAt: String
+)

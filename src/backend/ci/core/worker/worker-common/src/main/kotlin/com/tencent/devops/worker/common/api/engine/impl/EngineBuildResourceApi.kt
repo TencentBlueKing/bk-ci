@@ -98,7 +98,11 @@ open class EngineBuildResourceApi : AbstractBuildResourceApi(), EngineBuildSDKAp
         return objectMapper.readValue(responseContent)
     }
 
-    override fun endTask(buildVariables: BuildVariables, retryCount: Int): Result<Boolean> {
+    override fun endTask(variables: Map<String, String>, envBuildId: String, retryCount: Int): Result<Boolean> {
+        if (envBuildId.isNotBlank()) {
+            buildId = envBuildId
+        }
+
         val path = getRequestUrl(path = "api/build/worker/end", retryCount = retryCount)
         val request = buildPost(path)
         val errorMessage = "构建完成请求失败"
