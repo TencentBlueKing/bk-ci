@@ -208,16 +208,6 @@ class CodeSvnRepositoryService @Autowired constructor(
         )
     }
 
-    /**
-     * 兼容为旧数据
-     */
-    fun isOldData(credentialInfo: CredentialInfo, repository: Repository): Boolean {
-        return repository is CodeSvnRepository &&
-            repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP &&
-            credentialInfo.v2.isNullOrBlank() &&
-            credentialInfo.credentialType == CredentialType.USERNAME_PASSWORD
-    }
-
     companion object {
         private val logger = LoggerFactory.getLogger(CodeSvnRepositoryService::class.java)
     }
