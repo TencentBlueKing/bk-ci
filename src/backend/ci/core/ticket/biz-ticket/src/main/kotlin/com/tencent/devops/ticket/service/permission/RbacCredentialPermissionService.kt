@@ -151,7 +151,7 @@ class RbacCredentialPermissionService constructor(
                     value
                 }
             credentialMap[key] = ids
-            //TODO RBAC中有list类型
+            //TODO 待删除 RBAC中有list类型
             /*if (key == AuthPermission.VIEW) {
                 credentialMap[AuthPermission.LIST] = ids
             }*/
