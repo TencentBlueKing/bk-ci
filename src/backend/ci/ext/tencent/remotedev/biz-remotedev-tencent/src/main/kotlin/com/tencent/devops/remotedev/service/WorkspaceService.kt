@@ -911,6 +911,7 @@ class WorkspaceService @Autowired constructor(
         logger.info("$userId get his all workspace ")
         val workspaces = workspaceDao.fetchWorkspace(dslContext, userId) ?: emptyList()
         val status = workspaces.map { WorkspaceStatus.values()[it.status] }
+        val now = LocalDateTime.now()
 
         // 查出所有正在运行ws的最新历史记录
         val latestHistory = workspaceHistoryDao.fetchLatestHistory(
@@ -928,22 +929,29 @@ class WorkspaceService @Autowired constructor(
         val usageTime = workspaces.sumOf {
             it.usageTime + if (WorkspaceStatus.values()[it.status].checkRunning()) {
                 // 如果正在运行，需要加上目前距离该次启动的时间
-                Duration.between(latestHistory[it.name]?.startTime ?: LocalDateTime.now(), LocalDateTime.now()).seconds
+                Duration.between(latestHistory[it.name]?.startTime ?: now, now).seconds
             } else 0
         }
         val sleepingTime = workspaces.sumOf {
             it.sleepingTime + if (WorkspaceStatus.values()[it.status].checkSleeping()) {
                 // 如果正在休眠，需要加上目前距离上次结束的时间
-                Duration.between(latestSleepHistory[it.name]?.endTime, LocalDateTime.now()).seconds
+                Duration.between(latestSleepHistory[it.name]?.endTime, now).seconds
             } else 0
         }
+
+        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
+            Duration.between(it.startTime, now).seconds
+        }
+
+        val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
         val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toLong()
         return WorkspaceUserDetail(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
-            chargeableTime = (usageTime - discountTime).coerceAtLeast(0),
+            chargeableTime = endBilling.value2() +
+                (notEndBillingTime + endBilling.value1() - discountTime).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -956,6 +964,7 @@ class WorkspaceService @Autowired constructor(
     fun getWorkspaceDetail(userId: String, workspaceName: String): WorkspaceDetail? {
         logger.info("$userId get workspace from id $workspaceName")
         permissionService.checkPermission(userId, workspaceName)
+        val now = LocalDateTime.now()
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName) ?: return null
 
         val workspaceStatus = WorkspaceStatus.values()[workspace.status]
@@ -966,21 +975,28 @@ class WorkspaceService @Autowired constructor(
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
-            Duration.between(lastHistory.startTime, LocalDateTime.now()).seconds
+            Duration.between(lastHistory.startTime, now).seconds
         } else 0
 
         val sleepingTime = workspace.sleepingTime + if (workspaceStatus.checkSleeping()) {
             // 如果正在休眠，需要加上目前距离上次结束的时间
-            Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds
+            Duration.between(lastHistory.endTime, now).seconds
         } else 0
 
+
+        val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
+            Duration.between(it.startTime, now).seconds
+        }
+
+        val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
         return with(workspace) {
             WorkspaceDetail(
                 workspaceId = id,
                 workspaceName = name,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = (usageTime - discountTime).coerceAtLeast(0),
+                chargeableTime = endBilling.value2() +
+                    (notEndBillingTime + endBilling.value1() - discountTime).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,

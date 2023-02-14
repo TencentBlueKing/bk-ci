@@ -29,10 +29,12 @@ package com.tencent.devops.remotedev.dao
 
 import com.tencent.devops.model.remotedev.tables.TRemoteDevBilling
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.model.remotedev.tables.records.TRemoteDevBillingRecord
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
 import org.jooq.Record2
+import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -103,6 +105,12 @@ class RemoteDevBillingDao {
                     .where(USER_ID.eq(record2.value1()))
                     .execute()
             }
+        }
+    }
+
+    fun fetchNotEndBilling(dslContext: DSLContext, userId: String): Result<TRemoteDevBillingRecord> {
+        with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
+            return dslContext.selectFrom(this).where(USER.eq(userId)).and(END_TIME.isNull).fetch()
         }
     }
 
