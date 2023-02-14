@@ -983,7 +983,6 @@ class WorkspaceService @Autowired constructor(
             Duration.between(lastHistory.endTime, now).seconds
         } else 0
 
-
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
             Duration.between(it.startTime, now).seconds
         }
