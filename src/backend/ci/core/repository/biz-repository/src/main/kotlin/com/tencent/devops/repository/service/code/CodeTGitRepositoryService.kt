@@ -236,7 +236,7 @@ class CodeTGitRepositoryService @Autowired constructor(
     fun getGitProjectId(repo: CodeTGitRepository, token: String): Long {
         logger.info("the repo is:$repo")
         val repositoryProjectInfo = scmService.getProjectInfo(
-            projectName = repo.projectName,
+            projectName = GitUtils.getProjectName(repo.getFormatURL()),
             url = repo.getFormatURL(),
             type = ScmType.CODE_TGIT,
             token = token
