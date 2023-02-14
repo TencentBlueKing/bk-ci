@@ -43,6 +43,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val redisHeartBeat: RedisHeartBeat = mockk()
     private val webSocketDispatcher: WebSocketDispatcher = mockk()
     private val remoteDevBillingDao: RemoteDevBillingDao = mockk()
+    private val commonService: CommonService = mockk()
     private val self: WorkspaceService = spyk(
         WorkspaceService(
             dslContext = dslContext,
@@ -59,7 +60,8 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             remoteDevSettingDao = remoteDevSettingDao,
             webSocketDispatcher = webSocketDispatcher,
             redisHeartBeat = redisHeartBeat,
-            remoteDevBillingDao = remoteDevBillingDao
+            remoteDevBillingDao = remoteDevBillingDao,
+            commonService = commonService
         ),
         recordPrivateCalls = true
     )
