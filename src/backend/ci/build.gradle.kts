@@ -117,6 +117,7 @@ allprojects {
                 entry("okhttp-testing-support")
                 entry("okhttp-tls")
                 entry("okhttp-urlconnection")
+            }
             dependencySet("org.eclipse.jgit:${Versions.jgit}") {
                 entry("org.eclipse.jgit")
                 entry("org.eclipse.jgit.ssh.jsch")

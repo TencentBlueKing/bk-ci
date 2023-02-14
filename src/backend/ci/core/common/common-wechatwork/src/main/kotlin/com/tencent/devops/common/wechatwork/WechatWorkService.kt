@@ -56,6 +56,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextM
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -179,7 +180,7 @@ class WechatWorkService @Autowired constructor(
                 .build()
             OkhttpUtils.doHttp(accessTokenRequest).use { response ->
                 //            httpClient.newCall(accessTokenRequest).execute().use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw RuntimeException("Fail to send msg to yqwx. $responseContent")
                 }
@@ -216,14 +217,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -250,14 +251,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -284,14 +285,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -306,14 +307,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(richtextMessage, false)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -356,14 +357,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/send?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -384,14 +385,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = JsonUtil.toJson(requestData)
 
         val sendURL = "$wechatWorkApiURL/cgi-bin/tencent/chat/create?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -412,7 +413,7 @@ class WechatWorkService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
@@ -447,14 +448,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = if (message is String) message else objectMapper.writeValueAsString(message)
 
         logger.info("send to wework send json:$jsonString")
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
 
             logger.info("send to wework responseContent:$responseContent")
             if (!response.isSuccessful) {
@@ -479,7 +480,7 @@ class WechatWorkService @Autowired constructor(
         val accessToken = getAccessToken()
         val url = "$uploadMediaApiURL?access_token=$accessToken&type=$mediaType"
 
-        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), mediaInputStream.readBytes())
+        val fileBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), mediaInputStream.readBytes())
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("media", mediaName, fileBody)
@@ -490,7 +491,7 @@ class WechatWorkService @Autowired constructor(
             .build()
         OkhttpUtils.doHttp(uploadRequest).use { response ->
             //        httpClient.newCall(uploadRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send media to yqwx. $responseContent")
             }
@@ -510,14 +511,14 @@ class WechatWorkService @Autowired constructor(
         val jsonString = objectMapper.writeValueAsString(userIdList)
         val accessToken = getAccessToken()
         val sendURL = "$converUserIdtoUserNameApiURL?access_token=$accessToken"
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonString)
+        val requestBody = RequestBody.create("application/json".toMediaTypeOrNull(), jsonString)
         val sendRequest = Request.Builder()
             .url(sendURL)
             .post(requestBody)
             .build()
         OkhttpUtils.doHttp(sendRequest).use { response ->
             //        httpClient.newCall(sendRequest).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RuntimeException("Fail to send msg to yqwx. $responseContent")
             }
