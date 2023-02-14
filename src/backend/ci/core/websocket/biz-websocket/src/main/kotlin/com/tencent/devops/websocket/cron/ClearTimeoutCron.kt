@@ -31,8 +31,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.websocket.keys.WebsocketKeys
-import com.tencent.devops.common.websocket.utils.RedisUtlis
-import com.tencent.devops.common.websocket.utils.RedisUtlis.cleanPageSessionByPage
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
+import com.tencent.devops.common.websocket.utils.WsRedisUtils.cleanPageSessionByPage
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
@@ -100,14 +100,14 @@ class ClearTimeoutCron(
                         val sessionId = it.substringBefore("#")
                         if (nowTime > timeout) {
                             logger.info("websocket timer timeout $bucket|$it|$userId|$sessionId")
-                            val sessionPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-                            RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+                            val sessionPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
+                            WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)
                             if (sessionPage != null) {
-                                RedisUtlis.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
-                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, sessionPage, sessionId)
+                                WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                             } else {
                                 // sessionId没有匹配到页面且超时, 需把session从userId-sessionId内删除
-                                RedisUtlis.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
+                                WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
                             }
                             // 如果不在本实例，下发到mq,供其他实例删除对应实例维持的session
                             if (websocketService.isCacheSession(sessionId)) {
