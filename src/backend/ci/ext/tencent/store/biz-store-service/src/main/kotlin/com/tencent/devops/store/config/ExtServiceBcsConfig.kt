@@ -33,15 +33,15 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceBcsConfig {
 
-    @Value("\${store.extService.kubernetes.masterUrl:}")
+    @Value("\${store.extService.bcs.masterUrl}")
     val masterUrl: String = ""
 
-    @Value("\${store.extService.kubernetes.token:}")
+    @Value("\${store.extService.bcs.token}")
     val token: String = ""
 
-    @Value("\${store.extService.kubernetes.deployTimeOut:}")
+    @Value("\${store.extService.bcs.deployTimeOut}")
     val deployTimeOut: String = ""
 
-    @Value("\${store.extService.kubernetes.killGrayAppIntervalTime:}")
+    @Value("\${store.extService.bcs.killGrayAppIntervalTime}")
     val killGrayAppIntervalTime: String = ""
 }
