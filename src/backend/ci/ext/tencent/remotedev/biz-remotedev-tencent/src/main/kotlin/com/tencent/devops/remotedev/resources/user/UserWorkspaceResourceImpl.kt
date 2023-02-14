@@ -170,4 +170,9 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun checkUserPermission(userId: String, workspaceName: String): Result<Boolean> {
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
+
+    override fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Result<Boolean> {
+        workspaceService.updateBkTicket(userId, bkTicket, hostName)
+        return Result(true)
+    }
 }

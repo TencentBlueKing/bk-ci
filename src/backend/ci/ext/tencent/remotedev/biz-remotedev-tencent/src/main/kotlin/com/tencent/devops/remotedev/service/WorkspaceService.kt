@@ -27,15 +27,19 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestamp
@@ -43,6 +47,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.service.trace.TraceTag
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.enum.NotityLevel
 import com.tencent.devops.common.websocket.pojo.NotifyPost
@@ -81,13 +86,19 @@ import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
+import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import okhttp3.Headers
+import okhttp3.MediaType
+import okhttp3.Request
+import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import org.springframework.util.StringUtils
 import java.time.Duration
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
@@ -109,7 +120,8 @@ class WorkspaceService @Autowired constructor(
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val redisHeartBeat: RedisHeartBeat,
-    private val remoteDevBillingDao: RemoteDevBillingDao
+    private val remoteDevBillingDao: RemoteDevBillingDao,
+    private val commonService: CommonService
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
@@ -1422,4 +1434,24 @@ class WorkspaceService @Autowired constructor(
     fun getDevfile(): String {
         return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
     }
+
+    fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Boolean {
+        logger.info("updateBkTicket|userId|$userId|bkTicket|$bkTicket|hostName|$hostName")
+        val url = "http://$hostName/_remoting/api/token/updateBkTicket"
+        val params = mutableMapOf<String, Any?>()
+        params["ticket"] = bkTicket
+        params["user"] = userId
+        val request = Request.Builder()
+            .url(commonService.getProxyUrl(url))
+            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(params)))
+
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val data = response.body()!!.string()
+            val dataMap = JsonUtil.toMap(data)
+            val dataCode = dataMap["data"]
+            return (dataCode == 0)
+       }
+        }
 }
