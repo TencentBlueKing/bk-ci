@@ -51,7 +51,7 @@ class ServiceTXPipelineResourceImpl @Autowired constructor(
         return Result(pipelineExportService.exportV2YamlStr(userId, projectId, pipelineId, true))
     }
 
-    override fun getPipelineInfobyId(id: Int): Result<SimplePipeline> {
+    override fun getPipelineInfobyId(id: Long): Result<SimplePipeline> {
         return Result(pipelineListFacadeService.getByAutoIds(listOf(id))[0])
     }
 

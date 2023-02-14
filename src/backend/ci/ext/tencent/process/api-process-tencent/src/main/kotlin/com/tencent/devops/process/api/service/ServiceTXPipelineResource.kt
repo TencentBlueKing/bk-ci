@@ -70,6 +70,6 @@ interface ServiceTXPipelineResource {
     fun getPipelineInfobyId(
         @PathParam("id")
         @ApiParam(value = "流水线自增id", required = true)
-        id: Int
+        id: Long
     ): Result<SimplePipeline>
 }
