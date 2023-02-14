@@ -95,14 +95,14 @@ class RemoteDevBillingDao {
                 )
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .where(WORKSPACE_NAME.eq(workspaceName)).and(END_TIME.isNull)
-                .returningResult(USER, USAGE_TIME)
+                .returning(USER, USAGE_TIME)
                 .fetch()
         }
-        res.forEach { record2: Record2<String/*USER*/, Int/*USAGE_TIME*/> ->
+        res.forEach { record ->
             with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
                 dslContext.update(this)
-                    .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + record2.value2())
-                    .where(USER_ID.eq(record2.value1()))
+                    .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + record.usageTime)
+                    .where(USER_ID.eq(record.user))
                     .execute()
             }
         }
