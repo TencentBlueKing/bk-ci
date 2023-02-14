@@ -54,6 +54,7 @@ import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.remotedev.common.Constansts
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
+import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
@@ -107,7 +108,8 @@ class WorkspaceService @Autowired constructor(
     private val dispatcher: RemoteDevDispatcher,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val webSocketDispatcher: WebSocketDispatcher,
-    private val redisHeartBeat: RedisHeartBeat
+    private val redisHeartBeat: RedisHeartBeat,
+    private val remoteDevBillingDao: RemoteDevBillingDao
 ) {
 
     private val redisCache = CacheBuilder.newBuilder()
@@ -273,7 +275,7 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceAction.PREPARING
                 ),
                 projectId = "",
-                userId = userId,
+                userIds = setOf(userId),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -308,6 +310,7 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     hostName = event.environmentHost
                 )
+                remoteDevBillingDao.newBilling(transactionContext, event.workspaceName, event.userId)
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = event.workspaceName,
@@ -356,7 +359,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = event.errorMsg
                 ),
                 projectId = "",
-                userId = event.userId,
+                userIds = setOf(event.userId),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(event.workspaceName),
                 notifyPost = NotifyPost(
@@ -386,6 +389,7 @@ class WorkspaceService @Autowired constructor(
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.checkRunning()) {
                 logger.info("${workspace.name} is running.")
+                remoteDevBillingDao.newBilling(dslContext, workspaceName, userId)
                 val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                     .getWorkspaceInfo(userId, workspaceName)
 
@@ -454,7 +458,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.STARTING
                     ),
                     projectId = "",
-                    userId = userId,
+                    userIds = setOf(userId),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -514,6 +518,8 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceStatus.RUNNING,
                     dslContext = transactionContext
                 )
+
+                remoteDevBillingDao.newBilling(transactionContext, workspaceName, operator)
 
                 val lastHistory = workspaceHistoryDao.fetchAnyHistory(
                     dslContext = transactionContext,
@@ -581,7 +587,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userId = operator,
+                userIds = setOf(operator),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -666,7 +672,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.SLEEPING
                     ),
                     projectId = "",
-                    userId = userId,
+                    userIds = setOf(userId),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -734,12 +740,6 @@ class WorkspaceService @Autowired constructor(
                 )
 
                 workspaceDao.updateWorkspaceStatus(
-                    workspaceName = workspaceName,
-                    status = WorkspaceStatus.DELETED,
-                    dslContext = transactionContext
-                )
-
-                workspaceDao.updateWorkspaceStatus(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
                     status = WorkspaceStatus.DELETING
@@ -778,7 +778,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.DELETING
                     ),
                     projectId = "",
-                    userId = userId,
+                    userIds = setOf(userId),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -865,7 +865,8 @@ class WorkspaceService @Autowired constructor(
                 if (status.notOk2doNextAction() && Duration.between(
                         it.lastStatusUpdateTime,
                         LocalDateTime.now()
-                    ).seconds > DEFAULT_WAIT_TIME) {
+                    ).seconds > DEFAULT_WAIT_TIME
+                ) {
                     val workspaceInfo = client.get(ServiceRemoteDevResource::class)
                         .getWorkspaceInfo(userId, it.name).data!!
                     when (workspaceInfo.status) {
@@ -1091,7 +1092,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.SLEEPING
                     ),
                     projectId = "",
-                    userId = "system",
+                    userIds = workspaceDao.fetchWorkspaceUser(dslContext, workSpaceName).toSet(),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workSpaceName),
                     notifyPost = NotifyPost(
@@ -1164,7 +1165,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.DELETING
                     ),
                     projectId = "",
-                    userId = "system",
+                    userIds = workspaceDao.fetchWorkspaceUser(dslContext, workspace.name).toSet(),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspace.name),
                     notifyPost = NotifyPost(
@@ -1228,6 +1229,7 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         }
+        remoteDevBillingDao.endBilling(dslContext, workspaceName)
 
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
@@ -1239,7 +1241,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userId = operator,
+                userIds = setOf(operator),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -1322,6 +1324,8 @@ class WorkspaceService @Autowired constructor(
             )
         }
 
+        remoteDevBillingDao.endBilling(dslContext, workspaceName)
+
         webSocketDispatcher.dispatch(
             WorkspaceWebsocketPush(
                 type = WebSocketActionType.WORKSPACE_SLEEP,
@@ -1332,7 +1336,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userId = operator,
+                userIds = setOf(operator),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -1346,6 +1350,10 @@ class WorkspaceService @Autowired constructor(
                 )
             )
         )
+    }
+
+    fun initBilling(freeTime: Int) {
+        remoteDevBillingDao.monthlyInit(dslContext, freeTime)
     }
 
     /**

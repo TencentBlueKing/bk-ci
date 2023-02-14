@@ -47,12 +47,12 @@ data class WorkspaceWebsocketPush(
     val status: Boolean,
     val anyMessage: Any,
     val projectId: String,
-    override val userId: String,
+    val userIds: Set<String>,
     override val redisOperation: RedisOperation,
     override var page: String?,
     override var notifyPost: NotifyPost
 ) : WebsocketPush(
-    userId = userId,
+    userId = userIds.firstOrNull() ?: "",
     pushType = WebSocketType.AMD,
     redisOperation = redisOperation,
     page = page,
@@ -65,9 +65,14 @@ data class WorkspaceWebsocketPush(
 
     // 同时向 user 和 page 的 session 推送。可以同时兼容概览页面和详情页面
     override fun findSession(page: String): List<String> {
-        val userSession = RedisUtlis.getSessionIdByUserId(redisOperation, userId)?.split(",") ?: emptyList()
+        val userSession = mutableSetOf<String>()
+        userIds.forEach {
+            userSession.plus(
+                RedisUtlis.getSessionIdByUserId(redisOperation, it)?.split(",") ?: emptyList()
+            )
+        }
         val pageSession = super.findSession(page) ?: emptyList()
-        return userSession.plus(pageSession).distinct()
+        return userSession.plus(pageSession).toList()
     }
 
     override fun buildMqMessage(): SendMessage {

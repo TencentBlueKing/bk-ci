@@ -97,6 +97,8 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
                                                        `TAPD_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接TAPD',
                                                        `GITHUB_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接github',
                                                        `ENVS_FOR_VARIABLE` mediumtext NOT NULL COMMENT '远程开发环境变量配置',
+                                                       `CUMULATIVE_USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '当月累计使用时间(月初清空)',
+                                                       `CUMULATIVE_BILLING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '用户累计计费时间(当月计费数据暂不统计)',
                                                        `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                                        `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 
@@ -133,6 +135,24 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_FILE` (
     KEY `idx_user` (`USER`),
     KEY `idx_user_md5` (`USER`, `md5`)
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云开发文件存储';
+
+-- ----------------------------
+-- Table structure for T_REMOTE_DEV_BILLING 云开发用户计费记录
+-- ----------------------------
+CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_BILLING` (
+    `ID` bigint(20) NOT NULL AUTO_INCREMENT,
+    `WORKSPACE_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '工作空间名称，唯一性',
+    `USER` varchar(64) NOT NULL DEFAULT '' COMMENT '用户',
+    `START_TIME` timestamp NOT NULL COMMENT '单次使用开始时间',
+    `END_TIME` timestamp NULL COMMENT '单次使用结束时间',
+    `USAGE_TIME` int(11) NULL COMMENT '单次使用时长(秒)',
+    `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+    PRIMARY KEY (`ID`) USING BTREE,
+    KEY `idx_user` (`USER`),
+    KEY `idx_workspace` (`WORKSPACE_NAME`),
+    KEY `idx_end_time` (`END_TIME`)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT '云开发用户计费记录';
 
 -- ----------------------------
 -- Table structure for T_SSH_PUBLIC_KEYS 用户SSH公钥存储

@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
@@ -43,38 +42,40 @@ import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
-@Api(tags = ["OP_WORKSPACE_TEMPLATE"], description = "OP-工作空间模板")
-@Path("/op/wstemplate")
+@Api(tags = ["OP_REMOTE_DEV"], description = "OP-REMOTE-DEV")
+@Path("/op")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface OpWsTemplateResource {
+interface OpRemoteDevResource {
 
     @ApiOperation("新增工作空间模板")
     @POST
-    @Path("/add")
+    @Path("/wstemplate/add")
     fun addWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板信息", required = true)
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean>
+
     @ApiOperation("获取工作空间模板")
     @GET
-    @Path("/list")
+    @Path("/wstemplate/list")
     fun getWorkspaceTemplateList(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
     ): Result<List<WorkspaceTemplate>>
 
     @ApiOperation("更新工作空间模板")
     @PUT
-    @Path("/update/template/{wsTemplateId}")
+    @Path("/wstemplate/update/template/{wsTemplateId}")
     fun updateWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板ID", required = true)
@@ -86,13 +87,24 @@ interface OpWsTemplateResource {
 
     @ApiOperation("删除工作空间模板")
     @DELETE
-    @Path("/delete/template/{wsTemplateId}")
+    @Path("/wstemplate/delete/template/{wsTemplateId}")
     fun deleteWorkspaceTemplate(
-        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
         @ApiParam(value = "模板信息", required = true)
         @PathParam("wsTemplateId")
         wsTemplateId: Long
+    ): Result<Boolean>
+
+    @ApiOperation("计费刷新")
+    @POST
+    @Path("/init_billing")
+    fun initBilling(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @QueryParam("freeTime")
+        freeTime: Int
     ): Result<Boolean>
 }
