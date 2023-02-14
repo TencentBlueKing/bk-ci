@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.dao
 
+import com.tencent.devops.auth.pojo.vo.AuthItsmCallbackInfo
 import com.tencent.devops.model.auth.tables.TAuthItsmCallback
 import com.tencent.devops.model.auth.tables.records.TAuthItsmCallbackRecord
 import org.jooq.DSLContext
@@ -93,6 +94,21 @@ class AuthItsmCallbackDao {
                 .and(APPROVE_RESULT.isNull)
                 .orderBy(CREATE_TIME.desc())
                 .fetchAny()
+        }
+    }
+
+    fun convert(record: TAuthItsmCallbackRecord?): AuthItsmCallbackInfo? {
+        return record?.let {
+            with(it) {
+                AuthItsmCallbackInfo(
+                    sn = sn,
+                    projectId = it.englishName,
+                    callbackId = callbackId,
+                    applicant = applicant,
+                    approver = approver,
+                    approveResult = approveResult
+                )
+            }
         }
     }
 }
