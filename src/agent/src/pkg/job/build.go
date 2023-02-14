@@ -469,6 +469,7 @@ func removeFileThan7Days(dir string, f fs.DirEntry) {
 	info, err := f.Info()
 	if err != nil {
 		logs.Error("removeFileThan7Days|read file info error ", "file: ", f.Name(), " error: ", err)
+		return
 	}
 	if (time.Now().Sub(info.ModTime())) > 7*24*time.Hour {
 		err = os.Remove(dir + "/" + f.Name())

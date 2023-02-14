@@ -70,6 +70,7 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
 import java.time.LocalDateTime
@@ -89,6 +90,10 @@ class BkRepoService @Autowired constructor(
     val client: Client,
     val shortUrlService: ShortUrlService
 ) : RepoService {
+
+    @Value("\${bkrepo.dockerRegistry:#{null}}")
+    private val dockerRegistry: String? = null
+
     override fun list(
         userId: String,
         projectId: String,
@@ -582,7 +587,8 @@ class BkRepoService @Autowired constructor(
                     DateTimeFormatter.ISO_DATE_TIME
                 ).timestamp(),
                 artifactoryType = ArtifactoryType.IMAGE,
-                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) }
+                properties = packageVersion.metadata.map { Property(it["key"].toString(), it["value"].toString()) },
+                registry = dockerRegistry
             )
         }
     }

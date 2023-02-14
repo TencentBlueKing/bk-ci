@@ -32,7 +32,7 @@
                                 v-model="atomForm.name"
                                 v-validate="{
                                     required: true,
-                                    max: 20
+                                    max: 40
                                 }"
                                 :class="{ 'is-danger': errors.has('atomName') }"
                             >
@@ -41,7 +41,7 @@
                         <bk-popover placement="right">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件名称不超过20个字符') }} </p>
+                                <p> {{ $t('store.插件名称不超过40个字符') }} </p>
                             </template>
                         </bk-popover>
                     </div>
@@ -168,20 +168,19 @@
                         <input
                             type="text"
                             class="bk-form-input atom-introduction-input"
-                            :placeholder="$t('store.插件一句话简介，不超过70个字符')"
+                            :placeholder="$t('store.插件一句话简介，不超过256个字符')"
                             name="introduction"
-                            maxlength="70"
+                            maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
-                                required: true,
-                                max: 70
+                                required: true
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }"
                         >
                         <bk-popover placement="left">
                             <i class="devops-icon icon-info-circle"></i>
                             <template slot="content">
-                                <p> {{ $t('store.插件一句话简介，不超过70个字符。') }} </p>
+                                <p> {{ $t('store.插件一句话简介，不超过256个字符。') }} </p>
                                 <p> {{ $t('store.展示在插件市场以及流水线选择插件页面。') }} </p>
                             </template>
                         </bk-popover>
@@ -245,19 +244,9 @@
                 <div class="bk-form-item name-form-item is-required">
                     <label class="bk-label"> {{ $t('store.发布者') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <input
-                            type="text"
-                            class="bk-form-input atom-name-input"
-                            :placeholder="$t('store.请输入')"
-                            name="publisher"
-                            v-model="atomForm.publisher"
-                            v-validate="{
-                                required: true,
-                                max: 20
-                            }"
-                            :class="{ 'is-danger': errors.has('publisher') }"
-                        >
-                        <p :class="errors.has('publisher') ? 'error-tips' : 'normal-tips'">{{ errors.first("publisher") }}</p>
+                        <bk-select v-model="atomForm.publisher">
+                            <bk-option v-for="publisher in publishersList" :key="publisher.id" :id="publisher.publisherCode" :name="publisher.publisherName"></bk-option>
+                        </bk-select>
                     </div>
                 </div>
                 <div
@@ -528,7 +517,8 @@
                     envError: false,
                     releaseTypeError: false
                 },
-                versionMap: {}
+                versionMap: {},
+                publishersList: []
             }
         },
         computed: {
@@ -553,6 +543,9 @@
                     { name: this.$t('store.工作台'), to: { name: 'atomWork' } },
                     { name }
                 ]
+            },
+            userName () {
+                return this.$store.state.user.username
             }
         },
         watch: {
@@ -583,6 +576,7 @@
         async created () {
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
+            await this.fetchPublishersList(this.atomForm.atomCode)
             this.requestAtomClassify()
         },
         methods: {
@@ -599,6 +593,18 @@
                 this.$router.push({
                     name: 'atomHome'
                 })
+            },
+            fetchPublishersList (atomCode) {
+                this.$store.dispatch('store/getPublishersList', { atomCode }).then(res => {
+                    this.publishersList = res
+                    const result = this.publishersList.find(i => i.publisherCode === this.userName)
+                    if (!result) {
+                        this.publishersList.push({
+                            publisherCode: this.userName,
+                            publisherName: this.userName
+                        })
+                    }
+                }).catch(() => [])
             },
             async requestAtomlabels () {
                 try {

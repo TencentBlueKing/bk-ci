@@ -36,6 +36,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.wechatwork.WechatWorkRobotService
+import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
@@ -71,7 +73,9 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     private val emailService: EmailService,
     private val rtxService: RtxService,
     private val wechatService: WechatService,
-    private val weworkService: WeworkService
+    private val weworkService: WeworkService,
+    private val wechatWorkService: WechatWorkService,
+    private val wechatWorkRobotService: WechatWorkRobotService
 ) : NotifyMessageTemplateServiceImpl(
     dslContext = dslContext,
     notifyMessageTemplateDao = notifyMessageTemplateDao,
@@ -79,10 +83,14 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
     emailService = emailService,
     rtxService = rtxService,
     wechatService = wechatService,
-    weworkService = weworkService
+    weworkService = weworkService,
+    wechatWorkService = wechatWorkService,
+    wechatWorkRobotService = wechatWorkRobotService
 ) {
 
-    private val logger = LoggerFactory.getLogger(TXNotifyMessageTemplateServiceImpl::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(TXNotifyMessageTemplateServiceImpl::class.java)
+    }
 
     override fun sendOtherSpecialNotifyMessage(
         sendAllNotify: Boolean,

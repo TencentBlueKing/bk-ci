@@ -1,7 +1,7 @@
 #!/bin/bash
 echo "source env files..."
 source service.env
-MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:-UseAdaptiveSizePolicy"
+MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:-UseAdaptiveSizePolicy -Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 API_PORT=80
 
 echo "create log dir"

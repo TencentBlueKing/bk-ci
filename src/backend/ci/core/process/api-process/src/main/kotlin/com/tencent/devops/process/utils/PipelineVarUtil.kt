@@ -65,6 +65,7 @@ import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_MIL
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_OWNER
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_STATE
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_TITLE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_IID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_REVIEW_OWNER
@@ -220,7 +221,8 @@ object PipelineVarUtil {
         "ci.note_comment" to PIPELINE_WEBHOOK_NOTE_COMMENT,
         "ci.note_id" to PIPELINE_WEBHOOK_NOTE_ID,
         "ci.action" to PIPELINE_GIT_ACTION,
-        "ci.build_url" to PIPELINE_BUILD_URL
+        "ci.build_url" to PIPELINE_BUILD_URL,
+        "ci.mr_reviewers" to BK_REPO_GIT_WEBHOOK_MR_REVIEWERS
     )
 
     /**

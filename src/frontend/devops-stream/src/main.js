@@ -15,7 +15,7 @@ import icon from '@/components/icon'
 import log from '@blueking/log'
 import VeeValidate from 'vee-validate'
 import VueCompositionAPI from '@vue/composition-api'
-import { bkMessage } from 'bk-magic-vue'
+import { bkMessage } from '@tencent/bk-magic-vue'
 import bkPipeline from 'bkui-pipeline'
 
 import {

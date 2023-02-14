@@ -138,7 +138,7 @@ class BcsDeployService @Autowired constructor(private val redisOperation: RedisO
             .withName(getServiceName(serviceCode))
             .endMetadata()
             .withNewSpec()
-            .withSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
+            .addToSelector(Collections.singletonMap(defaultLabelKey, serviceCode))
             .addNewPort()
             .withName("$serviceCode-port")
             .withProtocol("TCP")

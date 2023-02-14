@@ -48,7 +48,7 @@ import javax.ws.rs.core.Response
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildAgentThirdPartyAgentUpgradeResource {
 
-    @ApiOperation("下载upgrade.jar")
+    @ApiOperation("下载指定文件")
     @GET
     @Path("/files/download")
     @Produces(MediaType.APPLICATION_OCTET_STREAM)

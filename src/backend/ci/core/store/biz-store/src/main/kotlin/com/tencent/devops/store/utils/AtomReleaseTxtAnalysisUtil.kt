@@ -55,6 +55,7 @@ object AtomReleaseTxtAnalysisUtil {
     private val logger = LoggerFactory.getLogger(AtomReleaseTxtAnalysisUtil::class.java)
     private const val FILE_DEFAULT_SIZE = 1024
 
+    @Suppress("NestedBlockDepth")
     fun descriptionAnalysis(
         userId: String,
         description: String,

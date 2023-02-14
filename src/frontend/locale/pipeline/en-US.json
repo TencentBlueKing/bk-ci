@@ -115,6 +115,11 @@
   "stageUserTriggers": "Stage Owner",
   "stageOptionLabel": "Run this Stage",
   "stageTriggerDesc": "Multiple people separated by commas",
+  "stageReviewInputNotice": "Review notice",
+  "weChatGroupID": "Enterprise WeChat group ID",
+  "notifyGroupDesc": "Multiple groups are separated by English commas",
+  "stageWeChatGroupIDError": "Please enter the enterprise WeChat group ID",
+  "markdownContentLabel": "Enterprise WeChat messages are sent in Markdown format",
   "stageReviewInputDesc": "Review instructions",
   "stageReviewInputDescTip": "You can fill in the audit criteria or the meaning of each parameter here",
   "stageReviewParams": "Custom parameters",
@@ -133,6 +138,9 @@
   "fileUploadSuccess": "Upload Sucessful",
   "empty": "No data",
   "link": "link",
+  "downloadLog": "Download Log",
+  "hideDebugLog": "Hide Debug Log",
+  "showDebugLog": "Show Debug Log",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
@@ -1015,6 +1023,7 @@
   "visibleRange": "Visible range",
   "personalVis": "Personally visible",
   "projectVis": "Project Visible",
+  "recentUse": "Recent Used",
   "myCollect": "My Favorites",
   "myPipeline": "My Pipelines",
   "stickyTop": "Top",
@@ -1103,5 +1112,7 @@
   "deleteAlready": "Deleted",
   "removedPipelineError": "Failure to move out of the line",
   "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
-  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty"
+  "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
+  "pipelineLockTips": "Execute is disabled; You can go to Basic Settings to restore it",
+  "pipelineManualDisable": "This pipeline is not configured for manual trigger"
 }

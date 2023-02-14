@@ -155,7 +155,7 @@
     import { Accordion, AccordionItem } from '../components/Accordion'
     import ConsultTools from '../components/ConsultTools/index.vue'
     
-    import { urlJoin, isAbsoluteUrl } from '../utils/util'
+    import { urlJoin, isAbsoluteUrl } from '@/utils/util'
 
     @Component({
         components: {
