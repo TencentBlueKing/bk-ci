@@ -83,7 +83,6 @@ import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
-import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -1436,6 +1435,7 @@ class WorkspaceService @Autowired constructor(
         params["user"] = userId
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
+            .header("Cookie", "X-DEVOPS-BK-TICKET=$bkTicket")
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
 
