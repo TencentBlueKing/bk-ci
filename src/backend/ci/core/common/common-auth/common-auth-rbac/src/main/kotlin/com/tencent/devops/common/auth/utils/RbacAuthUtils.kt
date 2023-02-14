@@ -7,12 +7,12 @@ object RbacAuthUtils {
 
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
         // TODO 待确定，rbac有list类型，不需要做转换
-        /*val action = if (authPermission == AuthPermission.LIST) {
+        val action = if (authPermission == AuthPermission.LIST) {
             AuthPermission.VIEW.value
         } else {
             authPermission.value
-        }*/
-        return "${extResourceType(authResourceType)}_${authPermission.value}"
+        }
+        return "${extResourceType(authResourceType)}_$action"
     }
 
     fun extResourceType(authResourceType: AuthResourceType): String {
