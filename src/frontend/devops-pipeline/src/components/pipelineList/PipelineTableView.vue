@@ -27,14 +27,14 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.hasPermission && !isDeleteView"
+                    v-if="!props.row.delete && !props.row.hasPermission && !isDeleteView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
                     {{props.row.pipelineName}}
                 </span>
                 <router-link
-                    v-else-if="!isDeleteView && props.row.historyRoute"
+                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
                     :to="props.row.historyRoute">
