@@ -175,7 +175,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(projectId: String,repository: CodeSvnRepository): RepoCredentialInfo {
+    private fun checkCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
         // 凭证信息
         val repoCredentialInfo = getCredentialInfo(
             projectId = projectId,
@@ -208,7 +208,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     /**
      * 获取凭证信息
      */
-    fun getCredentialInfo(projectId: String,repository: CodeSvnRepository): RepoCredentialInfo {
+    fun getCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
         // 凭证信息
         return credentialService.getCredentialInfo(
             projectId = projectId,
