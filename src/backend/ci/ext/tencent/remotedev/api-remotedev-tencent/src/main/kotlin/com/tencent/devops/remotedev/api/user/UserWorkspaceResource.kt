@@ -270,4 +270,19 @@ interface UserWorkspaceResource {
         @QueryParam("workspaceName")
         workspaceName: String
     ): Result<Boolean>
+
+    @ApiOperation("更新容器的BKticket")
+    @POST
+    @Path("/updateBkTicket")
+    fun updateBkTicket(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "ticket", required = true)
+        @QueryParam("ticket")
+        bkTicket: String,
+        @ApiParam(value = "host", required = true)
+        @QueryParam("host")
+        hostName: String
+    ): Result<Boolean>
 }
