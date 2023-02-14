@@ -5,7 +5,6 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotMarkdownSendMsg
 import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
