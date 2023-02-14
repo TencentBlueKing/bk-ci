@@ -59,7 +59,7 @@ class RemoteDevBillingDao {
         val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
             dslContext.selectCount().from(this).where(
                 WORKSPACE_NAME.eq(workspaceName)
-            ).and(USER.eq(userId)).and(END_TIME.isNull).execute() > 0
+            ).and(USER.eq(userId)).and(END_TIME.isNull).fetchOne(DSL.count())!! > 0
         }
         if (res) {
             logger.info("newBilling fail, task exist|$workspaceName|$userId")
