@@ -39,6 +39,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.sql.Timestamp
+import java.time.Duration
 import java.time.LocalDateTime
 
 @Repository
@@ -86,22 +87,25 @@ class RemoteDevBillingDao {
         dslContext: DSLContext,
         workspaceName: String
     ) {
+        val now = LocalDateTime.now()
         val res = with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
-            dslContext.update(this)
-                .set(END_TIME, LocalDateTime.now())
-                .set(
-                    USAGE_TIME,
-                    timestampDiff(DatePart.SECOND, START_TIME.cast(java.sql.Timestamp::class.java))
-                )
-                .set(UPDATE_TIME, LocalDateTime.now())
+            dslContext.selectFrom(this)
                 .where(WORKSPACE_NAME.eq(workspaceName)).and(END_TIME.isNull)
-                .returning(USER, USAGE_TIME)
                 .fetch()
         }
         res.forEach { record ->
+            val add = Duration.between(record.startTime, now).seconds.toInt()
+            with(TRemoteDevBilling.T_REMOTE_DEV_BILLING) {
+                dslContext.update(this)
+                    .set(END_TIME, now)
+                    .set(USAGE_TIME, add)
+                    .set(UPDATE_TIME, now)
+                    .where(ID.eq(record.id))
+                    .execute()
+            }
             with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
                 dslContext.update(this)
-                    .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + record.usageTime)
+                    .set(CUMULATIVE_USAGE_TIME, CUMULATIVE_USAGE_TIME + add)
                     .where(USER_ID.eq(record.user))
                     .execute()
             }
@@ -144,12 +148,5 @@ class RemoteDevBillingDao {
                 .where(CUMULATIVE_USAGE_TIME.gt(0))
                 .execute()
         }
-    }
-
-    fun timestampDiff(part: DatePart, t1: Field<Timestamp>): Field<Int> {
-        return DSL.field(
-            "timestampdiff({0}, {1}, NOW())",
-            Int::class.java, DSL.keyword(part.toSQL()), t1
-        )
     }
 }
