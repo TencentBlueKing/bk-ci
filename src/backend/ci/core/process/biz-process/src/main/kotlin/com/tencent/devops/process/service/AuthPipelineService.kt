@@ -353,7 +353,7 @@ class AuthPipelineService @Autowired constructor(
 
         val pipelineInfos = if (idNumType) {
             // 纯数字按自增id获取
-            pipelineListFacadeService.getByAutoIds(ids.map { it.toInt() })
+            pipelineListFacadeService.getByAutoIds(ids.map { it.toLong() })
         } else {
             // 非纯数字按pipelineId获取
             pipelineListFacadeService.getByPipelineIds(pipelineIds = ids.toSet())
