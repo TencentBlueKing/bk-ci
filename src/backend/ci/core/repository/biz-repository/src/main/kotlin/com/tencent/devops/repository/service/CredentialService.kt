@@ -67,7 +67,6 @@ class CredentialService @Autowired constructor(
     }
 
     fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {
-        logger.info("start get repository credential info of repo=[$repository],projectId=[$projectId]")
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)

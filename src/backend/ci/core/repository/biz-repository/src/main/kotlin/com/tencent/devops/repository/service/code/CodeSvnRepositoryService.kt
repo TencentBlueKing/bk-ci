@@ -146,12 +146,10 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
-        logger.info("check token repoCredentialInfo=[$repoCredentialInfo]")
         val credential = CredentialUtils.getCredential(
             repository = repository,
             repoCredentialInfo = repoCredentialInfo
         )
-        logger.info("repository credential =[$credential]")
         return scmService.checkPrivateKeyAndToken(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
