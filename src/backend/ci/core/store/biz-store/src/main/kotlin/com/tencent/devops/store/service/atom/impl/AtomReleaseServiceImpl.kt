@@ -586,14 +586,15 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                     }
                     storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(dslContext, userId, storeErrorCodeInfo)
                 }
-            } else {
-                throw ErrorCodeException(
-                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
-                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
-                )
+                // 无意义的抛出异常
+//            } else {
+//                throw ErrorCodeException(
+//                    errorCode = USER_REPOSITORY_PULL_ERROR_JSON_FILE_FAIL,
+//                    params = arrayOf(branch ?: MASTER, ERROR_JSON_NAME)
+//                )
             }
-        } catch (ignored: Throwable) {
-            logger.error("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
+        } catch (ignored: Exception) {
+            logger.warn("syncAtomErrorCodeConfig fail $atomCode|error=${ignored.message}", ignored)
         }
     }
 
