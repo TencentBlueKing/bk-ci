@@ -158,8 +158,9 @@ CREATE TABLE IF NOT EXISTS `T_AUTH_USER_INFO`  (
 )ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='账号信息表';
 
 CREATE TABLE IF NOT EXISTS `T_AUTH_ACTION` (
-    `actionId` varchar(64) NOT NULL COMMENT '操作ID',
-    `resourceType` varchar(64) NOT NULL COMMENT '资源类型',
+    `action` varchar(64) NOT NULL COMMENT '操作ID',
+    `resourceType` varchar(64) NOT NULL COMMENT '蓝盾-关联资源类型',
+    `relatedResourceType` varchar(64) NOT NULL COMMENT 'IAM-关联资源类型',
     `actionName` varchar(64) NOT NULL COMMENT '操作名称',
     `englishName` varchar(64) DEFAULT NULL  COMMENT '动作英文名称',
     `creator` varchar(32) DEFAULT NULL  COMMENT '创建者',

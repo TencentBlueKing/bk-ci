@@ -99,11 +99,12 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
             val actionInfoVoList = actionList.map {
-                actionNameCache.put(it.actionid, it.actionname)
+                actionNameCache.put(it.action, it.actionname)
                 ActionInfoVo(
-                    actionId = it.actionid,
+                    action = it.action,
                     actionName = it.actionname,
-                    resourceType = it.resourcetype
+                    resourceType = it.resourcetype,
+                    relatedResourceType = it.relatedresourcetype
                 )
             }
             actionCache.put(resourceType, actionInfoVoList)
@@ -247,54 +248,62 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
-        val actionId = action.substring(action.lastIndexOf("_") + 1)
-        val isEnablePermission = permissionResourceService.isEnablePermission(
-            projectId = projectId,
-            resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
+        val actionInfo = listActions(userId, resourceType).filter { it.action == action }[0]
+        val relatedResourceType = actionInfo.relatedResourceType
+        val resourceTypeName = getResourceTypeName(userId, resourceType)
+        val resourceInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = relatedResourceType,
             resourceCode = resourceCode
         )
-
-        val resourceTypeName = getResourceTypeName(userId, resourceType)
-
-        val actionName = getActionName(userId, resourceType, action)
-
-        val resourceName = authResourceService.get(
-            projectCode = projectId,
-            resourceType = if (actionId == AuthPermission.CREATE.value) AuthResourceType.PROJECT.value else resourceType,
-            resourceCode = resourceCode
-        ).resourceName
-
-        if (isEnablePermission) {
-            // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
-            authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
-                val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
-                if (strategy != null) {
-                    val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
-                    if (isStrategyContainsAction != null && isStrategyContainsAction) {
-                        buildGroupInfoList(
-                            groupInfoList = groupInfoList,
-                            projectId = projectId,
-                            userId = userId,
-                            resourceName = resourceName,
-                            action = action,
-                            resourceType = resourceType,
-                            resourceCode = resourceCode,
-                            groupCode = it.groupCode
-                        )
+        val resourceName = resourceInfo.resourceName
+        val isEnablePermission: Boolean
+        if (relatedResourceType == AuthResourceType.PROJECT.value) {
+            isEnablePermission = false
+            groupInfoList.add(
+                AuthRedirectGroupInfoVo(
+                    url = String.format(
+                        authApplyRedirectUrl, userId, projectId,
+                        "", resourceType, resourceName, action
+                    )
+                )
+            )
+        } else {
+            isEnablePermission = resourceInfo.enable
+            if (isEnablePermission) {
+                // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
+                val actionId = action.substring(action.lastIndexOf("_") + 1)
+                authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
+                    val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
+                    if (strategy != null) {
+                        val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
+                        if (isStrategyContainsAction != null && isStrategyContainsAction) {
+                            buildGroupInfoList(
+                                groupInfoList = groupInfoList,
+                                projectId = projectId,
+                                userId = userId,
+                                resourceName = resourceName,
+                                action = action,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                groupCode = it.groupCode
+                            )
+                        }
                     }
                 }
+            } else {
+                buildGroupInfoList(
+                    groupInfoList = groupInfoList,
+                    projectId = projectId,
+                    userId = userId,
+                    resourceName = resourceName,
+                    action = action,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    groupCode = "manager"
+                )
             }
-        } else {
-            buildGroupInfoList(
-                groupInfoList = groupInfoList,
-                projectId = projectId,
-                userId = userId,
-                resourceName = resourceName,
-                action = action,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                groupCode = "manager"
-            )
+
         }
         if (groupInfoList.isEmpty()) {
             throw ErrorCodeException(
@@ -306,7 +315,7 @@ class RbacPermissionApplyService @Autowired constructor(
             auth = isEnablePermission,
             resourceTypeName = resourceTypeName,
             resourceName = resourceName,
-            actionName = actionName,
+            actionName = actionInfo.actionName,
             groupInfoList = groupInfoList
         )
     }
