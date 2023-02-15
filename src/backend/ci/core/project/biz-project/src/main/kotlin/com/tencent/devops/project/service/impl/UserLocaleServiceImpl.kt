@@ -30,6 +30,7 @@ package com.tencent.devops.project.service.impl
 import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.UserLocaleDao
 import com.tencent.devops.project.pojo.LocaleInfo
 import com.tencent.devops.project.service.UserLocaleService
@@ -41,7 +42,8 @@ import org.springframework.stereotype.Service
 class UserLocaleServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val userLocaleDao: UserLocaleDao,
-    private val redisOperation: RedisOperation
+    private val redisOperation: RedisOperation,
+    private val commonConfig: CommonConfig
 ) : UserLocaleService {
     override fun addUserLocale(userId: String, locale: String): Boolean {
         val key = LocaleUtil.getUserLocaleKey(userId)
@@ -101,7 +103,7 @@ class UserLocaleServiceImpl @Autowired constructor(
             // 缓存中未取到则直接从db查
             locale = userLocaleDao.getLocaleByUserId(dslContext, userId)
         }
-        // 用户未配置locale信息则默认返回简体中文
-        return LocaleInfo(locale ?: "zh_CN")
+        // 用户未配置locale信息则默认返回系统默认配置
+        return LocaleInfo(locale ?: commonConfig.devopsDefaultLocale)
     }
 }

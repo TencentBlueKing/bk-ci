@@ -28,6 +28,12 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.constant.REPO_NAME_REPORT
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -38,12 +44,6 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.parseArtifactoryType
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileDetail
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
@@ -223,7 +223,7 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         val nodeList = bkRepoClient.queryByNameAndMetadata(
             userId = userId,
             projectId = projectId,
-            repoNames = listOf(BkRepoUtils.REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
+            repoNames = listOf(REPO_NAME_PIPELINE, REPO_NAME_CUSTOM),
             fileNames = listOf(),
             metadata = searchProps.props,
             page = page ?: 1,

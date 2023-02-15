@@ -31,18 +31,21 @@ interface StoreI18nMessageService {
 
     /**
      * 解析map集合，把map字段的值替换成蓝盾默认语言对应的值
-     * @param projectCode 项目代码
+     * @param userId 用户ID
+     * @param projectCode 项目标识
      * @param jsonMap map集合
      * @param filePathPrefix 资源文件路径前缀
-     * @param locale map集合字段值对应的语言环境
+     * @param keyPrefix map字段在资源文件中key的前缀
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
+    @Suppress("LongParameterList")
     fun parseJsonMap(
+        userId: String,
         projectCode: String,
-        jsonMap: Map<String, Any>,
+        jsonMap: MutableMap<String, Any>,
         filePathPrefix: String,
-        locale: String? = null,
+        keyPrefix: String? = null,
         repositoryHashId: String? = null
     ): Map<String, Any>
 }

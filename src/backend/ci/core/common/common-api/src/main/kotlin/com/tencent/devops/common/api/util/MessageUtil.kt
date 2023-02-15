@@ -29,9 +29,12 @@ package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import java.util.Locale
+import java.util.Properties
 import java.util.ResourceBundle
 
 object MessageUtil {
+
+    private const val DEFAULT_BASE_NAME = "i18n/message"
 
     /**
      * 根据语言环境获取对应的描述信息
@@ -43,7 +46,7 @@ object MessageUtil {
     fun getMessageByLocale(
         messageCode: String,
         locale: String,
-        baseName: String = "i18n/message"
+        baseName: String = DEFAULT_BASE_NAME
     ): String {
         val localeObj = Locale(locale)
         // 根据locale和baseName生成resourceBundle对象
@@ -53,56 +56,88 @@ object MessageUtil {
     }
 
     /**
+     * 获取国际化资源文件特性对象
+     * @param fileStr 国际化资源文件内容
+     * @return 国际化资源文件特性对象
+     */
+    fun getMessageProperties(fileStr: String): Properties {
+        val properties = Properties()
+        properties.load(fileStr.reader())
+        return properties
+    }
+
+    /**
      * 遍历map集合获取字段列表
      * @param dataMap map集合
-     * @param fieldLocaleInfoList 字段集合
      * @param keyPrefix 字段key前缀
+     * @param properties 国际化资源文件特性对象
      * @return 字段列表
      */
+    @Suppress("UNCHECKED_CAST")
     fun traverseMap(
-        dataMap: Map<*, *>,
-        fieldLocaleInfoList: MutableList<FieldLocaleInfo>,
-        keyPrefix: String? = null
+        dataMap: MutableMap<String, Any>,
+        keyPrefix: String? = null,
+        properties: Properties? = null
     ): MutableList<FieldLocaleInfo> {
+        val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         dataMap.forEach { (key, value) ->
             val dataKey = if (!keyPrefix.isNullOrBlank()) {
                 // 如果字段key前缀不为空，需为key加上前缀
                 "$keyPrefix.$key"
             } else {
-                key.toString()
+                key
             }
             when (value) {
                 is Map<*, *> -> {
                     // value类型为map，需要递归遍历value获取字段列表
-                    traverseMap(value, fieldLocaleInfoList, dataKey)
+                    fieldLocaleInfos.addAll(
+                        traverseMap(
+                            dataMap = value as MutableMap<String, Any>,
+                            keyPrefix = dataKey,
+                            properties = properties
+                        )
+                    )
                 }
 
                 is List<*> -> {
                     // value类型为list，需要递归遍历value获取字段列表
-                    traverseList(value, fieldLocaleInfoList, dataKey)
+                    fieldLocaleInfos.addAll(
+                        traverseList(
+                            dataList = value as MutableList<Any>,
+                            keyPrefix = dataKey,
+                            properties = properties
+                        )
+                    )
                 }
 
                 else -> {
+                    properties?.let {
+                        val propertyValue = properties[dataKey]?.toString()
+                        // 如果properties参数不为空则进行国际化内容替换
+                        propertyValue?.let { dataMap[key] = propertyValue }
+                    }
                     // 如果value不是集合类型则直接加入字段列表中
-                    fieldLocaleInfoList.add(FieldLocaleInfo(dataKey, value.toString()))
+                    fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataMap[key].toString()))
                 }
             }
         }
-        return fieldLocaleInfoList
+        return fieldLocaleInfos
     }
 
     /**
      * 遍历list集合获取字段列表
      * @param dataList list集合
-     * @param fieldLocaleInfoList 字段集合
      * @param keyPrefix 字段key前缀
+     * @param properties 国际化资源文件特性对象
      * @return 字段列表
      */
+    @Suppress("UNCHECKED_CAST")
     fun traverseList(
-        dataList: List<*>,
-        fieldLocaleInfoList: MutableList<FieldLocaleInfo>,
-        keyPrefix: String? = null
+        dataList: MutableList<Any>,
+        keyPrefix: String? = null,
+        properties: Properties? = null
     ): MutableList<FieldLocaleInfo> {
+        val fieldLocaleInfos = mutableListOf<FieldLocaleInfo>()
         dataList.forEachIndexed { index, value ->
             val dataKey = if (!keyPrefix.isNullOrBlank()) {
                 // 如果字段key前缀不为空，需为key加上前缀
@@ -113,22 +148,39 @@ object MessageUtil {
             when (value) {
                 is Map<*, *> -> {
                     // value类型为map，需要递归遍历value获取字段列表
-                    traverseMap(value, fieldLocaleInfoList, dataKey)
+                    fieldLocaleInfos.addAll(
+                        traverseMap(
+                            dataMap = value as MutableMap<String, Any>,
+                            keyPrefix = dataKey,
+                            properties = properties
+                        )
+                    )
                 }
 
                 is List<*> -> {
                     // value类型为list，需要递归遍历value获取字段列表
-                    traverseList(value, fieldLocaleInfoList, dataKey)
+                    fieldLocaleInfos.addAll(
+                        traverseList(
+                            dataList = value as MutableList<Any>,
+                            keyPrefix = dataKey,
+                            properties = properties
+                        )
+                    )
                 }
 
                 else -> {
                     if (!dataKey.isNullOrBlank()) {
+                        properties?.let {
+                            val propertyValue = properties[dataKey]?.toString()
+                            // 如果properties参数不为空则进行国际化内容替换
+                            propertyValue?.let { dataList[index] = propertyValue }
+                        }
                         // 如果value不是集合类型则直接加入字段列表中
-                        fieldLocaleInfoList.add(FieldLocaleInfo(dataKey, value.toString()))
+                        fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataList[index].toString()))
                     }
                 }
             }
         }
-        return fieldLocaleInfoList
+        return fieldLocaleInfos
     }
 }

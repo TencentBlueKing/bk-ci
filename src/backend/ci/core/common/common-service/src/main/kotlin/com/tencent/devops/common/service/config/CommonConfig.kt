@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.service.config
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -123,6 +124,6 @@ class CommonConfig {
     /**
      * 蓝盾默认语言
      */
-    @Value("\${bkci.defaultLocale:zh_CN}")
-    val devopsDefaultLocale: String = "zh_CN"
+    @Value("\${bkci.defaultLocale:$DEFAULT_LOCALE}")
+    val devopsDefaultLocale: String = DEFAULT_LOCALE
 }

@@ -1,12 +1,12 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.BK_CI_PLUGIN_FE_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PLUGIN
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.STATIC
 import com.tencent.devops.common.api.exception.RemoteServiceException

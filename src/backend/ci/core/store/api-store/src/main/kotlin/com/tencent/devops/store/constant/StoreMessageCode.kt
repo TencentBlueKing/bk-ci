@@ -146,4 +146,5 @@ object StoreMessageCode {
     const val SENSITIVE_API_NOT_EXIST = "2120912" // 研发商店：敏感API[{0}]不存在
     const val USER_HIS_VERSION_UPGRADE_INVALID = "2120913" // 研发商店：当前发布类型下仅能新增历史大版本下的小版本，请修改版本号或者发布类型
     const val USER_UPLOAD_FILE_PATH_ERROR = "2120914" // 研发商店：文件路径[{0}]错误
+    const val USER_DEFAULT_LOCALE_FILE_NOT_EXIST = "2120915" // 研发商店：未提供系统默认[{0}]语言的配置文件
 }

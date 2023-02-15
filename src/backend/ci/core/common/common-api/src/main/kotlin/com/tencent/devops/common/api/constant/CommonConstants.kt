@@ -113,6 +113,7 @@ const val BUILD_COMPLETED = "buildCompleted" // 运行成功
 const val BUILD_CANCELED = "buildCanceled" // 构建已取消
 const val BUILD_FAILED = "buildFailed" // 构建失败
 const val LOCALE = "BK_CI_LOCALE" // locale国际化信息
+const val DEFAULT_LOCALE = "zh_CN"
 
 const val KEY_START_TIME = "startTime"
 const val KEY_END_TIME = "endTime"
@@ -143,3 +144,4 @@ const val KEY_REPOSITORY_PATH = "repositoryPath"
 const val KEY_VERSION = "version"
 const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
+const val KEY_DEFAULT_LOCALE = "defaultLocale"

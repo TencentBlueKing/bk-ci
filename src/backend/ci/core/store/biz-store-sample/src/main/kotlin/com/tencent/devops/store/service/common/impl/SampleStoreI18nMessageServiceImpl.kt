@@ -27,16 +27,11 @@
 
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.artifactory.api.ServiceArchiveAtomResource
 import com.tencent.devops.artifactory.api.service.ServiceFileResource
 import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.store.utils.StoreUtils
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import org.springframework.stereotype.Service
-import java.io.File
 import java.net.URLEncoder
 
 @Service
@@ -48,11 +43,11 @@ class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
         repositoryHashId: String?,
         branch: String?
     ): String? {
-        val filePath = URLEncoder.encode("$projectCode/$filePathPrefix/$fileName", "UTF-8")
+        val filePath = URLEncoder.encode("$projectCode/$filePathPrefix/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceFileResource::class).getFileContent(
             userId = BKREPO_DEFAULT_USER,
-            projectId = "",
-            repoName = BK_CI_ATOM_DIR,
+            projectId = BKREPO_STORE_PROJECT_ID,
+            repoName = REPO_NAME_PLUGIN,
             filePath = filePath
         ).data
     }

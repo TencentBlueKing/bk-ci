@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.service.impl
 
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
@@ -37,7 +38,6 @@ import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.util.BkRepoUtils
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -632,7 +632,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         if (filePath.contains("../")) {
             throw ErrorCodeException(errorCode = CommonMessageCode.PARAMETER_IS_INVALID, params = arrayOf(filePath))
         }
-        val bkRepoName = if (repoName == BkRepoUtils.REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
         val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
         val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
         return if (file.exists()) file.readText((Charsets.UTF_8)) else ""
@@ -644,7 +644,7 @@ class DiskArchiveFileServiceImpl : ArchiveFileServiceImpl() {
         repoName: String,
         filePath: String
     ): List<String> {
-        val bkRepoName = if (repoName == BkRepoUtils.REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
+        val bkRepoName = if (repoName == REPO_NAME_PLUGIN) BK_CI_ATOM_DIR else repoName
         val decodeFilePath = URLDecoder.decode(filePath, Charsets.UTF_8.name())
         val file = File("$archiveLocalBasePath/$bkRepoName/$decodeFilePath")
         val fileNames = mutableListOf<String>()

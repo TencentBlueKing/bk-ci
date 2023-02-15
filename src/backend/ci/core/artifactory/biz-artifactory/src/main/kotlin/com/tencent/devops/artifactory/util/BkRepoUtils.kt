@@ -29,6 +29,13 @@ package com.tencent.devops.artifactory.util
 
 import com.tencent.bkrepo.repository.pojo.node.NodeDetail
 import com.tencent.bkrepo.repository.pojo.node.NodeInfo
+import com.tencent.devops.artifactory.constant.BKREPO_COMMOM_REPO
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PLUGIN
+import com.tencent.devops.artifactory.constant.REPO_NAME_REPORT
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.FileChecksums
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -44,16 +51,6 @@ import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 object BkRepoUtils {
-    const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-    const val BKREPO_STORE_PROJECT_ID = "bk-store"
-    const val BKREPO_COMMOM_REPO = "common"
-
-    const val REPO_NAME_PIPELINE = "pipeline"
-    const val REPO_NAME_CUSTOM = "custom"
-    const val REPO_NAME_IMAGE = "image"
-    const val REPO_NAME_REPORT = "report"
-    const val REPO_NAME_PLUGIN = "plugin"
-    const val REPO_NAME_STATIC = "static"
 
     fun parseArtifactoryInfo(path: String): ArtifactInfo {
         val normalizedPath = path.trim().removePrefix("/").removePrefix("./")
