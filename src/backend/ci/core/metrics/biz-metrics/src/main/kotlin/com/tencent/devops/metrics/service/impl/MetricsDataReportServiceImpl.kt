@@ -53,6 +53,7 @@ import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.model.metrics.tables.records.TAtomOverviewDataRecord
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import com.tencent.devops.store.api.atom.ServiceAtomResource
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -798,21 +799,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
+        var errorCodeType: ErrorCodeTypeEnum
         when {
             errorCodePrefix == "8" -> {
-                return client.get(ServiceAtomResource::class).isComplianceErrorCode(
-                    atomCode,
-                    StoreTypeEnum.ATOM,
-                    errorCode.toInt()
-                ).data!!
+                errorCodeType = ErrorCodeTypeEnum.ATOM
             }
             errorCodePrefix.startsWith("100") -> {
-                return true
+                errorCodeType = ErrorCodeTypeEnum.GENERAL
             }
             errorCodePrefix.toInt() in 101..599 -> {
-                return true
+                errorCodeType = ErrorCodeTypeEnum.PLATFORM
             }
             else -> return false
         }
+        return client.get(ServiceAtomResource::class).isComplianceErrorCode(
+            storeCode = atomCode,
+            StoreTypeEnum.ATOM,
+            errorCode.toInt()
+        ).data!!
     }
 }

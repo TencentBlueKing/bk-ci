@@ -34,7 +34,9 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.store.api.common.OpenStoreResource
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import com.tencent.devops.store.service.common.StoreCommonService
 import com.tencent.devops.store.service.common.StoreProjectService
 import com.tencent.devops.store.utils.StoreUtils
@@ -45,6 +47,7 @@ class OpenStoreResourceImpl @Autowired constructor(
     private val storeProjectService: StoreProjectService,
     private val storeCommonService: StoreCommonService,
     private val clientTokenService: ClientTokenService,
+    private val marketAtomErrorCodeService: MarketAtomErrorCodeService,
     private val redisOperation: RedisOperation
 ) : OpenStoreResource {
 
@@ -75,5 +78,9 @@ class OpenStoreResourceImpl @Autowired constructor(
                     storeType = StoreTypeEnum.ATOM.type.toByte()
                 )
         )
+    }
+
+    override fun createGeneralErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean> {
+        return marketAtomErrorCodeService.createErrorCode(userId, storeErrorCodeInfo)
     }
 }
