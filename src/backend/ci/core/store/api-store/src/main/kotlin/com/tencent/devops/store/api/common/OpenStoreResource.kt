@@ -78,5 +78,4 @@ interface OpenStoreResource {
         @ApiParam("插件自定义错误码信息", required = true)
         storeErrorCodeInfo: StoreErrorCodeInfo
     ): Result<Boolean>
-
 }

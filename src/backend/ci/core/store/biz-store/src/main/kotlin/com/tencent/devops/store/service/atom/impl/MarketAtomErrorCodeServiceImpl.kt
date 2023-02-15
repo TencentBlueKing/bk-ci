@@ -93,9 +93,9 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             val errorCodePrefix = errorCode.substring(0, 3)
             when (errorCodeType) {
                 ErrorCodeTypeEnum.ATOM -> {
-                     if (!errorCodePrefix.startsWith("8")) {
+                    if (!errorCodePrefix.startsWith("8")) {
                          invalidErrorCodes.add(errorCode)
-                     }
+                    }
                 }
                 ErrorCodeTypeEnum.GENERAL -> {
                     if (!errorCodePrefix.startsWith("100")) {
