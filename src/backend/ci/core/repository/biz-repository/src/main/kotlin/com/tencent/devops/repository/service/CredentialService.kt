@@ -117,11 +117,7 @@ class CredentialService @Autowired constructor(
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
                 RepoCredentialInfo(
-                    username = if (credentialInfo.v1.isNotBlank()) {
-                        decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey)
-                    } else {
-                        ""
-                    },
+                    username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     password = if (!credentialInfo.v2.isNullOrBlank()) {
                         decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
                     } else {

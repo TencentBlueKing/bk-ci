@@ -70,10 +70,15 @@ object CredentialUtils {
     fun getCredential(repository: Repository, repoCredentialInfo: RepoCredentialInfo): Credential {
         return if (repository is CodeSvnRepository && repository.svnType == CodeSvnRepository.SVN_TYPE_HTTP) {
             if (repoCredentialInfo.credentialType == CredentialType.USERNAME_PASSWORD.name) {
-                if (repoCredentialInfo.username.isBlank()) {
+                // 兼容旧数据
+                // 参考上述重载方法以及CredentialService.buildCredentialList()
+                //  -->credentials[0] 取自 com.tencent.devops.ticket.pojo.CredentialInfo.v1 字段
+                //  -->目前v1字段对应com.tencent.devops.repository.pojo.credential.RepoCredentialInfo.username 字段
+                // 旧数据的密码字段若为空，则说明username字段存的是密码，凭证用户名直接用仓库用户
+                if (repoCredentialInfo.password.isBlank()) {
                     Credential(
                         username = repository.userName,
-                        privateKey = repoCredentialInfo.password,
+                        privateKey = repoCredentialInfo.username,
                         passPhrase = null
                     )
                 } else {
