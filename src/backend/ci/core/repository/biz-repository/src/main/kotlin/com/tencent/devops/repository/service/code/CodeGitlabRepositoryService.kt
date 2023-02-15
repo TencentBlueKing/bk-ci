@@ -156,6 +156,16 @@ class CodeGitlabRepositoryService @Autowired constructor(
     ): TokenCheckResult {
         val checkResult: TokenCheckResult = when (repository.authType) {
             RepoAuthType.SSH -> {
+                if (repoCredentialInfo.token.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                    )
+                }
+                if (repoCredentialInfo.privateKey.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                    )
+                }
                 scmService.checkPrivateKeyAndToken(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
