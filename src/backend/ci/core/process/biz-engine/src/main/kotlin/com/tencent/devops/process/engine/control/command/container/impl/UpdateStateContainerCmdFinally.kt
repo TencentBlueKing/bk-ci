@@ -41,6 +41,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildStageEvent
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
@@ -51,6 +52,7 @@ class UpdateStateContainerCmdFinally(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val dispatchQueueControl: DispatchQueueControl
@@ -105,6 +107,7 @@ class UpdateStateContainerCmdFinally(
         // 返回stage的时候，需要解锁
         mutexControl.releaseContainerMutex(
             projectId = commandContext.event.projectId,
+            pipelineId = commandContext.event.pipelineId,
             buildId = commandContext.event.buildId,
             stageId = commandContext.event.stageId,
             containerId = commandContext.event.containerId,
@@ -146,6 +149,13 @@ class UpdateStateContainerCmdFinally(
             containerBuildDetailService.containerSkip(
                 projectId = event.projectId, buildId = event.buildId, containerId = event.containerId
             )
+            containerBuildRecordService.containerSkip(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                executeCount = commandContext.executeCount
+            )
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
             containerBuildDetailService.updateContainerStatus(
@@ -154,6 +164,15 @@ class UpdateStateContainerCmdFinally(
                 containerId = event.containerId,
                 buildStatus = buildStatus,
                 executeCount = commandContext.executeCount
+            )
+            containerBuildRecordService.updateContainerStatus(
+                projectId = event.projectId,
+                pipelineId = event.pipelineId,
+                buildId = event.buildId,
+                containerId = event.containerId,
+                buildStatus = buildStatus,
+                executeCount = commandContext.executeCount,
+                operation = "updateContainerCmdFinally#${event.containerId}"
             )
         }
 

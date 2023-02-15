@@ -66,6 +66,11 @@ object ContainerUtils {
         }
     }
 
+    fun getMutexFixedContainerName(containerName: String) =
+        if (containerName.startsWith(mutexPrefix)) {
+            containerName.substring(mutexPrefix.length)
+        } else containerName
+
     fun setMutexWaitName(container: Container) {
         if (container.name.startsWith(mutexPrefix)) {
             return
@@ -73,6 +78,13 @@ object ContainerUtils {
 
         container.name = "$mutexPrefix${container.name}"
     }
+
+    fun getMutexWaitName(containerName: String) =
+        if (containerName.startsWith(mutexPrefix)) {
+            containerName
+        } else {
+            "$mutexPrefix$containerName"
+        }
 
     private const val queuePrefix = "排队中(Queuing)"
     private const val reviewPrefix = "审核中(Pending)"
@@ -84,6 +96,13 @@ object ContainerUtils {
             container.name = container.name.substring(reviewPrefix.length)
         }
     }
+
+    fun getQueueFixedContainerName(containerName: String) =
+        if (containerName.startsWith(queuePrefix)) {
+            containerName.substring(queuePrefix.length)
+        } else if (containerName.startsWith(reviewPrefix)) {
+            containerName.substring(reviewPrefix.length)
+        } else containerName
 
     fun setQueuingWaitName(container: Container, startBuildStatus: BuildStatus) {
         if (container.name.startsWith(queuePrefix) || container.name.startsWith(reviewPrefix)) {

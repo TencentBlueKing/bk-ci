@@ -28,5 +28,3 @@
 dependencies {
     api(project(":core:monitoring:biz-monitoring-sample"))
 }
-
-

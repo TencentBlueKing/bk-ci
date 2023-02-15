@@ -63,7 +63,8 @@ class StageBuildDetailService(
         projectId: String,
         buildId: String,
         stageId: String,
-        buildStatus: BuildStatus
+        buildStatus: BuildStatus,
+        executeCount: Int
     ): List<BuildStageStatus> {
         logger.info("[$buildId]|update_stage_status|stageId=$stageId|status=$buildStatus")
         var allStageStatus: List<BuildStageStatus>? = null
@@ -74,6 +75,7 @@ class StageBuildDetailService(
                 if (stage.id == stageId) {
                     update = true
                     stage.status = buildStatus.name
+                    stage.executeCount = executeCount
                     if (buildStatus.isRunning() && stage.startEpoch == null) {
                         stage.startEpoch = System.currentTimeMillis()
                     } else if (buildStatus.isFinish() && stage.startEpoch != null) {
