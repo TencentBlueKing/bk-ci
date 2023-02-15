@@ -79,35 +79,30 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
-                                <LoadingIcon v-if="row.approvalStatus === 1" />
-                                <icon
-                                    v-else-if="!row.enabled"
-                                    class="devops-icon status-icon"
-                                    :size="20"
-                                    name="unknown"
+                                <bk-switcher
+                                    v-model="row.enabled"
+                                    class="mr5"
+                                    size="small"
+                                    theme="primary"
+                                    :disabled="[1, 3].includes(row.approvalStatus)"
+                                    @change="handleChangeEnabled(row)"
                                 />
-                                <icon
-                                    v-else-if="row.enabled"
-                                    class="devops-icon status-icon"
-                                    :size="20"
-                                    name="normal"
-                                />
-                                <span>
+                                <span class="mr5">
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
                                 </span>
                                 <icon
                                     v-bk-tooltips="{ content: $t('新建项目申请已拒绝') }"
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
-                                    :size="20"
-                                    name="warning-circle"
+                                    :size="16"
+                                    name="warning-circle-small"
                                 />
                                 <icon
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
-                                    :size="20"
-                                    name="wait"
+                                    :size="16"
+                                    name="wait-small"
                                 />
                             </span>
                         </template>
@@ -122,7 +117,7 @@
                                 text
                                 @click="handleGoUserGroup(row)"
                             >
-                                {{ $t('userGroups') }}
+                                {{ $t('userGroupManage') }}
                             </bk-button>
                             <bk-button
                                 text
@@ -163,12 +158,10 @@
 <script>
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-    import LoadingIcon from '../components/LoadingIcon/index.vue'
     export default ({
         name: 'ProjectManage',
         components: {
-            ApplyProjectDialog,
-            LoadingIcon
+            ApplyProjectDialog
         },
         data () {
             return {
@@ -188,9 +181,9 @@
                 inputValue: '',
                 approvalStatusMap: {
                     1: this.$t('创建中'),
-                    2: this.$t('启用中'),
+                    2: this.$t('已启用'),
                     3: this.$t('创建中'),
-                    4: this.$t('启用中')
+                    4: this.$t('已启用')
                 }
             }
         },
@@ -206,7 +199,7 @@
             this.fetchProjects()
         },
         methods: {
-            ...mapActions(['fetchProjectList']),
+            ...mapActions(['fetchProjectList', 'toggleProjectEnable']),
             async fetchProjects () {
                 this.isDataLoading = true
                 await this.fetchProjectList().then(res => {
@@ -255,6 +248,17 @@
                 const { origin } = window.location
                 const { englishName } = row
                 window.open(`${origin}/console/manage/${englishName}/show`, '_blank')
+            },
+            handleChangeEnabled (row) {
+                this.toggleProjectEnable({
+                    projectCode: row.englishName,
+                    enabled: row.enabled
+                }).then(res => {
+                    this.$bkMessage({
+                        message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
+                        theme: 'success'
+                    })
+                })
             }
         }
     })

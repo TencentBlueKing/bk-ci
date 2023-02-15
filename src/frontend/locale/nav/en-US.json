@@ -196,6 +196,6 @@
     "projectId": "Project ID",
     "administrator": "Administrator",
     "projectStatus": "Project Status",
-    "userGroups": "User Groups",
-    "extendManage": "Extended management"
+    "userGroupManage": "User Manage",
+    "extendManage": "Extended Manage"
 }
