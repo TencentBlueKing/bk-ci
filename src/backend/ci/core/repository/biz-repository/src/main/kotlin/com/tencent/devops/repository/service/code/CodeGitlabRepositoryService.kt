@@ -61,8 +61,7 @@ class CodeGitlabRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeGitlabRepository): Long {
-        repository.projectId = projectId
-        val credentialInfo = checkCredentialInfo(repository = repository)
+        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -103,9 +102,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_GITLAB.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GITLAB_INVALID))
         }
-        repository.projectId = projectId
         // 凭证信息
-        val credentialInfo = checkCredentialInfo(repository = repository)
+        val credentialInfo = checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         var gitProjectId = 0L
         // 需要更新gitProjectId
@@ -158,6 +156,16 @@ class CodeGitlabRepositoryService @Autowired constructor(
     ): TokenCheckResult {
         val checkResult: TokenCheckResult = when (repository.authType) {
             RepoAuthType.SSH -> {
+                if (repoCredentialInfo.token.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.GIT_TOKEN_EMPTY)
+                    )
+                }
+                if (repoCredentialInfo.privateKey.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
+                    )
+                }
                 scmService.checkPrivateKeyAndToken(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
@@ -203,8 +211,11 @@ class CodeGitlabRepositoryService @Autowired constructor(
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(repository: CodeGitlabRepository): RepoCredentialInfo {
-        val repoCredentialInfo = getCredentialInfo(repository = repository)
+    private fun checkCredentialInfo(projectId: String, repository: CodeGitlabRepository): RepoCredentialInfo {
+        val repoCredentialInfo = getCredentialInfo(
+            projectId = projectId,
+            repository = repository
+        )
         val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
@@ -231,10 +242,10 @@ class CodeGitlabRepositoryService @Autowired constructor(
     /**
      * 获取凭证信息
      */
-    fun getCredentialInfo(repository: CodeGitlabRepository): RepoCredentialInfo {
+    fun getCredentialInfo(projectId: String, repository: CodeGitlabRepository): RepoCredentialInfo {
         // 凭证信息
         return credentialService.getCredentialInfo(
-            projectId = repository.projectId!!,
+            projectId = projectId,
             repository = repository
         )
     }

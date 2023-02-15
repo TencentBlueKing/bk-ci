@@ -39,7 +39,6 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.CredentialInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -55,16 +54,7 @@ class CredentialService @Autowired constructor(
     }
 
     fun getCredential(projectId: String, repository: Repository): List<String> {
-        val pair = DHUtil.initKey()
-        val encoder = Base64.getEncoder()
-        val result = client.get(ServiceCredentialResource::class)
-            .get(projectId, repository.credentialId, encoder.encodeToString(pair.publicKey))
-        if (result.isNotOk() || result.data == null) {
-            throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
-        }
-
-        val credential = result.data!!
-        logger.info("Get the credential($credential)")
+        val (pair, credential) = get(projectId, repository)
         return buildCredentialList(credential, pair)
     }
 
@@ -72,6 +62,11 @@ class CredentialService @Autowired constructor(
      * 获取凭证基础信息
      */
     fun getCredentialInfo(projectId: String, repository: Repository): RepoCredentialInfo {
+        val (pair, credential: CredentialInfo) = get(projectId, repository)
+        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+    }
+
+    fun get(projectId: String, repository: Repository): Pair<DHKeyPair, CredentialInfo> {
         val pair = DHUtil.initKey()
         val encoder = Base64.getEncoder()
         val result = client.get(ServiceCredentialResource::class)
@@ -79,9 +74,9 @@ class CredentialService @Autowired constructor(
         if (result.isNotOk() || result.data == null) {
             throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
         }
-        val credential: CredentialInfo = result.data!!
+        val credential = result.data!!
         logger.info("Get the credential($credential)")
-        return buildRepoCredentialInfo(credential, credential.credentialType, pair)
+        return Pair(pair, credential)
     }
 
     /**
@@ -105,7 +100,7 @@ class CredentialService @Autowired constructor(
         return list
     }
 
-    private fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
+    fun decode(encode: String, publicKey: String, privateKey: ByteArray): String {
         val decoder = Base64.getDecoder()
         return String(DHUtil.decrypt(decoder.decode(encode), decoder.decode(publicKey), privateKey))
     }
@@ -113,20 +108,21 @@ class CredentialService @Autowired constructor(
     /**
      * 构建授权信息实体
      */
-    private fun buildRepoCredentialInfo(
+    fun buildRepoCredentialInfo(
         credentialInfo: CredentialInfo,
         credentialType: CredentialType,
         pair: DHKeyPair
     ): RepoCredentialInfo {
         return when (credentialType) {
             CredentialType.USERNAME_PASSWORD -> {
-                checkUsername(credentialInfo.v1)
-                checkPassword(credentialInfo.v2)
                 RepoCredentialInfo(
-                    token = StringUtils.EMPTY,
                     username = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    password = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    password = if (!credentialInfo.v2.isNullOrBlank()) {
+                        decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                    } else {
+                        ""
+                    },
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.TOKEN_USERNAME_PASSWORD -> {
@@ -136,47 +132,59 @@ class CredentialService @Autowired constructor(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
                     username = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
                     password = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.SSH_PRIVATEKEY -> {
-                if (credentialInfo.v1.isNullOrEmpty()) {
-                    throw OperationException(
-                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_SECRET_EMPTY)
-                    )
+                val privateKey = if (credentialInfo.v1.isNotBlank()) {
+                    decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
                 }
-                var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v2.isNullOrBlank()) {
-                    passPhrase = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                val passPhrase = if (!credentialInfo.v2.isNullOrBlank()) {
+                    decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
                 }
                 RepoCredentialInfo(
-                    token = StringUtils.EMPTY,
-                    privateKey = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    privateKey = privateKey,
                     passPhrase = passPhrase,
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                checkUsername(credentialInfo.v2)
-                var passPhrase = StringUtils.EMPTY
-                if (!credentialInfo.v3.isNullOrBlank()) {
-                    passPhrase = decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                val privateKey = if (!credentialInfo.v2.isNullOrBlank()) {
+                    decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
+                }
+                val passPhrase = if (!credentialInfo.v3.isNullOrBlank()) {
+                    decode(credentialInfo.v3!!, credentialInfo.publicKey, pair.privateKey)
+                } else {
+                    ""
                 }
                 RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    privateKey = decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey),
+                    privateKey = privateKey,
                     passPhrase = passPhrase,
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
                 )
             }
             CredentialType.ACCESSTOKEN -> {
                 RepoCredentialInfo(
                     token = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
-                    credentialInfoType = credentialType.name
+                    credentialType = credentialType.name
+                )
+            }
+            CredentialType.PASSWORD -> {
+                checkPassword(credentialInfo.v1)
+                RepoCredentialInfo(
+                    password = decode(credentialInfo.v1, credentialInfo.publicKey, pair.privateKey),
+                    credentialType = credentialType.name
                 )
             }
             else -> {
-                RepoCredentialInfo(token = StringUtils.EMPTY)
+                RepoCredentialInfo()
             }
         }
     }

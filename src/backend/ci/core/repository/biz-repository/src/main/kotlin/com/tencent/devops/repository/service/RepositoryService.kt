@@ -56,7 +56,6 @@ import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.service.loader.CodeRepositoryServiceRegistrar
 import com.tencent.devops.repository.service.scm.IGitOauthService
@@ -65,6 +64,7 @@ import com.tencent.devops.repository.service.scm.IScmService
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import org.jooq.DSLContext
@@ -430,7 +430,7 @@ class RepositoryService @Autowired constructor(
         // 兼容历史插件的代码库不在公共group下的情况，历史插件的代码库信息更新要用用户的token更新
         var finalTokenType = tokenType
         if (!repoProjectName.startsWith(devopsGroupName) && !repoProjectName
-                .contains("bkdevops-extension-service", true)
+                        .contains("bkdevops-extension-service", true)
         ) {
             finalTokenType = TokenTypeEnum.OAUTH
         }
@@ -650,7 +650,7 @@ class RepositoryService @Autowired constructor(
             sortType = sortType
         )
         val repoGroup = repositoryRecordList.groupBy { it.type }.mapValues { it.value.map { a -> a.repositoryId } }
-        val repoAuthInfoMap: MutableMap<Long, RepoAuthInfo> = mutableMapOf()
+        val repoAuthInfoMap = mutableMapOf<Long, RepoAuthInfo>()
         repoGroup.forEach { (type, repositoryIds) ->
             run {
                 // 1. 获取处理类
@@ -659,12 +659,10 @@ class RepositoryService @Autowired constructor(
                 repoAuthInfoMap.putAll(codeGitRepositoryService.getAuthInfo(repositoryIds))
             }
         }
-        logger.info("repoAuthInfoMap.keys=${repoAuthInfoMap.keys}")
         val repositoryList = repositoryRecordList.map {
             val hasEditPermission = hasEditPermissionRepoList.contains(it.repositoryId)
             val hasDeletePermission = hasDeletePermissionRepoList.contains(it.repositoryId)
-            val authInfo: RepoAuthInfo = repoAuthInfoMap[it.repositoryId]
-                ?: throw NotFoundException("代码库授权信息不存在|repoId=[${it.repositoryId}]|type=[${it.type}]")
+            val authInfo = repoAuthInfoMap[it.repositoryId]
             RepositoryInfoWithPermission(
                 repositoryHashId = HashUtil.encodeOtherLongId(it.repositoryId),
                 aliasName = it.aliasName,
@@ -673,9 +671,9 @@ class RepositoryService @Autowired constructor(
                 updatedTime = it.updatedTime.timestamp(),
                 canEdit = hasEditPermission,
                 canDelete = hasDeletePermission,
-                authType = authInfo.authType,
-                svnType = authInfo.svnType,
-                authIdentity = authInfo.credentialId
+                authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
+                svnType = authInfo?.svnType,
+                authIdentity = authInfo?.credentialId
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)

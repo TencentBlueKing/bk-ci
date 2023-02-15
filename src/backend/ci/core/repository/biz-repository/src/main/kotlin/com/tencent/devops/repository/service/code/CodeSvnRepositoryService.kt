@@ -28,7 +28,6 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -42,9 +41,9 @@ import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
+import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -65,8 +64,7 @@ class CodeSvnRepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeSvnRepository): Long {
-        repository.projectId = projectId
-        checkCredentialInfo(repository = repository)
+        checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -104,6 +102,7 @@ class CodeSvnRepositoryService @Autowired constructor(
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.SVN_INVALID))
         }
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
+        checkCredentialInfo(projectId = projectId, repository = repository)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
             repositoryDao.edit(
@@ -147,37 +146,29 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
-        // 根据凭证类型匹配私钥
-        val privateKey = when (repoCredentialInfo.credentialInfoType) {
-            CredentialType.TOKEN_SSH_PRIVATEKEY.name,CredentialType.SSH_PRIVATEKEY.name -> {
-                repoCredentialInfo.privateKey
-            }
-            CredentialType.TOKEN_USERNAME_PASSWORD.name, CredentialType.USERNAME_PASSWORD.name -> {
-                repoCredentialInfo.password
-            }
-            else -> {
-                throw ErrorCodeException(errorCode = RepositoryMessageCode.GET_TICKET_FAIL)
-            }
-        }
-
+        val credential = CredentialUtils.getCredential(
+            repository = repository,
+            repoCredentialInfo = repoCredentialInfo
+        )
         return scmService.checkPrivateKeyAndToken(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
             type = ScmType.CODE_SVN,
-            privateKey = privateKey,
-            passPhrase = repoCredentialInfo.passPhrase,
+            privateKey = credential.privateKey,
+            passPhrase = credential.passPhrase,
             token = null,
             region = repository.region,
-            userName = repository.userName
+            userName = credential.username
         )
     }
 
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(repository: CodeSvnRepository): RepoCredentialInfo {
+    private fun checkCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
         // 凭证信息
         val repoCredentialInfo = getCredentialInfo(
+            projectId = projectId,
             repository = repository
         )
         val checkResult = checkToken(
@@ -207,10 +198,10 @@ class CodeSvnRepositoryService @Autowired constructor(
     /**
      * 获取凭证信息
      */
-    fun getCredentialInfo(repository: CodeSvnRepository): RepoCredentialInfo {
+    fun getCredentialInfo(projectId: String, repository: CodeSvnRepository): RepoCredentialInfo {
         // 凭证信息
         return credentialService.getCredentialInfo(
-            projectId = repository.projectId!!,
+            projectId = projectId,
             repository = repository
         )
     }

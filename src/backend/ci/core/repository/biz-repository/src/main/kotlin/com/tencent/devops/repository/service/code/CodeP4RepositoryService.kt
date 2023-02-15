@@ -61,8 +61,7 @@ class CodeP4RepositoryService @Autowired constructor(
     }
 
     override fun create(projectId: String, userId: String, repository: CodeP4Repository): Long {
-        repository.projectId = projectId
-        checkCredentialInfo(repository = repository)
+        checkCredentialInfo(projectId = projectId, repository = repository)
         var repositoryId = 0L
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -96,8 +95,7 @@ class CodeP4RepositoryService @Autowired constructor(
         if (record.type != ScmType.CODE_P4.name) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.P4_INVALID))
         }
-        repository.projectId = projectId
-        checkCredentialInfo(repository = repository)
+        checkCredentialInfo(projectId = projectId, repository = repository)
         val repositoryId = HashUtil.decodeOtherIdToLong(repositoryHashId)
         dslContext.transaction { configuration ->
             val transactionContext = DSL.using(configuration)
@@ -133,10 +131,21 @@ class CodeP4RepositoryService @Autowired constructor(
     /**
      * 检查凭证信息
      */
-    private fun checkCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
+    private fun checkCredentialInfo(projectId: String, repository: CodeP4Repository): RepoCredentialInfo {
         val repoCredentialInfo = getCredentialInfo(
+            projectId = projectId,
             repository = repository
         )
+        if (repoCredentialInfo.username.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+            )
+        }
+        if (repoCredentialInfo.password.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+            )
+        }
         val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
@@ -176,10 +185,10 @@ class CodeP4RepositoryService @Autowired constructor(
     /**
      * 获取凭证信息
      */
-    fun getCredentialInfo(repository: CodeP4Repository): RepoCredentialInfo {
+    fun getCredentialInfo(projectId: String, repository: CodeP4Repository): RepoCredentialInfo {
         // 凭证信息
         return credentialService.getCredentialInfo(
-            projectId = repository.projectId!!,
+            projectId = projectId,
             repository = repository
         )
     }
