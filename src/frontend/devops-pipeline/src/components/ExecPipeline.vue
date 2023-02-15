@@ -2,7 +2,7 @@
     <div class="exec-pipeline-wrapper">
         <div class="pipeline-exec-summary">
             <div class="pipeline-exec-count">
-                <span>{{$t('details.num')}}</span>
+                <span>{{ $t("details.num") }}</span>
                 <bk-select
                     ext-cls="pipeline-exec-count-select"
                     :value="executeCount"
@@ -18,12 +18,12 @@
                     >
                         <p class="exec-count-select-option">
                             <span>{{ item.name }}</span>
-                            <span>{{ item.user }}</span>
+                            <span class="exec-count-select-option-user">{{ item.user }}</span>
                         </p>
                     </bk-option>
                 </bk-select>
                 <span class="exec-status-label">
-                    {{$t('details.times')}}，{{statusLabel}}
+                    {{ $t("details.times") }}，{{ statusLabel }}
                     <span
                         v-if="execDetail.status === 'CANCELED'"
                         v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
@@ -33,13 +33,17 @@
                 </span>
             </div>
             <ul class="pipeline-exec-timeline">
-                <li class="pipeline-exec-timeline-item" v-for="step in timeSteps" :key="step.title">
+                <li
+                    class="pipeline-exec-timeline-item"
+                    v-for="step in timeSteps"
+                    :key="step.title"
+                >
                     <span>
-                        {{step.title}}
+                        {{ step.title }}
                     </span>
                     <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
                     <p>
-                        {{step.description}}
+                        {{ step.description }}
                     </p>
                 </li>
             </ul>
@@ -47,12 +51,8 @@
         <section class="pipeline-exec-content">
             <header class="pipeline-style-setting-header">
                 <div class="bk-button-group">
-                    <bk-button
-                        v-for="item in pipelineModes"
-                        :key="item.id"
-                        :class="item.cls"
-                    >
-                        {{item.label}}
+                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
+                        {{ item.label }}
                     </bk-button>
                 </div>
                 <bk-checkbox
@@ -61,11 +61,11 @@
                     v-model="hideSkipTask"
                     ext-cls="hide-skip-pipeline-task"
                 >
-                    {{$t('details.hideSkipStep')}}
+                    {{ $t("details.hideSkipStep") }}
                 </bk-checkbox>
                 <bk-button text theme="primary" @click="toggleCompleteLog">
                     <i class="devops-icon icon-txt"></i>
-                    {{$t('history.viewLog')}}
+                    {{ $t("history.viewLog") }}
                 </bk-button>
             </header>
             <div class="exec-pipeline-ui-wrapper">
@@ -91,42 +91,50 @@
                 v-if="showErrorPopup"
                 :class="{
                     'exec-errors-popup': true,
-                    'visible': showErrors
+                    visible: showErrors
                 }"
                 v-bk-clickoutside="hideErrorPopup"
             >
-                <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup">.....</bk-button>
-                <bk-tab class="pipeline-exec-error-tab" :active.sync="active" type="unborder-card">
+                <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
+                >.....</bk-button
+                >
+                <bk-tab
+                    class="pipeline-exec-error-tab"
+                    :active.sync="active"
+                    type="unborder-card"
+                    @tab-change="setShowErrorPopup"
+                >
                     <template slot="setting">
                         <bk-link theme="primary" href="javascript:;">
                             <span class="fix-error-jump">
                                 <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
-                                {{$t('流水线故障排查指南')}}
+                                {{ $t("流水线故障排查指南") }}
                             </span>
                         </bk-link>
                         <bk-button theme="normal" text @click="toggleErrorPopup">
-                            <i class="bk-icon  hide-error-popup-icon" :class="{
-                                'icon-angle-down': showErrors,
-                                'icon-angle-up': !showErrors
-                            }"
+                            <i
+                                class="bk-icon hide-error-popup-icon"
+                                :class="{
+                                    'icon-angle-down': showErrors,
+                                    'icon-angle-up': !showErrors
+                                }"
                             />
                         </bk-button>
                     </template>
-                    <bk-tab-panel
-                        v-for="(panel, index) in panels"
-                        v-bind="panel"
-                        :key="index"
-                    >
+                    <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
                         <bk-table
                             :data="errorList"
                             :border="false"
                             @row-click="setAtomLocate"
+                            highlight-current-row
                         >
                             <bk-table-column width="80">
                                 <div slot-scope="props" class="exec-error-type-cell">
                                     <span class="exec-error-locate-icon">
                                         <Logo
-                                            v-if="activeErrorAtom && activeErrorAtom.taskId === props.row.taskId"
+                                            v-if="
+                                                activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
+                                            "
                                             name="location-right"
                                             size="18"
                                         />
@@ -157,8 +165,8 @@
             @confirm="retryPipeline(true)"
         >
             <bk-radio-group v-model="failedContainer">
-                <bk-radio :value="false">{{ $t('editPage.retryAllJobs') }}</bk-radio>
-                <bk-radio :value="true">{{ $t('editPage.retryFailJobs') }}</bk-radio>
+                <bk-radio :value="false">{{ $t("editPage.retryAllJobs") }}</bk-radio>
+                <bk-radio :value="true">{{ $t("editPage.retryFailJobs") }}</bk-radio>
             </bk-radio-group>
         </bk-dialog>
         <check-atom-dialog
@@ -169,24 +177,27 @@
 
         <div class="queue-time-detail-popup">
             <div class="pipeline-time-detail-sum">
-                <span>{{$t('details.queueCost')}}</span>
-                <span>{{queueCost}}</span>
+                <span>{{ $t("details.queueCost") }}</span>
+                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : queueCost }}</span>
             </div>
         </div>
         <div class="time-detail-popup">
             <div class="pipeline-time-detail-sum">
-                <span>{{$t('details.totalCost')}}</span>
-                <span>{{totalCost}}</span>
+                <span>{{ $t("details.totalCost") }}</span>
+                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : totalCost }}</span>
             </div>
             <ul class="pipeline-time-detail-sum-list">
                 <li v-for="cost in timeDetailRows" :key="cost.field">
-                    <span>{{cost.label}}:</span>
-                    <span>{{cost.value}}</span>
+                    <span>{{ cost.label }}:</span>
+                    <span>{{ cost.value }}</span>
                 </li>
             </ul>
         </div>
         <template v-if="execDetail && showLog">
-            <complete-log @close="toggleCompleteLog" :execute-count="executeCount"></complete-log>
+            <complete-log
+                @close="toggleCompleteLog"
+                :execute-count="executeCount"
+            ></complete-log>
         </template>
     </div>
 </template>
@@ -225,10 +236,7 @@
             }
         },
         computed: {
-            ...mapState('common', [
-                'ruleList',
-                'templateRuleList'
-            ]),
+            ...mapState('common', ['ruleList', 'templateRuleList']),
             panels () {
                 return [
                     {
@@ -236,6 +244,9 @@
                         label: this.$t('Errors')
                     }
                 ]
+            },
+            isRunning () {
+                return this.execDetail?.status === 'RUNNING'
             },
             timeDetailConf () {
                 return {
@@ -246,29 +257,31 @@
             },
             errorList () {
                 return this.execDetail?.errorInfoList?.map((error) => ({
-                    ...error,
-                    errorTypeConf: errorTypeMap[error.errorType]
-                }))
+        ...error,
+        errorTypeConf: errorTypeMap[error.errorType]
+      }))
             },
             showErrorPopup () {
                 return Array.isArray(this.errorList) && this.errorList.length > 0
             },
             timeDetailRows () {
-                return [
-                    'executeCost',
-                    'systemCost',
-                    'waitCost'
-                ].map(key => ({
+                return ['executeCost', 'systemCost', 'waitCost'].map((key) => ({
                     field: key,
                     label: this.$t(`details.${key}`),
-                    value: this.execDetail?.model?.timeCost?.[key] ? convertMStoString(this.execDetail.model.timeCost[key]) : '--'
+                    value: this.execDetail?.model?.timeCost?.[key]
+          ? convertMStoString(this.execDetail.model.timeCost[key])
+          : '--'
                 }))
             },
             queueCost () {
-                return this.execDetail?.model?.timeCost?.queueCost ? convertMStoString(this.execDetail.model.timeCost.queueCost) : '--'
+                return this.execDetail?.model?.timeCost?.queueCost
+        ? convertMStoString(this.execDetail.model.timeCost.queueCost)
+                : '--'
             },
             totalCost () {
-                return this.execDetail?.model?.timeCost?.totalCost ? convertMStoString(this.execDetail.model.timeCost.totalCost) : '--'
+                return this.execDetail?.model?.timeCost?.totalCost
+        ? convertMStoString(this.execDetail.model.timeCost.totalCost)
+                : '--'
             },
             errorsTableColumns () {
                 return [
@@ -297,10 +310,16 @@
                 return this.execDetail?.model?.instanceFromTemplate
             },
             curMatchRules () {
-                return this.$route.path.indexOf('template') > 0 ? this.templateRuleList : this.isInstanceEditable ? this.templateRuleList.concat(this.ruleList) : this.ruleList
+                return this.$route.path.indexOf('template') > 0
+                    ? this.templateRuleList
+                    : this.isInstanceEditable
+                        ? this.templateRuleList.concat(this.ruleList)
+                        : this.ruleList
             },
             statusLabel () {
-                return this.execDetail?.status ? this.$t(`details.statusMap.${this.execDetail?.status}`) : ''
+                return this.execDetail?.status
+        ? this.$t(`details.statusMap.${this.execDetail?.status}`)
+                : ''
             },
             cancelUserId () {
                 return this.execDetail?.cancelUserId ?? '--'
@@ -310,20 +329,20 @@
             },
             curPipeline () {
                 const stages = this.hideSkipTask
-                    ? this.execDetail?.model?.stages.filter(stage => {
-                        if (this.isSkip(stage.status)) return false
-                        return stage.containers.filter(container => {
-                            if (this.isSkip(container.status)) return false
-                            return container.elements.filter(element => !this.isSkip(element.status))
-                        })
-                    })
+                    ? this.execDetail?.model?.stages.filter((stage) => {
+            if (this.isSkip(stage.status)) return false
+            return stage.containers.filter((container) => {
+              if (this.isSkip(container.status)) return false
+              return container.elements.filter((element) => !this.isSkip(element.status))
+            })
+          })
                     : this.execDetail?.model?.stages
                 return this.execDetail?.model
-                    ? {
-                        ...this.execDetail.model,
-                        stages
-                    }
-                    : null
+        ? {
+            ...this.execDetail.model,
+            stages
+          }
+                : null
             },
             pipelineModes () {
                 return [
@@ -369,11 +388,13 @@
             },
             executeCounts () {
                 const len = this.execDetail?.startUserList?.length ?? 0
-                return this.execDetail?.startUserList?.map((user, index) => ({
-                    id: len - index,
-                    name: `${(len - index)} / ${len}`,
-                    user
-                })) ?? []
+                return (
+        this.execDetail?.startUserList?.map((user, index) => ({
+          id: len - index,
+          name: `${len - index} / ${len}`,
+          user
+        })) ?? []
+                )
             },
             routerParams () {
                 return this.$route.params
@@ -403,12 +424,8 @@
                 'requestPipelineExecDetail',
                 'pausePlugin'
             ]),
-            ...mapActions('common', [
-                'requestInterceptAtom'
-            ]),
-            ...mapActions('pipelines', [
-                'requestRetryPipeline'
-            ]),
+            ...mapActions('common', ['requestInterceptAtom']),
+            ...mapActions('pipelines', ['requestRetryPipeline']),
             isSkip (status) {
                 return ['SKIP'].includes(status)
             },
@@ -417,6 +434,9 @@
             },
             toggleErrorPopup () {
                 this.showErrors = !this.showErrors
+            },
+            setShowErrorPopup () {
+                this.showErrors = true
             },
             hideErrorPopup () {
                 this.showErrors = false
@@ -484,18 +504,21 @@
                 await this.retryPipeline()
                 done()
             },
-            async handleExec ({
-                stageIndex,
-                containerIndex,
-                containerGroupIndex,
-                isContinue,
-                elementIndex,
-                showPanelType,
-                stageId,
-                containerId,
-                taskId,
-                atom
-            }, done) {
+            async handleExec (
+                {
+                    stageIndex,
+                    containerIndex,
+                    containerGroupIndex,
+                    isContinue,
+                    elementIndex,
+                    showPanelType,
+                    stageId,
+                    containerId,
+                    taskId,
+                    atom
+                },
+                done
+            ) {
                 if (!isContinue) {
                     const postData = {
                         projectId: this.routerParams.projectId,
@@ -553,20 +576,25 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.routerParams.pipelineId,
-                            name: this.routerParams.pipelineId
-                        }],
-                        projectId: this.routerParams.projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.execute,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.routerParams.pipelineId,
+                                    name: this.routerParams.pipelineId
+                                }
+                            ],
+                            projectId: this.routerParams.projectId
+                        }
+                    ])
                 } finally {
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                     this.retryTaskId = ''
                     this.skipTask = false
                 }
@@ -582,18 +610,18 @@
             locateAtom (row, isLocate = true) {
                 try {
                     const { stageId, containerId, taskId, matrixFlag } = row
-                    const stage = this.curPipeline.stages.find(stage => stage.id === stageId)
+                    const stage = this.curPipeline.stages.find((stage) => stage.id === stageId)
                     let container
                     if (matrixFlag) {
                         container = stage.containers
-                            .filter(item => Array.isArray(item.groupContainers))
-                            .map(item => item.groupContainers)
+                            .filter((item) => Array.isArray(item.groupContainers))
+                            .map((item) => item.groupContainers)
                             .flat()
-                            .find(matrix => matrix.id === containerId)
+                            .find((matrix) => matrix.id === containerId)
                     } else {
-                        container = stage.containers.find(item => item.id === containerId)
+                        container = stage.containers.find((item) => item.id === containerId)
                     }
-                    const element = container.elements.find(element => element.id === taskId)
+                    const element = container.elements.find((element) => element.id === taskId)
 
                     this.$set(element, 'locateActive', isLocate)
                 } catch (e) {
@@ -624,215 +652,229 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/conf';
-    .exec-pipeline-wrapper {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
+@import "@/scss/conf";
+.exec-pipeline-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.pipeline-exec-summary {
+  display: flex;
+  align-items: center;
+  padding: 16px 24px;
+  .pipeline-exec-count {
+    display: flex;
+    align-items: center;
+    flex-shrink: 0;
+    font-size: 12px;
+    font-weight: bold;
+    .pipeline-exec-count-select {
+      width: 88px;
+      flex-shrink: 0;
+      margin: 0 8px;
     }
-    .pipeline-exec-summary {
-        display: flex;
-        align-items: center;
-        padding: 16px 24px;
-        .pipeline-exec-count {
-            display: flex;
-            align-items: center;
-            flex-shrink: 0;
-            font-size: 12px;
-            font-weight: bold;
-            .pipeline-exec-count-select {
-                width: 88px;
-                flex-shrink: 0;
-                margin: 0 8px;
-            }
-            .exec-status-label {
-                display: grid;
-                align-items: center;
-                grid-auto-flow: column;
-                grid-gap: 6px;
-            }
-        }
-        .pipeline-exec-timeline {
-            flex: 1;
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            top: 11px;
-            margin-left: 108px;
-            &-item {
-                position:relative;
-                padding-left: 20px;
-                font-size: 12px;
-
-                > span {
-                    position: relative;
-                    background: white;
-                    padding: 0 4px;
-                    z-index: 2;
-                    color: #979BA5;
-                    display: inline-block;
-                    margin-bottom: 8px;
-                }
-                &:before {
-                    position: absolute;
-                    content: '';
-                    left: 0;
-                    top: 2px;
-                    width: 9px;
-                    height: 9px;
-                    border-radius: 50%;
-                    background: white;
-                    border: 2px solid #D8D8D8;
-                }
-
-                &:not(:last-child) .time-step-divider {
-                    display: block;
-                    position: absolute;
-                    width: calc(100% - 24px);
-                    height: 24px;
-                    top: 0;
-                    &:hover {
-                        &:before {
-                            background: $primaryColor;
-                        }
-                    }
-                    &:before {
-                        content: '';
-                        position: absolute;
-                        height: 1px;
-                        width: 100%;
-                        top: 8px;
-                        background: #D8D8D8;
-                    }
-                }
-            }
-        }
+    .exec-status-label {
+      display: grid;
+      align-items: center;
+      grid-auto-flow: column;
+      grid-gap: 6px;
     }
-    .pipeline-exec-content {
-        flex: 1;
+  }
+  .pipeline-exec-timeline {
+    width: 666px;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    top: 11px;
+    margin-left: 108px;
+    &-item {
+      position: relative;
+      padding-left: 20px;
+      font-size: 12px;
+
+      > span {
         position: relative;
-        background: #FAFBFD;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-        .pipeline-style-setting-header {
-            display: flex;
-            align-items: center;
-            font-size: 12px;
-            padding: 16px 24px;
-            flex-shrink: 0;
-            .hide-skip-pipeline-task {
-                padding: 0 16px 0 24px;
-                position: relative;
-                &:after {
-                    content: '';
-                    position: absolute;
-                    width: 1px;
-                    height: 16px;
-                    right: 7px;
-                    top: 1px;
-                    background: #DCDEE5;
-                }
-            }
-        }
-        .exec-pipeline-ui-wrapper {
-            flex: 1;
-            overflow: auto;
-            padding: 0 24px 42px 24px;
-        }
-        .exec-errors-popup {
-            width: 100%;
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            overflow: hidden;
-            will-change: auto;
-            transition: all .5s ease;
-            transform: translateY(calc(100% - 42px));
-            box-shadow: 0 -2px 20px 0 rgba(0,0,0,0.15);
-            background: white;
-            z-index: 6;
-            .pipeline-exec-error-tab {
-                display: flex;
-                flex-direction: column;
-                height: 100%;
-                .bk-tab-section {
-                    padding: 0;
-                    position: static;
-                }
-            }
-            &.visible {
-                transform: translateY(0);
-            }
-            .drag-dot {
-                position: absolute;
-                left: 50%;
-                top: 0;
-                z-index: 2;
+        background: white;
+        padding: 0 4px 0 0;
+        z-index: 2;
+        color: #979ba5;
+        display: inline-block;
+        margin-bottom: 8px;
+      }
+      &:before {
+        position: absolute;
+        content: "";
+        left: 0;
+        top: 2px;
+        width: 9px;
+        height: 9px;
+        border-radius: 50%;
+        background: white;
+        border: 2px solid #d8d8d8;
+      }
 
-            }
-            .fix-error-jump {
-                display: flex;
-                align-items: center;
-                color: $primaryColor;
-                font-size: 12px;
-                .fix-error-jump-icon {
-                    padding: 0 4px;
-                }
-            }
-            .hide-error-popup-icon {
-                display: inline-block;
-                font-size: 20px;
-                margin-right: 24px;
-            }
-            .exec-error-type-cell {
-                color: $primaryColor;
-                display: grid;
-                align-items: center;
-                grid-auto-flow: column;
-                grid-template-columns: repeat(2, 1fr);
-                .exec-error-locate-icon {
-                    display: flex;
-                }
-            }
+      &:not(:last-child) .time-step-divider {
+        display: block;
+        position: absolute;
+        width: calc(100% - 24px);
+        height: 24px;
+        top: 0;
+        &:hover {
+          &:before {
+            background: $primaryColor;
+          }
         }
+        &:before {
+          content: "";
+          position: absolute;
+          height: 1px;
+          width: 100%;
+          top: 8px;
+          background: #d8d8d8;
+        }
+      }
     }
-    .time-detail-popup,
-    .queue-time-detail-popup {
-        font-size: 12px;
-        width: 160px;
-        .pipeline-time-detail-sum {
-            display: flex;
-            justify-content: space-between;
-            font-weight: bold;
-
-            >span:first-child {
-                color: #979BA5;
-                font-weight: normal;
-            }
-        }
-        &.time-detail-popup .pipeline-time-detail-sum {
-            border-bottom: 1px solid #DCDEE5;
-            padding: 0 0 6px 0;
-            margin-bottom: 6px;
-        }
-        .pipeline-time-detail-sum-list {
-            > li {
-                display: flex;
-                justify-content: space-between;
-                margin-bottom: 8px;
-                >span:first-child {
-                    color: #979BA5;
-                }
-                &:last-child {
-                    margin-bottom: 0;
-                }
-            }
-        }
+  }
+}
+.pipeline-exec-content {
+  flex: 1;
+  position: relative;
+  background: #fafbfd;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  .pipeline-style-setting-header {
+    display: flex;
+    align-items: center;
+    font-size: 12px;
+    padding: 16px 24px;
+    flex-shrink: 0;
+    .hide-skip-pipeline-task {
+      padding: 0 16px 0 24px;
+      position: relative;
+      &:after {
+        content: "";
+        position: absolute;
+        width: 1px;
+        height: 16px;
+        right: 7px;
+        top: 1px;
+        background: #dcdee5;
+      }
     }
-    .exec-count-select-option {
+  }
+  .exec-pipeline-ui-wrapper {
+    flex: 1;
+    overflow: auto;
+    padding: 0 24px 42px 24px;
+  }
+  .exec-errors-popup {
+    width: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    overflow: hidden;
+    will-change: auto;
+    transition: all 0.5s ease;
+    transform: translateY(calc(100% - 42px));
+    box-shadow: 0 -2px 20px 0 rgba(0, 0, 0, 0.15);
+    background: white;
+    z-index: 6;
+    .pipeline-exec-error-tab {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      .bk-tab-section {
+        padding: 0;
+        position: static;
+      }
+    }
+    &.visible {
+      transform: translateY(0);
+    }
+    .drag-dot {
+      position: absolute;
+      left: 50%;
+      top: 0;
+      z-index: 2;
+    }
+    .fix-error-jump {
+      display: flex;
+      align-items: center;
+      color: $primaryColor;
+      font-size: 12px;
+      .fix-error-jump-icon {
+        padding: 0 4px;
+      }
+    }
+    .hide-error-popup-icon {
+      display: inline-block;
+      font-size: 20px;
+      margin-right: 24px;
+    }
+    .exec-error-type-cell {
+      color: $primaryColor;
+      display: grid;
+      align-items: center;
+      grid-auto-flow: column;
+      grid-template-columns: repeat(2, 1fr);
+      .exec-error-locate-icon {
         display: flex;
-        align-items: center;
-        justify-content: space-between;
+      }
     }
+  }
+}
+.time-detail-popup,
+.queue-time-detail-popup {
+  font-size: 12px;
+  width: 160px;
+  .pipeline-time-detail-sum {
+    display: flex;
+    justify-content: space-between;
+    > span {
+      flex: 1;
+      color: #63656e;
+      text-align: left;
+      font-weight: 600;
+    }
+
+    > span:first-child {
+      color: #979ba5;
+      font-weight: normal;
+      width: 56px;
+    }
+  }
+  &.time-detail-popup .pipeline-time-detail-sum {
+    border-bottom: 1px solid #dcdee5;
+    padding: 0 0 6px 0;
+    margin-bottom: 6px;
+  }
+  .pipeline-time-detail-sum-list {
+    > li {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      > span {
+        flex: 1;
+        color: #63656e;
+        text-align: left;
+      }
+      > span:first-child {
+        color: #979ba5;
+        width: 56px;
+      }
+      &:last-child {
+        margin-bottom: 0;
+      }
+    }
+  }
+}
+.exec-count-select-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .exec-count-select-option-user {
+    color: #979ba5;
+  }
+}
 </style>

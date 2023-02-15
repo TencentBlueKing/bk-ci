@@ -92,9 +92,6 @@
             },
             pipelineId () {
                 return this.$route.params.pipelineId
-            },
-            originPipeline () {
-                return Object.assign(this.pipeline, 'stages', this.pipeline.stages.slice(1))
             }
         },
         watch: {

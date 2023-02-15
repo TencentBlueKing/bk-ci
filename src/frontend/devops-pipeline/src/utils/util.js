@@ -683,3 +683,15 @@ export function cacheViewId (projectId, viewId) {
 export function getCacheViewId (projectId) {
     return localStorage.getItem(cacheViewIdKey(projectId)) ?? ALL_PIPELINE_VIEW_ID
 }
+
+export function getMaterialIconByType (type) {
+    const materialIconMap = {
+        CODE_SVN: 'CODE_SVN',
+        CODE_GIT: 'CODE_GIT',
+        CODE_GITLAB: 'CODE_GITLAB',
+        GITHUB: 'codeGithubWebHookTrigger',
+        CODE_TGIT: 'CODE_GIT',
+        CODE_P4: 'CODE_P4'
+    }
+    return materialIconMap[type] ?? 'CODE_GIT'
+}

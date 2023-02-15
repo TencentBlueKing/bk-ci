@@ -4,7 +4,7 @@
             :class="{
                 'container-atom-list': true,
                 'trigger-container': stageIndex === 0,
-                'readonly': !reactiveData.editable
+                readonly: !reactiveData.editable
             }"
             :data-baseos="container.baseOS || container.classType"
             v-model="atomList"
@@ -28,7 +28,7 @@
                 @[COPY_EVENT_NAME]="handleCopy"
                 @[DELETE_EVENT_NAME]="handleDelete"
             />
-            
+
             <span
                 v-if="reactiveData.editable"
                 :class="{ 'add-atom-entry': true, 'block-add-entry': atomList.length === 0 }"
@@ -36,15 +36,20 @@
             >
                 <i class="add-plus-icon" />
                 <template v-if="atomList.length === 0">
-                    <span class="add-atom-label">{{ t('addAtom') }}</span>
+                    <span class="add-atom-label">{{ t("addAtom") }}</span>
                     <Logo class="atom-invalid-icon" name="exclamation-triangle-shape" />
                 </template>
             </span>
-            <span v-if="hasHookAtom" :style="`top: ${hookToggleTop}`" :class="{
-                'post-action-arrow': true,
-                [postActionStatus]: true,
-                'post-action-arrow-hide': container.hidePostAction
-            }" @click.stop="togglePostAction"
+            <span
+                v-if="hasHookAtom"
+                :style="`top: ${hookToggleTop}`"
+                :class="{
+                    'post-action-arrow': true,
+                    [postActionStatus]: true,
+                    'post-action-arrow-hide': container.hidePostAction
+                }"
+                @click.stop="togglePostAction"
+                v-bk-tooltips="hookToggleTips"
             >
                 <logo class="toggle-post-action-icon" size="6" name="angle-down"></logo>
             </span>
@@ -53,7 +58,6 @@
 </template>
 
 <script>
-    
     import draggable from 'vuedraggable'
     import Atom from './Atom'
     import Logo from './Logo'
@@ -73,9 +77,7 @@
             Logo,
             Atom
         },
-        inject: [
-            'reactiveData'
-        ],
+        inject: ['reactiveData'],
         mixins: [localeMixins],
         props: {
             stage: {
@@ -114,10 +116,15 @@
                 return this.containerStatus === STATUS_MAP.PREPARE_ENV
             },
             isInstanceEditable () {
-                return !this.reactiveData.editable && this.pipeline && this.pipeline.instanceFromTemplate
+                return (
+                    !this.reactiveData.editable && this.pipeline && this.pipeline.instanceFromTemplate
+                )
             },
             hasHookAtom () {
                 return this.container.elements.some(this.isHookAtom)
+            },
+            hookToggleTips () {
+                return `${this.$t(this.container?.hidePostAction ? 'open' : 'fold')}POST`
             },
             hookToggleTop () {
                 const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
@@ -132,8 +139,8 @@
             atomList: {
                 get () {
                     return this.container.elements
-                        .filter(atom => !(this.container.hidePostAction && this.isHookAtom(atom)))
-                        .map(atom => {
+                        .filter((atom) => !(this.container.hidePostAction && this.isHookAtom(atom)))
+                        .map((atom) => {
                             atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
                             if (atom.isReviewing) {
                                 const atomReviewer = this.getReviewUser(atom)
@@ -204,20 +211,28 @@
                 const to = event.to || {}
                 const dataSet = to.dataset || {}
                 const baseOS = dataSet.baseos || ''
-                const isJobTypeOk = os.includes(baseOS) || (os.length <= 0 && (!baseOS || baseOS === 'normal'))
-                return !!atomCode && (
-                    (isTriggerAtom && baseOS === 'trigger')
-                    || (!isTriggerAtom && isJobTypeOk)
-                    || (!isTriggerAtom && baseOS !== 'trigger' && os.length <= 0 && element.buildLessRunFlag)
+                const isJobTypeOk
+                    = os.includes(baseOS) || (os.length <= 0 && (!baseOS || baseOS === 'normal'))
+                return (
+                    !!atomCode
+                    && ((isTriggerAtom && baseOS === 'trigger')
+                        || (!isTriggerAtom && isJobTypeOk)
+                        || (!isTriggerAtom
+                            && baseOS !== 'trigger'
+                            && os.length <= 0
+                            && element.buildLessRunFlag))
                 )
             },
 
             getReviewUser (atom) {
                 try {
-                    const list = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
-                    const reviewUsers = list.map(user => user.split(';').map(val => val.trim())).reduce((prev, curr) => {
-                        return prev.concat(curr)
-                    }, [])
+                    const list
+                        = atom.reviewUsers || (atom.data && atom.data.input && atom.data.input.reviewers)
+                    const reviewUsers = list
+                        .map((user) => user.split(';').map((val) => val.trim()))
+                        .reduce((prev, curr) => {
+                            return prev.concat(curr)
+                        }, [])
                     return reviewUsers
                 } catch (error) {
                     console.error(error)
@@ -241,133 +256,132 @@
                     containerIndex: this.containerIndex
                 })
             }
-            
         }
     }
 </script>
 
 <style lang="scss">
-    @import "./conf";
-    .container-atom-list {
-        position: relative;
-        z-index: 3;
+@import "./conf";
+.container-atom-list {
+  position: relative;
+  z-index: 3;
 
-        .sortable-ghost-atom {
-            opacity: 0.5;
-        }
-        .sortable-chosen-atom {
-            transform: scale(1.0);
-        }
-        .add-atom-entry {
-            position: absolute;
-            bottom: -10px;
-            left: 111px;
-            background-color: white;
-            cursor: pointer;
-            z-index: 3;
-            .add-plus-icon {
-                @include add-plus-icon($fontLighterColor, $fontLighterColor, white, 18px, true);
-                @include add-plus-icon-hover($primaryColor, $primaryColor, white);
-            }
-            &.block-add-entry {
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                height: $itemHeight;
-                margin: 0 0 11px 0;
-                background-color: #fff;
-                border-radius: 2px;
-                font-size: 14px;
-                transition: all .4s ease-in-out;
-                z-index: 2;
-                position: static;
-                padding-right: 12px;
-                border-style: dashed;
-                color: $dangerColor;
-                border-color: $dangerColor;
-                border-width: 1px;
-                .add-atom-label {
-                    flex: 1;
-                    color: $borderWeightColor;
-                }
-                .add-plus-icon {
-                    margin: 12px 13px;
-                }
-                &:before,
-                &:after {
-                    display: none;
-                }
-            }
-
-            &:hover {
-                border-color: $primaryColor;
-                color: $primaryColor;
-            }
-        }
-        .post-action-arrow {
-            position: relativecd;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: absolute;
-            height: 14px;
-            width: 14px;
-            border: 1px solid $unexecColor;
-            color: $unexecColor;
-            border-radius: 50%;
-            background: white !important;
-            top: -7px;
-            left: 17px;
-            z-index: 3;
-            font-weight: bold;
-            .toggle-post-action-icon {
-                display: block;
-                transition: all .5s ease;
-            }
-            &.post-action-arrow-hide {
-                .toggle-post-action-icon {
-                    transform: rotate(180deg);
-                }
-            }
-            &::after {
-                content: '';
-                position: absolute;
-                width: 2px;
-                height: 6px;
-                background-color: $unexecColor;
-                left: 5px;
-                top: -6px;
-            }
-            
-            &.FAILED {
-                border-color: $dangerColor;
-                color: $dangerColor;
-                &::after {
-                    background-color: $dangerColor;
-                }
-            }
-            &.CANCELED {
-                border-color: $warningColor;
-                color: $warningColor;
-                &::after {
-                    background-color: $warningColor;
-                }
-            }
-
-            &.SUCCEED {
-                border-color: $successColor;
-                color: $successColor;
-                &::after {
-                    background-color: $successColor;
-                }
-            }
-            &.RUNNING {
-                border-color: $primaryColor;
-                color: $primaryColor;
-                &::after {
-                    background-color: $primaryColor;
-                }
-            }
-        }
+  .sortable-ghost-atom {
+    opacity: 0.5;
+  }
+  .sortable-chosen-atom {
+    transform: scale(1);
+  }
+  .add-atom-entry {
+    position: absolute;
+    bottom: -10px;
+    left: 111px;
+    background-color: white;
+    cursor: pointer;
+    z-index: 3;
+    .add-plus-icon {
+      @include add-plus-icon($fontLighterColor, $fontLighterColor, white, 18px, true);
+      @include add-plus-icon-hover($primaryColor, $primaryColor, white);
     }
+    &.block-add-entry {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      height: $itemHeight;
+      margin: 0 0 11px 0;
+      background-color: #fff;
+      border-radius: 2px;
+      font-size: 14px;
+      transition: all 0.4s ease-in-out;
+      z-index: 2;
+      position: static;
+      padding-right: 12px;
+      border-style: dashed;
+      color: $dangerColor;
+      border-color: $dangerColor;
+      border-width: 1px;
+      .add-atom-label {
+        flex: 1;
+        color: $borderWeightColor;
+      }
+      .add-plus-icon {
+        margin: 12px 13px;
+      }
+      &:before,
+      &:after {
+        display: none;
+      }
+    }
+
+    &:hover {
+      border-color: $primaryColor;
+      color: $primaryColor;
+    }
+  }
+  .post-action-arrow {
+    position: relativecd;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: absolute;
+    height: 14px;
+    width: 14px;
+    border: 1px solid $unexecColor;
+    color: $unexecColor;
+    border-radius: 50%;
+    background: white !important;
+    top: -7px;
+    left: 17px;
+    z-index: 3;
+    font-weight: bold;
+    .toggle-post-action-icon {
+      display: block;
+      transition: all 0.5s ease;
+    }
+    &.post-action-arrow-hide {
+      .toggle-post-action-icon {
+        transform: rotate(180deg);
+      }
+    }
+    &::after {
+      content: "";
+      position: absolute;
+      width: 2px;
+      height: 6px;
+      background-color: $unexecColor;
+      left: 5px;
+      top: -6px;
+    }
+
+    &.FAILED {
+      border-color: $dangerColor;
+      color: $dangerColor;
+      &::after {
+        background-color: $dangerColor;
+      }
+    }
+    &.CANCELED {
+      border-color: $warningColor;
+      color: $warningColor;
+      &::after {
+        background-color: $warningColor;
+      }
+    }
+
+    &.SUCCEED {
+      border-color: $successColor;
+      color: $successColor;
+      &::after {
+        background-color: $successColor;
+      }
+    }
+    &.RUNNING {
+      border-color: $primaryColor;
+      color: $primaryColor;
+      &::after {
+        background-color: $primaryColor;
+      }
+    }
+  }
+}
 </style>

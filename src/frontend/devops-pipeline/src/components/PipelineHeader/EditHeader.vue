@@ -10,7 +10,7 @@
                 theme="primary"
                 @click="save"
             >
-                {{ $t('save') }}
+                {{ $t("save") }}
             </bk-button>
             <bk-button
                 theme="primary"
@@ -19,7 +19,7 @@
                 :title="canManualStartup ? '' : '不支持手动启动流水线'"
                 @click="saveAndExec"
             >
-                {{ isSaveAndRun ? $t('subpage.saveAndExec') : $t('exec') }}
+                {{ isSaveAndRun ? $t("subpage.saveAndExec") : $t("exec") }}
             </bk-button>
             <more-actions />
         </aside>
@@ -32,9 +32,7 @@
     import VersionSideslider from '@/components/VersionSideslider'
     import MoreActions from './MoreActions.vue'
     import { PROCESS_API_URL_PREFIX } from '@/store/constants'
-    import {
-        HttpError
-    } from '@/utils/util'
+    import { HttpError } from '@/utils/util'
     export default {
         components: {
             PipelineBreadCrumb,
@@ -42,14 +40,8 @@
             MoreActions
         },
         computed: {
-            ...mapState('atom', [
-                'pipeline',
-                'executeStatus',
-                'saveStatus'
-            ]),
-            ...mapState('pipelines', [
-                'pipelineSetting'
-            ]),
+            ...mapState('atom', ['pipeline', 'executeStatus', 'saveStatus']),
+            ...mapState('pipelines', ['pipelineSetting']),
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline',
                 isEditing: 'atom/isEditing',
@@ -59,7 +51,11 @@
                 return this.saveStatus || this.executeStatus
             },
             saveBtnDisabled () {
-                return this.saveStatus || this.executeStatus || Object.keys(this.pipelineSetting).length === 0
+                return (
+                    this.saveStatus
+                    || this.executeStatus
+                    || Object.keys(this.pipelineSetting).length === 0
+                )
             },
             isSaveAndRun () {
                 return this.isEditing && !this.saveBtnDisabled
@@ -81,9 +77,7 @@
                 'setSaveStatus',
                 'updateContainer'
             ]),
-            ...mapMutations('pipelines', [
-                'updateCurPipelineByKeyValue'
-            ]),
+            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
             async saveAndExec () {
                 if (this.isSaveAndRun) {
                     await this.save()
@@ -94,10 +88,12 @@
             },
             formatParams (pipeline) {
                 const params = pipeline.stages[0].containers[0].params
-                const paramList = params && params.map(param => {
-                    const { paramIdKey, ...temp } = param
-                    return temp
-                })
+                const paramList
+                    = params
+                        && params.map((param) => {
+                            const { paramIdKey, ...temp } = param
+                            return temp
+                        })
                 this.updateContainer({
                     container: this.pipeline.stages[0].containers[0],
                     newParam: {
@@ -131,7 +127,7 @@
                     return setting
                 }
             },
-            
+
             async savePipelineAndSetting () {
                 const { pipelineSetting, checkPipelineInvalid, pipeline } = this
                 const { inValid, message } = checkPipelineInvalid(pipeline.stages, pipelineSetting)
@@ -158,7 +154,10 @@
                 }
 
                 // 请求执行构建
-                return this.$ajax.post(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`, body)
+                return this.$ajax.post(
+                    `${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveAll`,
+                    body
+                )
             },
             getPipelineSetting () {
                 const { pipelineSetting } = this
@@ -171,13 +170,18 @@
             saveSetting () {
                 const pipelineSetting = this.getPipelineSetting()
                 const { projectId, pipelineId } = this.$route.params
-                return this.$ajax.post(`/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`, pipelineSetting)
+                return this.$ajax.post(
+                    `/${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/saveSetting`,
+                    pipelineSetting
+                )
             },
             async save () {
                 const { pipelineId, projectId } = this.$route.params
                 try {
                     this.setSaveStatus(true)
-                    const saveAction = this.isTemplatePipeline ? this.saveSetting : this.savePipelineAndSetting
+                    const saveAction = this.isTemplatePipeline
+                        ? this.saveSetting
+                        : this.savePipelineAndSetting
                     const responses = await saveAction()
 
                     if (responses.code === 403) {
@@ -189,7 +193,11 @@
                         theme: 'success'
                     })
 
-                    if (!this.isTemplatePipeline && this.pipeline.latestVersion && !isNaN(this.pipeline.latestVersion)) {
+                    if (
+                        !this.isTemplatePipeline
+                        && this.pipeline.latestVersion
+                        && !isNaN(this.pipeline.latestVersion)
+                    ) {
                         ++this.pipeline.latestVersion
                         this.updateCurPipelineByKeyValue({
                             key: 'pipelineVersion',
@@ -197,7 +205,10 @@
                         })
                     }
 
-                    if (this.pipelineSetting && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName) {
+                    if (
+                        this.pipelineSetting
+                        && this.pipelineSetting.pipelineName !== this.curPipeline.pipelineName
+                    ) {
                         this.updateCurPipelineByKeyValue({
                             key: 'pipelineName',
                             value: this.pipelineSetting.pipelineName
@@ -209,15 +220,19 @@
                         data: responses
                     }
                 } catch (e) {
-                    this.handleError(e, [{
-                        actionId: this.$permissionActionMap.edit,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: pipelineId,
-                            name: this.pipeline.name
-                        }],
-                        projectId
-                    }])
+                    this.handleError(e, [
+                        {
+                            actionId: this.$permissionActionMap.edit,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: pipelineId,
+                                    name: this.pipeline.name
+                                }
+                            ],
+                            projectId
+                        }
+                    ])
                     return {
                         code: e.code,
                         message: e.message
@@ -231,15 +246,16 @@
 </script>
 
 <style lang="scss">
-    .pipeline-edit-header {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        .pipeline-edit-right-aside {
-            display: grid;
-            grid-gap: 10px;
-            grid-auto-flow: column;
-        }
-    }
+.pipeline-edit-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 14px;
+  .pipeline-edit-right-aside {
+    display: grid;
+    grid-gap: 10px;
+    grid-auto-flow: column;
+  }
+}
 </style>

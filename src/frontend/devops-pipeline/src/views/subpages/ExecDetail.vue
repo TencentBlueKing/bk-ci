@@ -8,7 +8,8 @@
             :show-lock="true"
             :title="noPermissionTipsConfig.title"
             :desc="noPermissionTipsConfig.desc"
-            :btns="noPermissionTipsConfig.btns">
+            :btns="noPermissionTipsConfig.btns"
+        >
         </empty-tips>
 
         <template v-else-if="execDetail">
@@ -27,7 +28,11 @@
                         :key="panel.name"
                     >
                         <div :class="panel.className" style="height: 100%">
-                            <component :is="panel.component" v-bind="panel.bindData" v-on="panel.listeners"></component>
+                            <component
+                                :is="panel.component"
+                                v-bind="panel.bindData"
+                                v-on="panel.listeners"
+                            ></component>
                         </div>
                     </bk-tab-panel>
                 </bk-tab>
@@ -46,16 +51,31 @@
                 />
             </template>
             <template v-else-if="showLog">
-                <plugin :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
+                <plugin
+                    :exec-detail="execDetail"
+                    :editing-element-pos="editingElementPos"
+                    @close="hideSidePanel"
+                />
             </template>
             <template v-else-if="showContainerPanel">
-                <job :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
+                <job
+                    :exec-detail="execDetail"
+                    :editing-element-pos="editingElementPos"
+                    @close="hideSidePanel"
+                />
             </template>
             <template v-else-if="showStagePanel">
-                <stage :exec-detail="execDetail" :editing-element-pos="editingElementPos" @close="hideSidePanel" />
+                <stage
+                    :exec-detail="execDetail"
+                    :editing-element-pos="editingElementPos"
+                    @close="hideSidePanel"
+                />
             </template>
             <template v-else-if="showStageReviewPanel.isShow">
-                <stage-review-panel :stage="stage" @approve="requestPipelineExecDetail(routerParams)" />
+                <stage-review-panel
+                    :stage="stage"
+                    @approve="requestPipelineExecDetail(routerParams)"
+                />
             </template>
         </template>
     </section>
@@ -140,43 +160,54 @@
                 'pipeline',
                 'showStageReviewPanel'
             ]),
-            ...mapState([
-                'fetchError'
-            ]),
+            ...mapState(['fetchError']),
             panels () {
-                return [{
-                    name: 'executeDetail',
-                    label: this.$t('details.executeDetail'),
-                    component: 'exec-pipeline',
-                    className: 'exec-pipeline',
-                    bindData: {
-                        execDetail: this.execDetail,
-                        matchRules: this.curMatchRules
+                return [
+                    {
+                        name: 'executeDetail',
+                        label: this.$t('details.executeDetail'),
+                        component: 'exec-pipeline',
+                        className: 'exec-pipeline',
+                        bindData: {
+                            execDetail: this.execDetail,
+                            matchRules: this.curMatchRules
+                        }
+                    },
+                    {
+                        name: 'outputs',
+                        label: this.$t('details.outputs'),
+                        className: '',
+                        component: 'outputs',
+                        bindData: {}
+                    },
+                    {
+                        name: 'codeRecords',
+                        label: this.$t('details.codeRecords'),
+                        className: '',
+                        component: 'code-record',
+                        bindData: {}
+                    },
+                    {
+                        name: 'startupParams',
+                        label: this.$t('details.startupParams'),
+                        className: '',
+                        component: 'start-params',
+                        bindData: {}
                     }
-                }, {
-                    name: 'outputs',
-                    label: this.$t('details.outputs'),
-                    className: '',
-                    component: 'outputs',
-                    bindData: {}
-                }, {
-                    name: 'codeRecords',
-                    label: this.$t('details.codeRecords'),
-                    className: '',
-                    component: 'code-record',
-                    bindData: {}
-                }, {
-                    name: 'startupParams',
-                    label: this.$t('details.startupParams'),
-                    className: '',
-                    component: 'start-params',
-                    bindData: {}
-                }]
+                ]
             },
             showLog: {
                 get () {
-                    const { editingElementPos, isPropertyPanelVisible, $route: { params } } = this
-                    return typeof editingElementPos.elementIndex !== 'undefined' && params.buildNo && isPropertyPanelVisible
+                    const {
+                        editingElementPos,
+                        isPropertyPanelVisible,
+                        $route: { params }
+                    } = this
+                    return (
+                        typeof editingElementPos.elementIndex !== 'undefined'
+                        && params.buildNo
+                        && isPropertyPanelVisible
+                    )
                 },
                 set (value) {
                     this.togglePropertyPanel({
@@ -185,11 +216,16 @@
                 }
             },
             showStagePanel () {
-                return typeof this.editingElementPos.stageIndex !== 'undefined' && this.isPropertyPanelVisible
+                return (
+                    typeof this.editingElementPos.stageIndex !== 'undefined'
+                    && this.isPropertyPanelVisible
+                )
             },
             showContainerPanel () {
                 const { editingElementPos, isPropertyPanelVisible } = this
-                return typeof editingElementPos.containerIndex !== 'undefined' && isPropertyPanelVisible
+                return (
+                    typeof editingElementPos.containerIndex !== 'undefined' && isPropertyPanelVisible
+                )
             },
             stage () {
                 const { editingElementPos, execDetail } = this
@@ -205,11 +241,16 @@
                 try {
                     const {
                         editingElementPos: { stageIndex, containerIndex, elementIndex },
-                        execDetail: { model: { stages } }
+                        execDetail: {
+                            model: { stages }
+                        }
                     } = this
-                    const element = stages[stageIndex].containers[containerIndex].elements[elementIndex]
+                    const element
+                        = stages[stageIndex].containers[containerIndex].elements[elementIndex]
 
-                    return `${element.name} T${stageIndex + 1}-${containerIndex + 1}-${elementIndex + 1}`
+                    return `${element.name} T${stageIndex + 1}-${containerIndex + 1}-${
+                        elementIndex + 1
+                    }`
                 } catch (error) {
                     return ''
                 }
@@ -258,7 +299,12 @@
             webSocketMessage.installWsMessage(this.setPipelineDetail)
 
             // 第三方系统、通知等，点击链接进入流水线执行详情页面时，定位到具体的 task/ job (自动打开对应的侧滑框)
-            const { stageIndex, elementIndex, containerGroupIndex, containerIndex } = this.$route.query
+            const {
+                stageIndex,
+                elementIndex,
+                containerGroupIndex,
+                containerIndex
+            } = this.$route.query
             if (stageIndex) {
                 this.togglePropertyPanel({
                     isShow: true,
@@ -289,9 +335,7 @@
                 'getAfterLog',
                 'pausePlugin'
             ]),
-            ...mapActions('common', [
-                'requestInterceptAtom'
-            ]),
+            ...mapActions('common', ['requestInterceptAtom']),
             hideSidePanel () {
                 this.showLog = false
             },
@@ -352,99 +396,99 @@
 </script>
 
 <style lang="scss">
-    @import './../../scss/conf';
-    @import './../../scss/pipelineStatus';
-    .pipeline-detail-wrapper {
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        border-top: 1px solid #DDE4EB;
-        .exec-detail-main {
-            padding: 16px 24px;
-            background: #F5F7FA;
-            flex: 1;
-            overflow: hidden;
-        }
-        .pipeline-detail-tab-card {
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            background: white;
-            .bk-tab-section {
-                position: relative;
-                flex: 1;
-                padding: 0;
-                overflow: auto;
-            }
-            .bk-tab-content {
-                height: 100%;
-            }
-        }
-        .exec-pipeline {
-            position: relative;
-            overflow: auto;
-            height: 100%;
-            ::v-deep .devops-stage-list {
-                padding-bottom: 25px;
-            }
-        }
-
-        .bk-sideslider-wrapper {
-            top: 0;
-            padding-bottom: 0;
-                .bk-sideslider-content {
-                height: calc(100% - 60px);
-            }
-        }
-        .inner-header-title > i {
-            font-size: 12px;
-            color: $fontLighterColor;
-            font-style: normal;
-        }
-        .pipeline-detail-wrapper .inner-header {
-            cursor: default;
-            .bk-tooltip-popper[x-placement^="bottom"] {
-                top: 37px !important;
-            }
-        }
-
-         .pipeline-info {
-            width: 480px;
-            display: flex;
-            height: 100%;
-            align-items: center;
-            justify-content: space-between;
-            .info-item {
-                line-height: normal;
-                font-size: 0;
-                display: flex;
-                color: $fontWeightColor;
-                & > span {
-                    display: inline-block;
-                    font-size: 14px;
-                }
-                .trigger-mode {
-                    display: inline-block;
-                    max-width: 120px;
-                }
-                .item-label {
-                    color: #c4cdd6;
-                }
-                .icon-retry {
-                    font-size: 20px;
-                    color: $primaryColor;
-                    cursor: pointer;
-                }
-                .icon-stop-shape {
-                    font-size: 15px;
-                    color: $primaryColor;
-                    cursor: pointer;
-                    border: 1px solid $primaryColor;
-                    padding: 1px;
-                    border-radius: 50%;
-                    margin-left: 3px;
-                }
-            }
-        }
+@import "./../../scss/conf";
+@import "./../../scss/pipelineStatus";
+.pipeline-detail-wrapper {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  border-top: 1px solid #dde4eb;
+  .exec-detail-main {
+    padding: 16px 24px 0 24px;
+    background: #f5f7fa;
+    flex: 1;
+    overflow: hidden;
+  }
+  .pipeline-detail-tab-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    background: white;
+    .bk-tab-section {
+      position: relative;
+      flex: 1;
+      padding: 0;
+      overflow: auto;
     }
+    .bk-tab-content {
+      height: 100%;
+    }
+  }
+  .exec-pipeline {
+    position: relative;
+    overflow: auto;
+    height: 100%;
+    ::v-deep .devops-stage-list {
+      padding-bottom: 25px;
+    }
+  }
+
+  .bk-sideslider-wrapper {
+    top: 0;
+    padding-bottom: 0;
+    .bk-sideslider-content {
+      height: calc(100% - 60px);
+    }
+  }
+  .inner-header-title > i {
+    font-size: 12px;
+    color: $fontLighterColor;
+    font-style: normal;
+  }
+  .pipeline-detail-wrapper .inner-header {
+    cursor: default;
+    .bk-tooltip-popper[x-placement^="bottom"] {
+      top: 37px !important;
+    }
+  }
+
+  .pipeline-info {
+    width: 480px;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: space-between;
+    .info-item {
+      line-height: normal;
+      font-size: 0;
+      display: flex;
+      color: $fontWeightColor;
+      & > span {
+        display: inline-block;
+        font-size: 14px;
+      }
+      .trigger-mode {
+        display: inline-block;
+        max-width: 120px;
+      }
+      .item-label {
+        color: #c4cdd6;
+      }
+      .icon-retry {
+        font-size: 20px;
+        color: $primaryColor;
+        cursor: pointer;
+      }
+      .icon-stop-shape {
+        font-size: 15px;
+        color: $primaryColor;
+        cursor: pointer;
+        border: 1px solid $primaryColor;
+        padding: 1px;
+        border-radius: 50%;
+        margin-left: 3px;
+      }
+    }
+  }
+}
 </style>

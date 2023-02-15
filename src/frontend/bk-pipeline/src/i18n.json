@@ -29,7 +29,9 @@
     "SKIP": "跳过",
     "skiped": "已跳过",
     "retry": "重试",
-    "dependOn": "依赖于"
+    "dependOn": "依赖于",
+    "open": "展示",
+    "fold": "收起"
   },
   "en-US": {
     "insertStage": "Add Stage",
@@ -61,6 +63,8 @@
     "SKIP": "Skip",
     "skiped": "Skipped",
     "retry": "Retry",
-    "dependOn": "Depend on"
+    "dependOn": "Depend on",
+    "open": "Open",
+    "fold": "Fold"
   }
 }

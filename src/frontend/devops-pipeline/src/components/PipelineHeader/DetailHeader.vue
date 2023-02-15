@@ -2,10 +2,8 @@
     <div class="pipeline-detail-header">
         <pipeline-bread-crumb>
             <span class="build-num-switcher-wrapper">
-                {{ $t('执行详情：') }}
-                <build-num-switcher
-                    v-bind="buildNumConf"
-                />
+                {{ $t("执行详情：") }}
+                <build-num-switcher v-bind="buildNumConf" />
             </span>
         </pipeline-bread-crumb>
         <aside class="pipeline-detail-right-aside">
@@ -14,7 +12,7 @@
                 :loading="loading"
                 @click="handleClick"
             >
-                {{ isRunning ? $t('终止构建') : $t('重新构建') }}
+                {{ isRunning ? $t("终止构建") : $t("重新构建") }}
             </bk-button>
         </aside>
     </div>
@@ -35,10 +33,7 @@
             }
         },
         computed: {
-            ...mapState('atom', [
-                'executeStatus',
-                'execDetail'
-            ]),
+            ...mapState('atom', ['executeStatus', 'execDetail']),
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
@@ -66,10 +61,7 @@
             }
         },
         methods: {
-            ...mapActions('pipelines', [
-                'requestRetryPipeline',
-                'requestTerminatePipeline'
-            ]),
+            ...mapActions('pipelines', ['requestRetryPipeline', 'requestTerminatePipeline']),
             async handleClick () {
                 this.loading = true
                 if (this.isRunning) {
@@ -107,25 +99,30 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: pipelineId,
-                            name: this.curPipeline.pipelineName
-                        }],
-                        projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.execute,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: pipelineId,
+                                    name: this.curPipeline.pipelineName
+                                }
+                            ],
+                            projectId
+                        }
+                    ])
                 } finally {
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             },
             /**
-         *  终止流水线
-         */
+             *  终止流水线
+             */
             async stopExecute (buildId) {
                 let message, theme
 
@@ -143,20 +140,25 @@
                         theme = 'error'
                     }
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.execute,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.curPipeline.pipelineId,
-                            name: this.curPipeline.pipelineName
-                        }],
-                        projectId: this.$route.params.projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.execute,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.curPipeline.pipelineId,
+                                    name: this.curPipeline.pipelineName
+                                }
+                            ],
+                            projectId: this.$route.params.projectId
+                        }
+                    ])
                 } finally {
-                    message && this.$showTips({
-                        message,
-                        theme
-                    })
+                    message
+                        && this.$showTips({
+                            message,
+                            theme
+                        })
                 }
             }
         }
@@ -164,20 +166,21 @@
 </script>
 
 <style lang="scss">
-    .pipeline-detail-header {
-        display: flex;
-        width: 100%;
-        align-items: center;
-        justify-content: space-between;
-        .build-num-switcher-wrapper {
-            display: grid;
-            grid-auto-flow: column;
-            grid-gap: 6px;
-        }
-        .pipeline-detail-right-aside {
-            display: grid;
-            grid-gap: 10px;
-            grid-auto-flow: column;
-        }
-    }
+.pipeline-detail-header {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 24px 0 14px;
+  .build-num-switcher-wrapper {
+    display: grid;
+    grid-auto-flow: column;
+    grid-gap: 6px;
+  }
+  .pipeline-detail-right-aside {
+    display: grid;
+    grid-gap: 10px;
+    grid-auto-flow: column;
+  }
+}
 </style>

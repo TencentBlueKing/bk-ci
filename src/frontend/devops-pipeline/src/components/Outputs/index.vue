@@ -18,7 +18,7 @@
                 {{ $t('条件查询') }}
                 <bk-tag class="output-filter-condition-count">2</bk-tag>
             </div> -->
-            <ul class="pipeline-exec-outputs-list">
+            <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
                 <li
                     v-for="output in outputs"
                     :key="output.id"
@@ -28,17 +28,23 @@
                     @click="setActiveOutput(output)"
                 >
                     <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                    <span>{{output.name}}</span>
+                    <span>{{ output.name }}</span>
                 </li>
             </ul>
+
+            <div v-else class="no-outputs-placeholder">
+                <logo name="empty" size="180" />
+                <span>{{ $t("empty") }}</span>
+            </div>
         </aside>
         <section v-bkloading="{ isLoading }" class="pipeline-exec-outputs-section">
-            <iframe-report v-if="isCustomizeReport" :index-file-url="activeOutput.indexFileUrl" />
+            <iframe-report
+                v-if="isCustomizeReport"
+                :index-file-url="activeOutput.indexFileUrl"
+            />
             <third-party-report v-else-if="isThirdReport" :report-list="thirdPartyReportList" />
             <template v-else-if="activeOutputDetail">
-                <div
-                    class="pipeline-exec-output-header"
-                >
+                <div class="pipeline-exec-output-header">
                     <span class="pipeline-exec-output-header-name">
                         <i :class="`devops-icon icon-${activeOutputDetail.icon}`" />
                         {{ activeOutputDetail.name }}
@@ -52,9 +58,14 @@
                             :key="btn.text"
                             @click="btn.handler"
                         >
-                            {{btn.text}}
+                            {{ btn.text }}
                         </bk-button>
-                        <bk-popover style="font-size:0" theme="light" placement="bottom-end" v-if="activeOutputDetail.isApp">
+                        <bk-popover
+                            style="font-size: 0"
+                            theme="light"
+                            placement="bottom-end"
+                            v-if="activeOutputDetail.isApp"
+                        >
                             <i style="font-size: 16px" class="devops-icon icon-qrcode" />
                             <qrcode slot="content" :text="activeOutputDetail.shortUrl" :size="100" />
                         </bk-popover>
@@ -73,18 +84,19 @@
                         <bk-table-column :label="$t('desc')" prop="desc"></bk-table-column>
                     </bk-table>
                     <ul v-else slot="content" class="pipeline-exec-output-block-content">
-                        <li v-for="row in block.block" :key="row.key"
-                        >
-                            <span class="pipeline-exec-output-block-row-label">
-                                {{row.name}}：
-                            </span>
+                        <li v-for="row in block.block" :key="row.key">
+                            <span class="pipeline-exec-output-block-row-label"> {{ row.name }}： </span>
                             <span class="pipeline-exec-output-block-row-value">
-                                {{block.value[row.key] || '--'}}
+                                {{ block.value[row.key] || "--" }}
                             </span>
                         </li>
                     </ul>
                 </div>
             </template>
+            <div v-else class="no-outputs-placeholder">
+                <logo name="empty" size="180" />
+                <span>{{ $t("empty") }}</span>
+            </div>
         </section>
         <copy-to-custom-repo-dialog ref="copyToDialog" :artifact="activeOutput" />
     </div>
@@ -99,9 +111,11 @@
     import { convertTime, convertFileSize } from '@/utils/util'
     import { extForFile, repoTypeMap, repoTypeNameMap } from '@/utils/pipelineConst'
     import ExtMenu from '@/components/pipelineList/extMenu'
-    
+    import Logo from '@/components/Logo'
+
     export default {
         components: {
+            Logo,
             ThirdPartyReport,
             IframeReport,
             qrcode,
@@ -123,16 +137,20 @@
         },
         computed: {
             outputClassifyList () {
-                return [{
-                    key: 'all',
-                    label: this.$t('editPage.all')
-                }, {
-                    key: 'artifact',
-                    label: this.$t('details.artifact')
-                }, {
-                    key: 'report',
-                    label: this.$t('execDetail.report')
-                }]
+                return [
+                    {
+                        key: 'all',
+                        label: this.$t('editPage.all')
+                    },
+                    {
+                        key: 'artifact',
+                        label: this.$t('details.artifact')
+                    },
+                    {
+                        key: 'report',
+                        label: this.$t('execDetail.report')
+                    }
+                ]
             },
             outputs () {
                 switch (this.currentTab) {
@@ -145,12 +163,14 @@
                             ...this.artifacts,
                             ...this.customizeReportList,
                             ...(this.thirdPartyReportList.length > 0
-                                ? [{
-                                    id: 'THIRDPARTY',
-                                    type: 'THIRDPARTY',
-                                    name: this.$t('details.thirdReport'),
-                                    icon: 'bar-chart'
-                                }]
+                                ? [
+                                    {
+                                        id: 'THIRDPARTY',
+                                        type: 'THIRDPARTY',
+                                        name: this.$t('details.thirdReport'),
+                                        icon: 'bar-chart'
+                                    }
+                                ]
                                 : [])
                         ]
                 }
@@ -162,22 +182,31 @@
                 return this.activeOutput?.type === 'INTERNAL'
             },
             thirdPartyReportList () {
-                return this.reports.filter(report => report.type === 'THIRDPARTY')
+                return this.reports.filter((report) => report.type === 'THIRDPARTY')
             },
             customizeReportList () {
-                return this.reports.filter(report => report.type === 'INTERNAL')
+                return this.reports.filter((report) => report.type === 'INTERNAL')
             },
             btns () {
-                const defaultBtns = [{
-                    text: this.$t('details.goRepo'),
-                    handler: () => {
-                        console.log(this.activeOutput)
-                        const pos = this.activeOutput.fullPath.lastIndexOf('/')
-                        const fileName = this.activeOutput.fullPath.substring(0, pos)
-                        const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]
-                        window.open(`${WEB_URL_PREFIX}/bkrepo/${this.$route.params.projectId}/generic?repoName=${repoName}&path=${encodeURIComponent(`${fileName}/default`)}`, '_blank')
+                const defaultBtns = [
+                    {
+                        text: this.$t('details.goRepo'),
+                        handler: () => {
+                            console.log(this.activeOutput)
+                            const pos = this.activeOutput.fullPath.lastIndexOf('/')
+                            const fileName = this.activeOutput.fullPath.substring(0, pos)
+                            const repoName = repoTypeNameMap[this.activeOutput.artifactoryType]
+                            window.open(
+                                `${WEB_URL_PREFIX}/bkrepo/${
+                                    this.$route.params.projectId
+                                }/generic?repoName=${repoName}&path=${encodeURIComponent(
+                                    `${fileName}/default`
+                                )}`,
+                                '_blank'
+                            )
+                        }
                     }
-                }]
+                ]
                 if (this.hasPermission && this.activeOutput.type === 'ARTIFACT') {
                     switch (true) {
                         case this.activeOutput.artifactoryType !== 'IMAGE':
@@ -191,10 +220,12 @@
                 return defaultBtns
             },
             artifactMoreActions () {
-                return [{
-                    text: this.$t('details.copyTo'),
-                    handler: this.$refs?.copyToDialog.show
-                }]
+                return [
+                    {
+                        text: this.$t('details.copyTo'),
+                        handler: this.$refs?.copyToDialog.show
+                    }
+                ]
             },
             infoBlocks () {
                 return [
@@ -238,6 +269,18 @@
                 ]
             }
         },
+        watch: {
+            outputs (outputs) {
+                if (outputs.length > 0) {
+                    this.setActiveOutput(outputs[0])
+                } else {
+                    this.activeOutputDetail = null
+                }
+            },
+            '$route.params.buildNo': function () {
+                this.$nextTick(this.init)
+            }
+        },
         mounted () {
             this.init()
         },
@@ -262,7 +305,7 @@
                             buildId
                         })
                     ])
-                    
+
                     this.artifacts = res.artifacts.map((item) => {
                         const icon = extForFile(item.name)
                         return {
@@ -314,26 +357,23 @@
                     }
                     const [download, external] = await Promise.all([
                         this.requestDownloadUrl(params),
-                        ...(this.activeOutput.isApp
-                            ? [
-                                this.requestExternalUrl(params)
-                            ]
-                            : [])
+                        ...(this.activeOutput.isApp ? [this.requestExternalUrl(params)] : [])
                     ])
-                    return [
-                        download.url,
-                        external?.url2
-                    ]
+                    return [download.url, external?.url2]
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.download,
-                        resourceId: this.$permissionResourceMap.pipeline,
-                        instanceId: [{
-                            id: this.$route.params.pipelineId,
-                            name: this.$route.params.pipelineId
-                        }],
-                        projectId: this.$route.params.projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.download,
+                            resourceId: this.$permissionResourceMap.pipeline,
+                            instanceId: [
+                                {
+                                    id: this.$route.params.pipelineId,
+                                    name: this.$route.params.pipelineId
+                                }
+                            ],
+                            projectId: this.$route.params.projectId
+                        }
+                    ])
                     return []
                 }
             },
@@ -357,12 +397,14 @@
                     }
                     this.isLoading = false
                 } catch (err) {
-                    this.handleError(err, [{
-                        actionId: this.$permissionActionMap.view,
-                        resourceId: this.$permissionResourceMap.artifactory,
-                        instanceId: [],
-                        projectId: projectId
-                    }])
+                    this.handleError(err, [
+                        {
+                            actionId: this.$permissionActionMap.view,
+                            resourceId: this.$permissionResourceMap.artifactory,
+                            instanceId: [],
+                            projectId: projectId
+                        }
+                    ])
                 }
             },
             setActiveOutput (output) {
@@ -384,149 +426,161 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/conf';
-    @import '@/scss/mixins/ellipsis';
-    .pipeline-exec-outputs {
-        height: 100%;
-        display: flex;
-        .pipeline-exec-outputs-aside {
-            width: 295px;
-            flex-shrink: 0;
-            padding: 16px 11px;
-            border-right: 1px solid #DCDEE5;
-            display: flex;
-            flex-direction: column;
-            .pipeline-exec-output-classify-tab {
-                display: flex;
-                align-items: center;
-                background: #F0F1F5;
-                border-radius: 2px;
-                padding: 4px;
-                flex-shrink: 0;
-                > li {
-                    position: relative;
-                    flex: 1;
-                    text-align: center;
-                    border-radius: 2px;
-                    cursor: pointer;
-                    transition: all 0.5s ease;
-                    font-size: 12px;
-                    line-height: 24px;
-                    &.active {
-                        background: white;
-                        color: $primaryColor;
-                        &:after {
-                            display: none;
-                        }
-                    }
-                    &:not(:last-child):after {
-                        content: '';
-                        position: absolute;
-                        width: 1px;
-                        height: 12px;
-                        top: 6px;
-                        right: 0;
-                        background: #DCDEE5;
-                    }
-                }
-            }
-            .pipeline-exec-outputs-filter {
-                position: relative;
-                margin: 16px 0 21px 0;
-                width: 100%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                height: 32px;
-                background: white;
-                border: 1px solid #C4C6CC;
-                border-radius: 2px;
-                font-size: 14px;
-                cursor: pointer;
-                .output-filter-condition-count {
-                    margin: 0;
-                    position: absolute;
-                    right: 16px;
-                }
-            }
-            .pipeline-exec-outputs-list {
-                overflow: auto;
-                flex: 1;
-                padding-top: 10px;
-                > li {
-                    height: 32px;
-                    display: flex;
-                    align-items: center;
-                    padding: 10px 19px;
-                    cursor: pointer;
-                    border-radius: 2px;
-                    font-size: 12px;
-                    margin-bottom: 10px;
-                    >.devops-icon {
-                        display: inline-block;
-                        font-size: 16px;
-                        margin-right: 4px;
-                    }
-                    &.active,
-                    &:hover {
-                        color: $primaryColor;
-                        background: #F5F7FA;
-                    }
-                }
-            }
-        }
-        .pipeline-exec-outputs-section {
-            flex: 1;
-            overflow: auto;
-            .pipeline-exec-output-header {
-                display: flex;
-                align-items: center;
-                height: 48px;
-                background: #FAFBFD;
-                padding: 0 24px;
-                &-name {
-                    display: flex;
-                    align-items: center;
-                    font-size: 16px;
-                    color: #313238;
-                    padding-right: 16px;
-                    > i {
-                        padding-right: 12px;
-                    }
-                }
-                .pipeline-exec-output-actions {
-                    display: grid;
-                    grid-gap: 16px;
-                    grid-auto-flow: column;
-                    align-items: center;
-                    justify-self: flex-end;
-                    margin-left: auto;
-                }
-            }
-            .pipeline-exec-output-block {
-                padding: 16px 24px;
-                .pipeline-exec-output-block-title {
-                    font-size: 14px;
-                    border-bottom: 1px solid #DCDEE5;
-                    margin:  0 0 16px 0;
-                    line-height: 24px;
-                }
-                .pipeline-exec-output-block-content {
-                    font-size: 12px;
-                    > li {
-                        margin-bottom: 16px;
-                        .pipeline-exec-output-block-row-label {
-                            color: #979BA5;
-                            text-align: right;
-                            @include ellipsis();
-                            width: 100px;
-                        }
-                        .pipeline-exec-output-block-row-value {
-                            @include ellipsis();
-                        }
-                    }
-                }
-            }
-        }
+@import "@/scss/conf";
+@import "@/scss/mixins/ellipsis";
+.pipeline-exec-outputs {
+  height: 100%;
+  display: flex;
+  .no-outputs-placeholder {
+    color: #979ba5;
+    display: flex;
+    height: 100%;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    > span {
+      font-size: 12px;
+      margin-top: -46px;
     }
+  }
+  .pipeline-exec-outputs-aside {
+    width: 295px;
+    flex-shrink: 0;
+    padding: 16px 11px;
+    border-right: 1px solid #dcdee5;
+    display: flex;
+    flex-direction: column;
+    .pipeline-exec-output-classify-tab {
+      display: flex;
+      align-items: center;
+      background: #f0f1f5;
+      border-radius: 2px;
+      padding: 4px;
+      flex-shrink: 0;
+      > li {
+        position: relative;
+        flex: 1;
+        text-align: center;
+        border-radius: 2px;
+        cursor: pointer;
+        transition: all 0.5s ease;
+        font-size: 12px;
+        line-height: 24px;
+        &.active {
+          background: white;
+          color: $primaryColor;
+          &:after {
+            display: none;
+          }
+        }
+        &:not(:last-child):after {
+          content: "";
+          position: absolute;
+          width: 1px;
+          height: 12px;
+          top: 6px;
+          right: 0;
+          background: #dcdee5;
+        }
+      }
+    }
+    .pipeline-exec-outputs-filter {
+      position: relative;
+      margin: 16px 0 21px 0;
+      width: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 32px;
+      background: white;
+      border: 1px solid #c4c6cc;
+      border-radius: 2px;
+      font-size: 14px;
+      cursor: pointer;
+      .output-filter-condition-count {
+        margin: 0;
+        position: absolute;
+        right: 16px;
+      }
+    }
+    .pipeline-exec-outputs-list {
+      overflow: auto;
+      flex: 1;
+      padding-top: 10px;
+      > li {
+        height: 32px;
+        display: flex;
+        align-items: center;
+        padding: 10px 19px;
+        cursor: pointer;
+        border-radius: 2px;
+        font-size: 12px;
+        margin-bottom: 10px;
+        > .devops-icon {
+          display: inline-block;
+          font-size: 16px;
+          margin-right: 4px;
+        }
+        &.active,
+        &:hover {
+          color: $primaryColor;
+          background: #f5f7fa;
+        }
+      }
+    }
+  }
+  .pipeline-exec-outputs-section {
+    flex: 1;
+    overflow: auto;
+    .pipeline-exec-output-header {
+      display: flex;
+      align-items: center;
+      height: 48px;
+      background: #fafbfd;
+      padding: 0 24px;
+      &-name {
+        display: flex;
+        align-items: center;
+        font-size: 16px;
+        color: #313238;
+        padding-right: 16px;
+        > i {
+          padding-right: 12px;
+        }
+      }
+      .pipeline-exec-output-actions {
+        display: grid;
+        grid-gap: 16px;
+        grid-auto-flow: column;
+        align-items: center;
+        justify-self: flex-end;
+        margin-left: auto;
+      }
+    }
+    .pipeline-exec-output-block {
+      padding: 16px 24px;
+      .pipeline-exec-output-block-title {
+        font-size: 14px;
+        border-bottom: 1px solid #dcdee5;
+        margin: 0 0 16px 0;
+        line-height: 24px;
+      }
+      .pipeline-exec-output-block-content {
+        font-size: 12px;
+        > li {
+          margin-bottom: 16px;
+          .pipeline-exec-output-block-row-label {
+            color: #979ba5;
+            text-align: right;
+            @include ellipsis();
+            width: 100px;
+          }
+          .pipeline-exec-output-block-row-value {
+            @include ellipsis();
+          }
+        }
+      }
+    }
+  }
+}
 </style>

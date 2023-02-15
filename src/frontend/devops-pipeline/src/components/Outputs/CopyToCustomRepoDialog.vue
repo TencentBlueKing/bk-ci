@@ -68,9 +68,7 @@
                 return this.$t('details.copyArtifactTo', [this.artifact?.name ?? '--'])
             },
             customFolders () {
-                return [
-                    this.customRootFolder
-                ]
+                return [this.customRootFolder]
             },
             repoOptions () {
                 return {
@@ -78,12 +76,9 @@
                 }
             }
         },
-        
+
         methods: {
-            ...mapActions('common', [
-                'requestCustomFolder',
-                'requestCopyArtifactory'
-            ]),
+            ...mapActions('common', ['requestCustomFolder', 'requestCopyArtifactory']),
             show () {
                 this.isCopyDialogShow = true
             },
@@ -99,10 +94,11 @@
                     }
                 })
                 return {
-                    data: res.children?.map(item => ({
-                        ...item,
-                        level: folder.level + 1
-                    })) ?? []
+                    data:
+          res.children?.map((item) => ({
+            ...item,
+            level: folder.level + 1
+          })) ?? []
                 }
             },
             async search (keyword) {
@@ -112,12 +108,12 @@
                         name: `*${keyword}*`
                     }
                 })
-                this.$refs?.customRepoTree?.setData?.([
-                    {
-                        ...this.customRootFolder,
-                        children: res.children
-                    }
-                ])
+      this.$refs?.customRepoTree?.setData?.([
+        {
+          ...this.customRootFolder,
+          children: res.children
+        }
+      ])
             },
             handleSelect (folder) {
                 this.activeFolder = folder.id
@@ -136,27 +132,39 @@
                     if (res) {
                         message = this.$createElement('span', {}, [
                             this.$t('details.copyToCustomSuc', [this.artifact.name, this.activeFolder]),
-                            this.$createElement('bk-link', {
-                                domProps: {
-                                    target: '_blank'
+                            this.$createElement(
+                                'bk-link',
+                                {
+                                    domProps: {
+                                        target: '_blank'
+                                    },
+                                    props: {
+                                        theme: 'primary',
+                                        href: `${WEB_URL_PREFIX}/bkrepo/${
+                                            this.$route.params.projectId
+                                        }/generic?repoName=custom&path=${encodeURIComponent(
+                                            `${this.activeFolder}/default`
+                                        )}`
+                                    }
                                 },
-                                props: {
-                                    theme: 'primary',
-                                    href: `${WEB_URL_PREFIX}/bkrepo/${this.$route.params.projectId}/generic?repoName=custom&path=${encodeURIComponent(`${this.activeFolder}/default`)}`
-                                }
-                            }, [
-                                this.$createElement('span', {
-                                    class: 'go-dist-link'
-                                }, [
-                                    this.$createElement(Logo, {
-                                        props: {
-                                            name: 'tiaozhuan',
-                                            size: 14
-                                        }
-                                    }),
-                                    this.$t('details.goDistFolder')
-                                ])
-                            ])
+                                [
+                                    this.$createElement(
+                                        'span',
+                                        {
+                                            class: 'go-dist-link'
+                                        },
+                                        [
+                                            this.$createElement(Logo, {
+                                                props: {
+                                                    name: 'tiaozhuan',
+                                                    size: 14
+                                                }
+                                            }),
+                                            this.$t('details.goDistFolder')
+                                        ]
+                                    )
+                                ]
+                            )
                         ])
                         theme = 'success'
                     }
@@ -177,24 +185,27 @@
 </script>
 
 <style lang="scss">
-    .copy-to-custom-dialog {
-        .bk-dialog-body {
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
-        .copy-to-custom-repo-search {
-            margin: 16px 0;
-        }
-        .copy-custom-repo-tree {
-            flex: 1;
-            overflow: auto;
-        }
-    }
-    .go-dist-link {
-        margin-left: 10px;
-        display: flex;
-        align-items: center;
-        font-size: 12px;
-    }
+.copy-to-custom-dialog {
+  .copy-to-custom-repo-dialog-header {
+    font-size: 12px;
+  }
+  .bk-dialog-body {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .copy-to-custom-repo-search {
+    margin: 16px 0;
+  }
+  .copy-custom-repo-tree {
+    flex: 1;
+    overflow: auto;
+  }
+}
+.go-dist-link {
+  margin-left: 10px;
+  display: flex;
+  align-items: center;
+  font-size: 12px;
+}
 </style>
