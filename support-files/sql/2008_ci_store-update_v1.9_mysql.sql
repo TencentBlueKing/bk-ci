@@ -151,7 +151,7 @@ BEGIN
     IF NOT EXISTS(SELECT 1
             FROM information_schema.COLUMNS
             WHERE TABLE_SCHEMA = db
-                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO'
+                AND TABLE_NAME = 'T_STORE_ERROR_CODE_INFO') THEN
     ALTER TABLE devops_store.T_STORE_ERROR_CODE_INFO COMMENT='store错误码信息';
     END IF;
 
