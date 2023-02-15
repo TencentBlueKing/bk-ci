@@ -153,9 +153,9 @@ class CredentialService @Autowired constructor(
                 )
             }
             CredentialType.TOKEN_SSH_PRIVATEKEY -> {
-                val privateKey = if (!credentialInfo.v3.isNullOrBlank()){
+                val privateKey = if (!credentialInfo.v2.isNullOrBlank()) {
                     decode(credentialInfo.v2!!, credentialInfo.publicKey, pair.privateKey)
-                }else{
+                } else {
                     ""
                 }
                 val passPhrase = if (!credentialInfo.v3.isNullOrBlank()) {
