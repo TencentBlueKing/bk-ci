@@ -278,11 +278,11 @@ interface UserWorkspaceResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "ticket", required = true)
-        @QueryParam("ticket")
+        @ApiParam(value = "bkTicket", required = true)
+        @QueryParam("bkTicket")
         bkTicket: String,
-        @ApiParam(value = "host", required = true)
-        @QueryParam("host")
+        @ApiParam(value = "hostName", required = true)
+        @QueryParam("hostName")
         hostName: String
     ): Result<Boolean>
 }
