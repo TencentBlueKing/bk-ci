@@ -118,6 +118,7 @@ object Runner {
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
             )
+            LoggerService.stop()
             EngineService.endBuild(buildVariables.variables)
             throw ignore
         } finally {
