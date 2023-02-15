@@ -31,14 +31,11 @@ import com.tencent.devops.model.remotedev.tables.TRemoteDevBilling
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.model.remotedev.tables.records.TRemoteDevBillingRecord
 import org.jooq.DSLContext
-import org.jooq.DatePart
-import org.jooq.Field
 import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
-import java.sql.Timestamp
 import java.time.Duration
 import java.time.LocalDateTime
 
@@ -99,7 +96,6 @@ class RemoteDevBillingDao {
                 dslContext.update(this)
                     .set(END_TIME, now)
                     .set(USAGE_TIME, add)
-                    .set(UPDATE_TIME, now)
                     .where(ID.eq(record.id))
                     .execute()
             }
