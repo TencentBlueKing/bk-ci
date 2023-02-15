@@ -151,10 +151,10 @@ interface ApigwBuildResourceV4 {
         @ApiParam("流水线ID", required = true)
         @QueryParam("pipelineId")
         pipelineId: String?,
-        @ApiParam("构建ID", required = false)
+        @ApiParam("构建ID(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildId")
         buildId: String?,
-        @ApiParam("构建号", required = false)
+        @ApiParam("构建号(构建ID和构建号，二选其一填入)", required = false)
         @QueryParam("buildNumber")
         buildNumber: Int?,
         @ApiParam("要重试或跳过的插件ID，或者StageId", required = false)
