@@ -134,6 +134,7 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
+        private const val ADMIN_NAME = "system"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
@@ -280,7 +281,7 @@ class WorkspaceService @Autowired constructor(
                     status = WorkspaceAction.PREPARING
                 ),
                 projectId = "",
-                userIds = setOf(userId),
+                userIds = getWebSocketUsers(userId, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -364,7 +365,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = event.errorMsg
                 ),
                 projectId = "",
-                userIds = setOf(event.userId),
+                userIds = getWebSocketUsers(event.userId, event.workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(event.workspaceName),
                 notifyPost = NotifyPost(
@@ -463,7 +464,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.STARTING
                     ),
                     projectId = "",
-                    userIds = setOf(userId),
+                    userIds = getWebSocketUsers(userId, workspaceName),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -592,7 +593,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userIds = setOf(operator),
+                userIds = getWebSocketUsers(operator, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -677,7 +678,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.SLEEPING
                     ),
                     projectId = "",
-                    userIds = setOf(userId),
+                    userIds = getWebSocketUsers(userId, workspaceName),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -783,7 +784,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.DELETING
                     ),
                     projectId = "",
-                    userIds = setOf(userId),
+                    userIds = getWebSocketUsers(userId, workspaceName),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
@@ -1086,7 +1087,7 @@ class WorkspaceService @Autowired constructor(
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspace.name,
-                operator = "system",
+                operator = ADMIN_NAME,
                 action = WorkspaceAction.SLEEP,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_SLEEP)
             )
@@ -1095,7 +1096,7 @@ class WorkspaceService @Autowired constructor(
 
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = "system",
+                    userId = ADMIN_NAME,
                     traceId = bizId,
                     type = UpdateEventType.STOP,
                     workspaceName = workspace.name
@@ -1112,7 +1113,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.SLEEPING
                     ),
                     projectId = "",
-                    userIds = workspaceDao.fetchWorkspaceUser(dslContext, workSpaceName).toSet(),
+                    userIds = getWebSocketUsers(ADMIN_NAME, workSpaceName),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workSpaceName),
                     notifyPost = NotifyPost(
@@ -1162,14 +1163,14 @@ class WorkspaceService @Autowired constructor(
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspace.name,
-                operator = "system",
+                operator = ADMIN_NAME,
                 action = WorkspaceAction.DELETE,
                 actionMessage = getOpHistory(OpHistoryCopyWriting.TIMEOUT_STOP)
             )
             val bizId = MDC.get(TraceTag.BIZID)
             dispatcher.dispatch(
                 WorkspaceOperateEvent(
-                    userId = "system",
+                    userId = ADMIN_NAME,
                     traceId = bizId,
                     type = UpdateEventType.DELETE,
                     workspaceName = workspace.name
@@ -1185,7 +1186,7 @@ class WorkspaceService @Autowired constructor(
                         status = WorkspaceAction.DELETING
                     ),
                     projectId = "",
-                    userIds = workspaceDao.fetchWorkspaceUser(dslContext, workspace.name).toSet(),
+                    userIds = getWebSocketUsers(ADMIN_NAME, workspace.name),
                     redisOperation = redisOperation,
                     page = WorkspacePageBuild.buildPage(workspace.name),
                     notifyPost = NotifyPost(
@@ -1261,7 +1262,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userIds = setOf(operator),
+                userIds = getWebSocketUsers(operator, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -1356,7 +1357,7 @@ class WorkspaceService @Autowired constructor(
                     errorMsg = errorMsg
                 ),
                 projectId = "",
-                userIds = setOf(operator),
+                userIds = getWebSocketUsers(operator, workspaceName),
                 redisOperation = redisOperation,
                 page = WorkspacePageBuild.buildPage(workspaceName),
                 notifyPost = NotifyPost(
@@ -1374,6 +1375,12 @@ class WorkspaceService @Autowired constructor(
 
     fun initBilling(freeTime: Int) {
         remoteDevBillingDao.monthlyInit(dslContext, freeTime)
+    }
+
+    private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
+        return if (operator == ADMIN_NAME)
+            workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
+        else setOf(operator)
     }
 
     /**
@@ -1445,6 +1452,6 @@ class WorkspaceService @Autowired constructor(
             val dataMap = JsonUtil.toMap(data)
             val status = dataMap["status"]
             return (status == 0)
-            }
         }
+    }
 }
