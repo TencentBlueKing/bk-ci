@@ -186,7 +186,7 @@ class GithubService @Autowired constructor(
         return RetryUtils.execute(
             object : RetryUtils.Action<GithubBranch?> {
                 override fun fail(e: Throwable): GithubBranch? {
-                    logger.error("getBranch fail| e=${e.message}", e)
+                    logger.warn("BKSystemMonitor|getBranch fail| e=${e.message}", e)
                     throw e
                 }
 
@@ -207,7 +207,7 @@ class GithubService @Autowired constructor(
         return RetryUtils.execute(
             object : RetryUtils.Action<GithubTag?> {
                 override fun fail(e: Throwable): GithubTag? {
-                    logger.error("getTag fail| e=${e.message}", e)
+                    logger.warn("BKSystemMonitor|getTag fail| e=${e.message}", e)
                     throw e
                 }
 
@@ -222,7 +222,6 @@ class GithubService @Autowired constructor(
         )
     }
 
-    // TODO:脱敏
     override fun getFileContent(projectName: String, ref: String, filePath: String): String {
         val url = "https://raw.githubusercontent.com/$projectName/$ref/$filePath"
         OkhttpUtils.doGet(url).use {
@@ -242,7 +241,7 @@ class GithubService @Autowired constructor(
         return RetryUtils.execute(
             object : RetryUtils.Action<List<String>> {
                 override fun fail(e: Throwable): List<String> {
-                    logger.error("listBranches fail| e=${e.message}", e)
+                    logger.warn("BKSystemMonitor|listBranches fail| e=${e.message}", e)
                     throw e
                 }
 
@@ -262,7 +261,7 @@ class GithubService @Autowired constructor(
         return RetryUtils.execute(
             object : RetryUtils.Action<List<String>> {
                 override fun fail(e: Throwable): List<String> {
-                    logger.error("listTags fail| e=${e.message}", e)
+                    logger.warn("BKSystemMonitor|listTags fail| e=${e.message}", e)
                     throw e
                 }
 
@@ -343,7 +342,6 @@ class GithubService @Autowired constructor(
         throw GithubApiException(code, msg)
     }
 
-    // TODO:脱敏
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)
         private const val PAGE_SIZE = 100
