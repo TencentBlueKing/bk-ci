@@ -72,19 +72,16 @@ const handleChangeSelectGroup = (values) => {
 const searchList = computed(() => {
   const datas = [
     {
-      name: t('ID'),
-      isDefaultOption: true,
-      id: 'groupId',
-      multiple: false,
-    },
-    {
       name: t('用户组名'),
+      isDefaultOption: true,
       id: 'name',
       multiple: false,
     },
     {
-      name: t('描述'),
-      id: 'description',
+      name: t('资源实例'),
+      id: 'resourceCode',
+      multiple: false,
+      children: [],
     },
     {
       name: t('操作'),
@@ -93,10 +90,13 @@ const searchList = computed(() => {
       children: [],
     },
     {
-      name: t('资源实例'),
-      id: 'resourceCode',
+      name: t('描述'),
+      id: 'description',
+    },
+    {
+      name: t('ID'),
+      id: 'groupId',
       multiple: false,
-      children: [],
     },
   ];
   return datas.filter((data) => {

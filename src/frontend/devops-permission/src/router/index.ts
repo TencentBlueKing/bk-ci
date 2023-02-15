@@ -18,7 +18,7 @@ const router = createRouter({
       component: HomeEntry,
       children: [
         {
-          path: '/',
+          path: '/:projectCode',
           component: PermissionEntry,
           redirect: () => ({ name: 'my-permission' }),
           children: [

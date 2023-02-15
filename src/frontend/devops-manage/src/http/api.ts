@@ -4,6 +4,7 @@ import {
   STORE_PERFIX,
   PROJECT_PERFIX,
   IAM_PERFIX,
+  ITSM_PERFIX,
 } from './constants';
 export default {
   getUser() {
@@ -64,6 +65,10 @@ export default {
   requestDiffProjectData(params: any) {
     const { englishName } = params;
     return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/diff`);
+  },
+
+  requestApprovalInfo(projectCode: string) {
+    return http.get(`${ITSM_PERFIX}/${projectCode}`)
   },
 
   /**

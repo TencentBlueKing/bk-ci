@@ -25,7 +25,6 @@
                     ></bk-input>
                 </div>
                 <bk-table
-                    v-if="curProjectList.length"
                     class="biz-table mt20"
                     size="medium"
                     :data="curProjectList"
@@ -105,7 +104,7 @@
                                 />
                                 <icon
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
-                                    v-if="row.approvalStatus = 4"
+                                    v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
                                     :size="20"
                                     name="wait"

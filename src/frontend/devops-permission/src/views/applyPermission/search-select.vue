@@ -140,7 +140,7 @@
 <script>
 import http from '@/http/api';
 import tools from '../../utils/tools.js'
-import { clickoutside } from 'bkui-vue';
+import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
 
@@ -293,6 +293,13 @@ export default {
     },
     
     async getResourceList() {
+      if (!this.projectCode) {
+        Message({
+          theme: 'error',
+          message: this.$t('请选择项目'),
+        });
+        return;
+      };
       this.isLoading = true;
       await http.getResourceList({
         resourceType: this.resourceType,
@@ -310,10 +317,15 @@ export default {
     // 获取资源类型列表
     async getResourceTypesList() {
       await http.getResourceTypesList().then(res => {
-        this.resourcesTypeList = res;
+        this.resourcesTypeList = res.map(item => {
+          return {
+            ...item,
+            id: item.resourceType,
+          }
+        }) ;
         this.optionList.forEach(option => {
           if (['actionId', 'resourceCode'].includes(option.id)) {
-            option.children = res;
+            option.children = this.resourcesTypeList;
           }
         });
       });
@@ -369,9 +381,6 @@ export default {
     },
     // 选中标题类型
     handleTitleSelect(val) {
-      if (this.hasResourceCode) {
-        
-      }
       this.actionsList = [];
       this.resourceList = [];
       this.hasResourceCode = this.searchSelectValue.some(item => item.id === 'resourceCode');
@@ -511,7 +520,6 @@ export default {
       const len = this.optionList.filter(option => {
         return this.judgeOptionShow(option)
       }).length;
-
       if (len) {
         e.preventDefault();
         e.stopPropagation();
@@ -521,7 +529,18 @@ export default {
         curIndex = curIndex > len - 1 ? 0 : (curIndex < 0 ? len - 1 : curIndex);
         const option = this.optionList[curIndex];
         if (option) {
-          this.hoverId = option.id;
+          this.hoverId = this.selectInfo.id ? option.resourceType : option.id;
+          setTimeout(() => {
+            const dom = document.getElementsByClassName('is-hover')[0];
+            const searchListDom = document.getElementsByClassName('search-list-menu')[0];
+            const scrollTop = searchListDom.scrollTop;
+            const searchListDomHeight = searchListDom.clientHeight;
+            if ((searchListDomHeight + scrollTop) < (curIndex + 1) * 32) {
+              searchListDom.scrollTop = ((curIndex + 1) * 32) + 12 - searchListDomHeight;
+            } else if (scrollTop > (curIndex * 32) - 6) {
+              searchListDom.scrollTop = (curIndex * 32) + 6
+            }
+          });
         };
       }
     },
@@ -537,7 +556,7 @@ export default {
             if (this.selectInfo.id) {
               this.handleOptionSelect(option)
             } else {
-              this.handleResultOptionSelect(option)
+              this.handleTitleSelect(option)
             }
           }
           this.handleInputFocus()

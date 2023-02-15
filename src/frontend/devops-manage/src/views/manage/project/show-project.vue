@@ -27,8 +27,19 @@ const fetchProjectData = async () => {
     englishName: projectCode,
   }).then((res) => {
     projectData.value = res;
+
+    // 审批状态下项目 -> 获取审批详情数据
+    if ([1, 4].includes(projectData.value.approvalStatus)) {
+      fetchApprovalInfo();
+    }
   });
   isLoading.value = false;
+};
+
+const fetchApprovalInfo = () => {
+  http.requestApprovalInfo(projectCode).then(res => {
+    projectData.value = { ...projectData.value, ...res }
+  });
 };
 
 const fieldMap = [
@@ -102,8 +113,8 @@ const handleEdit = () => {
   });
 };
 
-const handleToApprovalDetails = () => {
-  window.open(`/console/permission/my-apply`, '_blank')
+const handleToApprovalDetails = (applyId) => {
+  window.open(`/console/permission/${projectCode}/my-apply?applyId=${applyId}`, '_blank')
 };
 
 /**
@@ -232,7 +243,7 @@ onMounted(async () => {
       <bk-alert v-if="projectData.tipsStatus !== 0 && projectData.approvalStatus !== 2" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
         <template #title>
           {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
-          <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails">{{ t('审批详情') }}</a>
+          <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
           <span v-if="projectData.approvalMsg">{{ t('拒绝理由：') }}{{ projectData.approvalMsg }}</span>
         </template>
       </bk-alert>
