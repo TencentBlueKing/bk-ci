@@ -40,6 +40,7 @@ class AuthItsmCallbackDao {
 
     fun create(
         dslContext: DSLContext,
+        applyId: Int,
         sn: String,
         englishName: String,
         callbackId: String,
@@ -48,11 +49,13 @@ class AuthItsmCallbackDao {
         with(TAuthItsmCallback.T_AUTH_ITSM_CALLBACK) {
             return dslContext.insertInto(
                 this,
+                APPLY_ID,
                 SN,
                 ENGLISH_NAME,
                 CALLBACK_ID,
                 APPLICANT
             ).values(
+                applyId,
                 sn,
                 englishName,
                 callbackId,
@@ -101,6 +104,7 @@ class AuthItsmCallbackDao {
         return record?.let {
             with(it) {
                 AuthItsmCallbackInfo(
+                    applyId = applyId,
                     sn = sn,
                     projectId = it.englishName,
                     callbackId = callbackId,
