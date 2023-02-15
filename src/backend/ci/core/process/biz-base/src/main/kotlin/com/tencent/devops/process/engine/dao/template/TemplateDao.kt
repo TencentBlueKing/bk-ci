@@ -312,7 +312,7 @@ class TemplateDao {
     ): TTemplateRecord {
         with(TTemplate.T_TEMPLATE) {
             val conditions = mutableListOf<Condition>()
-                conditions.add(ID.eq(templateId))
+            conditions.add(ID.eq(templateId))
             if (version != null) {
                 conditions.add(VERSION.eq(version))
             }
@@ -385,7 +385,7 @@ class TemplateDao {
     ): Int {
         with(TTemplate.T_TEMPLATE) {
             val normalConditions = countTemplateBaseCondition(templateType, templateName, storeFlag)
-            if (!projectId.isNullOrBlank()){
+            if (!projectId.isNullOrBlank()) {
                 normalConditions.add(PROJECT_ID.eq(projectId))
             }
             var count = dslContext.select(DSL.countDistinct(ID))
