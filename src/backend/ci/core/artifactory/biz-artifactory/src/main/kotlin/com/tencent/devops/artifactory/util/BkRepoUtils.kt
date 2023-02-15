@@ -99,6 +99,7 @@ object BkRepoUtils {
             FileTypeEnum.BK_ARCHIVE -> REPO_NAME_PIPELINE
             FileTypeEnum.BK_CUSTOM -> REPO_NAME_CUSTOM
             FileTypeEnum.BK_REPORT -> REPO_NAME_REPORT
+            FileTypeEnum.BK_STATIC -> REPO_NAME_STATIC
             else -> BKREPO_COMMOM_REPO
         }
     }

@@ -58,7 +58,9 @@ data class FileInfo(
     @ApiModelProperty("下载链接", required = false)
     var downloadUrl: String? = null,
     @ApiModelProperty("MD5", required = false)
-    var md5: String? = null
+    var md5: String? = null,
+    @ApiModelProperty("docker registry", required = false)
+    var registry: String? = null
 ) : Comparable<FileInfo> {
     constructor(
         name: String,

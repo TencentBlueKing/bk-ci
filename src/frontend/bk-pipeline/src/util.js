@@ -133,7 +133,6 @@ export function getDependOnDesc (job) {
         }
         return val
     } catch (e) {
-        console.log(job, e)
         return ''
     }
 }

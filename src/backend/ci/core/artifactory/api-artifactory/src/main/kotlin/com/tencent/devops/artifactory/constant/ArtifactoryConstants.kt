@@ -35,6 +35,7 @@ const val REALM_BK_REPO = "bkrepo"
 const val BKREPO_DEFAULT_USER = "admin"
 const val BKREPO_DEVOPS_PROJECT_ID = "devops"
 const val BKREPO_STORE_PROJECT_ID = "bk-store"
+const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
 const val BKREPO_COMMOM_REPO = "common"
 
 const val REPO_NAME_PIPELINE = "pipeline"
