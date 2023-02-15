@@ -48,7 +48,7 @@ watch(() => selectGroupList.value, (val) => {
 
 watch(() => props.projectCode, () => {
   if (props.projectCode) {
-    fetchGroupList([]);
+    fetchGroupList();
   };
 })
 
@@ -94,7 +94,7 @@ const searchList = computed(() => {
       id: 'description',
     },
     {
-      name: t('ID'),
+      name: 'ID',
       id: 'groupId',
       multiple: false,
     },
@@ -126,7 +126,7 @@ const initTable = () => {
   tableRef.value?.clearSelection();
 };
 
-const fetchGroupList = async (payload) => {
+const fetchGroupList = async (payload = []) => {
   if (!props.projectCode) return;
   const params = {
     page: pagination.value.current,

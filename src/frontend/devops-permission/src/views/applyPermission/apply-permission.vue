@@ -9,9 +9,10 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
 const groupList = ref([]);
 const projectList = ref([]);
@@ -90,6 +91,12 @@ const handleSubmit = () => {
   });
 };
 
+const handleCancel = () => {
+  router.push({
+    name: 'my-permission'
+  })
+};
+
 const handleChangeGroup = (values) => {
   groupList.value = values;
 };
@@ -110,6 +117,7 @@ const getAllProjectList = () => {
 };
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
+  formData.value.projectCode = route.params.projectCode || '';
   getUserInfo();
   getAllProjectList();
 });
