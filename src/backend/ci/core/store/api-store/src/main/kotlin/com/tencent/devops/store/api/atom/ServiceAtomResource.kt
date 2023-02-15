@@ -32,6 +32,7 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -123,8 +124,11 @@ interface ServiceAtomResource {
         @ApiParam("类型", required = true)
         @QueryParam("storeType")
         storeType: StoreTypeEnum,
-        @ApiParam("用户ID", required = true)
+        @ApiParam("错误码", required = true)
         @QueryParam("errorCode")
-        errorCode: Int
+        errorCode: Int,
+        @ApiParam("错误码类型", required = true)
+        @QueryParam("errorCodeType")
+        errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean>
 }

@@ -42,10 +42,12 @@ import com.tencent.devops.project.api.service.ServiceUserResource
 import com.tencent.devops.store.dao.common.PublisherMemberDao
 import com.tencent.devops.store.dao.common.PublishersDao
 import com.tencent.devops.store.dao.common.StoreDockingPlatformDao
+import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.PublishersDataService
@@ -65,7 +67,8 @@ class PublishersDataServiceImpl @Autowired constructor(
     private val client: Client,
     private val storeDockingPlatformDao: StoreDockingPlatformDao,
     private val storeMemberDao: StoreMemberDao,
-    private val storeUserService: StoreUserService
+    private val storeUserService: StoreUserService,
+    private val storeErrorCodeInfoDao: StoreErrorCodeInfoDao
 ) : PublishersDataService {
     override fun createPublisherData(userId: String, publishers: List<PublishersRequest>): Int {
         val storePublisherInfoRecords = mutableListOf<TStorePublisherInfoRecord>()
@@ -229,6 +232,13 @@ class PublishersDataServiceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
+        storeDockingPlatformRequests.forEach {
+            storeErrorCodeInfoDao.batchDeleteErrorCodeInfo(
+                dslContext = dslContext,
+                storeCode = it.platformCode,
+                errorCodeType = ErrorCodeTypeEnum.PLATFORM
+            )
+        }
         return storeDockingPlatformDao.batchDelete(dslContext, userId, storeDockingPlatformRequests)
     }
 

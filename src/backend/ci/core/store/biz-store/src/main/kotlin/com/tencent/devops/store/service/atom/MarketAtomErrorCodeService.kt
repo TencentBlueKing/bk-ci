@@ -25,26 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.git
+package com.tencent.devops.store.service.atom
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 
-data class GitCreateFile(
-    @JsonProperty("file_path")
-    @ApiModelProperty(name = "file_path")
-    val filePath: String,
-    @JsonProperty("branch_name")
-    @ApiModelProperty(name = "branch_name")
-    val branch: String,
-    @JsonProperty("encoding")
-    @ApiModelProperty(name = "encoding")
-    val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
-    @JsonProperty("content")
-    @ApiModelProperty(name = "content")
-    val content: String,
-    @JsonProperty("commit_message")
-    @ApiModelProperty(name = "commit_message")
-    val commitMessage: String
-)
+interface MarketAtomErrorCodeService {
+
+    fun createErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
+
+    fun updateErrorCode(userId: String, storeErrorCodeInfo: StoreErrorCodeInfo): Result<Boolean>
+
+    fun isComplianceErrorCode(
+        storeCode: String,
+        storeType: StoreTypeEnum,
+        errorCode: String,
+        errorCodeType: ErrorCodeTypeEnum
+    ): Boolean
+}

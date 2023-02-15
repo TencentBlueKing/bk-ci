@@ -25,21 +25,26 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.repository.pojo.git
 
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
+import com.fasterxml.jackson.annotation.JsonProperty
+import com.tencent.devops.repository.pojo.enums.GitCodeFileEncoding
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("研发商店错误码信息")
-data class StoreErrorCodeInfo(
-    @ApiModelProperty("store代码")
-    val storeCode: String,
-    @ApiModelProperty("store组件类型")
-    val storeType: StoreTypeEnum,
-    @ApiModelProperty("错误码所属类型")
-    val errorCodeType: ErrorCodeTypeEnum,
-    @ApiModelProperty("错误码信息")
-    val errorCodeInfos: List<ErrorCodeInfo>
+data class GitOperationFile(
+    @JsonProperty("file_path")
+    @ApiModelProperty(name = "file_path")
+    val filePath: String,
+    @JsonProperty("branch_name")
+    @ApiModelProperty(name = "branch_name")
+    val branch: String,
+    @JsonProperty("encoding")
+    @ApiModelProperty(name = "encoding")
+    val encoding: GitCodeFileEncoding = GitCodeFileEncoding.TEXT,
+    @JsonProperty("content")
+    @ApiModelProperty(name = "content")
+    val content: String,
+    @JsonProperty("commit_message")
+    @ApiModelProperty(name = "commit_message")
+    val commitMessage: String
 )

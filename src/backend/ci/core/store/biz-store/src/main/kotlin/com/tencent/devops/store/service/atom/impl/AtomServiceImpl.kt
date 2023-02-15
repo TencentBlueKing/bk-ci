@@ -205,12 +205,6 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
         .expireAfterWrite(5, TimeUnit.MINUTES)
         .build<String, Map<String, String>>()
 
-    @Value("\${store.defaultAtomErrorCodeLength:6}")
-    private var defaultAtomErrorCodeLength: Int = 6
-
-    @Value("\${store.defaultAtomErrorCodePrefix:8}")
-    private lateinit var defaultAtomErrorCodePrefix: String
-
     /**
      * 获取插件列表
      */
@@ -1197,24 +1191,5 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             )
         }
         return Result(versionInfo)
-    }
-
-    override fun isComplianceErrorCode(
-        storeCode: String,
-        storeType: StoreTypeEnum,
-        errorCode: String
-    ): Boolean {
-        // 校验code码是否符合插件自定义错误码规范
-        if (
-            errorCode.length != defaultAtomErrorCodeLength || (!errorCode.startsWith(defaultAtomErrorCodePrefix))
-        ) {
-            return false
-        }
-        return storeErrorCodeInfoDao.getAtomErrorCode(
-            dslContext = dslContext,
-            storeCode = storeCode,
-            storeType = storeType,
-            errorCode = errorCode.toInt()
-        ).isNotEmpty
     }
 }
