@@ -126,7 +126,7 @@ class StoreErrorCodeInfoDao {
     fun batchDeleteErrorCodeInfo(
         dslContext: DSLContext,
         storeCode: String,
-        errorCodeType: ErrorCodeTypeEnum,
+        errorCodeType: ErrorCodeTypeEnum
     ) {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             dslContext.deleteFrom(this)

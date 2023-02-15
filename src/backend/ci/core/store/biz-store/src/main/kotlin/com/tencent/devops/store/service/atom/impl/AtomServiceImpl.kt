@@ -128,7 +128,6 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Value
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.concurrent.TimeUnit
