@@ -27,11 +27,13 @@
 
 package com.tencent.devops.repository.service.scm
 
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.scm.api.ServiceSvnResource
 import com.tencent.devops.scm.code.svn.ISvnService
 import com.tencent.devops.scm.pojo.SvnFileInfo
 import com.tencent.devops.scm.pojo.SvnRevisionInfo
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Primary
 import org.springframework.stereotype.Service
@@ -40,6 +42,7 @@ import java.net.URLEncoder
 @Primary
 @Service
 class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnService {
+
     override fun getFileContent(
         url: String,
         userId: String,
@@ -48,20 +51,25 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
         reversion: Long,
         credential1: String,
         credential2: String?
-    ): String {
-        return client.getScm(ServiceSvnResource::class).getFileContent(
-            url = url,
-            userId = userId,
-            svnType = svnType,
-            filePath = filePath,
-            reversion = reversion,
-            credential1 = credential1,
-            credential2 = if (credential2 == null) {
-                null
-            } else {
-                URLEncoder.encode(credential2, "UTF-8")
-            }
-        ).data ?: ""
+    ): String { // 遵守定义，不抛异常
+        return try {
+            client.getScm(ServiceSvnResource::class).getFileContent(
+                url = url,
+                userId = userId,
+                svnType = svnType,
+                filePath = filePath,
+                reversion = reversion,
+                credential1 = credential1,
+                credential2 = if (credential2 == null) {
+                    null
+                } else {
+                    URLEncoder.encode(credential2, "UTF-8")
+                }
+            ).data ?: ""
+        } catch (ignore: RemoteServiceException) {
+            logger.warn("BKSystemMonitor|WARN|getFileContent fail: $ignore")
+            ""
+        }
     }
 
     override fun getDirectories(
@@ -73,17 +81,22 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
         credential1: String,
         credential2: String,
         credential3: String?
-    ): List<SvnFileInfo> {
-        return client.getScm(ServiceSvnResource::class).getDirectories(
-            url = url,
-            userId = userId,
-            svnType = svnType,
-            svnPath = svnPath,
-            revision = revision,
-            credential1 = credential1,
-            credential2 = credential2,
-            credential3 = credential3
-        ).data!!
+    ): List<SvnFileInfo> { // 遵守定义，不抛异常
+        return try {
+            client.getScm(ServiceSvnResource::class).getDirectories(
+                url = url,
+                userId = userId,
+                svnType = svnType,
+                svnPath = svnPath,
+                revision = revision,
+                credential1 = credential1,
+                credential2 = credential2,
+                credential3 = credential3
+            ).data!!
+        } catch (ignore: RemoteServiceException) {
+            logger.warn("BKSystemMonitor|WARN|getDirectories fail: $ignore")
+            emptyList()
+        }
     }
 
     override fun getSvnRevisionList(
@@ -93,14 +106,23 @@ class TencentSvnServiceImpl @Autowired constructor(val client: Client) : ISvnSer
         passphrase: String?,
         branchName: String?,
         currentVersion: String?
-    ): Pair<Long, List<SvnRevisionInfo>> {
-        return client.getScm(ServiceSvnResource::class).getSvnRevisionList(
-            url = url,
-            username = username,
-            privateKey = privateKey,
-            passPhrase = passphrase,
-            branchName = branchName,
-            currentVersion = currentVersion
-        ).data!!
+    ): Pair<Long, List<SvnRevisionInfo>> { // 遵守定义，不抛异常
+        return try {
+            client.getScm(ServiceSvnResource::class).getSvnRevisionList(
+                url = url,
+                username = username,
+                privateKey = privateKey,
+                passPhrase = passphrase,
+                branchName = branchName,
+                currentVersion = currentVersion
+            ).data!!
+        } catch (ignore: RemoteServiceException) {
+            logger.warn("BKSystemMonitor|WARN|getSvnRevisionList fail: $ignore")
+            Pair(0, emptyList())
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(TencentSvnServiceImpl::class.java)
     }
 }
