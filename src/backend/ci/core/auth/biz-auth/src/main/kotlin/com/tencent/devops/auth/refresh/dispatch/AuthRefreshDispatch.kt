@@ -51,7 +51,6 @@ class AuthRefreshDispatch @Autowired constructor(
         events.forEach { event ->
             try {
                 send(event)
-
             } catch (ignored: Exception) {
                 if (ignored.cause is ChannelContinuationTimeoutException) {
                     logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
