@@ -5,10 +5,12 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("操作实体")
 data class ActionInfoVo(
-    @ApiModelProperty("actionId")
-    val actionId: String,
+    @ApiModelProperty("action")
+    val action: String,
     @ApiModelProperty("动作名")
     val actionName: String,
-    @ApiModelProperty("动作归属的资源")
-    val resourceType: String
+    @ApiModelProperty("蓝盾-关联资源类型")
+    val resourceType: String,
+    @ApiModelProperty("IAM-关联资源类型")
+    val relatedResourceType: String
 )
