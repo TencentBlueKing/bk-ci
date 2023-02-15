@@ -94,7 +94,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             when (errorCodeType) {
                 ErrorCodeTypeEnum.ATOM -> {
                     if (!errorCodePrefix.startsWith("8")) {
-                         invalidErrorCodes.add(errorCode)
+                        invalidErrorCodes.add(errorCode)
                     }
                 }
                 ErrorCodeTypeEnum.GENERAL -> {
