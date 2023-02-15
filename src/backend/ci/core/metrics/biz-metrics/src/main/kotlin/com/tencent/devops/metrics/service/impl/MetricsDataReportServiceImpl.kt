@@ -799,23 +799,23 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
-        var errorCodeType: ErrorCodeTypeEnum
-        when {
+        var errorCodeType: ErrorCodeTypeEnum = when {
             errorCodePrefix == "8" -> {
-                errorCodeType = ErrorCodeTypeEnum.ATOM
+                ErrorCodeTypeEnum.ATOM
             }
             errorCodePrefix.startsWith("100") -> {
-                errorCodeType = ErrorCodeTypeEnum.GENERAL
+                ErrorCodeTypeEnum.GENERAL
             }
             errorCodePrefix.toInt() in 101..599 -> {
-                errorCodeType = ErrorCodeTypeEnum.PLATFORM
+                ErrorCodeTypeEnum.PLATFORM
             }
             else -> return false
         }
         return client.get(ServiceAtomResource::class).isComplianceErrorCode(
             storeCode = atomCode,
             StoreTypeEnum.ATOM,
-            errorCode.toInt()
+            errorCode.toInt(),
+            errorCodeType = errorCodeType
         ).data!!
     }
 }
