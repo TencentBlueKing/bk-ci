@@ -817,7 +817,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 // record表需要记录被跳过的记录
                 if (stage.stageControlOption?.enable == false) {
-                    saveSkipRecords(
+                    saveSkipStageRecords(
                         projectId, pipelineId, version, buildId, stage, context, index,
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
@@ -834,15 +834,27 @@ class PipelineRuntimeService @Autowired constructor(
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
                     context.containerSeq++
+                    saveSkipContainerRecords(
+                        projectId, pipelineId, version, buildId, stage, container,
+                        context, containerBuildRecords, taskBuildRecords
+                    )
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
+                        saveSkipContainerRecords(
+                            projectId, pipelineId, version, buildId, stage, container,
+                            context, containerBuildRecords, taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
+                        saveSkipContainerRecords(
+                            projectId, pipelineId, version, buildId, stage, container,
+                            context, containerBuildRecords, taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 }
@@ -1218,7 +1230,7 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun saveSkipRecords(
+    private fun saveSkipStageRecords(
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -1239,30 +1251,47 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
         stage.containers.forEach { container ->
-            containerBuildRecords.add(
-                BuildRecordContainer(
-                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                    buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                    containerType = container.getClassType(), executeCount = context.executeCount,
-                    matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                    status = BuildStatus.SKIP.name, timestamps = mapOf(),
-                    containerVar = mutableMapOf(
-                        Container::containerHashId.name to container.containerHashId!!
-                    )
+            saveSkipContainerRecords(
+                projectId, pipelineId, version, buildId, stage,
+                container, context, containerBuildRecords, taskBuildRecords
+            )
+        }
+    }
+
+    private fun saveSkipContainerRecords(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String,
+        stage: Stage,
+        container: Container,
+        context: StartBuildContext,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>
+    ) {
+        containerBuildRecords.add(
+            BuildRecordContainer(
+                projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                containerType = container.getClassType(), executeCount = context.executeCount,
+                matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
+                status = BuildStatus.SKIP.name, timestamps = mapOf(),
+                containerVar = mutableMapOf(
+                    Container::containerHashId.name to container.containerHashId!!
                 )
             )
-            container.elements.forEachIndexed { index, element ->
-                taskBuildRecords.add(
-                    BuildRecordTask(
-                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                        stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = element.id!!, classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(), executeCount = context.executeCount,
-                        originClassType = null, resourceVersion = version, taskSeq = index,
-                        status = BuildStatus.SKIP.name, timestamps = mapOf(), taskVar = mutableMapOf()
-                    )
+        )
+        container.elements.forEachIndexed { index, element ->
+            taskBuildRecords.add(
+                BuildRecordTask(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stage.id!!, containerId = container.containerId!!,
+                    taskId = element.id!!, classType = element.getClassType(),
+                    atomCode = element.getTaskAtom(), executeCount = context.executeCount,
+                    originClassType = null, resourceVersion = version, taskSeq = index,
+                    status = BuildStatus.SKIP.name, timestamps = mapOf(), taskVar = mutableMapOf()
                 )
-            }
+            )
         }
     }
 
