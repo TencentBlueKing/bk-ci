@@ -43,6 +43,7 @@ import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.StoreStatisticTrendData
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
@@ -259,7 +260,13 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         return StoreErrorCodeInfo(
             storeCode = storeCode,
             storeType = storeType,
-            errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(dslContext, storeCode, storeType)
+            errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
+                dslContext = dslContext,
+                storeCode = storeCode,
+                storeType = storeType,
+                errorCodeType = ErrorCodeTypeEnum.ATOM
+            ),
+            errorCodeType = ErrorCodeTypeEnum.ATOM
         )
     }
 

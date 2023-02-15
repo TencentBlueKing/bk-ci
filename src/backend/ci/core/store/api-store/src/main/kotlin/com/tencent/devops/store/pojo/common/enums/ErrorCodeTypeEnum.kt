@@ -25,21 +25,10 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.store.pojo.common
+package com.tencent.devops.store.pojo.common.enums
 
-import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
-import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
-
-@ApiModel("研发商店错误码信息")
-data class StoreErrorCodeInfo(
-    @ApiModelProperty("store代码")
-    val storeCode: String,
-    @ApiModelProperty("store组件类型")
-    val storeType: StoreTypeEnum,
-    @ApiModelProperty("错误码所属类型")
-    val errorCodeType: ErrorCodeTypeEnum,
-    @ApiModelProperty("错误码信息")
-    val errorCodeInfos: List<ErrorCodeInfo>
-)
+enum class ErrorCodeTypeEnum(val type: Int) {
+    ATOM(0),
+    PLATFORM(1),
+    GENERAL(2)
+}

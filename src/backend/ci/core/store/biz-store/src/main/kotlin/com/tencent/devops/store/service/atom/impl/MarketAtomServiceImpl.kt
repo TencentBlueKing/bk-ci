@@ -109,6 +109,7 @@ import com.tencent.devops.store.pojo.common.MarketItem
 import com.tencent.devops.store.pojo.common.StoreDailyStatistic
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreShowVersionInfo
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.ReleaseTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomLabelService
@@ -702,7 +703,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
             storeErrorCodeInfo = storeErrorCodeInfo
         )
         val errorCodeInfos = storeErrorCodeInfoDao.getStoreErrorCodeInfo(
-            dslContext, storeErrorCodeInfo.storeCode, storeErrorCodeInfo.storeType
+            dslContext = dslContext,
+            storeCode = storeErrorCodeInfo.storeCode,
+            storeType = storeErrorCodeInfo.storeType,
+            errorCodeType = ErrorCodeTypeEnum.ATOM
         ).toMutableList()
         val newErrorCodeInfos = storeErrorCodeInfo.errorCodeInfos
         errorCodeInfos.removeAll(newErrorCodeInfos)
@@ -711,6 +715,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                 dslContext = dslContext,
                 storeCode = storeErrorCodeInfo.storeCode,
                 storeType = storeErrorCodeInfo.storeType,
+                errorCodeType = ErrorCodeTypeEnum.ATOM,
                 errorCodes = errorCodeInfos.map { it.errorCode }
             )
         }

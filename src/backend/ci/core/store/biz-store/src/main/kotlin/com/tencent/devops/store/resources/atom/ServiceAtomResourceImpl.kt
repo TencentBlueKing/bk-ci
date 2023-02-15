@@ -33,17 +33,20 @@ import com.tencent.devops.store.pojo.atom.AtomClassifyInfo
 import com.tencent.devops.store.pojo.atom.AtomProp
 import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.PipelineAtom
+import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.AtomPropService
 import com.tencent.devops.store.service.atom.AtomService
 import com.tencent.devops.store.service.atom.MarketAtomClassifyService
+import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAtomResourceImpl @Autowired constructor(
     private val atomService: AtomService,
     private val atomPropService: AtomPropService,
-    private val atomClassifyService: MarketAtomClassifyService
+    private val atomClassifyService: MarketAtomClassifyService,
+    private val marketAtomErrorCodeService: MarketAtomErrorCodeService
 ) : ServiceAtomResource {
 
     override fun getInstalledAtoms(
@@ -75,10 +78,16 @@ class ServiceAtomResourceImpl @Autowired constructor(
     override fun isComplianceErrorCode(
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCode: Int
+        errorCode: Int,
+        errorCodeType: ErrorCodeTypeEnum
     ): Result<Boolean> {
         return Result(
-            atomService.isComplianceErrorCode(storeCode, storeType, "$errorCode")
+            marketAtomErrorCodeService.isComplianceErrorCode(
+                storeCode,
+                storeType,
+                "$errorCode",
+                errorCodeType
+            )
         )
     }
 }
