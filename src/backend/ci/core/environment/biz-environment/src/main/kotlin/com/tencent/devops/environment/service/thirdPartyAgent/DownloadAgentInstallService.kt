@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.pojo.agent.AgentArchType
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
@@ -62,7 +63,8 @@ class DownloadAgentInstallService @Autowired constructor(
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
     private val agentUrlService: AgentUrlService,
-    private val profile: Profile
+    private val profile: Profile,
+    private val commonConfig: CommonConfig
 ) {
 
     @Value("\${environment.agent-package}")
@@ -278,7 +280,8 @@ class DownloadAgentInstallService @Autowired constructor(
             "gateWay" to gateWay,
             "fileGateway" to fileGateway,
             "landun.env" to profile.getEnv().name,
-            "agentCollectorOn" to agentCollectorOn
+            "agentCollectorOn" to agentCollectorOn,
+            "language" to commonConfig.devopsDefaultLocale
         )
     }
 
