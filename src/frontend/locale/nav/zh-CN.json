@@ -40,6 +40,7 @@
         "noOperateAccessTip": "已驳回，没有操作权限"
     },
     "projectManage": "项目管理",
+    "myPermission": "我的权限",
     "recommendationLabel": "推荐使用谷歌浏览器以获得更好的体验",
     "dismiss": "不再提示",
     "exception": {

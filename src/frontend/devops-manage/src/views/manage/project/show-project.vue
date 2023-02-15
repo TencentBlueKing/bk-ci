@@ -103,7 +103,7 @@ const handleEdit = () => {
 };
 
 const handleToApprovalDetails = () => {
-  window.open(`/console/permission/${projectData.value.englishName}/approval`, '_blank')
+  window.open(`/console/permission/my-apply`, '_blank')
 };
 
 /**
@@ -119,8 +119,7 @@ const handleCancelUpdate = () => {
         theme: 'success',
         message: t('取消更新成功'),
       });
-      const { origin } = window.location;
-      window.location.reload();
+      fetchProjectData();
     }
   };
 
@@ -132,7 +131,27 @@ const handleCancelUpdate = () => {
     footerAlign: 'center',
     onConfirm,
   });
-}
+};
+
+/**
+ * 停用/启用项目
+ */
+const handleEnabledProject = () => {
+  const { englishName, enabled } = projectData.value;
+  http.enabledProject({
+    projectId: englishName,
+    enable: !enabled,
+  }).then(res => {
+    if (res) {
+      const message = enabled ? t('停用项目成功') : t('启用项目成功');
+      Message({
+        theme: 'success',
+        message,
+      });
+      fetchProjectData();
+    }
+  })
+};
 
 /**
  * 取消创建项目
@@ -147,8 +166,9 @@ const handleCancelCreation = () => {
         theme: 'success',
         message: t('取消创建成功'),
       });
-      const { origin } = window.location;
-      window.location.href = `${origin}/console/pm`;
+      window.parent.devops.$router.push({
+        name: 'pm'
+      })
     }
   };
 
@@ -209,7 +229,7 @@ onMounted(async () => {
 <template>
   <bk-loading class="content-wrapper" :loading="isLoading">
     <article class="project-info-content" v-if="projectData.projectCode">
-      <bk-alert v-if="projectData.tipsStatus !== 0" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
+      <bk-alert v-if="projectData.tipsStatus !== 0 && projectData.approvalStatus !== 2" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
         <template #title>
           {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
           <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails">{{ t('审批详情') }}</a>
@@ -242,13 +262,13 @@ onMounted(async () => {
             </div>
           </bk-form-item>
           <bk-form-item :label="t('项目所属组织')" property="bg">
-            <span>{{ projectData.bgName }} - {{ projectData.deptName }} - {{ projectData.centerName }}</span>
+            <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.centerName }}</span>
             <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
               <p class="update-title">
                 {{ t('本次更新：') }}
               </p>
             <span>
-              {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} - {{ projectData.afterCenterName }}
+              {{ projectData.afterBgName || projectData.bgName }} - {{ projectData.afterDeptName || projectData.afterDeptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.afterCenterName }}
             </span>
             </div>
           </bk-form-item>
@@ -336,9 +356,9 @@ onMounted(async () => {
               v-if="projectData.approvalStatus === 2"
               class="btn"
               theme="default"
-              @click="handleCancelCreation"
+              @click="handleEnabledProject"
             >
-              {{ t('停用项目') }}
+              {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
             </bk-button>
           </bk-form-item>
         </bk-form>
@@ -405,10 +425,9 @@ onMounted(async () => {
       align-items: center;
     }
     .project-logo {
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      margin-right: 5px;
+      width: 60px;
+      height: 60px;
+      margin-right: 10px;
     }
     .item-value {
       display: inline-block;

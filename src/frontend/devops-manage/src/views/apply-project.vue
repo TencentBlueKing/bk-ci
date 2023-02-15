@@ -4,7 +4,7 @@ import {
   ref,
 } from 'vue';
 import http from '@/http/api';
-import { Message } from 'bkui-vue';
+import { Message, InfoBox } from 'bkui-vue';
 import ManageHeader from '@/components/manage-header.vue';
 import ProjectForm from '@/components/project-form.vue';
 import {
@@ -20,30 +20,53 @@ const projectData = ref({
   logoAddr: '',
   bgId: 0,
   bgName: '',
-  deptId: 0,
+  deptId: '',
   deptName: '',
-  centerId: 0,
+  centerId: '',
   centerName: '',
   subjectScopes: [],
   secrecy: false,
-  authSecrecy: false,
+  authSecrecy: 0,
 });
+const projectForm = ref(null);
 const btnLoading = ref(false);
-const handleConfirm = async () => {
-  btnLoading.value = true;
-  const result = await http.requestCreateProject({
-    projectData: projectData.value,
-  }).catch(() => false);
-  if (result) {
-    Message({
-      theme: 'success',
-      message: t('保存成功'),
+const handleConfirm = () => {
+  const confirmFn = async () => {
+    btnLoading.value = true;
+    const result = await http.requestCreateProject({
+      projectData: projectData.value,
+    })
+      .catch(() => false)
+      .finally(() => {
+        btnLoading.value = false;
+      });
+    if (result) {
+      Message({
+        theme: 'success',
+        message: t('提交成功'),
+      });
+      router.push({
+        path: `${projectData.value.englishName}/show`,
+      });
+    }
+  };
+
+  projectForm.value?.validate().then(() => {
+    InfoBox({
+      infoType: 'warning',
+      title: t('创建项目需您的上级审批，确认提交吗'),
+      contentAlign: 'center',
+      headerAlign: 'center',
+      footerAlign: 'center',
+      confirmText: t('确认提交'),
+      cancelText: t('取消'),
+      onConfirm: confirmFn,
+      onClosed: () => true,
     });
-    router.push({
-      path: `${projectData.value.englishName}/show`,
-    });
-  }
-  btnLoading.value = false;
+  })
+};
+const initProjectForm = (value) => {
+  projectForm.value = value;
 };
 
 const handleCancel = () => {
@@ -61,7 +84,9 @@ const handleCancel = () => {
       <section class="create-project-form">
         <project-form
           ref="projectForm"
+          type="apply"
           :data="projectData"
+          @initProjectForm="initProjectForm"
         >
           <bk-form-item>
             <bk-button

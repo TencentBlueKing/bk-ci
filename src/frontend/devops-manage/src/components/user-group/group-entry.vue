@@ -1,5 +1,5 @@
 <template>
-  <bk-loading :loading="isLoading" class="group-wrapper">
+  <section class="group-wrapper">
     <template v-if="!isLoading">
       <!-- 管理员 -->
       <template v-if="hasPermission">
@@ -25,7 +25,7 @@
       <!-- 未开启权限管理 -->
       <not-open-manage v-else-if="!hasPermission" v-bind="$props" />
     </template>
-  </bk-loading>
+  </section>
 </template>
 
 <script>

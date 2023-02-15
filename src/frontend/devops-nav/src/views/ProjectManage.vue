@@ -80,7 +80,7 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
-                                <LoadingIcon v-if="[1, 3].includes(row.approvalStatus)" />
+                                <LoadingIcon v-if="row.approvalStatus === 1" />
                                 <icon
                                     v-else-if="!row.enabled"
                                     class="devops-icon status-icon"
@@ -97,15 +97,15 @@
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
                                 </span>
                                 <icon
-                                    v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
+                                    v-bk-tooltips="{ content: $t('新建项目申请已拒绝') }"
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
                                     :size="20"
                                     name="warning-circle"
                                 />
                                 <icon
-                                    v-bk-tooltips="{ content: statusTips[row.approvalStatus] }"
-                                    v-if="[1, 4].includes(row.approvalStatus)"
+                                    v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
+                                    v-if="row.approvalStatus = 4"
                                     class="devops-icon status-icon"
                                     :size="20"
                                     name="wait"
@@ -188,16 +188,10 @@
                 ],
                 inputValue: '',
                 approvalStatusMap: {
-                    0: this.$t('启用中'),
                     1: this.$t('创建中'),
-                    2: this.$t('创建中'),
-                    4: this.$t('启用中'),
-                    5: this.$t('启用中')
-                },
-                statusTips: {
-                    1: this.$t('新建项目申请审批中'),
-                    2: this.$t('新建项目申请已拒绝'),
-                    4: this.$t('项目信息修改申请审批中'),
+                    2: this.$t('启用中'),
+                    3: this.$t('创建中'),
+                    4: this.$t('启用中')
                 }
             }
         },
