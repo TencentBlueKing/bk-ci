@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service.measure
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.IMeasureEvent
@@ -39,22 +41,33 @@ class MeasureEventDispatcher constructor(
     @Resource(name = EXTEND_RABBIT_TEMPLATE_NAME) private val rabbitTemplate: RabbitTemplate
 ) : EventDispatcher<IMeasureEvent> {
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: IMeasureEvent) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = eventType.routeKey
-//                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}
-//               |source=(${event.javaClass.name})")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    if (eventType.delayMills > 0) { // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                    }
-                    message
-                }
+                send(event)
             } catch (ignored: Exception) {
-                logger.error("[MQ_SEVERE]Fail to dispatch the event($events)", ignored)
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
+                    }
+                } else {
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                }
             }
+        }
+    }
+
+    private fun send(event: IMeasureEvent) {
+        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+        val routeKey = eventType.routeKey
+        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+            if (eventType.delayMills > 0) { // 事件类型固化默认值
+                message.messageProperties.setHeader("x-delay", eventType.delayMills)
+            }
+            message
         }
     }
 
