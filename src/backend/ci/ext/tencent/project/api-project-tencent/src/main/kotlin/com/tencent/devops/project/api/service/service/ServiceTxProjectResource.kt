@@ -61,6 +61,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("TooManyFunctions", "LongParameterList")
 interface ServiceTxProjectResource {
 
     @GET
