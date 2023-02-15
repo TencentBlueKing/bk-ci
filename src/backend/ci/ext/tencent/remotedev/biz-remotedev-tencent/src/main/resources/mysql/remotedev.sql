@@ -96,6 +96,7 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
                                                        `GIT_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接git',
                                                        `TAPD_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接TAPD',
                                                        `GITHUB_ATTACHED` boolean NOT NULL DEFAULT 0 COMMENT '是否连接github',
+                                                       `DOTFILE_REPO` varchar(256) NOT NULL DEFAULT '' COMMENT 'dotfiles仓库路径',
                                                        `ENVS_FOR_VARIABLE` mediumtext NOT NULL COMMENT '远程开发环境变量配置',
                                                        `CUMULATIVE_USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '当月累计使用时间(月初清空)',
                                                        `CUMULATIVE_BILLING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '用户累计计费时间(当月计费数据暂不统计)',

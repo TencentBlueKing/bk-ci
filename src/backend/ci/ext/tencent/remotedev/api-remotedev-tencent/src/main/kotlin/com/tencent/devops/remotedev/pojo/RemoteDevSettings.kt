@@ -45,5 +45,7 @@ data class RemoteDevSettings(
     @ApiModelProperty("远程开发环境变量配置")
     val envsForVariable: Map<String, String> = emptyMap(),
     @ApiModelProperty("远程开发文件配置")
-    val envsForFile: List<RemoteDevFile> = emptyList()
+    val envsForFile: List<RemoteDevFile> = emptyList(),
+    @ApiModelProperty("dotfiles仓库路径")
+    val dotfileRepo: String = ""
 )

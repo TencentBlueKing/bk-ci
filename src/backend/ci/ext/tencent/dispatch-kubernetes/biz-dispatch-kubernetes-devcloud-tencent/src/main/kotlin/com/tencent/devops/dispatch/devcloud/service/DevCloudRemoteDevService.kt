@@ -245,6 +245,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
                 EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
                 EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
+                EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
                 EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
@@ -281,7 +282,7 @@ class DevCloudRemoteDevService @Autowired constructor(
         private const val DEVOPS_REMOTING_BACKEND_HOST = "DEVOPS_REMOTING_BACKEND_HOST"
         private const val BK_PRE_BUILD_GATEWAY = "BK_PRE_BUILD_GATEWAY"
         private const val DEVOPS_REMOTING_GIT_REMOTE_REPO_URL = "DEVOPS_REMOTING_GIT_REMOTE_REPO_URL"
-
+        private const val DEVOPS_REMOTING_DOTFILE_REPO = "DEVOPS_REMOTING_DOTFILE_REPO"
         private const val INIT_CONTAINER_GIT_TOKEN = "GIT_TOKEN"
         private const val INIT_CONTAINER_GIT_URL = "GIT_URL"
         private const val INIT_CONTAINER_GIT_BRANCH = "GIT_BRANCH"

@@ -246,6 +246,8 @@ class WorkspaceService @Autowired constructor(
                 logger.warn("get user $userId info failed ${it.message}")
                 throw CustomException(Response.Status.BAD_REQUEST, "获取 user $userId info 异常 ${it.message}")
             }.email
+
+            dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.dotfileRepo ?: ""
         }
 
         workspaceDao.createWorkspace(

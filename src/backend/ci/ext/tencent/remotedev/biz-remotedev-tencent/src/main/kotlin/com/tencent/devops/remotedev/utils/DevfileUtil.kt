@@ -51,7 +51,8 @@ object DevfileUtil {
                 vscode = vscode,
                 ports = ports,
                 commands = commands,
-                gitEmail = null
+                gitEmail = null,
+                dotfileRepo = null
             )
         }
     }

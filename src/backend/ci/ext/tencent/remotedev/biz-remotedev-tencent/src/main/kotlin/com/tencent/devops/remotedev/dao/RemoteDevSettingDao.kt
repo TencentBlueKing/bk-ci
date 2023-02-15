@@ -53,7 +53,8 @@ class RemoteDevSettingDao {
                 GIT_ATTACHED,
                 TAPD_ATTACHED,
                 GITHUB_ATTACHED,
-                ENVS_FOR_VARIABLE
+                ENVS_FOR_VARIABLE,
+                DOTFILE_REPO
             )
                 .values(
                     userId,
@@ -62,7 +63,8 @@ class RemoteDevSettingDao {
                     ByteUtils.bool2Byte(setting.gitAttached),
                     ByteUtils.bool2Byte(setting.tapdAttached),
                     ByteUtils.bool2Byte(setting.githubAttached),
-                    JsonUtil.toJson(setting.envsForVariable, false)
+                    JsonUtil.toJson(setting.envsForVariable, false),
+                    setting.dotfileRepo
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
@@ -70,6 +72,7 @@ class RemoteDevSettingDao {
                 .set(TAPD_ATTACHED, ByteUtils.bool2Byte(setting.tapdAttached))
                 .set(GITHUB_ATTACHED, ByteUtils.bool2Byte(setting.githubAttached))
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
+                .set(DOTFILE_REPO, setting.dotfileRepo)
                 .execute()
         }
     }
@@ -93,7 +96,8 @@ class RemoteDevSettingDao {
                         it.envsForVariable,
                         object : TypeReference<Map<String, String>>() {}
                     ) ?: emptyMap(),
-                    envsForFile = emptyList()
+                    envsForFile = emptyList(),
+                    dotfileRepo = it.dotfileRepo
                 )
             }
         }
