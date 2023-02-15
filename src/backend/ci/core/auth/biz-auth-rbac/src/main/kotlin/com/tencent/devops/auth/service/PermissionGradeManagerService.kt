@@ -194,6 +194,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 iamV2ManagerService.createGradeManagerApplication(gradeManagerApplicationCreateDTO)
             authItsmCallbackDao.create(
                 dslContext = dslContext,
+                applyId = createGradeManagerApplication.id,
                 sn = createGradeManagerApplication.sn,
                 englishName = projectCode,
                 callbackId = callbackId,
@@ -291,6 +292,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 iamV2ManagerService.updateGradeManagerApplication(gradeManagerId, gradeManagerApplicationUpdateDTO)
             authItsmCallbackDao.create(
                 dslContext = dslContext,
+                applyId = updateGradeManagerApplication.id,
                 sn = updateGradeManagerApplication.sn,
                 englishName = projectCode,
                 callbackId = callbackId,
