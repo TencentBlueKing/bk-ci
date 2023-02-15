@@ -179,12 +179,12 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             if (osType == OSType.WINDOWS) {
                 ZipUtil.unZipFile(pkgFile, pkgFileDir.absolutePath, false)
             } else {
-                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), true)
+                CommandLineUtils.execute("tar -xzf $pkgName", File(envDir, NODEJS), print2Logger = true)
             }
             CommandLineUtils.execute(
                 command = command,
                 workspace = envDir,
-                print2Logger = false
+                print2Logger = true
             )
             // 把nodejs执行路径写入系统变量
             System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
