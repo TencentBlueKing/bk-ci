@@ -136,6 +136,16 @@ class CodeP4RepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
+        if (repoCredentialInfo.username.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+            )
+        }
+        if (repoCredentialInfo.password.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+            )
+        }
         val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
