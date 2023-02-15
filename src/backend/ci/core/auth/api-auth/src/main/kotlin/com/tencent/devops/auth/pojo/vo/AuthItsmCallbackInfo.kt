@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("itsm回调信息")
 data class AuthItsmCallbackInfo(
+    @ApiModelProperty("权限中心申请单ID")
+    val applyId: Int,
     @ApiModelProperty("itsm 审批单号")
     val sn: String,
     @ApiModelProperty("项目id")
