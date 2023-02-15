@@ -30,7 +30,6 @@ package com.tencent.devops.common.websocket.utils
 import com.tencent.devops.common.redis.RedisOperation
 import java.util.concurrent.TimeUnit
 
-//@Suppress("ALL")
 object WsRedisUtils {
 
     // 记录user-session映射。 user: session = 1:N 。同一个user，可以在不同端登录，可能产生多个session
