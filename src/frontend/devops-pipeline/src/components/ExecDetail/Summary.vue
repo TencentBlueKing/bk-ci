@@ -42,22 +42,9 @@
                 <span class="exec-detail-summary-info-block-title">{{
                     $t("details.triggerRepo")
                 }}</span>
-                <div v-if="webhookInfos" class="exec-detail-summary-info-material-list">
-                    <div class="exec-material-row visible-material-row">
-                        <span v-for="item in webhookInfos" :key="item.key">
-                            <logo :name="item.icon || execDetail.webhookInfo" size="14" />
-                            <a
-                                v-if="item.key === 'webhookCommitId'"
-                                class="material-link"
-                                theme="primary"
-                                target="_blank"
-                                :href="execDetail.webhookInfo.webhookRepoUrl"
-                            >
-                                {{ item.value.substring(0, 8) }}
-                            </a>
-                            <span class="material-span" v-else>{{ item.value }}</span>
-                        </span>
-                    </div>
+                <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
+                    <material-item class="visible-material-row" :material="webhookInfo">
+                    </material-item>
                 </div>
                 <span class="no-exec-material" v-else>--</span>
             </div>
@@ -66,52 +53,22 @@
                     $t("editPage.material")
                 }}</span>
                 <div v-if="visibleMaterial" class="exec-detail-summary-info-material-list">
-                    <div class="exec-material-row visible-material-row">
-                        <span v-for="field in materialInfos" :key="field">
-                            <logo :name="field.icon || visibleMaterial[0].icon" size="14" />
-                            <a
-                                v-if="field.key === 'newCommitId'"
-                                class="material-link"
-                                theme="primary"
-                                target="_blank"
-                                :href="visibleMaterial[0].url"
-                            >
-                                {{ visibleMaterial[0][field.key].substring(0, 8) }}
-                            </a>
-                            <span class="material-span" v-else>{{
-                                visibleMaterial[0][field.key]
-                            }}</span>
-                        </span>
-                        <span v-if="visibleMaterial.length > 1" @mouseenter="showMoreMaterial">
-                            <i class="devops-icon icon-ellipsis" />
-                        </span>
-                    </div>
+                    <material-item
+                        class="visible-material-row"
+                        :material="visibleMaterial[0]"
+                        @mouseenter="showMoreMaterial"
+                        :show-more="visibleMaterial.length <= 1"
+                    />
                     <ul
                         v-show="isShowMoreMaterial"
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
                         <li
-                            v-for="material in visibleMaterial"
-                            class="exec-material-row"
+                            v-for="(material, index) in visibleMaterial"
                             :key="material.newCommitId"
                         >
-                            <span v-for="field in materialInfos" :key="field.key">
-                                <logo :name="field.icon" size="14" />
-                                <a
-                                    v-if="field.key === 'newCommitId'"
-                                    class="material-link"
-                                    theme="primary"
-                                    target="_blank"
-                                    :href="material.url"
-                                >
-                                    {{ material[field.key].substring(0, 8) }}
-                                </a>
-                                <span class="material-span" v-else>{{ material[field.key] }}</span>
-                            </span>
-                            <span class="exec-more-material"
-                            ><i class="devops-icon icon-ellipsis"
-                            /></span>
+                            <material-item :show-more="index === 0" :material="material" />
                         </li>
                     </ul>
                 </div>
@@ -164,14 +121,15 @@
 <script>
     import { mapActions } from 'vuex'
     import Logo from '@/components/Logo'
+    import MaterialItem from './MaterialItem'
     import {
         convertMStoStringByRule,
-        convertTime,
-        getMaterialIconByType
+        convertTime
     } from '@/utils/util'
     export default {
         components: {
-            Logo
+            Logo,
+            MaterialItem
         },
         props: {
             execDetail: {
@@ -233,36 +191,17 @@
                     Array.isArray(this.execDetail?.material)
                     && this.execDetail?.material.length > 0
                 ) {
-                    return this.execDetail?.material.map((item) => ({
-          ...item,
-          icon: getMaterialIconByType(item.scmType)
-        }))
+                    return this.execDetail?.material
                 }
                 return null
             },
-            materialInfos () {
-                return [
-                    {
-                        key: 'aliasName',
-                        icon: 'codeGithubWebHookTrigger'
-                    },
-                    {
-                        key: 'branchName',
-                        icon: 'branch'
-                    },
-                    {
-                        key: 'newCommitId',
-                        icon: 'commit'
-                    }
-                ]
-            },
-            webhookInfos () {
+            webhookInfo () {
                 return this.execDetail?.webhookInfo
-        ? ['webhookAliasName', 'webhookBranch', 'webhookCommitId'].map((field) => ({
-            key: field,
-            icon: getMaterialIconByType(this.execDetail?.webhookInfo?.[field]?.scmType),
-            value: this.execDetail?.webhookInfo?.[field] ?? '--'
-          }))
+                ? {
+                    aliasName: this.execDetail.webhookInfo.webhookAliasName,
+                    branchName: this.execDetail.webhookInfo.webhookBranch,
+                    newCommitId: this.execDetail.webhookInfo.webhookCommitId
+                }
                 : null
             }
         },

@@ -254,11 +254,11 @@
             },
             baseInfoRows () {
                 return [
-                    { key: 'name', name: 'Name' },
-                    { key: 'fullName', name: 'Path' },
-                    { key: 'size', name: 'Size' },
-                    { key: 'createdTime', name: 'Created' },
-                    { key: 'modifiedTime', name: 'Last Modified' }
+                    { key: 'name', name: this.$t('details.name') },
+                    { key: 'fullName', name: this.$t('details.filePath') },
+                    { key: 'size', name: this.$t('details.size') },
+                    { key: 'createdTime', name: this.$t('details.created') },
+                    { key: 'modifiedTime', name: this.$t('details.lastModified') }
                 ]
             },
             checkSumRows () {

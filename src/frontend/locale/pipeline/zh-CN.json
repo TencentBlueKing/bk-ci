@@ -670,7 +670,17 @@
     "goDistFolder": "前往自定义仓库",
     "paramDetail": "参数详情",
     "execPreview": "调试预览",
-    "importPreview": "导入预览"
+    "importPreview": "导入预览",
+    "name": "产出物名称",
+    "filePath": "文件路径",
+    "size": "文件大小",
+    "created": "创建时间",
+    "lastModified": "最后修改时间",
+    "pipelineErrorGuide": "流水线故障排查指南",
+    "errorType": "错误类型",
+    "errorCode": "错误码",
+    "taskId": "错误位置",
+    "errorMsg": "错误信息"
   },
   "editPage": {
     "invalidValue": "插件表单参数{0}非法 ",

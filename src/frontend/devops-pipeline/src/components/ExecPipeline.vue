@@ -100,15 +100,13 @@
                 >
                 <bk-tab
                     class="pipeline-exec-error-tab"
-                    :active.sync="active"
                     type="unborder-card"
-                    @tab-change="setShowErrorPopup"
                 >
                     <template slot="setting">
                         <bk-link theme="primary" href="javascript:;">
                             <span class="fix-error-jump">
                                 <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
-                                {{ $t("流水线故障排查指南") }}
+                                {{ $t("details.pipelineErrorGuide") }}
                             </span>
                         </bk-link>
                         <bk-button theme="normal" text @click="toggleErrorPopup">
@@ -286,19 +284,19 @@
             errorsTableColumns () {
                 return [
                     {
-                        label: this.$t('错误类型'),
+                        label: this.$t('errorType'),
                         prop: 'errorType'
                     },
                     {
-                        label: this.$t('错误码'),
+                        label: this.$t('errorCode'),
                         prop: 'errorCode'
                     },
                     {
-                        label: this.$t('错误位置'),
+                        label: this.$t('taskId'),
                         prop: 'taskId'
                     },
                     {
-                        label: this.$t('错误信息'),
+                        label: this.$t('errorMsg'),
                         prop: 'errorMsg'
                     }
                 ]

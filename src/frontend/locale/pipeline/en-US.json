@@ -667,7 +667,17 @@
     "goDistFolder": "前往自定义仓库",
     "paramDetail": "参数详情",
     "execPreview": "调试预览",
-    "importPreview": "导入预览"
+    "importPreview": "导入预览",
+    "name": "Name",
+    "filePath": "Path",
+    "size": "Size",
+    "created": "Created",
+    "lastModified": "Last Modified",
+    "pipelineErrorGuide": "流水线故障排查指南",
+    "errorType": "错误类型",
+    "errorCode": "错误码",
+    "taskId": "错误位置",
+    "errorMsg": "错误信息"
   },
   "editPage": {
     "invalidValue": "Plugin's Input {0} Invalid",
