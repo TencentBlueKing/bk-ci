@@ -1129,14 +1129,10 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
         val propMap = JsonUtil.toMap(atom.props)
         val outputDataMap = propMap[ATOM_OUTPUT] as? Map<String, Any>
         return outputDataMap?.keys?.map { outputKey ->
-            val outputDataObj = outputDataMap[outputKey] as Map<String, Any>
+            val outputDataObj = outputDataMap[outputKey]
             AtomOutput(
                 name = outputKey,
-                desc = if (outputDataObj[OUTPUT_DESC] == null) {
-                    null
-                } else {
-                    outputDataObj[OUTPUT_DESC].toString()
-                }
+                desc = if (outputDataObj is Map<*, *>) outputDataObj[OUTPUT_DESC]?.toString() else null
             )
         } ?: emptyList()
     }

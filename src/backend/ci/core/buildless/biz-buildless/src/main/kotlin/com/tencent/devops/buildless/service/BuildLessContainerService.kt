@@ -180,9 +180,9 @@ class BuildLessContainerService(
                 httpDockerCli.stopContainerCmd(containerId).withTimeout(15).exec()
             }
         } catch (e: NotModifiedException) {
-            logger.error("$buildId|$vmSeqId Stop the container failed, containerId: $containerId already stopped.")
+            logger.warn("$buildId|$vmSeqId Stop the container failed, containerId: $containerId already stopped.")
         } catch (ignored: Throwable) {
-            logger.error(
+            logger.warn(
                 "$buildId|$vmSeqId Stop the container failed, containerId: $containerId, " +
                         "error msg: $ignored", ignored
             )
@@ -192,7 +192,7 @@ class BuildLessContainerService(
             // docker rm
             httpDockerCli.removeContainerCmd(containerId).exec()
         } catch (ignored: Throwable) {
-            logger.error(
+            logger.warn(
                 "$buildId|$vmSeqId Stop the container failed, containerId: $containerId, error msg: $ignored",
                 ignored
             )

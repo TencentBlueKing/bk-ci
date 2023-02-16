@@ -27,9 +27,6 @@
 
 package com.tencent.devops.process.engine.extend
 
-import com.nhaarman.mockito_kotlin.any
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.api.enums.FrontendTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
@@ -51,17 +48,19 @@ import com.tencent.devops.store.pojo.atom.InstalledAtom
 import com.tencent.devops.store.pojo.atom.enums.JobTypeEnum
 import com.tencent.devops.store.pojo.common.StoreUserCommentInfo
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
+import io.mockk.every
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 class DefaultModelCheckPluginTest : TestBase() {
 
-    private val client: Client = mock()
-    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig = mock()
-    private val stageCommonSettingConfig: StageCommonSettingConfig = mock()
-    private val jobCommonSettingConfig: JobCommonSettingConfig = mock()
-    private val taskCommonSettingConfig: TaskCommonSettingConfig = mock()
+    private val client: Client = mockk()
+    private val pipelineCommonSettingConfig: PipelineCommonSettingConfig = mockk()
+    private val stageCommonSettingConfig: StageCommonSettingConfig = mockk()
+    private val jobCommonSettingConfig: JobCommonSettingConfig = mockk()
+    private val taskCommonSettingConfig: TaskCommonSettingConfig = mockk()
     private val checkPlugin = DefaultModelCheckPlugin(
         client = client,
         pipelineCommonSettingConfig = pipelineCommonSettingConfig,
@@ -69,9 +68,9 @@ class DefaultModelCheckPluginTest : TestBase() {
         jobCommonSettingConfig = jobCommonSettingConfig,
         taskCommonSettingConfig = taskCommonSettingConfig
     )
-    private val serviceMarketAtomResource: ServiceMarketAtomResource = mock()
-    private val serviceAtomResource: ServiceAtomResource = mock()
-    private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mock()
+    private val serviceMarketAtomResource: ServiceMarketAtomResource = mockk()
+    private val serviceAtomResource: ServiceAtomResource = mockk()
+    private val serviceMarketAtomEnvResource: ServiceMarketAtomEnvResource = mockk()
 
     private fun genAtomVersion() = AtomVersion(
         atomId = "1",
@@ -118,55 +117,55 @@ class DefaultModelCheckPluginTest : TestBase() {
 
     @BeforeEach
     fun setUp2() {
-        whenever(client.get(ServiceMarketAtomResource::class)).thenReturn(serviceMarketAtomResource)
-        whenever(
+        every { client.get(ServiceMarketAtomResource::class) } returns serviceMarketAtomResource
+        every {
             client.get(ServiceMarketAtomResource::class).getAtomByCode(atomCode = atomCode, username = "")
-        ).thenReturn(
-            Result(genAtomVersion())
-        )
+        } returns (
+                Result(genAtomVersion())
+                )
 
-        whenever(client.get(ServiceAtomResource::class)).thenReturn(serviceAtomResource)
-        whenever(
+        every { client.get(ServiceAtomResource::class) } returns (serviceAtomResource)
+        every {
             client.get(ServiceAtomResource::class).getInstalledAtoms(projectId)
-        ).thenReturn(
-            Result(genInstallAtomInfo())
-        )
-        whenever(client.get(ServiceMarketAtomEnvResource::class)).thenReturn(serviceMarketAtomEnvResource)
-        whenever(
+        } returns (
+                Result(genInstallAtomInfo())
+                )
+        every { client.get(ServiceMarketAtomEnvResource::class) } returns (serviceMarketAtomEnvResource)
+        every {
             serviceMarketAtomEnvResource.batchGetAtomRunInfos(
                 projectCode = any(),
                 atomVersions = any()
             )
-        ).thenReturn(
-            Result(
-                mapOf(
-                    "manualTrigger:1.*" to AtomRunInfo(
-                        atomCode = "manualTrigger",
-                        atomName = "手动触发",
-                        version = "1.*",
-                        initProjectCode = projectId,
-                        jobType = JobTypeEnum.AGENT,
-                        buildLessRunFlag = false,
-                        inputTypeInfos = null
+        } returns (
+                Result(
+                    mapOf(
+                        "manualTrigger:1.*" to AtomRunInfo(
+                            atomCode = "manualTrigger",
+                            atomName = "手动触发",
+                            version = "1.*",
+                            initProjectCode = projectId,
+                            jobType = JobTypeEnum.AGENT,
+                            buildLessRunFlag = false,
+                            inputTypeInfos = null
+                        )
                     )
                 )
-            )
-        )
-        whenever(pipelineCommonSettingConfig.maxModelSize).thenReturn(16777215)
-        whenever(pipelineCommonSettingConfig.maxStageNum).thenReturn(20)
-        whenever(pipelineCommonSettingConfig.maxPipelineNameSize).thenReturn(255)
-        whenever(pipelineCommonSettingConfig.maxPipelineDescSize).thenReturn(255)
-        whenever(stageCommonSettingConfig.maxJobNum).thenReturn(20)
-        whenever(jobCommonSettingConfig.maxTaskNum).thenReturn(20)
-        whenever(taskCommonSettingConfig.maxInputNum).thenReturn(50)
-        whenever(taskCommonSettingConfig.maxOutputNum).thenReturn(50)
-        whenever(taskCommonSettingConfig.maxInputComponentSize).thenReturn(1024)
-        whenever(taskCommonSettingConfig.maxTextareaComponentSize).thenReturn(4096)
-        whenever(taskCommonSettingConfig.maxCodeEditorComponentSize).thenReturn(16384)
-        whenever(taskCommonSettingConfig.maxDefaultInputComponentSize).thenReturn(1024)
-        whenever(taskCommonSettingConfig.multipleInputComponents).thenReturn("dynamic-parameter")
-        whenever(taskCommonSettingConfig.maxMultipleInputComponentSize).thenReturn(4000)
-        whenever(taskCommonSettingConfig.maxDefaultOutputComponentSize).thenReturn(4000)
+                )
+        every { pipelineCommonSettingConfig.maxModelSize } returns (16777215)
+        every { pipelineCommonSettingConfig.maxStageNum } returns (20)
+        every { pipelineCommonSettingConfig.maxPipelineNameSize } returns (255)
+        every { pipelineCommonSettingConfig.maxPipelineDescSize } returns (255)
+        every { stageCommonSettingConfig.maxJobNum } returns (20)
+        every { jobCommonSettingConfig.maxTaskNum } returns (20)
+        every { taskCommonSettingConfig.maxInputNum } returns (50)
+        every { taskCommonSettingConfig.maxOutputNum } returns (50)
+        every { taskCommonSettingConfig.maxInputComponentSize } returns (1024)
+        every { taskCommonSettingConfig.maxTextareaComponentSize } returns (4096)
+        every { taskCommonSettingConfig.maxCodeEditorComponentSize } returns (16384)
+        every { taskCommonSettingConfig.maxDefaultInputComponentSize } returns (1024)
+        every { taskCommonSettingConfig.multipleInputComponents } returns ("dynamic-parameter")
+        every { taskCommonSettingConfig.maxMultipleInputComponentSize } returns (4000)
+        every { taskCommonSettingConfig.maxDefaultOutputComponentSize } returns (4000)
     }
 
     private fun genInstallAtomInfo(): List<InstalledAtom> {

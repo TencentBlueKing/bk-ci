@@ -93,7 +93,7 @@ import java.nio.file.Files
 import java.time.LocalDateTime
 
 @Service
-@Suppress("LongParameterList", "LongMethod", "ReturnCount")
+@Suppress("LongParameterList", "LongMethod", "ReturnCount", "ComplexMethod", "NestedBlockDepth")
 class OpAtomServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val classifyDao: ClassifyDao,
@@ -119,6 +119,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -135,6 +136,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val pipelineAtomList = atomDao.getOpPipelineAtoms(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -152,6 +154,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val totalSize = atomDao.getOpPipelineAtomCount(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,

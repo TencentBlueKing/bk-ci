@@ -344,6 +344,7 @@ class AtomDao : AtomBaseDao() {
     fun getOpPipelineAtoms(
         dslContext: DSLContext,
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -356,8 +357,16 @@ class AtomDao : AtomBaseDao() {
         pageSize: Int?
     ): Result<TAtomRecord> {
         with(TAtom.T_ATOM) {
-            val conditions =
-                queryOpPipelineAtomsConditions(atomName, atomType, serviceScope, os, category, classifyId, atomStatus)
+            val conditions = queryOpPipelineAtomsConditions(
+                atomName = atomName,
+                atomCode = atomCode,
+                atomType = atomType,
+                serviceScope = serviceScope,
+                os = os,
+                category = category,
+                classifyId = classifyId,
+                atomStatus = atomStatus
+            )
             val baseStep = dslContext.selectFrom(this)
             if (null != sortType) {
                 if (desc != null && desc) {
@@ -380,6 +389,7 @@ class AtomDao : AtomBaseDao() {
     fun getOpPipelineAtomCount(
         dslContext: DSLContext,
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -390,6 +400,7 @@ class AtomDao : AtomBaseDao() {
         with(TAtom.T_ATOM) {
             val conditions = queryOpPipelineAtomsConditions(
                 atomName = atomName,
+                atomCode = atomCode,
                 atomType = atomType,
                 serviceScope = serviceScope,
                 os = os,
@@ -403,6 +414,7 @@ class AtomDao : AtomBaseDao() {
 
     private fun TAtom.queryOpPipelineAtomsConditions(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -412,6 +424,7 @@ class AtomDao : AtomBaseDao() {
     ): MutableList<Condition> {
         val conditions = mutableListOf<Condition>()
         atomName?.let { conditions.add(NAME.contains(URLDecoder.decode(atomName, "UTF-8"))) }
+        atomCode?.let { conditions.add(ATOM_CODE.contains(atomCode)) }
         atomType?.let { conditions.add(ATOM_TYPE.eq(atomType.type.toByte())) }
         serviceScope?.let {
             if (!"all".equals(serviceScope, true)) {
