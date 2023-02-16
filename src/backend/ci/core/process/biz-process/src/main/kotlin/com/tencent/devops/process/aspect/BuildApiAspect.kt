@@ -24,34 +24,29 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.web.aop
+package com.tencent.devops.process.aspect
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
-import io.lettuce.core.MigrateArgs.Builder.auth
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.annotation.Pointcut
 import org.aspectj.lang.reflect.MethodSignature
-import org.glassfish.jersey.internal.inject.Bindings.service
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
-import javax.security.auth.AuthPermission
 
 @Aspect
-@ServiceInterface("process")
 class BuildApiAspect constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePermissionService: PipelinePermissionService
 ) {
 
-    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
+    @Pointcut("@annotation(com.tencent.devops.process.annotation.BuildApiPermission)")
     fun pointCut() = Unit
 
     companion object {
