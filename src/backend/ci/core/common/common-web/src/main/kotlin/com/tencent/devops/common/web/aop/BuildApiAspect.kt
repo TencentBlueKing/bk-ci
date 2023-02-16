@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.client.Client
@@ -63,7 +62,7 @@ class BuildApiAspect constructor(private val client: Client) {
         val types = method.getAnnotation(BuildApiPermission::class.java)?.values
         logger.info("[doBefore] the method 【$methodName】")
         types?.forEach {
-            when(it) {
+            when (it) {
                 "auth" -> {
                     // 参数value
                     val parameterValue = jp.args
@@ -73,7 +72,6 @@ class BuildApiAspect constructor(private val client: Client) {
                 }
             }
         }
-
     }
 
     private fun authPermission(parameterNames: Array<String>, parameterValue: Array<Any>) {
