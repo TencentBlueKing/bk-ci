@@ -91,7 +91,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         )
     }
 
-    @BuildApiPermission(["auth"])
+    @BuildApiPermission
     override fun getSubPipelineStatus(
         projectId: String,
         pipelineId: String,
