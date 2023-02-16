@@ -43,7 +43,7 @@
                     $t("details.triggerRepo")
                 }}</span>
                 <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
-                    <material-item class="visible-material-row" :material="webhookInfo">
+                    <material-item class="visible-material-row" :material="webhookInfo" :show-more="false">
                     </material-item>
                 </div>
                 <span class="no-exec-material" v-else>--</span>
@@ -57,7 +57,7 @@
                         class="visible-material-row"
                         :material="visibleMaterial[0]"
                         @mouseenter="showMoreMaterial"
-                        :show-more="visibleMaterial.length <= 1"
+                        :show-more="visibleMaterial.length > 1"
                     />
                     <ul
                         v-show="isShowMoreMaterial"
