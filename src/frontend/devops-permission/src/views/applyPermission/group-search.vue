@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import { Error } from 'bkui-vue/lib/icon'
@@ -32,42 +31,6 @@ const pagination = ref({
   limit: 10,
   current: 1,
 });
-
-const emits = defineEmits(['handle-change-select-group']);
-
-// 表格已选中用户组状态
-const handleSetTableSelected = () => {
-  
-};
-
-watch(() => selectGroupList.value, (val) => {
-  handleChangeSelectGroup(val)
-}, {
-  deep: true,
-});
-
-watch(() => props.projectCode, () => {
-  if (props.projectCode) {
-    fetchGroupList();
-  };
-})
-
-watch(() => props.groupList, () => {
-  selectGroupList.value = props.groupList;
-  if (tableRef.value) {
-    const data = tableRef.value.getSelection();
-    const selectIdMap = selectGroupList.value.map(i => i.id);
-    const list = data.filter(select => !selectIdMap.includes(select.id))
-    list.forEach(i => tableRef.value.toggleRowSelection(i, false))
-  }
-}, {
-  immediate: true,
-  deep: true,
-});
-
-const handleChangeSelectGroup = (values) => {
-  emits('handle-change-select-group', values);
-};
 
 const searchList = computed(() => {
   const datas = [
@@ -104,6 +67,40 @@ const searchList = computed(() => {
   });
 });
 
+const emits = defineEmits(['handle-change-select-group']);
+
+watch(() => props.projectCode, () => {
+  if (props.projectCode) {
+    fetchGroupList();
+  };
+})
+
+const handleChangeSelectGroup = (values) => {
+  emits('handle-change-select-group', values);
+};
+
+const toggleTableRowSelected = () => {
+  if (tableRef.value) {
+    const data = tableRef.value.getSelection();
+    const selectIdMap = selectGroupList.value.map(i => i.id);
+    const list = data.filter(select => !selectIdMap.includes(select.id))
+    list.forEach(i => tableRef.value.toggleRowSelection(i, false))
+  }
+};
+
+watch(() => selectGroupList.value, () => {
+  handleChangeSelectGroup(selectGroupList.value);
+  toggleTableRowSelected();
+});
+
+watch(() => props.groupList, () => {
+  selectGroupList.value = props.groupList;
+  toggleTableRowSelected();
+}, {
+  immediate: true,
+  deep: true,
+});
+
 const handlePageChange = (page) => {
   pagination.value.current = page;
 };
@@ -124,6 +121,11 @@ const hiddenDetail = (payload) => {
 
 const initTable = () => {
   tableRef.value?.clearSelection();
+};
+
+const handleChangeSearch = (data) => {
+  filter.value = data;
+  fetchGroupList(data);
 };
 
 const fetchGroupList = async (payload = []) => {
@@ -150,6 +152,7 @@ const fetchGroupList = async (payload = []) => {
   await http.getUserGroupList(params).then(res => {
     pagination.value.count = res.count;
     userGroupList.value = res.results;
+    toggleTableRowSelected();
   }).catch(() => {
     isLoading.value = false;
     return [];
@@ -175,6 +178,10 @@ const handleSelectAllGroup = (selection) => {
   }
 };
 
+const isRowSelectEnable = ({ row }) => {
+  return true;
+}
+
 onMounted(() => {
   
 });
@@ -187,7 +194,7 @@ onMounted(() => {
       v-model="filter"
       :search-list="searchList"
       :project-code="projectCode"
-      @change="fetchGroupList">
+      @change="handleChangeSearch">
     </search-select>
     <bk-loading
       class="group-table"
@@ -196,19 +203,26 @@ onMounted(() => {
         ref="tableRef"
         :data="userGroupList"
         :pagination="pagination"
+        row-key="id"
+        async-data
         :border="['row', 'outer']"
+        :is-row-select-enable="isRowSelectEnable"
         @page-value-change="handlePageChange"
         @page-limit-change="handleLimitChange"
         @select="handleSelectGroup"
         @select-all="handleSelectAllGroup"
       >
         <bk-table-column type="selection" width="60"></bk-table-column>
-        <bk-table-column :label="t('用户组名')" prop="name" show-overflow-tooltip>
+        <bk-table-column :label="t('用户组名')" prop="name">
           <template #default="{ data }">
-            <span class="group-name" @click="handleShowGroupDetail(data)">{{ data.name }}</span>
+            <span class="group-name" :title="data?.name" @click="handleShowGroupDetail(data)">{{ data?.name }}</span>
           </template>
         </bk-table-column>
-        <bk-table-column :label="t('描述')" prop="description" show-overflow-tooltip></bk-table-column>
+        <bk-table-column :label="t('描述')" prop="description">
+          <template #default="{ data }">
+            <span :title="data?.description">{{ data?.description }}</span>
+          </template>
+        </bk-table-column>
       </bk-table> 
     </bk-loading>
   </article>
@@ -236,5 +250,10 @@ onMounted(() => {
   }
   :deep(.bordered-outer) {
     border: 1px solid #dcdee5;
+  }
+  
+  :deep(.bk-table .bk-table-head table thead th),
+  :deep(.bk-table .bk-table-body table thead th) {
+    text-align: center !important;
   }
 </style>

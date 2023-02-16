@@ -27,7 +27,9 @@ const fetchGroupPermissionDetail = async () => {
   if (id) {
     await http.getGroupPermissionDetail(props.groupInfo.id).then(res => {
       groupPermissionDetail.value = res;
-    }).catch(() => []);
+    }).catch(() => {
+      groupPermissionDetail.value = [];
+    });
     isLoading.value = false;
   }
 };
@@ -45,7 +47,6 @@ const handleHidden = () => {
 
 const handleShowInstances = (data, name) => {
   relatedResourceInfo.value = { ...data, actionName: name };
-  console.log(relatedResourceInfo.value, 123)
   showInstancesDetail.value = true;
 }
 </script>

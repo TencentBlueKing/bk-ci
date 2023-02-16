@@ -32,6 +32,7 @@ const projectForm = ref(null);
 const btnLoading = ref(false);
 const handleConfirm = () => {
   const confirmFn = async () => {
+    infoBoxInstance.value.hide();
     btnLoading.value = true;
     const result = await http.requestCreateProject({
       projectData: projectData.value,
@@ -50,9 +51,10 @@ const handleConfirm = () => {
       });
     }
   };
-
+  const infoBoxInstance = ref();
   projectForm.value?.validate().then(() => {
-    InfoBox({
+    infoBoxInstance.value = InfoBox({
+      isShow: true,
       infoType: 'warning',
       title: t('创建项目需您的上级审批，确认提交吗'),
       contentAlign: 'center',

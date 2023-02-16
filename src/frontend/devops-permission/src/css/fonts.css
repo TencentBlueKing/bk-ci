@@ -44,3 +44,15 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-review:before {
 	content: "\e107";
 }
+.permission-icon-quanxianshenqing:before {
+	content: "\e108";
+}
+.permission-icon-wodequanxian:before {
+	content: "\e109";
+}
+.permission-icon-wodeshenqing:before {
+	content: "\e10b";
+}
+.permission-icon-wodeshenpi:before {
+	content: "\e10a";
+}

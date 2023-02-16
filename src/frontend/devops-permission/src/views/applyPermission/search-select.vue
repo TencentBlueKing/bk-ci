@@ -25,7 +25,6 @@
           :arrow="false"
           :isShow="showMenuPopover"
           placement='bottom-start'
-          class="search-list-popover"
           :boundary="boundary">
           <div
             ref="input"
@@ -353,7 +352,7 @@ export default {
       const classList = parent ? parent.classList : null;
       
       const unFocus = !parent || (classList && !Array.from(classList.values()).some(key => {
-        return ['search-select', 'bk-popover-content', 'menu-item'].includes(key);
+        return ['search-select', 'bk-popover', 'menu-item'].includes(key);
       }));
       if (unFocus) {
         this.showMenuPopover = false;
@@ -728,7 +727,7 @@ export default {
   }
 </style>
 <style lang="postcss">
-  .bk-popover-content {
+  .bk-popover {
     padding: 0 !important;
     padding-bottom: 0 !important;
     .cascader-panel,

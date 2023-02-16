@@ -31,7 +31,6 @@ const fetchProjectData = async () => {
   await http.requestProjectData({
     englishName: projectCode,
   }).then((res) => {
-    console.log(res, 123)
     projectData.value = res;
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
   });
@@ -74,12 +73,34 @@ const handleFormChange = (val: boolean) => {
 };
 
 const handleApprovedChange = (val: boolean) => {
-  console.log(123, 'handleApprovedChange')
   isToBeApproved.value = val;
 };
 
+const infoBoxInstance = ref();
+
+const updateProject = async () => {
+  infoBoxInstance.value?.hide()
+  btnLoading.value = true;
+  const result = await http.requestUpdateProject({
+    projectId: projectData.value.englishName,
+    projectData: projectData.value,
+  }).finally(() => {
+    btnLoading.value = false;
+  });
+  if (result) {
+    Message({
+      theme: 'success',
+      message: t('保存成功'),
+    });
+    router.push({
+      path: 'show',
+    });
+  }
+  return Promise.resolve(false)
+};
 const showNeedApprovedTips = () => {
-  InfoBox({
+  infoBoxInstance.value = InfoBox({
+    isShow: true,
     infoType: 'warning',
     title: t('本次提交需要审核'),
     subTitle: t('修改了“项目性质”或“项目最大可授权人员范围”，需要经过审核'),
@@ -91,24 +112,6 @@ const showNeedApprovedTips = () => {
     onConfirm: updateProject,
     onClosed: () => true,
   });
-};
-
-const updateProject = async () => {
-  btnLoading.value = true;
-  const result = await http.requestUpdateProject({
-    projectId: projectData.value.englishName,
-    projectData: projectData.value,
-  });
-  btnLoading.value = false;
-  if (result) {
-    Message({
-      theme: 'success',
-      message: t('保存成功'),
-    });
-    router.push({
-      path: 'show',
-    });
-  }
 };
 
 /**
