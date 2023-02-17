@@ -59,8 +59,8 @@ class BuildApiAspect constructor(private val client: Client) {
     fun doBefore(jp: JoinPoint) {
         val method = (jp.signature as MethodSignature).method
         val methodName: String = method.name
-        val types = method.getAnnotation(BuildApiPermission::class.java)?.values
-        logger.info("[doBefore] the method 【$methodName】 types${types?.map { it }}")
+        val types = method.getAnnotation(BuildApiPermission::class.java)?.values?.toList()
+        logger.info("[doBefore] the method 【$methodName】 types$types")
         types?.forEach {
             when (it) {
                 "auth" -> {
