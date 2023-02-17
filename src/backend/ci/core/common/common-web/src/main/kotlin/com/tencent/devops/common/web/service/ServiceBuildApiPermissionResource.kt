@@ -57,7 +57,12 @@ interface ServiceBuildApiPermissionResource {
      */
     @Path("triggerUser/{projectId}/{buildId}/get")
     @GET
-    fun getTriggerUser(projectId: String, buildId: String): Result<String?>
+    fun getTriggerUser(
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("buildId")
+        buildId: String
+    ): Result<String?>
 
     /**
      * 验证api调用是否越权
