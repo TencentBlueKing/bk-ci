@@ -78,7 +78,7 @@ class BuildApiAspect constructor(private val client: Client) {
         val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
         val authBuildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
         val authProjectId = request.getHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        if (!parameterNames.contains("authProjectId") || !parameterNames.contains("authBuildId")) return
+        if (!parameterNames.contains("projectId") || !parameterNames.contains("pipelineId")) return
         var projectId: String? = null
         var pipelineId: String? = null
         parameterNames.forEach {
