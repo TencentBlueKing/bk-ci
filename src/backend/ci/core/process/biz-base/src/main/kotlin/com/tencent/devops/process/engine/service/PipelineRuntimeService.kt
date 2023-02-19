@@ -1230,7 +1230,6 @@ class PipelineRuntimeService @Autowired constructor(
                 pipelineId = pipelineId,
                 userId = context.userId,
                 buildId = buildId,
-                buildStatus = startBuildStatus,
                 executeCount = context.executeCount
             ), // #3400 点启动处于DETAIL界面，以操作人视角，没有刷历史列表的必要，在buildStart真正启动时也会有HISTORY，减少负载
             PipelineBuildWebSocketPushEvent(
