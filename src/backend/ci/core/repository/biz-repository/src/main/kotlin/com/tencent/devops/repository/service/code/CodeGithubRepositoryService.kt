@@ -107,11 +107,6 @@ class CodeGithubRepositoryService @Autowired constructor(
     }
 
     override fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo> {
-        return repositoryGithubDao.list(
-            dslContext = dslContext,
-            repositoryIds = repositoryIds.toSet()
-        )?.associateBy({ it -> it.repositoryId }, {
-            RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = it.userName)
-        }) ?: mapOf()
+        return repositoryIds.associateWith { RepoAuthInfo(authType = RepoAuthType.OAUTH.name, credentialId = "") }
     }
 }

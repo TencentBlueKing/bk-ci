@@ -673,7 +673,7 @@ class RepositoryService @Autowired constructor(
                 canDelete = hasDeletePermission,
                 authType = authInfo?.authType ?: RepoAuthType.HTTP.name,
                 svnType = authInfo?.svnType,
-                authIdentity = authInfo?.credentialId
+                authIdentity = authInfo?.credentialId?.ifBlank { it.userId }
             )
         }
         return Pair(SQLPage(count, repositoryList), hasCreatePermission)
