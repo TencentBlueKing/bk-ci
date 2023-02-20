@@ -47,6 +47,7 @@ import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.pojo.common.PublisherInfo
 import com.tencent.devops.store.pojo.common.PublishersRequest
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
+import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.PublisherType
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -225,7 +226,22 @@ class PublishersDataServiceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
-        return storeDockingPlatformDao.batchCreate(dslContext, userId, storeDockingPlatformRequests)
+        storeDockingPlatformRequests.forEach {
+            storeDockingPlatformDao.add(dslContext, userId, it)
+            if (!it.errorCodeInfo.isNullOrEmpty()) {
+                storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeErrorCodeInfo = StoreErrorCodeInfo(
+                        storeCode = it.platformCode,
+                        storeType = StoreTypeEnum.ATOM,
+                        errorCodeType = ErrorCodeTypeEnum.PLATFORM,
+                        errorCodeInfos = it.errorCodeInfo!!
+                    )
+                )
+            }
+        }
+        return storeDockingPlatformRequests.size
     }
 
     override fun deletePlatformsData(
@@ -246,7 +262,22 @@ class PublishersDataServiceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
-        return storeDockingPlatformDao.batchUpdate(dslContext, userId, storeDockingPlatformRequests)
+        storeDockingPlatformRequests.forEach {
+            storeDockingPlatformDao.update(dslContext, userId, it)
+            if (!it.errorCodeInfo.isNullOrEmpty()) {
+                storeErrorCodeInfoDao.batchUpdateErrorCodeInfo(
+                    dslContext = dslContext,
+                    userId = userId,
+                    storeErrorCodeInfo = StoreErrorCodeInfo(
+                        storeCode = it.platformCode,
+                        storeType = StoreTypeEnum.ATOM,
+                        errorCodeType = ErrorCodeTypeEnum.PLATFORM,
+                        errorCodeInfos = it.errorCodeInfo!!
+                    )
+                )
+            }
+        }
+        return storeDockingPlatformRequests.size
     }
 
     override fun getPublishers(
