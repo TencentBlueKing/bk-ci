@@ -8,7 +8,6 @@ import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -91,15 +90,14 @@ class RbacCacheService @Autowired constructor(
         return actionCache.getIfPresent(action)!!
     }
 
-    fun getResourceTypeInfo(resourceType: String): String {
+    fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
         if (resourceTypeCache.getIfPresent(resourceType) == null) {
             listResourceTypes()
         }
-        val resourceTypeInfo = resourceTypeCache.getIfPresent(resourceType) ?: throw ErrorCodeException(
+        return resourceTypeCache.getIfPresent(resourceType) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_FOUND,
             params = arrayOf(resourceType),
             defaultMessage = "权限系统：[$resourceType]资源类型不存在"
         )
-        return resourceType
     }
 }
