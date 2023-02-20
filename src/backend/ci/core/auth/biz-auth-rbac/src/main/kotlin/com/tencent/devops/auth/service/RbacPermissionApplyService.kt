@@ -64,6 +64,11 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = "project",
             resourceCode = projectId
         )
+        // 如果选择了资源实例，首先校验一下资源类型是否为空
+        // 如果资源实例不为空，则bkIamPath 得拼成 /bk_ci_rbac,searchGroupInfo.resourceType,projectId/
+        // 然后进行搜索一次。
+        // 接着如果该资源类型是流水线，这得搜索出所有包含该流水线的流水线组的id，然后拼成/bk_ci_rbac,searchGroupInfo.resourceType,projectId/，
+        // 查找组，然后
         val searchGroupDTO = SearchGroupDTO
             .builder()
             .inherit(searchGroupInfo.inherit)
@@ -79,6 +84,9 @@ class RbacPermissionApplyService @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
+
+
+
 
         try {
             // 校验用户是否属于组
