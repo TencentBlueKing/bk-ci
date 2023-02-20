@@ -191,6 +191,16 @@ class CodeGitRepositoryService @Autowired constructor(
                 )
             }
             RepoAuthType.HTTP -> {
+                if (repoCredentialInfo.username.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                    )
+                }
+                if (repoCredentialInfo.password.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                    )
+                }
                 scmService.checkUsernameAndPassword(
                     projectName = repository.projectName,
                     url = repository.getFormatURL(),
