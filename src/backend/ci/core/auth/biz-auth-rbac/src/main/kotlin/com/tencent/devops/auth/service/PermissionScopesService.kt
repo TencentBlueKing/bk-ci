@@ -92,21 +92,7 @@ class PermissionScopesService(
                     projectName
                 )
                 managerPath.add(projectPath)
-                // 流水线组有三级权限管理,/project,mht/pipeline_group,01/
-                if (resourceType == AuthResourceType.PIPELINE_GROUP.value &&
-                    strategyResourceType == AuthResourceType.PIPELINE_DEFAULT.value
-                ) {
-                    val pipelineGroupPath = ManagerPath(
-                        iamConfiguration.systemId,
-                        AuthResourceType.PIPELINE_GROUP.value,
-                        resourceCode,
-                        resourceName
-                    )
-                    managerPath.add(pipelineGroupPath)
-                }
-                if (resourceType == actionInfo.relatedResourceType &&
-                    actionInfo.relatedResourceType != AuthResourceType.PROJECT.value
-                ) {
+                if (resourceType != strategyResourceType && resourceType != actionInfo.relatedResourceType) {
                     val resourcePath = ManagerPath(
                         iamConfiguration.systemId,
                         resourceType,
