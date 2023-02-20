@@ -115,12 +115,14 @@ export default {
   watch: {
     groupList: {
       handler() {
-        this.activeTab = this.groupList[0]?.groupId;
+        if (this.groupList.length) {
+          this.handleChangeTab(this.groupList[0]);
+        }
       },
       immediate: true,
     },
     activeIndex(newVal) {
-      this.activeTab = this.groupList[newVal]?.groupId;
+      this.activeTab = this.groupList[newVal]?.groupId || '';
     },
   },
   methods: {

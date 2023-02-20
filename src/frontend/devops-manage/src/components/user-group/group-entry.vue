@@ -136,6 +136,7 @@ export default {
     },
 
     handleCreateGroup() {
+      this.activeIndex = '';
       this.path = 'create-user-group';
     },
 
@@ -148,6 +149,7 @@ export default {
     },
 
     handleCancelCreate(index = 0) {
+      this.activeIndex = 0;
       this.path = `user-group-detail/${this.groupList[index].groupId}?role_id=${this.groupList[index].managerId}`;
     },
 

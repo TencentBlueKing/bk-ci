@@ -19,7 +19,7 @@ export default defineComponent({
   },
   setup(props) {
     const commonQuery = {
-      system_id: 'bk_ci',
+      system_id: 'bk_ci_rbac',
       source: 'externalApp',
     };
     const iframeUrl = ref('');

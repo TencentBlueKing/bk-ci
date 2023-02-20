@@ -242,6 +242,15 @@ onMounted(async () => {
             <div class="project-name">
               <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
               <span class="item-value">{{ projectData.projectName }}</span>
+              <span class="enable-status">
+                <svg v-if="projectData.enabled" aria-hidden="true" class="enable-status-icon">
+                  <use xlink:href="#manage-icon-normal"></use>
+                </svg>
+                <svg v-else aria-hidden="true" class="enable-status-icon">
+                  <use xlink:href="#manage-icon-unknown"></use>
+                </svg>
+                {{ projectData.enabled ? t('已启用') : t('未启用') }}
+              </span>
             </div>
             <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
               <p class="update-title">{{ t('本次更新：') }}</p>
@@ -422,6 +431,20 @@ onMounted(async () => {
     .project-name {
       display: flex;
       align-items: center;
+
+    }
+    .enable-status {
+      display: flex;
+      align-items: center;
+      margin-left: 20px;
+      padding: 0px 10px;
+      background: #F0F1F5;
+      border-radius: 12px;
+      .enable-status-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 2px;
+      }
     }
     .project-logo {
       width: 60px;
