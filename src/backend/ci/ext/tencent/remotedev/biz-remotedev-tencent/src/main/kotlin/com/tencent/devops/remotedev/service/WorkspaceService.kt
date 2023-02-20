@@ -1055,7 +1055,8 @@ class WorkspaceService @Autowired constructor(
         return WorkspaceProxyDetail(
             workspaceName = workspaceName,
             podIp = workspaceInfo.data?.environmentIP ?: "",
-            sshKey = sshKey
+            sshKey = sshKey,
+            environmentHost = workspaceInfo.data?.environmentHost ?: ""
         )
     }
 

@@ -37,5 +37,7 @@ data class WorkspaceProxyDetail(
     @ApiModelProperty("工作空间名称")
     val podIp: String,
     @ApiModelProperty("工作空间关联秘钥")
-    val sshKey: String
+    val sshKey: String,
+    @ApiModelProperty("工作空间Host")
+    val environmentHost: String
 )
