@@ -75,62 +75,64 @@ class PermissionScopesService(
             )
         logger.info("get $strategyName strategy|${strategyInfo.strategy}")
         val authorizationScopes = mutableListOf<AuthorizationScopes>()
-        strategyInfo.strategy.forEach { (strategyResourceType, operate) ->
-            val action = "${strategyResourceType}_${operate}"
-            val actionInfo = rbacCacheService.getActionInfo(action = action)
+        strategyInfo.strategy.forEach { (strategyResourceType, permissions) ->
+            permissions.forEach { permission ->
+                val action = "${strategyResourceType}_${permission}"
+                val actionInfo = rbacCacheService.getActionInfo(action = action)
 
-            val actions = mutableListOf<Action>()
-            val resources = mutableListOf<ManagerResources>()
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
 
-            actions.add(Action(action))
-            val managerPath = mutableListOf<ManagerPath>()
-            val projectPath = ManagerPath(
-                iamConfiguration.systemId,
-                AuthResourceType.PROJECT.value,
-                projectCode,
-                projectName
-            )
-            managerPath.add(projectPath)
-            // 流水线组有三级权限管理,/project,mht/pipeline_group,01/
-            if (resourceType == AuthResourceType.PIPELINE_GROUP.value &&
-                strategyResourceType == AuthResourceType.PIPELINE_DEFAULT.value
-            ) {
-                val pipelineGroupPath = ManagerPath(
+                actions.add(Action(action))
+                val managerPath = mutableListOf<ManagerPath>()
+                val projectPath = ManagerPath(
                     iamConfiguration.systemId,
-                    AuthResourceType.PIPELINE_GROUP.value,
-                    resourceCode,
-                    resourceName
+                    AuthResourceType.PROJECT.value,
+                    projectCode,
+                    projectName
                 )
-                managerPath.add(pipelineGroupPath)
-            }
-            if (resourceType == actionInfo.relatedResourceType &&
-                actionInfo.relatedResourceType != AuthResourceType.PROJECT.value
-            ) {
-                val resourcePath = ManagerPath(
-                    iamConfiguration.systemId,
-                    resourceType,
-                    "*",
-                    ""
+                managerPath.add(projectPath)
+                // 流水线组有三级权限管理,/project,mht/pipeline_group,01/
+                if (resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+                    strategyResourceType == AuthResourceType.PIPELINE_DEFAULT.value
+                ) {
+                    val pipelineGroupPath = ManagerPath(
+                        iamConfiguration.systemId,
+                        AuthResourceType.PIPELINE_GROUP.value,
+                        resourceCode,
+                        resourceName
+                    )
+                    managerPath.add(pipelineGroupPath)
+                }
+                if (resourceType == actionInfo.relatedResourceType &&
+                    actionInfo.relatedResourceType != AuthResourceType.PROJECT.value
+                ) {
+                    val resourcePath = ManagerPath(
+                        iamConfiguration.systemId,
+                        resourceType,
+                        "*",
+                        ""
+                    )
+                    managerPath.add(resourcePath)
+                }
+
+                val paths = mutableListOf<List<ManagerPath>>()
+                paths.add(managerPath)
+
+                resources.add(
+                    ManagerResources.builder()
+                        .system(iamConfiguration.systemId)
+                        .type(actionInfo.relatedResourceType)
+                        .paths(paths).build()
                 )
-                managerPath.add(resourcePath)
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
             }
-
-            val paths = mutableListOf<List<ManagerPath>>()
-            paths.add(managerPath)
-
-            resources.add(
-                ManagerResources.builder()
-                    .system(iamConfiguration.systemId)
-                    .type(actionInfo.relatedResourceType)
-                    .paths(paths).build()
-            )
-            authorizationScopes.add(
-                AuthorizationScopes.builder()
-                    .system(iamConfiguration.systemId)
-                    .actions(actions)
-                    .resources(resources)
-                    .build()
-            )
         }
         return authorizationScopes
     }
