@@ -74,15 +74,14 @@ const handleShowInstances = (data, name) => {
               :border="['row', 'outer']">
               <bk-table-column :label="t('操作')" width="150" show-overflow-tooltip>
                 <template #default="{ data }">
-                  {{ data.name }}
+                  {{ data?.name }}
                 </template>
               </bk-table-column>
               <bk-table-column :label="t('资源实例')" show-overflow-tooltip>
                 <template #default="{ data }">
-                  <div v-if="data.relatedResourceInfo" class="resources-info">
+                  <div v-if="data?.relatedResourceInfo" class="resources-info">
                     <bk-popover
                       theme="light"
-                      placement="right"
                     >
                       <span v-if="data.relatedResourceInfo?.instances?.path.length > 1">
                         {{ data.relatedResourceInfo?.name }}: {{ t('已选择个流水线', [data.relatedResourceInfo?.instances?.path.length]) }}
@@ -90,21 +89,21 @@ const handleShowInstances = (data, name) => {
                       <span v-else>
                         {{ data.relatedResourceInfo?.name }}:
                         <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
-                          {{ item.name }} {{ index > 0 ? '/' : '' }}
+                          {{ item.name }}{{ index !== data.relatedResourceInfo?.instances?.path[0].length - 1 ? ' / ' : '' }} 
                         </span>
                       </span>
                       <template #content>
                         <div v-if="data.relatedResourceInfo?.instances?.path.length > 1" class="resources-tips">
                           <div v-for="(path, pathIndex) in data.relatedResourceInfo?.instances?.path" :key="pathIndex" class="path-item">
                             <span v-for="(item, index) in path" :key="item.id">
-                              {{ item.name }} {{ index > 0 ? '/' : '' }}
+                              {{ item.name }} {{ index !== path.length -1 ? ' / ' : '' }} 
                             </span>
                           </div>
                         </div>
                         <div v-else class="resources-tips">
                           <span v-for="(item, index) in data.relatedResourceInfo?.instances?.path[0]" :key="item.id">
-                            {{ item.name }} {{ index > 0 ? '/' : '' }}
-                          </span>
+                            {{ item.name }} {{ index !== data.relatedResourceInfo?.instances?.path[0].length -1 ? ' / ' : '' }} 
+                          </span> 
                         </div>
                       </template>
                     </bk-popover>
@@ -185,13 +184,14 @@ const handleShowInstances = (data, name) => {
     padding: 20px;
     height: 100%;
   }
+  .resources-tips {
+    padding: 10px;
+  }
   .resources-info {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    .resources-tips {
-      padding: 0 10px;
-    }
+    
     .path-item {
       height: 30px;
       line-height: 30px;

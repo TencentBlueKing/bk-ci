@@ -10,12 +10,10 @@ import {
   useRouter,
 } from 'vue-router';
 import { Message, InfoBox, Popover } from 'bkui-vue';
-
 import { computed, onMounted } from '@vue/runtime-core';
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-
 const { projectCode } = route.params;
 const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
@@ -73,7 +71,6 @@ const fieldMap = [
   },
   
 ]
-
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
     englishName: projectCode,
@@ -85,7 +82,6 @@ const fetchDiffProjectData = () => {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
-
     if (projectData.value?.subjectScopes.length !== projectDiffData.value?.afterSubjectScopes.length) {
       projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
     } else {
@@ -100,13 +96,11 @@ const fetchDiffProjectData = () => {
     }
   });
 };
-
 const getUserInfo = () => {
   http.getUser().then(res => {
     userName.value = res.username;
   });
 };
-
 const handleEdit = () => {
   router.push({
     path: 'edit',
@@ -182,7 +176,6 @@ const handleCancelCreation = () => {
       })
     }
   };
-
   InfoBox({
     infoType: 'warning',
     title: t('确定取消创建项目'),
@@ -192,12 +185,10 @@ const handleCancelCreation = () => {
     onConfirm,
   });
 };
-
 const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
 };
-
 const tipsStatusMap = {
   1: {
     type: 'info',
@@ -224,13 +215,11 @@ const tipsStatusMap = {
     message: t('更新项目信息审批被拒绝。'),
   },
 };
-
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
   deep: true,
 });
-
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
@@ -424,7 +413,6 @@ onMounted(async () => {
     background-color: #fff;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
   }
-
   .detail-content-form {
     :deep(.bk-form-label) {
       font-size: 12px;
