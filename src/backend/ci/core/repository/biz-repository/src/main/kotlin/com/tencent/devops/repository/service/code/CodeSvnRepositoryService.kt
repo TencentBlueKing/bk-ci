@@ -149,6 +149,7 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
+        logger.info("repoCredentialInfo=[$repoCredentialInfo]")
         return when (repository.svnType) {
             SVN_TYPE_HTTP -> {
                 var username = repoCredentialInfo.username

@@ -49,6 +49,7 @@ interface Repository {
     var userName: String
     val projectId: String?
     val repoHashId: String?
+    val repoProjectId: Long?
 
     fun isLegal() = url.startsWith(getStartPrefix())
 

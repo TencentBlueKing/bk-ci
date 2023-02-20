@@ -48,7 +48,9 @@ data class CodeTGitRepository(
     val authType: RepoAuthType? = RepoAuthType.SSH,
     @ApiModelProperty("项目id", required = true)
     override var projectId: String?,
-    override val repoHashId: String?
+    override val repoHashId: String?,
+    @ApiModelProperty("TGit仓库ID", required = false)
+    override val repoProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeTGit"

@@ -50,7 +50,9 @@ data class CodeSvnRepository(
     @ApiModelProperty("仓库hash id", required = false)
     override val repoHashId: String?,
     @ApiModelProperty("SVN类型", required = false)
-    val svnType: String? = SVN_TYPE_SSH // default is ssh svn type
+    val svnType: String? = SVN_TYPE_SSH, // default is ssh svn type
+    @ApiModelProperty("SVN仓库ID", required = false)
+    override val repoProjectId: Long? = 0L
 ) : Repository {
 
     companion object {
