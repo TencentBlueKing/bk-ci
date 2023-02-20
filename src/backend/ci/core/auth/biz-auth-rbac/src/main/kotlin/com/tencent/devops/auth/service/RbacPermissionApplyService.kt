@@ -22,9 +22,7 @@ import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
-import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
@@ -33,7 +31,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
-import java.util.stream.Collectors
 
 @Service
 @Suppress("ALL")
