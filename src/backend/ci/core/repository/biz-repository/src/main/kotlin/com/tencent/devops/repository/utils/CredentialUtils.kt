@@ -75,10 +75,10 @@ object CredentialUtils {
                 //  -->credentials[0] 取自 com.tencent.devops.ticket.pojo.CredentialInfo.v1 字段
                 //  -->目前v1字段对应com.tencent.devops.repository.pojo.credential.RepoCredentialInfo.username 字段
                 // 旧数据的密码字段若为空，则说明username字段存的是密码，凭证用户名直接用仓库用户
-                if (repoCredentialInfo.password.isBlank()) {
+                if (repoCredentialInfo.username.isBlank()) {
                     Credential(
                         username = repository.userName,
-                        privateKey = repoCredentialInfo.username,
+                        privateKey = repoCredentialInfo.password,
                         passPhrase = null
                     )
                 } else {
