@@ -136,16 +136,6 @@ class CodeP4RepositoryService @Autowired constructor(
             projectId = projectId,
             repository = repository
         )
-        if (repoCredentialInfo.username.isEmpty()) {
-            throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
-            )
-        }
-        if (repoCredentialInfo.password.isEmpty()) {
-            throw OperationException(
-                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
-            )
-        }
         val checkResult = checkToken(
             repoCredentialInfo = repoCredentialInfo,
             repository = repository
@@ -161,6 +151,16 @@ class CodeP4RepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeP4Repository
     ): TokenCheckResult {
+        if (repoCredentialInfo.username.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+            )
+        }
+        if (repoCredentialInfo.password.isEmpty()) {
+            throw OperationException(
+                message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+            )
+        }
         return scmService.checkUsernameAndPassword(
             projectName = repository.projectName,
             url = repository.getFormatURL(),
