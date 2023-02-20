@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.service
 
-import com.google.common.cache.CacheBuilder
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
@@ -9,10 +8,8 @@ import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.ApplicationInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
@@ -30,7 +27,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 @Suppress("ALL")
@@ -41,9 +37,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceService: AuthResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
-    val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao,
-    val config: CommonConfig
+    val rbacCacheService: RbacCacheService,
+    final val config: CommonConfig
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -51,85 +46,12 @@ class RbacPermissionApplyService @Autowired constructor(
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/applyPermission?" +
         "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
 
-    private val actionListCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, List<ActionInfoVo>>()
-    private val resourceTypeListCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, List<ResourceTypeInfoVo>>()
-    private val actionCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, ActionInfoVo>()
-    private val resourceTypeNameCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, String>()
-
-
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
-        if (resourceTypeListCache.getIfPresent(ALL_RESOURCE) == null) {
-            val resourceTypeList = authResourceTypeDao.list(dslContext).map {
-                resourceTypeNameCache.put(it.resourceType, it.name)
-                ResourceTypeInfoVo(
-                    resourceType = it.resourceType,
-                    name = it.name,
-                    parent = it.parent,
-                    system = it.system
-                )
-            }
-            resourceTypeListCache.put(ALL_RESOURCE, resourceTypeList)
-        }
-        return resourceTypeListCache.getIfPresent(ALL_RESOURCE)!!
+        return rbacCacheService.listResourceTypes(userId)
     }
 
     override fun listActions(userId: String, resourceType: String): List<ActionInfoVo> {
-        if (actionCache.getIfPresent(resourceType) == null) {
-            val actionList = authActionDao.list(dslContext, resourceType)
-            if (actionList.isEmpty()) {
-                throw ErrorCodeException(
-                    errorCode = AuthMessageCode.RESOURCE_ACTION_EMPTY,
-                    params = arrayOf(resourceType),
-                    defaultMessage = "权限系统：[$resourceType]资源类型关联的动作不存在"
-                )
-            }
-            val actionInfoVoList = actionList.map {
-                val actionInfoVo = ActionInfoVo(
-                    action = it.action,
-                    actionName = it.actionName,
-                    resourceType = it.resourceType,
-                    relatedResourceType = it.relatedResourceType
-                )
-                actionCache.put(it.action, actionInfoVo)
-                actionInfoVo
-            }
-            actionListCache.put(resourceType, actionInfoVoList)
-        }
-        return actionListCache.getIfPresent(resourceType)!!
-
-    }
-
-    private fun getActionInfo(
-        userId: String,
-        resourceType: String,
-        action: String
-    ): ActionInfoVo {
-        if (actionCache.getIfPresent(resourceType) == null) {
-            listActions(userId, resourceType)
-        }
-        return actionCache.getIfPresent(action)!!
-    }
-
-    private fun getResourceTypeName(
-        userId: String,
-        resourceType: String,
-    ): String {
-        if (resourceTypeListCache.getIfPresent(ALL_RESOURCE) == null) {
-            listResourceTypes(userId)
-        }
-        return resourceTypeNameCache.getIfPresent(resourceType)!!
+        return rbacCacheService.listActions(userId, resourceType)
     }
 
     override fun listGroups(
@@ -215,13 +137,13 @@ class RbacPermissionApplyService @Autowired constructor(
             )
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = getResourceTypeName(userId, relatedResourceTypesDTO.type),
+                name = rbacCacheService.getResourceTypeName(userId, relatedResourceTypesDTO.type),
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             groupPermissionDetailVoList.add(
                 GroupPermissionDetailVo(
                     actionId = it.id,
-                    name = getActionInfo(
+                    name = rbacCacheService.getActionInfo(
                         userId = userId,
                         resourceType = it.id.substring(0, it.id.lastIndexOf("_")),
                         action = it.id
@@ -238,10 +160,10 @@ class RbacPermissionApplyService @Autowired constructor(
         userId: String
     ) {
         instancesDTO.let {
-            it.name = getResourceTypeName(userId, it.type)
+            it.name = rbacCacheService.getResourceTypeName(userId, it.type)
             it.path.forEach { element1 ->
                 element1.forEach { element2 ->
-                    element2.typeName = getResourceTypeName(userId, element2.type)
+                    element2.typeName = rbacCacheService.getResourceTypeName(userId, element2.type)
                 }
             }
         }
@@ -255,9 +177,9 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
-        val actionInfo = getActionInfo(userId, resourceType, action)
+        val actionInfo = rbacCacheService.getActionInfo(userId, resourceType, action)
         val iamRelatedResourceType = actionInfo.relatedResourceType
-        val resourceTypeName = getResourceTypeName(userId, resourceType)
+        val resourceTypeName = rbacCacheService.getResourceTypeName(userId, resourceType)
         val resourceInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = iamRelatedResourceType,
@@ -357,9 +279,7 @@ class RbacPermissionApplyService @Autowired constructor(
         }
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
-        private const val ALL_RESOURCE = "all_resource"
     }
 }
