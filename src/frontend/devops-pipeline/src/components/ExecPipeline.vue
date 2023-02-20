@@ -1,653 +1,647 @@
 <template>
-    <div class="exec-pipeline-wrapper">
-        <div class="pipeline-exec-summary">
-            <div class="pipeline-exec-count">
-                <span>{{ $t("details.num") }}</span>
-                <bk-select
-                    ext-cls="pipeline-exec-count-select"
-                    :value="executeCount"
-                    :popover-width="200"
-                    :clearable="false"
-                    @selected="handleExecuteCountChange"
-                >
-                    <bk-option
-                        v-for="item in executeCounts"
-                        :key="item.id"
-                        :id="item.id"
-                        :name="item.name"
-                    >
-                        <p class="exec-count-select-option">
-                            <span>{{ item.name }}</span>
-                            <span class="exec-count-select-option-user">{{ item.user }}</span>
-                        </p>
-                    </bk-option>
-                </bk-select>
-                <span class="exec-status-label">
-                    {{ $t("details.times") }}，{{ statusLabel }}
-                    <span
-                        v-if="execDetail.status === 'CANCELED'"
-                        v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
-                        class="devops-icon icon-info-circle"
-                    >
-                    </span>
-                </span>
-            </div>
-            <ul class="pipeline-exec-timeline">
-                <li
-                    class="pipeline-exec-timeline-item"
-                    v-for="step in timeSteps"
-                    :key="step.title"
-                >
-                    <span>
-                        {{ step.title }}
-                    </span>
-                    <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
-                    <p>
-                        {{ step.description }}
-                    </p>
-                </li>
-            </ul>
-        </div>
-        <section class="pipeline-exec-content">
-            <header class="pipeline-style-setting-header">
-                <div class="bk-button-group">
-                    <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
-                        {{ item.label }}
-                    </bk-button>
-                </div>
-                <bk-checkbox
-                    :true-value="true"
-                    :false-value="false"
-                    v-model="hideSkipTask"
-                    ext-cls="hide-skip-pipeline-task"
-                >
-                    {{ $t("details.hideSkipStep") }}
-                </bk-checkbox>
-                <bk-button text theme="primary" @click="toggleCompleteLog">
-                    <i class="devops-icon icon-txt"></i>
-                    {{ $t("history.viewLog") }}
-                </bk-button>
-            </header>
-            <div class="exec-pipeline-ui-wrapper">
-                <bk-pipeline
-                    :editable="false"
-                    is-exec-detail
-                    :current-exec-count="executeCount"
-                    :cancel-user-id="cancelUserId"
-                    :user-name="userName"
-                    :pipeline="curPipeline"
-                    v-bind="$attrs"
-                    @click="handlePiplineClick"
-                    @stage-check="handleStageCheck"
-                    @stage-retry="handleRetry"
-                    @atom-quality-check="qualityCheck"
-                    @atom-review="reviewAtom"
-                    @atom-continue="handleContinue"
-                    @atom-exec="handleExec"
-                    @toggle-post-action-visible="togglePostActionVisible"
-                />
-            </div>
-            <footer
-                v-if="showErrorPopup"
-                :class="{
-                    'exec-errors-popup': true,
-                    visible: showErrors
-                }"
-                v-bk-clickoutside="hideErrorPopup"
-            >
-                <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
-                >.....</bk-button
-                >
-                <bk-tab
-                    class="pipeline-exec-error-tab"
-                    :active.sync="active"
-                    :label-height="42"
-                    type="unborder-card"
-                    @tab-change="setShowErrorPopup"
-                >
-                    <template slot="setting">
-                        <bk-link theme="primary" href="javascript:;">
-                            <span class="fix-error-jump">
-                                <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
-                                {{ $t("流水线故障排查指南") }}
-                            </span>
-                        </bk-link>
-                        <bk-button theme="normal" text @click="toggleErrorPopup">
-                            <i
-                                class="bk-icon hide-error-popup-icon"
-                                :class="{
-                                    'icon-angle-down': showErrors,
-                                    'icon-angle-up': !showErrors
-                                }"
-                            />
-                        </bk-button>
-                    </template>
-                    <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
-                        <bk-table
-                            :data="errorList"
-                            :border="false"
-                            @row-click="setAtomLocate"
-                            highlight-current-row
-                        >
-                            <bk-table-column width="80">
-                                <div slot-scope="props" class="exec-error-type-cell">
-                                    <span class="exec-error-locate-icon">
-                                        <Logo
-                                            v-if="
-                                                activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
-                                            "
-                                            name="location-right"
-                                            size="18"
-                                        />
-                                    </span>
-                                    <logo
-                                        v-if="props.row.errorTypeConf"
-                                        :name="props.row.errorTypeConf.icon"
-                                        size="12"
-                                    />
-                                </div>
-                            </bk-table-column>
-                            <bk-table-column
-                                v-for="(column, i) in errorsTableColumns"
-                                v-bind="column"
-                                :key="i"
-                            />
-                        </bk-table>
-                    </bk-tab-panel>
-                </bk-tab>
-            </footer>
-        </section>
-        <bk-dialog
-            v-model="showRetryStageDialog"
-            render-directive="if"
-            ext-cls="stage-retry-dialog"
-            :width="400"
-            :auto-close="false"
-            @confirm="retryPipeline(true)"
+  <div class="exec-pipeline-wrapper">
+    <div class="pipeline-exec-summary">
+      <div class="pipeline-exec-count">
+        <span>{{ $t("details.num") }}</span>
+        <bk-select
+          ext-cls="pipeline-exec-count-select"
+          :value="executeCount"
+          :popover-width="200"
+          :clearable="false"
+          @selected="handleExecuteCountChange"
         >
-            <bk-radio-group v-model="failedContainer">
-                <bk-radio :value="false">{{ $t("editPage.retryAllJobs") }}</bk-radio>
-                <bk-radio :value="true">{{ $t("editPage.retryFailJobs") }}</bk-radio>
-            </bk-radio-group>
-        </bk-dialog>
-        <check-atom-dialog
-            :is-show-check-dialog="isShowCheckDialog"
-            :toggle-check="toggleCheckDialog"
-            :element="currentAtom"
-        />
-
-        <div class="queue-time-detail-popup">
-            <div class="pipeline-time-detail-sum">
-                <span>{{ $t("details.queueCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : queueCost }}</span>
-            </div>
-        </div>
-        <div class="time-detail-popup">
-            <div class="pipeline-time-detail-sum">
-                <span>{{ $t("details.totalCost") }}</span>
-                <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : totalCost }}</span>
-            </div>
-            <ul class="pipeline-time-detail-sum-list">
-                <li v-for="cost in timeDetailRows" :key="cost.field">
-                    <span>{{ cost.label }}:</span>
-                    <span>{{ cost.value }}</span>
-                </li>
-            </ul>
-        </div>
-        <template v-if="execDetail && showLog">
-            <complete-log
-                @close="toggleCompleteLog"
-                :execute-count="executeCount"
-            ></complete-log>
-        </template>
+          <bk-option
+            v-for="item in executeCounts"
+            :key="item.id"
+            :id="item.id"
+            :name="item.name"
+          >
+            <p class="exec-count-select-option">
+              <span>{{ item.name }}</span>
+              <span class="exec-count-select-option-user">{{ item.user }}</span>
+            </p>
+          </bk-option>
+        </bk-select>
+        <span class="exec-status-label">
+          {{ $t("details.times") }}，{{ statusLabel }}
+          <span
+            v-if="execDetail.status === 'CANCELED'"
+            v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+            class="devops-icon icon-info-circle"
+          >
+          </span>
+        </span>
+      </div>
+      <ul class="pipeline-exec-timeline">
+        <li
+          class="pipeline-exec-timeline-item"
+          v-for="step in timeSteps"
+          :key="step.title"
+        >
+          <span>
+            {{ step.title }}
+          </span>
+          <p v-bk-tooltips="step.popup" class="time-step-divider"></p>
+          <p>
+            {{ step.description }}
+          </p>
+        </li>
+      </ul>
     </div>
+    <section class="pipeline-exec-content">
+      <header class="pipeline-style-setting-header">
+        <div class="bk-button-group">
+          <bk-button v-for="item in pipelineModes" :key="item.id" :class="item.cls">
+            {{ item.label }}
+          </bk-button>
+        </div>
+        <bk-checkbox
+          :true-value="true"
+          :false-value="false"
+          v-model="hideSkipTask"
+          ext-cls="hide-skip-pipeline-task"
+        >
+          {{ $t("details.hideSkipStep") }}
+        </bk-checkbox>
+        <bk-button text theme="primary" @click="toggleCompleteLog">
+          <i class="devops-icon icon-txt"></i>
+          {{ $t("history.viewLog") }}
+        </bk-button>
+      </header>
+      <div class="exec-pipeline-ui-wrapper">
+        <bk-pipeline
+          :editable="false"
+          is-exec-detail
+          :current-exec-count="executeCount"
+          :cancel-user-id="cancelUserId"
+          :user-name="userName"
+          :pipeline="curPipeline"
+          v-bind="$attrs"
+          @click="handlePiplineClick"
+          @stage-check="handleStageCheck"
+          @stage-retry="handleRetry"
+          @atom-quality-check="qualityCheck"
+          @atom-review="reviewAtom"
+          @atom-continue="handleContinue"
+          @atom-exec="handleExec"
+          @toggle-post-action-visible="togglePostActionVisible"
+        />
+      </div>
+      <footer
+        v-if="showErrorPopup"
+        :class="{
+          'exec-errors-popup': true,
+          visible: showErrors,
+        }"
+        v-bk-clickoutside="hideErrorPopup"
+      >
+        <bk-button theme="normal" text class="drag-dot" @click="toggleErrorPopup"
+          >.....</bk-button
+        >
+        <bk-tab class="pipeline-exec-error-tab" :label-height="42" type="unborder-card">
+          <template slot="setting">
+            <bk-link theme="primary" href="javascript:;">
+              <span class="fix-error-jump">
+                <logo class="fix-error-jump-icon" size="20" name="tiaozhuan" />
+                {{ $t("details.pipelineErrorGuide") }}
+              </span>
+            </bk-link>
+            <bk-button theme="normal" text @click="toggleErrorPopup">
+              <i
+                class="bk-icon hide-error-popup-icon"
+                :class="{
+                  'icon-angle-down': showErrors,
+                  'icon-angle-up': !showErrors,
+                }"
+              />
+            </bk-button>
+          </template>
+          <bk-tab-panel v-for="(panel, index) in panels" v-bind="panel" :key="index">
+            <bk-table
+              :data="errorList"
+              :border="false"
+              @row-click="setAtomLocate"
+              highlight-current-row
+            >
+              <bk-table-column width="80">
+                <div slot-scope="props" class="exec-error-type-cell">
+                  <span class="exec-error-locate-icon">
+                    <Logo
+                      v-if="
+                        activeErrorAtom && activeErrorAtom.taskId === props.row.taskId
+                      "
+                      name="location-right"
+                      size="18"
+                    />
+                  </span>
+                  <logo
+                    v-if="props.row.errorTypeConf"
+                    :name="props.row.errorTypeConf.icon"
+                    size="12"
+                  />
+                </div>
+              </bk-table-column>
+              <bk-table-column
+                v-for="(column, i) in errorsTableColumns"
+                v-bind="column"
+                :key="i"
+              />
+            </bk-table>
+          </bk-tab-panel>
+        </bk-tab>
+      </footer>
+    </section>
+    <bk-dialog
+      v-model="showRetryStageDialog"
+      render-directive="if"
+      ext-cls="stage-retry-dialog"
+      :width="400"
+      :auto-close="false"
+      @confirm="retryPipeline(true)"
+    >
+      <bk-radio-group v-model="failedContainer">
+        <bk-radio :value="false">{{ $t("editPage.retryAllJobs") }}</bk-radio>
+        <bk-radio :value="true">{{ $t("editPage.retryFailJobs") }}</bk-radio>
+      </bk-radio-group>
+    </bk-dialog>
+    <check-atom-dialog
+      :is-show-check-dialog="isShowCheckDialog"
+      :toggle-check="toggleCheckDialog"
+      :element="currentAtom"
+    />
+
+    <div class="queue-time-detail-popup">
+      <div class="pipeline-time-detail-sum">
+        <span>{{ $t("details.queueCost") }}</span>
+        <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : queueCost }}</span>
+      </div>
+    </div>
+    <div class="time-detail-popup">
+      <div class="pipeline-time-detail-sum">
+        <span>{{ $t("details.totalCost") }}</span>
+        <span>{{ isRunning ? `${$t("details.statusMap.RUNNING")}...` : totalCost }}</span>
+      </div>
+      <ul class="pipeline-time-detail-sum-list">
+        <li v-for="cost in timeDetailRows" :key="cost.field">
+          <span>{{ cost.label }}:</span>
+          <span>{{ cost.value }}</span>
+        </li>
+      </ul>
+    </div>
+    <template v-if="execDetail && showLog">
+      <complete-log
+        @close="toggleCompleteLog"
+        :execute-count="executeCount"
+      ></complete-log>
+    </template>
+  </div>
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
-    import { convertTime, convertMStoString } from '@/utils/util'
-    import CheckAtomDialog from '@/components/CheckAtomDialog'
-    import CompleteLog from '@/components/ExecDetail/completeLog'
-    import { errorTypeMap } from '@/utils/pipelineConst'
-    import Logo from '@/components/Logo'
-    export default {
-        components: {
-            CheckAtomDialog,
-            CompleteLog,
-            Logo
+import { mapState, mapActions } from "vuex";
+import { convertTime, convertMStoString } from "@/utils/util";
+import CheckAtomDialog from "@/components/CheckAtomDialog";
+import CompleteLog from "@/components/ExecDetail/completeLog";
+import { errorTypeMap } from "@/utils/pipelineConst";
+import Logo from "@/components/Logo";
+export default {
+  components: {
+    CheckAtomDialog,
+    CompleteLog,
+    Logo,
+  },
+  props: {
+    execDetail: {
+      type: Object,
+      required: true,
+    },
+  },
+  data() {
+    return {
+      showRetryStageDialog: false,
+      showLog: false,
+      retryTaskId: "",
+      skipTask: false,
+      failedContainer: false,
+      currentAtom: {},
+      pipelineMode: "uiMode",
+      hideSkipTask: false,
+      showErrors: false,
+      activeErrorAtom: null,
+    };
+  },
+  computed: {
+    ...mapState("common", ["ruleList", "templateRuleList"]),
+    panels() {
+      return [
+        {
+          name: "errors",
+          label: this.$t("Errors"),
         },
-        props: {
-            execDetail: {
-                type: Object,
-                required: true
-            }
-        },
-        data () {
-            return {
-                showRetryStageDialog: false,
-                showLog: false,
-                retryTaskId: '',
-                skipTask: false,
-                failedContainer: false,
-                currentAtom: {},
-                pipelineMode: 'uiMode',
-                hideSkipTask: false,
-                showErrors: false,
-                activeErrorAtom: null
-            }
-        },
-        computed: {
-            ...mapState('common', ['ruleList', 'templateRuleList']),
-            panels () {
-                return [
-                    {
-                        name: 'errors',
-                        label: this.$t('Errors')
-                    }
-                ]
-            },
-            isRunning () {
-                return this.execDetail?.status === 'RUNNING'
-            },
-            timeDetailConf () {
-                return {
-                    allowHtml: true,
-                    theme: 'light',
-                    placement: 'bottom'
-                }
-            },
-            errorList () {
-                return this.execDetail?.errorInfoList?.map((error) => ({
+      ];
+    },
+    isRunning() {
+      return this.execDetail?.status === "RUNNING";
+    },
+    timeDetailConf() {
+      return {
+        allowHtml: true,
+        theme: "light",
+        placement: "bottom",
+      };
+    },
+    errorList() {
+      return this.execDetail?.errorInfoList?.map((error) => ({
         ...error,
-        errorTypeConf: errorTypeMap[error.errorType]
-      }))
-            },
-            showErrorPopup () {
-                return Array.isArray(this.errorList) && this.errorList.length > 0
-            },
-            timeDetailRows () {
-                return ['executeCost', 'systemCost', 'waitCost'].map((key) => ({
-                    field: key,
-                    label: this.$t(`details.${key}`),
-                    value: this.execDetail?.model?.timeCost?.[key]
+        errorTypeConf: errorTypeMap[error.errorType],
+      }));
+    },
+    showErrorPopup() {
+      return Array.isArray(this.errorList) && this.errorList.length > 0;
+    },
+    timeDetailRows() {
+      return ["executeCost", "systemCost", "waitCost"].map((key) => ({
+        field: key,
+        label: this.$t(`details.${key}`),
+        value: this.execDetail?.model?.timeCost?.[key]
           ? convertMStoString(this.execDetail.model.timeCost[key])
-          : '--'
-                }))
-            },
-            queueCost () {
-                return this.execDetail?.model?.timeCost?.queueCost
+          : "--",
+      }));
+    },
+    queueCost() {
+      return this.execDetail?.model?.timeCost?.queueCost
         ? convertMStoString(this.execDetail.model.timeCost.queueCost)
-                : '--'
-            },
-            totalCost () {
-                return this.execDetail?.model?.timeCost?.totalCost
+        : "--";
+    },
+    totalCost() {
+      return this.execDetail?.model?.timeCost?.totalCost
         ? convertMStoString(this.execDetail.model.timeCost.totalCost)
-                : '--'
-            },
-            errorsTableColumns () {
-                return [
-                    {
-                        label: this.$t('details.pipelineErrorType'),
-                        prop: 'errorType'
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorCode'),
-                        prop: 'errorCode'
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorPos'),
-                        prop: 'taskId'
-                    },
-                    {
-                        label: this.$t('details.pipelineErrorInfo'),
-                        prop: 'errorMsg'
-                    }
-                ]
-            },
-            userName () {
-                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
-            },
-            isInstanceEditable () {
-                return this.execDetail?.model?.instanceFromTemplate
-            },
-            curMatchRules () {
-                return this.$route.path.indexOf('template') > 0
-                    ? this.templateRuleList
-                    : this.isInstanceEditable
-                        ? this.templateRuleList.concat(this.ruleList)
-                        : this.ruleList
-            },
-            statusLabel () {
-                return this.execDetail?.status
+        : "--";
+    },
+    errorsTableColumns() {
+      return [
+        {
+          label: this.$t("details.pipelineErrorType"),
+          prop: "errorType",
+        },
+        {
+          label: this.$t("details.pipelineErrorCode"),
+          prop: "errorCode",
+        },
+        {
+          label: this.$t("details.pipelineErrorPos"),
+          prop: "taskId",
+        },
+        {
+          label: this.$t("details.pipelineErrorInfo"),
+          prop: "errorMsg",
+        },
+      ];
+    },
+    userName() {
+      return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : "";
+    },
+    isInstanceEditable() {
+      return this.execDetail?.model?.instanceFromTemplate;
+    },
+    curMatchRules() {
+      return this.$route.path.indexOf("template") > 0
+        ? this.templateRuleList
+        : this.isInstanceEditable
+        ? this.templateRuleList.concat(this.ruleList)
+        : this.ruleList;
+    },
+    statusLabel() {
+      return this.execDetail?.status
         ? this.$t(`details.statusMap.${this.execDetail?.status}`)
-                : ''
-            },
-            cancelUserId () {
-                return this.execDetail?.cancelUserId ?? '--'
-            },
-            executeCount () {
-                return this.execDetail?.executeCount ?? 1
-            },
-            curPipeline () {
-                const stages = this.hideSkipTask
-                    ? this.execDetail?.model?.stages.filter((stage) => {
-            if (this.isSkip(stage.status)) return false
+        : "";
+    },
+    cancelUserId() {
+      return this.execDetail?.cancelUserId ?? "--";
+    },
+    executeCount() {
+      return this.execDetail?.executeCount ?? 1;
+    },
+    curPipeline() {
+      const stages = this.hideSkipTask
+        ? this.execDetail?.model?.stages.filter((stage) => {
+            if (this.isSkip(stage.status)) return false;
             return stage.containers.filter((container) => {
-              if (this.isSkip(container.status)) return false
-              return container.elements.filter((element) => !this.isSkip(element.status))
-            })
+              if (this.isSkip(container.status)) return false;
+              return container.elements.filter((element) => !this.isSkip(element.status));
+            });
           })
-                    : this.execDetail?.model?.stages
-                return this.execDetail?.model
+        : this.execDetail?.model?.stages;
+      return this.execDetail?.model
         ? {
             ...this.execDetail.model,
-            stages
+            stages,
           }
-                : null
-            },
-            pipelineModes () {
-                return [
-                    {
-                        label: this.$t('details.codeMode'),
-                        disabled: true,
-                        id: 'codeMode',
-                        cls: this.pipelineMode === 'codeMode' ? 'is-selected' : ''
-                    },
-                    {
-                        label: this.$t('details.uiMode'),
-                        id: 'uiMode',
-                        cls: this.pipelineMode === 'uiMode' ? 'is-selected' : ''
-                    }
-                ]
-            },
-            timeSteps () {
-                return [
-                    {
-                        title: this.$t('details.triggerTime'),
-                        description: convertTime(this.execDetail?.queueTime),
-                        popup: {
-                            ...this.timeDetailConf,
-                            content: '.queue-time-detail-popup'
-                        }
-                    },
-                    {
-                        title: this.$t('details.startTime'),
-                        description: convertTime(this.execDetail?.startTime),
-                        popup: {
-                            ...this.timeDetailConf,
-                            content: '.time-detail-popup'
-                        }
-                    },
-                    {
-                        title: this.$t('details.endTime'),
-                        description: convertTime(this.execDetail?.endTime),
-                        popup: {
-                            disabled: true
-                        }
-                    }
-                ]
-            },
-            executeCounts () {
-                const len = this.execDetail?.startUserList?.length ?? 0
-                return (
+        : null;
+    },
+    pipelineModes() {
+      return [
+        {
+          label: this.$t("details.codeMode"),
+          disabled: true,
+          id: "codeMode",
+          cls: this.pipelineMode === "codeMode" ? "is-selected" : "",
+        },
+        {
+          label: this.$t("details.uiMode"),
+          id: "uiMode",
+          cls: this.pipelineMode === "uiMode" ? "is-selected" : "",
+        },
+      ];
+    },
+    timeSteps() {
+      return [
+        {
+          title: this.$t("details.triggerTime"),
+          description: convertTime(this.execDetail?.queueTime),
+          popup: {
+            ...this.timeDetailConf,
+            content: ".queue-time-detail-popup",
+          },
+        },
+        {
+          title: this.$t("details.startTime"),
+          description: convertTime(this.execDetail?.startTime),
+          popup: {
+            ...this.timeDetailConf,
+            content: ".time-detail-popup",
+          },
+        },
+        {
+          title: this.$t("details.endTime"),
+          description: convertTime(this.execDetail?.endTime),
+          popup: {
+            disabled: true,
+          },
+        },
+      ];
+    },
+    executeCounts() {
+      const len = this.execDetail?.startUserList?.length ?? 0;
+      return (
         this.execDetail?.startUserList?.map((user, index) => ({
           id: len - index,
           name: `${len - index} / ${len}`,
-          user
+          user,
         })) ?? []
-                )
-            },
-            routerParams () {
-                return this.$route.params
-            }
+      );
+    },
+    routerParams() {
+      return this.$route.params;
+    },
+  },
+  mounted() {
+    this.requestInterceptAtom(this.routerParams);
+  },
+  beforeDestroy() {
+    this.togglePropertyPanel({
+      isShow: false,
+    });
+  },
+  methods: {
+    ...mapActions("atom", [
+      "reviewExcuteAtom",
+      "togglePropertyPanel",
+      "toggleStageReviewPanel",
+      "requestPipelineExecDetail",
+      "pausePlugin",
+    ]),
+    ...mapActions("common", ["requestInterceptAtom"]),
+    ...mapActions("pipelines", ["requestRetryPipeline"]),
+    isSkip(status) {
+      return ["SKIP"].includes(status);
+    },
+    toggleCompleteLog() {
+      this.showLog = !this.showLog;
+    },
+    toggleErrorPopup() {
+      this.showErrors = !this.showErrors;
+    },
+    setShowErrorPopup() {
+      this.showErrors = true;
+    },
+    hideErrorPopup() {
+      this.showErrors = false;
+    },
+    handlePiplineClick(args) {
+      this.togglePropertyPanel({
+        isShow: true,
+        editingElementPos: args,
+      });
+    },
+    handleStageCheck({ type, stageIndex }) {
+      this.toggleStageReviewPanel({
+        showStageReviewPanel: {
+          isShow: true,
+          type,
         },
-        mounted () {
-            this.requestInterceptAtom(this.routerParams)
+        editingElementPos: {
+          stageIndex,
         },
-        beforeDestroy () {
-            this.togglePropertyPanel({
-                isShow: false
-            })
-        },
-        methods: {
-            ...mapActions('atom', [
-                'reviewExcuteAtom',
-                'togglePropertyPanel',
-                'toggleStageReviewPanel',
-                'requestPipelineExecDetail',
-                'pausePlugin'
-            ]),
-            ...mapActions('common', ['requestInterceptAtom']),
-            ...mapActions('pipelines', ['requestRetryPipeline']),
-            isSkip (status) {
-                return ['SKIP'].includes(status)
-            },
-            toggleCompleteLog () {
-                this.showLog = !this.showLog
-            },
-            toggleErrorPopup () {
-                this.showErrors = !this.showErrors
-            },
-            setShowErrorPopup () {
-                this.showErrors = true
-            },
-            hideErrorPopup () {
-                this.showErrors = false
-            },
-            handlePiplineClick (args) {
-                this.togglePropertyPanel({
-                    isShow: true,
-                    editingElementPos: args
-                })
-            },
-            handleStageCheck ({ type, stageIndex }) {
-                this.toggleStageReviewPanel({
-                    showStageReviewPanel: {
-                        isShow: true,
-                        type
-                    },
-                    editingElementPos: {
-                        stageIndex
-                    }
-                })
-            },
-            async qualityCheck ({ elementId, action }, done) {
-                try {
-                    const data = {
-                        ...this.routerParams,
-                        buildId: this.routerParams.buildNo,
-                        elementId,
-                        action
-                    }
-                    const res = await this.reviewExcuteAtom(data)
-                    if (res) {
-                        this.$showTips({
-                            message: this.$t('editPage.operateSuc'),
-                            theme: 'success'
-                        })
-                    }
-                } catch (err) {
-                    this.$showTips({
-                        message: err.message || err,
-                        theme: 'error'
-                    })
-                } finally {
-                    done()
-                }
-            },
-            handleRetry ({ taskId, skip = false }) {
-                this.showRetryStageDialog = true
-                this.retryTaskId = taskId
-                this.skipTask = skip
-            },
-            async reviewAtom (atom) {
-                // 人工审核
-                this.currentAtom = atom
-                this.toggleCheckDialog(true)
-            },
-            toggleCheckDialog (isShow = false) {
-                this.isShowCheckDialog = isShow
-                if (!isShow) {
-                    this.currentAtom = {}
-                }
-            },
-            async handleContinue ({ taskId, skip = false }, done) {
-                this.retryTaskId = taskId
-                this.skipTask = skip
-                await this.retryPipeline()
-                done()
-            },
-            async handleExec (
-                {
-                    stageIndex,
-                    containerIndex,
-                    containerGroupIndex,
-                    isContinue,
-                    elementIndex,
-                    showPanelType,
-                    stageId,
-                    containerId,
-                    taskId,
-                    atom
-                },
-                done
-            ) {
-                if (!isContinue) {
-                    const postData = {
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        stageId,
-                        containerId,
-                        taskId,
-                        isContinue,
-                        element: atom
-                    }
-
-                    try {
-                        await this.pausePlugin(postData)
-                        this.requestPipelineExecDetail(this.routerParams)
-                    } catch (err) {
-                        this.$showTips({
-                            message: err.message || err,
-                            theme: 'error'
-                        })
-                    } finally {
-                        done()
-                    }
-                } else {
-                    this.togglePropertyPanel({
-                        isShow: true,
-                        showPanelType,
-                        editingElementPos: {
-                            stageIndex,
-                            containerIndex,
-                            containerGroupIndex,
-                            elementIndex
-                        }
-                    })
-                }
-            },
-            async retryPipeline (isStageRetry) {
-                let message, theme
-                this.showRetryStageDialog = false
-                try {
-                    // 请求执行构建
-                    const res = await this.requestRetryPipeline({
-                        projectId: this.routerParams.projectId,
-                        pipelineId: this.routerParams.pipelineId,
-                        buildId: this.routerParams.buildNo,
-                        taskId: this.retryTaskId,
-                        skip: this.skipTask,
-                        ...(isStageRetry ? { failedContainer: this.failedContainer } : {})
-                    })
-                    if (res.id) {
-                        message = this.$t('subpage.retrySuc')
-                        theme = 'success'
-                    } else {
-                        message = this.$t('subpage.retryFail')
-                        theme = 'error'
-                    }
-                } catch (err) {
-                    this.handleError(err, [
-                        {
-                            actionId: this.$permissionActionMap.execute,
-                            resourceId: this.$permissionResourceMap.pipeline,
-                            instanceId: [
-                                {
-                                    id: this.routerParams.pipelineId,
-                                    name: this.routerParams.pipelineId
-                                }
-                            ],
-                            projectId: this.routerParams.projectId
-                        }
-                    ])
-                } finally {
-                    message
-                        && this.$showTips({
-                            message,
-                            theme
-                        })
-                    this.retryTaskId = ''
-                    this.skipTask = false
-                }
-            },
-            togglePostActionVisible ({ stageIndex, containerGroupIndex, containerIndex }) {
-                const stage = this.curPipeline.stages[stageIndex]
-                let container = stage.containers[containerIndex]
-                if (typeof containerGroupIndex !== 'undefined') {
-                    container = stage.containers[containerIndex].groupContainers[containerGroupIndex]
-                }
-                this.$set(container, 'hidePostAction', !container.hidePostAction)
-            },
-            locateAtom (row, isLocate = true) {
-                try {
-                    const { stageId, containerId, taskId, matrixFlag } = row
-                    const stage = this.curPipeline.stages.find((stage) => stage.id === stageId)
-                    let container
-                    if (matrixFlag) {
-                        container = stage.containers
-                            .filter((item) => Array.isArray(item.groupContainers))
-                            .map((item) => item.groupContainers)
-                            .flat()
-                            .find((matrix) => matrix.id === containerId)
-                    } else {
-                        container = stage.containers.find((item) => item.id === containerId)
-                    }
-                    const element = container.elements.find((element) => element.id === taskId)
-
-                    this.$set(element, 'locateActive', isLocate)
-                } catch (e) {
-                    console.log(e)
-                }
-            },
-            setAtomLocate (row) {
-                if (this.activeErrorAtom?.taskId === row.taskId) return
-                if (this.activeErrorAtom?.taskId) {
-                    this.locateAtom(this.activeErrorAtom, false)
-                }
-                this.hideErrorPopup()
-                this.locateAtom(row, true)
-                this.activeErrorAtom = row
-            },
-            handleExecuteCountChange (executeCount) {
-                this.$router.push({
-                    ...this.$route,
-                    params: {
-                        ...this.$route.params,
-                        type: this.$route.params.type ?? 'executeDetail',
-                        executeCount
-                    }
-                })
-                this.$nextTick(() => {
-                    this.requestPipelineExecDetail({
-                        ...this.routerParams,
-                        executeCount
-                    })
-                })
-            }
+      });
+    },
+    async qualityCheck({ elementId, action }, done) {
+      try {
+        const data = {
+          ...this.routerParams,
+          buildId: this.routerParams.buildNo,
+          elementId,
+          action,
+        };
+        const res = await this.reviewExcuteAtom(data);
+        if (res) {
+          this.$showTips({
+            message: this.$t("editPage.operateSuc"),
+            theme: "success",
+          });
         }
-    }
+      } catch (err) {
+        this.$showTips({
+          message: err.message || err,
+          theme: "error",
+        });
+      } finally {
+        done();
+      }
+    },
+    handleRetry({ taskId, skip = false }) {
+      this.showRetryStageDialog = true;
+      this.retryTaskId = taskId;
+      this.skipTask = skip;
+    },
+    async reviewAtom(atom) {
+      // 人工审核
+      this.currentAtom = atom;
+      this.toggleCheckDialog(true);
+    },
+    toggleCheckDialog(isShow = false) {
+      this.isShowCheckDialog = isShow;
+      if (!isShow) {
+        this.currentAtom = {};
+      }
+    },
+    async handleContinue({ taskId, skip = false }, done) {
+      this.retryTaskId = taskId;
+      this.skipTask = skip;
+      await this.retryPipeline();
+      done();
+    },
+    async handleExec(
+      {
+        stageIndex,
+        containerIndex,
+        containerGroupIndex,
+        isContinue,
+        elementIndex,
+        showPanelType,
+        stageId,
+        containerId,
+        taskId,
+        atom,
+      },
+      done
+    ) {
+      if (!isContinue) {
+        const postData = {
+          projectId: this.routerParams.projectId,
+          pipelineId: this.routerParams.pipelineId,
+          buildId: this.routerParams.buildNo,
+          stageId,
+          containerId,
+          taskId,
+          isContinue,
+          element: atom,
+        };
+
+        try {
+          await this.pausePlugin(postData);
+          this.requestPipelineExecDetail(this.routerParams);
+        } catch (err) {
+          this.$showTips({
+            message: err.message || err,
+            theme: "error",
+          });
+        } finally {
+          done();
+        }
+      } else {
+        this.togglePropertyPanel({
+          isShow: true,
+          showPanelType,
+          editingElementPos: {
+            stageIndex,
+            containerIndex,
+            containerGroupIndex,
+            elementIndex,
+          },
+        });
+      }
+    },
+    async retryPipeline(isStageRetry) {
+      let message, theme;
+      this.showRetryStageDialog = false;
+      try {
+        // 请求执行构建
+        const res = await this.requestRetryPipeline({
+          projectId: this.routerParams.projectId,
+          pipelineId: this.routerParams.pipelineId,
+          buildId: this.routerParams.buildNo,
+          taskId: this.retryTaskId,
+          skip: this.skipTask,
+          ...(isStageRetry ? { failedContainer: this.failedContainer } : {}),
+        });
+        if (res.id) {
+          message = this.$t("subpage.retrySuc");
+          theme = "success";
+        } else {
+          message = this.$t("subpage.retryFail");
+          theme = "error";
+        }
+      } catch (err) {
+        this.handleError(err, [
+          {
+            actionId: this.$permissionActionMap.execute,
+            resourceId: this.$permissionResourceMap.pipeline,
+            instanceId: [
+              {
+                id: this.routerParams.pipelineId,
+                name: this.routerParams.pipelineId,
+              },
+            ],
+            projectId: this.routerParams.projectId,
+          },
+        ]);
+      } finally {
+        message &&
+          this.$showTips({
+            message,
+            theme,
+          });
+        this.retryTaskId = "";
+        this.skipTask = false;
+      }
+    },
+    togglePostActionVisible({ stageIndex, containerGroupIndex, containerIndex }) {
+      const stage = this.curPipeline.stages[stageIndex];
+      let container = stage.containers[containerIndex];
+      if (typeof containerGroupIndex !== "undefined") {
+        container = stage.containers[containerIndex].groupContainers[containerGroupIndex];
+      }
+      this.$set(container, "hidePostAction", !container.hidePostAction);
+    },
+    locateAtom(row, isLocate = true) {
+      try {
+        const { stageId, containerId, taskId, matrixFlag } = row;
+        const stage = this.curPipeline.stages.find((stage) => stage.id === stageId);
+        let container;
+        if (matrixFlag) {
+          container = stage.containers
+            .filter((item) => Array.isArray(item.groupContainers))
+            .map((item) => item.groupContainers)
+            .flat()
+            .find((matrix) => matrix.id === containerId);
+        } else {
+          container = stage.containers.find((item) => item.id === containerId);
+        }
+        const element = container.elements.find((element) => element.id === taskId);
+
+        this.$set(element, "locateActive", isLocate);
+      } catch (e) {
+        console.log(e);
+      }
+    },
+    setAtomLocate(row) {
+      if (this.activeErrorAtom?.taskId === row.taskId) return;
+      if (this.activeErrorAtom?.taskId) {
+        this.locateAtom(this.activeErrorAtom, false);
+      }
+      this.hideErrorPopup();
+      this.locateAtom(row, true);
+      this.activeErrorAtom = row;
+    },
+    handleExecuteCountChange(executeCount) {
+      this.$router.push({
+        ...this.$route,
+        params: {
+          ...this.$route.params,
+          type: this.$route.params.type ?? "executeDetail",
+          executeCount,
+        },
+      });
+      this.$nextTick(() => {
+        this.requestPipelineExecDetail({
+          ...this.routerParams,
+          executeCount,
+        });
+      });
+    },
+  },
+};
 </script>
 
 <style lang="scss">
