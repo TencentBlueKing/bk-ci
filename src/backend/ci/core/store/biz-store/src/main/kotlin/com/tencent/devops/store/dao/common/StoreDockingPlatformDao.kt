@@ -78,45 +78,6 @@ class StoreDockingPlatformDao {
         }
     }
 
-    fun batchCreate(
-        dslContext: DSLContext,
-        userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
-        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-                return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                    dslContext.insertInto(
-                        this,
-                        ID,
-                        PLATFORM_CODE,
-                        PLATFORM_NAME,
-                        WEBSITE,
-                        SUMMARY,
-                        PRINCIPAL,
-                        LOGO_URL,
-                        CREATOR,
-                        MODIFIER,
-                        OWNER_DEPT_NAME,
-                        LABELS
-                    )
-                        .values(
-                            UUIDUtil.generate(),
-                            storeDockingPlatformRequest.platformCode,
-                            storeDockingPlatformRequest.platformName,
-                            storeDockingPlatformRequest.website,
-                            storeDockingPlatformRequest.summary,
-                            storeDockingPlatformRequest.principal,
-                            storeDockingPlatformRequest.logoUrl,
-                            userId,
-                            userId,
-                            storeDockingPlatformRequest.ownerDeptName,
-                            storeDockingPlatformRequest.labels?.joinToString(",")
-                        )
-                }
-            ).execute().size
-        }
-    }
-
     fun update(
         dslContext: DSLContext,
         id: String,
@@ -140,28 +101,25 @@ class StoreDockingPlatformDao {
         }
     }
 
-    fun batchUpdate(
+    fun update(
         dslContext: DSLContext,
         userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
+        storeDockingPlatformRequest: StoreDockingPlatformRequest
+    ) {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                var step = dslContext.update(this)
-                    .set(SUMMARY, storeDockingPlatformRequest.summary)
-                    .set(PRINCIPAL, storeDockingPlatformRequest.principal)
-                    .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
-                    .set(WEBSITE, storeDockingPlatformRequest.website)
-                    .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(MODIFIER, userId)
-                    .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
-                if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
-                    step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
-                }
-                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+            var step = dslContext.update(this)
+                .set(SUMMARY, storeDockingPlatformRequest.summary)
+                .set(PRINCIPAL, storeDockingPlatformRequest.principal)
+                .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
+                .set(WEBSITE, storeDockingPlatformRequest.website)
+                .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+            if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
+                step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
             }
-            ).execute().size
+            step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
         }
     }
 
