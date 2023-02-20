@@ -133,7 +133,7 @@
             })
             this.$store.commit('pipelines/updateCurAtomPrams', null)
             this.setPipelineEditing(false)
-            this.setPipeline()
+            this.setPipeline(null)
         },
         destroyed () {
             bus.$off('start-execute')

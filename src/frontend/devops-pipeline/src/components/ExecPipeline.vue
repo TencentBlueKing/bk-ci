@@ -101,6 +101,7 @@
                 <bk-tab
                     class="pipeline-exec-error-tab"
                     :active.sync="active"
+                    :label-height="42"
                     type="unborder-card"
                     @tab-change="setShowErrorPopup"
                 >
@@ -286,19 +287,19 @@
             errorsTableColumns () {
                 return [
                     {
-                        label: this.$t('错误类型'),
+                        label: this.$t('details.pipelineErrorType'),
                         prop: 'errorType'
                     },
                     {
-                        label: this.$t('错误码'),
+                        label: this.$t('details.pipelineErrorCode'),
                         prop: 'errorCode'
                     },
                     {
-                        label: this.$t('错误位置'),
+                        label: this.$t('details.pipelineErrorPos'),
                         prop: 'taskId'
                     },
                     {
-                        label: this.$t('错误信息'),
+                        label: this.$t('details.pipelineErrorInfo'),
                         prop: 'errorMsg'
                     }
                 ]
@@ -325,7 +326,7 @@
                 return this.execDetail?.cancelUserId ?? '--'
             },
             executeCount () {
-                return this.$route.params.executeCount ?? this.execDetail?.executeCount ?? 1
+                return this.execDetail?.executeCount ?? 1
             },
             curPipeline () {
                 const stages = this.hideSkipTask
@@ -398,14 +399,6 @@
             },
             routerParams () {
                 return this.$route.params
-            }
-        },
-        watch: {
-            executeCount (executeCount) {
-                this.requestPipelineExecDetail({
-                    ...this.routerParams,
-                    executeCount
-                })
             }
         },
         mounted () {
@@ -645,6 +638,12 @@
                         type: this.$route.params.type ?? 'executeDetail',
                         executeCount
                     }
+                })
+                this.$nextTick(() => {
+                    this.requestPipelineExecDetail({
+                        ...this.routerParams,
+                        executeCount
+                    })
                 })
             }
         }

@@ -323,6 +323,7 @@
   background: white;
   padding: 18px 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
+  z-index: 1;
   &-row {
     position: relative;
     display: flex;

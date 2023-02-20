@@ -18,6 +18,7 @@
                 <bk-tab
                     :active="curItemTab"
                     @tab-change="switchTab"
+                    :label-height="42"
                     class="pipeline-detail-tab-card"
                     type="unborder-card"
                 >
@@ -396,18 +397,20 @@
 </script>
 
 <style lang="scss">
-@import "./../../scss/conf";
-@import "./../../scss/pipelineStatus";
-.pipeline-detail-wrapper {
+@import "@/scss/conf";
+@import "@/scss/pipelineStatus";
+@import "@/scss/detail-tab.scss";
+.pipeline-detail-wrapper.biz-content {
   height: 100%;
   display: flex;
   flex-direction: column;
   border-top: 1px solid #dde4eb;
+  overflow: auto;
+
   .exec-detail-main {
-    padding: 16px 24px 0 24px;
+    margin: 16px 24px 0 24px;
     background: #f5f7fa;
     flex: 1;
-    overflow: hidden;
   }
   .pipeline-detail-tab-card {
     height: 100%;

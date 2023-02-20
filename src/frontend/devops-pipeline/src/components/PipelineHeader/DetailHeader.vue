@@ -10,6 +10,7 @@
             <bk-button
                 :disabled="loading || !canManualStartup"
                 :loading="loading"
+                :theme="isRunning ? 'warning' : ''"
                 @click="handleClick"
             >
                 {{ isRunning ? $t("终止构建") : $t("重新构建") }}

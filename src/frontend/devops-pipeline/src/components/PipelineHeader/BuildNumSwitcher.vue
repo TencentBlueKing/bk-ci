@@ -43,24 +43,24 @@
             }
         },
         methods: {
-            ...mapActions('atom', [
-                'requestPipelineExecDetailByBuildNum'
-            ]),
+            ...mapActions('atom', ['requestPipelineExecDetailByBuildNum']),
             async switchBuildNum (int = 0) {
                 const nextBuildNum = this.currentBuildNum + int
-                if (this.isLoading || (nextBuildNum > this.latestBuildNum || nextBuildNum < 1)) return
+                if (this.isLoading || nextBuildNum > this.latestBuildNum || nextBuildNum < 1) {
+                    return
+                }
                 try {
                     this.isLoading = true
                     const response = await this.requestPipelineExecDetailByBuildNum({
                         buildNum: nextBuildNum,
                         ...this.$route.params
                     })
-
                     this.$router.push({
                         name: 'pipelinesDetail',
                         params: {
                             ...this.$route.params,
-                            buildNo: response.data.id
+                            buildNo: response.data.id,
+                            executeCount: undefined
                         }
                     })
                 } catch (error) {
@@ -74,25 +74,25 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/conf';
-    .build-num-switcher {
-        display: grid;
-        align-items: center;
-        grid-auto-flow: column;
-        grid-gap: 6px;
-        > p {
-            display: flex;
-            flex-direction: column;
-            > i.devops-icon {
-                color: $primaryColor;
-                cursor: pointer;
-                font-size: 10px;
+@import "@/scss/conf";
+.build-num-switcher {
+  display: grid;
+  align-items: center;
+  grid-auto-flow: column;
+  grid-gap: 6px;
+  > p {
+    display: flex;
+    flex-direction: column;
+    > i.devops-icon {
+      color: $primaryColor;
+      cursor: pointer;
+      font-size: 10px;
 
-                &[disabled] {
-                    color: $fontLighterColor;
-                    cursor: auto;
-                }
-            }
-        }
+      &[disabled] {
+        color: $fontLighterColor;
+        cursor: auto;
+      }
     }
+  }
+}
 </style>
