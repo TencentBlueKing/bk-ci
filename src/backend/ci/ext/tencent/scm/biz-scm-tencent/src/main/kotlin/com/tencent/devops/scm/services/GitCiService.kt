@@ -87,39 +87,6 @@ class GitCiService {
     @Value("\${gitCI.oauthUrl}")
     private lateinit var gitCIOauthUrl: String
 
-    private val trustAllCerts = arrayOf<TrustManager>(object : X509TrustManager {
-        @Throws(CertificateException::class)
-        override fun checkClientTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
-
-        @Throws(CertificateException::class)
-        override fun checkServerTrusted(chain: Array<java.security.cert.X509Certificate>, authType: String) {
-        }
-
-        override fun getAcceptedIssuers(): Array<java.security.cert.X509Certificate> {
-            return arrayOf()
-        }
-    })
-
-    // 针对工蜂的一些接口提供更长的等待事件
-    private val gitCodeOkHttpClient = OkHttpClient.Builder()
-        .connectTimeout(5L, TimeUnit.SECONDS)
-        .readTimeout(60L, TimeUnit.SECONDS)
-        .writeTimeout(30L, TimeUnit.SECONDS)
-        .sslSocketFactory(sslSocketFactory(), trustAllCerts[0] as X509TrustManager)
-        .hostnameVerifier { _, _ -> true }
-        .build()
-
-    private fun sslSocketFactory(): SSLSocketFactory {
-        try {
-            val sslContext = SSLContext.getInstance("SSL")
-            sslContext.init(null, trustAllCerts, java.security.SecureRandom())
-            return sslContext.socketFactory
-        } catch (ingored: Exception) {
-            throw RemoteServiceException(ingored.message!!)
-        }
-    }
-
     fun getGitCIMembers(
         token: String,
         gitProjectId: String,
@@ -140,7 +107,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 throw CustomException(
@@ -184,7 +151,7 @@ class GitCiService {
             .get()
             .build()
 
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
             val branList = JsonParser.parseString(data).asJsonArray
             if (!branList.isJsonNull) {
@@ -223,7 +190,7 @@ class GitCiService {
                 .get()
                 .build()
             return RetryUtils.retryFun("getGitCIFileContent") {
-                gitCodeOkHttpClient.newCall(request).execute().use { response ->
+                RetryUtils.doRetryLongHttp(request).use { response ->
                     if (!response.isSuccessful) {
                         throw CustomException(
                             status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
@@ -245,7 +212,7 @@ class GitCiService {
     ): Result<GitCIProjectInfo?> {
         val (url, request) = getProjectInfoRequest(gitProjectId, useAccessToken, token)
         return RetryUtils.retryFun("getGitCIProjectInfo") {
-            OkhttpUtils.doHttp(request).use { response ->
+            RetryUtils.doRetryHttp(request).use { response ->
                 logger.info("[url=$url]|getGitCIProjectInfo($gitProjectId) with response=$response")
                 if (!response.isSuccessful) {
                     throw CustomException(
@@ -266,7 +233,7 @@ class GitCiService {
     ): Result<GitCodeProjectInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
         val (url, request) = getProjectInfoRequest(gitProjectId, useAccessToken, token)
-        OkhttpUtils.doHttp(request).use {
+        RetryUtils.doRetryHttp(request).use {
             val response = it.body()!!.string()
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
@@ -301,7 +268,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
             if (!response.isSuccessful) {
                 throw CustomException(
@@ -343,7 +310,7 @@ class GitCiService {
             .get()
             .build()
         logger.info("getProjectList: $url")
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             val data = response.body()?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
             if (!repoList.isJsonNull) {
@@ -375,7 +342,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             val data = response.body()!!.string()
             if (!response.isSuccessful) {
                 throw CustomException(
@@ -417,7 +384,7 @@ class GitCiService {
                 .url(url)
                 .get()
                 .build()
-            OkhttpUtils.doHttp(request).use { response ->
+            RetryUtils.doRetryHttp(request).use { response ->
                 logger.info("[url=$url]|getFileInfo with response=$response")
                 if (!response.isSuccessful) {
                     throw CustomException(
@@ -473,7 +440,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        gitCodeOkHttpClient.newCall(request).execute().use { response ->
+        RetryUtils.doRetryLongHttp(request).use { response ->
             logger.info("[url=$url]|getChangeFileList with response=$response")
             if (!response.isSuccessful) {
                 throw CustomException(
@@ -535,7 +502,7 @@ class GitCiService {
             .url(url)
             .get()
             .build()
-        OkhttpUtils.doHttp(request).use { response ->
+        RetryUtils.doRetryHttp(request).use { response ->
             logger.info("[url=$url]|getProjectGroupList with response=$response")
             if (!response.isSuccessful) {
                 throw GitCodeUtils.handleErrorMessage(response)
