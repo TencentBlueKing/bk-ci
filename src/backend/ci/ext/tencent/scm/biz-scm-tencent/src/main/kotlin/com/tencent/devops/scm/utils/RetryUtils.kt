@@ -29,11 +29,10 @@ package com.tencent.devops.scm.utils
 
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.scm.services.GitService
 import okhttp3.Request
-import java.net.SocketTimeoutException
 import org.slf4j.LoggerFactory
 import java.net.HttpRetryException
+import java.net.SocketTimeoutException
 
 object RetryUtils {
 

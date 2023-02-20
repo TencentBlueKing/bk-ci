@@ -31,23 +31,21 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.pojo.enums.GitAccessLevelEnum
-import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeBranchesOrder
 import com.tencent.devops.scm.pojo.GitCodeBranchesSort
-import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeFileInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
+import com.tencent.devops.scm.pojo.GitCodeProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeProjectsOrder
+import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.MrCommentBody
 import com.tencent.devops.scm.utils.GitCodeUtils
@@ -58,14 +56,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
-import java.security.cert.CertificateException
-import java.util.concurrent.TimeUnit
-import javax.net.ssl.SSLContext
-import javax.net.ssl.SSLSocketFactory
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
 import javax.ws.rs.core.Response
-import okhttp3.OkHttpClient
 
 @Suppress("All")
 @Service
@@ -95,13 +86,13 @@ class GitCiService {
         search: String?
     ): List<GitMember> {
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members" +
-                "?access_token=$token" +
-                if (search != null) {
-                    "&query=$search"
-                } else {
-                    ""
-                } +
-                "&page=$page" + "&per_page=$pageSize"
+            "?access_token=$token" +
+            if (search != null) {
+                "&query=$search"
+            } else {
+                ""
+            } +
+            "&page=$page" + "&per_page=$pageSize"
         logger.info("request url: $url")
         val request = Request.Builder()
             .url(url)
@@ -129,22 +120,22 @@ class GitCiService {
         sort: GitCodeBranchesSort?
     ): List<String> {
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}" +
-                "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
-                if (search != null) {
-                    "&search=$search"
-                } else {
-                    ""
-                } +
-                if (orderBy != null) {
-                    "&order_by=${orderBy.value}"
-                } else {
-                    ""
-                } +
-                if (sort != null) {
-                    "&sort=${sort.value}"
-                } else {
-                    ""
-                }
+            "/repository/branches?access_token=$token&page=$page&per_page=$pageSize" +
+            if (search != null) {
+                "&search=$search"
+            } else {
+                ""
+            } +
+            if (orderBy != null) {
+                "&order_by=${orderBy.value}"
+            } else {
+                ""
+            } +
+            if (sort != null) {
+                "&sort=${sort.value}"
+            } else {
+                ""
+            }
         val res = mutableListOf<String>()
         val request = Request.Builder()
             .url(url)
@@ -178,12 +169,12 @@ class GitCiService {
         val startEpoch = System.currentTimeMillis()
         try {
             val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "utf-8")}/repository/blobs/" +
-                    "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
-                    if (useAccessToken) {
-                        "&access_token=$token"
-                    } else {
-                        "&private_token=$token"
-                    }
+                "${URLEncoder.encode(ref, "UTF-8")}?filepath=${URLEncoder.encode(filePath, "UTF-8")}" +
+                if (useAccessToken) {
+                    "&access_token=$token"
+                } else {
+                    "&private_token=$token"
+                }
             logger.info("request url: $url")
             val request = Request.Builder()
                 .url(url)
@@ -263,7 +254,7 @@ class GitCiService {
     fun getMergeRequestChangeInfo(gitProjectId: Long, token: String?, mrId: Long): Result<GitMrChangeInfo?> {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
         val url = "$gitCIUrl/api/v3/projects/$gitProjectId/merge_request/$mrId/changes?" +
-                "access_token=$token"
+            "access_token=$token"
         val request = Request.Builder()
             .url(url)
             .get()
@@ -330,13 +321,13 @@ class GitCiService {
         val newPage = if (page == 0) 1 else page
         val newPageSize = if (pageSize > 1000) 1000 else pageSize
         val url = "$gitCIUrl/api/v3/projects/${URLEncoder.encode(gitProjectId, "UTF8")}/members/all" +
-                "?access_token=$token" +
-                if (query != null) {
-                    "&query=$query"
-                } else {
-                    ""
-                } +
-                "&page=$newPage" + "&per_page=$newPageSize"
+            "?access_token=$token" +
+            if (query != null) {
+                "&query=$query"
+            } else {
+                ""
+            } +
+            "&page=$newPage" + "&per_page=$newPageSize"
         logger.info("getGitCIAllMembers request url: $url")
         val request = Request.Builder()
             .url(url)
@@ -365,21 +356,21 @@ class GitCiService {
         try {
             val encodeId = URLEncoder.encode(gitProjectId, "utf-8")
             val url = "$gitCIUrl/api/v3/projects/$encodeId/repository/files" +
-                    if (useAccessToken) {
-                        "?access_token=$token"
-                    } else {
-                        "?private_token=$token"
-                    } +
-                    if (ref != null) {
-                        "&ref=${URLEncoder.encode(ref, "UTF-8")}"
-                    } else {
-                        ""
-                    } +
-                    if (filePath != null) {
-                        "&file_path=${URLEncoder.encode(filePath, "UTF-8")}"
-                    } else {
-                        ""
-                    }
+                if (useAccessToken) {
+                    "?access_token=$token"
+                } else {
+                    "?private_token=$token"
+                } +
+                if (ref != null) {
+                    "&ref=${URLEncoder.encode(ref, "UTF-8")}"
+                } else {
+                    ""
+                } +
+                if (filePath != null) {
+                    "&file_path=${URLEncoder.encode(filePath, "UTF-8")}"
+                } else {
+                    ""
+                }
             val request = Request.Builder()
                 .url(url)
                 .get()
@@ -422,20 +413,20 @@ class GitCiService {
         val newPage = if (page == 0) 1 else page
         val newPageSize = if (pageSize > 10000) 10000 else pageSize
         val url = "${getUrlPrefix(gitProjectId)}/repository/compare/changed_files/list" +
-                if (useAccessToken) {
-                    "?access_token=$token"
-                } else {
-                    "?private_token=$token"
-                }
-            .addParams(
-                mapOf(
-                    "from" to from,
-                    "to" to to,
-                    "straight" to straight,
-                    "page" to newPage,
-                    "per_page" to newPageSize
+            if (useAccessToken) {
+                "?access_token=$token"
+            } else {
+                "?private_token=$token"
+            }
+                .addParams(
+                    mapOf(
+                        "from" to from,
+                        "to" to to,
+                        "straight" to straight,
+                        "page" to newPage,
+                        "per_page" to newPageSize
+                    )
                 )
-            )
         val request = Request.Builder()
             .url(url)
             .get()
