@@ -29,7 +29,7 @@ spec:
               services="store artifactory"
               for service in $services
               do
-                until curl -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
+                until curl --connect-timeout 3 -m 1 -s "http://{{ include "bkci.names.fullname" . }}-$service.{{ .Release.Namespace }}.svc.cluster.local" > nohup
                 do 
                   echo "waiting for {{ include "bkci.names.fullname" . }}-$service";
                   sleep 2;
