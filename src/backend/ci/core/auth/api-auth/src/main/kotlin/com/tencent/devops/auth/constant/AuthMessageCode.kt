@@ -59,6 +59,9 @@ object AuthMessageCode {
     const val RESOURCE_NOT_FOUND = "2121014" // 权限系统：资源{0}不存在
     const val DEFAULT_GROUP_NOT_FOUND = "2121015" // 权限系统：资源类型{0}关联的默认组{1}不存在
     const val RESOURCE_ACTION_EMPTY = "2121016" // 权限系统：资源未绑定动作
+    const val ACTION_NOT_EXIST = "2121017" // 权限系统：操作不存在
+    const val RESOURCE_TYPE_NOT_FOUND = "2121018" // 权限系统：资源{0}不存在
+    const val RESOURCE_TYPE_NOT_EMPTY = "2121019" // 权限系统：资源类型不能为空
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
@@ -89,7 +92,7 @@ object AuthMessageCode {
     const val APPLY_TO_JOIN_GROUP_FAIL = "2121505" // 权限系统: 申请加入用户组失败
     const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121506" // 权限系统: 获取用户组权限信息失败
     const val GET_IAM_GROUP_FAIL = "2121507" // 权限系统: 获取用户组失败
-    const val GET_REDIRECT_INFORMATION_FAIL= "2121508" // 权限系统: 获取权限申请跳转信息失败
+    const val GET_REDIRECT_INFORMATION_FAIL = "2121508" // 权限系统: 获取权限申请跳转信息失败
 
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121601" // 用户{0}没有管理员权限
 

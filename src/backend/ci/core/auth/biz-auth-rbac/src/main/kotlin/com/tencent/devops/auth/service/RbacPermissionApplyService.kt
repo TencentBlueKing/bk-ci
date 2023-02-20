@@ -38,7 +38,7 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
     val rbacCacheService: RbacCacheService,
-    final val config: CommonConfig
+    val config: CommonConfig
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -47,11 +47,11 @@ class RbacPermissionApplyService @Autowired constructor(
         "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
-        return rbacCacheService.listResourceTypes(userId)
+        return rbacCacheService.listResourceTypes()
     }
 
     override fun listActions(userId: String, resourceType: String): List<ActionInfoVo> {
-        return rbacCacheService.listActions(userId, resourceType)
+        return rbacCacheService.listResourceType2Action(resourceType)
     }
 
     override fun listGroups(
@@ -64,6 +64,20 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = "project",
             resourceCode = projectId
         )
+        // 如果选择了资源实例，首先校验一下资源类型是否为空
+        val resourceCode = searchGroupInfo.resourceCode
+        if (resourceCode != null) {
+            searchGroupInfo.resourceType ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_EMPTY,
+                params = arrayOf(resourceCode),
+                defaultMessage = "权限系统：资源实例筛选时，资源类型不能为空！"
+            )
+        }
+
+        // 如果资源实例不为空，则bkIamPath 得拼成 /bk_ci_rbac,searchGroupInfo.resourceType,projectId/
+        // 然后进行搜索一次。
+        // 接着如果该资源类型是流水线，这得搜索出所有包含该流水线的流水线组的id，然后拼成/bk_ci_rbac,searchGroupInfo.resourceType,projectId/
+        // 查找组，然后
         val searchGroupDTO = SearchGroupDTO
             .builder()
             .inherit(searchGroupInfo.inherit)
@@ -79,6 +93,9 @@ class RbacPermissionApplyService @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
+
+
+
 
         try {
             // 校验用户是否属于组
@@ -131,23 +148,16 @@ class RbacPermissionApplyService @Autowired constructor(
         val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
         iamGroupPermissionDetailList.forEach {
             val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
-            handleRelatedResourceTypesDTO(
-                userId = userId,
-                instancesDTO = relatedResourceTypesDTO.condition[0].instances[0]
-            )
+            handleRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
-                name = rbacCacheService.getResourceTypeName(userId, relatedResourceTypesDTO.type),
+                name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
                 instances = relatedResourceTypesDTO.condition[0].instances[0]
             )
             groupPermissionDetailVoList.add(
                 GroupPermissionDetailVo(
                     actionId = it.id,
-                    name = rbacCacheService.getActionInfo(
-                        userId = userId,
-                        resourceType = it.id.substring(0, it.id.lastIndexOf("_")),
-                        action = it.id
-                    ).actionName,
+                    name = rbacCacheService.getActionInfo(action = it.id).actionName,
                     relatedResourceInfo = relatedResourceInfo
                 )
             )
@@ -155,15 +165,12 @@ class RbacPermissionApplyService @Autowired constructor(
         return groupPermissionDetailVoList
     }
 
-    private fun handleRelatedResourceTypesDTO(
-        instancesDTO: InstancesDTO,
-        userId: String
-    ) {
+    private fun handleRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
         instancesDTO.let {
-            it.name = rbacCacheService.getResourceTypeName(userId, it.type)
+            it.name = rbacCacheService.getResourceTypeInfo(it.type).name
             it.path.forEach { element1 ->
                 element1.forEach { element2 ->
-                    element2.typeName = rbacCacheService.getResourceTypeName(userId, element2.type)
+                    element2.typeName = rbacCacheService.getResourceTypeInfo(element2.type).name
                 }
             }
         }
@@ -177,9 +184,9 @@ class RbacPermissionApplyService @Autowired constructor(
         action: String
     ): AuthApplyRedirectInfoVo {
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
-        val actionInfo = rbacCacheService.getActionInfo(userId, resourceType, action)
+        val actionInfo = rbacCacheService.getActionInfo(action)
         val iamRelatedResourceType = actionInfo.relatedResourceType
-        val resourceTypeName = rbacCacheService.getResourceTypeName(userId, resourceType)
+        val resourceTypeName = rbacCacheService.getResourceTypeInfo(resourceType).name
         val resourceInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = iamRelatedResourceType,

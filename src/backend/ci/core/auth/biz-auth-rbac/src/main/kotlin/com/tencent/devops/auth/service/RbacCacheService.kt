@@ -8,7 +8,6 @@ import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
@@ -19,41 +18,38 @@ class RbacCacheService @Autowired constructor(
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
 ) {
-    private val actionListCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
+    /*获取资源类型下的动作*/
+    private val resourceType2ActionCache = CacheBuilder.newBuilder()
+        .maximumSize(100)
         .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, List<ActionInfoVo>>()
-    private val resourceTypeListCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
+        .build<String/*resourceType*/, List<ActionInfoVo>>()
+    private val resourceTypeCache = CacheBuilder.newBuilder()
+        .maximumSize(100)
         .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, List<ResourceTypeInfoVo>>()
+        .build<String/*resourceType*/, ResourceTypeInfoVo>()
     private val actionCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
+        .maximumSize(500)
         .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, ActionInfoVo>()
-    private val resourceTypeNameCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(7L, TimeUnit.DAYS)
-        .build<String, String>()
+        .build<String/*action*/, ActionInfoVo>()
 
-    fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
-        if (resourceTypeListCache.getIfPresent(ALL_RESOURCE) == null) {
-            val resourceTypeList = authResourceTypeDao.list(dslContext).map {
-                resourceTypeNameCache.put(it.resourceType, it.name)
-                ResourceTypeInfoVo(
+
+    fun listResourceTypes(): List<ResourceTypeInfoVo> {
+        if (resourceTypeCache.asMap().values.isEmpty()) {
+            authResourceTypeDao.list(dslContext).forEach {
+                val resourceTypeInfo = ResourceTypeInfoVo(
                     resourceType = it.resourceType,
                     name = it.name,
                     parent = it.parent,
                     system = it.system
                 )
+                resourceTypeCache.put(it.resourceType, resourceTypeInfo)
             }
-            resourceTypeListCache.put(ALL_RESOURCE, resourceTypeList)
         }
-        return resourceTypeListCache.getIfPresent(ALL_RESOURCE)!!
+        return resourceTypeCache.asMap().values.toList()
     }
 
-    fun listActions(userId: String, resourceType: String): List<ActionInfoVo> {
-        if (actionCache.getIfPresent(resourceType) == null) {
+    fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
+        if (resourceType2ActionCache.getIfPresent(resourceType) == null) {
             val actionList = authActionDao.list(dslContext, resourceType)
             if (actionList.isEmpty()) {
                 throw ErrorCodeException(
@@ -63,44 +59,45 @@ class RbacCacheService @Autowired constructor(
                 )
             }
             val actionInfoVoList = actionList.map {
-                val actionInfoVo = ActionInfoVo(
+                ActionInfoVo(
                     action = it.action,
                     actionName = it.actionName,
                     resourceType = it.resourceType,
                     relatedResourceType = it.relatedResourceType
                 )
-                actionCache.put(it.action, actionInfoVo)
-                actionInfoVo
             }
-            actionListCache.put(resourceType, actionInfoVoList)
+            resourceType2ActionCache.put(resourceType, actionInfoVoList)
         }
-        return actionListCache.getIfPresent(resourceType)!!
-
+        return resourceType2ActionCache.getIfPresent(resourceType)!!
     }
 
-    fun getActionInfo(
-        userId: String,
-        resourceType: String,
-        action: String
-    ): ActionInfoVo {
-        if (actionCache.getIfPresent(resourceType) == null) {
-            listActions(userId, resourceType)
+    fun getActionInfo(action: String): ActionInfoVo {
+        if (actionCache.getIfPresent(action) == null) {
+            val actionRecord = authActionDao.get(dslContext, action)
+                ?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ACTION_NOT_EXIST,
+                    params = arrayOf(action),
+                    defaultMessage = "权限系统：[$action]操作不存在"
+                )
+            val actionInfo = ActionInfoVo(
+                action = actionRecord.action,
+                actionName = actionRecord.actionName,
+                resourceType = actionRecord.resourceType,
+                relatedResourceType = actionRecord.relatedResourceType
+            )
+            actionCache.put(action, actionInfo)
         }
         return actionCache.getIfPresent(action)!!
     }
 
-    fun getResourceTypeName(
-        userId: String,
-        resourceType: String,
-    ): String {
-        if (resourceTypeListCache.getIfPresent(ALL_RESOURCE) == null) {
-            listResourceTypes(userId)
+    fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
+        if (resourceTypeCache.getIfPresent(resourceType) == null) {
+            listResourceTypes()
         }
-        return resourceTypeNameCache.getIfPresent(resourceType)!!
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
-        private const val ALL_RESOURCE = "all_resource"
+        return resourceTypeCache.getIfPresent(resourceType) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_FOUND,
+            params = arrayOf(resourceType),
+            defaultMessage = "权限系统：[$resourceType]资源类型不存在"
+        )
     }
 }
