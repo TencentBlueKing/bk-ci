@@ -13,10 +13,4 @@ class AuthResourceTypeDao {
             dslContext.selectFrom(this).fetch()
         }
     }
-
-    fun get(dslContext: DSLContext, resourceType: String): TAuthResourceTypeRecord? {
-        return with(TAuthResourceType.T_AUTH_RESOURCE_TYPE) {
-            dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType)).fetchAny()
-        }
-    }
 }
