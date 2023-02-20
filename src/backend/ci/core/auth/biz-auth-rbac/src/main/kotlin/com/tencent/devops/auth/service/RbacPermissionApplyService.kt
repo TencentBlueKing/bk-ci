@@ -33,6 +33,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import java.util.stream.Collectors
 
 @Service
 @Suppress("ALL")
@@ -159,8 +160,17 @@ class RbacPermissionApplyService @Autowired constructor(
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
+
         try {
-            return v2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+            // 校验用户是否属于组
+            val managerRoleGroupVO = v2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+            val groupInfoList = managerRoleGroupVO.results
+            val groupIds = groupInfoList.map { it.id }.joinToString(",")
+            val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
+            groupInfoList.forEach {
+                it.joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false
+            }
+            return managerRoleGroupVO
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
