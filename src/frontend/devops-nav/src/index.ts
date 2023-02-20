@@ -29,6 +29,8 @@ import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
+import { handleNoPermission } from '../../common-lib/permission/permission'
+import ajax from './utils/request'
 
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
@@ -40,7 +42,9 @@ declare module 'vue/types/vue' {
         $bkMessage: any
         $bkInfo: any
         $showAskPermissionDialog: any
+        $showTips: any
         iframeUtil: any
+        handleNoPermission: any
     }
 }
 
@@ -117,6 +121,24 @@ Vue.mixin({
             } catch (e) {
                 console.error(e)
             }
+        },
+        handleError (e, data) {
+            if (e.code === 403) { // 没有权限编辑
+                this.handleNoPermission(data)
+            } else {
+                this.$showTips({
+                    message: e.message || e,
+                    theme: 'error'
+                })
+            }
+        },
+        handleNoPermission (query: any) {
+            return handleNoPermission(
+                bkMagic,
+                query,
+                ajax,
+                (window.devops as any).$createElement
+            )
         }
     }
 })
