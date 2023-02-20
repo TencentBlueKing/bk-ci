@@ -57,7 +57,7 @@ spec:
           - mountPath: /tmp/frontend
             name: frontend
           command:
-            - "/bin/bash"
+            - "/bin/sh"
             - "-c"
             - |
               cp -r /data/workspace/frontend/* /tmp/frontend/
