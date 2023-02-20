@@ -218,8 +218,9 @@ class CodeTGitScmImpl constructor(
         }
     }
 
-    override fun addMRComment(mrId: Long, comment: String) = Unit
-
+    override fun addMRComment(mrId: Long, comment: String) {
+        gitApi.addMRComment(apiUrl, token, projectName, mrId, comment)
+    }
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not lock")
     }
