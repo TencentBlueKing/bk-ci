@@ -418,7 +418,6 @@
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
             await this.fetchPublishersList(this.atomForm.atomCode)
-            await this.checkNoCompilation()
             this.requestAtomClassify()
         },
         methods: {
@@ -519,26 +518,6 @@
                     })
                 }
             },
-          async checkNoCompilation () {
-            try {
-              const res = await this.$store.dispatch('store/checkNoCompilation')
-              console.log("checkNoCompilation res", res)
-              let flag = res.data
-              if (true) {
-                this.jobTypeList = [this.jobTypeList[0]]
-              }
-              console.log("jobTypeList", jobTypeList.toString())
-              console.log("checkNoCompilation flag", flag)
-            } catch (err) {
-              const message = err.message ? err.message : err
-              const theme = 'error'
-
-              this.$bkMessage({
-                message,
-                theme
-              })
-            }
-          },
             changeClassify () {
                 this.formErrors.sortError = false
             },
