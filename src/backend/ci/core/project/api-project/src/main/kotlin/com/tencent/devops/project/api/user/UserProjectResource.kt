@@ -33,7 +33,6 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
@@ -44,8 +43,6 @@ import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -57,6 +54,8 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 
 @Api(tags = ["USER_PROJECT"], description = "项目列表接口")
 @Path("/user/projects")
@@ -295,19 +294,5 @@ interface UserProjectResource {
         @ApiParam("项目ID", required = true)
         @PathParam("project_id")
         projectId: String
-    ): Result<Boolean>
-
-    @ApiOperation("申请加入项目")
-    @Path("/{english_name}/applyToJoinProject/")
-    @POST
-    fun applyToJoinProject(
-        @ApiParam("用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
-        @HeaderParam(AUTH_HEADER_USER_ID)
-        userId: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        @PathParam("english_name")
-        englishName: String,
-        @ApiParam("申请加入项目实体类", required = true)
-        applicationInfo: ApplicationInfo
     ): Result<Boolean>
 }

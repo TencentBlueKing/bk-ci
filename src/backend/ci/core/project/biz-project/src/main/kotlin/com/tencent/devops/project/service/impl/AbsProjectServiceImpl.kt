@@ -57,7 +57,6 @@ import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
 import com.tencent.devops.project.jmx.api.ProjectJmxApi.Companion.PROJECT_LIST
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
@@ -958,34 +957,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun applyToJoinProject(
-        userId: String,
-        englishName: String,
-        applicationInfo: ApplicationInfo
-    ): Boolean {
-        var success = false
-        val projectInfo = projectDao.getByEnglishName(dslContext, englishName)
-            ?: throw InvalidParamException("project is not exist!")
-        val gradeManagerId = projectInfo.relationId
-        try {
-            createRoleGroupApplication(
-                userId = userId,
-                applicationInfo = applicationInfo,
-                gradeManagerId = gradeManagerId
-            )
-            success = true
-        } catch (e: Exception) {
-            logger.warn("Apply to join project failed ：${projectInfo.englishName}|$applicationInfo")
-            throw OperationException(
-                MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.APPLY_TO_JOIN_PROJECT_FAIL,
-                    defaultMessage = "Apply to join project failed ！"
-                )
-            )
-        }
-        return success
-    }
-
     override fun getProjectByName(projectName: String): ProjectVO? {
         return projectDao.getProjectByName(dslContext, projectName)
     }
@@ -1029,12 +1000,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         projectCode: String
     )
-
-    abstract fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64

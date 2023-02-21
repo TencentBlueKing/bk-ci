@@ -36,7 +36,6 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BK_DEVOPS_SCOPE
 import com.tencent.devops.common.auth.code.GLOBAL_SCOPE_TYPE
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.service.ProjectPermissionService
@@ -68,14 +67,6 @@ class BluekingProjectPermissionServiceImpl @Autowired constructor(
     override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
-
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return true
-    }
 
     override fun getUserProjects(userId: String): List<String> {
         return authProjectApi.getUserProjects(

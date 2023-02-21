@@ -114,9 +114,9 @@ class PermissionSubsetManagerService @Autowired constructor(
                 userId = userId,
                 projectCode = projectCode,
                 projectName = projectName,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
             )
         )
         return subsetManagerId
