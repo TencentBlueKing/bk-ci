@@ -109,7 +109,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
         logger.info("Starting checkNoCompilation $containers")
         containers?.forEach {
-            if (it.type.equals(ContainerTypeEnum.NORMAL.name,true)) {
+            if (it.type.equals(ContainerTypeEnum.NORMAL.name, true)) {
                 return Result(true)
             }
         }
