@@ -298,9 +298,9 @@ class PublishersDataServiceImpl @Autowired constructor(
             publisherMemberDao.getPublisherMemberRelByMemberId(dslContext, userId)
         if (organizationPublisherIds.isNotEmpty()) {
             // 获取组织发布者信息
-            organizationPublisherIds.forEach {
-                val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, it)
-                publishersInfos.add(organizationPublisherInfo!!)
+            organizationPublisherIds.forEach { id ->
+                val organizationPublisherInfo = publishersDao.getPublisherInfoById(dslContext, id)
+                organizationPublisherInfo?.let { it -> publishersInfos.add(it) }
             }
         }
         var personPublisherInfo = publishersDao.getPublisherInfoByCode(dslContext, userId)
