@@ -42,7 +42,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
@@ -129,14 +128,6 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
     override fun cancelCreateAuthProject(userId: String, projectCode: String) = Unit
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
-
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return true
-    }
 
     override fun needApproval(needApproval: Boolean?) = false
 
