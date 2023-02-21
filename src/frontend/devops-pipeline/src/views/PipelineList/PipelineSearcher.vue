@@ -37,7 +37,8 @@
         },
         computed: {
             ...mapState('pipelines', [
-                'tagGroupList'
+                'tagGroupList',
+                'allPipelineGroup'
             ]),
             ...mapGetters('pipelines', [
                 'groupMap'
@@ -46,7 +47,7 @@
                 return {
                     [PIPELINE_FILTER_PIPELINENAME]: this.$t('pipelineName'),
                     [PIPELINE_FILTER_CREATOR]: this.$t('creator'),
-                    [PIPELINE_FILTER_VIEWIDS]: this.$t('projectViewList')
+                    [PIPELINE_FILTER_VIEWIDS]: this.$t('pipelineGroup')
                 }
             },
             dropList () {
@@ -65,13 +66,10 @@
                     },
                     {
                         id: PIPELINE_FILTER_VIEWIDS,
-                        name: this.$t('projectViewList'),
+                        name: this.$t('pipelineGroup'),
                         default: true,
                         multiable: true,
-                        children: Object.values(this.groupMap).filter(item => item.projected && item.viewType === 2).map(item => ({
-                            id: item.id,
-                            name: item.name
-                        }))
+                        children: this.allPipelineGroup.filter(item => item.viewType !== -1)
                     },
                     ...this.tagGroupList.filter(item =>
                         Array.isArray(item.labels) && item.labels.length > 0
@@ -152,7 +150,6 @@
                             case PIPELINE_FILTER_LABELS:
                                 return this.getFilterLabelValues(values)
                             case PIPELINE_FILTER_VIEWIDS:
-                               
                                 return {
                                     id: key,
                                     name: this.searchConditions[key],
@@ -178,7 +175,8 @@
             formatValue (originVal) {
                 return originVal.reduce((acc, filter) => {
                     if (this.tagGroupMap[filter.id]) {
-                        acc[PIPELINE_FILTER_LABELS] = filter.values.map(val => val.id).join(',')
+                        const tagIds = filter.values.map(val => val.id)
+                        acc[PIPELINE_FILTER_LABELS] = (acc[PIPELINE_FILTER_LABELS] ? [acc[PIPELINE_FILTER_LABELS], ...tagIds] : tagIds).join(',')
                     } else {
                         acc[filter.id] = filter.values.map(val => val.id).join(',')
                     }

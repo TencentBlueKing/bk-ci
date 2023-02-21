@@ -999,6 +999,7 @@
   "allPipeline": "全部流水线",
   "projectViewList": "项目流水线组",
   "personalViewList": "我的流水线组",
+  "pipelineGroup": "流水线组",
   "patchManage": "批量管理",
   "searchPipelinePlaceholder": "流水线名称/创建人/流水线组/标签",
   "ownGroupName": "所在项目流水线组",
