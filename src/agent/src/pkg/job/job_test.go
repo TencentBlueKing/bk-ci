@@ -1,7 +1,7 @@
 package job
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/util/systemutil"
 	"testing"
 )
 

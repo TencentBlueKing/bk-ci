@@ -28,10 +28,10 @@
 package api
 
 import (
+	"agent/src/pkg/config"
+	"agent/src/pkg/util/httputil"
+	"agent/src/pkg/util/systemutil"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
 	"runtime"
 	"strconv"
 )

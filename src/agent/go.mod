@@ -1,4 +1,4 @@
-module github.com/Tencent/bk-ci/src/agent
+module agent
 
 go 1.17
 

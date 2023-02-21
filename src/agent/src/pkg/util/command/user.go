@@ -38,8 +38,8 @@ import (
 	"strconv"
 	"syscall"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util/systemutil"
 )
 
 var envHome = "HOME"

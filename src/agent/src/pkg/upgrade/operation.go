@@ -28,19 +28,20 @@
 package upgrade
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
-	"github.com/pkg/errors"
+	"agent/src/pkg/job"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/pkg/errors"
+
+	"agent/src/pkg/config"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util/command"
+	"agent/src/pkg/util/fileutil"
+	"agent/src/pkg/util/systemutil"
 )
 
 // UninstallAgent 卸载

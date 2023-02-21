@@ -31,13 +31,13 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/api"
+	"agent/src/pkg/config"
+	"agent/src/pkg/job"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/upgrade"
+	"agent/src/pkg/util"
+	"agent/src/pkg/util/systemutil"
 )
 
 func DoAgentHeartbeat() {

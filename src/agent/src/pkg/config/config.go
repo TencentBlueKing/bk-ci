@@ -43,11 +43,11 @@ import (
 
 	"gopkg.in/ini.v1"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util"
+	"agent/src/pkg/util/command"
+	"agent/src/pkg/util/fileutil"
+	"agent/src/pkg/util/systemutil"
 )
 
 const (

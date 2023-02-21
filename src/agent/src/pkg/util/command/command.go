@@ -28,9 +28,9 @@
 package command
 
 import (
+	"agent/src/pkg/logs"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"os"
 	"os/exec"
 )

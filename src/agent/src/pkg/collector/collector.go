@@ -32,10 +32,11 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
+	"agent/src/pkg/util/fileutil"
+
 	"github.com/influxdata/telegraf/logger"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/util/systemutil"
 
 	"github.com/influxdata/telegraf/agent"
 	telegrafConfig "github.com/influxdata/telegraf/config"
@@ -43,8 +44,8 @@ import (
 	"io/ioutil"
 	"strings"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"agent/src/pkg/config"
+	"agent/src/pkg/logs"
 )
 
 const (
@@ -215,7 +216,7 @@ const configTemplateWindows = `[global_tags]
 `
 
 func DoAgentCollect() {
-  defer func() {
+	defer func() {
 		if err := recover(); err != nil {
 			logs.Error("agent collect panic: ", err)
 		}

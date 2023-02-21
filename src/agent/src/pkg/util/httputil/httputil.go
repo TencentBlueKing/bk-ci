@@ -28,13 +28,13 @@
 package httputil
 
 import (
+	"agent/src/pkg/config"
+	"agent/src/pkg/logs"
 	"bytes"
 	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"io"
 	"io/ioutil"
 	"net/http"

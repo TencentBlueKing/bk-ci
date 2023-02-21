@@ -36,10 +36,10 @@ import (
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/agent"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/agent"
+	"agent/src/pkg/config"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util/systemutil"
 )
 
 const (

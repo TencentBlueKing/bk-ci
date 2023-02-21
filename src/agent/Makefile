@@ -2,8 +2,8 @@ BINDIR := $(CURDIR)/bin
 CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
-BUILD_FLAGS := -ldflags="-w -s -X github.com/Tencent/bk-ci/src/agent/src/pkg/config.BuildTime=$(BuildTime) \
--X github.com/Tencent/bk-ci/src/agent/src/pkg/config.GitCommit=$(GitCommit)"
+BUILD_FLAGS := -ldflags="-w -s -X agent/src/pkg/config.BuildTime=$(BuildTime) \
+-X agent/src/pkg/config.GitCommit=$(GitCommit)"
 
 test: test-unit
 

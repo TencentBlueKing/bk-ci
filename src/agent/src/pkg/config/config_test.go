@@ -1,7 +1,7 @@
 package config
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
+	"agent/src/pkg/logs"
 	"os"
 	"reflect"
 	"testing"

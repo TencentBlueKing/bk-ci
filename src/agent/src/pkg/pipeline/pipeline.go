@@ -30,17 +30,18 @@ package pipeline
 import (
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/pkg/errors"
+
+	"agent/src/pkg/api"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util"
+	"agent/src/pkg/util/command"
+	"agent/src/pkg/util/systemutil"
 )
 
 func Start() {

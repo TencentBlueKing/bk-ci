@@ -36,12 +36,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/Tencent/bk-ci/src/agent/internal/third_party/dep/fs"
+	"agent/internal/third_party/dep/fs"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"agent/src/pkg/config"
+	"agent/src/pkg/logs"
+	"agent/src/pkg/util/fileutil"
+	"agent/src/pkg/util/systemutil"
 )
 
 type DevopsResult struct {
@@ -230,7 +230,7 @@ func AtomicWriteFile(filename string, reader io.Reader, mode os.FileMode) error 
 	if err := tempFile.Close(); err != nil {
 		return err
 	}
-	
+
 	if err := systemutil.Chmod(tempName, mode); err != nil {
 		return err
 	}
