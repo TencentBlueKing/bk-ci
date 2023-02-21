@@ -163,8 +163,8 @@ class AuthResourceService @Autowired constructor(
 
     @SuppressWarnings("LongParameterList")
     fun list(
-        projectCode: String?,
-        resourceType: String?,
+        projectCode: String,
+        resourceType: String,
         resourceName: String?,
         page: Int,
         pageSize: Int
@@ -178,7 +178,7 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType,
             limit = sqlLimit.limit,
             offset = sqlLimit.offset
-        )?.map { resourceList.add(authResourceDao.convert(it)) }
+        ).map { resourceList.add(authResourceDao.convert(it)) }
         return resourceList
     }
 

@@ -312,8 +312,8 @@ class RbacPermissionResourceService(
 
     override fun listResoureces(
         userId: String,
-        projectId: String?,
-        resourceType: String?,
+        projectId: String,
+        resourceType: String,
         resourceName: String?,
         page: Int,
         pageSize: Int
