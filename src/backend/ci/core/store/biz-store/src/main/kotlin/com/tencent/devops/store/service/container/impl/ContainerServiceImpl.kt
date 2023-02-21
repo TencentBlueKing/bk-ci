@@ -115,6 +115,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 logger.info("Starting forEach ${it.type}")
                 return Result(true)
             }
+            logger.info("result is false")
         }
         logger.info("No compilation")
         return Result(false)
