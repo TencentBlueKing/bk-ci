@@ -133,17 +133,17 @@
                 </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate">
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
-                </template>
+                </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
-                </template>
+                </div>
             </bk-table-column>
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
@@ -461,5 +461,9 @@
         justify-content: center;
         background: #EAEBF0;
         height: 32px;
+    }
+    .latest-build-multiple-row {
+        display: flex;
+        flex-direction: column;
     }
 </style>
