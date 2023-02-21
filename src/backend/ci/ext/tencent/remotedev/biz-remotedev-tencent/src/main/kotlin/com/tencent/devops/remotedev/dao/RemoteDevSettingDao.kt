@@ -33,7 +33,6 @@ import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import org.jooq.DSLContext
-import org.jooq.Record2
 import org.springframework.stereotype.Repository
 
 @Repository
@@ -106,11 +105,14 @@ class RemoteDevSettingDao {
     fun fetchSingleUserBilling(
         dslContext: DSLContext,
         userId: String
-    ): Record2<Int, Int> {
+    ): Pair<Int, Int> {
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.select(CUMULATIVE_USAGE_TIME, CUMULATIVE_BILLING_TIME).from(this)
                 .where(USER_ID.eq(userId))
-                .fetchSingle()
+                .fetchAny()?.let { it.value1() to it.value2() } ?: run {
+                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
+                return 0 to 0
+            }
         }
     }
 }

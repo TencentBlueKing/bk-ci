@@ -958,8 +958,8 @@ class WorkspaceService @Autowired constructor(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
             deleteCount = status.count { it.checkDeleted() },
-            chargeableTime = endBilling.value2() +
-                (notEndBillingTime + endBilling.value1() - discountTime * 60).coerceAtLeast(0),
+            chargeableTime = endBilling.second +
+                (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
@@ -1002,8 +1002,8 @@ class WorkspaceService @Autowired constructor(
                 workspaceName = name,
                 status = workspaceStatus,
                 lastUpdateTime = updateTime.timestamp(),
-                chargeableTime = endBilling.value2() +
-                    (notEndBillingTime + endBilling.value1() - discountTime * 60).coerceAtLeast(0),
+                chargeableTime = endBilling.second +
+                    (notEndBillingTime + endBilling.first - discountTime * 60).coerceAtLeast(0),
                 usageTime = usageTime,
                 sleepingTime = sleepingTime,
                 cpu = cpu,
