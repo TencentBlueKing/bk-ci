@@ -24,7 +24,7 @@ const manageTabs = ref([
     name: 'group',
   },
   {
-    title: t('拓展管理'),
+    title: t('微拓展管理'),
     name: 'expand',
   },
 ]);

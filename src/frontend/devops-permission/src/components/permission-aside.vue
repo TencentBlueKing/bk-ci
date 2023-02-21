@@ -10,22 +10,22 @@ const menuList = [
   {
     name: t('我的权限'),
     code: 'my-permission',
-    icon: '',
+    icon: 'permission-icon-wodequanxian',
   },
   {
     name: t('我的申请'),
     code: 'my-apply',
-    icon: '',
+    icon: 'permission-icon-wodeshenqing',
   },
   {
     name: t('我的审批'),
     code: 'my-approval',
-    icon: '',
+    icon: 'permission-icon-wodeshenpi',
   },
   {
     name: t('申请权限'),
     code: 'apply',
-    icon: '',
+    icon: 'permission-icon-quanxianshenqing',
   },
 ];
 
@@ -55,7 +55,7 @@ const handleChangeMenu = (menu: any) => {
           :visible="true"
           style="margin: 0 18px 0 25px"
         >
-          <i class="permission-icon permission-icon-app-store-fill"></i>
+          <i class="permission-icon" :class="menu.icon"></i>
         </bk-badge>
         <span>{{ menu.name }}</span>
       </div>

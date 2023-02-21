@@ -25,7 +25,6 @@
           :arrow="false"
           :isShow="showMenuPopover"
           placement='bottom-start'
-          class="search-list-popover"
           :boundary="boundary">
           <div
             ref="input"
@@ -140,7 +139,7 @@
 <script>
 import http from '@/http/api';
 import tools from '../../utils/tools.js'
-import { clickoutside } from 'bkui-vue';
+import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
 
@@ -202,7 +201,7 @@ export default {
         && !Object.keys(this.selectInfo).length;
     },
     optionList() {
-      const list = this.list.filter(option => {
+      let curList = this.list.filter(option => {
         return !this.searchSelectValue.some(item => item.id === option.id);
       });
       const { id, children } = this.selectInfo;
@@ -210,23 +209,27 @@ export default {
         if (children) {
           const text = this.input.value;
           if (text) {
-            return children.filter(item => item.name.indexOf(text) > -1);
+            curList = children.filter(item => item.name.indexOf(text) > -1);
           } else {
-            return children;
+            curList = children;
           }
-        } else {
-          return list;
         }
       } else if (this.input.value) {
         const inputOptions = this.list.filter(item => !item.children) || [];
     
-        return inputOptions.filter(option => {
+        curList = inputOptions.filter(option => {
           const isMatch = this.searchSelectValue.some(item => item.id === option.id);
           return !isMatch;
         }) || []
-      } else {
-        return list;
       }
+
+      curList.forEach(option => {
+        if (['actionId', 'resourceCode'].includes(option.id)) {
+          option.children = this.resourcesTypeList;
+        }
+      });
+
+      return curList;
     },
     boundary() {
       return document.body;
@@ -249,7 +252,7 @@ export default {
         this.$emit('change', val)
       },
       deep: true
-    }
+    },
   },
   data() {
     return {
@@ -293,6 +296,13 @@ export default {
     },
     
     async getResourceList() {
+      if (!this.projectCode) {
+        Message({
+          theme: 'error',
+          message: this.$t('请选择项目'),
+        });
+        return;
+      };
       this.isLoading = true;
       await http.getResourceList({
         resourceType: this.resourceType,
@@ -310,10 +320,10 @@ export default {
     // 获取资源类型列表
     async getResourceTypesList() {
       await http.getResourceTypesList().then(res => {
-        this.resourcesTypeList = res;
-        this.optionList.forEach(option => {
-          if (['actionId', 'resourceCode'].includes(option.id)) {
-            option.children = res;
+        this.resourcesTypeList = res.map(item => {
+          return {
+            ...item,
+            id: item.resourceType,
           }
         });
       });
@@ -341,7 +351,7 @@ export default {
       const classList = parent ? parent.classList : null;
       
       const unFocus = !parent || (classList && !Array.from(classList.values()).some(key => {
-        return ['search-select', 'bk-popover-content', 'menu-item'].includes(key);
+        return ['search-select', 'bk-popover', 'menu-item'].includes(key);
       }));
       if (unFocus) {
         this.showMenuPopover = false;
@@ -369,9 +379,6 @@ export default {
     },
     // 选中标题类型
     handleTitleSelect(val) {
-      if (this.hasResourceCode) {
-        
-      }
       this.actionsList = [];
       this.resourceList = [];
       this.hasResourceCode = this.searchSelectValue.some(item => item.id === 'resourceCode');
@@ -511,7 +518,6 @@ export default {
       const len = this.optionList.filter(option => {
         return this.judgeOptionShow(option)
       }).length;
-
       if (len) {
         e.preventDefault();
         e.stopPropagation();
@@ -521,7 +527,18 @@ export default {
         curIndex = curIndex > len - 1 ? 0 : (curIndex < 0 ? len - 1 : curIndex);
         const option = this.optionList[curIndex];
         if (option) {
-          this.hoverId = option.id;
+          this.hoverId = this.selectInfo.id ? option.resourceType : option.id;
+          setTimeout(() => {
+            const dom = document.getElementsByClassName('is-hover')[0];
+            const searchListDom = document.getElementsByClassName('search-list-menu')[0];
+            const scrollTop = searchListDom.scrollTop;
+            const searchListDomHeight = searchListDom.clientHeight;
+            if ((searchListDomHeight + scrollTop) < (curIndex + 1) * 32) {
+              searchListDom.scrollTop = ((curIndex + 1) * 32) + 12 - searchListDomHeight;
+            } else if (scrollTop > (curIndex * 32) - 6) {
+              searchListDom.scrollTop = (curIndex * 32) + 6
+            }
+          });
         };
       }
     },
@@ -537,7 +554,7 @@ export default {
             if (this.selectInfo.id) {
               this.handleOptionSelect(option)
             } else {
-              this.handleResultOptionSelect(option)
+              this.handleTitleSelect(option)
             }
           }
           this.handleInputFocus()
@@ -709,7 +726,7 @@ export default {
   }
 </style>
 <style lang="postcss">
-  .bk-popover-content {
+  .bk-popover {
     padding: 0 !important;
     padding-bottom: 0 !important;
     .cascader-panel,

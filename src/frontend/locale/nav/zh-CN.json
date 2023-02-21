@@ -196,6 +196,6 @@
     "projectId": "项目ID",
     "administrator": "管理员",
     "projectStatus": "项目状态",
-    "userGroups": "用户组",
-    "extendManage": "扩展管理"
+    "userGroupManage": "用户管理",
+    "extendManage": "微扩展管理"
 }

@@ -1,16 +1,17 @@
 <script setup lang="ts">
-import { h } from 'vue';
 import { useI18n } from 'vue-i18n';
 import http from '@/http/api';
 import { Error } from 'bkui-vue/lib/icon'
 import GroupDeatil from './group-detail.vue'
 import SearchSelect from './search-select'
 import {
+  h,
   ref,
   watch,
   onMounted,
   computed,
 } from 'vue';
+import BkCheckbox from 'bkui-vue/lib/checkbox';
 
 const props = defineProps({
   groupList: Array,
@@ -22,7 +23,7 @@ const showDetail = ref(false);
 const tableRef = ref();
 const resourcesTypeList = ref([]);
 const groupInfo = ref([]);
-const selectGroupList = ref([]);
+const selections = ref([]);
 const filter = ref([]);
 const isLoading = ref(false);
 const isDetailLoading = ref(false);
@@ -32,59 +33,23 @@ const pagination = ref({
   limit: 10,
   current: 1,
 });
-
-const emits = defineEmits(['handle-change-select-group']);
-
-// 表格已选中用户组状态
-const handleSetTableSelected = () => {
-  
-};
-
-watch(() => selectGroupList.value, (val) => {
-  handleChangeSelectGroup(val)
-}, {
-  deep: true,
-});
-
-watch(() => props.projectCode, () => {
-  if (props.projectCode) {
-    fetchGroupList([]);
-  };
-})
-
-watch(() => props.groupList, () => {
-  selectGroupList.value = props.groupList;
-  if (tableRef.value) {
-    const data = tableRef.value.getSelection();
-    const selectIdMap = selectGroupList.value.map(i => i.id);
-    const list = data.filter(select => !selectIdMap.includes(select.id))
-    list.forEach(i => tableRef.value.toggleRowSelection(i, false))
-  }
-}, {
-  immediate: true,
-  deep: true,
-});
-
-const handleChangeSelectGroup = (values) => {
-  emits('handle-change-select-group', values);
-};
+const isRowChecked = ref(false);
+const indeterminate = ref(false);
+const isSelectedAll = ref(false);
 
 const searchList = computed(() => {
   const datas = [
     {
-      name: t('ID'),
-      isDefaultOption: true,
-      id: 'groupId',
-      multiple: false,
-    },
-    {
       name: t('用户组名'),
+      isDefaultOption: true,
       id: 'name',
       multiple: false,
     },
     {
-      name: t('描述'),
-      id: 'description',
+      name: t('资源实例'),
+      id: 'resourceCode',
+      multiple: false,
+      children: [],
     },
     {
       name: t('操作'),
@@ -93,15 +58,53 @@ const searchList = computed(() => {
       children: [],
     },
     {
-      name: t('资源实例'),
-      id: 'resourceCode',
+      name: t('描述'),
+      id: 'description',
+    },
+    {
+      name: 'ID',
+      id: 'groupId',
       multiple: false,
-      children: [],
     },
   ];
   return datas.filter((data) => {
     return !filter.value.find(val => val.id === data.id);
   });
+});
+
+const emits = defineEmits(['handle-change-select-group']);
+
+const handleChangeSelectGroup = (values) => {
+  emits('handle-change-select-group', values);
+};
+
+// 可选择的用户组 joined -> flase
+const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
+
+watch(() => props.projectCode, () => {
+  if (props.projectCode) {
+    fetchGroupList();
+  };
+})
+
+watch(() => selections.value, () => {
+  checkSelectedAll();
+  checkIndeterminate();
+  handleChangeSelectGroup(selections.value);
+}, {
+  deep: true,
+});
+
+watch(() => props.groupList, () => {
+  selections.value = props.groupList;
+}, {
+  immediate: true,
+  deep: true,
+});
+
+watch(() => userGroupList.value, () => {
+  checkSelectedAll();
+  checkIndeterminate();
 });
 
 const handlePageChange = (page) => {
@@ -116,7 +119,7 @@ const handleShowGroupDetail = async (data) => {
   isDetailLoading.value = true;
   showDetail.value = true;
   groupInfo.value = data;
-}
+};
 
 const hiddenDetail = (payload) => {
   showDetail.value = payload;
@@ -126,7 +129,12 @@ const initTable = () => {
   tableRef.value?.clearSelection();
 };
 
-const fetchGroupList = async (payload) => {
+const handleChangeSearch = (data) => {
+  filter.value = data;
+  fetchGroupList(data);
+};
+
+const fetchGroupList = async (payload = []) => {
   if (!props.projectCode) return;
   const params = {
     page: pagination.value.current,
@@ -158,22 +166,120 @@ const fetchGroupList = async (payload) => {
   })
 };
 
-const handleSelectGroup = ({ row }) => {
-  const index = selectGroupList.value.findIndex(i => i.id === row.id)
-  if (index === -1) {
-    selectGroupList.value.push(row);
-  } else {
-    selectGroupList.value.splice(index, 1);
+const handleSelectRow = (value, row) => {
+  const index = selections.value.findIndex(i => i.id === row.id);
+  if (value && index === -1) {
+    selections.value.push(row);
+  } else if (!value && index > -1) {
+    selections.value.splice(index, 1);
   }
 };
 
-const handleSelectAllGroup = (selection) => {
-  if (selection.checked) {
-    selectGroupList.value = [...userGroupList.value];
+const checkSelectedAll = () => {
+  if (!selections.value.length) {
+    isSelectedAll.value = false;
+    return false;
+  }
+
+  isSelectedAll.value = optionGroupList.value.every(i => {
+    return selections.value.some(group => group.id === i.id);
+  })
+};
+
+const checkIndeterminate = () => {
+  if (!selections.value.length) {
+    indeterminate.value = false;
+    return false;
+  }
+
+  if (selections.value.length > optionGroupList.value.length) {
+    checkSelectedAll();
   } else {
-    selectGroupList.value = [];
+    indeterminate.value = selections.value.length !== optionGroupList.value.length;
+  }
+}
+
+const handleSelectAllGroup = (val) => {
+  isSelectedAll.value = val;
+  if (val) {
+    selections.value = userGroupList.value.filter(i => !i.joined);
+  } else {
+    selections.value = [];
   }
 };
+
+const renderSelectionCell = ({ row, column }) => {
+  return h(
+    BkCheckbox,
+    {
+      modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
+      disabled: row.joined,
+      onChange(val) {
+        handleSelectRow(val, row)
+      }
+    }
+  )
+};
+
+const renderSelectionHeader = (col: any) => {
+  return h(
+    BkCheckbox,
+    {
+      indeterminate: indeterminate.value,
+      modelValue: isSelectedAll.value,
+      onChange(val) {
+        handleSelectAllGroup(val);
+      }
+    }
+  )
+};
+
+const columns = [
+  {
+    label: renderSelectionHeader,
+    width: 60,
+    render: renderSelectionCell,
+  },
+  {
+    label: t('用户组名'),
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.name, 
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick() {
+            handleShowGroupDetail(row)
+          },
+        },
+        [
+          cell,
+          row.name
+        ]
+      );
+    },
+  },
+  {
+    label: t('描述'),
+    field: 'description',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.description, 
+        },
+        [
+          cell,
+          row.description
+        ]
+      );
+    },
+  }
+];
+
 
 onMounted(() => {
   
@@ -187,7 +293,7 @@ onMounted(() => {
       v-model="filter"
       :search-list="searchList"
       :project-code="projectCode"
-      @change="fetchGroupList">
+      @change="handleChangeSearch">
     </search-select>
     <bk-loading
       class="group-table"
@@ -195,20 +301,12 @@ onMounted(() => {
       <bk-table
         ref="tableRef"
         :data="userGroupList"
+        :columns="columns"
         :pagination="pagination"
         :border="['row', 'outer']"
         @page-value-change="handlePageChange"
         @page-limit-change="handleLimitChange"
-        @select="handleSelectGroup"
-        @select-all="handleSelectAllGroup"
       >
-        <bk-table-column type="selection" width="60"></bk-table-column>
-        <bk-table-column :label="t('用户组名')" prop="name" show-overflow-tooltip>
-          <template #default="{ data }">
-            <span class="group-name" @click="handleShowGroupDetail(data)">{{ data.name }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column :label="t('描述')" prop="description" show-overflow-tooltip></bk-table-column>
       </bk-table> 
     </bk-loading>
   </article>
@@ -236,5 +334,10 @@ onMounted(() => {
   }
   :deep(.bordered-outer) {
     border: 1px solid #dcdee5;
+  }
+  
+  :deep(.bk-table .bk-table-head table thead th),
+  :deep(.bk-table .bk-table-body table thead th) {
+    text-align: center !important;
   }
 </style>

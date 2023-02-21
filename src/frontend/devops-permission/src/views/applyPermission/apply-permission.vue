@@ -9,17 +9,13 @@ import {
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
-import { useRouter } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 const { t } = useI18n();
 const router = useRouter();
+const route = useRoute();
 
 const groupList = ref([]);
 const projectList = ref([]);
-const userName = ref('');
-const navs = ref([
-  { name: '我的权限', url: `/permission/${'hwweng'}/permission` },
-  { name: '权限申请' }
-]);
 const formData = ref<any>({
   projectCode: '',
   applicant: '',
@@ -37,6 +33,23 @@ const timeFilters = ref({
 });
 const formRef = ref();
 const isLoading = ref(false);
+
+const rules = {
+  projectCode: [
+    {
+      validator: (val) => val,
+      message: t('请选择项目'),
+      trigger: 'change',
+    },
+  ],
+  groupIds: [
+    {
+      validator: () => groupList.value.length,
+      message: t('请选择用户组'),
+      trigger: 'change',
+    },
+  ],
+};
 
 const handleChangeTime = (value) => {
   currentActive.value = Number(value)
@@ -90,6 +103,12 @@ const handleSubmit = () => {
   });
 };
 
+const handleCancel = () => {
+  router.push({
+    name: 'my-permission'
+  })
+};
+
 const handleChangeGroup = (values) => {
   groupList.value = values;
 };
@@ -110,6 +129,7 @@ const getAllProjectList = () => {
 };
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
+  formData.value.projectCode = route.params.projectCode || '';
   getUserInfo();
   getAllProjectList();
 });
@@ -121,6 +141,7 @@ onMounted(() => {
     <section class="apply-from-content">
       <bk-form
         ref="formRef"
+        :rules="rules"
         class="group-form"
         :model="formData"
         label-width="150">
@@ -140,7 +161,7 @@ onMounted(() => {
               />
             </bk-select>
           </bk-form-item>
-          <bk-form-item :label="t('选择用户组')" required property="groupIds">
+          <bk-form-item :label="t('选择用户组')" required>
             <group-search
               :groupList="groupList"
               :project-code="formData.projectCode"
@@ -149,7 +170,7 @@ onMounted(() => {
           </bk-form-item>
         </div>
         <div class="form-group">
-          <bk-form-item :label="t('已选用户组')">
+          <bk-form-item :label="t('已选用户组')" property="groupIds">
             <span class="empty-group" v-if="!groupList.length">{{ t('请先从上方选择用户组') }}</span>
             <div v-else class="selected-group">
               <span class="group-item" v-for="(group, index) in groupList" :key="group.id">
@@ -196,7 +217,7 @@ onMounted(() => {
               </bk-input>
             </div>
           </bk-form-item>
-          <bk-form-item :label="t('理由')">
+          <bk-form-item :label="t('理由')" required property="reason">
             <bk-input
               v-model="formData.reason"
               class="reason-textarea"

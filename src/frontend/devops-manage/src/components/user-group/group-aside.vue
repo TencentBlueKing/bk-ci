@@ -3,7 +3,7 @@
     <section class="group-list">
       <bk-loading :style="{ 'min-height': '100px' }" :loading="!groupList.length">
         <div
-          :class="{ 'group-item': true, 'group-active': activeTab === group.name }"
+          :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           v-for="(group, index) in groupList"
           :key="index"
           @click="handleChangeTab(group)">
@@ -96,6 +96,10 @@ export default {
       type: Function,
       default: () => {},
     },
+    activeIndex: {
+      type: Boolean,
+      default: 0,
+    }
   },
   emits: ['create-group', 'choose-group', 'delete-group'],
   data() {
@@ -111,9 +115,14 @@ export default {
   watch: {
     groupList: {
       handler() {
-        this.activeTab = this.groupList[0]?.name;
+        if (this.groupList.length) {
+          this.handleChangeTab(this.groupList[0]);
+        }
       },
       immediate: true,
+    },
+    activeIndex(newVal) {
+      this.activeTab = this.groupList[newVal]?.groupId || '';
     },
   },
   methods: {
@@ -135,7 +144,7 @@ export default {
         });
     },
     handleChangeTab(group) {
-      this.activeTab = group.name;
+      this.activeTab = group.groupId;
       this.$emit('choose-group', group);
     },
     handleCreateGroup() {

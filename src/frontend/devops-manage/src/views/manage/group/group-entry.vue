@@ -12,6 +12,7 @@
     :open-manage="handleOpenManage"
     :close-manage="handleCloseManage"
     :delete-group="handleDeleteGroup"
+    :fetch-group-list="fetchGroupList"
   />
 </template>
 
@@ -51,7 +52,7 @@ export default {
       await this.fetchGroupList();
     }
     // 普通成员获取成员数据
-    if (this.isEnablePermission && !this.hasPermission) {
+    if (this.isEnablePermission && !this.hasPermission && this.resourceType !== 'project') {
       await this.fetchMemberGroupList();
     }
   },
@@ -210,9 +211,15 @@ export default {
         .deleteGroup({
           resourceType,
           projectCode,
-          groupId: group.id,
+          groupId: group.groupId,
         })
-        .then(() => this.fetchMemberGroupList());
+        .then(() => {
+          Message({
+            theme: 'success',
+            message: this.$t('删除成功'),
+          })
+          this.fetchGroupList()
+        });
     },
   },
 };

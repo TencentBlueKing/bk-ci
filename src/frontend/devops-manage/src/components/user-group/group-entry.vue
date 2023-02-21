@@ -2,13 +2,14 @@
   <section class="group-wrapper">
     <template v-if="!isLoading">
       <!-- 管理员 -->
-      <template v-if="hasPermission">
+      <template v-if="isEnablePermission">
         <div
-          v-if="isEnablePermission"
+          v-if="hasPermission"
           class="group-manage"
         >
           <group-aside
             v-bind="$props"
+            :active-index="activeIndex"
             :delete-group="handleDeleteGroup"
             @choose-group="handleChooseGroup"
             @create-group="handleCreateGroup"
@@ -19,11 +20,13 @@
             :path="path"
           />
         </div>
+        <!-- 项目维度 -> 无权限 -->
+        <no-permission v-else-if="!hasPermission && resourceType === 'project'" :title="$t('无该项目用户组管理权限')"></no-permission>
         <!-- 普通成员 -->
-        <group-table v-else v-bind="$props" />
+        <group-table v-else-if="!hasPermission && resourceType !== 'project'" v-bind="$props" />
       </template>
       <!-- 未开启权限管理 -->
-      <not-open-manage v-else-if="!hasPermission" v-bind="$props" />
+      <not-open-manage v-else-if="!isEnablePermission && resourceType !== 'project'" v-bind="$props" />
     </template>
   </section>
 </template>
@@ -32,6 +35,7 @@
 import GroupAside from './group-aside.vue';
 import GroupTable from './group-table.vue';
 import NotOpenManage from './not-open-manage.vue';
+import NoPermission from './no-permission.vue';
 import IamIframe from '../IAM-Iframe';
 
 export default {
@@ -40,6 +44,7 @@ export default {
     GroupTable,
     NotOpenManage,
     IamIframe,
+    NoPermission,
   },
 
   props: {
@@ -93,6 +98,10 @@ export default {
     isLoading: {
       type: Boolean,
       default: false,
+    },
+    fetchGroupList: {
+      type: Function,
+      default: () => {},
     }
   },
 
@@ -127,7 +136,21 @@ export default {
     },
 
     handleCreateGroup() {
+      this.activeIndex = '';
       this.path = 'create-user-group';
+    },
+
+    async handleComfigCreate() {
+      await this.fetchGroupList();
+      setTimeout(() => {
+        this.handleCancelCreate(this.groupList.length - 1);
+        this.activeIndex = this.groupList.length - 1;
+      });
+    },
+
+    handleCancelCreate(index = 0) {
+      this.activeIndex = 0;
+      this.path = `user-group-detail/${this.groupList[index].groupId}?role_id=${this.groupList[index].managerId}`;
     },
 
     handleMessage(event) {
@@ -135,10 +158,10 @@ export default {
       if (data.type === 'IAM') {
         switch (data.code) {
           case 'cancel':
-            this.handleChooseGroup();
+            this.handleCancelCreate();
             break;
           case 'success':
-            this.handleChooseGroup();
+            this.handleComfigCreate();
             break;
         }
       }

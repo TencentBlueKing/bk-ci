@@ -10,12 +10,10 @@ import {
   useRouter,
 } from 'vue-router';
 import { Message, InfoBox, Popover } from 'bkui-vue';
-
 import { computed, onMounted } from '@vue/runtime-core';
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
-
 const { projectCode } = route.params;
 const projectData = ref<any>({});
 const projectDiffData = ref<any>({});
@@ -27,8 +25,19 @@ const fetchProjectData = async () => {
     englishName: projectCode,
   }).then((res) => {
     projectData.value = res;
+
+    // 审批状态下项目 -> 获取审批详情数据
+    if ([1, 4].includes(projectData.value.approvalStatus)) {
+      fetchApprovalInfo();
+    }
   });
   isLoading.value = false;
+};
+
+const fetchApprovalInfo = () => {
+  http.requestApprovalInfo(projectCode).then(res => {
+    projectData.value = { ...projectData.value, ...res }
+  });
 };
 
 const fieldMap = [
@@ -62,7 +71,6 @@ const fieldMap = [
   },
   
 ]
-
 const fetchDiffProjectData = () => {
   http.requestDiffProjectData({
     englishName: projectCode,
@@ -74,7 +82,6 @@ const fetchDiffProjectData = () => {
         projectData.value[field.after] = projectDiffData.value[field.after];
       }
     });
-
     if (projectData.value?.subjectScopes.length !== projectDiffData.value?.afterSubjectScopes.length) {
       projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
     } else {
@@ -89,21 +96,19 @@ const fetchDiffProjectData = () => {
     }
   });
 };
-
 const getUserInfo = () => {
   http.getUser().then(res => {
     userName.value = res.username;
   });
 };
-
 const handleEdit = () => {
   router.push({
     path: 'edit',
   });
 };
 
-const handleToApprovalDetails = () => {
-  window.open(`/console/permission/my-apply`, '_blank')
+const handleToApprovalDetails = (applyId) => {
+  window.open(`/console/permission/${projectCode}/my-apply?applyId=${applyId}`, '_blank')
 };
 
 /**
@@ -171,7 +176,6 @@ const handleCancelCreation = () => {
       })
     }
   };
-
   InfoBox({
     infoType: 'warning',
     title: t('确定取消创建项目'),
@@ -181,12 +185,10 @@ const handleCancelCreation = () => {
     onConfirm,
   });
 };
-
 const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
 };
-
 const tipsStatusMap = {
   1: {
     type: 'info',
@@ -213,13 +215,11 @@ const tipsStatusMap = {
     message: t('更新项目信息审批被拒绝。'),
   },
 };
-
 watch(() => projectData.value.approvalStatus, (status) => {
   if (status === 4) fetchDiffProjectData();
 }, {
   deep: true,
 });
-
 onMounted(async () => {
   await getUserInfo();
   await fetchProjectData();
@@ -232,7 +232,7 @@ onMounted(async () => {
       <bk-alert v-if="projectData.tipsStatus !== 0 && projectData.approvalStatus !== 2" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
         <template #title>
           {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
-          <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails">{{ t('审批详情') }}</a>
+          <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
           <span v-if="projectData.approvalMsg">{{ t('拒绝理由：') }}{{ projectData.approvalMsg }}</span>
         </template>
       </bk-alert>
@@ -242,6 +242,15 @@ onMounted(async () => {
             <div class="project-name">
               <img v-if="projectData.logoAddr" class="project-logo" :src="projectData.logoAddr" alt="">
               <span class="item-value">{{ projectData.projectName }}</span>
+              <span class="enable-status">
+                <svg v-if="projectData.enabled" aria-hidden="true" class="enable-status-icon">
+                  <use xlink:href="#manage-icon-normal"></use>
+                </svg>
+                <svg v-else aria-hidden="true" class="enable-status-icon">
+                  <use xlink:href="#manage-icon-unknown"></use>
+                </svg>
+                {{ projectData.enabled ? t('已启用') : t('未启用') }}
+              </span>
             </div>
             <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
               <p class="update-title">{{ t('本次更新：') }}</p>
@@ -413,7 +422,6 @@ onMounted(async () => {
     background-color: #fff;
     box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
   }
-
   .detail-content-form {
     :deep(.bk-form-label) {
       font-size: 12px;
@@ -423,6 +431,20 @@ onMounted(async () => {
     .project-name {
       display: flex;
       align-items: center;
+
+    }
+    .enable-status {
+      display: flex;
+      align-items: center;
+      margin-left: 20px;
+      padding: 0px 10px;
+      background: #F0F1F5;
+      border-radius: 12px;
+      .enable-status-icon {
+        width: 18px;
+        height: 18px;
+        margin-right: 2px;
+      }
     }
     .project-logo {
       width: 60px;

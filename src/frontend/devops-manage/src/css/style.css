@@ -1,5 +1,5 @@
 @font-face {
-	font-family: "permission";
+	font-family: "manage";
 	src: url("fonts/iconcool.svg#iconcool") format("svg"),
 url("fonts/iconcool.ttf") format("truetype"),
 url("fonts/iconcool.woff") format("woff"),
@@ -8,9 +8,9 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
     font-style: normal;
 }
 
-.permission-icon {
+.manage-icon {
   /* use !important to prevent issues with browser extensions that change fonts */
-  font-family: 'permission' !important;
+  font-family: 'manage' !important;
   speak: none;
   font-style: normal;
   font-weight: normal;
@@ -23,36 +23,22 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
   -moz-osx-font-smoothing: grayscale;
 }
 
-.permission-icon-app-store-fill:before {
+.manage-icon-more-fill:before {
 	content: "\e101";
 }
-.permission-icon-search:before {
+.manage-icon-user-shape:before {
 	content: "\e102";
 }
-.permission-icon-close:before {
+.manage-icon-add-fill:before {
 	content: "\e103";
 }
-.permission-icon-angle-right:before {
+.manage-icon-lock-radius:before {
 	content: "\e104";
 }
-.permission-icon-close-circle-shape:before {
-	content: "\e105";
-}
-.permission-icon-close-samll:before {
+.manage-icon-normal:before {
 	content: "\e106";
 }
-.permission-icon-review:before {
-	content: "\e107";
+.manage-icon-unknown:before {
+	content: "\e105";
 }
-.permission-icon-quanxianshenqing:before {
-	content: "\e108";
-}
-.permission-icon-wodequanxian:before {
-	content: "\e109";
-}
-.permission-icon-wodeshenqing:before {
-	content: "\e10b";
-}
-.permission-icon-wodeshenpi:before {
-	content: "\e10a";
-}
+
