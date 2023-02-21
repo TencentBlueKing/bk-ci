@@ -30,7 +30,11 @@ package com.tencent.devops.store.service.container
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.store.pojo.container.*
+import com.tencent.devops.store.pojo.container.Container
+import com.tencent.devops.store.pojo.container.ContainerRequest
+import com.tencent.devops.store.pojo.container.ContainerResource
+import com.tencent.devops.store.pojo.container.ContainerResourceValue
+import com.tencent.devops.store.pojo.container.ContainerResp
 
 /**
  * 构建容器逻辑类
