@@ -107,14 +107,16 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      */
     override fun checkNoCompilation(): Result<Boolean> {
         logger.info("Starting compilation ${ContainerTypeEnum.NORMAL.name}")
-        val containers = getAllPipelineContainer()
-        containers.data?.forEach {
-            if (it.type == ContainerTypeEnum.NORMAL.name) {
-                logger.info("it.type == ContainerTypeEnum.NORMAL.name ${it.type == ContainerTypeEnum.NORMAL.name}")
+        val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
+        logger.info("containers $containers")
+        containers?.forEach {
+            if (it.type.equals(ContainerTypeEnum.NORMAL.name,true)) {
+                logger.info("it.type == ContainerTypeEnum.NORMAL.name ${it.type.equals(ContainerTypeEnum.NORMAL.name,true)}")
                 logger.info("Starting forEach ${it.type}")
                 return Result(true)
             }
         }
+        logger.info("No compilation")
         return Result(false)
     }
 
