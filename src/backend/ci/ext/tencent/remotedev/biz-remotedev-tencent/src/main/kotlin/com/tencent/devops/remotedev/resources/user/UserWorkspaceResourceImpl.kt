@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
+import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -171,8 +172,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         return Result(permissionService.checkUserPermission(userId, workspaceName))
     }
 
-    override fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Result<Boolean> {
-        workspaceService.updateBkTicket(userId, bkTicket, hostName)
+    override fun updateBkTicket(userId: String, bkTicketInfo: BkTicketInfo): Result<Boolean> {
+        workspaceService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
         return Result(true)
     }
 }
