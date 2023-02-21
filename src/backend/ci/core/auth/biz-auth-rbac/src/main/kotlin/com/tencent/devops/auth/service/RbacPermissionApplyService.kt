@@ -3,6 +3,7 @@ package com.tencent.devops.auth.service
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
+import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.bk.sdk.iam.dto.response.GroupPermissionDetailResponseDTO
@@ -23,7 +24,9 @@ import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.process.api.user.UserPipelineViewResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -40,7 +43,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
     val rbacCacheService: RbacCacheService,
-    val config: CommonConfig
+    val config: CommonConfig,
+    val client: Client
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -63,23 +67,77 @@ class RbacPermissionApplyService @Autowired constructor(
     ): V2ManagerRoleGroupVO {
         val projectInfo = authResourceService.get(
             projectCode = projectId,
-            resourceType = "project",
+            resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-        // 如果选择了资源实例，首先校验一下资源类型是否为空
         val resourceCode = searchGroupInfo.resourceCode
-        if (resourceCode != null) {
-            searchGroupInfo.resourceType ?: throw ErrorCodeException(
-                errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_EMPTY,
-                params = arrayOf(resourceCode),
-                defaultMessage = "权限系统：资源实例筛选时，资源类型不能为空！"
+        val resourceType = searchGroupInfo.resourceType
+        try {
+            val bkIamPath = buildBkIamPath(
+                userId = userId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                projectId = projectId
+            )
+            val managerRoleGroupVO = getGradeManagerRoleGroup(
+                searchGroupInfo = searchGroupInfo,
+                bkIamPath = bkIamPath,
+                relationId = projectInfo.relationId
+            )
+            // 校验用户是否属于组
+            verifyGroupValidMember(
+                userId = userId,
+                groupInfoList = managerRoleGroupVO.results
+            )
+            return managerRoleGroupVO
+        } catch (e: Exception) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
+                defaultMessage = "权限系统：获取用户组失败！"
             )
         }
+    }
 
-        // 如果资源实例不为空，则bkIamPath 得拼成 /bk_ci_rbac,searchGroupInfo.resourceType,projectId/
-        // 然后进行搜索一次。
-        // 接着如果该资源类型是流水线，这得搜索出所有包含该流水线的流水线组的id，然后拼成/bk_ci_rbac,searchGroupInfo.resourceType,projectId/
-        // 查找组，然后
+    private fun buildBkIamPath(
+        userId: String,
+        resourceType: String?,
+        resourceCode: String?,
+        projectId: String
+    ): String {
+        var bkIamPath: StringBuilder? = null
+        if (resourceCode != null) {
+            if (resourceType == null) {
+                throw ErrorCodeException(
+                    errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_EMPTY,
+                    params = arrayOf(resourceCode),
+                    defaultMessage = "权限系统：资源实例筛选时，资源类型不能为空！"
+                )
+            }
+            bkIamPath = StringBuilder("/${systemId},${AuthResourceType.PROJECT.value},${projectId}/")
+            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+                // todo 首先从resource表获取流水线的pid
+                val pipelineId = resourceCode
+                // 获取包含该流水线的所有流水线组
+                val viewIds = client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
+                    userId = userId,
+                    projectId = projectId,
+                    pipelineId = pipelineId
+                ).data
+                if (viewIds != null && viewIds.isNotEmpty()) {
+                    viewIds.forEach {
+                        bkIamPath.append("${systemId},${AuthResourceType.PIPELINE_GROUP.value},${it}/")
+                    }
+                }
+            }
+        }
+        return bkIamPath?.toString() ?: return ""
+    }
+
+    private fun getGradeManagerRoleGroup(
+        searchGroupInfo: SearchGroupInfo,
+        bkIamPath: String?,
+        relationId: String
+    ): V2ManagerRoleGroupVO {
         val searchGroupDTO = SearchGroupDTO
             .builder()
             .inherit(searchGroupInfo.inherit)
@@ -88,32 +146,26 @@ class RbacPermissionApplyService @Autowired constructor(
             .resourceTypeSystemId(systemId)
             .resourceTypeId(searchGroupInfo.resourceType)
             .resourceId(searchGroupInfo.resourceCode)
-            .bkIamPath(searchGroupInfo.bkIamPath)
+            .bkIamPath(bkIamPath)
             .name(searchGroupInfo.name)
             .description(searchGroupInfo.description)
             .build()
         val v2PageInfoDTO = V2PageInfoDTO()
         v2PageInfoDTO.pageSize = searchGroupInfo.pageSize
         v2PageInfoDTO.page = searchGroupInfo.page
+        return v2ManagerService.getGradeManagerRoleGroupV2(relationId, searchGroupDTO, v2PageInfoDTO)
+    }
 
-
-
-
-        try {
-            // 校验用户是否属于组
-            val managerRoleGroupVO = v2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
-            val groupInfoList = managerRoleGroupVO.results
+    private fun verifyGroupValidMember(
+        userId: String,
+        groupInfoList: List<V2ManagerRoleGroupInfo>
+    ) {
+        if (groupInfoList.isNotEmpty()) {
             val groupIds = groupInfoList.map { it.id }.joinToString(",")
             val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
             groupInfoList.forEach {
                 it.joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false
             }
-            return managerRoleGroupVO
-        } catch (e: Exception) {
-            throw ErrorCodeException(
-                errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
-                defaultMessage = "权限系统：获取用户组失败！"
-            )
         }
     }
 
@@ -178,7 +230,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
         iamGroupPermissionDetailList.forEach {
             val relatedResourceTypesDTO = it.resourceGroups[0].relatedResourceTypesDTO[0]
-            handleRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
+            buildRelatedResourceTypesDTO(instancesDTO = relatedResourceTypesDTO.condition[0].instances[0])
             val relatedResourceInfo = RelatedResourceInfo(
                 type = relatedResourceTypesDTO.type,
                 name = rbacCacheService.getResourceTypeInfo(relatedResourceTypesDTO.type).name,
@@ -195,7 +247,7 @@ class RbacPermissionApplyService @Autowired constructor(
         return groupPermissionDetailVoList
     }
 
-    private fun handleRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
+    private fun buildRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
         instancesDTO.let {
             it.name = rbacCacheService.getResourceTypeInfo(it.type).name
             it.path.forEach { element1 ->
@@ -223,54 +275,20 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceCode = resourceCode
         )
         val resourceName = resourceInfo.resourceName
-        val isEnablePermission: Boolean
-        if (iamRelatedResourceType == AuthResourceType.PROJECT.value) {
-            isEnablePermission = false
-            groupInfoList.add(
-                AuthRedirectGroupInfoVo(
-                    url = String.format(
-                        authApplyRedirectUrl, userId, projectId,
-                        "", resourceType, resourceName, action
-                    )
-                )
-            )
-        } else {
-            isEnablePermission = resourceInfo.enable
-            if (isEnablePermission) {
-                // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
-                val actionId = action.substring(action.lastIndexOf("_") + 1)
-                authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
-                    val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
-                    if (strategy != null) {
-                        val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
-                        if (isStrategyContainsAction != null && isStrategyContainsAction) {
-                            buildGroupInfoList(
-                                groupInfoList = groupInfoList,
-                                projectId = projectId,
-                                userId = userId,
-                                resourceName = resourceName,
-                                action = action,
-                                resourceType = resourceType,
-                                resourceCode = resourceCode,
-                                groupCode = it.groupCode
-                            )
-                        }
-                    }
-                }
-            } else {
-                buildGroupInfoList(
-                    groupInfoList = groupInfoList,
-                    projectId = projectId,
-                    userId = userId,
-                    resourceName = resourceName,
-                    action = action,
-                    resourceType = resourceType,
-                    resourceCode = resourceCode,
-                    groupCode = "manager"
-                )
-            }
-
-        }
+        val isEnablePermission: Boolean =
+            if (iamRelatedResourceType == AuthResourceType.PROJECT.value) false
+            else resourceInfo.enable
+        buildRedirectGroupInfoResult(
+            iamRelatedResourceType = iamRelatedResourceType,
+            isEnablePermission = isEnablePermission,
+            groupInfoList = groupInfoList,
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            action = action,
+            resourceName = resourceName
+        )
         if (groupInfoList.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
@@ -286,7 +304,64 @@ class RbacPermissionApplyService @Autowired constructor(
         )
     }
 
-    private fun buildGroupInfoList(
+    private fun buildRedirectGroupInfoResult(
+        iamRelatedResourceType: String,
+        isEnablePermission: Boolean,
+        groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String,
+        action: String,
+        resourceName: String
+    ) {
+        if (iamRelatedResourceType == AuthResourceType.PROJECT.value) {
+            groupInfoList.add(
+                AuthRedirectGroupInfoVo(
+                    url = String.format(
+                        authApplyRedirectUrl, userId, projectId,
+                        "", resourceType, resourceName, action
+                    )
+                )
+            )
+        } else {
+            if (isEnablePermission) {
+                // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
+                val actionId = action.substring(action.lastIndexOf("_") + 1)
+                authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
+                    val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
+                    if (strategy != null) {
+                        val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
+                        if (isStrategyContainsAction != null && isStrategyContainsAction) {
+                            buildRedirectGroupInfo(
+                                groupInfoList = groupInfoList,
+                                projectId = projectId,
+                                userId = userId,
+                                resourceName = resourceName,
+                                action = action,
+                                resourceType = resourceType,
+                                resourceCode = resourceCode,
+                                groupCode = it.groupCode
+                            )
+                        }
+                    }
+                }
+            } else {
+                buildRedirectGroupInfo(
+                    groupInfoList = groupInfoList,
+                    projectId = projectId,
+                    userId = userId,
+                    resourceName = resourceName,
+                    action = action,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    groupCode = "manager"
+                )
+            }
+        }
+    }
+
+    private fun buildRedirectGroupInfo(
         projectId: String,
         groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
         userId: String,

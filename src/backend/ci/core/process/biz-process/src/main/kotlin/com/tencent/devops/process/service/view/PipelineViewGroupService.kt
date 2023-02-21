@@ -755,6 +755,10 @@ class PipelineViewGroupService @Autowired constructor(
         }
     }
 
+    fun listViewIdsByPipelineId(projectId: String, pipelineId: String): Set<Long> {
+        return pipelineViewGroupDao.listByPipelineId(dslContext, projectId, pipelineId).map { it.viewId }.toSet()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
     }

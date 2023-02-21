@@ -13,8 +13,6 @@ data class SearchGroupInfo(
     val resourceType: String?,
     @ApiModelProperty("资源实例筛选")
     val resourceCode: String?,
-    @ApiModelProperty("资源实例筛选")
-    val bkIamPath: String?,
     @ApiModelProperty("用户组名称")
     val name: String?,
     @ApiModelProperty("用户组描述")
