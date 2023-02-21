@@ -110,6 +110,8 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         val containers = getAllPipelineContainer()
         containers.data?.forEach {
             if (it.type == ContainerTypeEnum.NORMAL.name) {
+                logger.info("it.type == ContainerTypeEnum.NORMAL.name ${it.type == ContainerTypeEnum.NORMAL.name}")
+                logger.info("Starting forEach ${it.type}")
                 return Result(true)
             }
         }
