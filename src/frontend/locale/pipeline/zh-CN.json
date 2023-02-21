@@ -1065,7 +1065,7 @@
   "removeFromGroup": "移出分组",
   "alreadyDeleted": "流水线已删除",
   "execedTimes": "已运行",
-  "removeSuc": "移除成功",
+  "removeSuc": "移出成功",
   "addPipelineGroupSuc": "创建流水线组成功",
   "total": "共",
   "strip": "条",
