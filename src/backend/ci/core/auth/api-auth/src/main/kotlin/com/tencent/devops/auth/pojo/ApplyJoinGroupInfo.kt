@@ -4,7 +4,7 @@ import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("申请加入用户组实体")
-data class ApplicationInfo(
+data class ApplyJoinGroupInfo(
     @ApiModelProperty("用户组id")
     val groupIds: List<Int>,
     @ApiModelProperty("过期时间")

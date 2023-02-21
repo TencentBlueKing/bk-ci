@@ -34,6 +34,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.service.iam.PermissionProjectService
+import com.tencent.devops.common.auth.api.AuthActionEnums
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -84,13 +85,11 @@ class RbacPermissionProjectService(
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {
-        val projectInfo = authResourceService.get(
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        )
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
-        return gradeManagerDetail.members.contains(userId)
+        val instanceDTO = InstanceDTO()
+        instanceDTO.system = iamConfiguration.systemId
+        instanceDTO.id = projectCode
+        instanceDTO.type = AuthResourceType.PROJECT.value
+        return authHelper.isAllowed(userId, AuthActionEnums.PROJECT_MANAGE.value, instanceDTO)
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {

@@ -13,8 +13,18 @@ class AuthActionDao {
         resourceType: String
     ): Result<TAuthActionRecord> {
         return with(TAuthAction.T_AUTH_ACTION) {
-            dslContext.selectFrom(this).where(RESOURCETYPE.eq(resourceType))
+            dslContext.selectFrom(this).where(RESOURCE_TYPE.eq(resourceType))
                 .fetch()
+        }
+    }
+
+    fun get(
+        dslContext: DSLContext,
+        action: String
+    ): TAuthActionRecord? {
+        return with(TAuthAction.T_AUTH_ACTION) {
+            dslContext.selectFrom(this).where(ACTION.eq(action))
+                .fetchAny()
         }
     }
 }

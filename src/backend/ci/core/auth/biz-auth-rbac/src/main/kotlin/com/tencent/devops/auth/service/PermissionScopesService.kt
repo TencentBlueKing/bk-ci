@@ -26,7 +26,7 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.Action
@@ -34,7 +34,6 @@ import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.dto.manager.ManagerPath
 import com.tencent.bk.sdk.iam.dto.manager.ManagerResources
 import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -47,13 +46,81 @@ import org.springframework.stereotype.Service
  * 可授权范围操作
  */
 @Service
+@Suppress("LongParameterList", "LongMethod")
 class PermissionScopesService(
     private val iamConfiguration: IamConfiguration,
-    private val strategyService: StrategyService
+    private val strategyService: StrategyService,
+    private val rbacCacheService: RbacCacheService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionScopesService::class.java)
+    }
+
+    fun buildAuthorizationScopes(
+        strategyName: String,
+        projectCode: String,
+        projectName: String,
+        resourceType: String,
+        resourceCode: String,
+        resourceName: String
+    ): List<AuthorizationScopes> {
+        val strategyInfo = strategyService.getStrategyByName(strategyName)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                    params = arrayOf(strategyName)
+                )
+            )
+        logger.info("get $strategyName strategy|${strategyInfo.strategy}")
+        val authorizationScopes = mutableListOf<AuthorizationScopes>()
+        strategyInfo.strategy.forEach { (strategyResourceType, permissions) ->
+            permissions.forEach { permission ->
+                val action = "${strategyResourceType}_${permission}"
+                val actionInfo = rbacCacheService.getActionInfo(action = action)
+
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
+
+                actions.add(Action(action))
+                val managerPath = mutableListOf<ManagerPath>()
+                val projectPath = ManagerPath(
+                    iamConfiguration.systemId,
+                    AuthResourceType.PROJECT.value,
+                    projectCode,
+                    projectName
+                )
+                managerPath.add(projectPath)
+                if (resourceType != strategyResourceType && resourceType != actionInfo.relatedResourceType) {
+                    val resourcePath = ManagerPath(
+                        iamConfiguration.systemId,
+                        strategyResourceType,
+                        "*",
+                        ""
+                    )
+                    managerPath.add(resourcePath)
+                }
+
+                val paths = mutableListOf<List<ManagerPath>>()
+                paths.add(managerPath)
+
+                resources.add(
+                    ManagerResources.builder()
+                        .system(iamConfiguration.systemId)
+                        .type(actionInfo.relatedResourceType)
+                        .paths(paths).build()
+                )
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
+            }
+        }
+        return authorizationScopes
     }
 
     /**
@@ -64,22 +131,62 @@ class PermissionScopesService(
         projectCode: String,
         projectName: String
     ): List<AuthorizationScopes> {
-        val (projectStrategyList, resourceStrategyMap) = getGroupStrategy(strategyName)
+        val strategyInfo = strategyService.getStrategyByName(strategyName)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                    params = arrayOf(strategyName)
+                )
+            )
         val authorizationScopes = mutableListOf<AuthorizationScopes>()
-        authorizationScopes.addAll(
-            buildProjectAuthorizationScopes(
-                projectStrategyList = projectStrategyList,
-                projectCode = projectCode,
-                projectName = projectName
-            )
-        )
-        authorizationScopes.addAll(
-            buildResourceAuthorizationScopes(
-                resourceStrategyMap = resourceStrategyMap,
-                projectCode = projectCode,
-                projectName = projectName
-            )
-        )
+        strategyInfo.strategy.forEach { (strategyResourceType, permissions) ->
+            permissions.forEach { permission ->
+                val action = "${strategyResourceType}_${permission}"
+                val actionInfo = rbacCacheService.getActionInfo(action = action)
+
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
+
+                actions.add(Action(action))
+                val managerPath = mutableListOf<ManagerPath>()
+                val projectPath = ManagerPath(
+                    iamConfiguration.systemId,
+                    AuthResourceType.PROJECT.value,
+                    projectCode,
+                    projectName
+                )
+                managerPath.add(projectPath)
+                if (AuthResourceType.PROJECT.value != strategyResourceType &&
+                    AuthResourceType.PROJECT.value != actionInfo.relatedResourceType
+                ) {
+                    val resourcePath = ManagerPath(
+                        iamConfiguration.systemId,
+                        strategyResourceType,
+                        "*",
+                        ""
+                    )
+                    managerPath.add(resourcePath)
+                }
+
+                val paths = mutableListOf<List<ManagerPath>>()
+                paths.add(managerPath)
+
+                resources.add(
+                    ManagerResources.builder()
+                        .system(iamConfiguration.systemId)
+                        .type(actionInfo.relatedResourceType)
+                        .paths(paths).build()
+                )
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
+            }
+        }
         return authorizationScopes
     }
 
@@ -92,28 +199,72 @@ class PermissionScopesService(
         resourceCode: String,
         resourceName: String
     ): List<AuthorizationScopes> {
-        val (projectStrategyList, resourceStrategyMap) = getGroupStrategy(strategyName)
+        val strategyInfo = strategyService.getStrategyByName(strategyName)
+            ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                defaultMessage = MessageCodeUtil.getCodeMessage(
+                    messageCode = AuthMessageCode.STRATEGT_NAME_NOT_EXIST,
+                    params = arrayOf(strategyName)
+                )
+            )
         val authorizationScopes = mutableListOf<AuthorizationScopes>()
-        authorizationScopes.addAll(
-            buildProjectAuthorizationScopes(
-                projectStrategyList = projectStrategyList,
-                projectCode = projectCode,
-                projectName = projectName
-            )
-        )
-        authorizationScopes.addAll(
-            buildResourceAuthorizationScopes(
-                resourceStrategyMap = resourceStrategyMap,
-                projectCode = projectCode,
-                projectName = projectName,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName
-            )
-        )
-        logger.info(
-            "build subset manager authorization scopes authorizationScopes:${JsonUtil.toJson(authorizationScopes)}"
-        )
+        strategyInfo.strategy.forEach { (strategyResourceType, permissions) ->
+            permissions.forEach { permission ->
+                val action = "${strategyResourceType}_${permission}"
+                val actionInfo = rbacCacheService.getActionInfo(action = action)
+
+                val actions = mutableListOf<Action>()
+                val resources = mutableListOf<ManagerResources>()
+
+                actions.add(Action(action))
+                val managerPath = mutableListOf<ManagerPath>()
+                val projectPath = ManagerPath(
+                    iamConfiguration.systemId,
+                    AuthResourceType.PROJECT.value,
+                    projectCode,
+                    projectName
+                )
+                managerPath.add(projectPath)
+                if (actionInfo.relatedResourceType != AuthResourceType.PROJECT.value) {
+                    val resourcePath = ManagerPath(
+                        iamConfiguration.systemId,
+                        strategyResourceType,
+                        resourceCode,
+                        resourceName
+                    )
+                    managerPath.add(resourcePath)
+                }
+                // 流水线组拥有组下所有流水线的权限
+                if (resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+                    strategyResourceType == AuthResourceType.PIPELINE_DEFAULT.value
+                ) {
+                    val pipelinePath = ManagerPath(
+                        iamConfiguration.systemId,
+                        AuthResourceType.PIPELINE_DEFAULT.value,
+                        "*",
+                        ""
+                    )
+                    managerPath.add(pipelinePath)
+                }
+
+                val paths = mutableListOf<List<ManagerPath>>()
+                paths.add(managerPath)
+
+                resources.add(
+                    ManagerResources.builder()
+                        .system(iamConfiguration.systemId)
+                        .type(actionInfo.relatedResourceType)
+                        .paths(paths).build()
+                )
+                authorizationScopes.add(
+                    AuthorizationScopes.builder()
+                        .system(iamConfiguration.systemId)
+                        .actions(actions)
+                        .resources(resources)
+                        .build()
+                )
+            }
+        }
         return authorizationScopes
     }
 

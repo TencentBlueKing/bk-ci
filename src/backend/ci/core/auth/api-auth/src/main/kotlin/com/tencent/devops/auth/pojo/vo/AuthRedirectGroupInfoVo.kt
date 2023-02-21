@@ -8,5 +8,5 @@ data class AuthRedirectGroupInfoVo(
     @ApiModelProperty("跳转URL")
     val url: String,
     @ApiModelProperty("用户组名")
-    val groupName: String
+    val groupName: String? = null
 )

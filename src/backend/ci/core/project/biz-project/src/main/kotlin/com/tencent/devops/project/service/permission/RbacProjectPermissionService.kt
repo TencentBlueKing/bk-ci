@@ -176,13 +176,5 @@ class RbacProjectPermissionService(
         )
     }
 
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return true
-    }
-
     override fun needApproval(needApproval: Boolean?) = needApproval == true
 }
