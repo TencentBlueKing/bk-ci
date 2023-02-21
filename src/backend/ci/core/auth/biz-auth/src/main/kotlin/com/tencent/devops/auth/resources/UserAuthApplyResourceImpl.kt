@@ -49,7 +49,13 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         projectId: String,
         applyJoinProjectInfo: ApplyJoinProjectInfo
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(
+            permissionApplyService.applyToJoinProject(
+                userId = userId,
+                projectId = projectId,
+                applyJoinProjectInfo = applyJoinProjectInfo
+            )
+        )
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {
