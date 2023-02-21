@@ -100,6 +100,7 @@
                                 display: flex;
                                 @include ellipsis();
                                 min-width: 0;
+                                margin-left: 6px;
                             }
                         }
                     }
