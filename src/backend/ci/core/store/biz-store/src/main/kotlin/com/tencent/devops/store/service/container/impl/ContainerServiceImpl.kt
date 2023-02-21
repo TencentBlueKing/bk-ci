@@ -106,18 +106,13 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
      * 判断是否有无编译环境
      */
     override fun checkNoCompilation(): Result<Boolean> {
-        logger.info("Starting compilation ${ContainerTypeEnum.NORMAL.name}")
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
-        logger.info("containers $containers")
+        logger.info("Starting checkNoCompilation $containers")
         containers?.forEach {
             if (it.type.equals(ContainerTypeEnum.NORMAL.name,true)) {
-                logger.info("it.type == ContainerTypeEnum.NORMAL.name ${it.type.equals(ContainerTypeEnum.NORMAL.name,true)}")
-                logger.info("Starting forEach ${it.type}")
                 return Result(true)
             }
-            logger.info("result is false")
         }
-        logger.info("No compilation")
         return Result(false)
     }
 
