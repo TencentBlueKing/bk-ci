@@ -11,11 +11,7 @@ const request = axios.create({
     },
     withCredentials: true,
     xsrfCookieName: 'backend_csrftoken', // 注入csrfToken
-    xsrfHeaderName: 'X-CSRFToken', // 注入csrfToken
-    headers: {
-        'X-Requested-With': 'fetch',
-        'X-Gateway-Tag': 'kubernetes-dev-rbac'
-    }
+    xsrfHeaderName: 'X-CSRFToken' // 注入csrfToken
 })
 
 function errorHandler (error: object) {

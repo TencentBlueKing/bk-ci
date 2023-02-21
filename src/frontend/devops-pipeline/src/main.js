@@ -39,9 +39,12 @@ import createLocale from '../../locale'
 import '@icon-cool/bk-icon-devops/src/index'
 import '@icon-cool/bk-icon-devops'
 
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 import bkMagic from 'bk-magic-vue'
 import BkPipeline from 'bkui-pipeline'
+import {
+    handlePipelineNoPermission,
+    RESOURCE_ACTION
+} from '@/utils/permission'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -69,9 +72,7 @@ Vue.use(BkPipeline, {
 })
 
 Vue.prototype.$setLocale = setLocale
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
+Vue.prototype.$permissionResourceAction = RESOURCE_ACTION
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -85,13 +86,9 @@ String.prototype.isBkVar = function () {
 
 Vue.mixin({
     methods: {
-        // handleError (e, permissionAction, instance, projectId, resourceMap = this.$permissionResourceMap.pipeline) {
-        handleError (e, noPermissionList) {
+        handleError (e, data) {
             if (e.code === 403) { // 没有权限编辑
-                // this.setPermissionConfig(resourceMap, permissionAction, instance ? [instance] : [], projectId)
-                this.$showAskPermissionDialog({
-                    noPermissionList
-                })
+                handlePipelineNoPermission(data)
             } else {
                 this.$showTips({
                     message: e.message || e,
@@ -99,19 +96,6 @@ Vue.mixin({
                 })
             }
         },
-        /**
-         * 设置权限弹窗的参数
-         */
-        setPermissionConfig (resourceId, actionId, instanceId = [], projectId = this.$route.params.projectId) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId,
-                    resourceId,
-                    instanceId,
-                    projectId
-                }]
-            })
-        }
     }
 })
 

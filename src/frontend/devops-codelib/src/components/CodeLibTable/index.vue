@@ -34,6 +34,8 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig } from '../../config/'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../../utils/permission'
+
     export default {
         props: {
             switchPage: {
@@ -194,24 +196,15 @@
                                 this.switchPage(currentPage, pageSize)
                             }
                         }).catch((e) => {
-                            if (e.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.edit,
-                                        resourceId: this.$permissionResourceMap.code,
-                                        instanceId: [{
-                                            id: repositoryHashId,
-                                            name: aliasName
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
-                            } else {
-                                this.$bkMessage({
-                                    message: e.message,
-                                    theme: 'error'
-                                })
-                            }
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: RESOURCE_TYPE,
+                                    resourceCode: repositoryHashId,
+                                    action: RESOURCE_ACTION.DELETE
+                                }
+                            )
                         }).finally(() => {
                             this.isLoading = false
                         })

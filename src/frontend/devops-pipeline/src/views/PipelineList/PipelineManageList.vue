@@ -157,6 +157,10 @@
         ALL_PIPELINE_VIEW_ID,
         DELETED_VIEW_ID
     } from '@/store/constants'
+    import {
+        handlePipelineNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     const TABLE_LAYOUT = 'table'
     const CARD_LAYOUT = 'card'
@@ -395,11 +399,19 @@
             },
 
             toggleImportPipelinePopup () {
-                this.importPipelinePopupShow = !this.importPipelinePopupShow
+                if (!this.hasCreatePermission) {
+                    this.toggleCreatePermission()
+                } else {
+                    this.importPipelinePopupShow = !this.importPipelinePopupShow
+                }
             },
 
             toggleCreatePermission () {
-                this.setPermissionConfig(this.$permissionResourceMap.pipeline, this.$permissionActionMap.create)
+                handlePipelineNoPermission({
+                    projectId: this.$route.params.projectId,
+                    resourceCode: this.$route.params.projectId,
+                    action: RESOURCE_ACTION.CREATE
+                })
             },
             refresh () {
                 this.$refs.pipelineBox?.refresh?.()

@@ -142,6 +142,8 @@
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
     import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { RESOURCE_ACTION, RESOURCE_TYPE } from '../../utils/permission'
+
     export default {
         name: 'codelib-dialog',
         props: {
@@ -454,27 +456,15 @@
                         this.refreshCodelibList()
                     }
                 } catch (e) {
-                    if (e.code === 403) {
-                        const actionId = this.$permissionActionMap[repositoryHashId ? 'edit' : 'create']
-                        this.$showAskPermissionDialog({
-                            noPermissionList: [{
-                                actionId,
-                                resourceId: this.$permissionResourceMap.code,
-                                instanceId: repositoryHashId
-                                    ? [{
-                                        id: repositoryHashId,
-                                        name: codelib.aliasName
-                                    }]
-                                    : null,
-                                projectId
-                            }]
-                        })
-                    } else {
-                        this.$bkMessage({
-                            message: e.message,
-                            theme: 'error'
-                        })
-                    }
+                    this.handleError(
+                        e,
+                        {
+                            projectId,
+                            resourceType: RESOURCE_TYPE,
+                            resourceCode: repositoryHashId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    )
                     this.saving = false
                 } finally {
                     this.$nextTick(() => (this.loading = false))
