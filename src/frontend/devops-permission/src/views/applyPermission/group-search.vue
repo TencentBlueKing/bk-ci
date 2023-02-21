@@ -5,11 +5,13 @@ import { Error } from 'bkui-vue/lib/icon'
 import GroupDeatil from './group-detail.vue'
 import SearchSelect from './search-select'
 import {
+  h,
   ref,
   watch,
   onMounted,
   computed,
 } from 'vue';
+import BkCheckbox from 'bkui-vue/lib/checkbox';
 
 const props = defineProps({
   groupList: Array,
@@ -21,7 +23,7 @@ const showDetail = ref(false);
 const tableRef = ref();
 const resourcesTypeList = ref([]);
 const groupInfo = ref([]);
-const selectGroupList = ref([]);
+const selections = ref([]);
 const filter = ref([]);
 const isLoading = ref(false);
 const isDetailLoading = ref(false);
@@ -31,6 +33,9 @@ const pagination = ref({
   limit: 10,
   current: 1,
 });
+const isRowChecked = ref(false);
+const indeterminate = ref(false);
+const isSelectedAll = ref(false);
 
 const searchList = computed(() => {
   const datas = [
@@ -69,36 +74,37 @@ const searchList = computed(() => {
 
 const emits = defineEmits(['handle-change-select-group']);
 
+const handleChangeSelectGroup = (values) => {
+  emits('handle-change-select-group', values);
+};
+
+// 可选择的用户组 joined -> flase
+const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
+
 watch(() => props.projectCode, () => {
   if (props.projectCode) {
     fetchGroupList();
   };
 })
 
-const handleChangeSelectGroup = (values) => {
-  emits('handle-change-select-group', values);
-};
-
-const toggleTableRowSelected = () => {
-  if (tableRef.value) {
-    const data = tableRef.value.getSelection();
-    const selectIdMap = selectGroupList.value.map(i => i.id);
-    const list = data.filter(select => !selectIdMap.includes(select.id))
-    list.forEach(i => tableRef.value.toggleRowSelection(i, false))
-  }
-};
-
-watch(() => selectGroupList.value, () => {
-  handleChangeSelectGroup(selectGroupList.value);
-  toggleTableRowSelected();
+watch(() => selections.value, () => {
+  checkSelectedAll();
+  checkIndeterminate();
+  handleChangeSelectGroup(selections.value);
+}, {
+  deep: true,
 });
 
 watch(() => props.groupList, () => {
-  selectGroupList.value = props.groupList;
-  toggleTableRowSelected();
+  selections.value = props.groupList;
 }, {
   immediate: true,
   deep: true,
+});
+
+watch(() => userGroupList.value, () => {
+  checkSelectedAll();
+  checkIndeterminate();
 });
 
 const handlePageChange = (page) => {
@@ -113,7 +119,7 @@ const handleShowGroupDetail = async (data) => {
   isDetailLoading.value = true;
   showDetail.value = true;
   groupInfo.value = data;
-}
+};
 
 const hiddenDetail = (payload) => {
   showDetail.value = payload;
@@ -152,7 +158,6 @@ const fetchGroupList = async (payload = []) => {
   await http.getUserGroupList(params).then(res => {
     pagination.value.count = res.count;
     userGroupList.value = res.results;
-    toggleTableRowSelected();
   }).catch(() => {
     isLoading.value = false;
     return [];
@@ -161,26 +166,120 @@ const fetchGroupList = async (payload = []) => {
   })
 };
 
-const handleSelectGroup = ({ row }) => {
-  const index = selectGroupList.value.findIndex(i => i.id === row.id)
-  if (index === -1) {
-    selectGroupList.value.push(row);
-  } else {
-    selectGroupList.value.splice(index, 1);
+const handleSelectRow = (value, row) => {
+  const index = selections.value.findIndex(i => i.id === row.id);
+  if (value && index === -1) {
+    selections.value.push(row);
+  } else if (!value && index > -1) {
+    selections.value.splice(index, 1);
   }
 };
 
-const handleSelectAllGroup = (selection) => {
-  if (selection.checked) {
-    selectGroupList.value = [...userGroupList.value];
-  } else {
-    selectGroupList.value = [];
+const checkSelectedAll = () => {
+  if (!selections.value.length) {
+    isSelectedAll.value = false;
+    return false;
   }
+
+  isSelectedAll.value = optionGroupList.value.every(i => {
+    return selections.value.some(group => group.id === i.id);
+  })
 };
 
-const isRowSelectEnable = ({ row }) => {
-  return true;
+const checkIndeterminate = () => {
+  if (!selections.value.length) {
+    indeterminate.value = false;
+    return false;
+  }
+
+  if (selections.value.length > optionGroupList.value.length) {
+    checkSelectedAll();
+  } else {
+    indeterminate.value = selections.value.length !== optionGroupList.value.length;
+  }
 }
+
+const handleSelectAllGroup = (val) => {
+  isSelectedAll.value = val;
+  if (val) {
+    selections.value = userGroupList.value.filter(i => !i.joined);
+  } else {
+    selections.value = [];
+  }
+};
+
+const renderSelectionCell = ({ row, column }) => {
+  return h(
+    BkCheckbox,
+    {
+      modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
+      disabled: row.joined,
+      onChange(val) {
+        handleSelectRow(val, row)
+      }
+    }
+  )
+};
+
+const renderSelectionHeader = (col: any) => {
+  return h(
+    BkCheckbox,
+    {
+      indeterminate: indeterminate.value,
+      modelValue: isSelectedAll.value,
+      onChange(val) {
+        handleSelectAllGroup(val);
+      }
+    }
+  )
+};
+
+const columns = [
+  {
+    label: renderSelectionHeader,
+    width: 60,
+    render: renderSelectionCell,
+  },
+  {
+    label: t('用户组名'),
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.name, 
+          style: {
+            cursor: 'pointer',
+            color: '#3a84ff',
+          },
+          onClick() {
+            handleShowGroupDetail(row)
+          },
+        },
+        [
+          cell,
+          row.name
+        ]
+      );
+    },
+  },
+  {
+    label: t('描述'),
+    field: 'description',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.description, 
+        },
+        [
+          cell,
+          row.description
+        ]
+      );
+    },
+  }
+];
+
 
 onMounted(() => {
   
@@ -202,27 +301,12 @@ onMounted(() => {
       <bk-table
         ref="tableRef"
         :data="userGroupList"
+        :columns="columns"
         :pagination="pagination"
-        row-key="id"
-        async-data
         :border="['row', 'outer']"
-        :is-row-select-enable="isRowSelectEnable"
         @page-value-change="handlePageChange"
         @page-limit-change="handleLimitChange"
-        @select="handleSelectGroup"
-        @select-all="handleSelectAllGroup"
       >
-        <bk-table-column type="selection" width="60"></bk-table-column>
-        <bk-table-column :label="t('用户组名')" prop="name">
-          <template #default="{ data }">
-            <span class="group-name" :title="data?.name" @click="handleShowGroupDetail(data)">{{ data?.name }}</span>
-          </template>
-        </bk-table-column>
-        <bk-table-column :label="t('描述')" prop="description">
-          <template #default="{ data }">
-            <span :title="data?.description">{{ data?.description }}</span>
-          </template>
-        </bk-table-column>
       </bk-table> 
     </bk-loading>
   </article>

@@ -201,7 +201,7 @@ export default {
         && !Object.keys(this.selectInfo).length;
     },
     optionList() {
-      const list = this.list.filter(option => {
+      let curList = this.list.filter(option => {
         return !this.searchSelectValue.some(item => item.id === option.id);
       });
       const { id, children } = this.selectInfo;
@@ -209,23 +209,27 @@ export default {
         if (children) {
           const text = this.input.value;
           if (text) {
-            return children.filter(item => item.name.indexOf(text) > -1);
+            curList = children.filter(item => item.name.indexOf(text) > -1);
           } else {
-            return children;
+            curList = children;
           }
-        } else {
-          return list;
         }
       } else if (this.input.value) {
         const inputOptions = this.list.filter(item => !item.children) || [];
     
-        return inputOptions.filter(option => {
+        curList = inputOptions.filter(option => {
           const isMatch = this.searchSelectValue.some(item => item.id === option.id);
           return !isMatch;
         }) || []
-      } else {
-        return list;
       }
+
+      curList.forEach(option => {
+        if (['actionId', 'resourceCode'].includes(option.id)) {
+          option.children = this.resourcesTypeList;
+        }
+      });
+
+      return curList;
     },
     boundary() {
       return document.body;
@@ -248,7 +252,7 @@ export default {
         this.$emit('change', val)
       },
       deep: true
-    }
+    },
   },
   data() {
     return {
@@ -320,11 +324,6 @@ export default {
           return {
             ...item,
             id: item.resourceType,
-          }
-        }) ;
-        this.optionList.forEach(option => {
-          if (['actionId', 'resourceCode'].includes(option.id)) {
-            option.children = this.resourcesTypeList;
           }
         });
       });
