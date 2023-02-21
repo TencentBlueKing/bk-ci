@@ -2,7 +2,6 @@
     <bk-table
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
-        size="large"
         row-key="pipelineId"
         height="100%"
         :data="pipelineList"
@@ -13,6 +12,7 @@
         @sort-change="handleSort"
         :default-sort="sortField"
         @selection-change="handleSelectChange"
+        :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
