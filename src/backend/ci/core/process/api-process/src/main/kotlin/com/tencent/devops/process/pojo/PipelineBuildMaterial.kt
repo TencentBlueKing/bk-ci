@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo
 
+import com.tencent.devops.common.api.enums.ScmType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -46,5 +47,7 @@ data class PipelineBuildMaterial(
     @ApiModelProperty("当前提交备注信息", required = false)
     val newCommitComment: String?,
     @ApiModelProperty("提交次数", required = false)
-    val commitTimes: Int?
+    val commitTimes: Int?,
+    @ApiModelProperty("代码库类型", required = false)
+    val scmType: ScmType?
 )
