@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
 import com.tencent.devops.process.constant.PipelineViewType
@@ -66,9 +67,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.Collator
 import java.time.LocalDateTime
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -700,7 +699,7 @@ class PipelineViewGroupService @Autowired constructor(
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
-        return views.sortedWith(compareBy(Collator.getInstance(Locale.SIMPLIFIED_CHINESE)) { it.name }).sortedBy {
+        return views.sortedBy { PinyinUtil.toPinyin(it.name).toUpperCase() }.sortedBy {
             viewScoreMap[it.id] ?: Int.MAX_VALUE
         }.map {
             PipelineNewViewSummary(
