@@ -85,7 +85,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         return Result(true)
     }
 
-    @Suppress("NestedBlockDepth")
+    @Suppress("ComplexMethod")
     private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
         val invalidErrorCodes = mutableListOf<String>()
         errorCodeInfos.forEach {
