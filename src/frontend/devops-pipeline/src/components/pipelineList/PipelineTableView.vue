@@ -287,10 +287,10 @@
                 return res
             },
             sortField () {
-                const { sortType, collation = ORDER_ENUM.descending } = this.$route.query
+                const { sortType, collation } = this.$route.query
                 return {
                     prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
-                    order: collation
+                    order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
             }
         },

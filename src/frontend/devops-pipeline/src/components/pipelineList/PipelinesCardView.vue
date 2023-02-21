@@ -59,7 +59,7 @@
                 const { sortType, collation = ORDER_ENUM.descending } = this.$route.query
                 return {
                     sortType: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
-                    collation
+                    collation: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
             }
         },

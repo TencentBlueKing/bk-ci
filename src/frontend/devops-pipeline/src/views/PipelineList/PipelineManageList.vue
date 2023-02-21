@@ -366,6 +366,7 @@
                     }
                 }
                 localStorage.setItem('pipelineSortType', sortType)
+                localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
                 this.$router.push({
                     ...this.$route,
                     query: newSortQuery
