@@ -2,8 +2,9 @@ BINDIR := $(CURDIR)/bin
 CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
+AGENT_VERSION=v1.9.17
 BUILD_FLAGS := -ldflags="-w -s -X agent/src/pkg/config.BuildTime=$(BuildTime) \
--X agent/src/pkg/config.GitCommit=$(GitCommit)"
+-X agent/src/pkg/config.GitCommit=$(GitCommit) -X agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
 test: test-unit
 
