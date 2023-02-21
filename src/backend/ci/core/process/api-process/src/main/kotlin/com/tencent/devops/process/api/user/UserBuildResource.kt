@@ -560,7 +560,7 @@ interface UserBuildResource {
         @PathParam("pipelineId")
         @BkField(minLength = 32, maxLength = 34, required = true)
         pipelineId: String,
-        @ApiParam("要操作的构建ID列表", required = true)
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
         @BkField(required = true)
         buildIds: Set<String>
     ): Result<Boolean>

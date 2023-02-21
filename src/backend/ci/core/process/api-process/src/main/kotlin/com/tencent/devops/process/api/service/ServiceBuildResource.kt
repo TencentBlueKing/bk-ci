@@ -804,4 +804,25 @@ interface ServiceBuildResource {
         @ApiParam("备注信息", required = true)
         remark: BuildHistoryRemark?
     ): Result<Boolean>
+
+    @ApiOperation("尝试将异常导致流水线中断的继续运转下去（结果可能是：失败结束 or 继续运行）")
+    @PUT
+    @Path("/{projectId}/{pipelineId}/try_fix_stuck_builds")
+    fun tryFinishStuckBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        @BkField(minLength = 1, maxLength = 128, required = true)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        @BkField(minLength = 1, maxLength = 64, required = true)
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @PathParam("pipelineId")
+        @BkField(minLength = 32, maxLength = 34, required = true)
+        pipelineId: String,
+        @ApiParam("要操作的构建ID列表[最大50个]", required = true)
+        @BkField(required = true)
+        buildIds: Set<String>
+    ): Result<Boolean>
 }
