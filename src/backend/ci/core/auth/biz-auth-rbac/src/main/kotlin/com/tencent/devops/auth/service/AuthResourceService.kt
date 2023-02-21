@@ -41,7 +41,8 @@ import org.springframework.stereotype.Service
 @Service
 class AuthResourceService @Autowired constructor(
     val dslContext: DSLContext,
-    val authResourceDao: AuthResourceDao
+    val authResourceDao: AuthResourceDao,
+    val authResourceCodeConverter: AuthResourceCodeConverter
 ) {
 
     companion object {
@@ -65,6 +66,10 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
+            iamResourceCode = authResourceCodeConverter.code2IamCode(
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            ),
             enable = enable,
             relationId = relationId
         )
@@ -186,7 +191,7 @@ class AuthResourceService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
-        return authResourceDao.listByProjectAndType(
+        return authResourceDao.getResourceCodeByType(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType
