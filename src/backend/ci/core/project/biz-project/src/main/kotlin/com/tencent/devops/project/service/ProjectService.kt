@@ -30,7 +30,6 @@ package com.tencent.devops.project.service
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectBaseInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
