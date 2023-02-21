@@ -94,7 +94,6 @@ class AuthResourceGroupService(
                 groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
-            addGroupMember(userId = userId, iamGroupId = iamGroupId)
         }
     }
 
@@ -185,7 +184,6 @@ class AuthResourceGroupService(
                 groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
-            addGroupMember(userId = userId, iamGroupId = iamGroupId)
         }
     }
 

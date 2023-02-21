@@ -10,7 +10,8 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.pojo.ApplicationInfo
+import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
+import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
@@ -21,6 +22,7 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.config.CommonConfig
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -115,23 +117,51 @@ class RbacPermissionApplyService @Autowired constructor(
         }
     }
 
-    override fun applyToJoinGroup(userId: String, applicationInfo: ApplicationInfo): Boolean {
+    override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
         try {
             val iamApplicationDTO = ApplicationDTO
                 .builder()
-                .groupId(applicationInfo.groupIds)
+                .groupId(applyJoinGroupInfo.groupIds)
                 .applicant(userId)
-                .expiredAt(applicationInfo.expiredAt.toLong())
-                .reason(applicationInfo.reason).build()
+                .expiredAt(applyJoinGroupInfo.expiredAt.toLong())
+                .reason(applyJoinGroupInfo.reason).build()
             v2ManagerService.createRoleGroupApplicationV2(iamApplicationDTO)
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
-                params = arrayOf(applicationInfo.groupIds.toString()),
-                defaultMessage = "权限系统：申请加入用户组[${applicationInfo.groupIds}]失败！"
+                params = arrayOf(applyJoinGroupInfo.groupIds.toString()),
+                defaultMessage = "权限系统：申请加入用户组[${applyJoinGroupInfo.groupIds}]失败！"
             )
         }
         return true
+    }
+
+    override fun applyToJoinProject(
+        userId: String,
+        projectId: String,
+        applyJoinProjectInfo: ApplyJoinProjectInfo
+    ): Boolean {
+        logger.info("user $userId apply join project $projectId)|${applyJoinProjectInfo.expireTime}")
+        val resourceGroup = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            groupCode = DefaultGroupType.VIEWER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.VIEWER.displayName),
+            defaultMessage = "group ${DefaultGroupType.VIEWER.displayName} not exist"
+        )
+        return applyToJoinGroup(
+            userId = userId,
+            applyJoinGroupInfo = ApplyJoinGroupInfo(
+                groupIds = listOf(resourceGroup.relationId.toInt()),
+                expiredAt = applyJoinProjectInfo.expireTime,
+                applicant = userId,
+                reason = applyJoinProjectInfo.reason
+            )
+        )
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): List<GroupPermissionDetailVo> {
