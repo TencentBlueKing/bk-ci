@@ -195,7 +195,7 @@ class OPRepositoryService @Autowired constructor(
 
     fun updateGitLabProjectId() {
         var offset = 0
-        val limit = 1000
+        val limit = 100
         logger.info("OPRepositoryService:begin updateGitLabProjectId")
         do {
             val repoRecords = codeGitLabDao.getAllRepo(dslContext, limit, offset)
@@ -251,13 +251,15 @@ class OPRepositoryService @Autowired constructor(
                 )
             }
             offset += limit
-        } while (repoSize == 1000)
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoSize == 100)
         logger.info("OPRepositoryService:end updateGitLabProjectId")
     }
 
     fun updateCodeGitProjectId() {
         var offset = 0
-        val limit = 1000
+        val limit = 100
         logger.info("OPRepositoryService:begin updateCodeGitProjectId")
         do {
             val repoRecords = codeGitDao.getAllRepo(dslContext, limit, offset)
@@ -322,7 +324,9 @@ class OPRepositoryService @Autowired constructor(
                 )
             }
             offset += limit
-        } while (repoSize == 1000)
+            // 避免限流，增加一秒休眠时间
+            Thread.sleep(1 * 1000)
+        } while (repoSize == 100)
         logger.info("OPRepositoryService:end updateCodeGitProjectId")
     }
 
