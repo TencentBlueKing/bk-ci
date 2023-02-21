@@ -699,7 +699,7 @@ class PipelineViewGroupService @Autowired constructor(
         var score = 1
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
-        return views.sortedBy { PinyinUtil.toPinyin(it.name) }.sortedBy {
+        return views.sortedBy { PinyinUtil.toPinyin(it.name).toUpperCase() }.sortedBy {
             viewScoreMap[it.id] ?: Int.MAX_VALUE
         }.map {
             PipelineNewViewSummary(
