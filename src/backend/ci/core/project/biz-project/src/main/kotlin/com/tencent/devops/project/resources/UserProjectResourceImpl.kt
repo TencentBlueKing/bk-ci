@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.user.UserProjectResource
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectDiffVO
@@ -43,9 +42,9 @@ import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
+import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -198,20 +197,6 @@ class UserProjectResourceImpl @Autowired constructor(
             projectService.cancelUpdateProject(
                 userId = userId,
                 projectId = projectId
-            )
-        )
-    }
-
-    override fun applyToJoinProject(
-        userId: String,
-        englishName: String,
-        applicationInfo: ApplicationInfo
-    ): Result<Boolean> {
-        return Result(
-            projectService.applyToJoinProject(
-                userId = userId,
-                englishName = englishName,
-                applicationInfo = applicationInfo
             )
         )
     }

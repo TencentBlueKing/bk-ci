@@ -207,10 +207,4 @@ interface ProjectService {
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
     fun cancelUpdateProject(userId: String, projectId: String): Boolean
-
-    fun applyToJoinProject(
-        userId: String,
-        englishName: String,
-        applicationInfo: ApplicationInfo
-    ): Boolean
 }

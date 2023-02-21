@@ -103,13 +103,5 @@ class StreamProjectPermissionServiceImpl @Autowired constructor(
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
 
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return true
-    }
-
     override fun needApproval(needApproval: Boolean?) = false
 }

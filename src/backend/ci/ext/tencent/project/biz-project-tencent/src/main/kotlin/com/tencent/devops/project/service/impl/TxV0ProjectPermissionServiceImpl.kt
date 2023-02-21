@@ -41,7 +41,6 @@ import com.tencent.devops.common.auth.api.BSAuthProjectApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.BSProjectServiceCodec
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
@@ -188,14 +187,6 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
     ) = Unit
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) = Unit
-
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return true
-    }
 
     override fun needApproval(needApproval: Boolean?) = false
 
