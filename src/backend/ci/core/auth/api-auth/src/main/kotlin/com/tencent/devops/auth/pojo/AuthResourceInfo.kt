@@ -37,6 +37,7 @@ data class AuthResourceInfo(
     val resourceType: String,
     val resourceCode: String,
     val resourceName: String,
+    val iamResourceCode: String,
     val enable: Boolean,
     val relationId: String
 )

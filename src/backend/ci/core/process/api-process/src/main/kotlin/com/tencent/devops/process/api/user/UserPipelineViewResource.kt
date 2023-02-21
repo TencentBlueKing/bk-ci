@@ -291,4 +291,18 @@ interface UserPipelineViewResource {
         @PathParam("viewId")
         viewId: String
     ): Result<PipelineViewPipelineCount>
+
+    @ApiOperation("根据流水线ID获取视图ID(流水线组ID)")
+    @GET
+    @Path("/projects/{projectId}/pipelines/{pipelineId}/listViewIds")
+    fun listViewIdsByPipelineId(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Set<Long>>
+
 }
