@@ -135,4 +135,9 @@ interface UserContainerResource {
         @PathParam("os")
         os: OS
     ): Result<List<ContainerResp>>
+
+    @ApiOperation("判断是否有无编译环境")
+    @GET
+    @Path("/check")
+    fun checkNoCompilation(): Result<Boolean>
 }

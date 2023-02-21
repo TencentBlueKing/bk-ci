@@ -30,11 +30,7 @@ package com.tencent.devops.store.service.container
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.store.pojo.container.Container
-import com.tencent.devops.store.pojo.container.ContainerRequest
-import com.tencent.devops.store.pojo.container.ContainerResource
-import com.tencent.devops.store.pojo.container.ContainerResourceValue
-import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.*
 
 /**
  * 构建容器逻辑类
@@ -47,6 +43,11 @@ interface ContainerService {
      * 获取所有构建容器信息
      */
     fun getAllPipelineContainer(): Result<List<Container>>
+
+    /**
+     * 判断是否有无编译环境
+     */
+    fun checkNoCompilation(): Result<Boolean>
 
     /**
      * 获取构建容器信息

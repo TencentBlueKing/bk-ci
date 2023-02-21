@@ -213,6 +213,13 @@ export const actions = {
     },
 
     /**
+     * 判断有无无编译环境
+     */
+    checkNoCompilation ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/pipeline/container/check`)
+    },
+
+    /**
      * 上架/升级流水线插件
      */
     editAtom ({ commit }, { projectCode, params, initProject }) {

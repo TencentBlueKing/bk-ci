@@ -80,4 +80,8 @@ class UserContainerResourceImpl @Autowired constructor(private val containerServ
     ): Result<List<ContainerResp>> {
         return containerService.getAllContainerInfos(userId, projectCode, type, os)
     }
+
+    override fun checkNoCompilation(): Result<Boolean> {
+        return containerService.checkNoCompilation()
+    }
 }
