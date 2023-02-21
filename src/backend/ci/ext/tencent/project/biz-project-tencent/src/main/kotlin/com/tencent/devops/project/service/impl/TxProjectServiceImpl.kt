@@ -55,7 +55,6 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
-import com.tencent.devops.project.pojo.ApplicationInfo
 import com.tencent.devops.project.pojo.AuthProjectForList
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 import com.tencent.devops.project.pojo.ProjectCreateUserInfo
@@ -338,18 +337,6 @@ class TxProjectServiceImpl @Autowired constructor(
 
     override fun cancelUpdateAuthProject(userId: String, projectCode: String) {
         projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
-    }
-
-    override fun createRoleGroupApplication(
-        userId: String,
-        applicationInfo: ApplicationInfo,
-        gradeManagerId: String
-    ): Boolean {
-        return projectPermissionService.createRoleGroupApplication(
-            userId = userId,
-            applicationInfo = applicationInfo,
-            gradeManagerId = gradeManagerId
-        )
     }
 
     fun getInfoByEnglishName(userId: String, englishName: String, needTips: Boolean): ProjectVO? {

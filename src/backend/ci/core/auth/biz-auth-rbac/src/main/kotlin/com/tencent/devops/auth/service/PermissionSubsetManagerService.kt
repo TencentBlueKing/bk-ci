@@ -35,7 +35,6 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -115,9 +114,9 @@ class PermissionSubsetManagerService @Autowired constructor(
                 userId = userId,
                 projectCode = projectCode,
                 projectName = projectName,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                resourceName = projectName
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName
             )
         )
         return subsetManagerId

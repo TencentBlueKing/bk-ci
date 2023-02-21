@@ -37,7 +37,6 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.service.iam.PermissionScopesService
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -95,7 +94,6 @@ class AuthResourceGroupService(
                 groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
-            addGroupMember(userId = userId, iamGroupId = iamGroupId)
         }
     }
 
@@ -186,7 +184,6 @@ class AuthResourceGroupService(
                 groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
-            addGroupMember(userId = userId, iamGroupId = iamGroupId)
         }
     }
 
