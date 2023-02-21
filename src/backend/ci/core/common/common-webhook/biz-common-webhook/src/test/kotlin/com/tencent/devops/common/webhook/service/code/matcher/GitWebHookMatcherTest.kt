@@ -68,7 +68,7 @@ class GitWebHookMatcherTest {
         authType = RepoAuthType.HTTP,
         projectId = "mht",
         repoHashId = "eraf",
-        repoProjectId = 0L
+        gitProjectId = 0L
     )
 
     private val repositoryDyy = CodeGitRepository(
@@ -80,7 +80,7 @@ class GitWebHookMatcherTest {
         authType = RepoAuthType.HTTP,
         projectId = "mht",
         repoHashId = "eraf",
-        repoProjectId = 0L
+        gitProjectId = 0L
     )
 
     @BeforeEach

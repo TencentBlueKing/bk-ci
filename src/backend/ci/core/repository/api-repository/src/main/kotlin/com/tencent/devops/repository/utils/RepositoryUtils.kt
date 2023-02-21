@@ -76,7 +76,7 @@ object RepositoryUtils {
                     authType = RepoAuthType.HTTP,
                     projectId = projectId,
                     repoHashId = null,
-                    repoProjectId = 0L
+                    gitProjectId = 0L
                 )
             }
             ScmType.CODE_TGIT -> {
@@ -90,7 +90,7 @@ object RepositoryUtils {
                     authType = RepoAuthType.HTTP,
                     projectId = projectId,
                     repoHashId = null,
-                    repoProjectId = 0L
+                    gitProjectId = 0L
                 )
             }
             ScmType.CODE_GITLAB -> {
@@ -103,7 +103,7 @@ object RepositoryUtils {
                     userName = userName,
                     projectId = projectId,
                     repoHashId = null,
-                    repoProjectId = 0L
+                    gitProjectId = 0L
                 )
             }
             ScmType.GITHUB -> {

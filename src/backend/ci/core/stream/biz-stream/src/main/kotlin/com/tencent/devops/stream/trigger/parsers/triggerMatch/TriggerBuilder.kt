@@ -163,7 +163,7 @@ object TriggerBuilder {
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
                 repoHashId = null,
-                repoProjectId = 0L
+                gitProjectId = 0L
             )
         }
     }
@@ -181,7 +181,7 @@ object TriggerBuilder {
             authType = RepoAuthType.OAUTH,
             projectId = action.getProjectCode(action.data.eventCommon.gitProjectId),
             repoHashId = null,
-            repoProjectId = 0L
+            gitProjectId = 0L
         )
     }
 

@@ -50,7 +50,7 @@ data class CodeTGitRepository(
     override var projectId: String?,
     override val repoHashId: String?,
     @ApiModelProperty("TGit仓库ID", required = false)
-    override val repoProjectId: Long?
+    val gitProjectId: Long?
 ) : Repository {
     companion object {
         const val classType = "codeTGit"

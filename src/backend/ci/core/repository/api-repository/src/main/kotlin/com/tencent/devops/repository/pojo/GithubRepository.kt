@@ -43,9 +43,7 @@ data class GithubRepository(
     @ApiModelProperty("项目id", required = true)
     override val projectId: String = "",
     @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?,
-    @ApiModelProperty("Github仓库ID", required = false)
-    override val repoProjectId: Long? = 0L
+    override val repoHashId: String?
 ) : Repository {
     companion object {
         const val classType = "github"
