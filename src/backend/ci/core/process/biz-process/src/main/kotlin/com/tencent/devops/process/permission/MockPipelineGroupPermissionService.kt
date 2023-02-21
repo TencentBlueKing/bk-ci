@@ -23,28 +23,40 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.common.auth.code
+package com.tencent.devops.process.permission
 
-enum class MockAuthServiceCode(val value: String) {
-    BCS("bk_bcs"),
-    REPO("bk_repo"),
-    ARTIFACTORY(BK_DEVOPS_SCOPE),
-    CODE(BK_DEVOPS_SCOPE),
-    PIPELINE(BK_DEVOPS_SCOPE),
-    PIPELINE_GROUP(BK_DEVOPS_SCOPE),
-    TICKET(BK_DEVOPS_SCOPE),
-    ENVIRONMENT(BK_DEVOPS_SCOPE),
-    PROJECT(BK_DEVOPS_SCOPE),
-    QUALITY(BK_DEVOPS_SCOPE);
+import com.tencent.devops.common.auth.api.AuthPermission
 
-    companion object {
-        fun get(value: String): MockAuthServiceCode {
-            values().forEach {
-                if (value == it.value) return it
-            }
-            throw IllegalArgumentException("No enum for constant $value")
-        }
+class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
+    override fun checkPipelineGroupPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        return true
     }
+
+    override fun checkPipelineGroupPermission(
+        userId: String,
+        projectId: String,
+        pipelineViewId: String,
+        permission: AuthPermission
+    ): Boolean {
+        return true
+    }
+
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        pipelineViewId: String,
+        pipelineViewName: String
+    ) = Unit
+
+    override fun modifyResource(
+        userId: String,
+        projectId: String,
+        pipelineViewId: String,
+        pipelineViewName: String
+    ) = Unit
+
+    override fun deleteResource(projectId: String, pipelineViewId: String) = Unit
 }
