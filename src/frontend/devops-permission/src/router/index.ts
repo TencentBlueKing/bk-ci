@@ -33,7 +33,7 @@ const router = createRouter({
               component: MyPermission,
             },
             {
-              path: 'my-apply',
+              path: 'my-apply/:applyId?',
               name: 'my-apply',
               component: MyApply,
             },

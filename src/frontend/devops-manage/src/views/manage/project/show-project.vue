@@ -108,7 +108,7 @@ const handleEdit = () => {
 };
 
 const handleToApprovalDetails = (applyId) => {
-  window.open(`/console/permission/${projectCode}/my-apply?applyId=${applyId}`, '_blank')
+  window.open(`/console/permission/${projectCode}/my-apply/${applyId}`, '_blank')
 };
 
 /**
