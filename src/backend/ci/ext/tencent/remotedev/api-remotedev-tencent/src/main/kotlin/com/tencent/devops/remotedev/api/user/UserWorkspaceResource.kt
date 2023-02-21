@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.BkTicketInfo
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -278,11 +279,7 @@ interface UserWorkspaceResource {
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        @ApiParam(value = "bkTicket", required = true)
-        @QueryParam("bkTicket")
-        bkTicket: String,
-        @ApiParam(value = "hostName", required = true)
-        @QueryParam("hostName")
-        hostName: String
+        @ApiParam("bkTicket信息", required = true)
+        bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
 }
