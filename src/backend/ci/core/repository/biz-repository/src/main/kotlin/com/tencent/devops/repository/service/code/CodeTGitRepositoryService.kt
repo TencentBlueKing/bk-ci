@@ -148,7 +148,8 @@ class CodeTGitRepositoryService @Autowired constructor(
             userName = record.userName,
             authType = RepoAuthType.parse(record.authType),
             projectId = repository.projectId,
-            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId)
+            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
+            repoProjectId = record.gitProjectId
         )
     }
 

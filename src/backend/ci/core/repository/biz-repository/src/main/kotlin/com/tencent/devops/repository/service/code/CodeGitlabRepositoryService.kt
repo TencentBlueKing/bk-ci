@@ -146,7 +146,8 @@ class CodeGitlabRepositoryService @Autowired constructor(
             projectName = record.projectName,
             userName = record.userName,
             projectId = repository.projectId,
-            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId)
+            repoHashId = HashUtil.encodeOtherLongId(repository.repositoryId),
+            repoProjectId = record.gitProjectId
         )
     }
 

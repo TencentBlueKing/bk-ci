@@ -28,6 +28,7 @@ package com.tencent.devops.repository.service.code
 
 import com.tencent.devops.common.api.constant.RepositoryMessageCode
 import com.tencent.devops.common.api.enums.ScmType
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -35,15 +36,17 @@ import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
 import com.tencent.devops.repository.dao.RepositoryCodeSvnDao
 import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.pojo.CodeSvnRepository
+import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_HTTP
+import com.tencent.devops.repository.pojo.CodeSvnRepository.Companion.SVN_TYPE_SSH
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 import com.tencent.devops.repository.pojo.credential.RepoCredentialInfo
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.service.CredentialService
 import com.tencent.devops.repository.service.scm.IScmService
-import com.tencent.devops.repository.utils.CredentialUtils
 import com.tencent.devops.scm.enums.CodeSvnRegion
 import com.tencent.devops.scm.pojo.TokenCheckResult
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -146,20 +149,54 @@ class CodeSvnRepositoryService @Autowired constructor(
         repoCredentialInfo: RepoCredentialInfo,
         repository: CodeSvnRepository
     ): TokenCheckResult {
-        val credential = CredentialUtils.getCredential(
-            repository = repository,
-            repoCredentialInfo = repoCredentialInfo
-        )
-        return scmService.checkPrivateKeyAndToken(
-            projectName = repository.projectName,
-            url = repository.getFormatURL(),
-            type = ScmType.CODE_SVN,
-            privateKey = credential.privateKey,
-            passPhrase = credential.passPhrase,
-            token = null,
-            region = repository.region,
-            userName = credential.username
-        )
+        return when (repository.svnType) {
+            SVN_TYPE_HTTP -> {
+                var username = repoCredentialInfo.username
+                // 兼容旧数据，之前的SVN使用的PASSWORD类型凭证,使用repository用户名
+                if (repoCredentialInfo.credentialType == CredentialType.PASSWORD.name) {
+                    logger.warn("The credential information is missing the username,use repository username")
+                    username = repository.userName
+                }
+                if (username.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.USER_NAME_EMPTY)
+                    )
+                }
+                if (repoCredentialInfo.password.isEmpty()) {
+                    throw OperationException(
+                        message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.PWD_EMPTY)
+                    )
+                }
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repository.projectName,
+                    url = repository.getFormatURL(),
+                    type = ScmType.CODE_SVN,
+                    privateKey = repoCredentialInfo.password,
+                    passPhrase = repoCredentialInfo.passPhrase,
+                    token = null,
+                    region = repository.region,
+                    userName = username
+                )
+            }
+            SVN_TYPE_SSH -> {
+                scmService.checkPrivateKeyAndToken(
+                    projectName = repository.projectName,
+                    url = repository.getFormatURL(),
+                    type = ScmType.CODE_SVN,
+                    privateKey = repoCredentialInfo.privateKey,
+                    passPhrase = repoCredentialInfo.passPhrase,
+                    token = "",
+                    region = repository.region,
+                    userName = repository.userName
+                )
+            }
+            else -> {
+                throw ErrorCodeException(
+                    errorCode = RepositoryMessageCode.REPO_TYPE_NO_NEED_CERTIFICATION,
+                    params = arrayOf(repository.svnType ?: "")
+                )
+            }
+        }
     }
 
     /**
