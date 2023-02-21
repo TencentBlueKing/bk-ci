@@ -6,13 +6,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 object RbacAuthUtils {
 
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
-        // TODO 待确定，rbac有list类型，不需要做转换
-        val action = if (authPermission == AuthPermission.LIST) {
-            AuthPermission.VIEW.value
-        } else {
-            authPermission.value
-        }
-        return "${extResourceType(authResourceType)}_$action"
+        return "${extResourceType(authResourceType)}_${authPermission.value}"
     }
 
     fun extResourceType(authResourceType: AuthResourceType): String {
