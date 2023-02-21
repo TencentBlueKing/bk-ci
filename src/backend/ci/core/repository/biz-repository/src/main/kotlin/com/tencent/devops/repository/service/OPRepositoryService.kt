@@ -346,7 +346,7 @@ class OPRepositoryService @Autowired constructor(
                         projectId = repositoryInfo.projectId,
                         repoHashId = repositoryInfo.repositoryHashId,
                         authType = null,
-                        repoProjectId = 0L
+                        gitProjectId = 0L
                     )
                 ).token
             }

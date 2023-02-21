@@ -158,7 +158,7 @@ class RepositoryService @Autowired constructor(
                 authType = RepoAuthType.OAUTH,
                 projectId = projectCode,
                 repoHashId = null,
-                repoProjectId = 0L
+                gitProjectId = 0L
             )
 
             // 关联代码库
