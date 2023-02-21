@@ -54,7 +54,7 @@ func init() {
 
 func (b *buildManager) GetInstanceCount() int {
 	var i = 0
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})
@@ -63,7 +63,7 @@ func (b *buildManager) GetInstanceCount() int {
 
 func (b *buildManager) GetInstances() []api.ThirdPartyBuildInfo {
 	result := make([]api.ThirdPartyBuildInfo, 0)
-	b.instances.Range(func(key, value interface{}) bool {
+	b.instances.Range(func(_, value interface{}) bool {
 		result = append(result, *value.(*api.ThirdPartyBuildInfo))
 		return true
 	})
@@ -130,7 +130,7 @@ func (b *buildManager) waitProcessDone(processId int) {
 
 func (b *buildManager) GetPreInstancesCount() int {
 	var i = 0
-	b.preInstances.Range(func(key, value interface{}) bool {
+	b.preInstances.Range(func(_, _ interface{}) bool {
 		i++
 		return true
 	})

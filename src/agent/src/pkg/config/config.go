@@ -33,7 +33,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"gopkg.in/ini.v1"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -41,6 +40,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"gopkg.in/ini.v1"
 
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
@@ -107,8 +108,11 @@ var GAgentConfig *AgentConfig
 var GEnvVars map[string]string
 var UseCert bool
 
+var IsDebug bool = false
+
 // Init 加载和初始化配置
-func Init() {
+func Init(isDebug bool) {
+	IsDebug = isDebug
 	err := LoadAgentConfig()
 	if err != nil {
 		logs.Error("load agent config err: ", err)

@@ -49,7 +49,7 @@ const (
 
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
-	config.Init()
+	config.Init(false)
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()

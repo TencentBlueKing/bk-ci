@@ -32,9 +32,10 @@ package systemutil
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 	"os"
 	"syscall"
+
+	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
 )
 
 // MkBuildTmpDir 创建构建提供的临时目录

@@ -38,8 +38,8 @@ import (
 	"github.com/Tencent/bk-ci/src/agent/src/pkg/upgrade"
 )
 
-func Run() {
-	config.Init()
+func Run(isDebug bool) {
+	config.Init(isDebug)
 
 	_, err := job.AgentStartup()
 	if err != nil {

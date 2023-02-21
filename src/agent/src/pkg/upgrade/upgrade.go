@@ -105,6 +105,11 @@ func DoPollAndUpgradeAgent() {
 	for {
 		time.Sleep(20 * time.Second)
 		logs.Info("try upgrade")
+		// debug模式下关闭升级，方便调试问题
+		if config.IsDebug {
+			logs.Debug("debug no upgrade")
+			continue
+		}
 		agentUpgrade()
 		logs.Info("upgrade done")
 	}

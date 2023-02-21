@@ -51,25 +51,30 @@ const (
 )
 
 func main() {
+	isDebug := false
+	if len(os.Args) == 2 {
+		switch os.Args[1] {
+		case "version":
+			fmt.Println(config.AgentVersion)
+			systemutil.ExitProcess(0)
+		case "fullVersion":
+			fmt.Println(config.AgentVersion)
+			fmt.Println(config.GitCommit)
+			fmt.Println(config.BuildTime)
+			systemutil.ExitProcess(0)
+		case "debug":
+			isDebug = true
+		}
+	}
+
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsDaemon.log")
-	err := logs.Init(logFilePath)
+	err := logs.Init(logFilePath, isDebug)
 	if err != nil {
 		fmt.Printf("init daemon log error %v\n", err)
 		systemutil.ExitProcess(1)
 	}
 
-	if len(os.Args) == 2 {
-		if os.Args[1] == "version" {
-			fmt.Println(config.AgentVersion)
-			systemutil.ExitProcess(0)
-		} else if os.Args[1] == "fullVersion" {
-			fmt.Println(config.AgentVersion)
-			fmt.Println(config.GitCommit)
-			fmt.Println(config.BuildTime)
-			systemutil.ExitProcess(0)
-		}
-	}
 	logs.Info("GOOS=%s, GOARCH=%s", runtime.GOOS, runtime.GOARCH)
 
 	runtime.GOMAXPROCS(4)
@@ -96,16 +101,16 @@ func main() {
 	logs.Info("devops daemon start")
 	logs.Info("pid: ", os.Getpid())
 
-	watch()
+	watch(isDebug)
 	systemutil.KeepProcessAlive()
 }
 
-func watch() {
+func watch(isDebug bool) {
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 
 	// first check immediately
 	totalLock.Lock()
-	doCheckAndLaunchAgent()
+	doCheckAndLaunchAgent(isDebug)
 	totalLock.Unlock()
 
 	checkTimeTicker := time.NewTicker(agentCheckGap)
@@ -117,12 +122,12 @@ func watch() {
 				continue
 			}
 
-			doCheckAndLaunchAgent()
+			doCheckAndLaunchAgent(isDebug)
 		}
 	}
 }
 
-func doCheckAndLaunchAgent() {
+func doCheckAndLaunchAgent(isDebug bool) {
 	workDir := systemutil.GetWorkDir()
 	agentLock := flock.New(fmt.Sprintf("%s/agent.lock", systemutil.GetRuntimeDir()))
 
@@ -131,7 +136,9 @@ func doCheckAndLaunchAgent() {
 		// #1613 fix open too many files
 		defer func() {
 			err = agentLock.Unlock()
-			logs.Error("try to unlock agent.lock failed: %v", err)
+			if err != nil {
+				logs.Error("try to unlock agent.lock failed", err)
+			}
 		}()
 	}
 	if err != nil {
@@ -144,7 +151,7 @@ func doCheckAndLaunchAgent() {
 
 	logs.Warn("agent is not available, will launch it")
 
-	process, err := launch(workDir + "/" + config.AgentFileClientLinux)
+	process, err := launch(workDir+"/"+config.AgentFileClientLinux, isDebug)
 	if err != nil {
 		logs.Error("launch agent failed: %v", err)
 		return
@@ -156,11 +163,15 @@ func doCheckAndLaunchAgent() {
 	logs.Info("success to launch agent, pid: %d", process.Pid)
 }
 
-func launch(agentPath string) (*os.Process, error) {
-	cmd := exec.Command(agentPath)
+func launch(agentPath string, isDebug bool) (*os.Process, error) {
+	command := agentPath
+	if isDebug {
+		command = agentPath + " debug"
+	}
+	cmd := exec.Command(command)
 	cmd.Dir = systemutil.GetWorkDir()
 
-	logs.Info("start devops agent: %s", agentPath)
+	logs.Info("start devops agent: %s", command)
 	if !fileutil.Exists(agentPath) {
 		return nil, fmt.Errorf("agent file %s not exists", agentPath)
 	}

@@ -47,7 +47,7 @@ const (
 func main() {
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsUpgrader.log")
-	err := logs.Init(logFilePath)
+	err := logs.Init(logFilePath, false)
 	if err != nil {
 		fmt.Printf("init upgrader log error %v\n", err)
 		systemutil.ExitProcess(1)

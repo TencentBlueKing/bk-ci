@@ -42,7 +42,7 @@ import (
 
 func DoInstallAgent() error {
 	logs.Info("start install agent...")
-	config.Init()
+	config.Init(false)
 
 	if len(config.GAgentConfig.BatchInstallKey) == 0 {
 		return errors.New("file .agent.properties 's devops.agent.batch.install key is null")

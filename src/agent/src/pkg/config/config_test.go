@@ -9,7 +9,7 @@ import (
 
 func Test_parseWorkerVersion(t *testing.T) {
 	logFile := "config_unit_test.log"
-	_ = logs.Init(logFile)
+	_ = logs.Init(logFile, false)
 
 	defer func() { _ = os.Remove(logFile) }()
 

@@ -49,7 +49,7 @@ const (
 func main() {
 	// 初始化日志
 	logFilePath := filepath.Join(systemutil.GetWorkDir(), "logs", "devopsInstaller.log")
-	err := logs.Init(logFilePath)
+	err := logs.Init(logFilePath, false)
 	if err != nil {
 		fmt.Printf("init installer log error %v\n", err)
 		systemutil.ExitProcess(1)
