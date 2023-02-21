@@ -359,13 +359,15 @@
             handleSort ({ prop, order }) {
                 const sortType = PIPELINE_SORT_FILED[prop]
                 if (sortType) {
+                    const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
                     localStorage.setItem('pipelineSortType', sortType)
+                    localStorage.setItem('pipelineSortCollation', collation)
                     this.$router.push({
                         ...this.$route,
                         query: {
                             ...this.$route.query,
                             sortType: sortType,
-                            collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
+                            collation
                         }
                     })
                 }
