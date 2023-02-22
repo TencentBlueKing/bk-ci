@@ -228,7 +228,7 @@ class PermissionScopesService(
                 if (actionInfo.relatedResourceType != AuthResourceType.PROJECT.value) {
                     val resourcePath = ManagerPath(
                         iamConfiguration.systemId,
-                        strategyResourceType,
+                        resourceType,
                         resourceCode,
                         resourceName
                     )

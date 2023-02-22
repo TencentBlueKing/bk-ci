@@ -154,10 +154,7 @@ class AuthResourceGroupService(
         resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
-            val name = IamGroupUtils.buildSubsetManagerGroupName(
-                resourceName = resourceName,
-                groupName = groupConfig.groupName
-            )
+            val name = groupConfig.groupName
             val description = IamGroupUtils.buildSubsetManagerGroupDescription(
                 resourceName = resourceName,
                 groupName = name,
