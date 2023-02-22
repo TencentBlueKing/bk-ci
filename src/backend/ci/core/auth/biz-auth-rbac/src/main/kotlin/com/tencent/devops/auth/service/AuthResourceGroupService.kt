@@ -238,7 +238,7 @@ class AuthResourceGroupService(
             resourceName = resourceName
         )
         logger.info(
-            "${resourceType}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes)}"
+            "${resourceType}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes, false)}"
         )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
@@ -260,7 +260,8 @@ class AuthResourceGroupService(
             projectName = projectName
         )
         logger.info(
-            "${AuthResourceType.PROJECT.value}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes)}"
+            "${AuthResourceType.PROJECT.value}_$groupCode authorization scopes:" +
+                "${JsonUtil.toJson(authorizationScopes, false)}"
         )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
