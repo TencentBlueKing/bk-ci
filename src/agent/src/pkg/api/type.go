@@ -52,7 +52,6 @@ type ThirdPartyDockerBuildInfo struct {
 	SecretKey      string            `json:"secretKey"`
 	Image          string            `json:"image"`
 	Credential     *Credential       `json:"credential"`
-	Envs           map[string]string `json:"envs"`
 	DockerResource *DockerResourceOptions
 }
 
