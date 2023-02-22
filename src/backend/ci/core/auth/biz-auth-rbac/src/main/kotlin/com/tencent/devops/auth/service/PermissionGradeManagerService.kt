@@ -40,6 +40,7 @@ import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
@@ -330,9 +331,10 @@ class PermissionGradeManagerService @Autowired constructor(
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
-            null,
+            searchGroupDTO,
             pageInfoDTO
         )
         return iamGroupInfoList.results.map {
