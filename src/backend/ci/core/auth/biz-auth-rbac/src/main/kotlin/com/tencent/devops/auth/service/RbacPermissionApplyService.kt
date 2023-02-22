@@ -44,7 +44,8 @@ class RbacPermissionApplyService @Autowired constructor(
     val authResourceGroupDao: AuthResourceGroupDao,
     val rbacCacheService: RbacCacheService,
     val config: CommonConfig,
-    val client: Client
+    val client: Client,
+    val authResourceCodeConverter:AuthResourceCodeConverter
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
@@ -65,6 +66,7 @@ class RbacPermissionApplyService @Autowired constructor(
         projectId: String,
         searchGroupInfo: SearchGroupInfo
     ): V2ManagerRoleGroupVO {
+        logger.info("RbacPermissionApplyService|listGroups: searchGroupInfo=$searchGroupInfo")
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -79,11 +81,13 @@ class RbacPermissionApplyService @Autowired constructor(
                 resourceCode = resourceCode,
                 projectId = projectId
             )
+            logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
             val managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
                 bkIamPath = bkIamPath,
                 relationId = projectInfo.relationId
             )
+            logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
             // 校验用户是否属于组
             verifyGroupValidMember(
                 userId = userId,
@@ -115,8 +119,11 @@ class RbacPermissionApplyService @Autowired constructor(
             }
             bkIamPath = StringBuilder("/${systemId},${AuthResourceType.PROJECT.value},${projectId}/")
             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-                // todo 首先从resource表获取流水线的pid
-                val pipelineId = resourceCode
+                val pipelineId = authResourceCodeConverter.iamCode2Code(
+                    projectCode = projectId,
+                    resourceType = resourceType,
+                    iamResourceCode = resourceCode
+                )
                 // 获取包含该流水线的所有流水线组
                 val viewIds = client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
                     userId = userId,
@@ -171,6 +178,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
         try {
+            logger.info("RbacPermissionApplyService|applyToJoinGroup: applyJoinGroupInfo=$applyJoinGroupInfo")
             val iamApplicationDTO = ApplicationDTO
                 .builder()
                 .groupId(applyJoinGroupInfo.groupIds)
@@ -220,6 +228,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val iamGroupPermissionDetailList: List<GroupPermissionDetailResponseDTO>
         try {
             iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
+            logger.info("RbacPermissionApplyService|getGroupPermissionDetail: iamGroupPermissionDetailList=$iamGroupPermissionDetailList")
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
@@ -265,6 +274,7 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceCode: String,
         action: String
     ): AuthApplyRedirectInfoVo {
+        logger.info("RbacPermissionApplyService|getRedirectInformation: $userId|$projectId|$resourceType|$resourceCode|$action|")
         val groupInfoList: ArrayList<AuthRedirectGroupInfoVo> = ArrayList()
         val actionInfo = rbacCacheService.getActionInfo(action)
         val iamRelatedResourceType = actionInfo.relatedResourceType
@@ -275,6 +285,7 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceCode = resourceCode
         )
         val resourceName = resourceInfo.resourceName
+        logger.info("RbacPermissionApplyService|getRedirectInformation: $iamRelatedResourceType|$resourceTypeName|$resourceInfo|")
         val isEnablePermission: Boolean =
             if (iamRelatedResourceType == AuthResourceType.PROJECT.value) false
             else resourceInfo.enable
@@ -289,6 +300,7 @@ class RbacPermissionApplyService @Autowired constructor(
             action = action,
             resourceName = resourceName
         )
+        logger.info("RbacPermissionApplyService|getRedirectInformation: groupInfoList=$groupInfoList")
         if (groupInfoList.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
