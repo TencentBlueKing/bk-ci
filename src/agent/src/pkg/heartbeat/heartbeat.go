@@ -29,6 +29,7 @@ package heartbeat
 
 import (
 	"errors"
+	"sync"
 	"time"
 
 	"agent/src/pkg/api"
@@ -47,18 +48,41 @@ func DoAgentHeartbeat() {
 		}
 	}()
 
+	// 部分逻辑只在启动时运行一次
+	var jdkOnce = &sync.Once{}
+	var dockerfileSyncOnce = &sync.Once{}
+
 	for {
-		_ = agentHeartbeat()
+		_ = agentHeartbeat(jdkOnce, dockerfileSyncOnce)
 		time.Sleep(10 * time.Second)
 	}
 }
 
-func agentHeartbeat() error {
+func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce *sync.Once) error {
+	// 在第一次启动时同步一次jdk version，防止重启时因为upgrade的执行慢导致了升级jdk
 	var jdkVersion []string
-	version := upgrade.JdkVersion.GetVersion()
-	if version != nil {
+	jdkSyncOnce.Do(func() {
+		version, err := upgrade.SyncJdkVersion()
+		if err != nil {
+			logs.Error("agent heart sync jdkVersion error", err)
+			return
+		}
 		jdkVersion = version
+	})
+	if jdkVersion == nil {
+		version := upgrade.JdkVersion.GetVersion()
+		if version != nil {
+			jdkVersion = version
+		}
 	}
+
+	// 获取docker的filemd5前也同步一次
+	dockerfileSyncOnce.Do(func() {
+		if err := upgrade.SyncDockerInitFileMd5(); err != nil {
+			logs.Error("agent heart sync docker file md5 error", err)
+		}
+	})
+
 	result, err := api.Heartbeat(
 		job.GBuildManager.GetInstances(),
 		jdkVersion,

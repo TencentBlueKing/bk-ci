@@ -128,13 +128,13 @@ func agentUpgrade() {
 		}
 	}()
 
-	jdkVersion, err := syncJdkVersion()
+	jdkVersion, err := SyncJdkVersion()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync jdk version err: ", err.Error())
 		return
 	}
 
-	err = syncDockerInitFileMd5()
+	err = SyncDockerInitFileMd5()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync docker file md5 err: ", err.Error())
 		return
@@ -182,8 +182,8 @@ func agentUpgrade() {
 	}
 }
 
-// syncJdkVersion 同步jdk版本信息
-func syncJdkVersion() ([]string, error) {
+// SyncJdkVersion 同步jdk版本信息
+func SyncJdkVersion() ([]string, error) {
 	// 获取jdk文件状态以及时间
 	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
 	if err != nil {
@@ -227,7 +227,7 @@ func syncJdkVersion() ([]string, error) {
 	return version, nil
 }
 
-func syncDockerInitFileMd5() error {
+func SyncDockerInitFileMd5() error {
 	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
 		DockerFileMd5.NeedUpgrade = false
 		return nil
