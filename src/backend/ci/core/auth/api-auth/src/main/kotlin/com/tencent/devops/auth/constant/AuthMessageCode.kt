@@ -96,6 +96,7 @@ object AuthMessageCode {
 
     const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121601" // 用户{0}没有管理员权限
     const val ERROR_AUTH_GROUP_NOT_EXIST = "2121602" // 用户组{0}不存在
+    const val ERROR_AUTH_GROUP_CONFIG_NOT_EXIST = "2121603" // 用户组配置{0}不存在
 
     const val ITSM_CALLBACK_APPLICATION_FAIL = "2121701" // 查询不到有效的项目审批回调单
 }
