@@ -29,9 +29,21 @@
 
         <section class="main-body section-box">
             <section class="build-filter">
-                <bk-input v-model="filterData.commitMsg" class="filter-item w300" :placeholder="$t('pipeline.commitMsg')"></bk-input>
-                <bk-input v-model="filterData.triggerUser" name="triggerUser" class="filter-item w300" :placeholder="$t('pipeline.actor')"></bk-input>
-                <bk-select v-model="filterData.branch"
+                <bk-input
+                    v-model="filterData.commitMsg"
+                    class="filter-item w300"
+                    :placeholder="$t('pipeline.commitMsgWithEnter')"
+                    @enter="handleFilterChange"
+                ></bk-input>
+                <bk-input
+                    v-model="filterData.triggerUser"
+                    name="triggerUser"
+                    class="filter-item w300"
+                    :placeholder="$t('pipeline.actor')"
+                    @change="handleFilterChange"
+                ></bk-input>
+                <bk-select
+                    v-model="filterData.branch"
                     class="filter-item"
                     :placeholder="$t('pipeline.branch')"
                     multiple
@@ -39,6 +51,7 @@
                     :loading="isLoadingBuildBranch"
                     :remote-method="remoteGetBuildBranchList"
                     @toggle="toggleFilterBuildBranch"
+                    @change="handleFilterChange"
                 >
                     <bk-option v-for="option in buildBranchList"
                         :key="option"
@@ -54,6 +67,7 @@
                     multiple
                     searchable
                     @toggle="toggleFilterEvent"
+                    @change="handleFilterChange"
                 >
                     <bk-option
                         v-for="event in eventList"
@@ -87,6 +101,7 @@
                     :loading="isLoadingPipeline"
                     :remote-method="remoteGetPipelineList"
                     @toggle="toggleFilterPipeline"
+                    @change="handleFilterChange"
                 >
                     <bk-option v-for="option in pipelineList"
                         :key="option.pipelineId"
@@ -414,26 +429,6 @@
                     if (Object.keys(oldVal).length) this.cleanFilterData()
                     this.initBuildData()
                 }
-            },
-            filterData: {
-                handler () {
-                    debounce(
-                        () => {
-                            this.initBuildData()
-                            const query = { page: 1 }
-                            Object.keys(this.filterData).forEach(key => {
-                                if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
-                                    query[key] = this.filterData[key]
-                                } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
-                                    query[key] = this.filterData[key].join(',')
-                                }
-                            })
-                            this.$router.replace({ query })
-                        },
-                        400
-                    )
-                },
-                deep: true
             }
         },
 
@@ -464,6 +459,20 @@
                 const filter = this.filterList.find(filter => filter.id === id)
                 const options = filter.data.filter(data => val.includes(data.id))
                 this.filterData[id] = options.map(opstion => opstion.val).flat()
+                this.handleFilterChange()
+            },
+
+            handleFilterChange () {
+                this.initBuildData()
+                const query = { page: 1 }
+                Object.keys(this.filterData).forEach(key => {
+                    if (this.filterData[key].length && typeof this.filterData[key] === 'string') {
+                        query[key] = this.filterData[key]
+                    } else if (this.filterData[key].length && Array.isArray(this.filterData[key])) {
+                        query[key] = this.filterData[key].join(',')
+                    }
+                })
+                this.$router.replace({ query })
             },
 
             toggleFilterBranch (isOpen) {
@@ -569,6 +578,7 @@
                     status: [],
                     pipelineIds: []
                 }
+                this.handleFilterChange()
             },
 
             initBuildData () {
@@ -840,6 +850,7 @@
                     status: [],
                     pipelineIds: []
                 }
+                this.handleFilterChange()
             },
 
             requireRule (name) {

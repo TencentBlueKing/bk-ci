@@ -87,6 +87,7 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.service.AgentUrlService
 import com.tencent.devops.environment.service.NodeWebsocketService
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getAgentJarFile
 import com.tencent.devops.environment.utils.FileMD5CacheUtils.getFileMD5
 import com.tencent.devops.environment.utils.NodeStringIdUtils
@@ -123,7 +124,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
     private val influxdbClient: InfluxdbClient,
     private val agentUrlService: AgentUrlService,
     private val environmentPermissionService: EnvironmentPermissionService,
-    private val upgradeService: UpgradeService,
+    private val agentPropsScope: AgentPropsScope,
     private val webSocketDispatcher: WebSocketDispatcher,
     private val websocketService: NodeWebsocketService,
     private val envShareProjectDao: EnvShareProjectDao
@@ -196,8 +197,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             ncpus = agentHostInfo.nCpus,
             memTotal = agentHostInfo.memTotal,
             diskTotal = agentHostInfo.diskTotal,
-            currentAgentVersion = upgradeService.getAgentVersion(),
-            currentWorkerVersion = upgradeService.getWorkerVersion()
+            currentAgentVersion = agentPropsScope.getAgentVersion(),
+            currentWorkerVersion = agentPropsScope.getWorkerVersion()
         )
 
         if (needHeartbeatInfo) {
@@ -1245,8 +1246,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             thirdPartyAgentHeartbeatUtils.heartbeat(projectId, agentHashId)
 
             HeartbeatResponse(
-                masterVersion = upgradeService.getAgentVersion(),
-                slaveVersion = upgradeService.getWorkerVersion(),
+                masterVersion = agentPropsScope.getAgentVersion(),
+                slaveVersion = agentPropsScope.getWorkerVersion(),
                 AgentStatus = agentStatus.name,
                 ParallelTaskCount = agentRecord.parallelTaskCount,
                 envs = if (agentRecord.agentEnvs.isNullOrBlank()) {

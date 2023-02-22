@@ -130,11 +130,7 @@ class DispatchService constructor(
         // job结束
         finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
         redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
-
-        val keysSet = redisOperation.hkeys(secretInfoKey)
-        if (keysSet == null || keysSet.isEmpty()) {
-            redisOperation.delete(secretInfoKey)
-        }
+        // 当hash表为空时，redis会自动删除
     }
 
     fun checkRunning(event: PipelineAgentStartupEvent) {

@@ -1,8 +1,8 @@
 <template>
     <section v-bkloading="{ isLoading }">
         <bk-form :label-width="100" :model="formData" class="manage-detail-edit" ref="atomEdit" v-if="!isLoading">
-            <bk-form-item :label="$t('store.名称')" :rules="[requireRule($t('store.名称')), nameRule, numMax(20)]" :required="true" property="name" error-display-type="normal">
-                <bk-input v-model="formData.name" :placeholder="$t('store.请输入中英文名称，不超过20个字符')"></bk-input>
+            <bk-form-item :label="$t('store.名称')" :rules="[requireRule($t('store.名称')), nameRule, numMax(40)]" :required="true" property="name" error-display-type="normal">
+                <bk-input v-model="formData.name" :placeholder="$t('store.请输入中英文名称，不超过40个字符')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('store.分类')" :rules="[requireRule($t('store.分类'))]" :required="true" property="classifyCode" error-display-type="normal">
                 <bk-select v-model="formData.classifyCode" searchable :clearable="false" @toggle="requestAtomClassify" :loading="isLoadingClassify">
@@ -29,8 +29,8 @@
                     </bk-option>
                 </bk-select>
             </bk-form-item>
-            <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.简介')), numMax(70)]" :required="true" property="summary" :desc="$t('store.展示在插件市场以及流水线选择插件页面。')" error-display-type="normal">
-                <bk-input v-model="formData.summary" :placeholder="$t('store.插件一句话简介，不超过70个字符')"></bk-input>
+            <bk-form-item :label="$t('store.简介')" :rules="[requireRule($t('store.简介')), numMax(256)]" :required="true" property="summary" :desc="$t('store.展示在插件市场以及流水线选择插件页面。')" error-display-type="normal">
+                <bk-input v-model="formData.summary" :placeholder="$t('store.插件一句话简介，不超过256个字符')"></bk-input>
             </bk-form-item>
             <bk-form-item :label="$t('store.描述')"
                 property="description"
@@ -85,8 +85,8 @@
                 isSaving: false,
                 toolbars,
                 nameRule: {
-                    validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-]+$/.test(val)),
-                    message: this.$t('store.由汉字、英文字母、数字、连字符(-)组成，长度小于20个字符'),
+                    validator: (val) => (/^[\u4e00-\u9fa5a-zA-Z0-9-_. ]+$/.test(val)),
+                    message: this.$t('store.由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符'),
                     trigger: 'blur'
                 },
                 publishersList: []

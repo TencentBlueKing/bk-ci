@@ -1,8 +1,8 @@
 package com.tencent.devops.stream.trigger.actions.tgit
 
-import com.nhaarman.mockito_kotlin.mock
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlPathListEntry
+import io.mockk.mockk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Test
@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test
 @DisplayName("TGit Mr Action 相关测试")
 internal class TGitMrActionGitTest {
 
-    private val action = TGitMrActionGit(mock(), mock(), mock(), mock(), mock(), mock(), mock())
+    private val action = TGitMrActionGit(mockk(), mockk(), mockk(), mockk(), mockk(), mockk(), mockk())
 
     /**
      * 校验

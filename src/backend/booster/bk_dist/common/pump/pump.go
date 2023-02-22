@@ -150,6 +150,7 @@ func IsPump(env *env.Sandbox) bool {
 }
 
 func SupportPump(env *env.Sandbox) bool {
+	// return IsPump(env) && (runtime.GOOS == "windows" || runtime.GOOS == "darwin")
 	return IsPump(env) && runtime.GOOS == "windows"
 }
 
@@ -173,4 +174,18 @@ func PumpCacheSizeMaxMB(env *env.Sandbox) int32 {
 	}
 
 	return -1
+}
+
+func PumpMinActionNum(env *env.Sandbox) int32 {
+	strsize := env.GetEnv(dcEnv.KeyExecutorPumpMinActionNum)
+	if strsize != "" {
+		size, err := strconv.Atoi(strsize)
+		if err != nil {
+			return 0
+		} else {
+			return int32(size)
+		}
+	}
+
+	return 0
 }
