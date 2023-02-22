@@ -108,20 +108,13 @@ class RbacCredentialPermissionService constructor(
         projectId: String,
         authPermission: AuthPermission
     ): List<String> {
-        val credentialList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             action = buildCredentialAction(authPermission),
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         ).data ?: emptyList()
-
-        logger.info("filterCredential user[$userId] project[$projectId] auth[$authPermission] list[$credentialList]")
-        return if (credentialList.contains("*")) {
-            getAllCredentialsByProject(projectId)
-        } else {
-            credentialList
-        }
     }
 
     override fun filterCredentials(
@@ -129,34 +122,13 @@ class RbacCredentialPermissionService constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val actions = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL)
-
-        val credentialAuthResult = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            action = actions,
+            action = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CREDENTIAL),
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value
         ).data ?: emptyMap()
-        val credentialMap = mutableMapOf<AuthPermission, List<String>>()
-
-        val projectAllCertIds: List<String> by lazy { getAllCredentialsByProject(projectId) }
-
-        credentialAuthResult.forEach { (key, value) ->
-            val ids =
-                if (value.contains("*")) {
-                    logger.info("filterCredential user[$userId] project[$projectId] auth[$key] list[$value]")
-                    projectAllCertIds
-                } else {
-                    value
-                }
-            credentialMap[key] = ids
-            //TODO 待删除 RBAC中有list类型
-            /*if (key == AuthPermission.VIEW) {
-                credentialMap[AuthPermission.LIST] = ids
-            }*/
-        }
-        return credentialMap
     }
 
     override fun createResource(
@@ -185,14 +157,6 @@ class RbacCredentialPermissionService constructor(
             resourceType = AuthResourceType.TICKET_CREDENTIAL.value,
             resourceCode = credentialId
         )
-    }
-
-    private fun getAllCredentialsByProject(projectId: String): List<String> {
-        val idList = mutableListOf<String>()
-        val count = credentialDao.countByProject(dslContext, projectId)
-        credentialDao.listByProject(dslContext, projectId, 0, count.toInt())
-            .filter { idList.add(it.credentialId) }
-        return idList
     }
 
     private fun buildCredentialAction(permission: AuthPermission): String {
