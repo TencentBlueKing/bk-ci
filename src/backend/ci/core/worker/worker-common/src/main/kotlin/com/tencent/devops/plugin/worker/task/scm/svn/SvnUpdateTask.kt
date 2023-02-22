@@ -28,6 +28,7 @@
 package com.tencent.devops.plugin.worker.task.scm.svn
 
 import com.tencent.devops.common.api.enums.RepositoryConfig
+import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.common.pipeline.enums.CodePullStrategy
 import com.tencent.devops.common.pipeline.enums.SVNVersion
@@ -225,7 +226,8 @@ open class SvnUpdateTask constructor(
                 branchName = "",
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
-                commitTimes = commitMaterial.commitTimes
+                commitTimes = commitMaterial.commitTimes,
+                scmType = ScmType.CODE_SVN
             )
         ))
         return env
