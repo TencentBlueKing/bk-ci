@@ -87,6 +87,7 @@
     import android from '../components/centificate/android'
     import ssl from '../components/centificate/ssl'
     import enterprise from '../components/centificate/enterprise'
+    import { CERT_RESOURCE_ACTION, CERT_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -198,13 +199,13 @@
                 this.iframeUtil.toggleProjectMenu(true)
             },
 
-            goToApplyPerm () {
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
-                // window.open(url, '_blank')
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+            applyPermission () {
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: CERT_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: CERT_RESOURCE_ACTION.CREATE
+                })
             },
 
             async requestCertDetail (callBack) {
@@ -217,10 +218,16 @@
                         certType,
                         certId
                     })
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-                    this.$bkMessage({ message, theme })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: CERT_RESOURCE_TYPE,
+                            resourceCode: certId,
+                            action: CERT_RESOURCE_ACTION.VIEW
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                     this.showContent = true
@@ -279,13 +286,16 @@
                         projectId: this.projectId
                     })
                     this.hasPermission = res
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: CERT_RESOURCE_TYPE,
+                            resourceCode: this.projectId,
+                            action: CERT_RESOURCE_ACTION.CREATE
+                        }
+                    )
                 } finally {
                     this.loading.isLoading = false
                     this.showContent = true

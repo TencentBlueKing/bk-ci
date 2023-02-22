@@ -36,6 +36,7 @@
 <script>
     import { mapGetters } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -187,16 +188,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.credential,
-                            instanceId: [{
-                                id: credential.credentialId,
-                                name: credential.credentialId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CRED_RESOURCE_TYPE,
+                        resourceCode: credential.credentialId,
+                        action: CRED_RESOURCE_ACTION.DELETE
                     })
                 }
             },
@@ -210,16 +206,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.edit,
-                            resourceId: this.$permissionResourceMap.credential,
-                            instanceId: [{
-                                id: credential.credentialId,
-                                name: credential.credentialId
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: CRED_RESOURCE_TYPE,
+                        resourceCode: this.projectId,
+                        action: CRED_RESOURCE_ACTION.EDIT
                     })
                 }
             },
