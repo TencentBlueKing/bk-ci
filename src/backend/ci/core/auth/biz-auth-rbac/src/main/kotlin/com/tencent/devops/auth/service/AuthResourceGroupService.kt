@@ -28,24 +28,19 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
-import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 import org.slf4j.LoggerFactory
+import org.springframework.stereotype.Service
 
 @Service
 @SuppressWarnings("LongParameterList")
@@ -94,10 +89,12 @@ class AuthResourceGroupService(
                 groupName = name,
                 relationId = iamGroupId.toString()
             )
-            grantGradeManagerGroupPermission(
+            grantGroupPermission(
+                authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,
-                groupCode = groupConfig.groupCode,
+                resourceCode = projectCode,
+                resourceName = projectName,
                 iamGroupId = iamGroupId
             )
         }
@@ -172,19 +169,18 @@ class AuthResourceGroupService(
             authResourceGroupDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
+                resourceType = resourceType,
                 resourceCode = projectCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
                 relationId = iamGroupId.toString()
             )
-            grantSubsetManagerGroupPermission(
+            grantGroupPermission(
+                authorizationScopesStr = groupConfig.authorizationScopes,
                 projectCode = projectCode,
                 projectName = projectName,
-                resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
-                groupCode = groupConfig.groupCode,
                 iamGroupId = iamGroupId
             )
         }
@@ -217,66 +213,23 @@ class AuthResourceGroupService(
         }
     }
 
-    fun grantSubsetManagerGroupPermission(
+    fun grantGroupPermission(
+        authorizationScopesStr: String,
         projectCode: String,
         projectName: String,
-        resourceType: String,
         resourceCode: String,
         resourceName: String,
-        groupCode: String,
         iamGroupId: Int
     ) {
-        val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = groupCode
-            ),
+        val authorizationScopes = permissionScopesService.buildAuthorizationScopes(
+            authorizationScopesStr = authorizationScopesStr,
             projectCode = projectCode,
             projectName = projectName,
-            resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName
         )
-        logger.info(
-            "${resourceType}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes, false)}"
-        )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
-    }
-
-    fun grantGradeManagerGroupPermission(
-        projectCode: String,
-        projectName: String,
-        groupCode: String,
-        iamGroupId: Int
-    ) {
-        val authorizationScopes = permissionScopesService.buildGradeManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = AuthResourceType.PROJECT.value,
-                groupCode = groupCode
-            ),
-            projectCode = projectCode,
-            projectName = projectName
-        )
-        logger.info(
-            "${AuthResourceType.PROJECT.value}_$groupCode authorization scopes:" +
-                "${JsonUtil.toJson(authorizationScopes, false)}"
-        )
-        authorizationScopes.forEach { authorizationScope ->
-            iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
-        }
-    }
-
-    fun addGroupMember(
-        userId: String,
-        iamGroupId: Int
-    ) {
-        val groupMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-        val groupMembers = mutableListOf<ManagerMember>()
-        groupMembers.add(groupMember)
-        val expired = System.currentTimeMillis() / 1000 + TimeUnit.DAYS.toSeconds(IamGroupUtils.DEFAULT_EXPIRED_AT)
-        val managerMemberGroup = ManagerMemberGroupDTO.builder().members(groupMembers).expiredAt(expired).build()
-        iamV2ManagerService.createRoleGroupMemberV2(iamGroupId, managerMemberGroup)
     }
 }

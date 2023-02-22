@@ -37,7 +37,6 @@ import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
-import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
@@ -84,14 +83,19 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName,
             userId = userId
         )
-        val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
-            ),
+        val groupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf("${resourceType}_${DefaultGroupType.MANAGER.value}"),
+            defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
+        )
+        val authorizationScopes = permissionScopesService.buildAuthorizationScopes(
+            authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
-            resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName
         )
@@ -144,14 +148,19 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName,
             groupName = managerGroupConfig.groupName
         )
-        val authorizationScopes = permissionScopesService.buildSubsetManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
-            ),
+        val groupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf("${resourceType}_${DefaultGroupType.MANAGER.value}"),
+            defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
+        )
+        val authorizationScopes = permissionScopesService.buildAuthorizationScopes(
+            authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
             projectName = projectName,
-            resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName
         )

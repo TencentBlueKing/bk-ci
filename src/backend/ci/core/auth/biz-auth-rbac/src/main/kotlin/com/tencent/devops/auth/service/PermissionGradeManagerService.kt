@@ -45,6 +45,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateManagerDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -79,7 +80,8 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val dslContext: DSLContext,
     private val authResourceService: AuthResourceService,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     companion object {
@@ -118,13 +120,21 @@ class PermissionGradeManagerService @Autowired constructor(
             projectName = resourceName,
             userId = userId
         )
-        val authorizationScopes = permissionScopesService.buildGradeManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
-            ),
+        val groupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
+        )
+        val authorizationScopes = permissionScopesService.buildAuthorizationScopes(
+            authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
-            projectName = projectName
+            projectName = projectName,
+            resourceCode = projectCode,
+            resourceName = projectName
         )
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
@@ -225,13 +235,21 @@ class PermissionGradeManagerService @Autowired constructor(
         val name = IamGroupUtils.buildGradeManagerName(
             projectName = resourceName,
         )
-        val authorizationScopes = permissionScopesService.buildGradeManagerAuthorizationScopes(
-            strategyName = IamGroupUtils.buildGroupStrategyName(
-                resourceType = resourceType,
-                groupCode = DefaultGroupType.MANAGER.value
-            ),
+        val groupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
+        )
+        val authorizationScopes = permissionScopesService.buildAuthorizationScopes(
+            authorizationScopesStr = groupConfig.authorizationScopes,
             projectCode = projectCode,
-            projectName = projectName
+            projectName = projectName,
+            resourceCode = projectCode,
+            resourceName = projectName
         )
         val subjectScopes = projectApprovalInfo.subjectScopes?.map {
             when (it.type) {
