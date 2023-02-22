@@ -74,13 +74,13 @@ class RbacPermissionApplyService @Autowired constructor(
         )
         val iamResourceCode = searchGroupInfo.iamResourceCode
         val resourceType = searchGroupInfo.resourceType
+        val bkIamPath = buildBkIamPath(
+            userId = userId,
+            resourceType = resourceType,
+            iamResourceCode = iamResourceCode,
+            projectId = projectId
+        )
         try {
-            val bkIamPath = buildBkIamPath(
-                userId = userId,
-                resourceType = resourceType,
-                iamResourceCode = iamResourceCode,
-                projectId = projectId
-            )
             logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
             val managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
