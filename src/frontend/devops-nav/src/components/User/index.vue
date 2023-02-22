@@ -98,7 +98,7 @@
                         label: this.$t('projectManage')
                     },
                     {
-                        to: '/console/permission/my-permission',
+                        to: '/console/permission',
                         label: this.$t('myPermission')
                     },
                     {

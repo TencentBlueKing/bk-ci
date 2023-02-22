@@ -145,7 +145,7 @@ const actions: ActionTree<RootState, any> = {
      */
     applyToJoinProject (_, payload) {
         const { englishName, ApplicationInfo } = payload
-        return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/${englishName}/applyToJoinProject`, ApplicationInfo)
+        return Request.post(`${PROJECT_API_URL_PREFIX}/user/auth/apply/${englishName}/applyToJoinProject`, ApplicationInfo)
     },
     /**
      * 项目列表 (申请加入项目弹窗，分页加载)
