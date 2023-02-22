@@ -114,7 +114,7 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        val iamInstanceList = authPermissionApi.getUserResourceByPermission(
+        return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
@@ -122,15 +122,6 @@ class RbacPipelinePermissionService constructor(
             supplier = null,
             resourceType = resourceType
         )
-
-        val pipelineIds = mutableListOf<String>()
-        if (iamInstanceList.contains("*")) {
-            pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
-        } else {
-            val ids = iamInstanceList.map { it.toLong() }
-            pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
-        }
-        return pipelineIds
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
