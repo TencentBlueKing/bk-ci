@@ -65,16 +65,22 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val workspaceDevCloudClient: WorkspaceDevCloudClient
 ) : RemoteDevInterface {
 
-    @Value("\${devCloud.initContainer.image:mirrors.tencent.com/ci/workspace-init:v1.0.3}")
-    var initContainerImage: String = "mirrors.tencent.com/ci/workspace-init:v1.0.3"
+    @Value("\${devCloud.workspace.environment.cpu:8000}")
+    var workspaceCpu: Int = 8000
 
-    @Value("\${devCloud.initContainer.preCIGateWayUrl:}")
+    @Value("\${devCloud.workspace.environment.memory:16096}")
+    var workspaceMemory: Int = 16096 // 单位: MB
+
+    @Value("\${devCloud.workspace.environment.disk:100}")
+    var workspaceDisk: Int = 100 // 单位: G
+
+    @Value("\${devCloud.workspace.preCIGateWayUrl:}")
     val preCIGateWayUrl: String = ""
 
-    @Value("\${devCloud.initContainer.preCIDownUrl:}")
+    @Value("\${devCloud.workspace.preCIDownUrl:}")
     val preCIDownUrl: String = ""
 
-    @Value("\${devCloud.initContainer.backendHost:}")
+    @Value("\${devCloud.workspace.backendHost:}")
     val backendHost: String = ""
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
@@ -104,7 +110,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                         Container(
                             name = event.workspaceName,
                             image = event.devFile.image?.publicImage ?: "",
-                            resource = ResourceRequirements(2000, 16096),
+                            resource = ResourceRequirements(workspaceCpu, workspaceMemory),
                             workingDir = gitRepoRootPath,
                             volumeMounts = listOf(
                                 VolumeMount(
@@ -134,7 +140,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                             volumeSource = VolumeSource(
                                 dataDisk = DataDiskSource(
                                     type = "pvc",
-                                    sizeLimit = 100
+                                    sizeLimit = workspaceDisk
                                 )
                             )
                         )
