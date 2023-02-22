@@ -37,6 +37,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -44,6 +45,7 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
+import org.slf4j.LoggerFactory
 
 @Service
 @SuppressWarnings("LongParameterList")
@@ -54,6 +56,10 @@ class AuthResourceGroupService(
     private val permissionScopesService: PermissionScopesService,
     private val authResourceGroupDao: AuthResourceGroupDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(AuthResourceGroupService::class.java)
+    }
 
     fun createGradeDefaultGroup(
         gradeManagerId: Int,
@@ -231,6 +237,9 @@ class AuthResourceGroupService(
             resourceCode = resourceCode,
             resourceName = resourceName
         )
+        logger.info(
+            "${resourceType}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes)}"
+        )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
         }
@@ -249,6 +258,9 @@ class AuthResourceGroupService(
             ),
             projectCode = projectCode,
             projectName = projectName
+        )
+        logger.info(
+            "${AuthResourceType.PROJECT.value}_$groupCode authorization scopes:${JsonUtil.toJson(authorizationScopes)}"
         )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
