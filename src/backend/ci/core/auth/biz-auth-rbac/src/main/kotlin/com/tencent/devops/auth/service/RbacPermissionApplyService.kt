@@ -45,13 +45,13 @@ class RbacPermissionApplyService @Autowired constructor(
     val rbacCacheService: RbacCacheService,
     val config: CommonConfig,
     val client: Client,
-    val authResourceCodeConverter:AuthResourceCodeConverter
+    val authResourceCodeConverter: AuthResourceCodeConverter
 ) : PermissionApplyService {
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/applyPermission?" +
-        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s"
+        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
@@ -72,15 +72,15 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-        val resourceCode = searchGroupInfo.resourceCode
+        val iamResourceCode = searchGroupInfo.iamResourceCode
         val resourceType = searchGroupInfo.resourceType
+        val bkIamPath = buildBkIamPath(
+            userId = userId,
+            resourceType = resourceType,
+            iamResourceCode = iamResourceCode,
+            projectId = projectId
+        )
         try {
-            val bkIamPath = buildBkIamPath(
-                userId = userId,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                projectId = projectId
-            )
             logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
             val managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
@@ -105,15 +105,15 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun buildBkIamPath(
         userId: String,
         resourceType: String?,
-        resourceCode: String?,
+        iamResourceCode: String?,
         projectId: String
     ): String {
         var bkIamPath: StringBuilder? = null
-        if (resourceCode != null) {
+        if (iamResourceCode != null) {
             if (resourceType == null) {
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_EMPTY,
-                    params = arrayOf(resourceCode),
+                    params = arrayOf(iamResourceCode),
                     defaultMessage = "权限系统：资源实例筛选时，资源类型不能为空！"
                 )
             }
@@ -122,7 +122,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 val pipelineId = authResourceCodeConverter.iamCode2Code(
                     projectCode = projectId,
                     resourceType = resourceType,
-                    iamResourceCode = resourceCode
+                    iamResourceCode = iamResourceCode
                 )
                 // 获取包含该流水线的所有流水线组
                 val viewIds = client.get(UserPipelineViewResource::class).listViewIdsByPipelineId(
@@ -152,7 +152,7 @@ class RbacPermissionApplyService @Autowired constructor(
             .actionId(searchGroupInfo.actionId)
             .resourceTypeSystemId(systemId)
             .resourceTypeId(searchGroupInfo.resourceType)
-            .resourceId(searchGroupInfo.resourceCode)
+            .resourceId(searchGroupInfo.iamResourceCode)
             .bkIamPath(bkIamPath)
             .name(searchGroupInfo.name)
             .description(searchGroupInfo.description)
@@ -285,6 +285,7 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceCode = resourceCode
         )
         val resourceName = resourceInfo.resourceName
+        val iamResourceCode = resourceInfo.iamResourceCode
         logger.info("RbacPermissionApplyService|getRedirectInformation: $iamRelatedResourceType|$resourceTypeName|$resourceInfo|")
         val isEnablePermission: Boolean =
             if (iamRelatedResourceType == AuthResourceType.PROJECT.value) false
@@ -298,7 +299,8 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             action = action,
-            resourceName = resourceName
+            resourceName = resourceName,
+            iamResourceCode = iamResourceCode
         )
         logger.info("RbacPermissionApplyService|getRedirectInformation: groupInfoList=$groupInfoList")
         if (groupInfoList.isEmpty()) {
@@ -325,14 +327,15 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         action: String,
-        resourceName: String
+        resourceName: String,
+        iamResourceCode: String
     ) {
         if (iamRelatedResourceType == AuthResourceType.PROJECT.value) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
                         authApplyRedirectUrl, userId, projectId,
-                        "", resourceType, resourceName, action
+                        "", resourceType, resourceName, action, iamResourceCode
                     )
                 )
             )
@@ -353,7 +356,8 @@ class RbacPermissionApplyService @Autowired constructor(
                                 action = action,
                                 resourceType = resourceType,
                                 resourceCode = resourceCode,
-                                groupCode = it.groupCode
+                                groupCode = it.groupCode,
+                                iamResourceCode = iamResourceCode
                             )
                         }
                     }
@@ -367,7 +371,8 @@ class RbacPermissionApplyService @Autowired constructor(
                     action = action,
                     resourceType = resourceType,
                     resourceCode = resourceCode,
-                    groupCode = "manager"
+                    groupCode = "manager",
+                    iamResourceCode = iamResourceCode
                 )
             }
         }
@@ -382,6 +387,7 @@ class RbacPermissionApplyService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         groupCode: String,
+        iamResourceCode: String
     ) {
         val resourceGroup = authResourceGroupDao.get(
             dslContext = dslContext,
@@ -395,7 +401,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
                         authApplyRedirectUrl, userId, projectId,
-                        resourceGroup.relationId, resourceType, resourceName, action
+                        resourceGroup.relationId, resourceType, resourceName, action, iamResourceCode
                     ),
                     groupName = resourceGroup.groupName
                 )

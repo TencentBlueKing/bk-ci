@@ -116,19 +116,13 @@ class RbacCertPermissionService constructor(
         projectId: String,
         authPermission: AuthPermission
     ): List<String> {
-        val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             action = buildCertAction(authPermission),
             resourceType = AuthResourceType.TICKET_CERT.value,
             projectCode = projectId
         ).data ?: emptyList()
-
-        logger.info("filterCert user[$userId] project[$projectId] auth[$authPermission] list[$certIamInfo]")
-        if (certIamInfo.contains("*")) {
-            return getAllCertByProject(projectId)
-        }
-        return certIamInfo
     }
 
     override fun filterCerts(
@@ -136,32 +130,13 @@ class RbacCertPermissionService constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>> {
-        val actions = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT)
-        val certResultMap = mutableMapOf<AuthPermission, List<String>>()
-        val certIamInfo = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
-            action = actions,
+            action = RbacAuthUtils.buildActionList(authPermissions, AuthResourceType.TICKET_CERT),
             resourceType = AuthResourceType.TICKET_CERT.value,
             projectCode = projectId
         ).data ?: emptyMap()
-
-        val projectAllCertIds: List<String> by lazy { getAllCertByProject(projectId) }
-
-        certIamInfo.forEach { key, value ->
-            val ids =
-                if (value.contains("*")) {
-                    projectAllCertIds
-                } else {
-                    value
-                }
-            certResultMap[key] = ids
-            //TODO 待删除，rbac有list动作
-            /*if (key == AuthPermission.VIEW) {
-                certResultMap[AuthPermission.LIST] = ids
-            }*/
-        }
-        return certResultMap
     }
 
     override fun createResource(
@@ -193,16 +168,6 @@ class RbacCertPermissionService constructor(
 
     private fun buildCertAction(permission: AuthPermission): String {
         return RbacAuthUtils.buildAction(permission, AuthResourceType.TICKET_CERT)
-    }
-
-    private fun getAllCertByProject(projectId: String): List<String> {
-        val idList = mutableListOf<String>()
-        val count = certDao.countByProject(dslContext, projectId, null)
-        val records = certDao.listByProject(dslContext, projectId, 0, count.toInt())
-        records.map {
-            idList.add(it.certId)
-        }
-        return idList
     }
 
     companion object {
