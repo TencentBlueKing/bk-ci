@@ -109,10 +109,12 @@ watch(() => userGroupList.value, () => {
 
 const handlePageChange = (page) => {
   pagination.value.current = page;
+  fetchGroupList(filter.value);
 };
 
 const handleLimitChange = (limit) => {
   pagination.value.limit = limit;
+  fetchGroupList(filter.value);
 };
 
 const handleShowGroupDetail = async (data) => {
@@ -143,11 +145,11 @@ const fetchGroupList = async (payload = []) => {
   payload.forEach(i => {
     if (i.id === 'actionId') {
       const values = i.values;
-      params[i.id] = values.map(i => i.actionId).join('');
+      params[i.id] = values.map(i => i.action).join('');
       params['resourceType'] = values[0].resourceType;
     } else if (i.id === 'resourceCode') {
       const values = i.values;
-      params[i.id] = values.map(i => i.resourceCode).join('');
+      params['iamResourceCode'] = values.map(i => i.resourceCode).join('');
       params['resourceType'] = values[0].resourceType;
     } else {
       params[i.id] = i.values.join();
@@ -302,12 +304,16 @@ onMounted(() => {
         ref="tableRef"
         :data="userGroupList"
         :columns="columns"
-        :pagination="pagination"
         :border="['row', 'outer']"
-        @page-value-change="handlePageChange"
-        @page-limit-change="handleLimitChange"
       >
-      </bk-table> 
+      </bk-table>
+      <bk-pagination
+        class="table-pagination"
+        v-bind="pagination"
+        type="default"
+        @change="handlePageChange"
+        @limit-change="handleLimitChange"
+      />
     </bk-loading>
   </article>
   <group-deatil
@@ -339,5 +345,13 @@ onMounted(() => {
   :deep(.bk-table .bk-table-head table thead th),
   :deep(.bk-table .bk-table-body table thead th) {
     text-align: center !important;
+  }
+  :deep(.bordered-outer) {
+    border-bottom: none;
+  }
+  .table-pagination {
+    border: 1px solid #dcdee5;
+    border-top: none;
+    height: 40px;
   }
 </style>
