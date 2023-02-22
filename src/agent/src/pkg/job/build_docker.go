@@ -189,8 +189,9 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
 	if err != nil {
+		errMsg := fmt.Sprintf("准备Docker挂载目录失败: %s", err.Error())
 		logs.Error("DOCKER_JOB| ", err)
-		dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerMountCreateErrorEnum))
+		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
 	}
 	var resources container.Resources
@@ -419,7 +420,13 @@ func parseContainerMounts(buildInfo *api.ThirdPartyBuildInfo) ([]mount.Mount, er
 	})
 
 	// 创建并挂载data和log
-	dataDir := fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	// data目录优先选择用户自定的工作空间
+	dataDir := ""
+	if buildInfo.Workspace == "" {
+		dataDir = fmt.Sprintf("%s/%s/data/%s/%s", workDir, LocalDockerWorkSpaceDirName, buildInfo.PipelineId, buildInfo.VmSeqId)
+	} else {
+		dataDir = buildInfo.Workspace
+	}
 	err := mkDir(dataDir)
 	if err != nil && !os.IsExist(err) {
 		return nil, errors.Wrapf(err, "create local data dir %s error", dataDir)
@@ -457,14 +464,6 @@ func parseContainerEnv(dockerBuildInfo *api.ThirdPartyDockerBuildInfo) []string 
 	envs = append(envs, "devops_gateway="+config.GetGateWay())
 	// 通过环境变量区分agent docker
 	envs = append(envs, "agent_build_env=DOCKER")
-
-	if dockerBuildInfo.Envs == nil {
-		return envs
-	}
-
-	for k, v := range dockerBuildInfo.Envs {
-		envs = append(envs, k+"="+v)
-	}
 
 	return envs
 }
