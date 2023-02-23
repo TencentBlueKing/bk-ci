@@ -323,19 +323,12 @@
                 this.$toggleProjectMenu(true)
             },
             goToApplyPerm () {
-                this.applyPermission(this.$permissionActionMap.view, this.$permissionResourceMap.envNode, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
-            },
-            toNodeApplyPerm (row) {
-                this.applyPermission(this.$permissionActionMap.use, this.$permissionResourceMap.envNode, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }, {
-                    id: row.nodeHashId,
-                    type: this.$permissionResourceTypeMap.ENVIRONMENT_ENV_NODE
-                }])
+                this.handleNoPermission({
+                    projectId: this.projectId,
+                    resourceType: NODE_RESOURCE_TYPE,
+                    resourceCode: this.projectId,
+                    action: NODE_RESOURCE_ACTION.CREATE
+                })
             },
             dropdownIsShow (isShow) {
                 if (isShow === 'show') {
@@ -624,7 +617,6 @@
                                 action: NODE_RESOURCE_ACTION.CREATE
                             }
                         )
-                        
                     } finally {
                         this.dialogLoading.isLoading = false
                         this.dialogLoading.isShow = false

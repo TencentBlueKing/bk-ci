@@ -179,7 +179,7 @@
                                 {
                                     projectId: this.projectId,
                                     resourceType: ENV_RESOURCE_TYPE,
-                                    resourceCode: node.envHashId,
+                                    resourceCode: row.envHashId,
                                     action: ENV_RESOURCE_ACTION.DELETE
                                 }
                             )
