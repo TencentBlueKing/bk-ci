@@ -95,6 +95,9 @@ interface OpAtomResource {
         @ApiParam("插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
+        @ApiParam("插件标识", required = false)
+        @QueryParam("atomCode")
+        atomCode: String?,
         @ApiParam("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: AtomTypeEnum?,
