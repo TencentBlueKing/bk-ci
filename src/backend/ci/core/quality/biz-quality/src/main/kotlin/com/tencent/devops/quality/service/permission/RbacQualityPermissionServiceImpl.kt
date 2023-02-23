@@ -110,20 +110,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
             action = actions
         ).data ?: emptyMap<AuthPermission, List<Long>>()
-        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-        instancesMap.forEach { (key, value) ->
-            val instanceLongIds = mutableListOf<Long>()
-            if (value.contains("*")) {
-                val count = groupDao.count(dslContext, projectId)
-                groupDao.list(dslContext, projectId, 0, count.toInt()).map { instanceLongIds.add(it.id) }
-            } else {
-                value.forEach {
-                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
-                }
-            }
-            resultMap[key] = instanceLongIds
-        }
-        return resultMap
+        return buildResultMap(instancesMap as Map<AuthPermission, List<String>>)
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
@@ -199,15 +186,17 @@ class RbacQualityPermissionServiceImpl(
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
             action = actions
         ).data ?: emptyMap<AuthPermission, List<Long>>()
+        return buildResultMap(instancesMap as Map<AuthPermission, List<String>>)
+    }
+
+    private fun buildResultMap(
+        instancesMap: Map<AuthPermission, List<String>>
+    ): Map<AuthPermission, List<Long>> {
         val resultMap = mutableMapOf<AuthPermission, List<Long>>()
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
-            if (value.contains("*")) {
-                ruleDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
-            } else {
-                value.forEach {
-                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
-                }
+            value.forEach {
+                instanceLongIds.add(it.toLong())
             }
             resultMap[key] = instanceLongIds
         }
