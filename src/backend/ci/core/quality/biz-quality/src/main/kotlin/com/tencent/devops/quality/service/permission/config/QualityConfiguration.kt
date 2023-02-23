@@ -126,14 +126,10 @@ class QualityConfiguration {
     fun rbacQualityPermissionService(
         client: Client,
         dslContext: DSLContext,
-        ruleDao: QualityRuleDao,
-        groupDao: QualityNotifyGroupDao,
         tokenService: ClientTokenService
     ): QualityPermissionService = RbacQualityPermissionServiceImpl(
         client = client,
         dslContext = dslContext,
-        ruleDao = ruleDao,
-        groupDao = groupDao,
         tokenService = tokenService
     )
 }
