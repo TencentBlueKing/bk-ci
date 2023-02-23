@@ -2,9 +2,12 @@ BINDIR := $(CURDIR)/bin
 CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
-AGENT_VERSION=v1.9.17
+AGENT_VERSION=v1.9.18
 BUILD_FLAGS := -ldflags="-w -s -X agent/src/pkg/config.BuildTime=$(BuildTime) \
 -X agent/src/pkg/config.GitCommit=$(GitCommit) -X agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
+
+# 编译外部出包版本时需要设置当前变量为out
+BUILD_OUT_TAG=inner
 
 test: test-unit
 
@@ -12,7 +15,7 @@ test: test-unit
 test-unit:
 	@echo
 	@echo "==> Running unit tests <=="
-	GO111MODULE=on go test -run . ./...
+	GO111MODULE=on go test -tags=${BUILD_OUT_TAG} -run . ./...
 
 all: linux windows macos_no_cgo
 
@@ -20,26 +23,28 @@ linux: build_linux build_linux_arm64 build_linux_mips64
 
 windows: build_windows
 
+macos: build_macos build_macos_arm64
+
 macos_no_cgo: build_macos_no_cgo build_macos_arm64_no_cgo
 
 build_linux: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_linux $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
 build_linux_arm64: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux_arm64 $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_arm64 $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_arm64 $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux_arm64 $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_linux_arm64 $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
 build_linux_mips64: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_linux_mips64 $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_mips64 $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_linux_mips64 $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_linux_mips64 $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=linux GOARCH=mips64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_linux_mips64 $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
@@ -48,14 +53,14 @@ build_linux_mips64: test clean
 build_macos: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_macos $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
 build_macos_arm64: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos_arm64 $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos_arm64 $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_macos_arm64 $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
@@ -64,14 +69,14 @@ build_macos_arm64: test clean
 build_macos_no_cgo: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=amd64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_macos $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
 build_macos_arm64_no_cgo: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon_macos_arm64 $(CMDDIR)/daemon/main.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent_macos_arm64 $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader_macos_arm64 $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 go build ${BUILD_FLAGS} -o $(BINDIR)/installer_macos_arm64 $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
@@ -79,7 +84,7 @@ build_macos_arm64_no_cgo: test clean
 build_windows: test clean
 	mkdir -p $(BINDIR)
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsDaemon.exe $(CMDDIR)/daemon/main_win.go
-	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 go build ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
+	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 go build -tags=${BUILD_OUT_TAG} ${BUILD_FLAGS} -o $(BINDIR)/devopsAgent.exe $(CMDDIR)/agent/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 go build ${BUILD_FLAGS} -o $(BINDIR)/upgrader.exe $(CMDDIR)/upgrader/main.go
 	GO111MODULE=on CGO_ENABLED=0 GOOS=windows GOARCH=386 go build ${BUILD_FLAGS} -o $(BINDIR)/installer.exe $(CMDDIR)/installer/main.go
 	ls -la $(BINDIR)
