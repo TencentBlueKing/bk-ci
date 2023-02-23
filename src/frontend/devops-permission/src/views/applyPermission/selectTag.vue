@@ -30,8 +30,8 @@
       watch: {
         tagInfo: {
           handler (val) {
-            const { values, children } = this.tagInfo
-            const value = values.map(item => children ? item.name : item).join('')
+            const { values, id } = this.tagInfo
+            const value = values.map(item => ['actionId', 'resourceCode'].includes(id) ? item.name : item).join('')
             this.localValue = value
           },
           deep: true,

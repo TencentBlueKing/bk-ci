@@ -45,6 +45,7 @@
 <script>
     import { mapState } from 'vuex'
     import { bus } from '@/utils/bus'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '../../../utils/permission'
 
     export default {
         data () {
@@ -101,7 +102,14 @@
                 }
             },
             addHandle () {
-                if (this.nodeDetails.canEdit) {
+                if (!this.nodeDetails.canEdit) {
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: NODE_RESOURCE_TYPE,
+                        resourceCode: this.nodeHashId,
+                        action: NODE_RESOURCE_ACTION.EDIT
+                    })
+                } else {
                     this.editable = true
                     this.editableList.push({ name: '', value: '', secure: false })
                 }

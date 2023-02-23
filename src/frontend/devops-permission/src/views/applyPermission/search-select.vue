@@ -277,10 +277,35 @@ export default {
       hasActionId: false,
     }
   },
-  created() {
-    this.getResourceTypesList();
+  async created() {
+    await this.getResourceTypesList();
+    await this.initApplyQuery();
   },
   methods: {
+    async initApplyQuery() {
+      const { resourceType, action, iamResourceCode, groupId } = this.$route.query;
+      if (resourceType && iamResourceCode && action && iamResourceCode) {
+        this.resourceType = resourceType;
+        await this.getResourceList();
+        await this.getActionsList();
+        const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
+        const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
+        resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
+        const resourceCodeParams = {
+          id: 'resourceCode',
+          name: this.$t('资源实例'),
+          values: [resourceValue],
+        };
+        this.searchSelectValue.push(resourceCodeParams);
+        const actionValue = this.actionsList.find(i => i.action === action)
+        const actionParams = {
+          id: 'actionId',
+          name: this.$t('操作'),
+          values: [actionValue],
+        }
+        this.searchSelectValue.push(actionParams);
+      }
+    },
     async getActionsList() {
       this.isLoading = true;
       await http.getActionsList(this.resourceType).then(res => {
@@ -433,7 +458,8 @@ export default {
       };
       const values = [...this.selectTagList];
       this.searchSelectValue.push({
-        ...this.selectInfo,
+        id: this.selectInfo.id,
+        name: this.selectInfo.name,
         values,
       });
 
@@ -570,7 +596,8 @@ export default {
           if (index === -1) {
             if (children && !this.optionList.length) return // 当包含子项时，如果输入匹配列表为空时，回车禁止选中
             info = {
-              ...this.selectInfo,
+              id: this.selectInfo.id,
+              name: this.selectInfo.name,
               values: [this.input.value]
             }
             this.searchSelectValue.push(info)
@@ -580,7 +607,8 @@ export default {
           if (!isMatch) {
             const defaultOption = this.list.find(item => item.isDefaultOption) || {}
             info = {
-              ...defaultOption,
+              id: defaultOption.id,
+              name: defaultOption.name,
               values: [this.input.value]
             }
             this.searchSelectValue.push(info)
@@ -599,7 +627,8 @@ export default {
     // 选择搜索结果匹配下拉项
     handleResultOptionSelect(option) {
       const selectInfo = {
-        ...option,
+        id: option.id,
+        name: option.name,
         values: [this.input.value]
       };
       this.searchSelectValue.push(selectInfo);
@@ -819,7 +848,7 @@ export default {
       display: none !important;
     }
   }
-  
+
   .search-tippy-popover {
     .tippy-tooltip {
       top:  5px !important;

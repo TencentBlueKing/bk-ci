@@ -53,6 +53,7 @@
 <script>
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '../utils/permission'
 
     export default {
         components: {
@@ -144,16 +145,11 @@
             async confirmDelete (row) {
                 const id = row.envHashId
                 if (!row.canDelete) {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.delete,
-                            resourceId: this.$permissionResourceMap.environment,
-                            instanceId: [{
-                                id,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: row.envHashId,
+                        action: ENV_RESOURCE_ACTION.DELETE
                     })
                     return
                 }
@@ -173,28 +169,21 @@
 
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
-                        } catch (err) {
-                            if (err.code === 403) {
-                                this.$showAskPermissionDialog({
-                                    noPermissionList: [{
-                                        actionId: this.$permissionActionMap.delete,
-                                        resourceId: this.$permissionResourceMap.environment,
-                                        instanceId: [{
-                                            id,
-                                            name: row.name
-                                        }],
-                                        projectId: this.projectId
-                                    }]
-                                })
-                            } else {
-                                message = err.data ? err.data.message : err
-                                theme = 'error'
-                            }
-                        } finally {
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: row.envHashId,
+                                    action: ENV_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        } finally {
                             this.requestList()
                         }
                     }
@@ -212,16 +201,11 @@
                         }
                     })
                 } else {
-                    this.$showAskPermissionDialog({
-                        noPermissionList: [{
-                            actionId: this.$permissionActionMap.use,
-                            resourceId: this.$permissionResourceMap.environment,
-                            instanceId: [{
-                                id: row.envHashId,
-                                name: row.name
-                            }],
-                            projectId: this.projectId
-                        }]
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: row.envHashId,
+                        action: ENV_RESOURCE_ACTION.USE
                     })
                 }
             },
