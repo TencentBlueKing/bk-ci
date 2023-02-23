@@ -68,7 +68,7 @@
 <script>
     import { mapState } from 'vuex'
     import { copyText } from '@/utils/util'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '../../utils/permission'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '../../../utils/permission'
 
     export default {
         data () {
