@@ -184,25 +184,28 @@ class RbacPermissionApplyService @Autowired constructor(
                     dslContext = dslContext,
                     projectCode = projectId,
                     iamGroupId = it.id.toString()
-                ) ?: throw ErrorCodeException(
+                ) /*?: throw ErrorCodeException(
                     errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
                     params = arrayOf(it.id.toString()),
                     defaultMessage = "group ${it.name} not exist"
-                )
-                groupInfoList.add(
-                    ManagerRoleGroupInfo(
-                        id = it.id,
-                        name = it.name,
-                        description = it.description,
-                        readonly = it.readonly,
-                        userCount = it.userCount,
-                        departmentCount = it.departmentCount,
-                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                        resourceType = dbGroupRecord.resourceType,
-                        resourceName = "",
-                        resourceCode = dbGroupRecord.resourceCode
+                )*/
+                // todo 待完善后，要进行异常处理
+                if (dbGroupRecord != null) {
+                    groupInfoList.add(
+                        ManagerRoleGroupInfo(
+                            id = it.id,
+                            name = it.name,
+                            description = it.description,
+                            readonly = it.readonly,
+                            userCount = it.userCount,
+                            departmentCount = it.departmentCount,
+                            joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
+                            resourceType = dbGroupRecord.resourceType,
+                            resourceName = "",
+                            resourceCode = dbGroupRecord.resourceCode
+                        )
                     )
-                )
+                }
             }
         }
         return groupInfoList
@@ -422,21 +425,22 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             groupCode = groupCode
-        ) ?: throw ErrorCodeException(
+        ) /*?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
             params = arrayOf(groupCode),
             defaultMessage = "group [$groupCode] not exist"
-        )
-        groupInfoList.add(
-            AuthRedirectGroupInfoVo(
-                url = String.format(
-                    authApplyRedirectUrl, projectId, resourceType, resourceName,
-                    action, iamResourceCode, resourceGroup.relationId
-                ),
-                groupName = resourceGroup.groupName
+        )*/
+        if (resourceGroup != null){
+            groupInfoList.add(
+                AuthRedirectGroupInfoVo(
+                    url = String.format(
+                        authApplyRedirectUrl, projectId, resourceType, resourceName,
+                        action, iamResourceCode, resourceGroup.relationId
+                    ),
+                    groupName = resourceGroup.groupName
+                )
             )
-        )
-
+        }
     }
 
     companion object {
