@@ -56,7 +56,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     /**
      * 创建二级管理员
      */
-    @SuppressWarnings("LongParameterList")
+    @SuppressWarnings("LongParameterList", "LongMethod")
     fun createSubsetManager(
         gradeManagerId: String,
         userId: String,
@@ -107,6 +107,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
             .syncPerm(true)
+            .groupName(groupConfig.groupName)
             .build()
         val subsetManagerId = iamV2ManagerService.createSubsetManager(
             gradeManagerId,
@@ -173,6 +174,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             .inheritSubjectScope(true)
             .subjectScopes(listOf())
             .syncPerm(true)
+            .groupName(groupConfig.groupName)
             .build()
         iamV2ManagerService.updateSubsetManager(
             subsetManagerId,
