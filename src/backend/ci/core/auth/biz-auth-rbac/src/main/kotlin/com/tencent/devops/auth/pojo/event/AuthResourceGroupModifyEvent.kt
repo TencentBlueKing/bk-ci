@@ -37,17 +37,12 @@ import io.swagger.annotations.ApiModelProperty
 data class AuthResourceGroupModifyEvent(
     @ApiModelProperty("分级管理员ID或二级管理员ID")
     val managerId: Int,
-    val userId: String,
     @ApiModelProperty("项目ID")
     val projectCode: String,
-    @ApiModelProperty("项目名")
-    val projectName: String,
     @ApiModelProperty("资源类型")
     val resourceType: String,
     @ApiModelProperty("资源ID")
     val resourceCode: String,
-    @ApiModelProperty("iam资源ID")
-    val iamResourceCode: String,
     @ApiModelProperty("资源名")
     val resourceName: String
 ): ITraceEvent()

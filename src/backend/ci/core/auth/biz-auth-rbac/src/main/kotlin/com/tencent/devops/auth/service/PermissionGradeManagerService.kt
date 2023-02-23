@@ -49,6 +49,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -160,18 +161,6 @@ class PermissionGradeManagerService @Autowired constructor(
                 .build()
             logger.info("create grade manager|$name|$description|$userId")
             val gradeManagerId = iamV2ManagerService.createManagerV2(createManagerDTO)
-            traceEventDispatcher.dispatch(
-                AuthResourceGroupModifyEvent(
-                    managerId = gradeManagerId,
-                    userId = userId,
-                    projectCode = projectCode,
-                    projectName = projectName,
-                    resourceType = AuthResourceType.PROJECT.value,
-                    resourceCode = projectCode,
-                    resourceName = projectName,
-                    iamResourceCode = projectCode
-                )
-            )
             gradeManagerId
         } else {
             val callbackId = UUIDUtil.generate()
@@ -373,7 +362,6 @@ class PermissionGradeManagerService @Autowired constructor(
 
     fun modifyGradeDefaultGroup(
         gradeManagerId: Int,
-        userId: String,
         projectCode: String,
         projectName: String
     ) {
@@ -501,7 +489,7 @@ class PermissionGradeManagerService @Autowired constructor(
             relationId = gradeManagerId.toString()
         )
         traceEventDispatcher.dispatch(
-            AuthResourceGroupModifyEvent(
+            AuthResourceGroupCreateEvent(
                 managerId = gradeManagerId,
                 userId = userId,
                 projectCode = projectCode,
@@ -524,6 +512,11 @@ class PermissionGradeManagerService @Autowired constructor(
         currentStatus: String
     ) {
         logger.info("handle itsm update callback|$userId|$projectCode|$sn|$callBackId|$currentStatus")
+        val resourceInfo = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        )
         val callbackApplicationDTO = CallbackApplicationDTO
             .builder()
             .sn(sn)
@@ -535,6 +528,15 @@ class PermissionGradeManagerService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectCode,
             resourceName = projectName
+        )
+        traceEventDispatcher.dispatch(
+            AuthResourceGroupModifyEvent(
+                managerId = resourceInfo.relationId.toInt(),
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                resourceName = projectName
+            )
         )
     }
 
