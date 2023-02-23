@@ -330,9 +330,7 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
-                buildTaskDao.get(context, projectId, buildId, taskId)?.let {
-                    taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
-                }
+                taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -417,11 +415,16 @@ class TaskBuildRecordService(
             }
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
+            val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
             if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
                 startTime = LocalDateTime.now()
             }
             if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
                 endTime = LocalDateTime.now()
+                if (BuildStatus.parse(recordTask.status) == BuildStatus.REVIEWING) {
+                    newTimestamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING] =
+                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                }
             }
             recordTaskDao.updateRecord(
                 dslContext = transactionContext,
