@@ -455,6 +455,7 @@ class BuildStartControl @Autowired constructor(
         stageRecordService.updateStageRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             stageId = stage.id!!, executeCount = executeCount, buildStatus = BuildStatus.SUCCEED,
+            startTime = null, endTime = LocalDateTime.now(),
             stageVar = mutableMapOf(
                 Stage::elapsed.name to max(0, System.currentTimeMillis() - buildInfo.queueTime)
             )
@@ -470,6 +471,7 @@ class BuildStartControl @Autowired constructor(
         containerRecordService.updateContainerRecord(
             projectId = buildInfo.projectId, pipelineId = buildInfo.pipelineId, buildId = buildInfo.buildId,
             executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
+            startTime = LocalDateTime.now(), endTime = null,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to now.timestampmilli(),
                 Container::systemElapsed.name to (stage.elapsed ?: 0),

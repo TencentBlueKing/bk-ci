@@ -322,12 +322,12 @@ class MutexControl @Autowired constructor(
     ) {
         val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
         val queueKey = mutexGroup.genMutexQueueKey(projectId)
-        val currentTime = LocalDateTime.now().timestamp()
-        redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
+        redisOperation.hset(queueKey, containerMutexId, LocalDateTime.now().timestamp().toString())
         containerBuildRecordService.updateContainerRecord(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             containerId = containerId, executeCount = executeCount,
             containerVar = emptyMap(), buildStatus = null,
+            startTime = null, endTime = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_MUTEX_QUEUE to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
@@ -350,6 +350,7 @@ class MutexControl @Autowired constructor(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             containerId = containerId, executeCount = executeCount,
             containerVar = emptyMap(), buildStatus = null,
+            startTime = null, endTime = null,
             timestamps = mapOf(
                 BuildTimestampType.JOB_MUTEX_QUEUE to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
