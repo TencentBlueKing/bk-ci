@@ -228,7 +228,7 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
-        if (refreshStatus || executeCount == buildInfo.executeCount) {
+        if (refreshStatus || fixedExecuteCount == buildInfo.executeCount) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             // #6400 无需流水线是终态就可以进行task重试
             if (checkPassDays(buildInfo.startTime)) {
