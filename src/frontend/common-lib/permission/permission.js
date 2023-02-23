@@ -146,7 +146,8 @@ export const handleNoPermission = (ui, params, ajax, h) => {
     }
     return ajax
         .get('/ms/auth/api/user/auth/apply/getRedirectInformation', { params })
-        .then((data = {}) => {
+        .then((res = {}) => {
+            const data = res.data ? res.data : res
             infoBoxRef = ui.bkInfoBox({
                 subHeader: h(
                     'section',
