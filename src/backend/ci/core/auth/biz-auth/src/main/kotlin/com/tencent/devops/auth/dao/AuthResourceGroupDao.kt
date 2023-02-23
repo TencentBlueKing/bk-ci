@@ -96,15 +96,28 @@ class AuthResourceGroupDao {
     fun get(
         dslContext: DSLContext,
         projectCode: String,
-        resourceType: String? = null,
-        resourceCode: String? = null,
-        groupCode: String? = null
+        resourceType: String,
+        resourceCode: String,
+        groupCode: String?
     ): TAuthResourceGroupRecord? {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
-                .let { if (resourceType == null) it else it.and(RESOURCE_TYPE.eq(resourceType)) }
-                .let { if (resourceCode == null) it else it.and(RESOURCE_CODE.eq(resourceCode)) }
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (groupCode == null) it else it.and(GROUP_CODE.eq(groupCode)) }
+                .fetchOne()
+        }
+    }
+
+    fun getByRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupId: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(iamGroupId))
                 .fetchOne()
         }
     }

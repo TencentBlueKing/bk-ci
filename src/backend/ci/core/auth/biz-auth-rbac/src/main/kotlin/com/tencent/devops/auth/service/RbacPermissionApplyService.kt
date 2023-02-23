@@ -180,11 +180,10 @@ class RbacPermissionApplyService @Autowired constructor(
             val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
             val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
             managerRoleGroupInfoList.forEach {
-                logger.info("buildGroupInfoList: $it")
-                val dbGroupRecord = authResourceGroupDao.get(
+                val dbGroupRecord = authResourceGroupDao.getByRelationId(
                     dslContext = dslContext,
                     projectCode = projectId,
-                    groupCode = it.id.toString()
+                    iamGroupId = it.id.toString()
                 ) ?: throw ErrorCodeException(
                     errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
                     params = arrayOf(it.id.toString()),
@@ -426,7 +425,7 @@ class RbacPermissionApplyService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
             params = arrayOf(groupCode),
-            defaultMessage = "group $groupCode not exist"
+            defaultMessage = "group [$groupCode] not exist"
         )
         groupInfoList.add(
             AuthRedirectGroupInfoVo(
