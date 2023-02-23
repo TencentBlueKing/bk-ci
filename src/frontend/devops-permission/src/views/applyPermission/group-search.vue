@@ -157,7 +157,7 @@ const fetchGroupList = async (payload = []) => {
       params['resourceType'] = values[0].resourceType;
     } else if (i.id === 'resourceCode') {
       const values = i.values;
-      params['iamResourceCode'] = values.map(i => i.resourceCode).join('');
+      params['iamResourceCode'] = values.map(i => i.iamResourceCode).join('');
       params['resourceType'] = values[0].resourceType;
     } else {
       params[i.id] = i.values.join();
