@@ -1454,11 +1454,11 @@ class WorkspaceService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
-            logger.info("updateBkTicket|response|$data")
-            if (data.isEmpty()) {
+            if (!response.isSuccessful) {
                 return false
             }
+            val data = response.body()!!.string()
+            logger.info("updateBkTicket|response|$data")
             val dataMap = JsonUtil.toMap(data)
             val status = dataMap["status"]
             return (status == 0)
