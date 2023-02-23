@@ -30,6 +30,8 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
@@ -37,6 +39,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 
@@ -46,7 +49,8 @@ class RbacPermissionResourceService(
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val authResourceCodeConverter: AuthResourceCodeConverter,
-    private val permissionService: PermissionService
+    private val permissionService: PermissionService,
+    private val traceEventDispatcher: TraceEventDispatcher
 ) : PermissionResourceService {
 
     companion object {
@@ -66,6 +70,7 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+        var projectName = resourceName
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
@@ -82,6 +87,7 @@ class RbacPermissionResourceService(
                 resourceType = AuthResourceType.PROJECT.value,
                 resourceCode = projectCode
             )
+            projectName = projectInfo.resourceName
             permissionSubsetManagerService.createSubsetManager(
                 gradeManagerId = projectInfo.relationId,
                 userId = userId,
@@ -105,6 +111,18 @@ class RbacPermissionResourceService(
                 // 项目默认开启权限管理
                 enable = resourceType == AuthResourceType.PROJECT.value,
                 relationId = managerId.toString()
+            )
+            traceEventDispatcher.dispatch(
+                AuthResourceGroupCreateEvent(
+                    managerId = managerId,
+                    userId = userId,
+                    projectCode = projectCode,
+                    projectName = projectName,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName,
+                    iamResourceCode = iamResourceCode
+                )
             )
         }
         return true
@@ -145,6 +163,15 @@ class RbacPermissionResourceService(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
+            )
+            traceEventDispatcher.dispatch(
+                AuthResourceGroupModifyEvent(
+                    managerId = resourceInfo.relationId.toInt(),
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    resourceCode = resourceCode,
+                    resourceName = resourceName
+                )
             )
         }
         return true

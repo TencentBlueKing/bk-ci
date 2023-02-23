@@ -115,13 +115,15 @@ class RbacAuthConfiguration {
         permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService,
         authResourceCodeConverter: AuthResourceCodeConverter,
-        permissionService: PermissionService
+        permissionService: PermissionService,
+        traceEventDispatcher: TraceEventDispatcher
     ) = RbacPermissionResourceService(
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
         authResourceCodeConverter = authResourceCodeConverter,
-        permissionService = permissionService
+        permissionService = permissionService,
+        traceEventDispatcher = traceEventDispatcher
     )
 
     @Bean

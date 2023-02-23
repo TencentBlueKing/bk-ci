@@ -49,14 +49,12 @@ class AuthResourceGroupModifyListener(
             if (resourceType == AuthResourceType.PROJECT.value) {
                 permissionGradeManagerService.modifyGradeDefaultGroup(
                     gradeManagerId = managerId,
-                    userId = userId,
                     projectCode = projectCode,
-                    projectName = projectName
+                    projectName = resourceName
                 )
             } else {
                 permissionSubsetManagerService.modifyGradeDefaultGroup(
                     subsetManagerId = managerId,
-                    userId = userId,
                     projectCode = projectCode,
                     resourceType = resourceType,
                     resourceCode = resourceCode,

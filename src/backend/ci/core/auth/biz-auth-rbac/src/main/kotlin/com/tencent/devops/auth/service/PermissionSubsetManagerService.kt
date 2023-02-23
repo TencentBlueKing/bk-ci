@@ -36,13 +36,11 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
-import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -53,8 +51,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val dslContext: DSLContext,
     private val authResourceGroupDao: AuthResourceGroupDao,
-    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
 
     /**
@@ -102,23 +99,10 @@ class PermissionSubsetManagerService @Autowired constructor(
             .syncPerm(true)
             .groupName(managerGroupConfig.groupName)
             .build()
-        val subsetManagerId = iamV2ManagerService.createSubsetManager(
+        return iamV2ManagerService.createSubsetManager(
             gradeManagerId,
             createSubsetManagerDTO
         )
-        traceEventDispatcher.dispatch(
-            AuthResourceGroupModifyEvent(
-                managerId = subsetManagerId,
-                userId = userId,
-                projectCode = projectCode,
-                projectName = projectName,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                resourceName = resourceName,
-                iamResourceCode = iamResourceCode
-            )
-        )
-        return subsetManagerId
     }
 
     @SuppressWarnings("LongParameterList")
@@ -289,7 +273,6 @@ class PermissionSubsetManagerService @Autowired constructor(
     @Suppress("LongParameterList")
     fun modifyGradeDefaultGroup(
         subsetManagerId: Int,
-        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String,
