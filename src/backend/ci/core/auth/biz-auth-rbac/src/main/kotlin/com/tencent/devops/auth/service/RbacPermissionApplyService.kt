@@ -53,7 +53,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private val systemId = ""
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/apply?" +
-        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s"
+        "resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s&groupId=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
@@ -352,8 +352,8 @@ class RbacPermissionApplyService @Autowired constructor(
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectId,
-                        "", resourceType, resourceName, action, iamResourceCode
+                        authApplyRedirectUrl, projectId, resourceType,
+                        resourceName, action, iamResourceCode, ""
                     )
                 )
             )
@@ -415,8 +415,8 @@ class RbacPermissionApplyService @Autowired constructor(
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectId,
-                        resourceGroup.relationId, resourceType, resourceName, action, iamResourceCode
+                        authApplyRedirectUrl, projectId, resourceType, resourceName,
+                        action, iamResourceCode, resourceGroup.relationId
                     ),
                     groupName = resourceGroup.groupName
                 )
