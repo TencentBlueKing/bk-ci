@@ -1,4 +1,4 @@
-import './permission.css';
+import './permission.css'
 
 /**
  * 处理无权限的情况
@@ -43,6 +43,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
             {
                 class: 'permission-table',
                 props: {
+                    outerBorder: false,
                     data: [data]
                 }
             },
@@ -105,10 +106,10 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                             {
                                                 class: 'bk-icon icon-angle-down'
                                             }
-                                        ),
+                                        )
                                     ]
                                 }
-                            },
+                            }
                         }
                     )
                     : h(
@@ -119,7 +120,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                 theme: 'primary'
                             },
                             on: {
-                                click() {
+                                click () {
                                     window.open(data.groupInfoList[0].url, '_blank')
                                 }
                             }
@@ -160,5 +161,4 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                 showFooter: false
             })
         })
-    
 }

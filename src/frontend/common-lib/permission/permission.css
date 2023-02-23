@@ -12,6 +12,7 @@
 }
 
 .permission-table.bk-table:before {
+    background: #dfe0e5;
     left: 25px;
     width: calc(100% - 50px);
 }
