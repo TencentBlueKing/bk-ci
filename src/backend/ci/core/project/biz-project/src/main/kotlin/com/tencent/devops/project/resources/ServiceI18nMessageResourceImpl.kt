@@ -49,7 +49,7 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
         moduleCode: SystemModuleEnum,
         locale: String?
     ): Result<Boolean> {
-        i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, locale = locale)
+        i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, language = locale)
         return Result(true)
     }
 
@@ -63,7 +63,7 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
             userId = userId,
             moduleCode = moduleCode,
             key = key,
-            locale = locale
+            language = locale
         )
         return Result(i18nMessage)
     }
@@ -78,7 +78,7 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
             userId = userId,
             moduleCode = moduleCode,
             keys = keys,
-            locale = locale
+            language = locale
         )
         return Result(i18nMessages)
     }

@@ -50,13 +50,13 @@ class I18nMessageServiceImpl @Autowired constructor(
         userId: String,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String?
+        language: String?
     ): Boolean {
         i18nMessageDao.delete(
             dslContext = dslContext,
             moduleCode = moduleCode,
             key = key,
-            locale = locale
+            language = language
         )
         return true
     }
@@ -65,13 +65,13 @@ class I18nMessageServiceImpl @Autowired constructor(
         userId: String,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String
+        language: String
     ): I18nMessage? {
         // 获取国际化信息缓在缓存中的key
         val i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
             moduleCode = moduleCode.name,
             key = key,
-            locale = locale
+            language = language
         )
         val value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
         if (value.isNullOrBlank()) {
@@ -80,23 +80,23 @@ class I18nMessageServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 moduleCode = moduleCode,
                 key = key,
-                locale = locale
+                language = language
             )
             return if (i18nMessageRecord != null) {
                 BkI18nMessageCacheUtil.put(i18nMessageCacheKey, i18nMessageRecord.value)
-                I18nMessage(moduleCode = moduleCode, locale = locale, key = key, value = i18nMessageRecord.value)
+                I18nMessage(moduleCode = moduleCode, language = language, key = key, value = i18nMessageRecord.value)
             } else {
                 null
             }
         }
-        return I18nMessage(moduleCode = moduleCode, locale = locale, key = key, value = value)
+        return I18nMessage(moduleCode = moduleCode, language = language, key = key, value = value)
     }
 
     override fun getI18nMessages(
         userId: String,
         moduleCode: SystemModuleEnum,
         keys: List<String>,
-        locale: String
+        language: String
     ): List<I18nMessage>? {
         var i18nMessages: MutableList<I18nMessage>? = null
         var noCacheKeys: MutableList<String>? = null
@@ -105,7 +105,7 @@ class I18nMessageServiceImpl @Autowired constructor(
             val i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
                 moduleCode = moduleCode.name,
                 key = key,
-                locale = locale
+                language = language
             )
             val value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
             if (value.isNullOrBlank()) {
@@ -118,7 +118,7 @@ class I18nMessageServiceImpl @Autowired constructor(
                 if (i18nMessages == null) {
                     i18nMessages = mutableListOf()
                 }
-                i18nMessages!!.add(I18nMessage(moduleCode = moduleCode, locale = locale, key = key, value = value))
+                i18nMessages!!.add(I18nMessage(moduleCode = moduleCode, language = language, key = key, value = value))
             }
         }
         // 2、未在缓存中的key，则批量去db中查询
@@ -127,7 +127,7 @@ class I18nMessageServiceImpl @Autowired constructor(
                 dslContext = dslContext,
                 moduleCode = moduleCode,
                 keys = it,
-                locale = locale
+                language = language
             )
             i18nMessageRecords?.forEach { i18nMessageRecord ->
                 if (i18nMessages == null) {
@@ -136,7 +136,7 @@ class I18nMessageServiceImpl @Autowired constructor(
                 i18nMessages!!.add(
                     I18nMessage(
                         moduleCode = moduleCode,
-                        locale = locale,
+                        language = language,
                         key = i18nMessageRecord.key,
                         value = i18nMessageRecord.value
                     )
@@ -146,7 +146,7 @@ class I18nMessageServiceImpl @Autowired constructor(
                     key = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
                         moduleCode = moduleCode.name,
                         key = i18nMessageRecord.key,
-                        locale = locale
+                        language = language
                     ),
                     value = i18nMessageRecord.value
                 )

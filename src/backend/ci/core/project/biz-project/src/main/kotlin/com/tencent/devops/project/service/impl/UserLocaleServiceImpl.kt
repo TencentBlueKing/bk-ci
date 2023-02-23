@@ -45,8 +45,8 @@ class UserLocaleServiceImpl @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val commonConfig: CommonConfig
 ) : UserLocaleService {
-    override fun addUserLocale(userId: String, locale: String): Boolean {
-        val key = LocaleUtil.getUserLocaleKey(userId)
+    override fun addUserLocale(userId: String, language: String): Boolean {
+        val key = LocaleUtil.getUserLocaleLanguageKey(userId)
         val lock = RedisLock(redisOperation, "$key:add", 10)
         try {
             lock.lock()
@@ -59,11 +59,11 @@ class UserLocaleServiceImpl @Autowired constructor(
                 return true
             }
             // locale信息入库
-            userLocaleDao.add(dslContext, userId, locale)
+            userLocaleDao.add(dslContext, userId, language)
             // locale写入redis缓存
             redisOperation.set(
                 key = key,
-                value = locale
+                value = language
             )
         } finally {
             lock.unlock()
@@ -73,21 +73,21 @@ class UserLocaleServiceImpl @Autowired constructor(
 
     override fun deleteUserLocale(userId: String): Boolean {
         userLocaleDao.delete(dslContext, userId)
-        redisOperation.delete(LocaleUtil.getUserLocaleKey(userId))
+        redisOperation.delete(LocaleUtil.getUserLocaleLanguageKey(userId))
         return true
     }
 
-    override fun updateUserLocale(userId: String, locale: String): Boolean {
-        val key = LocaleUtil.getUserLocaleKey(userId)
+    override fun updateUserLocale(userId: String, language: String): Boolean {
+        val key = LocaleUtil.getUserLocaleLanguageKey(userId)
         val lock = RedisLock(redisOperation, "$key:update", 10)
         try {
             lock.lock()
-            // 更新db中locale信息
-            userLocaleDao.update(dslContext, userId, locale)
-            // 更新redis缓存locale信息
+            // 更新db中locale语言信息
+            userLocaleDao.update(dslContext, userId, language)
+            // 更新redis缓存locale语言信息
             redisOperation.set(
                 key = key,
-                value = locale
+                value = language
             )
         } finally {
             lock.unlock()
@@ -96,14 +96,14 @@ class UserLocaleServiceImpl @Autowired constructor(
     }
 
     override fun getUserLocale(userId: String): LocaleInfo {
-        val key = LocaleUtil.getUserLocaleKey(userId)
-        // 从缓存中获取locale信息
-        var locale = redisOperation.get(key)
-        if (locale.isNullOrBlank()) {
+        val key = LocaleUtil.getUserLocaleLanguageKey(userId)
+        // 从缓存中获取locale语言信息
+        var language = redisOperation.get(key)
+        if (language.isNullOrBlank()) {
             // 缓存中未取到则直接从db查
-            locale = userLocaleDao.getLocaleByUserId(dslContext, userId)
+            language = userLocaleDao.getLocaleByUserId(dslContext, userId)
         }
-        // 用户未配置locale信息则默认返回系统默认配置
-        return LocaleInfo(locale ?: commonConfig.devopsDefaultLocale)
+        // 用户未配置locale语言信息则默认返回系统默认配置
+        return LocaleInfo(language ?: commonConfig.devopsDefaultLocale)
     }
 }

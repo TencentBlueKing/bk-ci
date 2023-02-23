@@ -33,5 +33,5 @@ import io.swagger.annotations.ApiModelProperty
 data class LocaleInfo(
     @ApiModelProperty("语言环境信息")
     @field:BkField(minLength = 1, maxLength = 64)
-    val locale: String
+    val language: String
 )

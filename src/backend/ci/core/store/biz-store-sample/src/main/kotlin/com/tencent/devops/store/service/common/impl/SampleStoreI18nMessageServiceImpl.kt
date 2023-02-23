@@ -38,13 +38,28 @@ import java.net.URLEncoder
 class SampleStoreI18nMessageServiceImpl : StoreI18nMessageServiceImpl() {
     override fun getPropertiesFileStr(
         projectCode: String,
-        filePathPrefix: String,
+        fileDir: String,
         fileName: String,
         repositoryHashId: String?,
         branch: String?
     ): String? {
-        val filePath = URLEncoder.encode("$projectCode/$filePathPrefix/$fileName", Charsets.UTF_8.name())
+        val filePath = URLEncoder.encode("$projectCode/$fileDir/$fileName", Charsets.UTF_8.name())
         return client.get(ServiceFileResource::class).getFileContent(
+            userId = BKREPO_DEFAULT_USER,
+            projectId = BKREPO_STORE_PROJECT_ID,
+            repoName = REPO_NAME_PLUGIN,
+            filePath = filePath
+        ).data
+    }
+
+    override fun getPropertiesFileNames(
+        projectCode: String,
+        fileDir: String,
+        repositoryHashId: String?,
+        branch: String?
+    ): List<String>? {
+        val filePath = URLEncoder.encode("$projectCode/$fileDir", Charsets.UTF_8.name())
+        return client.get(ServiceFileResource::class).listFileNamesByPath(
             userId = BKREPO_DEFAULT_USER,
             projectId = BKREPO_STORE_PROJECT_ID,
             repoName = REPO_NAME_PLUGIN,

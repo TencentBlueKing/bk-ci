@@ -45,7 +45,7 @@ class I18nMessageDao {
                 dslContext.insertInto(
                     this,
                     MODULE_CODE,
-                    LOCALE,
+                    LANGUAGE,
                     KEY,
                     VALUE,
                     CREATOR,
@@ -53,13 +53,13 @@ class I18nMessageDao {
                 )
                     .values(
                         i18nMessage.moduleCode.name,
-                        i18nMessage.locale,
+                        i18nMessage.language,
                         i18nMessage.key,
                         i18nMessage.value,
                         userId,
                         userId
                     ).onDuplicateKeyUpdate()
-                    .set(VALUE, i18nMessage.locale)
+                    .set(VALUE, i18nMessage.language)
             }).execute()
         }
     }
@@ -68,13 +68,13 @@ class I18nMessageDao {
         dslContext: DSLContext,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String? = null
+        language: String? = null
     ) {
         with(TI18nMessage.T_I18N_MESSAGE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(MODULE_CODE.eq(moduleCode.name))
             conditions.add(KEY.like("$key%"))
-            locale?.let { conditions.add(LOCALE.eq(locale)) }
+            language?.let { conditions.add(LANGUAGE.eq(language)) }
             dslContext.deleteFrom(this)
                 .where(conditions)
                 .execute()
@@ -85,13 +85,13 @@ class I18nMessageDao {
         dslContext: DSLContext,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String
+        language: String
     ): TI18nMessageRecord? {
         with(TI18nMessage.T_I18N_MESSAGE) {
             return dslContext.selectFrom(this)
                 .where(MODULE_CODE.eq(moduleCode.name))
                 .and(KEY.eq(key))
-                .and(LOCALE.eq(locale))
+                .and(LANGUAGE.eq(language))
                 .fetchOne()
         }
     }
@@ -100,13 +100,13 @@ class I18nMessageDao {
         dslContext: DSLContext,
         moduleCode: SystemModuleEnum,
         keys: List<String>,
-        locale: String
+        language: String
     ): Result<TI18nMessageRecord>? {
         with(TI18nMessage.T_I18N_MESSAGE) {
             return dslContext.selectFrom(this)
                 .where(MODULE_CODE.eq(moduleCode.name))
                 .and(KEY.`in`(keys))
-                .and(LOCALE.eq(locale))
+                .and(LANGUAGE.eq(language))
                 .fetch()
         }
     }
@@ -115,13 +115,13 @@ class I18nMessageDao {
         dslContext: DSLContext,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String? = null
+        language: String? = null
     ): List<String> {
         with(TI18nMessage.T_I18N_MESSAGE) {
             val conditions = mutableListOf<Condition>()
             conditions.add(MODULE_CODE.eq(moduleCode.name))
             conditions.add(KEY.like("$key%"))
-            locale?.let { conditions.add(LOCALE.eq(locale)) }
+            language?.let { conditions.add(LANGUAGE.eq(language)) }
             return dslContext.select(KEY).from(this)
                 .where(conditions)
                 .fetchInto(String::class.java)

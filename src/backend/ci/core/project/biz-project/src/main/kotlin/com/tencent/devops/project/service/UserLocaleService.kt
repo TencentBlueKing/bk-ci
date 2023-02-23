@@ -34,10 +34,10 @@ interface UserLocaleService {
     /**
      * 添加用户国际化信息
      * @param userId 用户ID
-     * @param locale 国际化信息
+     * @param language 国际化语言信息
      * @return 布尔值
      */
-    fun addUserLocale(userId: String, locale: String): Boolean
+    fun addUserLocale(userId: String, language: String): Boolean
 
     /**
      * 删除用户国际化信息
@@ -49,10 +49,10 @@ interface UserLocaleService {
     /**
      * 更新用户国际化信息
      * @param userId 用户ID
-     * @param locale 国际化信息
+     * @param language 国际化信息
      * @return 布尔值
      */
-    fun updateUserLocale(userId: String, locale: String): Boolean
+    fun updateUserLocale(userId: String, language: String): Boolean
 
     /**
      * 根据用户ID查找用户国际化信息

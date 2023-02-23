@@ -34,7 +34,7 @@ data class I18nMessage(
     @ApiModelProperty("模块标识")
     val moduleCode: SystemModuleEnum,
     @ApiModelProperty("国际化语言信息")
-    val locale: String,
+    val language: String,
     @ApiModelProperty("国际化变量名")
     val key: String,
     @ApiModelProperty("国际化变量值")

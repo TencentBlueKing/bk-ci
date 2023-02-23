@@ -34,6 +34,6 @@ data class FieldLocaleInfo(
     val fieldName: String,
     @ApiModelProperty("字段值")
     val fieldValue: String,
-    @ApiModelProperty("语言环境")
-    val locale: String? = null
+    @ApiModelProperty("语言信息")
+    val language: String? = null
 )

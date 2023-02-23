@@ -45,14 +45,14 @@ interface I18nMessageService {
      * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param key 国际化变量名
-     * @param locale 国际化语言信息
+     * @param language 国际化语言信息
      * @return 布尔值
      */
     fun deleteI18nMessage(
         userId: String,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String? = null
+        language: String? = null
     ): Boolean
 
     /**
@@ -60,14 +60,14 @@ interface I18nMessageService {
      * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param key 国际化变量名
-     * @param locale 国际化语言信息
+     * @param language 国际化语言信息
      * @return 国际化信息
      */
     fun getI18nMessage(
         userId: String,
         moduleCode: SystemModuleEnum,
         key: String,
-        locale: String
+        language: String
     ): I18nMessage?
 
     /**
@@ -75,13 +75,13 @@ interface I18nMessageService {
      * @param userId 用户ID
      * @param moduleCode 模块标识
      * @param keys 国际化变量名列表
-     * @param locale 国际化语言信息
+     * @param language 国际化语言信息
      * @return 国际化信息
      */
     fun getI18nMessages(
         userId: String,
         moduleCode: SystemModuleEnum,
         keys: List<String>,
-        locale: String
+        language: String
     ): List<I18nMessage>?
 }

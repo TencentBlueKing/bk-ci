@@ -32,9 +32,9 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.annotation.SkipLogField
 import com.tencent.devops.common.api.constant.ARTIFACT
 import com.tencent.devops.common.api.constant.ARTIFACTORY_TYPE
-import com.tencent.devops.common.api.constant.DEFAULT_LOCALE
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.LABEL
-import com.tencent.devops.common.api.constant.LOCALE
+import com.tencent.devops.common.api.constant.LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.PATH
 import com.tencent.devops.common.api.constant.REPORT
 import com.tencent.devops.common.api.constant.REPORT_TYPE
@@ -229,7 +229,7 @@ open class MarketAtomTask : ITask() {
                 PIPELINE_ATOM_VERSION to atomData.version,
                 PIPELINE_TASK_NAME to taskName,
                 PIPELINE_ATOM_TIMEOUT to TaskUtil.getTimeOut(buildTask).toString(),
-                LOCALE to (System.getProperty(LOCALE) ?: DEFAULT_LOCALE)
+                LOCALE_LANGUAGE to (System.getProperty(LOCALE_LANGUAGE) ?: DEFAULT_LOCALE_LANGUAGE)
             )
         )
         buildTask.stepId?.let { variables = variables.plus(PIPELINE_STEP_ID to it) }

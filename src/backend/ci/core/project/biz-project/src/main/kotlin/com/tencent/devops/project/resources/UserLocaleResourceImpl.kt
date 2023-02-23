@@ -43,6 +43,6 @@ class UserLocaleResourceImpl @Autowired constructor(
     }
 
     override fun updateUserLocale(userId: String, localeInfo: LocaleInfo): Result<Boolean> {
-        return Result(userLocaleService.updateUserLocale(userId, localeInfo.locale))
+        return Result(userLocaleService.updateUserLocale(userId, localeInfo.language))
     }
 }

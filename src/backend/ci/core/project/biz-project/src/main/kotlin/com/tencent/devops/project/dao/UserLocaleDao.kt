@@ -39,13 +39,13 @@ class UserLocaleDao {
             dslContext.insertInto(
                 this,
                 USER_ID,
-                LOCALE,
+                LANGUAGE,
             )
                 .values(
                     userId,
                     locale
                 ).onDuplicateKeyUpdate()
-                .set(LOCALE, locale)
+                .set(LANGUAGE, locale)
                 .execute()
         }
     }
@@ -57,7 +57,7 @@ class UserLocaleDao {
     ) {
         with(TUserLocale.T_USER_LOCALE) {
             dslContext.update(this)
-                .set(LOCALE, locale)
+                .set(LANGUAGE, locale)
                 .where(USER_ID.eq(userId))
                 .execute()
         }
@@ -87,7 +87,7 @@ class UserLocaleDao {
         userId: String
     ): String? {
         with(TUserLocale.T_USER_LOCALE) {
-            return dslContext.select(LOCALE).from(this)
+            return dslContext.select(LANGUAGE).from(this)
                 .where(USER_ID.eq(userId))
                 .fetchOne(0, String::class.java)
         }

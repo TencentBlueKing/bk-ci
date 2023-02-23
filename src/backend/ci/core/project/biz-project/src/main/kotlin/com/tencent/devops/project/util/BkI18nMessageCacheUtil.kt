@@ -65,15 +65,15 @@ object BkI18nMessageCacheUtil {
     /**
      * 获取国际化信息缓在缓存中的key
      * @param moduleCode 模块标识
-     * @param locale 语言信息
+     * @param language 语言信息
      * @param key 国际化变量名
      * @return 国际化信息缓在缓存中的key
      */
     fun getI18nMessageCacheKey(
         moduleCode: String,
-        locale: String,
+        language: String,
         key: String
     ): String {
-        return "BK_I18N_MESSAGE:$moduleCode:$locale:$key"
+        return "BK_I18N_MESSAGE:$moduleCode:$language:$key"
     }
 }
