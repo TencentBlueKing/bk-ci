@@ -201,7 +201,7 @@ class RbacPermissionApplyService @Autowired constructor(
                             departmentCount = it.departmentCount,
                             joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
                             resourceType = dbGroupRecord.resourceType,
-                            resourceName = "",
+                            resourceName = dbGroupRecord.resourceName,
                             resourceCode = dbGroupRecord.resourceCode
                         )
                     )
@@ -430,7 +430,7 @@ class RbacPermissionApplyService @Autowired constructor(
             params = arrayOf(groupCode),
             defaultMessage = "group [$groupCode] not exist"
         )*/
-        if (resourceGroup != null){
+        if (resourceGroup != null) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
