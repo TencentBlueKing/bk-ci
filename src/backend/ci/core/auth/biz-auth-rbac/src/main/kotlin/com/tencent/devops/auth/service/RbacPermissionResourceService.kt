@@ -28,23 +28,25 @@
 
 package com.tencent.devops.auth.service
 
-import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.slf4j.LoggerFactory
 
 @SuppressWarnings("LongParameterList", "TooManyFunctions")
 class RbacPermissionResourceService(
-    private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
-    private val authResourceGroupService: AuthResourceGroupService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
-    private val permissionSubsetManagerService: PermissionSubsetManagerService
+    private val permissionSubsetManagerService: PermissionSubsetManagerService,
+    private val authResourceCodeConverter: AuthResourceCodeConverter,
+    private val permissionService: PermissionService
 ) : PermissionResourceService {
 
     companion object {
@@ -60,6 +62,10 @@ class RbacPermissionResourceService(
         resourceName: String
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
+        val iamResourceCode = authResourceCodeConverter.code2IamCode(
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
         val managerId = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.createGradeManager(
                 userId = userId,
@@ -70,7 +76,7 @@ class RbacPermissionResourceService(
                 resourceName = resourceName
             )
         } else {
-            // 获取项目管理的权限资源
+            // 获取分级管理员信息
             val projectInfo = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = AuthResourceType.PROJECT.value,
@@ -83,7 +89,8 @@ class RbacPermissionResourceService(
                 projectName = projectInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode
             )
         }
         // 项目创建需要审批时,不需要保存资源信息
@@ -94,6 +101,7 @@ class RbacPermissionResourceService(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
+                iamResourceCode = iamResourceCode,
                 // 项目默认开启权限管理
                 enable = resourceType == AuthResourceType.PROJECT.value,
                 relationId = managerId.toString()
@@ -118,10 +126,7 @@ class RbacPermissionResourceService(
             permissionGradeManagerService.modifyGradeManager(
                 gradeManagerId = resourceInfo.relationId,
                 projectCode = projectCode,
-                projectName = resourceName,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = resourceCode,
-                resourceName = resourceName
+                projectName = resourceName
             )
         } else {
             permissionSubsetManagerService.modifySubsetManager(
@@ -130,7 +135,8 @@ class RbacPermissionResourceService(
                 projectName = resourceInfo.resourceName,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName
+                resourceName = resourceName,
+                iamResourceCode = resourceInfo.iamResourceCode
             )
         }
         if (updateAuthResource) {
@@ -179,43 +185,30 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource cancel relation|$projectCode|$resourceType|$resourceCode")
-        // 只有项目创建时才可以取消
+        // 只有项目才可以取消
         if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.userCancelApplication(projectCode)
         }
         return true
     }
 
-    @Suppress("ReturnCount")
     override fun hasManagerPermission(
         userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        // 1. 先判断是否是项目管理员
-        val projectInfo = authResourceService.get(
+        return permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+            ),
             projectCode = projectId,
             resourceType = resourceType,
-            resourceCode = projectId
+            resourceCode = resourceCode,
+            relationResourceType = null
         )
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
-        if (gradeManagerDetail.members.contains(userId)) {
-            return true
-        }
-        if (resourceType != AuthResourceType.PROJECT.value) {
-            // 2. 判断是否是资源管理员
-            val resourceInfo = authResourceService.get(
-                projectCode = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-            val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
-            if (subsetManagerDetail.members.contains(userId)) {
-                return true
-            }
-        }
-        return false
     }
 
     override fun isEnablePermission(
@@ -237,36 +230,33 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        // 1. 先判断是否是项目管理员
+        if (hasManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
-        val gradeManagerDetail = iamV2ManagerService.getGradeManagerDetail(projectInfo.relationId)
-        if (!gradeManagerDetail.members.contains(userId)) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
-        // 2. 判断是否是资源管理员
         val resourceInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        val subsetManagerDetail = iamV2ManagerService.getSubsetManagerDetail(resourceInfo.relationId)
-        if (!subsetManagerDetail.members.contains(userId)) {
-            throw PermissionForbiddenException(
-                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
-            )
-        }
         // 已经启用的不需要再启用
         if (resourceInfo.enable) {
             logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
             return true
         }
-        authResourceGroupService.createSubsetManagerDefaultGroup(
+        permissionSubsetManagerService.createSubsetManagerDefaultGroup(
             subsetManagerId = resourceInfo.relationId.toInt(),
             userId = userId,
             projectCode = projectId,
@@ -274,6 +264,7 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
+            iamResourceCode = resourceInfo.iamResourceCode,
             createMode = true
         )
         return authResourceService.enable(

@@ -43,6 +43,8 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
+        resourceName: String,
+        iamResourceCode: String,
         groupCode: String,
         groupName: String,
         relationId: String
@@ -54,6 +56,8 @@ class AuthResourceGroupDao {
                 PROJECT_CODE,
                 RESOURCE_TYPE,
                 RESOURCE_CODE,
+                RESOURCE_NAME,
+                IAM_RESOURCE_CODE,
                 GROUP_CODE,
                 GROUP_NAME,
                 RELATION_ID,
@@ -63,6 +67,8 @@ class AuthResourceGroupDao {
                 projectCode,
                 resourceType,
                 resourceCode,
+                resourceName,
+                iamResourceCode,
                 groupCode,
                 groupName,
                 relationId,
@@ -77,6 +83,7 @@ class AuthResourceGroupDao {
         projectCode: String,
         resourceType: String,
         resourceCode: String,
+        resourceName: String,
         groupCode: String,
         groupName: String
     ): Int {
@@ -84,11 +91,12 @@ class AuthResourceGroupDao {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
             dslContext.update(this)
                 .set(GROUP_NAME, groupName)
-                .set(GROUP_CODE, groupCode)
+                .set(RESOURCE_NAME, resourceName)
                 .set(UPDATE_TIME, now)
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_CODE.eq(resourceCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_CODE.eq(groupCode))
                 .execute()
         }
     }
