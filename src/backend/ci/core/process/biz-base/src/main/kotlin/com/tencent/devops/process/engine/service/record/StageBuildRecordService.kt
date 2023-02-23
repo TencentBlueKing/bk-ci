@@ -91,20 +91,19 @@ class StageBuildRecordService(
             cancelUser = null, operation = "updateStageStatus#$stageId"
         ) {
             val stageVar = mutableMapOf<String, Any>()
-            var startTime: LocalDateTime? = null
-            var endTime: LocalDateTime? = null
-            if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
-                stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
-                startTime = LocalDateTime.now()
+            if (buildStatus.isRunning()) {
+                // 旧兼容逻辑
+                if (stageVar[Stage::startEpoch.name] == null) {
+                    stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+                }
             } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
                 stageVar[Stage::elapsed.name] =
                     System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
-                endTime = LocalDateTime.now()
             }
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                startTime = startTime, endTime = endTime, buildStatus = buildStatus
+                buildStatus = buildStatus
             )
         }
         return allStageStatus ?: emptyList()
@@ -132,7 +131,7 @@ class StageBuildRecordService(
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
-                startTime = null, endTime = null, stageVar = mutableMapOf()
+                stageVar = mutableMapOf()
             )
         }
         return allStageStatus ?: emptyList()
@@ -164,8 +163,7 @@ class StageBuildRecordService(
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers,
-                startTime = null, endTime = null
+                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
             )
         }
         return allStageStatus ?: emptyList()
@@ -200,9 +198,7 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null,
-                startTime = null,
-                endTime = null
+                buildStatus = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -256,8 +252,6 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = stageVar,
                 buildStatus = null, // 红线不改变stage原状态
-                startTime = null,
-                endTime = endTime,
                 timestamps = timestamps
             )
             pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
@@ -293,9 +287,7 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null,
-                startTime = null,
-                endTime = null
+                buildStatus = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -329,8 +321,6 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                startTime = null,
-                endTime = null,
                 buildStatus = BuildStatus.QUEUE
             )
         }
@@ -345,8 +335,6 @@ class StageBuildRecordService(
         executeCount: Int,
         stageVar: MutableMap<String, Any>,
         buildStatus: BuildStatus?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
@@ -369,14 +357,20 @@ class StageBuildRecordService(
             }
             // 结束时进行启动状态校准，并计算所有耗时
             var timeCost: BuildRecordTimeCost? = null
+            var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
+            if (buildStatus?.isRunning() == true && recordStage.startTime == null) {
+                startTime = LocalDateTime.now()
+            }
             if (buildStatus?.isFinish() == true) {
-                buildStageDao.get(dslContext, projectId, buildId, stageId)?.let { buildStage ->
-                    val recordContainers = recordContainerDao.getRecords(
-                        context, projectId, pipelineId, buildId, executeCount, stageId
-                    )
-                    timeCost = recordStage.generateStageTimeCost(recordContainers)
-                    timeCost?.let { stageVar[Stage::timeCost.name] = it }
+                if (recordStage.endTime == null) {
+                    endTime = LocalDateTime.now()
                 }
+                val recordContainers = recordContainerDao.getRecords(
+                    context, projectId, pipelineId, buildId, executeCount, stageId
+                )
+                timeCost = recordStage.generateStageTimeCost(recordContainers)
+                stageVar[Stage::timeCost.name] = timeCost
             }
             allStageStatus = buildStatus?.let {
                 fetchHistoryStageStatus(

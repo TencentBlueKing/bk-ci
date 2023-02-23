@@ -123,7 +123,6 @@ class ContainerBuildRecordService(
                 containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.RUNNING.name
                 ),
-                startTime = LocalDateTime.now(), endTime = null,
                 timestamps = mapOf(
                     BuildTimestampType.JOB_CONTAINER_STARTUP to
                         BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
@@ -156,7 +155,6 @@ class ContainerBuildRecordService(
                     Container::startVMStatus.name to containerBuildStatus.name,
                     Container::startEpoch.name to System.currentTimeMillis()
                 ),
-                startTime = null, endTime = null,
                 timestamps = mapOf(
                     BuildTimestampType.JOB_CONTAINER_STARTUP to
                         BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
@@ -193,8 +191,13 @@ class ContainerBuildRecordService(
                 containerVar.putAll(recordContainer.containerVar)
 
                 val containerName = containerVar[Container::name.name]?.toString() ?: ""
+                var startTime: LocalDateTime? = null
+                var endTime: LocalDateTime? = null
                 // 存在互斥组的先将名字修改
                 if (buildStatus.isReadyToRun()) {
+                    if (recordContainer.startTime == null) {
+                        startTime = LocalDateTime.now()
+                    }
                     when (recordContainer.containerType) {
                         VMBuildContainer.classType -> containerVar[VMBuildContainer::mutexGroup.name]
                         NormalContainer.classType -> containerVar[NormalContainer::mutexGroup.name]
@@ -208,15 +211,17 @@ class ContainerBuildRecordService(
 
                 // 结束时进行启动状态校准，并计算所有耗时
                 val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-                var endTime: LocalDateTime? = null
+
                 if (buildStatus.isFinish()) {
+                    if (recordContainer.endTime == null) {
+                        endTime = LocalDateTime.now()
+                    }
                     if (!BuildStatus.parse(containerVar[Container::startVMStatus.name]?.toString()).isFinish()) {
                         containerVar[Container::startVMStatus.name] = buildStatus.name
                     }
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, LocalDateTime.now().timestampmilli()
                     )
-                    endTime = LocalDateTime.now()
                     val recordTasks = recordTaskDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, containerId
                     )
@@ -230,7 +235,7 @@ class ContainerBuildRecordService(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, containerId = containerId, executeCount = executeCount,
                     containerVar = containerVar.plus(containerVar), buildStatus = buildStatus,
-                    startTime = null, endTime = endTime,
+                    startTime = startTime, endTime = endTime,
                     timestamps = mergeTimestamps(newTimestamps, recordContainer.timestamps)
                 )
             }
@@ -259,7 +264,7 @@ class ContainerBuildRecordService(
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 containerId = matrixGroupId, executeCount = executeCount,
-                buildStatus = buildStatus, startTime = null, endTime = null,
+                buildStatus = buildStatus,
                 containerVar = mapOf(
                     VMBuildContainer::matrixControlOption.name to matrixOption
                 )
@@ -281,8 +286,7 @@ class ContainerBuildRecordService(
             logger.info("[$buildId]|container_skip|j($containerId)")
             updateContainerRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                containerId = containerId, executeCount = executeCount,
-                buildStatus = BuildStatus.SKIP, startTime = null, endTime = null,
+                containerId = containerId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
                 containerVar = mapOf(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
@@ -309,8 +313,6 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
@@ -324,12 +326,19 @@ class ContainerBuildRecordService(
                 )
                 return@transaction
             }
-
+            var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
+            if (buildStatus?.isRunning() == true && recordContainer.startTime == null) {
+                startTime = LocalDateTime.now()
+            }
+            if (buildStatus?.isFinish() == true && recordContainer.endTime == null) {
+                endTime = LocalDateTime.now()
+            }
             recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, containerId = containerId, executeCount = executeCount,
                 containerVar = recordContainer.containerVar.plus(containerVar),
-                startTime = null, endTime = null, buildStatus = buildStatus,
+                startTime = startTime, endTime = endTime, buildStatus = buildStatus,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordContainer.timestamps) }
             )
         }

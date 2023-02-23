@@ -106,8 +106,6 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 buildStatus = buildStatus,
                 taskVar = emptyMap(),
-                startTime = null,
-                endTime = null,
                 timestamps = timestamps
             )
         }
@@ -135,8 +133,6 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 buildStatus = BuildStatus.PAUSE,
                 taskVar = emptyMap(),
-                startTime = null,
-                endTime = null,
                 timestamps = mapOf(
                     BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
                         LocalDateTime.now().timestampmilli(), null
@@ -274,9 +270,7 @@ class TaskBuildRecordService(
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.CANCELED,
-                taskVar = emptyMap(),
-                startTime = null,
-                endTime = LocalDateTime.now()
+                taskVar = emptyMap()
             )
         }
     }
@@ -404,8 +398,6 @@ class TaskBuildRecordService(
         executeCount: Int,
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
-        startTime: LocalDateTime?,
-        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
@@ -422,6 +414,14 @@ class TaskBuildRecordService(
                     "ENGINE|$buildId|updateTaskByMap| get task($taskId) record failed."
                 )
                 return@transaction
+            }
+            var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
+            if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
+                startTime = LocalDateTime.now()
+            }
+            if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
+                endTime = LocalDateTime.now()
             }
             recordTaskDao.updateRecord(
                 dslContext = transactionContext,

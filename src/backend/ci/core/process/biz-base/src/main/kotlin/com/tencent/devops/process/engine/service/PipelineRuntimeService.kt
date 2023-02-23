@@ -736,7 +736,6 @@ class PipelineRuntimeService @Autowired constructor(
             taskBuildRecordService.updateTaskRecord(
                 projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
                 taskId = task.taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-                startTime = null, endTime = LocalDateTime.now(),
                 taskVar = mapOf(), timestamps = mapOf(
                     BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                         BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
@@ -1698,7 +1697,6 @@ class PipelineRuntimeService @Autowired constructor(
                     taskBuildRecordService.updateTaskRecord(
                         projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                         taskId = taskId, executeCount = executeCount ?: 1, buildStatus = null,
-                        startTime = null, endTime = LocalDateTime.now(),
                         taskVar = mapOf(
                             ManualReviewUserTaskElement::desc.name to (params.desc ?: ""),
                             ManualReviewUserTaskElement::suggest.name to (params.suggest ?: ""),

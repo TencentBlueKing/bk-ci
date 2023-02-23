@@ -103,7 +103,6 @@ class ManualReviewTaskAtom(
         taskBuildRecordService.updateTaskRecord(
             projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
             taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-            startTime = LocalDateTime.now(), endTime = null,
             taskVar = mapOf(ManualReviewUserTaskElement::reviewUsers.name to reviewUsersList),
             timestamps = mapOf(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to

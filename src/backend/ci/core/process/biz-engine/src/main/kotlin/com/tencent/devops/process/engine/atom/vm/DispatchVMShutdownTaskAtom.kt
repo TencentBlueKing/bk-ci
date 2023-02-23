@@ -93,7 +93,6 @@ class DispatchVMShutdownTaskAtom @Autowired constructor(
             projectId = task.projectId, pipelineId = task.pipelineId, buildId = task.buildId,
             containerId = task.containerId, executeCount = task.executeCount ?: 1,
             containerVar = emptyMap(), buildStatus = null,
-            startTime = null, endTime = LocalDateTime.now(),
             timestamps = mapOf(
                 BuildTimestampType.JOB_CONTAINER_SHUTDOWN to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)

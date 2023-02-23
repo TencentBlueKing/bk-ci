@@ -409,7 +409,6 @@ class PipelineBuildQualityService(
                 taskBuildRecordService.updateTaskRecord(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                     taskId = taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-                    startTime = null, endTime = LocalDateTime.now(),
                     taskVar = mapOf(QualityGateInElement::reviewUsers.name to auditUsers),
                     timestamps = mapOf(
                         BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
