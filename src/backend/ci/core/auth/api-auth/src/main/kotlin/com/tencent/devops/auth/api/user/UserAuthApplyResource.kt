@@ -1,12 +1,12 @@
 package com.tencent.devops.auth.api.user
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
@@ -63,7 +63,7 @@ interface UserAuthApplyResource {
         projectId: String,
         @ApiParam("搜索用户组实体", required = true)
         searchGroupInfo: SearchGroupInfo
-    ): Result<V2ManagerRoleGroupVO>
+    ): Result<ManagerRoleGroupVO>
 
     @POST
     @Path("applyToJoinGroup")
