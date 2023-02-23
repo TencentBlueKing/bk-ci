@@ -52,7 +52,7 @@ class RbacPermissionApplyService @Autowired constructor(
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
-    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/applyPermission?" +
+    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/apply?" +
         "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
