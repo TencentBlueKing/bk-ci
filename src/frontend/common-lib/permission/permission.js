@@ -1,4 +1,4 @@
-import './permission.css';
+import './permission.css'
 
 /**
  * 处理无权限的情况
@@ -8,6 +8,8 @@ import './permission.css';
  * @param {*} h createElement 方法
  */
 export const handleNoPermission = (ui, params, ajax, h) => {
+    let infoBoxRef = {}
+
     const columns = [
         {
             label: '需要申请的权限',
@@ -41,9 +43,9 @@ export const handleNoPermission = (ui, params, ajax, h) => {
             {
                 class: 'permission-table',
                 props: {
-                    outerBorder: false
-                },
-                data: [data]
+                    outerBorder: false,
+                    data: [data]
+                }
             },
             columns.map(column => {
                 return h(
@@ -104,10 +106,10 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                             {
                                                 class: 'bk-icon icon-angle-down'
                                             }
-                                        ),
+                                        )
                                     ]
                                 }
-                            },
+                            }
                         }
                     )
                     : h(
@@ -118,7 +120,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                 theme: 'primary'
                             },
                             on: {
-                                click() {
+                                click () {
                                     window.open(data.groupInfoList[0].url, '_blank')
                                 }
                             }
@@ -128,7 +130,12 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                 h(
                     ui.bkButton,
                     {
-                        class: 'permission-cancel'
+                        class: 'permission-cancel',
+                        on: {
+                            click() {
+                                infoBoxRef?.close?.()
+                            }
+                        }
                     },
                     [
                         '取消'
@@ -139,10 +146,8 @@ export const handleNoPermission = (ui, params, ajax, h) => {
     }
     return ajax
         .get('/ms/auth/api/user/auth/apply/getRedirectInformation', { params })
-        .then((res) => {
-            const data = res?.data || {}
-
-            ui.bkInfoBox({
+        .then((data = {}) => {
+            infoBoxRef = ui.bkInfoBox({
                 subHeader: h(
                     'section',
                     [
@@ -156,5 +161,4 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                 showFooter: false
             })
         })
-    
 }

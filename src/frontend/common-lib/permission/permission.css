@@ -8,6 +8,7 @@
 
 .permission-table {
     padding: 0 25px;
+    margin-bottom: 20px;
 }
 
 .permission-table.bk-table:before {
