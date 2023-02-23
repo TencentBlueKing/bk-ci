@@ -1454,11 +1454,12 @@ class WorkspaceService @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            if (!response.isSuccessful) {
-                return false
-            }
             val data = response.body()!!.string()
-            logger.info("updateBkTicket|response|$data")
+            logger.info("updateBkTicket|response code|${response.code()}|content|$data")
+            if (!response.isSuccessful) {
+               throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "update fail,please check hostName exists")
+            }
+
             val dataMap = JsonUtil.toMap(data)
             val status = dataMap["status"]
             return (status == 0)
