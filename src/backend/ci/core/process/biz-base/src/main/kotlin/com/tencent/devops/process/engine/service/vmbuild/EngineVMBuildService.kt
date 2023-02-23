@@ -872,6 +872,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     taskId = result.taskId
                 )!!
             }
+            LOG.warn("measureService is null ${measureService == null} taskName is ${task.taskName}")
             measureService?.postTaskData(
                 task = task,
                 startTime = task.startTime?.timestampmilli() ?: 0L,

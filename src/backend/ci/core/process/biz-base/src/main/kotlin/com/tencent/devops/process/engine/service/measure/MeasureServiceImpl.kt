@@ -105,7 +105,7 @@ class MeasureServiceImpl constructor(
             val vmSeqId = task.containerId
             val taskParams = task.taskParams
             val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
-
+            logger.warn("postTaskData taskName:${task.taskName}|atomCode:$atomCode")
             pipelineEventDispatcher.dispatch(
                 PipelineBuildTaskFinishBroadCastEvent(
                     source = "build-element-$taskId",
