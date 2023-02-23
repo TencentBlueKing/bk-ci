@@ -53,7 +53,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private val systemId = ""
 
     private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/apply?" +
-        "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s"
+        "resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s&groupId=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
@@ -82,28 +82,30 @@ class RbacPermissionApplyService @Autowired constructor(
             iamResourceCode = iamResourceCode,
             projectId = projectId
         )
+        logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
+        val managerRoleGroupVO: V2ManagerRoleGroupVO
         try {
-            logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
-            val managerRoleGroupVO = getGradeManagerRoleGroup(
+            managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
                 bkIamPath = bkIamPath,
                 relationId = projectInfo.relationId
             )
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
-            val groupInfoList = buildGroupInfoList(
-                userId = userId,
-                managerRoleGroupInfoList = managerRoleGroupVO.results
-            )
-            return ManagerRoleGroupVO(
-                count = managerRoleGroupVO.count,
-                results = groupInfoList
-            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
                 defaultMessage = "权限系统：获取用户组失败！"
             )
         }
+        val groupInfoList = buildGroupInfoList(
+            userId = userId,
+            projectId = projectId,
+            managerRoleGroupInfoList = managerRoleGroupVO.results
+        )
+        return ManagerRoleGroupVO(
+            count = managerRoleGroupVO.count,
+            results = groupInfoList
+        )
     }
 
     private fun buildBkIamPath(
@@ -169,6 +171,7 @@ class RbacPermissionApplyService @Autowired constructor(
 
     private fun buildGroupInfoList(
         userId: String,
+        projectId: String,
         managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
         val groupInfoList: MutableList<ManagerRoleGroupInfo> = ArrayList()
@@ -176,21 +179,33 @@ class RbacPermissionApplyService @Autowired constructor(
             // 校验用户是否属于用户组
             val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
             val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
-            // 获取组对应的资源code和资源名
             managerRoleGroupInfoList.forEach {
-                groupInfoList.add(
-                    ManagerRoleGroupInfo(
-                        id = it.id,
-                        name = it.name,
-                        description = it.description,
-                        readonly = it.readonly,
-                        userCount = it.userCount,
-                        departmentCount = it.departmentCount,
-                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                        resourceName = "",
-                        resourceCode = ""
+                val dbGroupRecord = authResourceGroupDao.getByRelationId(
+                    dslContext = dslContext,
+                    projectCode = projectId,
+                    iamGroupId = it.id.toString()
+                ) /*?: throw ErrorCodeException(
+                    errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+                    params = arrayOf(it.id.toString()),
+                    defaultMessage = "group ${it.name} not exist"
+                )*/
+                // todo 待完善后，要进行异常处理
+                if (dbGroupRecord != null) {
+                    groupInfoList.add(
+                        ManagerRoleGroupInfo(
+                            id = it.id,
+                            name = it.name,
+                            description = it.description,
+                            readonly = it.readonly,
+                            userCount = it.userCount,
+                            departmentCount = it.departmentCount,
+                            joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
+                            resourceType = dbGroupRecord.resourceType,
+                            resourceName = dbGroupRecord.resourceName,
+                            resourceCode = dbGroupRecord.resourceCode
+                        )
                     )
-                )
+                }
             }
         }
         return groupInfoList
@@ -352,8 +367,8 @@ class RbacPermissionApplyService @Autowired constructor(
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectId,
-                        "", resourceType, resourceName, action, iamResourceCode
+                        authApplyRedirectUrl, projectId, resourceType,
+                        resourceName, action, iamResourceCode, ""
                     )
                 )
             )
@@ -410,13 +425,17 @@ class RbacPermissionApplyService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             groupCode = groupCode
-        )
+        ) /*?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(groupCode),
+            defaultMessage = "group [$groupCode] not exist"
+        )*/
         if (resourceGroup != null) {
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, projectId, projectId,
-                        resourceGroup.relationId, resourceType, resourceName, action, iamResourceCode
+                        authApplyRedirectUrl, projectId, resourceType, resourceName,
+                        action, iamResourceCode, resourceGroup.relationId
                     ),
                     groupName = resourceGroup.groupName
                 )

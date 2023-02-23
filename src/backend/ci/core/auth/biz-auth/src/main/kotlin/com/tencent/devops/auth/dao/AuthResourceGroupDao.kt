@@ -116,4 +116,17 @@ class AuthResourceGroupDao {
                 .fetchOne()
         }
     }
+
+    fun getByRelationId(
+        dslContext: DSLContext,
+        projectCode: String,
+        iamGroupId: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RELATION_ID.eq(iamGroupId))
+                .fetchOne()
+        }
+    }
 }

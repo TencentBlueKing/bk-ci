@@ -35,16 +35,12 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.quality.dao.QualityNotifyGroupDao
-import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import com.tencent.devops.quality.service.QualityPermissionService
 import org.jooq.DSLContext
 
 class RbacQualityPermissionServiceImpl(
     val client: Client,
     val dslContext: DSLContext,
-    val ruleDao: QualityRuleDao,
-    val groupDao: QualityNotifyGroupDao,
     val tokenService: ClientTokenService
 ) : QualityPermissionService {
     override fun validateGroupPermission(
@@ -109,21 +105,8 @@ class RbacQualityPermissionServiceImpl(
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
             action = actions
-        ).data ?: emptyMap<AuthPermission, List<Long>>()
-        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-        instancesMap.forEach { (key, value) ->
-            val instanceLongIds = mutableListOf<Long>()
-            if (value.contains("*")) {
-                val count = groupDao.count(dslContext, projectId)
-                groupDao.list(dslContext, projectId, 0, count.toInt()).map { instanceLongIds.add(it.id) }
-            } else {
-                value.forEach {
-                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
-                }
-            }
-            resultMap[key] = instanceLongIds
-        }
-        return resultMap
+        ).data ?: emptyMap()
+        return buildResultMap(instancesMap)
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
@@ -198,16 +181,20 @@ class RbacQualityPermissionServiceImpl(
             projectCode = projectId,
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
             action = actions
-        ).data ?: emptyMap<AuthPermission, List<Long>>()
+        ).data ?: emptyMap()
+        return buildResultMap(instancesMap)
+    }
+
+    private fun buildResultMap(
+        instancesMap: Map<AuthPermission, List<String>>
+    ): Map<AuthPermission, List<Long>> {
+        if (instancesMap.isEmpty())
+            return emptyMap()
         val resultMap = mutableMapOf<AuthPermission, List<Long>>()
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
-            if (value.contains("*")) {
-                ruleDao.list(dslContext, projectId)?.map { instanceLongIds.add(it.id) }
-            } else {
-                value.forEach {
-                    instanceLongIds.add(HashUtil.decodeIdToLong(it.toString()))
-                }
+            value.forEach {
+                instanceLongIds.add(it.toLong())
             }
             resultMap[key] = instanceLongIds
         }
