@@ -74,7 +74,10 @@ class AuthResourceGroupDao {
                 relationId,
                 now,
                 now,
-            ).execute()
+            ).onDuplicateKeyUpdate()
+                .set(GROUP_NAME, groupName)
+                .set(GROUP_CODE, groupCode)
+                .execute()
         }
     }
 
