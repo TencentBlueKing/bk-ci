@@ -100,6 +100,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val groupInfoList = buildGroupInfoList(
             userId = userId,
             projectId = projectId,
+            projectName = projectInfo.resourceName,
             managerRoleGroupInfoList = managerRoleGroupVO.results
         )
         return ManagerRoleGroupVO(
@@ -172,6 +173,7 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun buildGroupInfoList(
         userId: String,
         projectId: String,
+        projectName: String,
         managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
         val groupInfoList: MutableList<ManagerRoleGroupInfo> = ArrayList()
@@ -190,22 +192,21 @@ class RbacPermissionApplyService @Autowired constructor(
                     defaultMessage = "group ${it.name} not exist"
                 )*/
                 // todo 待完善后，要进行异常处理
-                if (dbGroupRecord != null) {
-                    groupInfoList.add(
-                        ManagerRoleGroupInfo(
-                            id = it.id,
-                            name = it.name,
-                            description = it.description,
-                            readonly = it.readonly,
-                            userCount = it.userCount,
-                            departmentCount = it.departmentCount,
-                            joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                            resourceType = dbGroupRecord.resourceType,
-                            resourceName = dbGroupRecord.resourceName,
-                            resourceCode = dbGroupRecord.resourceCode
-                        )
+                // todo 暂时这么处理，如果在用户组表找不到，那么用户组默认挂在项目下
+                groupInfoList.add(
+                    ManagerRoleGroupInfo(
+                        id = it.id,
+                        name = it.name,
+                        description = it.description,
+                        readonly = it.readonly,
+                        userCount = it.userCount,
+                        departmentCount = it.departmentCount,
+                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
+                        resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value,
+                        resourceName = dbGroupRecord?.resourceName ?: projectName,
+                        resourceCode = dbGroupRecord?.resourceCode ?: projectId
                     )
-                }
+                )
             }
         }
         return groupInfoList
