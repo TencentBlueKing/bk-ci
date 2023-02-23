@@ -68,6 +68,7 @@
 <script>
     import { mapState } from 'vuex'
     import { copyText } from '@/utils/util'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '../../utils/permission'
 
     export default {
         data () {
@@ -105,6 +106,12 @@
         methods: {
             editHandle (type, isOpen) {
                 if (!this.nodeDetails.canEdit) {
+                    this.handleNoPermission({
+                        projectId: this.projectId,
+                        resourceType: NODE_RESOURCE_TYPE,
+                        resourceCode: this.nodeHashId,
+                        action: NODE_RESOURCE_ACTION.EDIT
+                    })
                     return
                 }
 
