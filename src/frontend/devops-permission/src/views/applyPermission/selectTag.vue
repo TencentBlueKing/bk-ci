@@ -31,7 +31,7 @@
         tagInfo: {
           handler (val) {
             const { values, id } = this.tagInfo
-            const value = values.map(item => ['actionId', 'resourceType'].includes(id) ? item.name : item).join('')
+            const value = values.map(item => ['actionId', 'resourceCode'].includes(id) ? item.name : item).join('')
             this.localValue = value
           },
           deep: true,

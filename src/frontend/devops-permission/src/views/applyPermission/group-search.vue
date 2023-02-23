@@ -85,7 +85,7 @@ const handleChangeSelectGroup = (values) => {
 const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
 
 watch(() => props.projectCode, () => {
-  if (props.projectCode) {
+  if (props.projectCode && !route.query.resourceType) {
     fetchGroupList();
   };
 })
@@ -106,6 +106,11 @@ watch(() => props.groupList, () => {
 });
 
 watch(() => userGroupList.value, () => {
+  const { groupId } = route?.query;
+  if (groupId) {
+    const group = userGroupList.value.find(group => String(group.id) === groupId);
+    group && selections.value.push(group);
+  }
   checkSelectedAll();
   checkIndeterminate();
 });
@@ -300,14 +305,6 @@ const columns = [
     },
   }
 ];
-
-const initApplyQuery = () => {
-  console.log(route.query, '2222')
-};
-
-onMounted(() => {
-  initApplyQuery();
-});
 </script>
 
 <template>
