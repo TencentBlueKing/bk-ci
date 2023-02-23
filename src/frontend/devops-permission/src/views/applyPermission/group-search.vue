@@ -11,7 +11,10 @@ import {
   onMounted,
   computed,
 } from 'vue';
+import { useRoute } from 'vue-router';
 import BkCheckbox from 'bkui-vue/lib/checkbox';
+
+const route = useRoute();
 
 const props = defineProps({
   groupList: Array,
@@ -265,13 +268,29 @@ const columns = [
     },
   },
   {
+    label: t('资源实例'),
+    field: 'resourceName',
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.resourceName, 
+        },
+        [
+          cell,
+          row.resourceName
+        ]
+      );
+    },
+  },
+  {
     label: t('描述'),
     field: 'description',
     render ({ cell, row }) {
       return h(
         'span',
         {
-          title: row.description, 
+          title: row.description,
         },
         [
           cell,
@@ -282,9 +301,12 @@ const columns = [
   }
 ];
 
+const initApplyQuery = () => {
+  console.log(route.query, '2222')
+};
 
 onMounted(() => {
-  
+  initApplyQuery();
 });
 </script>
 
