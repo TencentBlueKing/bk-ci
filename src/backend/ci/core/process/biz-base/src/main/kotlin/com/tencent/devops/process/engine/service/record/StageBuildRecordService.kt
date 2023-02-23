@@ -39,7 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
-import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
@@ -91,16 +91,20 @@ class StageBuildRecordService(
             cancelUser = null, operation = "updateStageStatus#$stageId"
         ) {
             val stageVar = mutableMapOf<String, Any>()
+            var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
             if (buildStatus.isRunning() && stageVar[Stage::startEpoch.name] == null) {
                 stageVar[Stage::startEpoch.name] = System.currentTimeMillis()
+                startTime = LocalDateTime.now()
             } else if (buildStatus.isFinish() && stageVar[Stage::startEpoch.name] != null) {
                 stageVar[Stage::elapsed.name] =
                     System.currentTimeMillis() - stageVar[Stage::startEpoch.name].toString().toLong()
+                endTime = LocalDateTime.now()
             }
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                buildStatus = buildStatus
+                startTime = startTime, endTime = endTime, buildStatus = buildStatus
             )
         }
         return allStageStatus ?: emptyList()
@@ -128,7 +132,7 @@ class StageBuildRecordService(
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, buildStatus = BuildStatus.SKIP,
-                stageVar = mutableMapOf()
+                startTime = null, endTime = null, stageVar = mutableMapOf()
             )
         }
         return allStageStatus ?: emptyList()
@@ -160,7 +164,8 @@ class StageBuildRecordService(
             allStageStatus = updateStageRecord(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount, stageVar = stageVar,
-                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers
+                buildStatus = null, reviewers = checkIn?.groupToReview()?.reviewers,
+                startTime = null, endTime = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -195,7 +200,9 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null
+                buildStatus = null,
+                startTime = null,
+                endTime = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -215,10 +222,11 @@ class StageBuildRecordService(
         logger.info("[$buildId]|stage_check_quality|stageId=$stageId|checkIn=$checkIn|checkOut=$checkOut")
         var allStageStatus: List<BuildStageStatus>? = null
         val timestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
-        val timestampType = if (inOrOut) {
-            BuildTimestampType.STAGE_CHECK_IN_WAITING
+        // 准出时刷新stage的结束时间
+        val (timestampType, endTime) = if (inOrOut) {
+            Pair(BuildTimestampType.STAGE_CHECK_IN_WAITING, null)
         } else {
-            BuildTimestampType.STAGE_CHECK_OUT_WAITING
+            Pair(BuildTimestampType.STAGE_CHECK_OUT_WAITING, LocalDateTime.now())
         }
         val (oldBuildStatus, newBuildStatus) = if (checkIn?.status == BuildStatus.QUALITY_CHECK_WAIT.name ||
             checkOut?.status == BuildStatus.QUALITY_CHECK_WAIT.name
@@ -248,6 +256,8 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = stageVar,
                 buildStatus = null, // 红线不改变stage原状态
+                startTime = null,
+                endTime = endTime,
                 timestamps = timestamps
             )
             pipelineBuildDao.updateStatus(dslContext, projectId, buildId, oldBuildStatus, newBuildStatus)
@@ -283,7 +293,9 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
-                buildStatus = null
+                buildStatus = null,
+                startTime = null,
+                endTime = null
             )
         }
         return allStageStatus ?: emptyList()
@@ -317,6 +329,8 @@ class StageBuildRecordService(
                 stageId = stageId,
                 executeCount = executeCount,
                 stageVar = stageVar,
+                startTime = null,
+                endTime = null,
                 buildStatus = BuildStatus.QUEUE
             )
         }
@@ -331,6 +345,8 @@ class StageBuildRecordService(
         executeCount: Int,
         stageVar: MutableMap<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         reviewers: List<String>? = null,
         errorMsg: String? = null,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
@@ -358,9 +374,7 @@ class StageBuildRecordService(
                     val recordContainers = recordContainerDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, stageId
                     )
-                    timeCost = BuildTimeCostUtils.generateStageTimeCost(
-                        buildStage, recordStage, recordContainers
-                    )
+                    timeCost = recordStage.generateStageTimeCost(recordContainers)
                     timeCost?.let { stageVar[Stage::timeCost.name] = it }
                 }
             }
@@ -382,6 +396,8 @@ class StageBuildRecordService(
                 executeCount = executeCount,
                 stageVar = recordStage.stageVar.plus(stageVar),
                 buildStatus = buildStatus,
+                startTime = startTime,
+                endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordStage.timestamps) }
             )
         }

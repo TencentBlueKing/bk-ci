@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordModel(
@@ -50,10 +51,6 @@ data class BuildRecordModel(
     val modelVar: MutableMap<String, Any>,
     @ApiModelProperty("触发时间", required = false)
     val queueTime: Long,
-    @ApiModelProperty("开始时间", required = true)
-    val startTime: Long?,
-    @ApiModelProperty("结束时间", required = true)
-    val endTime: Long?,
     @ApiModelProperty("触发人", required = true)
     val startUser: String,
     @ApiModelProperty("触发器", required = true)
@@ -62,6 +59,10 @@ data class BuildRecordModel(
     var status: String?,
     @ApiModelProperty("取消人", required = false)
     val cancelUser: String?,
+    @ApiModelProperty("开始时间", required = true)
+    var startTime: LocalDateTime?,
+    @ApiModelProperty("结束时间", required = true)
+    var endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = false)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

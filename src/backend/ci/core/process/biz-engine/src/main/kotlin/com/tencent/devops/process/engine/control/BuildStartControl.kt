@@ -487,8 +487,8 @@ class BuildStartControl @Autowired constructor(
         )
     }
 
-    // TODO #7983 统一改为使用record修改
     @Suppress("ALL")
+    @Deprecated("后台内置插件特殊处理，后续不再维护")
     private fun supplementModel(
         projectId: String,
         pipelineId: String,

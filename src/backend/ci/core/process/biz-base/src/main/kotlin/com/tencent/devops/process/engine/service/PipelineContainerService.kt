@@ -340,6 +340,8 @@ class PipelineContainerService @Autowired constructor(
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
                         status = null,
+                        startTime = null,
+                        endTime = null,
                         timestamps = mapOf(),
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(

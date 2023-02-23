@@ -45,7 +45,7 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -106,6 +106,8 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 buildStatus = buildStatus,
                 taskVar = emptyMap(),
+                startTime = null,
+                endTime = null,
                 timestamps = timestamps
             )
         }
@@ -133,6 +135,8 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 buildStatus = BuildStatus.PAUSE,
                 taskVar = emptyMap(),
+                startTime = null,
+                endTime = null,
                 timestamps = mapOf(
                     BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(
                         LocalDateTime.now().timestampmilli(), null
@@ -240,6 +244,8 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = taskStatus,
+                    startTime = LocalDateTime.now(),
+                    endTime = null,
                     timestamps = null
                 )
             }
@@ -268,7 +274,9 @@ class TaskBuildRecordService(
                 taskId = taskId,
                 executeCount = executeCount,
                 buildStatus = BuildStatus.CANCELED,
-                taskVar = emptyMap()
+                taskVar = emptyMap(),
+                startTime = null,
+                endTime = LocalDateTime.now()
             )
         }
     }
@@ -329,7 +337,7 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
                 buildTaskDao.get(context, projectId, buildId, taskId)?.let {
-                    taskVar[Element::timeCost.name] = BuildTimeCostUtils.generateTaskTimeCost(it, recordTask.timestamps)
+                    taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
                 }
                 recordTaskDao.updateRecord(
                     dslContext = context,
@@ -340,6 +348,8 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = buildStatus,
+                    startTime = null,
+                    endTime = LocalDateTime.now(),
                     timestamps = null
                 )
             }
@@ -394,6 +404,8 @@ class TaskBuildRecordService(
         executeCount: Int,
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
         dslContext.transaction { configuration ->
@@ -420,6 +432,8 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 taskVar = recordTask.taskVar.plus(taskVar),
                 buildStatus = buildStatus,
+                startTime = startTime,
+                endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordTask.timestamps) }
             )
         }

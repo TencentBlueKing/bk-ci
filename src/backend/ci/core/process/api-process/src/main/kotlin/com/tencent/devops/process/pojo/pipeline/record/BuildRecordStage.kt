@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordStage(
@@ -52,6 +53,10 @@ data class BuildRecordStage(
     val stageVar: MutableMap<String, Any>,
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
+    @ApiModelProperty("开始时间", required = true)
+    var startTime: LocalDateTime?,
+    @ApiModelProperty("结束时间", required = true)
+    var endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

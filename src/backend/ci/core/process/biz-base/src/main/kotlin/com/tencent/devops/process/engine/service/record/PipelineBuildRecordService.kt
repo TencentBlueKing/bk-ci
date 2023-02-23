@@ -290,8 +290,9 @@ class PipelineBuildRecordService @Autowired constructor(
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             queueTime = buildRecordPipeline?.queueTime ?: buildInfo.queueTime,
-            startTime = buildRecordPipeline?.startTime ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
-            endTime = buildRecordPipeline?.endTime ?: buildInfo.endTime,
+            startTime = buildRecordPipeline?.startTime?.timestampmilli()
+                ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
+            endTime = buildRecordPipeline?.endTime?.timestampmilli() ?: buildInfo.endTime,
             status = buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
