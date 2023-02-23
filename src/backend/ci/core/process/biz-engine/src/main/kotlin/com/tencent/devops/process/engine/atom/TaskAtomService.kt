@@ -230,7 +230,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                         )
                     }
                 }
-                logger.debug("measureService is null ${measureService == null} taskName is ${task.taskName}")
                 measureService?.postTaskData(
                     task = task,
                     startTime = task.startTime?.timestampmilli() ?: startTime,
