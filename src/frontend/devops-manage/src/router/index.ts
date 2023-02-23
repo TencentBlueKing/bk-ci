@@ -61,7 +61,7 @@ const router = createRouter({
 // afterEach
 router.afterEach((to) => {
   // 同步导航数据
-  window.$syncUrl?.(to.path);
+  window.$syncUrl?.(to.fullPath);
 });
 
 // 导出默认数据
