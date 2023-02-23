@@ -13,12 +13,14 @@ import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
+import com.tencent.devops.auth.pojo.ManagerRoleGroupInfo
 import com.tencent.devops.auth.pojo.RelatedResourceInfo
 import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthRedirectGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -50,7 +52,7 @@ class RbacPermissionApplyService @Autowired constructor(
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
-    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/applyPermission?" +
+    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/apply?" +
         "projectId=%s&groupId=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
@@ -65,7 +67,7 @@ class RbacPermissionApplyService @Autowired constructor(
         userId: String,
         projectId: String,
         searchGroupInfo: SearchGroupInfo
-    ): V2ManagerRoleGroupVO {
+    ): ManagerRoleGroupVO {
         logger.info("RbacPermissionApplyService|listGroups: searchGroupInfo=$searchGroupInfo")
         val projectInfo = authResourceService.get(
             projectCode = projectId,
@@ -88,12 +90,14 @@ class RbacPermissionApplyService @Autowired constructor(
                 relationId = projectInfo.relationId
             )
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
-            // 校验用户是否属于组
-            verifyGroupValidMember(
+            val groupInfoList = buildGroupInfoList(
                 userId = userId,
-                groupInfoList = managerRoleGroupVO.results
+                managerRoleGroupInfoList = managerRoleGroupVO.results
             )
-            return managerRoleGroupVO
+            return ManagerRoleGroupVO(
+                count = managerRoleGroupVO.count,
+                results = groupInfoList
+            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
@@ -163,17 +167,33 @@ class RbacPermissionApplyService @Autowired constructor(
         return v2ManagerService.getGradeManagerRoleGroupV2(relationId, searchGroupDTO, v2PageInfoDTO)
     }
 
-    private fun verifyGroupValidMember(
+    private fun buildGroupInfoList(
         userId: String,
-        groupInfoList: List<V2ManagerRoleGroupInfo>
-    ) {
-        if (groupInfoList.isNotEmpty()) {
-            val groupIds = groupInfoList.map { it.id }.joinToString(",")
+        managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
+    ): List<ManagerRoleGroupInfo> {
+        val groupInfoList: MutableList<ManagerRoleGroupInfo> = ArrayList()
+        if (managerRoleGroupInfoList.isNotEmpty()) {
+            // 校验用户是否属于用户组
+            val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
             val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
-            groupInfoList.forEach {
-                it.joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false
+            // 获取组对应的资源code和资源名
+            managerRoleGroupInfoList.forEach {
+                groupInfoList.add(
+                    ManagerRoleGroupInfo(
+                        id = it.id,
+                        name = it.name,
+                        description = it.description,
+                        readonly = it.readonly,
+                        userCount = it.userCount,
+                        departmentCount = it.departmentCount,
+                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
+                        resourceName = "",
+                        resourceCode = ""
+                    )
+                )
             }
         }
+        return groupInfoList
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
@@ -294,7 +314,6 @@ class RbacPermissionApplyService @Autowired constructor(
             iamRelatedResourceType = iamRelatedResourceType,
             isEnablePermission = isEnablePermission,
             groupInfoList = groupInfoList,
-            userId = userId,
             projectId = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode,
@@ -322,7 +341,6 @@ class RbacPermissionApplyService @Autowired constructor(
         iamRelatedResourceType: String,
         isEnablePermission: Boolean,
         groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
-        userId: String,
         projectId: String,
         resourceType: String,
         resourceCode: String,
@@ -334,7 +352,7 @@ class RbacPermissionApplyService @Autowired constructor(
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, userId, projectId,
+                        authApplyRedirectUrl, projectId, projectId,
                         "", resourceType, resourceName, action, iamResourceCode
                     )
                 )
@@ -351,7 +369,6 @@ class RbacPermissionApplyService @Autowired constructor(
                             buildRedirectGroupInfo(
                                 groupInfoList = groupInfoList,
                                 projectId = projectId,
-                                userId = userId,
                                 resourceName = resourceName,
                                 action = action,
                                 resourceType = resourceType,
@@ -366,7 +383,6 @@ class RbacPermissionApplyService @Autowired constructor(
                 buildRedirectGroupInfo(
                     groupInfoList = groupInfoList,
                     projectId = projectId,
-                    userId = userId,
                     resourceName = resourceName,
                     action = action,
                     resourceType = resourceType,
@@ -381,7 +397,6 @@ class RbacPermissionApplyService @Autowired constructor(
     private fun buildRedirectGroupInfo(
         projectId: String,
         groupInfoList: ArrayList<AuthRedirectGroupInfoVo>,
-        userId: String,
         resourceName: String,
         action: String,
         resourceType: String,
@@ -400,7 +415,7 @@ class RbacPermissionApplyService @Autowired constructor(
             groupInfoList.add(
                 AuthRedirectGroupInfoVo(
                     url = String.format(
-                        authApplyRedirectUrl, userId, projectId,
+                        authApplyRedirectUrl, projectId, projectId,
                         resourceGroup.relationId, resourceType, resourceName, action, iamResourceCode
                     ),
                     groupName = resourceGroup.groupName
