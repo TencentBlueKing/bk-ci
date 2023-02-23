@@ -137,6 +137,5 @@ spec:
       terminationGracePeriodSeconds: 40
       volumes:
       - name: frontend
-        emptyDir:
-          sizeLimit: 500Mi
+        emptyDir: {}
 {{- end -}}
