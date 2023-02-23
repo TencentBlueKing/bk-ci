@@ -88,6 +88,8 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
             }
             val pkgFileDir = File(envDir, "$NODEJS/$pkgFileFolderName")
             val nodejsPath = getNodejsPath(osType, pkgFileDir)
+            // 把nodejs执行路径写入系统变量
+            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
             val command = "$nodejsPath${File.separator}node -v"
             try {
                 // 判断nodejs安装包是否已经存在构建机上
@@ -186,8 +188,6 @@ class NodeJsAtomRunConditionHandleServiceImpl : AtomRunConditionHandleService {
                 workspace = envDir,
                 print2Logger = false
             )
-            // 把nodejs执行路径写入系统变量
-            System.setProperty(BK_CI_ATOM_EXECUTE_ENV_PATH, "$nodejsPath${File.separator}")
             logger.info("prepareRunEnv decompress [$pkgName] success")
         } catch (ignored: Throwable) {
             if (retryNum == 0) {
