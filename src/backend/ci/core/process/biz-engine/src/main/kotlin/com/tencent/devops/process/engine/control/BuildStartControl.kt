@@ -472,7 +472,7 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to now.timestampmilli(),
-                Container::systemElapsed.name to (stage.elapsed ?: 0), // TODO 后续使用时间戳计算
+                Container::systemElapsed.name to (stage.elapsed ?: 0),
                 Container::elementElapsed.name to 0,
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
                 Container::name.name to container.name, // 名字刷新成非队列中

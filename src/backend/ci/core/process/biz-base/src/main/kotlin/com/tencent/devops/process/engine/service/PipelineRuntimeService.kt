@@ -834,7 +834,7 @@ class PipelineRuntimeService @Autowired constructor(
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
                     context.containerSeq++
-                    saveSkipContainerRecords(
+                    addContainerRecords(
                         projectId, pipelineId, version, buildId, stage, container,
                         context, containerBuildRecords, taskBuildRecords
                     )
@@ -842,7 +842,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
-                        saveSkipContainerRecords(
+                        addContainerRecords(
                             projectId, pipelineId, version, buildId, stage, container,
                             context, containerBuildRecords, taskBuildRecords
                         )
@@ -851,7 +851,7 @@ class PipelineRuntimeService @Autowired constructor(
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
-                        saveSkipContainerRecords(
+                        addContainerRecords(
                             projectId, pipelineId, version, buildId, stage, container,
                             context, containerBuildRecords, taskBuildRecords
                         )
@@ -1251,14 +1251,14 @@ class PipelineRuntimeService @Autowired constructor(
             )
         )
         stage.containers.forEach { container ->
-            saveSkipContainerRecords(
+            addContainerRecords(
                 projectId, pipelineId, version, buildId, stage,
                 container, context, containerBuildRecords, taskBuildRecords
             )
         }
     }
 
-    private fun saveSkipContainerRecords(
+    private fun addContainerRecords(
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -1272,6 +1272,15 @@ class PipelineRuntimeService @Autowired constructor(
         val containerVar = mutableMapOf<String, Any>()
         container.containerHashId?.let {
             containerVar[Container::containerHashId.name] = it
+        }
+        if (container is TriggerContainer) {
+            containerVar[container::params.name] = container.params
+            container.buildNo?.let {
+                containerVar[container::buildNo.name] = it
+            }
+            container.templateParams?.let {
+                containerVar[container::templateParams.name] = it
+            }
         }
         containerBuildRecords.add(
             BuildRecordContainer(
