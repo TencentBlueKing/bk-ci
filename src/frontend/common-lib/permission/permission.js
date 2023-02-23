@@ -43,9 +43,9 @@ export const handleNoPermission = (ui, params, ajax, h) => {
             {
                 class: 'permission-table',
                 props: {
-                    outerBorder: false
-                },
-                data: [data]
+                    outerBorder: false,
+                    data: [data]
+                }
             },
             columns.map(column => {
                 return h(
