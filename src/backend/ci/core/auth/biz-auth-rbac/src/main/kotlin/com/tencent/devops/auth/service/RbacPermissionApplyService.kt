@@ -82,29 +82,30 @@ class RbacPermissionApplyService @Autowired constructor(
             iamResourceCode = iamResourceCode,
             projectId = projectId
         )
+        logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
+        val managerRoleGroupVO: V2ManagerRoleGroupVO
         try {
-            logger.info("RbacPermissionApplyService|listGroups: bkIamPath=$bkIamPath")
-            val managerRoleGroupVO = getGradeManagerRoleGroup(
+            managerRoleGroupVO = getGradeManagerRoleGroup(
                 searchGroupInfo = searchGroupInfo,
                 bkIamPath = bkIamPath,
                 relationId = projectInfo.relationId
             )
             logger.info("RbacPermissionApplyService|listGroups: managerRoleGroupVO=$managerRoleGroupVO")
-            val groupInfoList = buildGroupInfoList(
-                userId = userId,
-                projectId = projectId,
-                managerRoleGroupInfoList = managerRoleGroupVO.results
-            )
-            return ManagerRoleGroupVO(
-                count = managerRoleGroupVO.count,
-                results = groupInfoList
-            )
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_IAM_GROUP_FAIL,
                 defaultMessage = "权限系统：获取用户组失败！"
             )
         }
+        val groupInfoList = buildGroupInfoList(
+            userId = userId,
+            projectId = projectId,
+            managerRoleGroupInfoList = managerRoleGroupVO.results
+        )
+        return ManagerRoleGroupVO(
+            count = managerRoleGroupVO.count,
+            results = groupInfoList
+        )
     }
 
     private fun buildBkIamPath(
@@ -179,6 +180,7 @@ class RbacPermissionApplyService @Autowired constructor(
             val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
             val verifyGroupValidMember = v2ManagerService.verifyGroupValidMember(userId, groupIds)
             managerRoleGroupInfoList.forEach {
+                logger.info("buildGroupInfoList: $it")
                 val dbGroupRecord = authResourceGroupDao.get(
                     dslContext = dslContext,
                     projectCode = projectId,
@@ -188,22 +190,20 @@ class RbacPermissionApplyService @Autowired constructor(
                     params = arrayOf(it.id.toString()),
                     defaultMessage = "group ${it.name} not exist"
                 )
-                if (dbGroupRecord != null) {
-                    groupInfoList.add(
-                        ManagerRoleGroupInfo(
-                            id = it.id,
-                            name = it.name,
-                            description = it.description,
-                            readonly = it.readonly,
-                            userCount = it.userCount,
-                            departmentCount = it.departmentCount,
-                            joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
-                            resourceType = dbGroupRecord.resourceType,
-                            resourceName = "",
-                            resourceCode = dbGroupRecord.resourceCode
-                        )
+                groupInfoList.add(
+                    ManagerRoleGroupInfo(
+                        id = it.id,
+                        name = it.name,
+                        description = it.description,
+                        readonly = it.readonly,
+                        userCount = it.userCount,
+                        departmentCount = it.departmentCount,
+                        joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
+                        resourceType = dbGroupRecord.resourceType,
+                        resourceName = "",
+                        resourceCode = dbGroupRecord.resourceCode
                     )
-                }
+                )
             }
         }
         return groupInfoList
