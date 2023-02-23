@@ -28,31 +28,33 @@
 
 package com.tencent.devops.auth.listener
 
-import com.tencent.devops.auth.pojo.event.AuthResourceGroupEvent
-import com.tencent.devops.auth.service.AuthResourceGroupService
+import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
+import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
 import org.springframework.stereotype.Component
 
 @Component
-class AuthResourceGroupListener(
-    private val authResourceGroupService: AuthResourceGroupService,
+class AuthResourceGroupCreateListener(
+    private val permissionGradeManagerService: PermissionGradeManagerService,
+    private val permissionSubsetManagerService: PermissionSubsetManagerService,
     traceEventDispatcher: TraceEventDispatcher
-) : BaseTraceListener<AuthResourceGroupEvent>(traceEventDispatcher) {
+) : BaseTraceListener<AuthResourceGroupCreateEvent>(traceEventDispatcher) {
 
-    override fun run(event: AuthResourceGroupEvent) {
+    override fun run(event: AuthResourceGroupCreateEvent) {
         with(event) {
-            logger.info("receive auth resource group event|$managerId|$resourceType|$resourceCode|$resourceName")
+            logger.info("receive auth resource group create event|$managerId|$resourceType|$resourceCode|$resourceName")
             if (resourceType == AuthResourceType.PROJECT.value) {
-                authResourceGroupService.createGradeDefaultGroup(
+                permissionGradeManagerService.createGradeDefaultGroup(
                     gradeManagerId = managerId,
                     userId = userId,
                     projectCode = projectCode,
                     projectName = projectName
                 )
             } else {
-                authResourceGroupService.createSubsetManagerDefaultGroup(
+                permissionSubsetManagerService.createSubsetManagerDefaultGroup(
                     subsetManagerId = managerId,
                     userId = userId,
                     projectCode = projectCode,
@@ -60,6 +62,7 @@ class AuthResourceGroupListener(
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     resourceName = resourceName,
+                    iamResourceCode = iamResourceCode,
                     createMode = false
                 )
             }

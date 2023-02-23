@@ -31,21 +31,23 @@ package com.tencent.devops.auth.service
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
+import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.common.api.util.JsonUtil
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
 /**
- * 可授权范围操作
+ * 权限组策略
  */
 @Service
 @Suppress("LongParameterList", "LongMethod")
-class PermissionScopesService(
-    private val iamConfiguration: IamConfiguration
+class PermissionGroupPoliciesService(
+    private val iamConfiguration: IamConfiguration,
+    private val iamV2ManagerService: V2ManagerService,
 ) {
 
     companion object {
-        private val logger = LoggerFactory.getLogger(PermissionScopesService::class.java)
+        private val logger = LoggerFactory.getLogger(PermissionGroupPoliciesService::class.java)
         private const val SYSTEM_PLACEHOLDER = "#system#"
         private const val PROJECT_ID_PLACEHOLDER = "#projectId#"
         private const val PROJECT_NAME_PLACEHOLDER = "#projectName#"
@@ -61,16 +63,36 @@ class PermissionScopesService(
         authorizationScopesStr: String,
         projectCode: String,
         projectName: String,
-        resourceCode: String,
+        iamResourceCode: String,
         resourceName: String
     ): List<AuthorizationScopes> {
         val replaceAuthorizationScopesStr =
             authorizationScopesStr.replace(SYSTEM_PLACEHOLDER, iamConfiguration.systemId)
                 .replace(PROJECT_ID_PLACEHOLDER, projectCode)
                 .replace(PROJECT_NAME_PLACEHOLDER, projectName)
-                .replace(RESOURCE_CODE_PLACEHOLDER, resourceCode)
+                .replace(RESOURCE_CODE_PLACEHOLDER, iamResourceCode)
                 .replace(RESOURCE_Name_PLACEHOLDER, resourceName)
         logger.info("$projectCode authorization scopes after replace $replaceAuthorizationScopesStr ")
         return JsonUtil.to(replaceAuthorizationScopesStr, object : TypeReference<List<AuthorizationScopes>>() {})
+    }
+
+    fun grantGroupPermission(
+        authorizationScopesStr: String,
+        projectCode: String,
+        projectName: String,
+        iamResourceCode: String,
+        resourceName: String,
+        iamGroupId: Int
+    ) {
+        val authorizationScopes = buildAuthorizationScopes(
+            authorizationScopesStr = authorizationScopesStr,
+            projectCode = projectCode,
+            projectName = projectName,
+            iamResourceCode = iamResourceCode,
+            resourceName = resourceName
+        )
+        authorizationScopes.forEach { authorizationScope ->
+            iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+        }
     }
 }

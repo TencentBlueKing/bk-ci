@@ -290,7 +290,11 @@ object MQ {
     const val ROUTE_AUTH_ITSM_CALLBACK = "r.auth.itsm.callback"
     const val QUEUE_AUTH_ITSM_CALLBACK = "q.auth.itsm.callback"
 
-    // 权限资源关联用户组事件
-    const val ROUTE_AUTH_RESOURCE_GROUP = "r.auth.resource.group"
-    const val QUEUE_AUTH_RESOURCE_GROUP = "q.auth.resource.group"
+    // 权限资源关联用户组创建事件
+    const val ROUTE_AUTH_RESOURCE_GROUP_CREATE = "r.auth.resource.group.create"
+    const val QUEUE_AUTH_RESOURCE_GROUP_CREATE = "q.auth.resource.group.create"
+
+    // 权限资源关联用户组修改事件
+    const val ROUTE_AUTH_RESOURCE_GROUP_MODIFY = "r.auth.resource.group.modify"
+    const val QUEUE_AUTH_RESOURCE_GROUP_MODIFY = "q.auth.resource.group.modify"
 }

@@ -33,8 +33,8 @@ import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 import io.swagger.annotations.ApiModelProperty
 
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP)
-data class AuthResourceGroupEvent(
+@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
+data class AuthResourceGroupCreateEvent(
     @ApiModelProperty("分级管理员ID或二级管理员ID")
     val managerId: Int,
     val userId: String,
@@ -46,6 +46,8 @@ data class AuthResourceGroupEvent(
     val resourceType: String,
     @ApiModelProperty("资源ID")
     val resourceCode: String,
+    @ApiModelProperty("iam资源ID")
+    val iamResourceCode: String,
     @ApiModelProperty("资源名")
     val resourceName: String
 ): ITraceEvent()
