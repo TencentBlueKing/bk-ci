@@ -19,8 +19,10 @@ data class ManagerRoleGroupInfo(
     val departmentCount: Int,
     @ApiModelProperty("是否已经加入用户组")
     val joined: Boolean,
-    @ApiModelProperty("关联的资源实例名称")
+    @ApiModelProperty("用户组关联的资源类型")
+    val resourceType: String,
+    @ApiModelProperty("用户组关联的资源实例名称")
     val resourceName: String,
-    @ApiModelProperty("关联的资源实例id")
+    @ApiModelProperty("用户组关联的资源实例code")
     val resourceCode: String
 )
