@@ -287,7 +287,7 @@ class PipelineBuildRecordService @Autowired constructor(
             id = buildInfo.buildId,
             pipelineId = buildInfo.pipelineId,
             pipelineName = model.name,
-            userId = buildInfo.startUser ?: "",
+            userId = buildInfo.startUser,
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
             queueTime = buildRecordPipeline?.queueTime ?: buildInfo.queueTime,

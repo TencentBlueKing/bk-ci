@@ -167,8 +167,9 @@ class BuildRecordContainerDao {
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
-                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, CONTAINER_VAR,
-                EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG, MATRIX_GROUP_ID, TIMESTAMPS
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
+                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
+                MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))

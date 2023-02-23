@@ -148,7 +148,8 @@ class BuildRecordTaskDao {
             ).from(this).where(conditions).groupBy(TASK_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
-                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE, TIMESTAMPS
+                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
+                START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
