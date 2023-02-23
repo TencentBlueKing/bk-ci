@@ -34,13 +34,9 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
-import com.tencent.devops.repository.dao.RepositoryDao
 import com.tencent.devops.repository.service.RepositoryPermissionService
-import org.jooq.DSLContext
 
 class RbacRepositoryPermissionService(
-    private val repositoryDao: RepositoryDao,
-    private val dslContext: DSLContext,
     private val client: Client,
     private val tokenService: ClientTokenService
 ) : RepositoryPermissionService {
@@ -51,26 +47,14 @@ class RbacRepositoryPermissionService(
     }
 
     override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
-        val managerIds = mutableListOf<Long>()
-        val resourceCodeList = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
+        return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
-        ).data ?: emptyList()
+        ).data?.map { it.toLong() } ?: emptyList()
 
-        if (resourceCodeList.isEmpty()) {
-            return emptyList()
-        }
-
-        if (resourceCodeList.contains("*")) {
-            repositoryDao.listByProject(dslContext, projectId, null)
-                .map { managerIds.add(it.repositoryId.toLong()) }
-            return managerIds
-        }
-
-        return resourceCodeList.map { it.toLong() }
     }
 
     override fun filterRepositories(userId: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
@@ -86,25 +70,7 @@ class RbacRepositoryPermissionService(
             action = actions,
             resourceType = AuthResourceType.CODE_REPERTORY.value
         ).data ?: emptyMap()
-
-        val projectRepositoryIds = repositoryDao.listByProject(dslContext, projectId, null)
-            .map { it.repositoryId }
-
-        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-
-        permissionResourcesMap.forEach { key, value ->
-            val ids = if (value.contains("*")) {
-                projectRepositoryIds
-            } else {
-                value.map { it.toLong() }
-            }
-            resultMap[key] = ids
-            // todo 再确定一下，这里要去掉，因为rbac有  list权限，会拿 list动作，去获取资源，所以不会拉到 list动作的权限
-            /*if (key == AuthPermission.VIEW) {
-                resultMap[AuthPermission.LIST] = ids
-            }*/
-        }
-        return resultMap
+        return buildResultMap(permissionResourcesMap)
     }
 
     override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
@@ -156,5 +122,21 @@ class RbacRepositoryPermissionService(
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = repositoryId.toString()
         )
+    }
+
+    private fun buildResultMap(
+        instancesMap: Map<AuthPermission, List<String>>
+    ): Map<AuthPermission, List<Long>> {
+        if (instancesMap.isEmpty())
+            return emptyMap()
+        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+        instancesMap.forEach { (key, value) ->
+            val instanceLongIds = mutableListOf<Long>()
+            value.forEach {
+                instanceLongIds.add(it.toLong())
+            }
+            resultMap[key] = instanceLongIds
+        }
+        return resultMap
     }
 }
