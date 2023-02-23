@@ -817,7 +817,7 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 // record表需要记录被跳过的记录
                 if (stage.stageControlOption?.enable == false) {
-                    saveSkipStageRecords(
+                    addStageRecords(
                         projectId, pipelineId, version, buildId, stage, context, index,
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
@@ -1230,7 +1230,7 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun saveSkipStageRecords(
+    private fun addStageRecords(
         projectId: String,
         pipelineId: String,
         version: Int,

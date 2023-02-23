@@ -51,7 +51,7 @@ data class ModelRecord(
     @ApiModelProperty("触发时间（进队列时间）", required = true)
     val queueTime: Long,
     @ApiModelProperty("执行开始时间", required = true)
-    val startTime: Long,
+    val startTime: Long?,
     @ApiModelProperty("执行结束时间", required = false)
     val endTime: Long?,
     @ApiModelProperty("Build status", required = true)

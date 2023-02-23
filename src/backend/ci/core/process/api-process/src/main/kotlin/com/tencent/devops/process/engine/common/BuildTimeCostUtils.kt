@@ -34,8 +34,8 @@ import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
-import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.slf4j.LoggerFactory
@@ -45,13 +45,10 @@ import java.time.LocalDateTime
 object BuildTimeCostUtils {
     private val logger = LoggerFactory.getLogger(BuildTimeCostUtils::class.java)
 
-    fun generateBuildTimeCost(
-        buildInfo: BuildInfo,
-        stagePairs: List<BuildRecordStage>
-    ): BuildRecordTimeCost {
-        val startTime = buildInfo.startTime ?: return BuildRecordTimeCost()
-        val endTime = buildInfo.endTime ?: LocalDateTime.now().timestampmilli()
-        val totalCost = endTime - startTime
+    fun BuildRecordModel.generateBuildTimeCost(stagePairs: List<BuildRecordStage>): BuildRecordTimeCost {
+        val startTime = startTime ?: return BuildRecordTimeCost()
+        val endTime = endTime ?: LocalDateTime.now()
+        val totalCost = Duration.between(startTime, endTime).toMillis()
         var executeCost = 0L
         var waitCost = 0L
         var queueCost = 0L

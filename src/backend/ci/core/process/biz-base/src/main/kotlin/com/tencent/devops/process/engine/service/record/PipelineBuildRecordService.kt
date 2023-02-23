@@ -49,6 +49,7 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
@@ -227,7 +228,8 @@ class PipelineBuildRecordService @Autowired constructor(
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
-        if (refreshStatus) {
+        // #7983 仅当查看最新一次执行记录时可以选择重试
+        if (refreshStatus || executeCount == buildInfo.executeCount) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             // #6400 无需流水线是终态就可以进行task重试
             if (checkPassDays(buildInfo.startTime)) {
@@ -366,18 +368,6 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
                 return@transaction
             }
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getBuildInfo(
-                    dslContext = context,
-                    projectId = projectId,
-                    buildId = buildId
-                )
-            ) ?: run {
-                logger.warn(
-                    "ENGINE|$buildId|buildEnd| get build ($buildId) info failed."
-                )
-                return@transaction
-            }
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
@@ -423,9 +413,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordStageDao.batchSave(context, recordStages)
 
             val modelVar = mutableMapOf<String, Any>()
-            modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
-                buildInfo, recordStages
-            )
+            modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
@@ -451,18 +439,6 @@ class PipelineBuildRecordService @Autowired constructor(
             ) ?: run {
                 logger.warn(
                     "ENGINE|$buildId|buildEnd| get model($buildId) record failed."
-                )
-                return@transaction
-            }
-            val buildInfo = pipelineBuildDao.convert(
-                pipelineBuildDao.getBuildInfo(
-                    dslContext = context,
-                    projectId = projectId,
-                    buildId = buildId
-                )
-            ) ?: run {
-                logger.warn(
-                    "ENGINE|$buildId|buildEnd| get build ($buildId) info failed."
                 )
                 return@transaction
             }
@@ -509,9 +485,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
 
             val modelVar = mutableMapOf<String, Any>()
-            modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
-                buildInfo, recordStages
-            )
+            modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
