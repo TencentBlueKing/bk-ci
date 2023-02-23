@@ -43,6 +43,12 @@ backendImage:
   tag: __image_backend_tag__
   pullPolicy: IfNotPresent 
   pullSecrets: []
+frontendImage:
+  registry: __image_registry__
+  repository: bkci-frontend
+  tag: __image_frontend_tag__
+  pullPolicy: IfNotPresent 
+  pullSecrets: []
 
 # 日志采集配置
 bkLogConfig:
