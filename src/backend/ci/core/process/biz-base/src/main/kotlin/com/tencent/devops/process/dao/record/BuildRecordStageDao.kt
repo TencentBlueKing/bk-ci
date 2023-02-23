@@ -61,6 +61,10 @@ class BuildRecordStageDao {
                     .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
                     .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
+                    .set(STATUS, record.status)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -97,7 +101,8 @@ class BuildRecordStageDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordStage> {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val conditions = mutableListOf<Condition>()
@@ -105,6 +110,7 @@ class BuildRecordStageDao {
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
+            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
         }

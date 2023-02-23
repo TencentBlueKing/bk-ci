@@ -154,10 +154,10 @@ class ContainerBuildDetailService(
                                 is NormalContainer -> targetContainer.mutexGroup
                                 else -> null
                             }?.let {
-                                ContainerUtils.setMutexWaitName(targetContainer)
+                                container.name = ContainerUtils.getMutexWaitName(container.name)
                             }
                         } else {
-                            ContainerUtils.clearMutexContainerName(targetContainer)
+                            container.name = ContainerUtils.getMutexFixedContainerName(container.name)
                         }
                         targetContainer.status = buildStatus.name
                         targetContainer.executeCount = executeCount

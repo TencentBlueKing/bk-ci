@@ -66,6 +66,10 @@ class BuildRecordTaskDao {
                     .set(TASK_SEQ, record.taskSeq)
                     .set(ATOM_CODE, record.atomCode)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
+                    .set(STATUS, record.status)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -103,7 +107,8 @@ class BuildRecordTaskDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        containerId: String? = null
+        containerId: String? = null,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()

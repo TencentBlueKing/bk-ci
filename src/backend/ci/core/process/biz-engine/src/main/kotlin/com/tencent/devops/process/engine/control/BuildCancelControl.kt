@@ -140,7 +140,8 @@ class BuildCancelControl @Autowired constructor(
                     pipelineId = event.pipelineId,
                     buildId = event.buildId,
                     buildStatus = event.status,
-                    cancelUser = event.userId
+                    cancelUser = event.userId,
+                    executeCount = buildInfo.executeCount ?: 1
                 )
             }
 

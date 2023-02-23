@@ -55,6 +55,8 @@ data class BuildRecordContainer(
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
     @ApiModelProperty("是否为构建矩阵组", required = false)
+    val containPostTaskFlag: Boolean? = null,
+    @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,

@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -57,6 +58,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
+import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
@@ -163,6 +165,7 @@ class PipelineBuildRecordService @Autowired constructor(
         val projectId = buildInfo.projectId
         val pipelineId = buildInfo.pipelineId
         val buildId = buildInfo.buildId
+        logger.info("[$$buildId|$projectId|QUERY_BUILD_RECORD|$refreshStatus|executeCount=$executeCount")
 
         // 如果请求的executeCount异常则直接返回错误，防止数据错乱
         if (
@@ -343,125 +346,19 @@ class PipelineBuildRecordService @Autowired constructor(
         }
     }
 
-    // TODO #7983 代替detail能力
-    fun updateModel(projectId: String, buildId: String, model: Model) {
-//        buildDetailDao.update(
-//            dslContext = dslContext,
-//            projectId = projectId,
-//            buildId = buildId,
-//            model = JsonUtil.toJson(model, formatted = false),
-//            buildStatus = BuildStatus.RUNNING
-//        )
-//        pipelineDetailChangeEvent(projectId, buildId)
-    }
-
     fun buildCancel(
         projectId: String,
         pipelineId: String,
         buildId: String,
         buildStatus: BuildStatus,
-        cancelUser: String
+        cancelUser: String,
+        executeCount: Int
     ) {
-        // TODO #7983 修正所有Record状态，自行获取最新executeCount
-        logger.info("Cancel the build $buildId by $cancelUser")
-//        update(
-//            projectId = projectId, buildId = buildId,
-//            modelInterface = object : ModelInterface {
-//
-//                var update = false
-//
-//                override fun onFindStage(stage: Stage, model: Model): Traverse {
-//                    if (BuildStatus.parse(stage.status).isRunning()) {
-//                        stage.status = buildStatus.name
-//                        if (stage.startEpoch == null) {
-//                            stage.elapsed = 0
-//                        } else {
-//                            stage.elapsed = System.currentTimeMillis() - stage.startEpoch!!
-//                        }
-//                        update = true
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-//                    val status = BuildStatus.parse(container.status)
-//                    if (status == BuildStatus.PREPARE_ENV) {
-//                        if (container.startEpoch == null) {
-//                            container.systemElapsed = 0
-//                        } else {
-//                            container.systemElapsed = System.currentTimeMillis() - container.startEpoch!!
-//                        }
-//                        update = true
-//                    }
-//                    // #3138 状态实时刷新
-//                    val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
-//                        container.containPostTaskFlag != true
-//                    if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
-//                        ContainerUtils.clearQueueContainerName(container)
-//                        container.status = buildStatus.name
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun onFindElement(index: Int, e: Element, c: Container): Traverse {
-//                    if (e.status == BuildStatus.RUNNING.name || e.status == BuildStatus.REVIEWING.name) {
-//                        val status = if (e.status == BuildStatus.RUNNING.name) {
-//                            val runCondition = e.additionalOptions?.runCondition
-//                            // 当task的runCondition为PRE_TASK_FAILED_EVEN_CANCEL，点击取消还需要运行
-//                            if (runCondition == RunCondition.PRE_TASK_FAILED_EVEN_CANCEL) {
-//                                BuildStatus.RUNNING.name
-//                            } else {
-//                                BuildStatus.CANCELED.name
-//                            }
-//                        } else buildStatus.name
-//                        e.status = status
-//                        if (c.containPostTaskFlag != true) {
-//                            c.status = status
-//                        }
-//                        if (BuildStatus.parse(status).isFinish()) {
-//                            if (e.startEpoch != null) {
-//                                e.elapsed = System.currentTimeMillis() - e.startEpoch!!
-//                            }
-//                            var elementElapsed = 0L
-//                            run lit@{
-//                                c.elements.forEach {
-//                                    elementElapsed += it.elapsed ?: 0
-//                                    if (it == e) {
-//                                        return@lit
-//                                    }
-//                                }
-//                            }
-//
-//                            c.elementElapsed = elementElapsed
-//                        }
-//
-//                        update = true
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun needUpdate(): Boolean {
-//                    return update
-//                }
-//            },
-//            buildStatus = BuildStatus.RUNNING, cancelUser = cancelUser, operation = "buildCancel"
-//        )
-    }
-
-    fun buildEnd(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int,
-        buildStatus: BuildStatus,
-        errorMsg: String?
-    ): List<BuildStageStatus> {
-        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
-        var allStageStatus: List<BuildStageStatus> = emptyList()
+        logger.info("[$buildId]|BUILD_CANCEL|cancelUser=$cancelUser|buildStatus=$buildStatus")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val recordModel = recordModelDao.getRecord(
-                dslContext, projectId, pipelineId, buildId, executeCount
+                context, projectId, pipelineId, buildId, executeCount
             ) ?: run {
                 logger.warn(
                     "ENGINE|$buildId|buildEnd| get model($buildId) record failed."
@@ -483,6 +380,133 @@ class PipelineBuildRecordService @Autowired constructor(
             val recordStages = recordStageDao.getRecords(
                 context, projectId, pipelineId, buildId, executeCount
             )
+            // 第1层循环：刷新运行中stage状态
+            recordStages.forEach nextStage@{ stage ->
+                if (BuildStatus.parse(stage.status).isRunning()) {
+                    return@nextStage
+                }
+                stage.status = buildStatus.name
+                // 第2层循环：刷新stage下运行中的container状态
+                val recordContainers = recordContainerDao.getRecords(
+                    context, projectId, pipelineId, buildId, executeCount,
+                    stage.stageId, BuildStatus.RUNNING
+                )
+                recordContainers.forEach nextContainer@{ container ->
+                    val status = BuildStatus.parse(container.status)
+                    val recordTasks = recordTaskDao.getRecords(
+                        context, projectId, pipelineId, buildId, executeCount, container.containerId
+                    )
+                    // #3138 状态实时刷新
+                    val refreshFlag = status.isRunning() && recordTasks[0].status.isNullOrBlank() &&
+                        container.containPostTaskFlag != true
+                    if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
+                        val containerName = container.containerVar[Container::name.name] as String?
+                        if (!containerName.isNullOrBlank()) {
+                            container.containerVar[Container::name.name] =
+                                ContainerUtils.getClearedQueueContainerName(containerName)
+                        }
+                        container.status = buildStatus.name
+                    }
+                    container.status = buildStatus.name
+                    // 第3层循环：刷新stage下运行中的container状态
+                    recordTasks.forEach nextTask@{ task ->
+                        if (BuildStatus.parse(task.status).isRunning()) {
+                            return@nextTask
+                        }
+                        task.status = buildStatus.name
+                    }
+                    recordTaskDao.batchSave(context, recordTasks)
+                }
+                recordContainerDao.batchSave(context, recordContainers)
+            }
+            recordStageDao.batchSave(context, recordStages)
+
+            val modelVar = mutableMapOf<String, Any>()
+            modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
+                buildInfo, recordStages
+            )
+            recordModelDao.updateRecord(
+                context, projectId, pipelineId, buildId, executeCount, buildStatus,
+                recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
+                null, null
+            )
+        }
+    }
+
+    fun buildEnd(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        buildStatus: BuildStatus,
+        errorMsg: String?
+    ): List<BuildStageStatus> {
+        logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
+        var allStageStatus: List<BuildStageStatus> = emptyList()
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            val recordModel = recordModelDao.getRecord(
+                context, projectId, pipelineId, buildId, executeCount
+            ) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|buildEnd| get model($buildId) record failed."
+                )
+                return@transaction
+            }
+            val buildInfo = pipelineBuildDao.convert(
+                pipelineBuildDao.getBuildInfo(
+                    dslContext = context,
+                    projectId = projectId,
+                    buildId = buildId
+                )
+            ) ?: run {
+                logger.warn(
+                    "ENGINE|$buildId|buildEnd| get build ($buildId) info failed."
+                )
+                return@transaction
+            }
+            val recordStages = recordStageDao.getRecords(
+                context, projectId, pipelineId, buildId, executeCount
+            )
+            // 第1层循环：刷新运行中stage状态
+            recordStages.forEach nextStage@{ stage ->
+                if (BuildStatus.parse(stage.status).isRunning()) {
+                    return@nextStage
+                }
+                stage.status = buildStatus.name
+                // 第2层循环：刷新stage下运行中的container状态
+                val recordContainers = recordContainerDao.getRecords(
+                    context, projectId, pipelineId, buildId, executeCount,
+                    stage.stageId, BuildStatus.RUNNING
+                )
+                recordContainers.forEach nextContainer@{ container ->
+                    if (BuildStatus.parse(container.status).isRunning()) {
+                        return@nextContainer
+                    }
+                    container.status = buildStatus.name
+                    // 第3层循环：刷新stage下运行中的container状态
+                    val recordTasks = recordTaskDao.getRecords(
+                        context, projectId, pipelineId, buildId, executeCount,
+                        container.containerId, BuildStatus.RUNNING
+                    )
+                    recordTasks.forEach nextTask@{ task ->
+                        if (BuildStatus.parse(task.status).isRunning()) {
+                            return@nextTask
+                        }
+                        task.status = buildStatus.name
+                    }
+                    recordTaskDao.batchSave(context, recordTasks)
+                }
+                recordContainerDao.batchSave(context, recordContainers)
+            }
+            recordStageDao.batchSave(context, recordStages)
+
+            allStageStatus = fetchHistoryStageStatus(
+                recordStages = recordStages,
+                buildStatus = buildStatus,
+                errorMsg = errorMsg
+            )
+
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = BuildTimeCostUtils.generateBuildTimeCost(
                 buildInfo, recordStages

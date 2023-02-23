@@ -64,6 +64,10 @@ class BuildRecordContainerDao {
                     .set(MATRIX_GROUP_ID, record.matrixGroupId)
                     .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
+                    .set(STATUS, record.status)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -122,7 +126,8 @@ class BuildRecordContainerDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        stageId: String?
+        stageId: String? = null,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -131,6 +136,7 @@ class BuildRecordContainerDao {
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
+            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
@@ -201,6 +207,7 @@ class BuildRecordContainerDao {
                     ).toMutableMap(),
                     containerType = containerType,
                     status = status,
+                    containPostTaskFlag = containPostTask,
                     matrixGroupFlag = matrixGroupFlag,
                     matrixGroupId = matrixGroupId,
                     timestamps = timestamps?.let {

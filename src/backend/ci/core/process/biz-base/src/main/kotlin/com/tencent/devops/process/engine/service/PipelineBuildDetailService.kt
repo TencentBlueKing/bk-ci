@@ -227,7 +227,7 @@ class PipelineBuildDetailService @Autowired constructor(
                     val refreshFlag = status.isRunning() && container.elements[0].status.isNullOrBlank() &&
                         container.containPostTaskFlag != true
                     if (status == BuildStatus.PREPARE_ENV || refreshFlag) {
-                        ContainerUtils.clearQueueContainerName(container)
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
                         container.status = buildStatus.name
                     }
                     return Traverse.CONTINUE
@@ -300,7 +300,7 @@ class PipelineBuildDetailService @Autowired constructor(
                         } else {
                             container.elementElapsed = System.currentTimeMillis() - container.startEpoch!!
                         }
-                        ContainerUtils.clearQueueContainerName(container)
+                        container.name = ContainerUtils.getClearedQueueContainerName(container.name)
                     }
                     return Traverse.CONTINUE
                 }

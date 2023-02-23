@@ -944,7 +944,7 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
-        ContainerUtils.setQueuingWaitName(container, startBuildStatus)
+        container.name = ContainerUtils.getQueuingWaitName(container.name, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
 

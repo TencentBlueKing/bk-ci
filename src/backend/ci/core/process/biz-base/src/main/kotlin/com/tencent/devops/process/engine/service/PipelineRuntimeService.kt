@@ -810,7 +810,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stage.containers.forEach {
                         if (it is TriggerContainer) {
                             it.status = BuildStatus.RUNNING.name
-                            ContainerUtils.setQueuingWaitName(it, startBuildStatus)
+                            it.name = ContainerUtils.getQueuingWaitName(it.name, startBuildStatus)
                         }
                     }
                     stage.executeCount?.let { count -> stage.executeCount = count + 1 }
@@ -1269,16 +1269,17 @@ class PipelineRuntimeService @Autowired constructor(
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
+        val containerVar = mutableMapOf<String, Any>()
+        container.containerHashId?.let {
+            containerVar[Container::containerHashId.name] = it
+        }
         containerBuildRecords.add(
             BuildRecordContainer(
                 projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
                 buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
                 containerType = container.getClassType(), executeCount = context.executeCount,
                 matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                status = BuildStatus.SKIP.name, timestamps = mapOf(),
-                containerVar = mutableMapOf(
-                    Container::containerHashId.name to container.containerHashId!!
-                )
+                status = BuildStatus.SKIP.name, timestamps = mapOf(), containerVar = containerVar
             )
         )
         container.elements.forEachIndexed { index, element ->
