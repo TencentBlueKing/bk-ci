@@ -83,8 +83,10 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                             return h(
                                                 'li',
                                                 {
-                                                    onClick () {
-                                                        window.open(info.url, '_blank')
+                                                    on: {
+                                                        click () {
+                                                            window.open(info.url, '_blank')
+                                                        }
                                                     }
                                                 },
                                                 [info.groupName]
