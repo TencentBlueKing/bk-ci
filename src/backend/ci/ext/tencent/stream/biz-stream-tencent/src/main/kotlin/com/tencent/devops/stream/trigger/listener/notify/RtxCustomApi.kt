@@ -58,9 +58,9 @@ object RtxCustomApi {
         val url = "$urlPrefix/cgi-bin/gettoken?corpid=$corpId&corpSecret=$corpSecret"
         OkhttpUtils.doGet(url).use { resp ->
             if (!resp.isSuccessful) throw RuntimeException(
-                "RtxCustomApi get AccessToken error code: ${resp.code()} messge: ${resp.message()}"
+                "RtxCustomApi get AccessToken error code: ${resp.code} messge: ${resp.message}"
             )
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             val responseData: RtxTokenResponse = jacksonObjectMapper().readValue(responseStr)
             return responseData.accessToken
         }
@@ -101,7 +101,7 @@ object RtxCustomApi {
             .build()
         OkhttpUtils.doHttp(request).use { resp ->
             if (!resp.isSuccessful) throw RuntimeException(
-                "RtxCustomApi send Stream finish message error code: ${resp.code()} messge: ${resp.message()}"
+                "RtxCustomApi send Stream finish message error code: ${resp.code} messge: ${resp.message}"
             )
         }
     }

@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.pojo.wetest.WetestAutoTestRequest
 import com.tencent.devops.plugin.pojo.wetest.WetestReportResponse
 import com.tencent.devops.plugin.utils.CommonUtils
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -49,7 +49,6 @@ import java.net.URLEncoder
 import java.util.TreeMap
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import kotlin.Comparator
 import kotlin.collections.component1
 import kotlin.collections.component2
 import kotlin.collections.set
@@ -145,11 +144,11 @@ class WeTestClient constructor(private val secretId: String, private val secretK
             OkhttpUtils.doHttp(request).use { response ->
                 //            val response = okclient.newCall(request).execute()
                 if (response.isSuccessful) {
-                    val responseStr = response.body()!!.string()
+                    val responseStr = response.body!!.string()
                     logger.info("WeTest response: $responseStr")
                     return JSONObject(responseStr)
                 } else {
-                    errRet.put("msg", "http code:" + response.code())
+                    errRet.put("msg", "http code:" + response.code)
                 }
             }
         } catch (e: IOException) {
@@ -188,7 +187,7 @@ class WeTestClient constructor(private val secretId: String, private val secretK
     }
 
     private fun doPostRequest(uri: String, jsonbody: JSONObject, queryParams: Map<String, Any>?): JSONObject {
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
+        val body = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
         val url = this.getAuthRequestUrl(METHOD_POST, uri, queryParams)
         logger.info("wetest post url: $url")
         logger.info("wetest post body: $jsonbody")
@@ -355,7 +354,7 @@ class WeTestClient constructor(private val secretId: String, private val secretK
     fun uploadRes(type: String, file: File): JSONObject {
         val params = mapOf("type" to type)
         logger.info("upload res params: $params")
-        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
+        val fileBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", file.name, fileBody)

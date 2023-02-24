@@ -32,6 +32,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.gcloud.api.pojo.ActionParam
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.GetUploadTaskParam
@@ -42,8 +43,7 @@ import com.tencent.devops.common.gcloud.api.pojo.dyn.DynDeleteVerParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.gcloud.api.pojo.dyn.DynUpdateVerParam
 import com.tencent.devops.common.gcloud.utils.GcloudUtil.getRequestUriWithSignature
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -65,7 +65,10 @@ class DynamicGcloudClient constructor(
         val uri = getRequestUriWithSignature(host, fileHost, uploadResParam.beanToMap(), commonParam, ModuleParam.FILE, ActionParam.UploadDynamicRes)
         val body = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                .addFormDataPart("file", file.name, RequestBody.create(
+                    "application/octet-stream".toMediaTypeOrNull(),
+                    file
+                ))
                 .build()
         val request = Request.Builder()
                 .url(uri)
@@ -74,7 +77,7 @@ class DynamicGcloudClient constructor(
         logger.info("dyn upload res url: $uri")
         logger.info("dyn get upload res params: $uploadResParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val uploadResp = res.body()!!.string()
+            val uploadResp = res.body!!.string()
             logger.info("dyn uploadRes response>> $uploadResp")
             if (!res.isSuccessful) throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -103,7 +106,7 @@ class DynamicGcloudClient constructor(
         logger.info("dyn get upload task url: $uri")
         logger.info("dyn get upload task params: $commonParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
 
             logger.info("dyn getUploadTask response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
@@ -142,7 +145,7 @@ class DynamicGcloudClient constructor(
         logger.info("dyn newResource app url: $uri")
         logger.info("dyn newResource params: $newResParam")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("dyn newResource response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -168,7 +171,7 @@ class DynamicGcloudClient constructor(
                 .build()
         logger.info("dyn pre publish url: $uri")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("dyn newApp response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -198,7 +201,7 @@ class DynamicGcloudClient constructor(
                 .get()
                 .build()
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("delete version response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
@@ -224,7 +227,7 @@ class DynamicGcloudClient constructor(
                 .build()
         logger.info("update version url: $uri")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val data = res.body()!!.string()
+            val data = res.body!!.string()
             logger.info("update version response>> $data")
             if (!res.isSuccessful) throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,

@@ -33,24 +33,24 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_RESOURCE_NOT_FOUND
+import com.tencent.devops.common.api.pojo.ErrorCode.USER_TASK_OPERATE_FAIL
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BSAuthTokenApi
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.BcsContainerOpByNameElement
 import com.tencent.devops.common.pipeline.element.bcs.BcsCommandStatus
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.pojo.third.enum.BcsCategory
 import com.tencent.devops.process.pojo.third.enum.BcsOperation
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -386,7 +386,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get instVersionId, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -461,7 +461,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get instance status, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -568,7 +568,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .post(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Create instance, response: $data")
             if (!response.isSuccessful) {
                 logger.warn("Create instance failed, msg: $data")
@@ -633,7 +633,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .post(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Recreate instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -668,7 +668,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .delete(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("delete instance, response: $data")
             if (!response.isSuccessful) {
                 throw TaskExecuteException(
@@ -705,7 +705,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
         lateinit var dataMap: Map<String, Any>
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get bcsAppInstId by bcsAppInstName, response: $data")
             if (!response.isSuccessful) {
                 logger.warn("Get bcsAppInstId by bcsAppInstName($bcsAppInstName) failed, msg:$data")
@@ -762,7 +762,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .post(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Send $signalCategory signal, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -841,7 +841,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .post(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("SendCommand, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -891,7 +891,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get Command Status, task_id($taskId), response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -1017,7 +1017,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .put(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Scale instance, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -1055,7 +1055,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .put(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Update application instance, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -1095,7 +1095,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .put(RequestBody.create(JSON, requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Update instance, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -1121,7 +1121,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             logger.info("Get project info, response: $data")
             if (!response.isSuccessful) {
                 throw throw TaskExecuteException(
@@ -1154,7 +1154,7 @@ class BcsContainerOpByNameAtom @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BcsContainerOpByNameAtom::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
     }
 
     data class TaskResult(var isFinish: Boolean, var success: Boolean, var msg: String)

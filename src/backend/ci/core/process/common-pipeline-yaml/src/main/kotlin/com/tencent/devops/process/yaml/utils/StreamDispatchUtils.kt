@@ -141,8 +141,7 @@ object StreamDispatchUtils {
                         user = userName,
                         password = password
                     )
-                },
-                envs = job.env
+                }
             )
 
             return ThirdPartyAgentEnvDispatchType(
@@ -203,6 +202,7 @@ object StreamDispatchUtils {
 
     /**
      * 解析 jobs.runsOn.container
+     * 注：因为要蓝盾也要支持所以环境变量替换会在蓝盾层面去做
      * @return image,username,password
      */
     fun parseRunsOnContainer(
@@ -219,9 +219,9 @@ object StreamDispatchUtils {
             )
 
             Triple(
-                EnvUtils.parseEnv(container.image, context ?: mapOf()),
-                EnvUtils.parseEnv(container.credentials?.username, context ?: mapOf()),
-                EnvUtils.parseEnv(container.credentials?.password, context ?: mapOf())
+                container.image,
+                container.credentials?.username ?: "",
+                container.credentials?.password ?: ""
             )
         } catch (e: Exception) {
             val container = YamlUtil.getObjectMapper().readValue(
@@ -238,7 +238,7 @@ object StreamDispatchUtils {
             }
 
             Triple(
-                EnvUtils.parseEnv(container.image, context ?: mapOf()),
+                container.image,
                 user,
                 password
             )

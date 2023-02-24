@@ -126,7 +126,7 @@ class FileServiceExt @Autowired constructor(
 
         // 获取所有的文件和文件夹
         OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get jfrog files($url) fail:\n $responseBody")
                 throw RuntimeException(MessageCodeUtil.getCodeMessage(PushMessageCode.GET_FILE_FAIL, null))

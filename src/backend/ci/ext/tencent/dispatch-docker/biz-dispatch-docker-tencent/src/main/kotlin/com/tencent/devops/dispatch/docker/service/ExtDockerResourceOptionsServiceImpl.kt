@@ -61,7 +61,7 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
             .build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             logger.info("[$projectId get devcloud resourceConfig responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["code"] == 0) {

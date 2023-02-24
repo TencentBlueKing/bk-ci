@@ -141,11 +141,11 @@ class GitCiService {
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             if (!response.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${response.code()})${response.message()}"
+                    status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code})${response.message}"
                 )
             }
             return JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
@@ -185,7 +185,7 @@ class GitCiService {
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val branList = JsonParser.parseString(data).asJsonArray
             if (!branList.isJsonNull) {
                 branList.forEach {
@@ -226,11 +226,11 @@ class GitCiService {
                 gitCodeOkHttpClient.newCall(request).execute().use { response ->
                     if (!response.isSuccessful) {
                         throw CustomException(
-                            status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                            message = "(${response.code()})${response.message()}"
+                            status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                            message = "(${response.code})${response.message}"
                         )
                     }
-                    response.body()!!.string()
+                    response.body!!.string()
                 }
             }
         } finally {
@@ -249,11 +249,11 @@ class GitCiService {
                 logger.info("[url=$url]|getGitCIProjectInfo($gitProjectId) with response=$response")
                 if (!response.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "(${response.code()})${response.message()}"
+                        status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code})${response.message}"
                     )
                 }
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 Result(JsonUtil.to(data, GitCIProjectInfo::class.java))
             }
         }
@@ -267,7 +267,7 @@ class GitCiService {
         logger.info("[gitProjectId=$gitProjectId]|getGitCodeProjectInfo")
         val (url, request) = getProjectInfoRequest(gitProjectId, useAccessToken, token)
         OkhttpUtils.doHttp(request).use {
-            val response = it.body()!!.string()
+            val response = it.body!!.string()
             logger.info("[url=$url]|getGitCIProjectInfo with response=$response")
             if (!it.isSuccessful) return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
             return Result(JsonUtil.to(response, GitCodeProjectInfo::class.java))
@@ -305,11 +305,11 @@ class GitCiService {
             logger.info("[url=$url]|getMergeRequestChangeInfo with response=$response")
             if (!response.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${response.code()})${response.message()}"
+                    status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code})${response.message}"
                 )
             }
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             return Result(JsonUtil.to(data, GitMrChangeInfo::class.java))
         }
     }
@@ -344,7 +344,7 @@ class GitCiService {
             .build()
         logger.info("getProjectList: $url")
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()?.string() ?: return@use
+            val data = response.body?.string() ?: return@use
             val repoList = JsonParser().parse(data).asJsonArray
             if (!repoList.isJsonNull) {
                 return JsonUtil.to(data, object : TypeReference<List<GitCodeProjectInfo>>() {})
@@ -376,11 +376,11 @@ class GitCiService {
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             if (!response.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${response.code()})${response.message()}"
+                    status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code})${response.message}"
                 )
             }
             return JsonUtil.to(data, object : TypeReference<List<GitMember>>() {})
@@ -421,11 +421,11 @@ class GitCiService {
                 logger.info("[url=$url]|getFileInfo with response=$response")
                 if (!response.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "(${response.code()})${response.message()}"
+                        status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                        message = "(${response.code})${response.message}"
                     )
                 }
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 val result = try {
                     JsonUtil.to(data, GitCodeFileInfo::class.java)
                 } catch (e: Throwable) {
@@ -477,11 +477,11 @@ class GitCiService {
             logger.info("[url=$url]|getChangeFileList with response=$response")
             if (!response.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                    message = "(${response.code()})${response.message()}"
+                    status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                    message = "(${response.code})${response.message}"
                 )
             }
-            val data = response.body()?.string() ?: return emptyList()
+            val data = response.body?.string() ?: return emptyList()
             return JsonUtil.to(data, object : TypeReference<List<ChangeFileInfo>>() {})
         }
     }
@@ -540,7 +540,7 @@ class GitCiService {
             if (!response.isSuccessful) {
                 throw GitCodeUtils.handleErrorMessage(response)
             }
-            val data = response.body()?.string()?.ifBlank { null } ?: return emptyList()
+            val data = response.body?.string()?.ifBlank { null } ?: return emptyList()
             return JsonUtil.to(data, object : TypeReference<List<GitCodeGroup>>() {})
         }
     }

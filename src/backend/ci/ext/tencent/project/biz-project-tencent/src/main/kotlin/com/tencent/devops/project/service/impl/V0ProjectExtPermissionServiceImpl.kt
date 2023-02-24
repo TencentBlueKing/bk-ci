@@ -35,7 +35,7 @@ import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.iam.ProjectIamV0Service
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -55,7 +55,7 @@ class V0ProjectExtPermissionServiceImpl @Autowired constructor(
     override fun verifyUserProjectPermission(accessToken: String, projectCode: String, userId: String): Boolean {
         val url = "$authUrl/$projectCode/users/$userId/verfiy?access_token=$accessToken"
         logger.info("the verifyUserProjectPermission url is:$url")
-        val body = RequestBody.create(MediaType.parse(MessageProperties.CONTENT_TYPE_JSON), "{}")
+        val body = RequestBody.create(MessageProperties.CONTENT_TYPE_JSON.toMediaTypeOrNull(), "{}")
         val request = Request.Builder().url(url).post(body).build()
         val responseContent = request(request, "verifyUserProjectPermission error")
         val result = objectMapper.readValue<Result<Any?>>(responseContent)
@@ -114,10 +114,11 @@ class V0ProjectExtPermissionServiceImpl @Autowired constructor(
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} ," +
-                                " message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code} ," +
+                            " message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent

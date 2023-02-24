@@ -53,9 +53,9 @@ class KeystoreService {
     fun getInHouseCertList(appId: String): Result<List<IosProfile?>> {
         logger.info("getInHouseCertList from KeyStore with appId:$appId")
         OkhttpUtils.doGet(getKeystoreUrl(appId)).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("[${getHost()}|$appId] Fail to get ios Certs from keystore with response [${response.code()}|${response.message()}|$responseContent]")
+                logger.warn("[${getHost()}|$appId] Fail to get ios Certs from keystore with response [${response.code}|${response.message}|$responseContent]")
                 throw OperationException("[${getHost()}|$appId]| Fail to get ios Certs from keystore")
             }
             logger.info("response: $responseContent")
@@ -63,7 +63,7 @@ class KeystoreService {
             val code = responseData["code"] as Int
             if (0 != code) {
                 val message = responseData["msg"] as String
-                logger.warn("[${getHost()}|$appId]|getInHouseCertList|return error [${response.code()}|$message|$responseContent]")
+                logger.warn("[${getHost()}|$appId]|getInHouseCertList|return error [${response.code}|$message|$responseContent]")
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.KEYSTORE_RESOURCE_NOT_EXISTS,
                     defaultMessage = message,
