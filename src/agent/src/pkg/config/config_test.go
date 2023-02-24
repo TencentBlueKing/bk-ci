@@ -57,6 +57,16 @@ func Test_parseWorkerVersion(t *testing.T) {
 			want:  "v1.13.8-beta.4",
 		},
 		{
+			name:  "Normal: with suffix",
+			lines: "v1.13.8-rc.241",
+			want:  "v1.13.8-rc.241",
+		},
+		{
+			name:  "Normal: with suffix",
+			lines: "v1.13.8-alpha.22",
+			want:  "v1.13.8-alpha.22",
+		},
+		{
 			name:  "Normal: without suffix",
 			lines: "v1.13.8\r\n",
 			want:  "v1.13.8",
