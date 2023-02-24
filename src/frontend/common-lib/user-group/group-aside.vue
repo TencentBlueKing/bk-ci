@@ -37,6 +37,7 @@
             </div>
             <div class="line-split" />
             <div
+                v-if="showCreateGroup"
                 :class="{ 'group-item': true, 'group-active': activeTab === '' }"
                 @click="handleCreateGroup">
                 <span class="add-group-btn">
@@ -46,7 +47,7 @@
             </div>
         </section>
         <div class="close-btn">
-            <bk-button @click="handleShowDeleteGroup">{{ $t('关闭权限管理') }}</bk-button>
+            <bk-button @click="handleCloseManage">{{ $t('关闭权限管理') }}</bk-button>
         </div>
         <bk-dialog
             header-align="center"
@@ -93,6 +94,9 @@
             deleteGroup: {
                 type: Function,
                 default: () => {}
+            },
+            showCreateGroup: {
+                type: Boolean,
             }
         },
         data () {

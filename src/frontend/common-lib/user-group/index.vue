@@ -9,6 +9,7 @@
                 <group-aside
                     v-bind="$props"
                     :delete-group="handleDeleteGroup"
+                    :close-manage="handleCloseManage"
                     @choose-group="handleChooseGroup"
                     @create-group="handleCreateGroup"
                     @update-enable="handelUpdateEnable"
@@ -87,6 +88,10 @@
             deleteGroup: {
                 type: Function,
                 default: () => {}
+            },
+            showCreateGroup: {
+                type: Boolean,
+                default: true
             }
         },
   
@@ -142,6 +147,10 @@
   
             handelUpdateEnable () {
                 // this.isEnablePermission = payload;
+            },
+
+            handleCloseManage () {
+                this.closeManage()
             }
         }
     }
