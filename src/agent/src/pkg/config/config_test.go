@@ -18,8 +18,9 @@ func Test_parseWorkerVersion(t *testing.T) {
 		lines string
 		want  string
 	}{
+		// 兼容旧版本，防止新agent发布后无限升级
 		{
-			name: "Insufficient memory",
+			name: "Insufficient memory old",
 			lines: "OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file:\n" +
 				"   30458\n" +
 				"Try using the -Djava.io.tmpdir= option to select an alternate temp location.\n\n" +
@@ -40,6 +41,24 @@ func Test_parseWorkerVersion(t *testing.T) {
 			name:  "Normal: with SNAPSHOT",
 			lines: "v1.13.8-SNAPSHOT\r\n",
 			want:  "v1.13.8-SNAPSHOT",
+		},
+		{
+			name: "Insufficient memory",
+			lines: "OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file:\n" +
+				"   30458\n" +
+				"Try using the -Djava.io.tmpdir= option to select an alternate temp location.\n\n" +
+				"v1.13.8",
+			want: "v1.13.8",
+		},
+		{
+			name:  "Normal: with suffix",
+			lines: "v1.13.8-beta.4",
+			want:  "v1.13.8-beta.4",
+		},
+		{
+			name:  "Normal: without suffix",
+			lines: "v1.13.8\r\n",
+			want:  "v1.13.8",
 		},
 		{
 			name:  "illegal: only number",
