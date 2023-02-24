@@ -176,7 +176,7 @@
                     this.handleNoPermission({
                         projectId: this.projectId,
                         resourceType: CERT_RESOURCE_TYPE,
-                        resourceCode: this.projectId,
+                        resourceCode: cert.certId,
                         action: CERT_RESOURCE_ACTION.EDIT
                     })
                 }
