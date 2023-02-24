@@ -10,11 +10,20 @@
             <bk-button
                 :disabled="loading || !canManualStartup"
                 :loading="loading"
-                :theme="isRunning ? 'warning' : ''"
+                outline
+                :hover-theme="isRunning ? 'warning' : ''"
                 @click="handleClick"
             >
                 {{ isRunning ? $t("终止构建") : $t("重新构建") }}
             </bk-button>
+            <span class="exec-deatils-operate-divider"></span>
+            <router-link :to="editRouteName">
+                <bk-button>{{ $t("edit") }}</bk-button>
+            </router-link>
+            <bk-button theme="primary" @click="goExecPreview">
+                {{ $t("exec") }}
+            </bk-button>
+            <more-actions />
         </aside>
     </div>
 </template>
@@ -23,10 +32,13 @@
     import { mapState, mapGetters, mapActions } from 'vuex'
     import PipelineBreadCrumb from './PipelineBreadCrumb'
     import BuildNumSwitcher from './BuildNumSwitcher'
+    import MoreActions from './MoreActions.vue'
+
     export default {
         components: {
             PipelineBreadCrumb,
-            BuildNumSwitcher
+            BuildNumSwitcher,
+            MoreActions
         },
         data () {
             return {
@@ -52,6 +64,9 @@
                     latestBuildNum: this.execDetail?.latestBuildNum ?? 1,
                     currentBuildNum: this.execDetail?.buildNum ?? 1
                 }
+            },
+            editRouteName () {
+                return { name: 'pipelinesEdit' }
             }
         },
         watch: {
@@ -161,6 +176,11 @@
                             theme
                         })
                 }
+            },
+            goExecPreview () {
+                this.$router.push({
+                    name: 'pipelinesPreview'
+                })
             }
         }
     }
@@ -173,6 +193,13 @@
   align-items: center;
   justify-content: space-between;
   padding: 0 24px 0 14px;
+  .exec-deatils-operate-divider {
+    display: block;
+    margin: 0 6px;
+    height: 32px;
+    width: 1px;
+    background: #d8d8d8;
+  }
   .build-num-switcher-wrapper {
     display: grid;
     grid-auto-flow: column;

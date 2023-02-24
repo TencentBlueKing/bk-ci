@@ -90,3 +90,31 @@ export const statusColorMap = {
     QUALITY_CHECK_WAIT: '#699DF4', // 26 质量红线等待把关
     UNKNOWN: '#699DF4' // 99
 }
+
+export function mapThemeOfStatus (status) {
+    switch (status) {
+        case 'CANCELED':
+        case 'REVIEW_ABORT':
+            return 'warning'
+        case 'SUCCEED':
+        case 'REVIEW_PROCESSED':
+        case 'STAGE_SUCCESS':
+            return 'success'
+        case 'FAILED':
+        case 'TERMINATE':
+        case 'HEARTBEAT_TIMEOUT':
+        case 'QUALITY_CHECK_FAIL':
+        case 'QUEUE_TIMEOUT':
+        case 'EXEC_TIMEOUT':
+            return 'danger'
+        case 'QUEUE':
+        case 'RUNNING':
+        case 'REVIEWING':
+        case 'PREPARE_ENV':
+        case 'LOOP_WAITING':
+        case 'CALL_WAITING':
+            return 'info'
+        default:
+            return ''
+    }
+}

@@ -1,49 +1,16 @@
 <template>
     <header class="exec-detail-summary">
-        <div class="exec-detail-summary-row">
-            <span
-                :class="{
-                    'exec-detail-build-summary-anchor': true,
-                    [execDetail.status]: execDetail.status
-                }"
-            ></span>
-            <aside class="exec-detail-summary-title">
-                <bk-tag class="exec-status-tag" type="stroke" :theme="statusTheme">
-                    <span class="exec-status-label">
-                        {{ statusLabel }}
-                        <span
-                            v-if="execDetail.status === 'CANCELED'"
-                            v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
-                            class="devops-icon icon-info-circle"
-                        >
-                        </span>
-                    </span>
-                </bk-tag>
-                <span class="exec-detail-summary-title-build-msg">
-                    {{ execDetail.buildMsg }}
-                </span>
-            </aside>
-            <aside class="exec-detail-summary-trigger">
-                <img v-if="execDetail.triggerUserProfile" class="exec-trigger-profile" />
-                <logo class="exec-trigger-profile" name="default-user" size="24" />
-                <span v-if="execDetail.triggerUser">
-                    {{
-                        $t("details.executorInfo", [
-                            execDetail.triggerUser,
-                            execDetail.trigger,
-                            execFormatStartTime
-                        ])
-                    }}
-                </span>
-            </aside>
-        </div>
         <div class="exec-detail-summary-info">
             <div class="exec-detail-summary-info-material">
                 <span class="exec-detail-summary-info-block-title">{{
                     $t("details.triggerRepo")
                 }}</span>
                 <div v-if="webhookInfo" class="exec-detail-summary-info-material-list">
-                    <material-item class="visible-material-row" :material="webhookInfo" :show-more="false">
+                    <material-item
+                        class="visible-material-row"
+                        :material="webhookInfo"
+                        :show-more="false"
+                    >
                     </material-item>
                 </div>
                 <span class="no-exec-material" v-else>--</span>
@@ -64,11 +31,8 @@
                         class="all-exec-material-list"
                         @mouseleave="hideMoreMaterial"
                     >
-                        <li
-                            v-for="(material, index) in visibleMaterial"
-                            :key="material.newCommitId"
-                        >
-                            <material-item :show-more="index === 0" :material="material" />
+                        <li v-for="material in visibleMaterial" :key="material.newCommitId">
+                            <material-item :material="material" />
                         </li>
                     </ul>
                 </div>
@@ -120,18 +84,17 @@
 
 <script>
     import { mapActions } from 'vuex'
-    import Logo from '@/components/Logo'
     import MaterialItem from './MaterialItem'
-    import {
-        convertMStoStringByRule,
-        convertTime
-    } from '@/utils/util'
+    import { convertMStoString, convertTime } from '@/utils/util'
     export default {
         components: {
-            Logo,
             MaterialItem
         },
         props: {
+            showInfoRow: {
+                type: Boolean,
+                default: true
+            },
             execDetail: {
                 type: Object,
                 required: true
@@ -151,40 +114,8 @@
             },
             executeTime () {
                 return this.execDetail?.executeTime
-        ? convertMStoStringByRule(this.execDetail?.executeTime)
+        ? convertMStoString(this.execDetail?.executeTime)
                 : '--'
-            },
-            statusLabel () {
-                return this.execDetail?.status
-        ? this.$t(`details.statusMap.${this.execDetail?.status}`)
-                : ''
-            },
-            statusTheme () {
-                switch (this.execDetail?.status) {
-                    case 'CANCELED':
-                    case 'REVIEW_ABORT':
-                        return 'warning'
-                    case 'SUCCEED':
-                    case 'REVIEW_PROCESSED':
-                    case 'STAGE_SUCCESS':
-                        return 'success'
-                    case 'FAILED':
-                    case 'TERMINATE':
-                    case 'HEARTBEAT_TIMEOUT':
-                    case 'QUALITY_CHECK_FAIL':
-                    case 'QUEUE_TIMEOUT':
-                    case 'EXEC_TIMEOUT':
-                        return 'danger'
-                    case 'QUEUE':
-                    case 'RUNNING':
-                    case 'REVIEWING':
-                    case 'PREPARE_ENV':
-                    case 'LOOP_WAITING':
-                    case 'CALL_WAITING':
-                        return 'info'
-                    default:
-                        return ''
-                }
             },
             visibleMaterial () {
                 if (
@@ -197,11 +128,11 @@
             },
             webhookInfo () {
                 return this.execDetail?.webhookInfo
-                ? {
-                    aliasName: this.execDetail.webhookInfo.webhookAliasName,
-                    branchName: this.execDetail.webhookInfo.webhookBranch,
-                    newCommitId: this.execDetail.webhookInfo.webhookCommitId
-                }
+        ? {
+            aliasName: this.execDetail.webhookInfo.webhookAliasName,
+            branchName: this.execDetail.webhookInfo.webhookBranch,
+            newCommitId: this.execDetail.webhookInfo.webhookCommitId
+          }
                 : null
             }
         },
@@ -257,65 +188,11 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/mixins/ellipsis";
-@import "@/scss/buildStatus";
+
 .exec-detail-summary {
   background: white;
-  padding: 18px 24px;
+  padding: 0 24px 18px 24px;
   box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
-  z-index: 1;
-  &-row {
-    position: relative;
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 24px;
-    .exec-detail-build-summary-anchor {
-      @include build-status();
-      position: absolute;
-      content: "";
-      width: 6px;
-      height: 100%;
-      left: -24px;
-    }
-  }
-  &-title {
-    height: 24px;
-    display: flex;
-    align-items: center;
-    flex: 1;
-    margin: 0;
-    overflow: hidden;
-
-    .exec-status-tag {
-      margin: 0;
-    }
-
-    .exec-status-label {
-      display: grid;
-      align-items: center;
-      grid-auto-flow: column;
-      grid-gap: 6px;
-    }
-
-    &-build-msg {
-      flex: 1;
-      margin: 0 24px 0 8px;
-      @include ellipsis();
-      min-width: auto;
-    }
-  }
-  &-trigger {
-    display: flex;
-    align-items: center;
-    flex-shrink: 0;
-    font-size: 12px;
-    .exec-trigger-profile {
-      width: 24px;
-      height: 24px;
-      border-radius: 12px;
-      margin-right: 6px;
-      color: #c4c6cc;
-    }
-  }
   &-info {
     display: grid;
     grid-auto-flow: column;

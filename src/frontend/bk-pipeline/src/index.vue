@@ -1,5 +1,10 @@
 <template>
-    <draggable v-model="computedStages" v-bind="dragOptions" :move="checkMove" class="bk-pipeline">
+    <draggable
+        v-model="computedStages"
+        v-bind="dragOptions"
+        :move="checkMove"
+        class="bk-pipeline"
+    >
         <Stage
             class="list-item"
             v-for="(stage, index) in computedStages"
@@ -26,12 +31,8 @@
 <script>
     import draggable from 'vuedraggable'
     import Stage from './Stage'
-    import {
-        eventBus,
-        hashID,
-        isTriggerContainer
-    } from './util'
-    
+    import { eventBus, hashID, isTriggerContainer } from './util'
+
     import {
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
@@ -62,7 +63,7 @@
         STAGE_RETRY,
         DEBUG_CONTAINER
     ]
-    
+
     export default {
         components: {
             Stage,
@@ -112,8 +113,8 @@
             }
         },
         provide () {
-            const reactiveData = {}
-            ;[
+            const reactiveData = {};
+            [
                 'currentExecCount',
                 'isPreview',
                 'userName',
@@ -123,13 +124,16 @@
                 'isLatestBuild',
                 'canSkipElement',
                 'cancelUserId'
-            ].forEach(key => {
+            ].forEach((key) => {
                 Object.defineProperty(reactiveData, key, {
                     enumerable: true,
-                    get: () => this[key]
+                    get: () => {
+                        console.log(key, this[key])
+                        return this[key]
+                    }
                 })
             })
-            
+
             return {
                 reactiveData
             }
@@ -143,16 +147,19 @@
         computed: {
             computedStages: {
                 get () {
-                    return this.pipeline?.stages?.map(stage => ({
-                        ...stage,
-                        isTrigger: this.checkIsTriggerStage(stage)
-                    })) ?? []
+                    return (
+          this.pipeline?.stages?.map((stage) => ({
+            ...stage,
+            isTrigger: this.checkIsTriggerStage(stage)
+          })) ?? []
+                    )
                 },
                 set (stages) {
                     const data = stages.map((stage, index) => {
                         const name = `stage-${index + 1}`
                         const id = `s-${hashID()}`
-                        if (!stage.containers) { // container
+                        if (!stage.containers) {
+                            // container
                             return {
                                 id,
                                 name,
@@ -209,7 +216,7 @@
         },
         methods: {
             registeCustomEvent (destory = false) {
-                customEvents.forEach(eventName => {
+                customEvents.forEach((eventName) => {
                     const fn = (destory ? eventBus.$off : eventBus.$on).bind(eventBus)
                     fn(eventName, (...args) => {
                         this.$emit(eventName, ...args)
@@ -235,11 +242,17 @@
                 const relatedContext = event.relatedContext || {}
                 const relatedelement = relatedContext.element || {}
                 const isRelatedTrigger = relatedelement['@type'] === 'trigger'
-                
+
                 const isTriggerStage = this.checkIsTriggerStage(relatedelement)
                 const isRelatedFinally = relatedelement.finally === true
 
-                return !isTrigger && !isRelatedTrigger && !isTriggerStage && !isFinally && !isRelatedFinally
+                return (
+                    !isTrigger
+                    && !isRelatedTrigger
+                    && !isTriggerStage
+                    && !isFinally
+                    && !isRelatedFinally
+                )
             },
             handleCopyStage ({ stageIndex, stage }) {
                 this.pipeline.stages.splice(stageIndex + 1, 0, stage)
@@ -254,31 +267,30 @@
 </script>
 
 <style lang="scss">
-    .bk-pipeline {
-        display: flex;
-        padding-right: 120px;
-        width: fit-content;
-        position: relative;
-        align-items: flex-start;
-        ul,
-        li {
-            margin: 0;
-            padding: 0;
-        }
-    }
+.bk-pipeline {
+  display: flex;
+  padding-right: 120px;
+  width: fit-content;
+  position: relative;
+  align-items: flex-start;
+  ul,
+  li {
+    margin: 0;
+    padding: 0;
+  }
+}
 
-    .list-item {
-        transition: transform .2s ease-out;
-    }
+.list-item {
+  transition: transform 0.2s ease-out;
+}
 
-    .list-enter, .list-leave-to
+.list-enter, .list-leave-to
         /* .list-complete-leave-active for below version 2.1.8 */ {
-        opacity: 0;
-        transform: translateY(36px) scale(0, 1);
-    }
+  opacity: 0;
+  transform: translateY(36px) scale(0, 1);
+}
 
-    .list-leave-active {
-        position: absolute !important;
-    }
-
+.list-leave-active {
+  position: absolute !important;
+}
 </style>

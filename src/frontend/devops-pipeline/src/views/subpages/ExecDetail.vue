@@ -13,7 +13,51 @@
         </empty-tips>
 
         <template v-else-if="execDetail">
-            <Summary :exec-detail="execDetail"></Summary>
+            <div class="exec-detail-summary-header">
+                <span
+                    :class="{
+                        'exec-detail-build-summary-anchor': true,
+                        [execDetail.status]: execDetail.status
+                    }"
+                ></span>
+                <aside class="exec-detail-summary-header-title">
+                    <bk-tag class="exec-status-tag" type="stroke" :theme="statusTagTheme">
+                        <span class="exec-status-label">
+                            {{ statusLabel }}
+                            <span
+                                v-if="execDetail.status === 'CANCELED'"
+                                v-bk-tooltips="`${$t('details.canceller')}：${execDetail.cancelUserId}`"
+                                class="devops-icon icon-info-circle"
+                            >
+                            </span>
+                        </span>
+                    </bk-tag>
+                    <span class="exec-detail-summary-header-build-msg">
+                        {{ execDetail.buildMsg }}
+                    </span>
+                </aside>
+                <aside class="exec-detail-summary-header-trigger">
+                    <img v-if="execDetail.triggerUserProfile" class="exec-trigger-profile" />
+                    <logo class="exec-trigger-profile" name="default-user" size="24" />
+                    <span v-if="execDetail.triggerUser">
+                        {{
+                            $t("details.executorInfo", [
+                                execDetail.triggerUser,
+                                execDetail.trigger,
+                                execFormatStartTime
+                            ])
+                        }}
+                    </span>
+                </aside>
+            </div>
+            <p class="summary-header-shadow"></p>
+            <p class="summary-header-shadow-cover"></p>
+            <Summary
+                :show-info-row="showSummaryInfoRow"
+                ref="detailSummary"
+                :exec-detail="execDetail"
+            ></Summary>
+
             <main class="exec-detail-main">
                 <bk-tab
                     :active="curItemTab"
@@ -100,6 +144,7 @@
     import pipelineConstMixin from '@/mixins/pipelineConstMixin'
     import Logo from '@/components/Logo'
     import AtomPropertyPanel from '@/components/AtomPropertyPanel'
+    import { mapThemeOfStatus } from '@/utils/pipelineStatus'
 
     export default {
         components: {
@@ -124,6 +169,7 @@
                 isLoading: true,
                 hasNoPermission: false,
                 linkUrl: WEB_URL_PREFIX + location.pathname,
+                showSummaryInfoRow: true,
                 noPermissionTipsConfig: {
                     title: this.$t('noPermission'),
                     desc: this.$t('history.noPermissionTips'),
@@ -273,6 +319,14 @@
             },
             curItemTab () {
                 return this.routerParams.type || 'executeDetail'
+            },
+            statusTagTheme () {
+                return mapThemeOfStatus(this.execDetail?.status)
+            },
+            statusLabel () {
+                return this.execDetail?.status
+        ? this.$t(`details.statusMap.${this.execDetail?.status}`)
+                : ''
             }
         },
 
@@ -337,6 +391,7 @@
                 'pausePlugin'
             ]),
             ...mapActions('common', ['requestInterceptAtom']),
+
             hideSidePanel () {
                 this.showLog = false
             },
@@ -399,6 +454,8 @@
 <style lang="scss">
 @import "@/scss/conf";
 @import "@/scss/pipelineStatus";
+@import "@/scss/mixins/ellipsis";
+@import "@/scss/buildStatus";
 @import "@/scss/detail-tab.scss";
 .pipeline-detail-wrapper.biz-content {
   height: 100%;
@@ -406,6 +463,82 @@
   flex-direction: column;
   border-top: 1px solid #dde4eb;
   overflow: auto;
+
+  .exec-detail-summary-header {
+    padding: 18px 24px;
+    background: white;
+    display: flex;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    .exec-detail-build-summary-anchor {
+      @include build-status();
+      position: absolute;
+      content: "";
+      width: 6px;
+      height: 24px;
+      left: 0;
+    }
+    &-title {
+      height: 24px;
+      display: flex;
+      align-items: center;
+      flex: 1;
+      margin: 0;
+      overflow: hidden;
+
+      .exec-status-tag {
+        margin: 0;
+      }
+
+      .exec-status-label {
+        display: grid;
+        align-items: center;
+        grid-auto-flow: column;
+        grid-gap: 6px;
+      }
+
+      .exec-detail-summary-header-build-msg {
+        flex: 1;
+        margin: 0 24px 0 8px;
+        @include ellipsis();
+        color: #313238;
+        min-width: auto;
+      }
+    }
+    &-trigger {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+      font-size: 12px;
+      .exec-trigger-profile {
+        width: 24px;
+        height: 24px;
+        border-radius: 12px;
+        margin-right: 6px;
+        color: #c4c6cc;
+      }
+    }
+  }
+
+  .summary-header-shadow {
+    width: 100%;
+    min-height: 2px;
+    position: sticky;
+    top: 60px;
+    z-index: 8;
+    box-shadow: 0 2px 2px 0 rgba(0, 0, 0, 0.15);
+  }
+
+  .summary-header-shadow-cover {
+    width: 100%;
+    min-height: 6px;
+    background: white;
+    position: absolute;
+    z-index: 9;
+    top: 60px;
+  }
 
   .exec-detail-main {
     margin: 16px 24px 0 24px;

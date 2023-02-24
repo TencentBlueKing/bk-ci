@@ -98,7 +98,7 @@
                         buildId
                     })
 
-                    this.defaultParamMap = this.params.reduce((acc, item) => {
+                    this.defaultParamMap = res.reduce((acc, item) => {
                         acc[item.key] = item.defaultValue
                         return acc
                     }, {})
@@ -107,6 +107,7 @@
                         isDiff: this.isDefaultDiff(item),
                         isOverflow: this.isOverflow(item.value ?? '')
                     }))
+                    console.log(this.params)
                 } catch (e) {
                     console.error(e)
                 } finally {

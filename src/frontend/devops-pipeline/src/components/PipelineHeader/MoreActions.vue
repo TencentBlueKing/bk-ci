@@ -20,6 +20,7 @@
         <rename-dialog
             :is-show="isRenameDialogShow"
             v-bind="curPipeline"
+            :project-id="$route.params.projectId"
             @close="toggleRenameDialog"
             @done="renameDone"
         />
@@ -33,7 +34,10 @@
             :pipeline="pipelineActionState.activePipeline"
             @cancel="closeSaveAsDialog"
         />
-        <import-pipeline-popup :handle-import-success="handleImportModifyPipeline" :is-show.sync="showImportDialog"></import-pipeline-popup>
+        <import-pipeline-popup
+            :handle-import-success="handleImportModifyPipeline"
+            :is-show.sync="showImportDialog"
+        ></import-pipeline-popup>
         <remove-confirm-dialog
             :type="pipelineActionState.confirmType"
             :is-show="pipelineActionState.isConfirmShow"
@@ -73,9 +77,7 @@
             }
         },
         computed: {
-            ...mapState('pipelines', [
-                'pipelineActionState'
-            ]),
+            ...mapState('pipelines', ['pipelineActionState']),
             ...mapGetters({
                 curPipeline: 'pipelines/getCurPipeline'
             }),
@@ -113,36 +115,28 @@
                         {
                             label: 'newlist.copyAs',
                             handler: () => this.copyAs(pipeline)
-                        }, {
+                        },
+                        {
                             label: 'newlist.saveAsTemp',
                             handler: () => this.saveAsTempHandler(pipeline)
                         },
                         {
                             label: 'newlist.jumpToTemp',
-                            handler: this.jumpToTemplate,
+                            handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(this.curPipeline)
+                            handler: () => this.deleteHandler(pipeline)
                         }
                     ]
                 ]
             }
         },
         methods: {
-            ...mapActions('atom', [
-                'setPipelineEditing',
-                'setPipeline',
-                'setEditFrom'
-            ]),
-            ...mapActions('pipelines', [
-                'setPipelineSetting',
-                'requestToggleCollect'
-            ]),
-            ...mapMutations('pipelines', [
-                'updateCurPipelineByKeyValue'
-            ]),
+            ...mapActions('atom', ['setPipelineEditing', 'setPipeline', 'setEditFrom']),
+            ...mapActions('pipelines', ['setPipelineSetting', 'requestToggleCollect']),
+            ...mapMutations('pipelines', ['updateCurPipelineByKeyValue']),
             toggleRenameDialog (show = false) {
                 this.isRenameDialogShow = show
             },
@@ -152,12 +146,14 @@
                         key: 'pipelineName',
                         value: name
                     })
-                    this.pipelineSetting && Object.keys(this.pipelineSetting).length && this.updatePipelineSetting({
-                        container: this.pipelineSetting,
-                        param: {
-                            pipelineName: name
-                        }
-                    })
+                    this.pipelineSetting
+                        && Object.keys(this.pipelineSetting).length
+                        && this.updatePipelineSetting({
+                            container: this.pipelineSetting,
+                            param: {
+                                pipelineName: name
+                            }
+                        })
                 })
             },
             exportPipeline () {
@@ -191,13 +187,14 @@
                     })
                 })
             },
-            
+
             async toggleCollect () {
                 const isCollect = !this.curPipeline.hasCollect
                 let message = isCollect ? this.$t('collectSuc') : this.$t('uncollectSuc')
                 let theme = 'success'
                 try {
                     await this.requestToggleCollect({
+                        projectId: this.$route.params.projectId,
                         ...this.curPipeline,
                         isCollect
                     })
@@ -220,58 +217,57 @@
 </script>
 
 <style lang="scss">
-    @import '@/scss/conf';
-    .flex-container {
-        display: flex;
-    }
-    .more-operation-entry {
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        cursor: pointer;
-        padding: 5px 10px;
+@import "@/scss/conf";
+.flex-container {
+  display: flex;
+}
+.more-operation-entry {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  padding: 5px 10px;
 
-        &:hover,
-        &.active {
-            background-color: #E0ECFF;
-            i.entry-circle {
-                background-color: $primaryColor;
-            }
-        }
+  &:hover,
+  &.active {
+    background-color: #e0ecff;
+    i.entry-circle {
+      background-color: $primaryColor;
+    }
+  }
 
-        i.entry-circle {
-            display: flex;
-            width: 18px;
-            margin: 2px 0;
-            background-color: $fontWeightColor;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            z-index: 1;
-        }
+  i.entry-circle {
+    display: flex;
+    width: 18px;
+    margin: 2px 0;
+    background-color: $fontWeightColor;
+    width: 3px;
+    height: 3px;
+    border-radius: 50%;
+    z-index: 1;
+  }
+}
+.more-operation-dropmenu {
+  width: 120px;
+  > ul {
+    &:first-child {
+      border-bottom: 1px solid #dcdee5;
     }
-    .more-operation-dropmenu {
-        width: 120px;
-        > ul {
-            
-            &:first-child {
-                border-bottom: 1px solid #DCDEE5;
-            }
-            > li {
-                font-size: 12px;
-                line-height: 32px;
-                text-align: left;
-                padding: 0 12px;
-                cursor: pointer;
-                &:hover {
-                    color: $primaryColor;
-                    background-color: #EAF3FF;
-                    a {
-                        color: $primaryColor;
-                    }
-                }
-            }
+    > li {
+      font-size: 12px;
+      line-height: 32px;
+      text-align: left;
+      padding: 0 12px;
+      cursor: pointer;
+      &:hover {
+        color: $primaryColor;
+        background-color: #eaf3ff;
+        a {
+          color: $primaryColor;
         }
+      }
     }
+  }
+}
 </style>
