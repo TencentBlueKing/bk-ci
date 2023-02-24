@@ -2,7 +2,6 @@
     <bk-table
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
-        size="large"
         row-key="pipelineId"
         height="100%"
         :data="pipelineList"
@@ -13,6 +12,7 @@
         @sort-change="handleSort"
         :default-sort="sortField"
         @selection-change="handleSelectChange"
+        :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
@@ -287,16 +287,17 @@
                 return res
             },
             sortField () {
-                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                const { sortType, collation } = this.$route.query
                 return {
-                    sortType,
-                    collation
+                    prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
+                    order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
             }
         },
 
         watch: {
             '$route.params.viewId': function (viewId) {
+                this.clearSort()
                 this.requestList({
                     viewId,
                     page: 1
@@ -356,14 +357,20 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
-                this.$router.push({
-                    ...this.$route,
-                    query: {
-                        ...this.$route.query,
-                        sortType: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime,
-                        collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
-                    }
-                })
+                const sortType = PIPELINE_SORT_FILED[prop]
+                if (sortType) {
+                    const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
+                    localStorage.setItem('pipelineSortType', sortType)
+                    localStorage.setItem('pipelineSortCollation', collation)
+                    this.$router.push({
+                        ...this.$route,
+                        query: {
+                            ...this.$route.query,
+                            sortType: sortType,
+                            collation
+                        }
+                    })
+                }
             },
             async requestList (query = {}) {
                 this.isLoading = true

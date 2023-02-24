@@ -212,7 +212,7 @@
                         },
                         {
                             label: 'newlist.jumpToTemp',
-                            handler: this.jumpToTemplate,
+                            handler: () => this.jumpToTemplate(pipeline),
                             hidden: !this.isTemplatePipeline
                         },
                         {
