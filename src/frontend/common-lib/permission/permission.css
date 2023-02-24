@@ -62,13 +62,13 @@
     width: auto;
 }
 
-.permission-list .bk-dropdown-list li {
+.permission-list .bk-dropdown-list>li {
     padding: 0 14px;
     line-height: 32px;
     cursor: pointer;
 }
 
-.permission-list .bk-dropdown-list li: hover {
+.permission-list .bk-dropdown-list>li:hover {
     background: #F5F7FA;
 }
 
