@@ -22,7 +22,9 @@ import com.tencent.devops.dispatch.kubernetes.interfaces.CommonService
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatusEnum
 import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.RandomStringUtils
@@ -57,27 +59,26 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
-                Headers.of(
-                    makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        userId
-                    )
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
                 )
+                    .toHeaders()
             )
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
-                logger.info("User $userId create environment response: ${response.code()} || $responseContent")
+                val responseContent = response.body!!.string()
+                logger.info("User $userId create environment response: ${response.code} || $responseContent")
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口异常: ${response.code()}"
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 创建环境接口异常: ${response.code}"
                     )
                 }
 
@@ -115,30 +116,29 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
-                Headers.of(
-                    makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        userId
-                    )
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
                 )
+                    .toHeaders()
             )
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(UidReq(environmentUid))
                 )
             )
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw BuildFailureException(
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.OP_ENVIRONMENT_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口异常：${response.code()}"
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 操作环境接口异常：${response.code}"
                     )
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
@@ -184,24 +184,23 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
-                Headers.of(
-                    makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        userId
-                    )
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
                 )
+                    .toHeaders()
             )
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     JsonUtil.toJson(UidReq(environmentUid))
                 )
             )
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("User $userId get environment status $environmentUid response: $responseContent")
                 if (!response.isSuccessful && retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
@@ -213,7 +212,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.ENVIRONMENT_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境状态接口异常: ${response.code()}"
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境状态接口异常: ${response.code}"
                     )
                 }
 
@@ -260,19 +259,18 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
-                Headers.of(
-                    makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        userId
-                    )
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
                 )
+                    .toHeaders()
             )
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 logger.info("User $userId get environment list response: $responseContent")
                 if (!response.isSuccessful && retryTime > 0) {
                     val retryTimeLocal = retryTime - 1
@@ -284,7 +282,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.ENVIRONMENT_LIST_INTERFACE_ERROR.formatErrorMessage,
-                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境列表接口异常: ${response.code()}"
+                        "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 获取环境列表接口异常: ${response.code}"
                     )
                 }
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
@@ -328,22 +326,21 @@ class WorkspaceDevCloudClient @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .headers(
-                Headers.of(
-                    makeHeaders(
-                        devCloudAppId,
-                        devCloudToken,
-                        userId
-                    )
+                makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId
                 )
+                    .toHeaders()
             )
             .get()
             .build()
 
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
-                    logger.error("Get task status $taskUid failed, responseCode: ${response.code()}")
+                    logger.error("Get task status $taskUid failed, responseCode: ${response.code}")
 
                     // 接口请求失败时，sleep 5s，再查一次
                     Thread.sleep(5 * 1000)
