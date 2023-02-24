@@ -108,8 +108,9 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
-                // 项目默认开启权限管理
-                enable = resourceType == AuthResourceType.PROJECT.value,
+                // 流水线和流水线组才需要主动开启权限管理
+                enable = resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
+                    resourceType == AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
             traceEventDispatcher.dispatch(
@@ -257,7 +258,7 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        if (hasManagerPermission(
+        if (!hasManagerPermission(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
