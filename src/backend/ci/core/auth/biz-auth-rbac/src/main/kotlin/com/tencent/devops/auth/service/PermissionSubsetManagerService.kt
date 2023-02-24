@@ -42,6 +42,7 @@ import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -53,6 +54,10 @@ class PermissionSubsetManagerService @Autowired constructor(
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao
 ) {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(PermissionSubsetManagerService::class.java)
+    }
 
     /**
      * 创建二级管理员
@@ -195,33 +200,31 @@ class PermissionSubsetManagerService @Autowired constructor(
         iamResourceCode: String,
         createMode: Boolean
     ) {
-        syncSubsetManagerGroup(
-            subsetManagerId = subsetManagerId,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode,
-            resourceName = resourceName,
-            iamResourceCode = iamResourceCode
-        )
+        // 创建资源时，先同步二级管理员创建时创建的组
+        if (!createMode) {
+            syncSubsetManagerGroup(
+                subsetManagerId = subsetManagerId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                resourceName = resourceName,
+                iamResourceCode = iamResourceCode
+            )
+        }
         val resourceGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
             resourceType = resourceType,
             createMode = createMode
         )
+        val existGroupNames = authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ).map { it.groupName }
         resourceGroupConfigs.filter {
-            it.groupCode != DefaultGroupType.MANAGER.value
+            !existGroupNames.contains(it.groupName)
         }.forEach { groupConfig ->
-            val authResourceGroupInfo = authResourceGroupDao.get(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                groupCode = groupConfig.groupCode
-            )
-            // 判断组是否已经存在，如先关闭权限管理再开启权限管理,就不需要再重复创建组
-            if (authResourceGroupInfo != null) {
-                return@forEach
-            }
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
@@ -266,7 +269,18 @@ class PermissionSubsetManagerService @Autowired constructor(
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
         val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId, pageInfoDTO)
-        iamGroupInfoList.results.map { iamGroupInfo ->
+        val manageGroupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
+        )
+        iamGroupInfoList.results.filter {
+            it.name == manageGroupConfig.groupName
+        }.forEach { iamGroupInfo ->
             authResourceGroupDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
