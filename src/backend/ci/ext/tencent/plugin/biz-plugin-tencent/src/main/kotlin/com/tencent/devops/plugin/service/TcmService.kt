@@ -31,17 +31,17 @@ import com.fasterxml.jackson.annotation.JsonProperty
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UnicodeUtil
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
-import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.pojo.ParametersInfo
 import com.tencent.devops.plugin.pojo.tcm.TcmApp
 import com.tencent.devops.plugin.pojo.tcm.TcmException
 import com.tencent.devops.plugin.pojo.tcm.TcmReqParam
 import com.tencent.devops.plugin.pojo.tcm.TcmTemplate
 import com.tencent.devops.plugin.pojo.tcm.TcmTemplateParam
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -86,10 +86,10 @@ class TcmService @Autowired constructor(
         logger.info("tcm get apps request body for userId($userId): $requestBody")
         val request = Request.Builder()
                 .url(getAppsUrl)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps response body for userId($userId): $body")
             val json = parser.parse(body).asJsonObject
             if (!response.isSuccessful) {
@@ -119,10 +119,10 @@ class TcmService @Autowired constructor(
         logger.info("tcm get apps templates request body for userId($userId): $requestBody")
         val request = Request.Builder()
                 .url(getTemplatesUrl)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps templates response body for userId($userId): $body")
             val json = parser.parse(body).asJsonObject
             if (!response.isSuccessful) {
@@ -154,10 +154,10 @@ class TcmService @Autowired constructor(
         logger.info("tcm get apps template info request body for userId($userId): $requestBody")
         val request = Request.Builder()
                 .url(getTemplateInfoUrl)
-                .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps template info response body for userId($userId): $body")
             val json = parser.parse(body).asJsonObject
             if (!response.isSuccessful) {
@@ -194,10 +194,10 @@ class TcmService @Autowired constructor(
 
         val request = Request.Builder()
                 .url(startTaskUrl)
-                .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), json))
+                .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), json))
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = UnicodeUtil.unicodeToString(response.body()!!.string())
+            val body = UnicodeUtil.unicodeToString(response.body!!.string())
             logger.info("tcm exec response for app(${tcmReqParam.appId}): $body")
             try {
                 val resultMap = objectMapper.readValue<Map<String, Any>>(body)

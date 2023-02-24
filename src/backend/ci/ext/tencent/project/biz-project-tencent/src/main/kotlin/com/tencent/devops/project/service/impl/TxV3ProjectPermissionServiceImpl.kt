@@ -28,29 +28,29 @@
 
 package com.tencent.devops.project.service.impl
 
-import com.tencent.devops.common.api.exception.OperationException
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
-import com.tencent.devops.project.pojo.AuthProjectForCreateResult
-import com.tencent.devops.project.pojo.user.UserDeptDetail
-import com.tencent.devops.project.service.ProjectPermissionService
-import okhttp3.Request
-import okhttp3.RequestBody
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.BkAuthProperties
+import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
+import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.Result
-import okhttp3.MediaType
+import com.tencent.devops.project.pojo.user.UserDeptDetail
+import com.tencent.devops.project.service.ProjectPermissionService
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.Request
+import okhttp3.RequestBody
+import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 class TxV3ProjectPermissionServiceImpl @Autowired constructor(
@@ -152,7 +152,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             param["center_id"] = userDeptDetail.centerId
             logger.info("createProjectResources add org info $param")
         }
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
@@ -176,10 +176,11 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , " +
-                    "message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code} , " +
+                            "message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent

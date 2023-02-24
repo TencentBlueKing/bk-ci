@@ -89,7 +89,7 @@ class PipelineBuildExtTencentService @Autowired constructor(
             logger.info("Get turbo task info, request url: $url")
             val startTime = System.currentTimeMillis()
             OkhttpUtils.doGet(url, mapOf(AUTH_HEADER_DEVOPS_PROJECT_ID to projectId)).use { response ->
-                val data = response.body()?.string() ?: return ""
+                val data = response.body?.string() ?: return ""
                 logger.info("Get turbo task info, response: $data")
                 LogUtils.costTime("call turbo ", startTime)
                 if (!response.isSuccessful) {

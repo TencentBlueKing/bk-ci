@@ -42,14 +42,14 @@ object GitCodeUtils {
     fun handleErrorMessage(
         response: Response
     ): CustomException {
-        val data = response.body()?.string() ?: return CustomException(
-            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
-            message = response.message()
+        val data = response.body?.string() ?: return CustomException(
+            status = HttpResp.Status.fromStatusCode(response.code) ?: HttpResp.Status.BAD_REQUEST,
+            message = response.message
         )
         val resp = JsonUtil.getObjectMapper().readValue(data) as GitCodeErrorResp
         return CustomException(
-            status = HttpResp.Status.fromStatusCode(response.code()) ?: HttpResp.Status.BAD_REQUEST,
-            message = resp.message ?: response.message()
+            status = HttpResp.Status.fromStatusCode(response.code) ?: HttpResp.Status.BAD_REQUEST,
+            message = resp.message ?: response.message
         )
     }
 }
