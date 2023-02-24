@@ -31,7 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -65,7 +65,7 @@ class JobIedService @Autowired constructor(
         requestData["app_id"] = ccAppId
         requestData["operator"] = operator
 
-        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonMediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
 
         val json = ObjectMapper().writeValueAsString(requestData)
         try {
@@ -74,7 +74,7 @@ class JobIedService @Autowired constructor(
                 .post(RequestBody.create(jsonMediaType, json))
                 .build()
             OkhttpUtils.doHttp(httpReq).use { resp ->
-                return resp.body()!!.string()
+                return resp.body!!.string()
             }
         } catch (e: Exception) {
             logger.error("Get job task lis. error.", e)
@@ -91,7 +91,7 @@ class JobIedService @Autowired constructor(
         requestData["task_id"] = taskId
         requestData["operator"] = operator
 
-        val jsonMediaType = MediaType.parse("application/json; charset=utf-8")
+        val jsonMediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
 
         val json = ObjectMapper().writeValueAsString(requestData)
         try {
@@ -100,7 +100,7 @@ class JobIedService @Autowired constructor(
                 .post(RequestBody.create(jsonMediaType, json))
                 .build()
             OkhttpUtils.doHttp(httpReq).use { resp ->
-                return resp.body()!!.string()
+                return resp.body!!.string()
             }
         } catch (e: Exception) {
             logger.error("Get job task lis. error.", e)

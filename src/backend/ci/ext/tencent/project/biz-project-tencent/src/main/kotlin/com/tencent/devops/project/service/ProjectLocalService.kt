@@ -520,7 +520,7 @@ class ProjectLocalService @Autowired constructor(
             val url = "$authUrl/$projectCode?access_token=$accessToken"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["code"] as Int == 0) {

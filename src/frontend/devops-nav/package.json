@@ -60,7 +60,7 @@
     "terser-webpack-plugin": "^5.3.6",
     "ts-loader": "^4.1.0",
     "typescript": "3.4.5",
-    "vue-loader": "^15.9.8",
+    "vue-loader": "15.9.8",
     "vue-template-compiler": "2.6.12",
     "webpack": "^5.58.1"
   },

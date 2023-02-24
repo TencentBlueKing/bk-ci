@@ -60,7 +60,7 @@ import com.tencent.devops.process.api.service.ServiceJfrogResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import javassist.NotFoundException
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -144,7 +144,7 @@ class JinGangService @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use {
-            return it.body()!!.string()
+            return it.body!!.string()
         }
     }
 
@@ -270,11 +270,11 @@ class JinGangService @Autowired constructor(
 
             val request = Request.Builder()
                 .url(jinGangUrl)
-                .post(RequestBody.create(MediaType.parse("application/json;charset=utf-8"), json))
+                .post(RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), json))
                 .build()
 
             OkhttpUtils.doHttp(request).use { response ->
-                val respJson = response.body()!!.string()
+                val respJson = response.body!!.string()
                 logger.info("jin gang response: $respJson")
                 val obj: Map<String, Any> = JsonUtil.toMap(respJson)
                 if (obj["status"]?.toString() != "1") {
@@ -319,7 +319,7 @@ class JinGangService @Autowired constructor(
 
         val request = Request.Builder().url("$starUrl?id=$ccId").get().build()
         OkhttpUtils.doHttp(request).use { response ->
-            val json = response.body()!!.string()
+            val json = response.body!!.string()
 
             logger.info("star response: $json")
             val obj: Map<String, Any> = JsonUtil.toMap(json)
