@@ -84,6 +84,7 @@ import com.tencent.devops.remotedev.websocket.push.WorkspaceWebsocketPush
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -1450,12 +1451,12 @@ class WorkspaceService @Autowired constructor(
         val request = Request.Builder()
             .url(commonService.getProxyUrl(url))
             .header("Cookie", "X-DEVOPS-BK-TICKET=$bkTicket")
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(params)))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(params)))
             .build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val data = response.body()!!.string()
-            logger.info("updateBkTicket|response code|${response.code()}|content|$data")
+            val data = response.body!!.string()
+            logger.info("updateBkTicket|response code|${response.code}|content|$data")
             if (!response.isSuccessful) {
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "update fail,please check hostName exists")
             }
