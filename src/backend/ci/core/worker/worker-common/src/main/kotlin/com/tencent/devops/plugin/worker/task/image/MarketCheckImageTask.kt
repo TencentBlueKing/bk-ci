@@ -28,27 +28,27 @@
 package com.tencent.devops.plugin.worker.task.image
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.TaskExecuteException
+import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketCheckImageElement
 import com.tencent.devops.dockerhost.pojo.CheckImageRequest
 import com.tencent.devops.dockerhost.pojo.CheckImageResponse
-import com.tencent.devops.common.api.pojo.ErrorCode
+import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
+import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.image.request.ImageBaseInfoUpdateRequest
 import com.tencent.devops.worker.common.api.ApiFactory
 import com.tencent.devops.worker.common.api.docker.DockerSDKApi
-import com.tencent.devops.common.api.exception.TaskExecuteException
-import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_IP
-import com.tencent.devops.dockerhost.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -75,9 +75,9 @@ class MarketCheckImageTask : ITask() {
         val dockerHostIp = System.getenv(ENV_DOCKER_HOST_IP)
         val dockerHostPort = System.getenv(ENV_DOCKER_HOST_PORT)
         val path = "/api/docker/build/image/buildIds/${buildTask.buildId}/" +
-            "check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
+                "check?containerId=${buildVariables.containerId}&containerHashId=${buildVariables.containerHashId}"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             JsonUtil.toJson(checkImageRequest)
         )
         val url = "http://$dockerHostIp:$dockerHostPort$path"
@@ -86,13 +86,15 @@ class MarketCheckImageTask : ITask() {
             .post(body)
             .build()
         val response = OkhttpUtils.doLongHttp(request)
-        val responseContent = response.body()?.string()
+        val responseContent = response.body?.string()
         if (!response.isSuccessful) {
-            logger.warn("Fail to request($request) with code ${response.code()} ," +
-                " message ${response.message()} and response ($responseContent)")
-            LoggerService.addErrorLine(response.message())
+            logger.warn(
+                "Fail to request($request) with code ${response.code} ," +
+                        " message ${response.message} and response ($responseContent)"
+            )
+            LoggerService.addErrorLine(response.message)
             throw TaskExecuteException(
-                errorMsg = "checkImage fail: message ${response.message()} and response ($responseContent)",
+                errorMsg = "checkImage fail: message ${response.message} and response ($responseContent)",
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorType = ErrorType.USER
             )
