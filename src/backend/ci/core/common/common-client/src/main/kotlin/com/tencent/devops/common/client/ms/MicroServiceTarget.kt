@@ -37,6 +37,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import feign.Request
 import feign.RequestTemplate
 import org.apache.commons.lang3.RandomUtils
+import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.cloud.client.ServiceInstance
 import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryClient
@@ -92,7 +93,12 @@ class MicroServiceTarget<T> constructor(
 
     override fun name() = serviceName
 
-    private fun ServiceInstance.url() = "${if (isSecure) "https" else "http"}://$host:$port/api"
+    private fun ServiceInstance.url(): String {
+        val finalHost = if (StringUtils.isNotBlank(host) && host.contains(":") && !host.startsWith("[")) {
+            "[$host]" // 兼容IPv6
+        } else host
+        return "${if (isSecure) "https" else "http"}://$finalHost:$port/api"
+    }
 
     companion object {
         private val logger = LoggerFactory.getLogger(MicroServiceTarget::class.java)
