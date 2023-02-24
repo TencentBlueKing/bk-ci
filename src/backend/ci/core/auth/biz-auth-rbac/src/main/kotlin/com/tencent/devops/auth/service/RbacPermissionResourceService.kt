@@ -109,8 +109,8 @@ class RbacPermissionResourceService(
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
                 // 流水线和流水线组才需要主动开启权限管理
-                enable = resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-                    resourceType == AuthResourceType.PIPELINE_GROUP.value,
+                enable = resourceType != AuthResourceType.PIPELINE_DEFAULT.value ||
+                    resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
             traceEventDispatcher.dispatch(
