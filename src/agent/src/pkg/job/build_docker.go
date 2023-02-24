@@ -12,12 +12,12 @@ import (
 	"sync"
 	"time"
 
-	"agent/src/pkg/api"
-	"agent/src/pkg/config"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/upgrade/download"
-	"agent/src/pkg/util"
-	"agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"

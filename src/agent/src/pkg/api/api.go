@@ -28,12 +28,13 @@
 package api
 
 import (
-	"agent/src/pkg/config"
-	"agent/src/pkg/util/httputil"
-	"agent/src/pkg/util/systemutil"
 	"fmt"
 	"runtime"
 	"strconv"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func buildUrl(url string) string {

@@ -28,11 +28,12 @@
 package command
 
 import (
-	"agent/src/pkg/logs"
 	"errors"
 	"fmt"
 	"os"
 	"os/exec"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 func RunCommand(command string, args []string, workDir string, envMap map[string]string) (output []byte, err error) {

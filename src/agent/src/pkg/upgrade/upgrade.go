@@ -28,22 +28,23 @@
 package upgrade
 
 import (
-	"agent/src/pkg/upgrade/download"
-	"agent/src/pkg/util"
-	"agent/src/pkg/util/command"
 	"os"
 	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+
 	"github.com/pkg/errors"
 
-	"agent/src/pkg/api"
-	"agent/src/pkg/config"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util/fileutil"
-	"agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 var JdkVersion = &JdkVersionType{}

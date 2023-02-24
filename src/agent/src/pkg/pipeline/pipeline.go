@@ -40,11 +40,11 @@ import (
 
 	"github.com/pkg/errors"
 
-	"agent/src/pkg/api"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util"
-	"agent/src/pkg/util/command"
-	"agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func Start() {

@@ -28,9 +28,6 @@
 package systemutil
 
 import (
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util"
-	"agent/src/pkg/util/fileutil"
 	"errors"
 	"fmt"
 	"net"
@@ -39,6 +36,10 @@ import (
 	"os/user"
 	"runtime"
 	"strings"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
 
 	"github.com/gofrs/flock"
 )

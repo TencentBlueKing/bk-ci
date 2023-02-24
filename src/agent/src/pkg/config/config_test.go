@@ -1,10 +1,11 @@
 package config
 
 import (
-	"agent/src/pkg/logs"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 )
 
 func Test_parseWorkerVersion(t *testing.T) {

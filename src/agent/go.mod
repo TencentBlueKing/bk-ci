@@ -1,4 +1,4 @@
-module agent
+module github.com/TencentBlueKing/bk-ci/src/agent
 
 go 1.17
 

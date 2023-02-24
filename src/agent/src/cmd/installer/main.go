@@ -34,10 +34,10 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"agent/src/pkg/config"
-	"agent/src/pkg/installer"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/installer"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (

@@ -36,12 +36,12 @@ import (
 	"os"
 	"path/filepath"
 
-	"agent/internal/third_party/dep/fs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/internal/third_party/dep/fs"
 
-	"agent/src/pkg/config"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util/fileutil"
-	"agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 type DevopsResult struct {

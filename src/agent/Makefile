@@ -3,8 +3,8 @@ CMDDIR := $(CURDIR)/src/cmd
 BuildTime := $(shell date '+%Y-%m-%d.%H:%M:%S%Z')
 GitCommit := $(shell git rev-parse HEAD)
 AGENT_VERSION=v1.9.18
-BUILD_FLAGS := -ldflags="-w -s -X agent/src/pkg/config.BuildTime=$(BuildTime) \
--X agent/src/pkg/config.GitCommit=$(GitCommit) -X agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
+BUILD_FLAGS := -ldflags="-w -s -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.BuildTime=$(BuildTime) \
+-X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.GitCommit=$(GitCommit) -X github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config.AgentVersion=$(AGENT_VERSION)"
 
 # 编译外部出包版本时需要设置当前变量为out
 BUILD_OUT_TAG=inner

@@ -28,14 +28,14 @@
 package agent
 
 import (
-	"agent/src/pkg/collector"
-	"agent/src/pkg/config"
-	"agent/src/pkg/cron"
-	"agent/src/pkg/heartbeat"
-	"agent/src/pkg/job"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/pipeline"
-	"agent/src/pkg/upgrade"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/collector"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/cron"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/heartbeat"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/pipeline"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
 )
 
 func Run(isDebug bool) {

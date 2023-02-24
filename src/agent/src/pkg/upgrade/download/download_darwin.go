@@ -4,8 +4,8 @@
 package download
 
 import (
-	"agent/src/pkg/api"
-	"agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/pkg/errors"
 	"runtime"
 	"strings"

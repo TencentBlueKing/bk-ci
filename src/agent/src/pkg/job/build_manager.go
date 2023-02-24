@@ -28,14 +28,15 @@
 package job
 
 import (
-	"agent/src/pkg/api"
-	"agent/src/pkg/logs"
-	"agent/src/pkg/util/fileutil"
-	"agent/src/pkg/util/systemutil"
 	"encoding/json"
 	"fmt"
 	"os"
 	"sync"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 // buildManager 二进制构建对象管理

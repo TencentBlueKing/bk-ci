@@ -31,8 +31,8 @@
 package systemutil
 
 import (
-	"agent/src/pkg/logs"
 	"fmt"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"os"
 )
 

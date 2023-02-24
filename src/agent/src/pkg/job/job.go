@@ -1,8 +1,9 @@
 package job
 
 import (
-	"agent/src/pkg/util/systemutil"
 	"fmt"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (

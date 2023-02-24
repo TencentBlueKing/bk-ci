@@ -31,7 +31,7 @@
 package command
 
 import (
-	"agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"os/exec"
 )
 
