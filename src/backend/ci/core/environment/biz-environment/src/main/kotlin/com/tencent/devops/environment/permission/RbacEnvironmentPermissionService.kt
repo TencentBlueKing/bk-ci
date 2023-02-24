@@ -77,7 +77,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = envResourceType,
             relationResourceType = null,
             action = buildEnvAction(permission)
@@ -106,7 +106,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = envResourceType,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId),
             resourceName = envName
         )
     }
@@ -116,7 +116,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = envResourceType,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId),
             resourceName = envName
         )
     }
@@ -126,7 +126,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = envResourceType,
-            resourceCode = envId.toString(),
+            resourceCode = HashUtil.encodeLongId(envId),
         )
     }
 
@@ -155,7 +155,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId), // 此处之所以要加密,为兼容企业版。已发布的企业版记录的为hashId
             resourceType = nodeResourceType,
             relationResourceType = null,
             action = buildNodeAction(permission)
@@ -180,7 +180,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
@@ -190,7 +190,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId),
             resourceName = nodeName
         )
     }
@@ -200,7 +200,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
-            resourceCode = nodeId.toString(),
+            resourceCode = HashUtil.encodeLongId(nodeId),
         )
     }
 

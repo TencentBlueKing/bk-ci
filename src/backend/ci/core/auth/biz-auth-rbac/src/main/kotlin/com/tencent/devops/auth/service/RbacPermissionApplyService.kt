@@ -237,7 +237,7 @@ class RbacPermissionApplyService @Autowired constructor(
         projectId: String,
         applyJoinProjectInfo: ApplyJoinProjectInfo
     ): Boolean {
-        logger.info("user $userId apply join project $projectId|expireTime:${applyJoinProjectInfo.expireTime}")
+        logger.info("user $userId apply join project $projectId)|${applyJoinProjectInfo.expireTime}")
         val resourceGroup = authResourceGroupDao.get(
             dslContext = dslContext,
             projectCode = projectId,

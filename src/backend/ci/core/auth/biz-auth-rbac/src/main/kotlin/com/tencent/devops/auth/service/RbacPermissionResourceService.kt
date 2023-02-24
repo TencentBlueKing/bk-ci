@@ -257,7 +257,7 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("enable resource permission|$userId|$projectId|$resourceType|$resourceCode")
-        if (!hasManagerPermission(
+        if (hasManagerPermission(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,
