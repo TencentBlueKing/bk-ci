@@ -1,5 +1,6 @@
 .permission-dialog .bk-dialog-sub-header {
     padding: 0 !important;
+    text-align: center;
 }
 
 .permission-exception .bk-exception-text {
@@ -74,4 +75,10 @@
 
 .permission-list .icon-angle-down {
     font-size: 20px;
+}
+
+.permission-refresh-dialog {
+    margin: 25px;
+    display: flex;
+    justify-content: center;
 }
