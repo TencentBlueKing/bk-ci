@@ -211,6 +211,17 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
+            val authResourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                groupCode = groupConfig.groupCode
+            )
+            // 判断组是否已经存在，如先关闭权限管理再开启权限管理,就不需要再重复创建组
+            if (authResourceGroupInfo != null) {
+                return@forEach
+            }
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)

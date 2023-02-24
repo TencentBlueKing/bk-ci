@@ -163,8 +163,14 @@ class RbacAuthConfiguration {
     fun rbacPermissionService(
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
-        iamConfiguration: IamConfiguration
-    ) = RbacPermissionService(authHelper, authResourceService, iamConfiguration)
+        iamConfiguration: IamConfiguration,
+        authResourceCodeConverter: AuthResourceCodeConverter
+    ) = RbacPermissionService(
+        authHelper = authHelper,
+        authResourceService = authResourceService,
+        iamConfiguration = iamConfiguration,
+        authResourceCodeConverter = authResourceCodeConverter
+    )
 
     @Bean
     @Primary
