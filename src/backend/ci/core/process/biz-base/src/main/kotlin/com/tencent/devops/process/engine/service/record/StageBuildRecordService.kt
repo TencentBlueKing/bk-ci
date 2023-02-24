@@ -41,7 +41,6 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
-import com.tencent.devops.process.engine.dao.PipelineBuildStageDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -58,7 +57,6 @@ class StageBuildRecordService(
     private val dslContext: DSLContext,
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,
-    private val buildStageDao: PipelineBuildStageDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildDao: PipelineBuildDao,
     stageTagService: StageTagService,

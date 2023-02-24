@@ -42,7 +42,6 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
-import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -60,7 +59,6 @@ class ContainerBuildRecordService(
     private val dslContext: DSLContext,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val buildContainerDao: PipelineBuildContainerDao,
     private val buildTaskDao: PipelineBuildTaskDao,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,

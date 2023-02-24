@@ -401,9 +401,9 @@ class PipelineContainerService @Autowired constructor(
         startParamMap: Map<String, Any>,
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, String>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
-        updateExistsContainer: MutableList<PipelineBuildContainer>,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, String>>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -542,7 +542,7 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
-                                updateExistsContainer.add(this)
+                                updateExistsContainer.add(Pair(this, container.name))
                             }
                             return@findHistoryContainer
                         }
@@ -572,19 +572,22 @@ class PipelineContainerService @Autowired constructor(
                     else -> null
                 }
                 buildContainers.add(
-                    PipelineBuildContainer(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
-                        containerHashId = container.containerHashId ?: "",
-                        containerType = container.getClassType(),
-                        seq = context.containerSeq,
-                        status = BuildStatus.QUEUE,
-                        controlOption = controlOption,
-                        matrixGroupFlag = container.matrixGroupFlag,
-                        matrixGroupId = null
+                    Pair(
+                        PipelineBuildContainer(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            stageId = stage.id!!,
+                            containerId = container.id!!,
+                            containerHashId = container.containerHashId ?: "",
+                            containerType = container.getClassType(),
+                            seq = context.containerSeq,
+                            status = BuildStatus.QUEUE,
+                            controlOption = controlOption,
+                            matrixGroupFlag = container.matrixGroupFlag,
+                            matrixGroupId = null
+                        ),
+                        container.name
                     )
                 )
             }

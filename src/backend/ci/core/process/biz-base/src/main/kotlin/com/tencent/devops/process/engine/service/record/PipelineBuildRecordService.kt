@@ -49,7 +49,6 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateBuildTimeCost
-import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineResDao
 import com.tencent.devops.process.engine.dao.PipelineResVersionDao
@@ -88,7 +87,6 @@ class PipelineBuildRecordService @Autowired constructor(
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
     private val pipelineTriggerReviewDao: PipelineTriggerReviewDao,
     private val dslContext: DSLContext,
-    private val pipelineBuildDao: PipelineBuildDao,
     private val recordModelDao: BuildRecordModelDao,
     private val recordStageDao: BuildRecordStageDao,
     private val recordContainerDao: BuildRecordContainerDao,

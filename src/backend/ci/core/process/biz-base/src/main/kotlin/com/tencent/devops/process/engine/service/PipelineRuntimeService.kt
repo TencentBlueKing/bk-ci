@@ -766,8 +766,9 @@ class PipelineRuntimeService @Autowired constructor(
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
 
+        // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
-        val buildContainers = mutableListOf<PipelineBuildContainer>()
+        val buildContainersWithName = mutableListOf<Pair<PipelineBuildContainer, String>>()
         val buildStages = ArrayList<PipelineBuildStage>(fullModel.stages.size)
 
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
@@ -776,7 +777,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         val updateExistsTask: MutableList<PipelineBuildTask> = mutableListOf()
         val updateExistsStage: MutableList<PipelineBuildStage> = ArrayList(fullModel.stages.size)
-        val updateExistsContainer: MutableList<PipelineBuildContainer> = mutableListOf()
+        val updateExistsContainerWithName: MutableList<Pair<PipelineBuildContainer, String>> = mutableListOf()
 
         context.currentBuildNo = buildNo
 //        var buildNoType: BuildNoType? = null
@@ -887,7 +888,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                     // 去掉要重试的矩阵内部数据
                     updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainer.removeIf { it.matrixGroupId == container.id }
+                    updateExistsContainerWithName.removeIf { it.first.matrixGroupId == container.id }
                 }
                 // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
@@ -898,9 +899,9 @@ class PipelineRuntimeService @Autowired constructor(
                     startParamMap = startParamMap,
                     context = context,
                     stage = stage,
-                    buildContainers = buildContainers,
+                    buildContainers = buildContainersWithName,
                     buildTaskList = buildTaskList,
-                    updateExistsContainer = updateExistsContainer,
+                    updateExistsContainer = updateExistsContainerWithName,
                     updateExistsTask = updateExistsTask,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
@@ -1165,10 +1166,10 @@ class PipelineRuntimeService @Autowired constructor(
                     buildNum = buildNum,
                     resourceVersion = version,
                     updateExistsStage = updateExistsStage,
-                    updateExistsContainer = updateExistsContainer,
+                    updateExistsContainer = updateExistsContainerWithName,
                     updateExistsTask = updateExistsTask,
                     buildStages = buildStages,
-                    buildContainers = buildContainers,
+                    buildContainers = buildContainersWithName,
                     buildTaskList = buildTaskList,
                     stageBuildRecords = stageBuildRecords,
                     containerBuildRecords = containerBuildRecords,
@@ -1253,6 +1254,7 @@ class PipelineRuntimeService @Autowired constructor(
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
         val containerVar = mutableMapOf<String, Any>()
+        containerVar[Container::name.name] = container.name
         container.containerHashId?.let {
             containerVar[Container::containerHashId.name] = it
         }
@@ -1297,10 +1299,10 @@ class PipelineRuntimeService @Autowired constructor(
         buildNum: Int,
         resourceVersion: Int,
         updateExistsStage: MutableList<PipelineBuildStage>,
-        updateExistsContainer: MutableList<PipelineBuildContainer>,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, String>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
         buildStages: ArrayList<PipelineBuildStage>,
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, String>>,
         buildTaskList: MutableList<PipelineBuildTask>,
         stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
@@ -1325,11 +1327,15 @@ class PipelineRuntimeService @Autowired constructor(
             saveTaskRecords(buildTaskList, taskBuildRecords, resourceVersion)
         }
         if (updateExistsContainer.isNotEmpty()) {
-            pipelineContainerService.batchUpdate(transactionContext, updateExistsContainer)
+            pipelineContainerService.batchUpdate(
+                transactionContext, updateExistsContainer.map { it.first }
+            )
             saveContainerRecords(updateExistsContainer, containerBuildRecords, resourceVersion)
         }
         if (buildContainers.isNotEmpty()) {
-            pipelineContainerService.batchSave(transactionContext, buildContainers)
+            pipelineContainerService.batchSave(
+                transactionContext, buildContainers.map { it.first }
+            )
             saveContainerRecords(buildContainers, containerBuildRecords, resourceVersion)
         }
 
@@ -1369,12 +1375,13 @@ class PipelineRuntimeService @Autowired constructor(
     }
 
     private fun saveContainerRecords(
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, String>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         resourceVersion: Int
     ) {
-        buildContainers.forEach {
+        buildContainers.forEach { (it, name) ->
             val containerVar = mutableMapOf<String, Any>()
+            containerVar[Container::name.name] = name
             it.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
             }
