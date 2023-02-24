@@ -333,6 +333,16 @@ class PermissionGradeManagerService @Autowired constructor(
         defaultGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
+            val authResourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode
+            )
+            if (authResourceGroupInfo != null) {
+                return@forEach
+            }
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)

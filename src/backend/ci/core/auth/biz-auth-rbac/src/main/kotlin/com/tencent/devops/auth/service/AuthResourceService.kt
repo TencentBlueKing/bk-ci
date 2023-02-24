@@ -30,18 +30,21 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthResourceService @Autowired constructor(
-    val dslContext: DSLContext,
-    val authResourceDao: AuthResourceDao
+    private val dslContext: DSLContext,
+    private val authResourceDao: AuthResourceDao,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     companion object {
@@ -93,12 +96,21 @@ class AuthResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String
     ) {
-        authResourceDao.delete(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            authResourceDao.delete(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            authResourceGroupDao.delete(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        }
     }
 
     fun get(

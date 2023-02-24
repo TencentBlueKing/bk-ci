@@ -117,6 +117,21 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun delete(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ) {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.deleteFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .execute()
+        }
+    }
+
     fun getByRelationId(
         dslContext: DSLContext,
         projectCode: String,
