@@ -55,7 +55,7 @@ spec:
                   echo "atomCode exists"
               fi
 
-              echo 'UPDATE devops_ci_store.T_ATOM SET DEFAULT_FLAG=true WHERE ATOM_CODE="'$atom_code'"' >> atom.sql
+              echo 'UPDATE devops_ci_store.T_ATOM SET DEFAULT_FLAG=true WHERE ATOM_CODE="'$atom_code'";' >> atom.sql
               echo 'SADD STORE_PUBLIC_FLAG_KEY:ATOM '$atom_code >> atom.redis
               {{ end }}
 
