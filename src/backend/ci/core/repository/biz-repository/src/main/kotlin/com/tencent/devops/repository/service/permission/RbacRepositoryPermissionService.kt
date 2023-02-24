@@ -29,6 +29,7 @@ package com.tencent.devops.repository.service.permission
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -53,7 +54,7 @@ class RbacRepositoryPermissionService(
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
-        ).data?.map { it.toLong() } ?: emptyList()
+        ).data?.map { HashUtil.decodeOtherIdToLong(it) } ?: emptyList()
 
     }
 
@@ -77,7 +78,7 @@ class RbacRepositoryPermissionService(
         val resourceCode: String
         val resourceType: String
         if (repositoryId != null) {
-            resourceCode = repositoryId.toString()
+            resourceCode = HashUtil.encodeOtherLongId(repositoryId)
             resourceType = AuthResourceType.CODE_REPERTORY.value
         } else {
             resourceCode = projectId
@@ -100,7 +101,7 @@ class RbacRepositoryPermissionService(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
-            resourceCode = repositoryId.toString(),
+            resourceCode = HashUtil.encodeOtherLongId(repositoryId),
             resourceName = repositoryName
         )
     }
@@ -110,7 +111,7 @@ class RbacRepositoryPermissionService(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
-            resourceCode = repositoryId.toString(),
+            resourceCode = HashUtil.encodeOtherLongId(repositoryId),
             resourceName = repositoryName
         )
     }
@@ -120,7 +121,7 @@ class RbacRepositoryPermissionService(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.CODE_REPERTORY.value,
-            resourceCode = repositoryId.toString()
+            resourceCode = HashUtil.encodeOtherLongId(repositoryId)
         )
     }
 
@@ -133,7 +134,7 @@ class RbacRepositoryPermissionService(
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
             value.forEach {
-                instanceLongIds.add(it.toLong())
+                instanceLongIds.add(HashUtil.decodeOtherIdToLong(it))
             }
             resultMap[key] = instanceLongIds
         }
