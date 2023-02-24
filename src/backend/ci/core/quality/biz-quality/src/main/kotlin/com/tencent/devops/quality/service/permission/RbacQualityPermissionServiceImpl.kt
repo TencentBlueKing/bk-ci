@@ -194,7 +194,7 @@ class RbacQualityPermissionServiceImpl(
         instancesMap.forEach { (key, value) ->
             val instanceLongIds = mutableListOf<Long>()
             value.forEach {
-                instanceLongIds.add(it.toLong())
+                instanceLongIds.add(HashUtil.decodeIdToLong(it))
             }
             resultMap[key] = instanceLongIds
         }
