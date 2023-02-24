@@ -54,7 +54,7 @@ class RbacEnvironmentPermissionService(
             action = buildEnvAction(permission),
             projectCode = projectId,
             resourceType = envResourceType
-        ).data?.map { it.toLong() }?.toSet() ?: emptySet()
+        ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
     }
 
     override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
@@ -137,7 +137,7 @@ class RbacEnvironmentPermissionService(
             action = buildNodeAction(permission),
             projectCode = projectId,
             resourceType = nodeResourceType
-        ).data?.map { it.toLong() }?.toSet() ?: emptySet()
+        ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
     }
 
     override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
