@@ -58,9 +58,9 @@ class StreamPipelineBadgeService @Autowired constructor(
         val url = "$badgeServerUrl?label=$pipelineName&message=${type.text}&status=${type.name}&logo=${type.logo}"
         OkhttpUtils.doGet(url).use { resp ->
             if (!resp.isSuccessful) throw RuntimeException(
-                "get badge error code: ${resp.code()} message: ${resp.message()}"
+                "get badge error code: ${resp.code} message: ${resp.message}"
             )
-            return resp.body()!!.string()
+            return resp.body!!.string()
         }
     }
 

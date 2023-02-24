@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.EsbCreateApiReq
 import com.tencent.devops.common.auth.api.pojo.EsbPermissionUrlReq
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -57,7 +57,7 @@ class IamEsbService {
         val content = objectMapper.writeValueAsString(iamCreateApiReq)
         logger.info("v3 createRelationResource url[$url]")
         logger.info("v3 createRelationResource body[$content]")
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
                 .post(requestBody)
@@ -68,7 +68,7 @@ class IamEsbService {
                 // 请求错误
                 throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             logger.info("v3 createRelationResource responseStr[$responseStr]")
             val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
             if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
@@ -87,7 +87,7 @@ class IamEsbService {
         iamPermissionUrl.bk_app_code = appCode!!
         iamPermissionUrl.bk_app_secret = appSecret!!
         val content = objectMapper.writeValueAsString(iamPermissionUrl)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         logger.info("getPermissionUrl url:$url")
         logger.info("getPermissionUrl content:$content body:$requestBody")
@@ -99,7 +99,7 @@ class IamEsbService {
                 // 请求错误
                 throw RemoteServiceException("bkiam v3 request failed, response: ($it)")
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             logger.info("v3 getPermissionUrl responseStr[$responseStr]")
             val iamApiRes = objectMapper.readValue<Map<String, Any>>(responseStr)
             if (iamApiRes["code"] != 0 || iamApiRes["result"] == false) {
