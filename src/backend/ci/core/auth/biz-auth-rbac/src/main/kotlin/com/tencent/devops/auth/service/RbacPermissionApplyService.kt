@@ -203,6 +203,9 @@ class RbacPermissionApplyService @Autowired constructor(
                         departmentCount = it.departmentCount,
                         joined = verifyGroupValidMember[it.id.toInt()]?.belong ?: false,
                         resourceType = dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value,
+                        resourceTypeName = rbacCacheService.getResourceTypeInfo(
+                            dbGroupRecord?.resourceType ?: AuthResourceType.PROJECT.value
+                        ).name,
                         resourceName = dbGroupRecord?.resourceName ?: projectName,
                         resourceCode = dbGroupRecord?.resourceCode ?: projectId
                     )
