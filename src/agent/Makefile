@@ -9,6 +9,9 @@ BUILD_FLAGS := -ldflags="-w -s -X agent/src/pkg/config.BuildTime=$(BuildTime) \
 # 编译外部出包版本时需要设置当前变量为out
 BUILD_OUT_TAG=inner
 
+format: 
+	find ./ -name "*.go" | xargs gofmt -w
+
 test: test-unit
 
 .PHONY: test-unit
