@@ -27,14 +27,14 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.hasPermission && !isDeleteView"
+                    v-if="!props.row.delete && !props.row.hasPermission && !isDeleteView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
                     {{props.row.pipelineName}}
                 </span>
                 <router-link
-                    v-else-if="!isDeleteView && props.row.historyRoute"
+                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
                     :to="props.row.historyRoute">
@@ -133,17 +133,17 @@
                 </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate">
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
-                </template>
+                </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
-                </template>
+                </div>
             </bk-table-column>
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
@@ -156,7 +156,7 @@
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="props.row.delete"
+                    v-else-if="props.row.delete && !isRecentView"
                     text
                     theme="primary"
                     :disabled="!isManage"
@@ -165,14 +165,14 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.hasPermission"
+                    v-else-if="!props.row.hasPermission && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
                 <template
-                    v-else
+                    v-else-if="props.row.hasPermission"
                 >
                     <bk-button
                         text
@@ -216,6 +216,7 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import {
         DELETED_VIEW_ID,
+        RECENT_USED_VIEW_ID,
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { convertTime, isShallowEqual } from '@/utils/util'
@@ -265,11 +266,14 @@
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
             },
+            isRecentView () {
+                return this.$route.params.viewId === RECENT_USED_VIEW_ID
+            },
             pipelineGroups () {
                 const res = this.pipelineList.map((pipeline, index) => {
                     const { viewNames } = pipeline
                     const visibleCount = this.visibleTagCountList[index]
-                                        
+
                     if (visibleCount >= 1) {
                         return {
                             visibleGroups: viewNames.slice(0, visibleCount),
@@ -277,7 +281,7 @@
                             showMore: viewNames.length - visibleCount
                         }
                     }
-                    
+
                     return {
                         visibleGroups: viewNames,
                         hiddenGroups: [],
@@ -464,5 +468,9 @@
         justify-content: center;
         background: #EAEBF0;
         height: 32px;
+    }
+    .latest-build-multiple-row {
+        display: flex;
+        flex-direction: column;
     }
 </style>
