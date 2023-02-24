@@ -180,7 +180,7 @@ class ApigwLogResourceV4Impl @Autowired constructor(
             headers = headers
         )
         return Response
-            .ok(response.body()!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
+            .ok(response.body!!.byteStream(), MediaType.APPLICATION_OCTET_STREAM_TYPE)
             .header("content-disposition", "attachment; filename = $pipelineId-$buildId-log.txt")
             .header("Cache-Control", "no-cache")
             .build()

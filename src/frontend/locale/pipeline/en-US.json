@@ -136,6 +136,9 @@
   "fileUploadSuccess": "Upload Sucessful",
   "empty": "No data",
   "link": "link",
+  "downloadLog": "Download Log",
+  "hideDebugLog": "Hide Debug Log",
+  "showDebugLog": "Show Debug Log",
   "stageReview": {
     "stageInConditions": "Stage-In conditions",
     "approvalFlow": "Approval flow",
