@@ -12,7 +12,7 @@ allprojects {
     group = "com.tencent.bk.devops.ci"
     // 版本
     version = (System.getProperty("ci_version") ?: "1.9.0") +
-            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else "-RELEASE"
+            if (System.getProperty("snapshot") == "true") "-SNAPSHOT" else ""
 
     // Docker镜像构建
     if (name.startsWith("boot-") && System.getProperty("devops.assemblyMode") == "KUBERNETES") {
