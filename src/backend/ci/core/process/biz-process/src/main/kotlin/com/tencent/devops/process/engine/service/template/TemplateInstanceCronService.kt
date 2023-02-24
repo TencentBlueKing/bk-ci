@@ -28,6 +28,7 @@
 package com.tencent.devops.process.engine.service.template
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
@@ -35,6 +36,8 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildNo
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.model.process.tables.records.TTemplateRecord
+import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.template.TemplateDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceBaseDao
 import com.tencent.devops.process.engine.dao.template.TemplateInstanceItemDao
@@ -96,6 +99,7 @@ class TemplateInstanceCronService @Autowired constructor(
             templateInstanceBaseList?.forEach { templateInstanceBase ->
                 val baseId = templateInstanceBase.id
                 val projectId = templateInstanceBase.projectId
+                val templateId = templateInstanceBase.templateId
                 val projectRouterTagCheck =
                     client.get(ServiceProjectTagResource::class).checkProjectRouter(projectId).data
                 if (!projectRouterTagCheck!!) {
@@ -119,10 +123,26 @@ class TemplateInstanceCronService @Autowired constructor(
                     baseId = baseId
                 )
                 if (templateInstanceItemCount < 1) {
+                    templateInstanceBaseDao.deleteByBaseId(dslContext, projectId, baseId)
                     return@forEach
                 }
                 val templateVersion = templateInstanceBase.templateVersion.toLong()
-                val template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
+                var template: TTemplateRecord? = null
+                try {
+                    template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
+                } catch (e: ErrorCodeException) {
+                    if (e.errorCode == ProcessMessageCode.ERROR_TEMPLATE_NOT_EXISTS) {
+                        // 模板版本记录如果已经被删，则无需执行更新任务并把任务记录删除
+                        logger.warn("the version[$templateVersion] of template[$templateId] is not exist,skip the task")
+                        deleteTemplateInstanceTaskRecord(projectId, baseId)
+                    } else {
+                        throw e
+                    }
+                }
+                if (template == null) {
+                    deleteTemplateInstanceTaskRecord(projectId, baseId)
+                    return@forEach
+                }
                 val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
                 // 分页切片处理当前批次的待处理任务
                 for (page in 1..totalPages) {
@@ -148,7 +168,7 @@ class TemplateInstanceCronService @Autowired constructor(
                                 userId = userId,
                                 useTemplateSettings = templateInstanceBase.useTemplateSettingsFlag,
                                 projectId = projectId,
-                                templateId = templateInstanceBase.templateId,
+                                templateId = templateId,
                                 templateVersion = template.version,
                                 versionName = template.versionName,
                                 templateContent = template.template,
@@ -170,11 +190,8 @@ class TemplateInstanceCronService @Autowired constructor(
                         }
                     }
                 }
-                dslContext.transaction { configuration ->
-                    val context = DSL.using(configuration)
-                    templateInstanceItemDao.deleteByBaseId(context, projectId, baseId)
-                    templateInstanceBaseDao.deleteByBaseId(context, projectId, baseId)
-                }
+                // 删除模板更新任务记录
+                deleteTemplateInstanceTaskRecord(projectId, baseId)
                 // 发送执行任务结果通知
                 TempNotifyTemplateUtils.sendUpdateTemplateInstanceNotify(
                     client = client,
@@ -186,9 +203,17 @@ class TemplateInstanceCronService @Autowired constructor(
                 )
             }
         } catch (ignored: Throwable) {
-            logger.warn("templateInstance failed", ignored)
+            logger.error("BKSystemErrorMonitor|templateInstance|error=${ignored.message}", ignored)
         } finally {
             lock.unlock()
+        }
+    }
+
+    private fun deleteTemplateInstanceTaskRecord(projectId: String, baseId: String) {
+        dslContext.transaction { configuration ->
+            val context = DSL.using(configuration)
+            templateInstanceItemDao.deleteByBaseId(context, projectId, baseId)
+            templateInstanceBaseDao.deleteByBaseId(context, projectId, baseId)
         }
     }
 }
