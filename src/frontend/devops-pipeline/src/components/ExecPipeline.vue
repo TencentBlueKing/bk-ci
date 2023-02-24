@@ -329,10 +329,14 @@
                 const stages = this.hideSkipTask
                     ? this.execDetail?.model?.stages.filter((stage) => {
             if (this.isSkip(stage.status)) return false
-            return stage.containers.filter((container) => {
+            stage.containers = stage.containers.filter((container) => {
               if (this.isSkip(container.status)) return false
-              return container.elements.filter((element) => !this.isSkip(element.status))
+              container.elements = container.elements.filter(
+                (element) => !this.isSkip(element.status)
+              )
+              return container.elements.length > 0
             })
+            return stage.containers.length > 0
           })
                     : this.execDetail?.model?.stages
                 return this.execDetail?.model

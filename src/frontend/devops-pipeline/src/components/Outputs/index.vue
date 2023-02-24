@@ -28,7 +28,7 @@
                     @click="setActiveOutput(output)"
                 >
                     <i :class="['devops-icon', `icon-${output.icon}`]"></i>
-                    <span>{{ output.name }}</span>
+                    <span :title="output.name">{{ output.name }}</span>
                 </li>
             </ul>
 
@@ -520,6 +520,11 @@
           display: inline-block;
           font-size: 16px;
           margin-right: 4px;
+          flex-shrink: 0;
+        }
+        > span {
+          flex: 1;
+          @include ellipsis();
         }
         &.active,
         &:hover {

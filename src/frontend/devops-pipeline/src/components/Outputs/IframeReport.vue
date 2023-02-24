@@ -1,7 +1,8 @@
 <template>
     <iframe
         class="exec-third-party-report"
-        allowfullscreen ref="iframeEle"
+        ref="reportIframe"
+        allowfullscreen
         :src="indexFileUrl"
     />
 </template>
@@ -14,13 +15,17 @@
                 type: String,
                 default: ''
             }
+        },
+        mounted () {
+            this.$refs.reportIframe.addEventListener('load', () => {
+                this.$refs.reportIframe.style.height = this.$refs.reportIframe.contentDocument.body.scrollHeight
+            })
         }
     }
 </script>
 <style lang="scss">
-    .exec-third-party-report {
-        width: 100%;
-        height: 100%;
-        border: 0;
-    }
+.exec-third-party-report {
+  width: 100%;
+  border: 0;
+}
 </style>
