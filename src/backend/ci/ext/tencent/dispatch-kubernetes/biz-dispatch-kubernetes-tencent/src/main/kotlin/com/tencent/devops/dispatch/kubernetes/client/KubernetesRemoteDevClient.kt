@@ -41,7 +41,6 @@ import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspace
 import com.tencent.devops.dispatch.kubernetes.pojo.KubernetesWorkspaceUrlRsp
 import com.tencent.devops.dispatch.kubernetes.pojo.TaskResp
 import com.tencent.devops.dispatch.kubernetes.pojo.getCodeMessage
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
