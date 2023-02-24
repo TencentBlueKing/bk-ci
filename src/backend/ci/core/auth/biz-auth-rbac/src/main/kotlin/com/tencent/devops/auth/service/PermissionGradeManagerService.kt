@@ -330,19 +330,15 @@ class PermissionGradeManagerService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             createMode = false
         )
+        val existGroupNames = authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).map { it.groupName }
         defaultGroupConfigs.filter {
-            it.groupCode != DefaultGroupType.MANAGER.value
+            !existGroupNames.contains(it.groupName)
         }.forEach { groupConfig ->
-            val authResourceGroupInfo = authResourceGroupDao.get(
-                dslContext = dslContext,
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode,
-                groupCode = groupConfig.groupCode
-            )
-            if (authResourceGroupInfo != null) {
-                return@forEach
-            }
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
@@ -409,7 +405,18 @@ class PermissionGradeManagerService @Autowired constructor(
             searchGroupDTO,
             pageInfoDTO
         )
-        iamGroupInfoList.results.map { iamGroupInfo ->
+        val manageGroupConfig = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = AuthResourceType.PROJECT.value,
+            groupCode = DefaultGroupType.MANAGER.value
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf(DefaultGroupType.MANAGER.value),
+            defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
+        )
+        iamGroupInfoList.results.filter {
+            it.name == manageGroupConfig.groupName
+        }.map { iamGroupInfo ->
             authResourceGroupDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,

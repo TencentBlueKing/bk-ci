@@ -74,7 +74,8 @@ class AuthResourceGroupDao {
                 relationId,
                 now,
                 now,
-            ).execute()
+            ).onDuplicateKeyIgnore()
+                .execute()
         }
     }
 
@@ -142,6 +143,36 @@ class AuthResourceGroupDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RELATION_ID.eq(iamGroupId))
                 .fetchOne()
+        }
+    }
+
+    fun getByGroupName(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+        groupName: String
+    ): TAuthResourceGroupRecord? {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(GROUP_NAME.eq(groupName))
+                .fetchOne()
+        }
+    }
+
+    fun getByResourceCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String
+    ): List<TAuthResourceGroupRecord> {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.selectFrom(this).where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_CODE.eq(resourceCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .fetch()
         }
     }
 }
