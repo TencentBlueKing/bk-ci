@@ -58,13 +58,14 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = envResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         ).data ?: emptyMap()
+        return buildResultMap(instancesMap)
     }
 
     override fun checkEnvPermission(
@@ -141,13 +142,14 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = nodeResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
         ).data ?: emptyMap()
+        return buildResultMap(instancesMap)
     }
 
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
@@ -210,6 +212,22 @@ class RbacEnvironmentPermissionService(
 
     private fun buildEnvAction(authPermission: AuthPermission): String {
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
+    }
+
+    private fun buildResultMap(
+        instancesMap: Map<AuthPermission, List<String>>
+    ): Map<AuthPermission, List<String>> {
+        if (instancesMap.isEmpty())
+            return emptyMap()
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        instancesMap.forEach { (key, value) ->
+            val instanceLongIds = mutableListOf<String>()
+            value.forEach {
+                instanceLongIds.add(HashUtil.decodeIdToLong(it).toString())
+            }
+            resultMap[key] = instanceLongIds
+        }
+        return resultMap
     }
 
     companion object {
