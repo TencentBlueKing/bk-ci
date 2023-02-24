@@ -1,3 +1,4 @@
+//go:build !out
 // +build !out
 
 /*
