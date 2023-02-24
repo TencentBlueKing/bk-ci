@@ -80,7 +80,7 @@ export default {
                 const { viewId, ...restQuery } = query
                 const queryParams = {
                     sortType: localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
-                    collation: ORDER_ENUM.descending,
+                    collation: localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending,
                     ...this.$route.query,
                     ...restQuery
                 }

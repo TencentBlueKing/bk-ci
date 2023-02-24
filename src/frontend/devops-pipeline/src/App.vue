@@ -12,7 +12,7 @@
     import { getCacheViewId } from '@/utils/util'
 
     export default {
-        name: 'app',
+        name: 'App',
         data () {
             return {
                 stayCurrentPage: ['atomDebug', '']
