@@ -143,7 +143,7 @@ class ApiAspect(
     }
 
     @Suppress("ComplexCondition")
-    @Around("execution(* com.tencent.devops.openapi.resources.apigw..*.*(..))")
+    @Around("within(com.tencent.devops.openapi.resources.apigw..*)")
     fun aroundMethod(pdj: ProceedingJoinPoint): Any? {
         val begin = System.currentTimeMillis()
         val methodName = pdj.signature.name
