@@ -14,7 +14,8 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
-        "@blueking/log": "2.0.9",
+        "@blueking/search-select": "0.0.1-beta.2",
+        "@blueking/log": "2.0.10",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "axios": "^0.27.2",
         "bk-magic-vue": "2.4.15-beta.7",
@@ -32,7 +33,8 @@
         "vue-json-viewer": "^2.2.5",
         "vue-router": "^2.8.1",
         "vuedraggable": "^2.16.0",
-        "vuex": "^2.4.0"
+        "vuex": "^2.4.0",
+        "mavon-editor": "^2.10.4"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",
@@ -74,7 +76,7 @@
         "sass-loader": "^12.1.0",
         "style-loader": "^3.3.1",
         "terser-webpack-plugin": "^5.3.6",
-        "vue-loader": "^15.9.8",
+        "vue-loader": "15.9.8",
         "vue-template-compiler": "2.6.12",
         "webpack": "^5.58.1"
     }

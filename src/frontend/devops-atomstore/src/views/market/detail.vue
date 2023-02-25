@@ -142,7 +142,6 @@
                     this.getUserApprovalInfo(atomCode),
                     this.getQualityData(atomCode)
                 ]).then(([atomDetail, atomStatic, userAppInfo, quality]) => {
-                    console.log(quality, 'quality')
                     const detail = atomDetail || {}
                     detail.detailId = atomDetail.atomId
                     detail.recentExecuteNum = atomStatic.recentExecuteNum || 0

@@ -23,42 +23,12 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.common.wechatwork.model.enums
 
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.api.callback.AuthResourceCallBackResource
-import com.tencent.devops.auth.service.ResourceService
-import com.tencent.devops.common.web.RestResource
-import org.slf4j.LoggerFactory
-import org.springframework.beans.factory.annotation.Autowired
-
-@RestResource
-class AuthResourceCallBackResourceImpl @Autowired constructor(
-    val resourceService: ResourceService
-) : AuthResourceCallBackResource {
-    override fun projectInfo(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO {
-        return resourceService.getProject(callBackInfo, token)
-    }
-
-    override fun resourceList(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO? {
-        logger.info("resourceList: $callBackInfo, token: $token")
-        return resourceService.getInstanceByResource(
-                callBackInfo = callBackInfo,
-                token = token
-            )
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(AuthResourceCallBackResourceImpl::class.java)
-    }
+enum class RichtextContentType(private val type: String) {
+    text("text"),
+    mentioned("mentioned"),
+    link("link")
 }

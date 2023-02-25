@@ -78,7 +78,6 @@ class StreamRepoTriggerAction(
     override fun checkAndDeletePipeline(path2PipelineExists: Map<String, StreamTriggerPipeline>) {}
 
     override fun getYamlPathList(): List<YamlPathListEntry> {
-        val changeSet = getChangeSet()
         return GitActionCommon.getYamlPathList(
             action = baseAction,
             gitProjectId = getGitProjectIdOrName(),

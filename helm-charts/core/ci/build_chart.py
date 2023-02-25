@@ -50,15 +50,18 @@ default_value_dict = {
     'bkCiStreamHost': 'devops.example.com',
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
-    'bkCiRepositoryGithubServer':'repository',
-    'bkCiDockerRoutingType':'KUBERNETES',
-    'bkCiDockerJobQuotaEnable':'false',
-    'bkCiBcsCpu':'8.0',
-    'bkCiBcsMemory':'16048',
-    'bkCiKubernetesCpu':'8',
-    'bkCiKubernetesMemory':'16048',
+    'bkCiRepositoryGithubServer': 'repository',
+    'bkCiDockerRoutingType': 'KUBERNETES',
+    'bkCiDockerJobQuotaEnable': 'false',
+    'bkCiBcsCpu': '8.0',
+    'bkCiBcsMemory': '16048',
+    'bkCiKubernetesCpu': '8',
+    'bkCiKubernetesMemory': '16048',
     'bkCiKubernetesHost': 'http://kubernetes-manager',
-    'bkCiKubernetesToken': 'landun'
+    'bkCiKubernetesToken': 'landun',
+    'bkCiDevopsToken': 'devops',
+    'bkCiAppToken': 'test',
+    'bkCiNotifyEmailSendChannel': 'blueking'
 }
 
 if os.path.isfile(default_value_json):
@@ -108,11 +111,13 @@ env_file.close()
 image_registry = sys.argv[1]
 image_gateway_tag = sys.argv[2]
 image_backend_tag = sys.argv[3]
+image_frontend_tag = sys.argv[4]
 value_file = open(output_value_yaml, 'w')
 for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_registry__", image_registry)
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
+    line = line.replace("__image_frontend_tag__", image_frontend_tag)
     value_file.write(line)
 
 value_file.write('\nconfig:\n')
@@ -149,8 +154,8 @@ for config_name in os.listdir(config_parent):
         config_file.close()
 
 # 生成网关的configmap
-gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
-                    "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__","__BK_REPO_HOST__"])  # frondend需要的变量
+gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__", "__BK_CI_PAAS_LOGIN_URL__",
+                    "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__", "__BK_REPO_HOST__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):
