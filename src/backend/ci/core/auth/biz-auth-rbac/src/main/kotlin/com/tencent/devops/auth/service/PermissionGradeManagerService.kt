@@ -330,15 +330,17 @@ class PermissionGradeManagerService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             createMode = false
         )
-        val existGroupNames = authResourceGroupDao.getByResourceCode(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectCode
-        ).map { it.groupName }
-        defaultGroupConfigs.filter {
-            !existGroupNames.contains(it.groupName)
-        }.forEach { groupConfig ->
+        defaultGroupConfigs.forEach { groupConfig ->
+            val resourceGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
+                groupCode = groupConfig.groupCode
+            )
+            if (resourceGroupInfo != null) {
+                return@forEach
+            }
             val name = groupConfig.groupName
             val description = groupConfig.description
             val managerRoleGroup = ManagerRoleGroup(name, description, false)
@@ -396,6 +398,16 @@ class PermissionGradeManagerService @Autowired constructor(
         projectCode: String,
         projectName: String
     ) {
+        val resourceManageGroupInfo = authResourceGroupDao.get(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode,
+            groupCode = DefaultGroupType.MANAGER.value
+        )
+        if (resourceManageGroupInfo != null) {
+            return
+        }
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
@@ -405,18 +417,7 @@ class PermissionGradeManagerService @Autowired constructor(
             searchGroupDTO,
             pageInfoDTO
         )
-        val manageGroupConfig = authResourceGroupConfigDao.get(
-            dslContext = dslContext,
-            resourceType = AuthResourceType.PROJECT.value,
-            groupCode = DefaultGroupType.MANAGER.value
-        ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
-            params = arrayOf(DefaultGroupType.MANAGER.value),
-            defaultMessage = "group config ${DefaultGroupType.MANAGER.value} not exist"
-        )
-        iamGroupInfoList.results.filter {
-            it.name == manageGroupConfig.groupName
-        }.map { iamGroupInfo ->
+        iamGroupInfoList.results.forEach { iamGroupInfo ->
             authResourceGroupDao.create(
                 dslContext = dslContext,
                 projectCode = projectCode,
