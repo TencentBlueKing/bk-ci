@@ -28,6 +28,7 @@
 
 package com.tencent.devops.process.permission
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
@@ -60,45 +61,45 @@ class RbacPipelineGroupPermissionService constructor(
     override fun checkPipelineGroupPermission(
         userId: String,
         projectId: String,
-        pipelineViewId: String,
+        viewId: Long,
         permission: AuthPermission
     ): Boolean {
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
-            resourceCode = pipelineViewId,
+            resourceCode = HashUtil.encodeLongId(viewId),
             permission = permission,
             resourceType = resourceType,
             serviceCode = pipelineGroupAuthServiceCode
         )
     }
 
-    override fun createResource(userId: String, projectId: String, pipelineViewId: String, pipelineViewName: String) {
+    override fun createResource(userId: String, projectId: String, viewId: Long, pipelineViewName: String) {
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
             serviceCode = pipelineGroupAuthServiceCode,
             resourceType = resourceType,
-            resourceCode = pipelineViewId,
+            resourceCode = HashUtil.encodeLongId(viewId),
             resourceName = pipelineViewName
         )
     }
 
-    override fun modifyResource(userId: String, projectId: String, pipelineViewId: String, pipelineViewName: String) {
+    override fun modifyResource(userId: String, projectId: String, viewId: Long, pipelineViewName: String) {
         authResourceApi.deleteResource(
             serviceCode = pipelineGroupAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = pipelineViewId
+            resourceCode = HashUtil.encodeLongId(viewId)
         )
     }
 
-    override fun deleteResource(projectId: String, pipelineViewId: String) {
+    override fun deleteResource(projectId: String, viewId: Long) {
         authResourceApi.deleteResource(
             serviceCode = pipelineGroupAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = pipelineViewId
+            resourceCode = HashUtil.encodeLongId(viewId)
         )
     }
 }

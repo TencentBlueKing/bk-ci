@@ -38,7 +38,7 @@ class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
     override fun checkPipelineGroupPermission(
         userId: String,
         projectId: String,
-        pipelineViewId: String,
+        viewId: Long,
         permission: AuthPermission
     ): Boolean {
         return true
@@ -47,16 +47,16 @@ class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
     override fun createResource(
         userId: String,
         projectId: String,
-        pipelineViewId: String,
+        viewId: Long,
         pipelineViewName: String
     ) = Unit
 
     override fun modifyResource(
         userId: String,
         projectId: String,
-        pipelineViewId: String,
+        viewId: Long,
         pipelineViewName: String
     ) = Unit
 
-    override fun deleteResource(projectId: String, pipelineViewId: String) = Unit
+    override fun deleteResource(projectId: String, viewId: Long) = Unit
 }

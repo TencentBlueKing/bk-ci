@@ -329,7 +329,7 @@ class PipelineViewService @Autowired constructor(
                 ""
             }
             val logic = if (pipelineView.viewType == PipelineViewType.DYNAMIC) pipelineView.logic.name else ""
-            val pipelineViewId =  pipelineViewDao.create(
+            val viewId = pipelineViewDao.create(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 name = pipelineView.name,
@@ -343,10 +343,10 @@ class PipelineViewService @Autowired constructor(
             pipelineGroupPermissionService.createResource(
                 userId = userId,
                 projectId = projectId,
-                pipelineViewId = pipelineViewId.toString(),
+                viewId = viewId,
                 pipelineViewName = pipelineView.name
             )
-            return pipelineViewId
+            return viewId
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
             throw throw ErrorCodeException(
@@ -361,7 +361,7 @@ class PipelineViewService @Autowired constructor(
         if (success) {
             pipelineGroupPermissionService.deleteResource(
                 projectId = projectId,
-                pipelineViewId = viewId.toString()
+                viewId = viewId
             )
         }
         return success
@@ -393,7 +393,7 @@ class PipelineViewService @Autowired constructor(
                 pipelineGroupPermissionService.modifyResource(
                     userId = userId,
                     projectId = projectId,
-                    pipelineViewId = viewId.toString(),
+                    viewId = viewId,
                     pipelineViewName = pipelineView.name
                 )
             }

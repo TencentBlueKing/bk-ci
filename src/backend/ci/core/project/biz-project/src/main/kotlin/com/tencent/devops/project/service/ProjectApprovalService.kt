@@ -121,8 +121,8 @@ class ProjectApprovalService @Autowired constructor(
         )
     }
 
-    fun delete(userId: String, projectId: String) {
-        logger.info("delete project approval info:$projectId, $userId")
+    fun delete(projectId: String) {
+        logger.info("delete project approval info:$projectId")
         projectApprovalDao.delete(dslContext = dslContext, projectId = projectId)
     }
 

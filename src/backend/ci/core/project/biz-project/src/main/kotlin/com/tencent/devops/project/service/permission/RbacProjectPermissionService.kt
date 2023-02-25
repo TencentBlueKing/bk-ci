@@ -88,6 +88,7 @@ class RbacProjectPermissionService(
     }
 
     override fun deleteResource(projectCode: String) {
+        projectApprovalService.delete(projectId = projectCode)
         authResourceApi.deleteResource(
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
@@ -150,7 +151,6 @@ class RbacProjectPermissionService(
 
     override fun cancelCreateAuthProject(userId: String, projectCode: String) {
         projectApprovalService.delete(
-            userId = userId,
             projectId = projectCode
         )
         authResourceApi.cancelCreateResource(

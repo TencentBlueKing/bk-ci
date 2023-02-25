@@ -34,7 +34,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.service.iam.PermissionProjectService
-import com.tencent.devops.common.auth.api.AuthActionEnums
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -89,7 +89,11 @@ class RbacPermissionProjectService(
         instanceDTO.system = iamConfiguration.systemId
         instanceDTO.id = projectCode
         instanceDTO.type = AuthResourceType.PROJECT.value
-        return authHelper.isAllowed(userId, AuthActionEnums.PROJECT_MANAGE.value, instanceDTO)
+        return authHelper.isAllowed(
+            userId,
+            RbacAuthUtils.buildAction(AuthPermission.MANAGE, authResourceType = AuthResourceType.PROJECT),
+            instanceDTO
+        )
     }
 
     override fun createProjectUser(userId: String, projectCode: String, roleCode: String): Boolean {
