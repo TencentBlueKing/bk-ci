@@ -23,11 +23,37 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.common.auth.api
+package com.tencent.devops.project.resources
 
-enum class AuthActionEnums(val value: String) {
-    PROJECT_MANAGE("project_manage")
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.open.OpenProjectAuthCallBackResource
+import org.springframework.beans.factory.annotation.Autowired
+
+@RestResource
+class OpenProjectAuthCallBackResourceImpl @Autowired constructor(
+    val authProjectService: AuthProjectService
+) : OpenProjectAuthCallBackResource {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return authProjectService.getProjectList(page, token)
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                val attribute = callBackInfo.filter.attributeList
+                return authProjectService.getProjectInfo(ids, token, attribute)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+            }
+        }
+        return null
+    }
 }

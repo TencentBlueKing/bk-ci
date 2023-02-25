@@ -36,6 +36,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
@@ -109,7 +110,7 @@ class RbacPermissionResourceService(
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
                 // 流水线和流水线组才需要主动开启权限管理
-                enable = resourceType != AuthResourceType.PIPELINE_DEFAULT.value ||
+                enable = resourceType != AuthResourceType.PIPELINE_DEFAULT.value &&
                     resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
@@ -337,12 +338,13 @@ class RbacPermissionResourceService(
         page: Int,
         pageSize: Int
     ): Pagination<AuthResourceInfo> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val resourceList = authResourceService.list(
             projectCode = projectId,
             resourceType = resourceType,
             resourceName = resourceName,
-            page = page,
-            pageSize = pageSize
+            limit = sqlLimit.limit,
+            offset = sqlLimit.offset
         )
         if (resourceList.isEmpty()) {
             return Pagination(false, emptyList())

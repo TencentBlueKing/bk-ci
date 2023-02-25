@@ -60,9 +60,7 @@ class AuthResourceCodeConverter @Autowired constructor(
      */
     fun code2IamCode(resourceType: String, resourceCode: String): String {
         // 如果是流水线或者凭证,iam资源code自动生成
-        return if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-            resourceType == AuthResourceType.TICKET_CREDENTIAL.value
-        ) {
+        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
             client.get(ServiceAllocIdResource::class)
                 .generateSegmentId(AUTH_RESOURCE_ID_TAG).data.toString()
         } else {
@@ -74,9 +72,7 @@ class AuthResourceCodeConverter @Autowired constructor(
      * 权限中心资源code转成蓝盾资源code
      */
     fun iamCode2Code(projectCode: String, resourceType: String, iamResourceCode: String): String {
-        return if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-            resourceType == AuthResourceType.TICKET_CREDENTIAL.value
-        ) {
+        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
             authResourceDao.getByIamCode(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -96,9 +92,7 @@ class AuthResourceCodeConverter @Autowired constructor(
      * 批量权限中心资源code转成蓝盾资源code
      */
     fun batchIamCode2Code(projectCode: String, resourceType: String, iamResourceCodes: List<String>): List<String> {
-        return if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value ||
-            resourceType == AuthResourceType.TICKET_CREDENTIAL.value
-        ) {
+        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
             authResourceDao.getResourceCodeByIamCode(
                 dslContext = dslContext,
                 projectCode = projectCode,

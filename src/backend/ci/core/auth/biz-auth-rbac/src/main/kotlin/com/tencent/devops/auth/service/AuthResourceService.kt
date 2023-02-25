@@ -180,18 +180,17 @@ class AuthResourceService @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceName: String?,
-        page: Int,
-        pageSize: Int
+        limit: Int,
+        offset: Int
     ): List<AuthResourceInfo> {
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val resourceList: MutableList<AuthResourceInfo> = ArrayList()
         authResourceDao.list(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceName = resourceName,
             resourceType = resourceType,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
+            limit = limit,
+            offset = offset
         ).map { resourceList.add(authResourceDao.convert(it)) }
         return resourceList
     }
@@ -205,5 +204,16 @@ class AuthResourceService @Autowired constructor(
             projectCode = projectCode,
             resourceType = resourceType
         )
+    }
+
+    fun listByIamCodes(
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByByIamCodes(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            iamResourceCodes = iamResourceCodes
+        ).map { authResourceDao.convert(it) }
     }
 }
