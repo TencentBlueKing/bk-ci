@@ -72,7 +72,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ITSM_CALLBACK_APPLICATION_FAIL,
+            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
             defaultMessage = "The itsm callback application does not exist!| sn = $sn"
         )
@@ -126,7 +126,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.ITSM_CALLBACK_APPLICATION_FAIL,
+            errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
             defaultMessage = "The itsm callback application does not exist!| sn = $sn"
         )

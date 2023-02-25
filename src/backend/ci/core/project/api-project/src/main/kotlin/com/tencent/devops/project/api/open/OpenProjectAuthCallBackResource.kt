@@ -25,12 +25,11 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.project.api.open
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-import com.tencent.devops.project.pojo.Result
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -42,10 +41,10 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/service/project/callback")
+@Path("/open/project/callback")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface ServiceProjectAuthCallBackResource {
+interface OpenProjectAuthCallBackResource {
     @POST
     @Path("/")
     @ApiOperation("iam项目回调接口")
@@ -55,5 +54,5 @@ interface ServiceProjectAuthCallBackResource {
         token: String,
         @ApiParam(value = "回调信息")
         callBackInfo: CallbackRequestDTO
-    ): Result<CallbackBaseResponseDTO>
+    ): CallbackBaseResponseDTO?
 }

@@ -25,44 +25,65 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.resources
+package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.web.RestResource
+import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
+import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
-import com.tencent.devops.project.pojo.Result
-import org.springframework.beans.factory.annotation.Autowired
 
-@RestResource
-class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
-    val authProjectService: AuthProjectService
-) : ServiceProjectAuthCallBackResource {
-    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): Result<CallbackBaseResponseDTO> {
+class RbacPermissionResourceCallbackService constructor(
+    private val client: Client,
+    private val authResourceService: AuthResourceService
+) : PermissionResourceCallbackService {
+
+    override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
+        return client.get(ServiceProjectAuthCallBackResource::class).projectInfo(
+            token = token,
+            callBackInfo = callBackInfo
+        ).data!!
+    }
+
+    override fun getInstanceByResource(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val callbackBaseResponseDTO = when (method) {
-            CallbackMethodEnum.LIST_INSTANCE -> {
-                authProjectService.getProjectList(page, token)
-            }
+        val resourceType = callBackInfo.type
+        return when (method) {
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
-                val attribute = callBackInfo.filter.attributeList
-                authProjectService.getProjectInfo(ids, token, attribute)
-            }
-            CallbackMethodEnum.SEARCH_INSTANCE -> {
-                authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+                fetchInstance(
+                    resourceType = resourceType,
+                    iamResourceCodes = ids
+                )
             }
             else ->
-                throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT,
-                    params = arrayOf(method.method),
-                    defaultMessage = "iam callback method ${method.method} not support"
-                )
+                null
         }
-        return Result(callbackBaseResponseDTO)
+    }
+
+    private fun fetchInstance(
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): FetchInstanceInfoResponseDTO {
+        val instanceInfoDTOList = authResourceService.listByIamCodes(
+            resourceType = resourceType,
+            iamResourceCodes = iamResourceCodes
+        ).map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.iamResourceCode
+            entity.displayName = it.resourceName
+            entity
+        }
+        val result = FetchInstanceInfo()
+
+        if (instanceInfoDTOList.isEmpty()) {
+            return result.buildFetchInstanceFailResult()
+        }
+        return result.buildFetchInstanceResult(instanceInfoDTOList)
     }
 }

@@ -94,9 +94,9 @@ object AuthMessageCode {
     const val GET_IAM_GROUP_FAIL = "2121507" // 权限系统: 获取用户组失败
     const val GET_REDIRECT_INFORMATION_FAIL = "2121508" // 权限系统: 获取权限申请跳转信息失败
 
-    const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121601" // 用户{0}没有管理员权限
-    const val ERROR_AUTH_GROUP_NOT_EXIST = "2121602" // 用户组{0}不存在
-    const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121603" // 用户组配置{0}不存在
-
-    const val ITSM_CALLBACK_APPLICATION_FAIL = "2121701" // 查询不到有效的项目审批回调单
+    const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121509" // 用户{0}没有管理员权限
+    const val ERROR_AUTH_GROUP_NOT_EXIST = "2121510" // 用户组{0}不存在
+    const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121511" // 用户组配置{0}不存在
+    const val ERROR_ITSM_CALLBACK_APPLICATION_FAIL = "2121512" // 查询不到有效的项目审批回调单
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "21211513" // iam回调方法${0}不支持
 }

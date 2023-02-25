@@ -30,39 +30,30 @@ package com.tencent.devops.project.resources
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.constant.AuthMessageCode
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
-import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.api.open.OpenProjectAuthCallBackResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class ServiceProjectAuthCallBackResourceImpl @Autowired constructor(
+class OpenProjectAuthCallBackResourceImpl @Autowired constructor(
     val authProjectService: AuthProjectService
-) : ServiceProjectAuthCallBackResource {
-    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): Result<CallbackBaseResponseDTO> {
+) : OpenProjectAuthCallBackResource {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
         val method = callBackInfo.method
         val page = callBackInfo.page
-        val callbackBaseResponseDTO = when (method) {
+        when (method) {
             CallbackMethodEnum.LIST_INSTANCE -> {
-                authProjectService.getProjectList(page, token)
+                return authProjectService.getProjectList(page, token)
             }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 val attribute = callBackInfo.filter.attributeList
-                authProjectService.getProjectInfo(ids, token, attribute)
+                return authProjectService.getProjectInfo(ids, token, attribute)
             }
             CallbackMethodEnum.SEARCH_INSTANCE -> {
-                authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
             }
-            else ->
-                throw ErrorCodeException(
-                    errorCode = AuthMessageCode.ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT,
-                    params = arrayOf(method.method),
-                    defaultMessage = "iam callback method ${method.method} not support"
-                )
         }
-        return Result(callbackBaseResponseDTO)
+        return null
     }
 }

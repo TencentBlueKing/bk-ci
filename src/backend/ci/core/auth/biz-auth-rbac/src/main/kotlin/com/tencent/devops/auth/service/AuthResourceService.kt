@@ -206,4 +206,15 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType
         )
     }
+
+    fun listByIamCodes(
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByByIamCodes(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            iamResourceCodes = iamResourceCodes
+        ).map { authResourceDao.convert(it) }
+    }
 }
