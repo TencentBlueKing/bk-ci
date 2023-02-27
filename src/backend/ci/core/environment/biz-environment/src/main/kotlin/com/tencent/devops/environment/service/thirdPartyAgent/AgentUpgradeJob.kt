@@ -36,6 +36,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentPropsScope
 import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.AgentScope
+import com.tencent.devops.environment.service.thirdPartyAgent.upgrade.ProjectScope
 import com.tencent.devops.model.environment.tables.records.TEnvironmentThirdpartyAgentRecord
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
@@ -52,7 +53,8 @@ class AgentUpgradeJob @Autowired constructor(
     private val agentScope: AgentScope,
     private val dslContext: DSLContext,
     private val thirdPartyAgentDao: ThirdPartyAgentDao,
-    private val client: Client
+    private val client: Client,
+    private val projectScope: ProjectScope
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(AgentUpgradeJob::class.java)
@@ -114,17 +116,17 @@ class AgentUpgradeJob @Autowired constructor(
             status = setOf(AgentStatus.IMPORT_OK)
         ).toSet()
         val needUpgradeAgents = importOKAgents.filter {
-            when {
-                // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
-                // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
-                checkProjectRouter(it.projectId) -> checkCanUpgrade(
+            // #5806 #5045 解决worker过老，或者异常，导致拿不到版本号，而无法自愈或升级的问题
+            // it.version.isNullOrBlank() || it.masterVersion.isNullOrBlank() -> false
+            if (checkProjectRouter(it.projectId) && checkProjectUpgrade(it.projectId)) {
+                checkCanUpgrade(
                     goAgentCurrentVersion = currentMasterVersion,
                     workCurrentVersion = currentVersion,
                     currentDockerInitFileMd5 = currentDockerInitFileMd5,
                     record = it
                 )
-
-                else -> false
+            } else {
+                false
             }
         }
         return if (needUpgradeAgents.size > maxParallelCount) {
@@ -157,7 +159,8 @@ class AgentUpgradeJob @Autowired constructor(
 
                 AgentUpgradeType.JDK -> {
                     val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
-                    val currentJdkVersion = agentPropsScope.getJdkVersion(record.os, props.arch) ?: return@forEach
+                    val currentJdkVersion =
+                        agentPropsScope.getJdkVersion(record.os, props.arch)?.ifBlank { null } ?: return@forEach
                     if (props.jdkVersion.size > 2) {
                         currentJdkVersion.trim() != props.jdkVersion.last().trim()
                     } else {
@@ -174,7 +177,7 @@ class AgentUpgradeJob @Autowired constructor(
                         return@forEach
                     }
                     (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
-                        props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
+                            props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
                 }
             }
             if (res) {
@@ -182,5 +185,19 @@ class AgentUpgradeJob @Autowired constructor(
             }
         }
         return false
+    }
+
+    /**
+     * 校验这个agent所属的项目是否可以进行升级或者其他属性
+     * @return true 可以升级 false 不能进行升级
+     */
+    private fun checkProjectUpgrade(projectId: String): Boolean {
+        // 校验不升级项目，这些项目不参与Agent升级
+        if (projectScope.checkDenyUpgradeProject(projectId)) {
+            return false
+        }
+
+        // 校验是否在优先升级的项目列表中，如果不在里面并且优先升级项目的列表为空也允许Agent升级。
+        return projectScope.checkInPriorityUpgradeProjectOrEmpty(projectId)
     }
 }

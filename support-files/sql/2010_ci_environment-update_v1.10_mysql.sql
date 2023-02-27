@@ -22,6 +22,21 @@ BEGIN
             ADD COLUMN `DOCKER_PARALLEL_TASK_COUNT` int(11) DEFAULT NULL COMMENT 'Docker构建机并行任务计数';
     END IF;
 
+    IF EXISTS(SELECT 1
+              FROM information_schema.COLUMNS
+              WHERE TABLE_SCHEMA = db
+                AND TABLE_NAME = 'T_NODE'
+                AND COLUMN_NAME = 'NODE_STRING_ID') THEN
+        IF NOT EXISTS(SELECT 1
+                      FROM information_schema.COLUMNS
+                      WHERE TABLE_SCHEMA = db
+                        AND TABLE_NAME = 'T_NODE'
+                        AND COLUMN_NAME = 'NODE_STRING_ID'
+                        AND COLUMN_TYPE = 'varchar(255)') THEN
+            ALTER TABLE T_NODE MODIFY COLUMN NODE_STRING_ID varchar(255) DEFAULT NULL COMMENT '节点ID字符串';
+        END IF;
+    END IF;
+
     COMMIT;
 
 END <CI_UBF>

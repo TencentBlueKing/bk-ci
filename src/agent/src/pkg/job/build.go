@@ -39,14 +39,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 type BuildTotalManagerType struct {
@@ -469,6 +469,7 @@ func removeFileThan7Days(dir string, f fs.DirEntry) {
 	info, err := f.Info()
 	if err != nil {
 		logs.Error("removeFileThan7Days|read file info error ", "file: ", f.Name(), " error: ", err)
+		return
 	}
 	if (time.Now().Sub(info.ModTime())) > 7*24*time.Hour {
 		err = os.Remove(dir + "/" + f.Name())

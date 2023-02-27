@@ -2,7 +2,6 @@
     <bk-table
         v-bkloading="{ isLoading }"
         ref="pipelineTable"
-        size="large"
         row-key="pipelineId"
         height="100%"
         :data="pipelineList"
@@ -13,6 +12,7 @@
         @sort-change="handleSort"
         :default-sort="sortField"
         @selection-change="handleSelectChange"
+        :row-style="{ height: '56px' }"
         v-on="$listeners"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
@@ -27,14 +27,14 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.hasPermission && !isDeleteView"
+                    v-if="!props.row.delete && !props.row.hasPermission && !isDeleteView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
                     {{props.row.pipelineName}}
                 </span>
                 <router-link
-                    v-else-if="!isDeleteView && props.row.historyRoute"
+                    v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
                     :disabled="!props.row.hasPermission"
                     :to="props.row.historyRoute">
@@ -133,17 +133,17 @@
                 </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastExecTime')" prop="latestBuildStartDate">
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.latestBuildStartDate }}</p>
                     <p v-if="props.row.progress" class="primary">{{ props.row.progress }}</p>
                     <p v-else class="desc">{{props.row.duration}}</p>
-                </template>
+                </div>
             </bk-table-column>
             <bk-table-column width="200" :label="$t('lastModify')" sortable="custom" prop="updateTime" sort>
-                <template v-if="!props.row.delete" slot-scope="props">
+                <div class="latest-build-multiple-row" v-if="!props.row.delete" slot-scope="props">
                     <p>{{ props.row.updater }}</p>
                     <p class="desc">{{props.row.updateDate}}</p>
-                </template>
+                </div>
             </bk-table-column>
         </template>
         <bk-table-column v-if="!isPatchView" width="150" :label="$t('operate')" prop="pipelineId">
@@ -156,7 +156,7 @@
                     {{ $t('restore.restore') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="props.row.delete"
+                    v-else-if="props.row.delete && !isRecentView"
                     text
                     theme="primary"
                     :disabled="!isManage"
@@ -165,14 +165,14 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.hasPermission"
+                    v-else-if="!props.row.hasPermission && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
                 <template
-                    v-else
+                    v-else-if="props.row.hasPermission"
                 >
                     <bk-button
                         text
@@ -216,6 +216,7 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import {
         DELETED_VIEW_ID,
+        RECENT_USED_VIEW_ID,
         ALL_PIPELINE_VIEW_ID
     } from '@/store/constants'
     import { convertTime, isShallowEqual } from '@/utils/util'
@@ -269,11 +270,14 @@
             isDeleteView () {
                 return this.$route.params.viewId === DELETED_VIEW_ID
             },
+            isRecentView () {
+                return this.$route.params.viewId === RECENT_USED_VIEW_ID
+            },
             pipelineGroups () {
                 const res = this.pipelineList.map((pipeline, index) => {
                     const { viewNames } = pipeline
                     const visibleCount = this.visibleTagCountList[index]
-                                        
+
                     if (visibleCount >= 1) {
                         return {
                             visibleGroups: viewNames.slice(0, visibleCount),
@@ -281,7 +285,7 @@
                             showMore: viewNames.length - visibleCount
                         }
                     }
-                    
+
                     return {
                         visibleGroups: viewNames,
                         hiddenGroups: [],
@@ -291,16 +295,17 @@
                 return res
             },
             sortField () {
-                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                const { sortType, collation } = this.$route.query
                 return {
-                    sortType,
-                    collation
+                    prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
+                    order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
             }
         },
 
         watch: {
             '$route.params.viewId': function (viewId) {
+                this.clearSort()
                 this.requestList({
                     viewId,
                     page: 1
@@ -360,14 +365,20 @@
                 this.$nextTick(this.requestList)
             },
             handleSort ({ prop, order }) {
-                this.$router.push({
-                    ...this.$route,
-                    query: {
-                        ...this.$route.query,
-                        sortType: PIPELINE_SORT_FILED[prop] ?? PIPELINE_SORT_FILED.createTime,
-                        collation: prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
-                    }
-                })
+                const sortType = PIPELINE_SORT_FILED[prop]
+                if (sortType) {
+                    const collation = prop ? ORDER_ENUM[order] : ORDER_ENUM.descending
+                    localStorage.setItem('pipelineSortType', sortType)
+                    localStorage.setItem('pipelineSortCollation', collation)
+                    this.$router.push({
+                        ...this.$route,
+                        query: {
+                            ...this.$route.query,
+                            sortType: sortType,
+                            collation
+                        }
+                    })
+                }
             },
             async requestList (query = {}) {
                 this.isLoading = true
@@ -468,5 +479,9 @@
         justify-content: center;
         background: #EAEBF0;
         height: 32px;
+    }
+    .latest-build-multiple-row {
+        display: flex;
+        flex-direction: column;
     }
 </style>
