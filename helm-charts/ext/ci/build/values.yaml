@@ -98,7 +98,7 @@ influxdb:
   enabled: false
 mongodb:
   enabled: false
-kubernetes-manager::
+kubernetes-manager:
   enabled: false
 
 #外部数据库
