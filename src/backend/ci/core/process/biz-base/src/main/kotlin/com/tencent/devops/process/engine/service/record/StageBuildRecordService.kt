@@ -379,12 +379,13 @@ class StageBuildRecordService(
             var timeCost: BuildRecordTimeCost? = null
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
+            val now = LocalDateTime.now()
             if (buildStatus?.isRunning() == true && recordStage.startTime == null) {
-                startTime = LocalDateTime.now()
+                startTime = now
             }
             if (buildStatus?.isFinish() == true) {
                 if (recordStage.endTime == null) {
-                    endTime = LocalDateTime.now()
+                    endTime = now
                 }
                 val recordContainers = recordContainerDao.getRecords(
                     context, projectId, pipelineId, buildId, executeCount, stageId

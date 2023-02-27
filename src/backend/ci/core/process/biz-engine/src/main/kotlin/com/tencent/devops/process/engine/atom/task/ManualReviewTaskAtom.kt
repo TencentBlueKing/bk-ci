@@ -49,6 +49,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.BuildVariableService
@@ -70,6 +71,7 @@ class ManualReviewTaskAtom(
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val taskBuildRecordService: TaskBuildRecordService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineVariableService: BuildVariableService
 ) : IAtomTask<ManualReviewUserTaskElement> {
 
@@ -108,6 +110,12 @@ class ManualReviewTaskAtom(
                 BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
                     BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
             )
+        )
+        // #7983 兜底只有一个审核插件的job未刷新执行状态
+        containerBuildRecordService.updateContainerRecord(
+            projectId = projectCode, pipelineId = pipelineId, buildId = buildId,
+            containerId = task.containerId, executeCount = task.executeCount ?: 1,
+            buildStatus = BuildStatus.RUNNING, containerVar = mapOf(), timestamps = mapOf()
         )
 
         // 开始进入人工审核步骤，需要打印日志，并发送通知给审核人

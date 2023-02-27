@@ -451,15 +451,16 @@ class TaskBuildRecordService(
             }
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
+            val now = LocalDateTime.now()
             val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
             if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
-                startTime = LocalDateTime.now()
+                startTime = now
             }
             if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
-                endTime = LocalDateTime.now()
+                endTime = now
                 if (BuildStatus.parse(recordTask.status) == BuildStatus.REVIEWING) {
                     newTimestamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING] =
-                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
+                        BuildRecordTimeStamp(null, now.timestampmilli())
                 }
             }
             recordTaskDao.updateRecord(

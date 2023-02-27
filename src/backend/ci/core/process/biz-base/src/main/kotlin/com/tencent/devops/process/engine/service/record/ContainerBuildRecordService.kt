@@ -401,11 +401,12 @@ class ContainerBuildRecordService(
             }
             var startTime: LocalDateTime? = null
             var endTime: LocalDateTime? = null
+            val now = LocalDateTime.now()
             if (buildStatus?.isRunning() == true && recordContainer.startTime == null) {
-                startTime = LocalDateTime.now()
+                startTime = now
             }
             if (buildStatus?.isFinish() == true && recordContainer.endTime == null) {
-                endTime = LocalDateTime.now()
+                endTime = now
             }
             recordContainerDao.updateRecord(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
