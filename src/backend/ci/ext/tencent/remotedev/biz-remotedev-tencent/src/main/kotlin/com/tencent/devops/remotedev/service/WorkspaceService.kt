@@ -134,6 +134,8 @@ class WorkspaceService @Autowired constructor(
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
+        private const val REDIS_REMOTEDEV_GRAY_VERSION = "remotedev:gray:version"
+        private const val REDIS_REMOTEDEV_PROD_VERSION = "remotedev:prod:version"
         private const val ADMIN_NAME = "system"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
@@ -1463,6 +1465,22 @@ class WorkspaceService @Autowired constructor(
             val dataMap = JsonUtil.toMap(data)
             val status = dataMap["status"]
             return (status == 0)
+        }
+    }
+
+    // 校验是否有当前环境客户端的最新稳定版
+    fun checkUpdate(userId: String): String {
+        logger.info("checkUpdate|userId|$userId")
+        // 先查询该用户信息获取是否灰度用户标记
+        val grayFlag = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.grayFlag ?: ""
+        // 根据灰度标识读取不同redis key对应的版本
+        if (grayFlag.isNotEmpty()) {
+            return redisCache.get(REDIS_REMOTEDEV_GRAY_VERSION).ifBlank {
+                ""
+            }
+        }
+        return redisCache.get(REDIS_REMOTEDEV_PROD_VERSION).ifBlank {
+            ""
         }
     }
 }

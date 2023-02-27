@@ -176,4 +176,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         workspaceService.updateBkTicket(userId, bkTicketInfo.bkTicket, bkTicketInfo.hostName)
         return Result(true)
     }
+
+    override fun checkUpdate(userId: String): Result<String> {
+        return Result(workspaceService.checkUpdate(userId))
+    }
 }

@@ -282,4 +282,13 @@ interface UserWorkspaceResource {
         @ApiParam("bkTicket信息", required = true)
         bkTicketInfo: BkTicketInfo
     ): Result<Boolean>
+
+    @ApiOperation("校验是否有最新稳定版本,返回当前环境的最新稳定版")
+    @POST
+    @Path("/checkUpdate")
+    fun checkUpdate(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<String>
 }
