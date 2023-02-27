@@ -18,7 +18,7 @@
  */
 
 import { handleNoPermission } from '../../../common-lib/permission/permission'
-import ajax from './ajax'
+import ajax from './request'
 import * as BKUI from 'bk-magic-vue'
 
 // 处理流水线无权限的情况

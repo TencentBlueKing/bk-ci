@@ -1,5 +1,6 @@
 .permission-dialog .bk-dialog-sub-header {
     padding: 0 !important;
+    text-align: center;
 }
 
 .permission-exception .bk-exception-text {
@@ -52,7 +53,9 @@
     color: #FFFFFF;
     height: 100%;
     justify-content: center;
-    font-size: 14px;
+    font-size: 14px !important;
+    line-height: 30px;
+    padding: 0 14px;
     cursor: pointer;
 }
 
@@ -60,6 +63,22 @@
     width: auto;
 }
 
+.permission-list .bk-dropdown-list>li {
+    padding: 0 14px;
+    line-height: 32px;
+    cursor: pointer;
+}
+
+.permission-list .bk-dropdown-list>li:hover {
+    background: #F5F7FA;
+}
+
 .permission-list .icon-angle-down {
     font-size: 20px;
+}
+
+.permission-refresh-dialog {
+    margin: 25px;
+    display: flex;
+    justify-content: center;
 }

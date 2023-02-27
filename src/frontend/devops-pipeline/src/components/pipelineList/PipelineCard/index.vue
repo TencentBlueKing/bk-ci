@@ -92,6 +92,7 @@
         <div v-if="pipeline.delete" class="pipeline-card-delete-mask">
             <span>{{$t('alreadyDeleted')}}</span>
             <bk-button
+                v-if="!isRecentView"
                 text
                 size="small"
                 theme="primary"
@@ -100,7 +101,7 @@
                 {{$t('removeFromGroup')}}
             </bk-button>
         </div>
-        <div v-else-if="!pipeline.hasPermission" class="pipeline-card-apply-mask">
+        <div v-else-if="!pipeline.hasPermission && !pipeline.delete" class="pipeline-card-apply-mask">
             <bk-button outline theme="primary" @click="applyPermission(pipeline)">
                 {{$t('applyPermission')}}
             </bk-button>
@@ -117,6 +118,7 @@
         handlePipelineNoPermission,
         RESOURCE_ACTION
     } from '@/utils/permission'
+    import { RECENT_USED_VIEW_ID } from '@/store/constants'
 
     export default {
         components: {
@@ -154,6 +156,9 @@
             },
             viewNamesStr () {
                 return this.pipeline.viewNames.join(';')
+            },
+            isRecentView () {
+                return this.$route.params.viewId === RECENT_USED_VIEW_ID
             }
         },
         methods: {
@@ -234,7 +239,7 @@
                     cursor: pointer;
                     margin: 0 8px;
                     font-size: 16px;
-                    
+
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;

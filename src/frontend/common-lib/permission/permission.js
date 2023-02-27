@@ -9,6 +9,7 @@ import './permission.css'
  */
 export const handleNoPermission = (ui, params, ajax, h) => {
     let infoBoxRef = {}
+    let refreshBoxRef = {}
 
     const columns = [
         {
@@ -83,8 +84,11 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                                             return h(
                                                 'li',
                                                 {
-                                                    onClick () {
-                                                        window.open(info.url, '_blank')
+                                                    on: {
+                                                        click () {
+                                                            window.open(info.url, '_blank')
+                                                            handleClickLink()
+                                                        }
                                                     }
                                                 },
                                                 [info.groupName]
@@ -122,6 +126,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                             on: {
                                 click () {
                                     window.open(data.groupInfoList[0].url, '_blank')
+                                    handleClickLink()
                                 }
                             }
                         },
@@ -144,9 +149,61 @@ export const handleNoPermission = (ui, params, ajax, h) => {
             ]
         )
     }
+    const handleClickLink = () => {
+        // 关闭现有弹框
+        infoBoxRef?.close?.()
+
+        refreshBoxRef = ui.bkInfoBox({
+            title: '权限申请单已提交',
+            subHeader: h(
+                'section',
+                [
+                    '请在权限管理页填写权限申请单，提交完成后再刷新该页面',
+                    h(
+                        'section',
+                        {
+                            class: 'permission-refresh-dialog',
+                        },
+                        [
+                            h(
+                                ui.bkButton,
+                                {
+                                    class: 'mr20',
+                                    props: {
+                                        theme: 'primary'
+                                    },
+                                    on: {
+                                        click () {
+                                            location.reload()
+                                        }
+                                    }
+                                },
+                                ['刷新页面']
+                            ),
+                            h(
+                                ui.bkButton,
+                                {
+                                    on: {
+                                        click () {
+                                            refreshBoxRef.close?.()
+                                        }
+                                    }
+                                },
+                                ['关闭']
+                            )
+                        ]
+                    )
+                ]
+            ),
+            extCls: 'permission-dialog',
+            width: 500,
+            showFooter: false
+        })
+    }
     return ajax
         .get('/ms/auth/api/user/auth/apply/getRedirectInformation', { params })
-        .then((data = {}) => {
+        .then((res = {}) => {
+            const data = res.data ? res.data : res
             infoBoxRef = ui.bkInfoBox({
                 subHeader: h(
                     'section',
