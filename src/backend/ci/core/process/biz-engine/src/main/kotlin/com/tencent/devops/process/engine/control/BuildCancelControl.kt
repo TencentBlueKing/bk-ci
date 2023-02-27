@@ -129,12 +129,6 @@ class BuildCancelControl @Autowired constructor(
             cancelAllPendingTask(event = event, model = model)
             if (event.actionType == ActionType.TERMINATE) {
                 // 修改detail model
-                pipelineBuildDetailService.buildCancel(
-                    projectId = event.projectId,
-                    buildId = event.buildId,
-                    buildStatus = event.status,
-                    cancelUser = event.userId
-                )
                 pipelineBuildRecordService.buildCancel(
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
@@ -317,13 +311,6 @@ class BuildCancelControl @Autowired constructor(
                     startTime = null,
                     endTime = LocalDateTime.now(),
                     buildStatus = switchedStatus
-                )
-                containerBuildDetailService.updateContainerStatus(
-                    projectId = projectId,
-                    buildId = buildId,
-                    containerId = containerId,
-                    buildStatus = switchedStatus,
-                    executeCount = executeCount
                 )
                 containerBuildRecordService.updateContainerStatus(
                     projectId = projectId,

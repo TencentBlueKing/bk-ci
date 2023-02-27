@@ -95,11 +95,6 @@ class TaskAtomService @Autowired(required = false) constructor(
                 buildStatus = BuildStatus.RUNNING
             )
             // 插件状态变化-启动
-            pipelineBuildDetailService.taskStart(
-                projectId = task.projectId,
-                buildId = task.buildId,
-                taskId = task.taskId
-            )
             taskBuildRecordService.taskStart(
                 projectId = task.projectId,
                 pipelineId = task.pipelineId,
@@ -221,8 +216,7 @@ class TaskAtomService @Autowired(required = false) constructor(
                     errorMsg = atomResponse.errorMsg,
                     atomVersion = atomVersion
                 )
-                val updateTaskStatusInfos = pipelineBuildDetailService.taskEnd(endParam)
-                taskBuildRecordService.taskEnd(endParam)
+                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
                     pipelineTaskService.updateTaskStatusInfo(
                         updateTaskInfo = UpdateTaskInfo(

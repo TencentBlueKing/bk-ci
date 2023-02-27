@@ -368,20 +368,11 @@ class StartActionTaskContainerCmd(
                     taskId = taskId,
                     buildStatus = taskStatus
                 )
-                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(endParam)
-                taskBuildRecordService.taskEnd(endParam)
+                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
-                taskBuildDetailService.updateTaskStatus(
-                    projectId = projectId,
-                    buildId = buildId,
-                    taskId = taskId,
-                    taskStatus = BuildStatus.FAILED,
-                    buildStatus = BuildStatus.RUNNING,
-                    operation = "taskConditionInvalid"
-                )
                 taskBuildRecordService.updateTaskStatus(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -547,14 +538,6 @@ class StartActionTaskContainerCmd(
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(currentTask.taskType) == null) {
-                taskBuildDetailService.updateTaskStatus(
-                    projectId = currentTask.projectId,
-                    buildId = currentTask.buildId,
-                    taskId = currentTask.taskId,
-                    taskStatus = taskStatus,
-                    buildStatus = BuildStatus.RUNNING,
-                    operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
-                )
                 taskBuildRecordService.updateTaskStatus(
                     projectId = currentTask.projectId,
                     pipelineId = currentTask.pipelineId,

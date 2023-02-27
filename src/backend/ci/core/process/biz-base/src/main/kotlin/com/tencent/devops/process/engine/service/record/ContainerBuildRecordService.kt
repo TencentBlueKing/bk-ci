@@ -43,7 +43,9 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.service.StageTagService
@@ -60,6 +62,7 @@ class ContainerBuildRecordService(
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
     private val buildTaskDao: PipelineBuildTaskDao,
+    private val containerBuildDetailService: ContainerBuildDetailService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -110,6 +113,7 @@ class ContainerBuildRecordService(
         containerId: String,
         executeCount: Int
     ) {
+        containerBuildDetailService.containerPreparing(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerPreparing#$containerId"
@@ -137,6 +141,12 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerBuildStatus: BuildStatus
     ) {
+        containerBuildDetailService.containerStarted(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            containerBuildStatus = containerBuildStatus
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerStarted#$containerId"
@@ -170,6 +180,13 @@ class ContainerBuildRecordService(
         buildStatus: BuildStatus,
         operation: String
     ) {
+        containerBuildDetailService.updateContainerStatus(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            buildStatus = buildStatus,
+            executeCount = executeCount
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "updateContainerStatus#$containerId"
@@ -251,6 +268,15 @@ class ContainerBuildRecordService(
         matrixOption: MatrixControlOption,
         modelContainer: Container?
     ) {
+        containerBuildDetailService.updateMatrixGroupContainer(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            matrixGroupId = matrixGroupId,
+            buildStatus = buildStatus,
+            matrixOption = matrixOption,
+            modelContainer = modelContainer
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "updateMatrixGroupContainer#$matrixGroupId"
@@ -277,6 +303,7 @@ class ContainerBuildRecordService(
         executeCount: Int,
         containerId: String
     ) {
+        containerBuildDetailService.containerSkip(projectId, buildId, containerId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "containerSkip#$containerId"
@@ -297,6 +324,54 @@ class ContainerBuildRecordService(
                     dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
                     buildId = buildId, taskId = task.taskId, executeCount = executeCount,
                     taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
+                    startTime = null, endTime = null, timestamps = null
+                )
+            }
+        }
+    }
+
+    fun saveBuildVmInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        containerId: String,
+        vmInfo: VmInfo,
+        executeCount: Int?
+    ) {
+        containerBuildDetailService.saveBuildVmInfo(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = containerId,
+            vmInfo = vmInfo
+        )
+        if (executeCount == null) return
+        update(
+            projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
+            cancelUser = null, operation = "containerSkip#$containerId"
+        ) {
+            dslContext.transaction { configuration ->
+                val context = DSL.using(configuration)
+                val recordContainer = recordContainerDao.getRecord(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, containerId = containerId, executeCount = executeCount
+                ) ?: run {
+                    logger.warn(
+                        "ENGINE|$buildId|saveBuildVmInfo| get container($containerId) record failed."
+                    )
+                    return@transaction
+                }
+                val containerVar = mutableMapOf<String, Any>()
+                containerVar.putAll(recordContainer.containerVar)
+                if (recordContainer.containerType == VMBuildContainer.classType &&
+                    containerVar[VMBuildContainer::showBuildResource.name] == true
+                ) {
+                    containerVar[VMBuildContainer::name.name] = vmInfo.name
+                }
+                recordContainerDao.updateRecord(
+                    dslContext = context, projectId = projectId, pipelineId = pipelineId,
+                    buildId = buildId, containerId = containerId, executeCount = executeCount,
+                    containerVar = containerVar.plus(containerVar), buildStatus = null,
                     startTime = null, endTime = null, timestamps = null
                 )
             }

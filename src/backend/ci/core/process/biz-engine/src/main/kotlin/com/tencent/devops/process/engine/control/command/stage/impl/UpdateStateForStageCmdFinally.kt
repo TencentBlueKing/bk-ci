@@ -293,11 +293,7 @@ class UpdateStateForStageCmdFinally(
             if (commandContext.fastKill || commandContext.buildStatus.isFailure()) {
                 commandContext.buildStatus = BuildStatus.FAILED
             }
-            val allStageStatus = stageBuildDetailService.updateStageStatus(
-                projectId = event.projectId, buildId = event.buildId, stageId = event.stageId,
-                buildStatus = commandContext.buildStatus, executeCount = commandContext.executeCount
-            )
-            stageBuildRecordService.updateStageStatus(
+            val allStageStatus = stageBuildRecordService.updateStageStatus(
                 projectId = event.projectId, pipelineId = event.pipelineId, buildId = event.buildId,
                 stageId = event.stageId, executeCount = commandContext.executeCount,
                 buildStatus = commandContext.buildStatus

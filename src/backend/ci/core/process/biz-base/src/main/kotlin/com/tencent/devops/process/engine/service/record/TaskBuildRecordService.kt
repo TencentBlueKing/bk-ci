@@ -46,6 +46,7 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -70,6 +71,7 @@ class TaskBuildRecordService(
     private val recordTaskDao: BuildRecordTaskDao,
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    private val taskBuildDetailService: TaskBuildDetailService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -94,6 +96,14 @@ class TaskBuildRecordService(
         operation: String,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
+        taskBuildDetailService.updateTaskStatus(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            taskStatus = BuildStatus.FAILED,
+            buildStatus = BuildStatus.RUNNING,
+            operation = "taskConditionInvalid"
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = operation
@@ -121,6 +131,14 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
+        taskBuildDetailService.taskPause(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            buildStatus = BuildStatus.PAUSE
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskPause#$taskId"
@@ -150,6 +168,7 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
+        taskBuildDetailService.taskStart(projectId, buildId, taskId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskStart#$taskId"
@@ -259,6 +278,13 @@ class TaskBuildRecordService(
         executeCount: Int,
         cancelUser: String
     ) {
+        taskBuildDetailService.taskCancel(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            taskId = taskId,
+            cancelUser = cancelUser // fix me: 是否要直接更新取消人，暂时维护原有逻辑
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = cancelUser, operation = "taskCancel#$taskId"
@@ -276,6 +302,8 @@ class TaskBuildRecordService(
     }
 
     fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+        taskBuildDetailService.taskEnd(taskBuildEndParam)
+
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
         val buildId = taskBuildEndParam.buildId
@@ -361,6 +389,14 @@ class TaskBuildRecordService(
         executeCount: Int,
         element: Element?
     ) {
+        taskBuildDetailService.taskContinue(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            element = element
+        )
         containerBuildRecordService.updateContainerStatus(
             projectId = projectId,
             pipelineId = pipelineId,

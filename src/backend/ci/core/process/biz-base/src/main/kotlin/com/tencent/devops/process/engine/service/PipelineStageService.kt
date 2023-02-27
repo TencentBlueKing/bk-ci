@@ -140,12 +140,7 @@ class PipelineStageService @Autowired constructor(
 
     fun skipStage(userId: String, buildStage: PipelineBuildStage, containers: List<PipelineBuildContainer>) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageSkip(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = stageId
-            )
-            stageBuildRecordService.stageSkip(
+            val allStageStatus = stageBuildRecordService.stageSkip(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -176,12 +171,7 @@ class PipelineStageService @Autowired constructor(
 
     fun refreshCheckStageStatus(userId: String, buildStage: PipelineBuildStage, inOrOut: Boolean) {
         with(buildStage) {
-            val allStageStatus = stageBuildDetailService.stageCheckQuality(
-                projectId = projectId, buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
-                checkIn = checkIn, checkOut = checkOut
-            )
-            stageBuildRecordService.stageCheckQuality(
+            val allStageStatus = stageBuildRecordService.stageCheckQuality(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
                 controlOption = controlOption!!, inOrOut = inOrOut,
@@ -220,15 +210,7 @@ class PipelineStageService @Autowired constructor(
                 return@with
             }
             checkIn?.status = BuildStatus.REVIEWING.name
-            val allStageStatus = stageBuildDetailService.stagePause(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = stageId,
-                controlOption = controlOption!!,
-                checkIn = checkIn,
-                checkOut = checkOut
-            )
-            stageBuildRecordService.stagePause(
+            val allStageStatus = stageBuildRecordService.stagePause(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
@@ -275,11 +257,6 @@ class PipelineStageService @Autowired constructor(
                 suggest = reviewRequest?.suggest
             )
             if (success != true) return false
-            stageBuildDetailService.stageReview(
-                projectId = projectId, buildId = buildId, stageId = stageId,
-                controlOption = controlOption!!,
-                checkIn = checkIn, checkOut = checkOut
-            )
             stageBuildRecordService.stageReview(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                 stageId = stageId, executeCount = executeCount,
@@ -303,11 +280,7 @@ class PipelineStageService @Autowired constructor(
                     buildNum = variables[PIPELINE_BUILD_NUM] ?: "1"
                 )
             } else {
-                val allStageStatus = stageBuildDetailService.stageStart(
-                    projectId = projectId, buildId = buildId, stageId = stageId,
-                    controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
-                )
-                stageBuildRecordService.stageManualStart(
+                val allStageStatus = stageBuildRecordService.stageManualStart(
                     projectId = projectId, pipelineId = pipelineId, buildId = buildId,
                     stageId = stageId, executeCount = executeCount,
                     controlOption = controlOption!!, checkIn = checkIn, checkOut = checkOut
@@ -416,10 +389,6 @@ class PipelineStageService @Autowired constructor(
             )
             // 5019 暂时只有准入有审核逻辑，准出待产品规划
             checkIn?.status = BuildStatus.REVIEW_ABORT.name
-            stageBuildDetailService.stageCancel(
-                projectId = projectId, buildId = buildId, stageId = stageId, controlOption = controlOption!!,
-                checkIn = checkIn, checkOut = checkOut
-            )
             stageBuildRecordService.stageCancel(
                 projectId = projectId, pipelineId = pipelineId, buildId = buildId, stageId = stageId,
                 executeCount = executeCount, controlOption = controlOption!!,

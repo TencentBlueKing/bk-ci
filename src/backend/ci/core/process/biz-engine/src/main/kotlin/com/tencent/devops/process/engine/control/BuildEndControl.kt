@@ -186,13 +186,7 @@ class BuildEndControl @Autowired constructor(
         }
 
         // 设置状态
-        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
-            projectId = projectId,
-            buildId = buildId,
-            buildStatus = buildStatus,
-            errorMsg = errorMsg
-        )
-        pipelineBuildRecordService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildRecordService.buildEnd(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

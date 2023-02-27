@@ -215,15 +215,6 @@ class PipelineContainerService @Autowired constructor(
             containerId = matrixGroupId,
             controlOption = controlOption
         )
-        containerBuildDetailService.updateMatrixGroupContainer(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            matrixGroupId = matrixGroupId,
-            buildStatus = buildStatus,
-            matrixOption = controlOption.matrixControlOption!!,
-            modelContainer = modelContainer
-        )
         containerBuildRecordService.updateMatrixGroupContainer(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -401,9 +392,9 @@ class PipelineContainerService @Autowired constructor(
         startParamMap: Map<String, Any>,
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
-        buildContainers: MutableList<Pair<PipelineBuildContainer, String>>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
-        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, String>>,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -542,7 +533,7 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
-                                updateExistsContainer.add(Pair(this, container.name))
+                                updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer
                         }
@@ -587,7 +578,7 @@ class PipelineContainerService @Autowired constructor(
                             matrixGroupFlag = container.matrixGroupFlag,
                             matrixGroupId = null
                         ),
-                        container.name
+                        container
                     )
                 )
             }

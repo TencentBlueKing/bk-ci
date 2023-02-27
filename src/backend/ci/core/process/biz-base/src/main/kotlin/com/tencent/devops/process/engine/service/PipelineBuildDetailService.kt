@@ -34,7 +34,6 @@ import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
-import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
@@ -49,7 +48,6 @@ import com.tencent.devops.process.engine.dao.PipelineTriggerReviewDao
 import com.tencent.devops.process.engine.service.detail.BaseBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -363,34 +361,6 @@ class PipelineBuildDetailService @Autowired constructor(
             projectId = projectId,
             buildId = buildId,
             cancelUser = cancelUserId
-        )
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
-        update(
-            projectId = projectId,
-            buildId = buildId,
-            modelInterface = object : ModelInterface {
-                var update = false
-
-                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-                    val targetContainer = container.getContainerById(containerId)
-                    if (targetContainer != null) {
-                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
-                            targetContainer.name = vmInfo.name
-                        }
-                        update = true
-                        return Traverse.BREAK
-                    }
-                    return Traverse.CONTINUE
-                }
-
-                override fun needUpdate(): Boolean {
-                    return update
-                }
-            },
-            buildStatus = BuildStatus.RUNNING,
-            operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
     }
 

@@ -83,6 +83,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -140,6 +141,7 @@ class PipelineBuildFacadeService(
     private val buildDetailService: PipelineBuildDetailService,
     private val buildRecordService: PipelineBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
@@ -876,7 +878,6 @@ class PipelineBuildFacadeService(
             }
         )
         if (params.status == ManualReviewAction.ABORT) {
-            buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
             buildRecordService.updateBuildCancelUser(projectId, buildId, userId)
         }
     }
@@ -2141,12 +2142,20 @@ class PipelineBuildFacadeService(
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        buildDetailService.saveBuildVmInfo(
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "流水线构建[$buildId]不存在",
+                params = arrayOf(buildId)
+            )
+        containerBuildRecordService.saveBuildVmInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            vmInfo = vmInfo
+            vmInfo = vmInfo,
+            executeCount = buildInfo.executeCount
         )
     }
 

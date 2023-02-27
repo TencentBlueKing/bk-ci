@@ -367,12 +367,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
                 )
-                containerBuildDetailService.containerStarted(
-                    projectId = projectId,
-                    buildId = buildId,
-                    containerId = vmSeqId,
-                    containerBuildStatus = buildStatus
-                )
                 containerBuildRecordService.containerStarted(
                     projectId = projectId,
                     pipelineId = pipelineId,
@@ -532,7 +526,6 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
                     pipelineRuntimeService.claimBuildTask(task, userId)
-                    taskBuildDetailService.taskStart(task.projectId, buildId, task.taskId)
                     taskBuildRecordService.taskStart(
                         projectId = task.projectId,
                         pipelineId = task.pipelineId,
@@ -689,8 +682,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             errorMsg = result.message,
             atomVersion = result.elementVersion
         )
-        val updateTaskStatusInfos = taskBuildDetailService.taskEnd(endParam)
-        taskBuildRecordService.taskEnd(endParam)
+        val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
                 updateTaskInfo = UpdateTaskInfo(

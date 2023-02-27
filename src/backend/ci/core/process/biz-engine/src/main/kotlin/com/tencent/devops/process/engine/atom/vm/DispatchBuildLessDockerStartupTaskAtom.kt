@@ -160,7 +160,6 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
         containerBuildRecordService.containerPreparing(
             projectId = projectId,
             pipelineId = pipelineId,

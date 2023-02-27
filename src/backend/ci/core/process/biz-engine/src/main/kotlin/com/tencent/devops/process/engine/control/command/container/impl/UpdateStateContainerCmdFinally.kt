@@ -146,9 +146,6 @@ class UpdateStateContainerCmdFinally(
                 pipelineTaskService.updateTaskStatus(task = task, userId = task.starter, buildStatus = buildStatus)
             }
             // 刷新Model状态为SKIP，包含containerId下的所有插件任务
-            containerBuildDetailService.containerSkip(
-                projectId = event.projectId, buildId = event.buildId, containerId = event.containerId
-            )
             containerBuildRecordService.containerSkip(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,
@@ -158,13 +155,6 @@ class UpdateStateContainerCmdFinally(
             )
         } else if (commandContext.container.status.isReadyToRun() || buildStatus.isFinish()) {
             // 刷新Model状态-仅更新container状态
-            containerBuildDetailService.updateContainerStatus(
-                projectId = event.projectId,
-                buildId = event.buildId,
-                containerId = event.containerId,
-                buildStatus = buildStatus,
-                executeCount = commandContext.executeCount
-            )
             containerBuildRecordService.updateContainerStatus(
                 projectId = event.projectId,
                 pipelineId = event.pipelineId,

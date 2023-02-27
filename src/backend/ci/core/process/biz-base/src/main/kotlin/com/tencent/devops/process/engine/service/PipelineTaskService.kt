@@ -610,14 +610,6 @@ class PipelineTaskService @Autowired constructor(
         // 修改任务状态位暂停
         updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
-        taskBuildDetailService.taskPause(
-            projectId = task.projectId,
-            buildId = task.buildId,
-            stageId = task.stageId,
-            containerId = task.containerId,
-            taskId = task.taskId,
-            buildStatus = BuildStatus.PAUSE
-        )
         taskBuildRecordService.taskPause(
             projectId = task.projectId,
             pipelineId = task.pipelineId,

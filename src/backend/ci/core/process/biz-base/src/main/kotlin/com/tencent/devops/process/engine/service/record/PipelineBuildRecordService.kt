@@ -59,7 +59,6 @@ import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.BuildStageStatus
-import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -360,6 +359,12 @@ class PipelineBuildRecordService @Autowired constructor(
         cancelUser: String,
         executeCount: Int
     ) {
+        pipelineBuildDetailService.buildCancel(
+            projectId = projectId,
+            buildId = buildId,
+            buildStatus = buildStatus,
+            cancelUser = cancelUser
+        )
         logger.info("[$buildId]|BUILD_CANCEL|cancelUser=$cancelUser|buildStatus=$buildStatus")
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
@@ -432,9 +437,9 @@ class PipelineBuildRecordService @Autowired constructor(
         executeCount: Int,
         buildStatus: BuildStatus,
         errorMsg: String?
-    ): List<BuildStageStatus> {
+    ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
-        var allStageStatus: List<BuildStageStatus> = emptyList()
+//        var allStageStatus: List<BuildStageStatus> = emptyList()
         dslContext.transaction { configuration ->
             val context = DSL.using(configuration)
             val recordModel = recordModelDao.getRecord(
@@ -481,11 +486,11 @@ class PipelineBuildRecordService @Autowired constructor(
             }
             recordStageDao.batchSave(context, recordStages)
 
-            allStageStatus = fetchHistoryStageStatus(
-                recordStages = recordStages,
-                buildStatus = buildStatus,
-                errorMsg = errorMsg
-            )
+//            allStageStatus = fetchHistoryStageStatus(
+//                recordStages = recordStages,
+//                buildStatus = buildStatus,
+//                errorMsg = errorMsg
+//            )
 
             val modelVar = mutableMapOf<String, Any>()
             modelVar[Model::timeCost.name] = recordModel.generateBuildTimeCost(recordStages)
@@ -496,10 +501,20 @@ class PipelineBuildRecordService @Autowired constructor(
             )
         }
 
-        return allStageStatus
+        return pipelineBuildDetailService.buildEnd(
+            projectId = projectId,
+            buildId = buildId,
+            buildStatus = buildStatus,
+            errorMsg = errorMsg
+        )
     }
 
     fun updateBuildCancelUser(projectId: String, buildId: String, cancelUserId: String) {
+        pipelineBuildDetailService.updateBuildCancelUser(
+            projectId = projectId,
+            buildId = buildId,
+            cancelUserId = cancelUserId
+        )
         recordModelDao.updateBuildCancelUser(
             dslContext = dslContext,
             projectId = projectId,
@@ -539,33 +554,5 @@ class PipelineBuildRecordService @Autowired constructor(
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }
-    }
-
-    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
-//        update(
-//            projectId = projectId,
-//            buildId = buildId,
-//            modelInterface = object : ModelInterface {
-//                var update = false
-//
-//                override fun onFindContainer(container: Container, stage: Stage): Traverse {
-//                    val targetContainer = container.getContainerById(containerId)
-//                    if (targetContainer != null) {
-//                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
-//                            targetContainer.name = vmInfo.name
-//                        }
-//                        update = true
-//                        return Traverse.BREAK
-//                    }
-//                    return Traverse.CONTINUE
-//                }
-//
-//                override fun needUpdate(): Boolean {
-//                    return update
-//                }
-//            },
-//            buildStatus = BuildStatus.RUNNING,
-//            operation = "saveBuildVmInfo($projectId,$pipelineId)"
-//        )
     }
 }
