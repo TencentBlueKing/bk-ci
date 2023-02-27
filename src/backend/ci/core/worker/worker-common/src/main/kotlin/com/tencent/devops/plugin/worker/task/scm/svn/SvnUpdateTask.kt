@@ -227,7 +227,7 @@ open class SvnUpdateTask constructor(
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
                 commitTimes = commitMaterial.commitTimes,
-                scmType = ScmType.CODE_SVN
+                scmType = ScmType.CODE_SVN.name
             )
         ))
         return env

@@ -266,7 +266,7 @@ open class GitUpdateTask constructor(
                 newCommitId = commitMaterial.newCommitId ?: commitMaterial.lastCommitId,
                 newCommitComment = commitMaterial.newCommitComment,
                 commitTimes = commitMaterial.commitTimes,
-                scmType = gitType
+                scmType = gitType.name
             )
         ))
         return env
