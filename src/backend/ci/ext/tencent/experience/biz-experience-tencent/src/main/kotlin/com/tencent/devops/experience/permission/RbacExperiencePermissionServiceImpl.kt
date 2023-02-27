@@ -47,7 +47,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
             userId = user,
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceType = AuthResourceType.EXPERIENCE_TASK.value,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_TASK),
             resourceCode = HashUtil.encodeLongId(experienceId),
             resourceName = experienceName
         )
@@ -100,7 +100,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
             userId = userId,
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceType = AuthResourceType.EXPERIENCE_GROUP.value,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
         )
@@ -114,7 +114,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceType = AuthResourceType.EXPERIENCE_GROUP.value,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId),
             resourceName = groupName
         )
@@ -127,7 +127,7 @@ class RbacExperiencePermissionServiceImpl @Autowired constructor(
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
-            resourceType = AuthResourceType.EXPERIENCE_GROUP.value,
+            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.EXPERIENCE_GROUP),
             resourceCode = HashUtil.encodeLongId(groupId)
         )
     }
