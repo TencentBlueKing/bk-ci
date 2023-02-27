@@ -55,7 +55,7 @@ import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -313,18 +313,16 @@ class DockerHostDebugService(
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
-            .post(
-                RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
-                    JsonUtil.toJson(requestBody)
-                )
-            )
+            .post(RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            ))
             .build()
 
         logger.info("start get docker webconsole id, ${JsonUtil.toJson(requestBody)}  $dockerDebugAuthToken")
         var eventId: String
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             logger.info("[$projectId|$pipelineId] get docker webconsole id responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             eventId = response["Id"] as String

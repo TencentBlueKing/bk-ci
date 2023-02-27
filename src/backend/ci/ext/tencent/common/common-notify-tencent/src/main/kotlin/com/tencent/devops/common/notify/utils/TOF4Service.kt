@@ -31,7 +31,8 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.pojo.EmailNotifyPost
 import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.OkHttpClient
 import okhttp3.Request
@@ -73,7 +74,7 @@ class TOF4Service @Autowired constructor(
             return TOFResult("TOF error, post tof data cannot serialize")
         }
 
-        val requestBody = RequestBody.create(MediaType.parse(CONTENT_TYPE), body)
+        val requestBody = RequestBody.create(CONTENT_TYPE.toMediaTypeOrNull(), body)
         val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
             ?: return TOFResult("TOF error, generate signature failure")
         logger.info("[$url] Start to request tof with body size: ${body.length}")
@@ -89,10 +90,10 @@ class TOF4Service @Autowired constructor(
                 .build()
 
             okHttpClient.newCall(request).execute().use { response ->
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.error(
-                        "TOF error, post data response failure, url: $finalUrl, status code: ${response.code()}," +
+                        "TOF error, post data response failure, url: $finalUrl, status code: ${response.code}," +
                                 " errorMsg: $responseBody, request body: $body"
                     )
 
@@ -171,7 +172,7 @@ class TOF4Service @Autowired constructor(
                 .build()
 
             OkhttpUtils.doHttp(taskRequest).use { response ->
-                responseBody = response.body()!!.string()
+                responseBody = response.body!!.string()
                 logger.info(
                     "post codecc email to tof with url, request, response: $finalUrl \n " +
                             "$params \n $responseBody"
@@ -181,7 +182,7 @@ class TOF4Service @Autowired constructor(
                         String.format(
                             "TOF error, post data response failure, url: %s, status code: %d, errorMsg: %s",
                             url,
-                            response.code(),
+                            response.code,
                             responseBody
                         )
                     )
@@ -230,6 +231,6 @@ class TOF4Service @Autowired constructor(
             put("x-rio-nonce", nonce)
         }
 
-        return Headers.of(headerMap)
+        return headerMap.toHeaders()
     }
 }

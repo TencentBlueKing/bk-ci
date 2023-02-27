@@ -39,7 +39,7 @@ import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectUpdateLogoInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.tof.Response
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -81,7 +81,7 @@ class ProjectPaasCCService @Autowired constructor(
         )
 
         val url = ccUrl
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(bscProject)
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("createBcsProject url:$url, body:$requestBody")
@@ -118,7 +118,7 @@ class ProjectPaasCCService @Autowired constructor(
             description = projectUpdateInfo.description
         )
         val url = "$ccUrl/$projectId"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(bscProjectUpdate)
         val requestBody = RequestBody.create(mediaType, param)
         logger.info("updateBcsProject url:$url, body:$requestBody")
@@ -145,7 +145,7 @@ class ProjectPaasCCService @Autowired constructor(
         logger.info("Update the bcs projectLogo $projectUpdateLogoInfo by user $userId with token $accessToken")
 
         val url = "$ccUrl/$projectId"
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val param = objectMapper.writeValueAsString(projectUpdateLogoInfo)
         val requestBody = RequestBody.create(mediaType, param)
         val request = Request.Builder().url(url)
@@ -185,11 +185,12 @@ class ProjectPaasCCService @Autowired constructor(
 //        val httpClient = okHttpClient.newBuilder().build()
         OkhttpUtils.doHttp(request).use { response ->
             //        httpClient.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("bcs: $responseContent")
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} " +
-                                ", message ${response.message()} and response $responseContent")
+                logger.warn(
+                    "Fail to request($request) with code ${response.code} " +
+                            ", message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent

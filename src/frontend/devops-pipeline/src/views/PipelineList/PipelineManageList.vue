@@ -35,6 +35,7 @@
                 </div>
                 <div class="pipeline-list-main-header-right-area">
                     <pipeline-searcher
+                        v-if="allPipelineGroup.length"
                         v-model="filters"
                     />
                     <bk-dropdown-menu trigger="click" class="pipeline-sort-dropdown-menu" align="right">
@@ -195,6 +196,7 @@
         },
         computed: {
             ...mapState('pipelines', [
+                'allPipelineGroup',
                 'pipelineActionState',
                 'isManage'
             ]),
@@ -309,7 +311,6 @@
             },
             getSortIconName (sortType) {
                 if (this.isActiveSort(sortType) && this.$route.query.collation) {
-                    console.log(123, this.$route.query.collation.toLowerCase())
                     return `sort-${this.$route.query.collation.toLowerCase()}`
                 }
                 return 'sort'
@@ -367,6 +368,7 @@
                     }
                 }
                 localStorage.setItem('pipelineSortType', sortType)
+                localStorage.setItem('pipelineSortCollation', newSortQuery.collation)
                 this.$router.push({
                     ...this.$route,
                     query: newSortQuery

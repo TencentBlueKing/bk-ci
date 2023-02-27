@@ -52,7 +52,7 @@ import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.scm.config.GitConfig
 import com.tencent.devops.scm.exception.GithubApiException
 import com.tencent.devops.scm.pojo.Project
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -228,11 +228,11 @@ class GithubService @Autowired constructor(
             logger.info("github content url: $url")
             if (!it.isSuccessful) {
                 throw CustomException(
-                    status = Response.Status.fromStatusCode(it.code()) ?: Response.Status.BAD_REQUEST,
-                    message = it.body()!!.toString()
+                    status = Response.Status.fromStatusCode(it.code) ?: Response.Status.BAD_REQUEST,
+                    message = it.body!!.toString()
                 )
             }
-            return it.body()!!.string()
+            return it.body!!.string()
         }
     }
 
@@ -278,13 +278,13 @@ class GithubService @Autowired constructor(
 
     private fun buildPost(token: String, path: String, body: String): Request {
         return request(token, path)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
     private fun buildPatch(token: String, path: String, body: String): Request {
         return request(token, path)
-            .patch(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body))
+            .patch(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body))
             .build()
     }
 
@@ -303,9 +303,9 @@ class GithubService @Autowired constructor(
 
     private fun getBody(operation: String, request: Request): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
             if (logger.isDebugEnabled) {
                 logger.debug("getBody operation($operation). response code($code) message($message) body($body)")
             }
@@ -318,9 +318,9 @@ class GithubService @Autowired constructor(
 
     private fun <T> callMethod(operation: String, request: Request, classOfT: Class<T>): T {
         OkhttpUtils.doHttp(request).use { response ->
-            val code = response.code()
-            val message = response.message()
-            val body = response.body()?.string() ?: ""
+            val code = response.code
+            val message = response.message
+            val body = response.body?.string() ?: ""
             if (logger.isDebugEnabled) {
                 logger.debug("callMethod operation($operation). response code($code) message($message) body($body)")
             }

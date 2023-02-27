@@ -147,8 +147,7 @@ enum class PoolType {
                     agentType = AgentType.NAME,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
-                        credential = null,
-                        envs = pool.env
+                        credential = null
                     )
                 )
             } else if (!pool.envId.isNullOrBlank()) {
@@ -159,8 +158,7 @@ enum class PoolType {
                     agentType = AgentType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
-                        credential = null,
-                        envs = pool.env
+                        credential = null
                     )
                 )
             } else if (!pool.agentId.isNullOrBlank()) {
@@ -170,8 +168,7 @@ enum class PoolType {
                     agentType = AgentType.ID,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
-                        credential = null,
-                        envs = pool.env
+                        credential = null
                     )
                 )
             } else {
@@ -181,8 +178,7 @@ enum class PoolType {
                     agentType = AgentType.NAME,
                     dockerInfo = ThirdPartyAgentDockerInfo(
                         image = pool.container ?: "",
-                        credential = null,
-                        envs = pool.env
+                        credential = null
                     )
                 )
             }

@@ -33,7 +33,6 @@ import com.tencent.devops.statistics.util.openapi.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
-
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Component
@@ -54,13 +53,7 @@ class ApiAspect(
      *
      * @param jp
      */
-    @Before(
-        "execution(* com.tencent.devops.statistics.openapi.resources.apigw.*.*(..))" +
-            "||execution(* com.tencent.devops.statistics.openapi.resources.apigw.v2.*.*(..))" +
-            "||execution(* com.tencent.devops.statistics.openapi.resources.apigw.v3.*.*(..))" +
-            "||execution(* com.tencent.devops.statistics.openapi.resources.apigw.v2.app.*.*(..))" +
-            "||execution(* com.tencent.devops.statistics.openapi.resources.apigw.v2.user.*.*(..))"
-    ) // 所有controller包下面的所有方法的所有参数
+    @Before("within(com.tencent.devops.statistics.openapi.resources.apigw..*)")
     fun beforeMethod(jp: JoinPoint) {
         if (!apiGatewayUtil.isAuth()) {
             logger.info("Openapi非apigw接口，不需要鉴权。")
@@ -88,12 +81,15 @@ class ApiAspect(
                 "projectId" -> {
                     projectId = parameterValue[index]?.toString()
                 }
+
                 "appCode" -> {
                     appCode = parameterValue[index]?.toString()
                 }
+
                 "apigwType" -> {
                     apigwType = parameterValue[index]?.toString()
                 }
+
                 else -> null
             }
         }

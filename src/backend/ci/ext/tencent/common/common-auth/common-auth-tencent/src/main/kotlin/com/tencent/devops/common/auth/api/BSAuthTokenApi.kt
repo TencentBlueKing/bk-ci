@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.code.BSAuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -100,7 +100,7 @@ class BSAuthTokenApi @Autowired constructor(
             grantType = bkAuthProperties.grantType!!
         )
         val content = objectMapper.writeValueAsString(bkAuthTokenRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder()
             .url(url)
@@ -109,7 +109,7 @@ class BSAuthTokenApi @Autowired constructor(
 
         logger.info("[$appCode|$appSecret]|createAccessToken|url($url) and body($bkAuthTokenRequest)")
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("Fail to create access token. $responseContent")
                 throw RemoteServiceException("Fail to create access token")

@@ -33,7 +33,7 @@ import com.tencent.devops.plugin.pojo.ParametersInfo
 import com.tencent.devops.plugin.pojo.tcm.TcmApp
 import com.tencent.devops.plugin.pojo.tcm.TcmTemplate
 import com.tencent.devops.plugin.pojo.tcm.TcmTemplateParam
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -72,11 +72,11 @@ class TcmService {
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps request body for userId($userId): $requestBody")
         val request = Request.Builder()
-            .url(getAppsUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
-            .build()
+                .url(getAppsUrl)
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+                .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps response body for userId($userId): $body")
             val json = JsonUtil.toMap(body)
             if (!response.isSuccessful) {
@@ -102,11 +102,11 @@ class TcmService {
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps templates request body for userId($userId): $requestBody")
         val request = Request.Builder()
-            .url(getTemplatesUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
-            .build()
+                .url(getTemplatesUrl)
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+                .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps templates response body for userId($userId): $body")
             val json = JsonUtil.toMap(body)
             if (!response.isSuccessful) {
@@ -138,11 +138,11 @@ class TcmService {
         val requestBody = JsonUtil.toJson(params)
         logger.info("tcm get apps template info request body for userId($userId): $requestBody")
         val request = Request.Builder()
-            .url(getTemplateInfoUrl)
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), requestBody))
-            .build()
+                .url(getTemplateInfoUrl)
+                .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), requestBody))
+                .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("tcm get apps template info response body for userId($userId): $body")
             val json = JsonUtil.toMap(body)
             if (!response.isSuccessful) {

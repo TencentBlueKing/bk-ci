@@ -30,7 +30,7 @@ package com.tencent.devops.common.auth.api.utils
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.BkAuthProperties
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.json.JSONArray
@@ -65,7 +65,7 @@ class AuthUtils constructor(xBkAuthProperties: BkAuthProperties) {
      * 执行post请求
      */
     fun doAuthPostRequest(uri: String, jsonbody: JSONObject, bkAppCode: String, bkAppSecret: String): JSONObject {
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
+        val body = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
         logger.debug("bkiam post url: {}, body: {}", url, jsonbody)
 
@@ -84,7 +84,7 @@ class AuthUtils constructor(xBkAuthProperties: BkAuthProperties) {
      * 执行put请求
      */
     fun doAuthPutRequest(uri: String, jsonbody: JSONObject, xBkAppCode: String, xBkAppSecret: String): JSONObject {
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
+        val body = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
         logger.debug("bkiam put url: {}, body: {}", url, jsonbody)
 
@@ -103,7 +103,7 @@ class AuthUtils constructor(xBkAuthProperties: BkAuthProperties) {
      * 执行delete请求
      */
     fun doAuthDeleteRequest(uri: String, jsonbody: JSONObject, xBkAppCode: String, xBkAppSecret: String): JSONObject {
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonbody.toString())
+        val body = RequestBody.create("application/json".toMediaTypeOrNull(), jsonbody.toString())
         val url = this.getAuthRequestUrl(uri, null)
         logger.debug("bkiam delete url: {}", url)
 
@@ -125,14 +125,14 @@ class AuthUtils constructor(xBkAuthProperties: BkAuthProperties) {
             val response = OkhttpUtils.doHttp(request)
 //            val response = okclient.newCall(request).execute()
             if (response.isSuccessful) {
-                val responseStr = response.body()!!.string()
+                val responseStr = response.body!!.string()
                 logger.debug("bkiam response: $responseStr")
                 jsonObject = JSONObject(responseStr)
 
                 // 由于成功与失败时返回的json结构不同，code不为0，失败情况需直接去除data字段
                 if (jsonObject["data"] !is JSONArray) jsonObject.remove("data")
             } else {
-                jsonObject.put("msg", "http code:" + response.code())
+                jsonObject.put("msg", "http code:" + response.code)
                 throw RemoteServiceException("bkiam request failed, response: ($response)")
             }
 

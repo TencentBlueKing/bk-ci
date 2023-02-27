@@ -13,7 +13,7 @@ import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
 import com.tencent.devops.dispatch.docker.pojo.DevCloudDebugResponse
 import com.tencent.devops.dispatch.docker.service.debug.ExtDebugService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -66,11 +66,11 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
             .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
-            .post(RequestBody.create(MediaType.parse("application/json"), ""))
+            .post(RequestBody.create("application/json".toMediaTypeOrNull(), ""))
             .build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             logger.info("[$pipelineId Stop devcloud debug responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["code"] == 0) {
@@ -107,11 +107,11 @@ class DevcloudDebugServiceImpl @Autowired constructor(
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
             .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
-            .post(RequestBody.create(MediaType.parse("application/json"), ""))
+            .post(RequestBody.create("application/json".toMediaTypeOrNull(), ""))
             .build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             logger.info("[$pipelineId get devcloud debugUrl responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["code"] == 0) {

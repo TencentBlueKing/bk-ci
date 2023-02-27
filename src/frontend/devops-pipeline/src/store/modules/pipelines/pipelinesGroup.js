@@ -259,14 +259,7 @@ const actions = {
     */
     async addPipelineGroup ({ commit, state, dispatch }, { projectId, ...body }) {
         const { data } = await ajax.post(`${prefix}/${projectId}`, body)
-        commit(SET_ALL_PIPELINE_GROUP, [
-            ...state.allPipelineGroup,
-            {
-                id: data.id,
-                pipelineCount: 0,
-                ...body
-            }
-        ])
+        dispatch('requestGetGroupLists', { projectId })
         return data.id
     },
     /**

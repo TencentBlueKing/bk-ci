@@ -102,13 +102,13 @@ KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionSer
         logger.info("Keystore download mobileprovision url:$url")
         logger.info("Keystore download mobileprovision header:$headers")
         OkhttpUtils.doGet(url, headers).use { resp ->
-            if (resp.code() != 200 || resp.body() == null) {
+            if (resp.code != 200 || resp.body == null) {
                 throw ErrorCodeException(
                     errorCode = SignMessageCode.ERROR_MP_NOT_EXIST,
                     defaultMessage = "KeyStore描述文件($mobileProvisionId)不存在或者下载失败。"
                 )
             }
-            val decryptedMobileProvisionEncrypt = resp.body()!!.bytes()
+            val decryptedMobileProvisionEncrypt = resp.body!!.bytes()
             logger.info("Keystore decrypt decryptedMobileProvisionEncrypt:$decryptedMobileProvisionEncrypt")
             logger.info("Keystore decrypt keyStoreAuthSecret:$keyStoreAuthSecret")
             val decryptedMobileProvisionDecrypt = EncryptUtil.decrypt(

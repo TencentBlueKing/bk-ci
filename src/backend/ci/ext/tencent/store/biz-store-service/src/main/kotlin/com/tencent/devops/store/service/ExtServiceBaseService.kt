@@ -761,8 +761,8 @@ abstract class ExtServiceBaseService @Autowired constructor() {
             .build()
         OkhttpUtils.doHttp(request).use { response ->
             if (!response.isSuccessful) {
-                val responseContent = response.body()!!.string()
-                throw RemoteServiceException("delete node file failed: $responseContent", response.code())
+                val responseContent = response.body!!.string()
+                throw RemoteServiceException("delete node file failed: $responseContent", response.code)
             }
         }
     }

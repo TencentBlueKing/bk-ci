@@ -168,6 +168,7 @@ jobs:
           ./0.get_release.sh
           ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
           ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./3.build_frontend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
       - name: Setup Python -- CLOUD NATIVE
         uses: actions/setup-python@v4
         with:
@@ -178,7 +179,7 @@ jobs:
           version="$(basename $GITHUB_REF)"
           echo 'python build'
           pip install pyhumps
-          python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version
+          python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version $version
       - name: Install Helm -- CLOUD NATIVE
         uses: azure/setup-helm@v1
         with:
