@@ -183,16 +183,14 @@ class AuthResourceService @Autowired constructor(
         limit: Int,
         offset: Int
     ): List<AuthResourceInfo> {
-        val resourceList: MutableList<AuthResourceInfo> = ArrayList()
-        authResourceDao.list(
+        return authResourceDao.list(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceName = resourceName,
             resourceType = resourceType,
             limit = limit,
             offset = offset
-        ).map { resourceList.add(authResourceDao.convert(it)) }
-        return resourceList
+        ).map { authResourceDao.convert(it) }
     }
 
     fun listByProjectAndType(

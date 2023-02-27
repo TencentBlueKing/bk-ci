@@ -32,6 +32,7 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.auth.api.callback.OpenAuthResourceCallBackResource
 import com.tencent.devops.auth.service.ResourceService
+import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.web.RestResource
@@ -40,31 +41,32 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpenAuthResourceCallBackResourceImpl @Autowired constructor(
-    val resourceService: ResourceService,
-    val authTokenApi: AuthTokenApi
+    private val permissionResourceCallbackService: PermissionResourceCallbackService,
+    private val authTokenApi: AuthTokenApi
 ) : OpenAuthResourceCallBackResource {
 
     override fun projectInfo(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO {
+        logger.info("callBackInfo: $callBackInfo, token: $token")
         if (!authTokenApi.checkToken(token)) {
             logger.warn("auth token check fail: $token")
             throw TokenForbiddenException("auth token check fail")
         }
-        return resourceService.getProject(callBackInfo, token)
+        return permissionResourceCallbackService.getProject(callBackInfo, token)
     }
 
     override fun resourceList(
         callBackInfo: CallbackRequestDTO,
         token: String
     ): CallbackBaseResponseDTO? {
+        logger.info("callBackInfo: $callBackInfo, token: $token")
         if (!authTokenApi.checkToken(token)) {
             logger.warn("auth token check fail: $token")
             throw TokenForbiddenException("auth token check fail")
         }
-        logger.info("resourceList: $callBackInfo, token: $token")
-        return resourceService.getInstanceByResource(
+        return permissionResourceCallbackService.getInstanceByResource(
                 callBackInfo = callBackInfo,
                 token = token
             )

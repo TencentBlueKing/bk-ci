@@ -26,40 +26,27 @@
  *
  */
 
-package com.tencent.devops.auth.resources
+package com.tencent.devops.auth.service.iam.impl
 
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.auth.api.callback.ServiceAuthResourceCallBackResource
+import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
-import com.tencent.devops.common.web.RestResource
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 
-@RestResource
-class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
-    private val permissionResourceCallbackService: PermissionResourceCallbackService,
-) : ServiceAuthResourceCallBackResource {
-    override fun projectInfo(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO {
-        logger.info("callBackInfo: $callBackInfo, token: $token")
-        return permissionResourceCallbackService.getProject(callBackInfo, token)
+@Service
+class PermissionResourceCallbackServiceImpl @Autowired constructor(
+    private val resourceService: ResourceService,
+) : PermissionResourceCallbackService {
+    override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
+        return resourceService.getProject(callBackInfo, token)
     }
 
-    override fun resourceList(
-        callBackInfo: CallbackRequestDTO,
-        token: String
-    ): CallbackBaseResponseDTO? {
-        logger.info("callBackInfo: $callBackInfo, token: $token")
-        return permissionResourceCallbackService.getInstanceByResource(
-                callBackInfo = callBackInfo,
-                token = token
-            )
-    }
-
-    companion object {
-        val logger = LoggerFactory.getLogger(ServiceAuthResourceCallBackResourceImpl::class.java)
+    override fun getInstanceByResource(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
+        return resourceService.getInstanceByResource(
+            callBackInfo = callBackInfo,
+            token = token
+        )
     }
 }
