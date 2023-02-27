@@ -26,13 +26,13 @@
  */
 package com.tencent.devops.openapi.service
 
-import com.google.common.cache.CacheBuilder
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
+import java.time.Duration
 
 @Service
 class OpenapiPermissionService(
@@ -41,11 +41,13 @@ class OpenapiPermissionService(
 ) {
     companion object {
         private val logger = LoggerFactory.getLogger(OpenapiPermissionService::class.java)
+        private const val CACHE_SIZE = 100000L
+        private const val CACHE_EXPIRE_MIN = 5L
     }
 
-    private val projectCache = CacheBuilder.newBuilder()
-        .maximumSize(100000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
+    private val projectCache = Caffeine.newBuilder()
+        .maximumSize(CACHE_SIZE)
+        .expireAfterWrite(Duration.ofMinutes(CACHE_EXPIRE_MIN))
         .build<String, String>()
 
     fun validProjectPermission(
