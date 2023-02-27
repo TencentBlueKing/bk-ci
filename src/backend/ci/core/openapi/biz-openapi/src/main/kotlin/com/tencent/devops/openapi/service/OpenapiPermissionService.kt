@@ -84,6 +84,7 @@ class OpenapiPermissionService(
                 "validProjectManagerPermission|permission_is_false|" +
                     "$apigwType|$appCode|$userId|$projectId|$stack"
             )
+            return
 //            val defaultMessage =
 //                "[user($userId) No access to this project($projectId) because you are not a member of the project"
 //            throw ErrorCodeException(
@@ -124,6 +125,7 @@ class OpenapiPermissionService(
                 "validProjectManagerPermission|permission_is_false|" +
                     "$apigwType|$appCode|$userId|$projectId|$stack"
             )
+            return
 //            val defaultMessage = "[user($userId) is not manager to this project($projectId)]"
 //            throw ErrorCodeException(
 //                statusCode = Response.Status.FORBIDDEN.statusCode,
