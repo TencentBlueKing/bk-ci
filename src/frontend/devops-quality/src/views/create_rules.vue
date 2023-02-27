@@ -1381,16 +1381,24 @@
                                     message = '创建规则成功'
                                     theme = 'success'
                                 }
-                            } catch (err) {
-                                message = err.message ? err.message : err
-                                theme = 'error'
-                            } finally {
-                                this.isEditing = false
-                                this.loading.isLoading = false
                                 this.$bkMessage({
                                     message,
                                     theme
                                 })
+                            } catch (e) {
+                                this.handleError(
+                                    e,
+                                    {
+                                        projectId: this.projectId,
+                                        resourceType: RULE_RESOURCE_TYPE,
+                                        resourceCode: this.ruleId,
+                                        action: RULE_RESOURCE_ACTION.EDIT
+                                    }
+                                )
+                            } finally {
+                                this.isEditing = false
+                                this.loading.isLoading = false
+                                
                                 if (theme === 'success') this.toRuleList()
                             }
                         }

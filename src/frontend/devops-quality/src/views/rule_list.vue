@@ -69,9 +69,9 @@
                             </bk-table-column>
                             <bk-table-column label="操作" min-width="120">
                                 <template slot-scope="props">
-                                    <bk-button class="mr5 no-permission-btn" :class="{ 'disabled': !props.row.permissions.canEdit }" text @click="editRule(props.row)">编辑</bk-button>
-                                    <bk-button class="mr5 no-permission-btn" :class="{ 'disabled': !props.row.permissions.canEnable }" text @click="switchRule(props.row)">{{ props.row.enable ? '停用' : '启用' }}</bk-button>
-                                    <bk-button class="no-permission-btn" :class="{ 'disabled': !props.row.permissions.canDeldete }" text @click="toDeleteRule(props.row)">删除</bk-button>
+                                    <bk-button class="mr5 " :class="{ 'disabled no-permission-btn': !props.row.permissions.canEdit }" text @click="editRule(props.row)">编辑</bk-button>
+                                    <bk-button class="mr5" :class="{ 'disabled no-permission-btn': !props.row.permissions.canEnable }" text @click="switchRule(props.row)">{{ props.row.enable ? '停用' : '启用' }}</bk-button>
+                                    <bk-button :class="{ 'disabled no-permission-btn': !props.row.permissions.canDelete }" text @click="toDeleteRule(props.row)">删除</bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
