@@ -1,5 +1,6 @@
 package com.tencent.devops.common.auth.utils
 
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 
@@ -55,5 +56,21 @@ object RbacAuthUtils {
             "experience_group" -> AuthResourceType.EXPERIENCE_GROUP
             else -> AuthResourceType.get(resourceTypeStr)
         }
+    }
+
+    fun buildResultMap(
+        instancesMap: Map<AuthPermission, List<String>>
+    ): Map<AuthPermission, List<Long>> {
+        if (instancesMap.isEmpty())
+            return emptyMap()
+        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
+        instancesMap.forEach { (key, value) ->
+            val instanceLongIds = mutableListOf<Long>()
+            value.forEach {
+                instanceLongIds.add(HashUtil.decodeIdToLong(it))
+            }
+            resultMap[key] = instanceLongIds
+        }
+        return resultMap
     }
 }
