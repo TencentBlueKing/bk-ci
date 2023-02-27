@@ -1803,7 +1803,7 @@ class GitService @Autowired constructor(
             .post(
                 RequestBody.create(
                     "application/json;charset=utf-8".toMediaTypeOrNull(),
-                    JsonUtil.toJson(gitCreateFile)
+                    JsonUtil.toJson(gitOperationFile)
                 )
             )
             .build()
