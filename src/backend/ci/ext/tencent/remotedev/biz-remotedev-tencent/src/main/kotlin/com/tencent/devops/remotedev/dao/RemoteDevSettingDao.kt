@@ -105,6 +105,22 @@ class RemoteDevSettingDao {
         }
     }
 
+    fun fetchAnyOpUserSetting(
+        dslContext: DSLContext,
+        userId: String
+    ): OPUserSetting? {
+        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()?.let {
+                OPUserSetting(
+                    userId = it.userId,
+                    wsMaxRunningCount = it.workspaceMaxRunningCount,
+                    wsMaxHavingCount = it.workspaceMaxHavingCount,
+                    grayFlag = ByteUtils.byte2Bool(it.inGray)
+                )
+            }
+        }
+    }
+
     fun fetchSingleUserBilling(
         dslContext: DSLContext,
         userId: String

@@ -1495,15 +1495,14 @@ class WorkspaceService @Autowired constructor(
     fun checkUpdate(userId: String): String {
         logger.info("checkUpdate|userId|$userId")
         // 先查询该用户信息获取是否灰度用户标记
-        val grayFlag = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.grayFlag ?: ""
+        val grayFlag = remoteDevSettingDao.fetchAnyOpUserSetting(dslContext, userId)?.grayFlag ?: false
         // 根据灰度标识读取不同redis key对应的版本
-        if (grayFlag.isNotEmpty()) {
-            return redisCache.get(REDIS_REMOTEDEV_GRAY_VERSION).ifBlank {
-                ""
-            }
+        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
+        if (grayFlag) {
+            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
         }
-        return redisCache.get(REDIS_REMOTEDEV_PROD_VERSION).ifBlank {
+        return redisCache.get(redisKey)?.ifBlank {
             ""
-        }
+        } ?: ""
     }
 }
