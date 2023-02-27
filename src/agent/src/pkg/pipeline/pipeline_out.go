@@ -1,5 +1,5 @@
-//go:build linux || darwin
-// +build linux darwin
+//go:build out
+// +build out
 
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
@@ -28,41 +28,8 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package systemutil
+package pipeline
 
-import (
-	"fmt"
-	"os"
-	"syscall"
-
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-)
-
-// MkBuildTmpDir 创建构建提供的临时目录
-// 对于指定构建帐号与当前agent运行帐号不同时，常用是用root安装运行agent，但配置文件中devops.slave.user指定其他普通帐号
-// 需要设置最大权限，以便任何runUser能够使用, 不考虑用chown切换目录属主，会导致之前的运行中所产生的子目录/文件的清理权限问题。
-func MkBuildTmpDir() (string, error) {
-	tmpDir := fmt.Sprintf("%s/build_tmp", GetWorkDir())
-	err := os.MkdirAll(tmpDir, os.ModePerm)
-	err2 := Chmod(tmpDir, os.ModePerm)
-	if err == nil && err2 != nil {
-		err = err2
-	}
-	return tmpDir, err
-}
-
-// Chmod 对指定file进行修改权限
-func Chmod(file string, perm os.FileMode) error {
-	stat, err := os.Stat(file)
-	if stat != nil && stat.Mode() != perm { // 修正目录权限
-		mask := syscall.Umask(0)   // 临时消除用户权限掩码
-		defer syscall.Umask(mask)  // 重置掩码
-		err = os.Chmod(file, perm) // 修改权限
-	}
-	if err == nil {
-		logs.Info("chmod %o %s ok!", perm, file)
-	} else {
-		logs.Warn("chmod %o %s msg: %s", perm, file, err.Error())
-	}
-	return err
+func Start() {
+	// 为外部出包使用
 }

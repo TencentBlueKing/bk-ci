@@ -33,7 +33,6 @@ import (
 	"crypto/x509"
 	"errors"
 	"fmt"
-	"gopkg.in/ini.v1"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -42,11 +41,13 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"gopkg.in/ini.v1"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 const (
@@ -107,8 +108,11 @@ var GAgentConfig *AgentConfig
 var GEnvVars map[string]string
 var UseCert bool
 
+var IsDebug bool = false
+
 // Init 加载和初始化配置
-func Init() {
+func Init(isDebug bool) {
+	IsDebug = isDebug
 	err := LoadAgentConfig()
 	if err != nil {
 		logs.Error("load agent config err: ", err)
@@ -198,8 +202,8 @@ func DetectWorkerVersionByDir(workDir string) string {
 
 // parseWorkerVersion 解析worker版本
 func parseWorkerVersion(output string) string {
-	// 用正则匹配正确的版本信息，当正则式出错时(versionRegexp = nil)，继续使用原逻辑
-	// 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
+	// 用函数匹配正确的版本信息, 主要解决tmp空间不足的情况下，jvm会打印出提示信息，导致识别不到worker版本号
+	// 兼容旧版本，防止新agent发布后无限升级
 	versionRegexp := regexp.MustCompile(`^v(\d+\.)(\d+\.)(\d+)((-RELEASE)|(-SNAPSHOT)?)$`)
 	lines := strings.Split(output, "\n")
 	for _, line := range lines {
@@ -208,19 +212,84 @@ func parseWorkerVersion(output string) string {
 			if len(line) > 64 {
 				line = line[:64]
 			}
-			if versionRegexp != nil {
-				if versionRegexp.MatchString(line) {
+			// 先使用新版本的匹配逻辑匹配，匹配不通则使用旧版本
+			if matchWorkerVersion(line) {
+				logs.Info("worker version: ", line)
+				return line
+			} else {
+				if versionRegexp != nil {
+					if versionRegexp.MatchString(line) {
+						logs.Info("worker version: ", line)
+						return line
+					} else {
+						continue
+					}
+				} else {
+					// 当正则式出错时(versionRegexp = nil)，继续使用原逻辑
 					logs.Info("worker version: ", line)
 					return line
-				} else {
-					continue
 				}
 			}
-			logs.Info("worker version: ", line)
-			return line
 		}
 	}
 	return ""
+}
+
+// matchWorkerVersion 匹配worker版本信息
+// 版本号为 v数字.数字.数字 || v数字.数字.数字-字符.数字
+// 只匹配以v开头的数字版本即可
+func matchWorkerVersion(line string) bool {
+	if !strings.HasPrefix(line, "v") {
+		logs.Warnf("line %s matchWorkerVersion no start 'v'", line)
+		return false
+	}
+
+	// 去掉v方便后面计算
+	subline := strings.Split(strings.TrimPrefix(line, "v"), ".")
+	sublen := len(subline)
+	if sublen < 3 || sublen > 4 {
+		logs.Warnf("line %s matchWorkerVersion len no match", line)
+		return false
+	}
+
+	// v数字.数字.数字 这种去掉v后应该全是数字
+	if sublen == 3 {
+		return checkNumb(subline, line)
+	}
+
+	// v数字.数字.数字-字符.数字，按照 - 分隔，前面的与len 3一致，后面的两个分别判断，不是数字的是字符，不是字符的是数字
+	fSubline := strings.Split(strings.TrimPrefix(line, "v"), "-")
+	if len(fSubline) != 2 {
+		logs.Warnf("line %s matchWorkerVersion len no match", line)
+		return false
+	}
+
+	if !checkNumb(strings.Split(fSubline[0], "."), line) {
+		return false
+	}
+
+	fSubline2 := strings.Split(fSubline[1], ".")
+	if checkNumb([]string{fSubline2[0]}, line) {
+		logs.Warnf("line %s matchWorkerVersion not char", line)
+		return false
+	}
+
+	if !checkNumb([]string{fSubline2[1]}, line) {
+		return false
+	}
+
+	return true
+}
+
+func checkNumb(subs []string, line string) bool {
+	for _, s := range subs {
+		_, err := strconv.ParseInt(s, 10, 64)
+		if err != nil {
+			logs.Warnf("line %s matchWorkerVersion not numb", line)
+			return false
+		}
+	}
+	return true
 }
 
 // BuildAgentJarPath 生成jar寻址路径
