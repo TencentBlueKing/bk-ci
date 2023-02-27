@@ -32,8 +32,11 @@ import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
+import com.tencent.devops.common.auth.callback.ListInstanceInfo
+import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
 
@@ -54,6 +57,15 @@ class RbacPermissionResourceCallbackService constructor(
         val page = callBackInfo.page
         val resourceType = callBackInfo.type
         return when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent?.id ?: ""
+                listInstance(
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt()
+                )
+            }
             CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
                 val ids = callBackInfo.filter.idList.map { it.toString() }
                 fetchInstance(
@@ -61,8 +73,45 @@ class RbacPermissionResourceCallbackService constructor(
                     iamResourceCodes = ids
                 )
             }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val projectId = callBackInfo.filter.parent?.id ?: ""
+                val keyword = callBackInfo.filter.keyword
+                searchInstance(
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    keyword = keyword,
+                    offset = page.offset.toInt(),
+                    limit = page.limit.toInt()
+                )
+            }
             else ->
                 null
+        }
+    }
+
+    private fun listInstance(
+        projectId: String,
+        resourceType: String,
+        offset: Int,
+        limit: Int
+    ): ListInstanceResponseDTO {
+        val instanceInfoList = authResourceService.list(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceName = null,
+            limit = limit,
+            offset = offset
+        ).map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.iamResourceCode
+            entity.displayName = it.resourceName
+            entity
+        }
+        val result = ListInstanceInfo()
+        return if (instanceInfoList.isEmpty()) {
+            result.buildListInstanceFailResult()
+        } else {
+            result.buildListInstanceResult(instanceInfoList, instanceInfoList.size.toLong())
         }
     }
 
@@ -70,7 +119,7 @@ class RbacPermissionResourceCallbackService constructor(
         resourceType: String,
         iamResourceCodes: List<String>
     ): FetchInstanceInfoResponseDTO {
-        val instanceInfoDTOList = authResourceService.listByIamCodes(
+        val instanceInfoList = authResourceService.listByIamCodes(
             resourceType = resourceType,
             iamResourceCodes = iamResourceCodes
         ).map {
@@ -81,9 +130,37 @@ class RbacPermissionResourceCallbackService constructor(
         }
         val result = FetchInstanceInfo()
 
-        if (instanceInfoDTOList.isEmpty()) {
-            return result.buildFetchInstanceFailResult()
+        return if (instanceInfoList.isEmpty()) {
+            result.buildFetchInstanceFailResult()
+        } else {
+            result.buildFetchInstanceResult(instanceInfoList)
         }
-        return result.buildFetchInstanceResult(instanceInfoDTOList)
+    }
+
+    private fun searchInstance(
+        projectId: String,
+        resourceType: String,
+        keyword: String,
+        offset: Int,
+        limit: Int
+    ): SearchInstanceInfo {
+        val instanceInfoList = authResourceService.list(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceName = keyword,
+            limit = limit,
+            offset = offset
+        ).map {
+            val entity = InstanceInfoDTO()
+            entity.id = it.iamResourceCode
+            entity.displayName = it.resourceName
+            entity
+        }
+        val result = SearchInstanceInfo()
+        return if (instanceInfoList.isEmpty()) {
+            result.buildSearchInstanceFailResult()
+        } else {
+            result.buildSearchInstanceResult(instanceInfoList, instanceInfoList.size.toLong())
+        }
     }
 }
