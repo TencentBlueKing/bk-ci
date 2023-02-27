@@ -58,7 +58,7 @@ class WhitelistApiFilter constructor(
 
         val userId = requestContext.headers[AUTH_HEADER_DEVOPS_USER_ID]?.get(0) ?: run {
             requestContext.abortWith(
-                Response.status(Response.Status.FORBIDDEN)
+                Response.status(Response.Status.BAD_REQUEST)
                     .entity("Sorry, X-DEVOPS-UID is null.")
                     .build()
             )
@@ -74,7 +74,7 @@ class WhitelistApiFilter constructor(
     override fun filter(requestContext: ContainerRequestContext) {
         if (!verify(requestContext)) {
             requestContext.abortWith(
-                Response.status(Response.Status.FORBIDDEN)
+                Response.status(Response.Status.BAD_REQUEST)
                     .entity("Sorry, you are not authorized to access this resource.")
                     .build()
             )
