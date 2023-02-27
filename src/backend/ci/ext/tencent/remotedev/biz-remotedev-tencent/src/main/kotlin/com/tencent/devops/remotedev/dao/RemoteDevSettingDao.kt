@@ -31,9 +31,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
+import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class RemoteDevSettingDao {
@@ -72,6 +74,7 @@ class RemoteDevSettingDao {
                 .set(GITHUB_ATTACHED, ByteUtils.bool2Byte(setting.githubAttached))
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
+                .set(UPDATE_TIME, LocalDateTime.now())
                 .execute()
         }
     }
@@ -113,6 +116,73 @@ class RemoteDevSettingDao {
                 createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
                 return 0 to 0
             }
+        }
+    }
+
+    fun fetchSingleUserWsCount(
+        dslContext: DSLContext,
+        userId: String
+    ): Pair<Int?, Int?> {
+        return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.select(WORKSPACE_MAX_RUNNING_COUNT, WORKSPACE_MAX_HAVING_COUNT).from(this)
+                .where(USER_ID.eq(userId))
+                .fetchAny()?.let { it.value1() to it.value2() } ?: (null to null)
+        }
+    }
+
+    fun createOrUpdateSetting4OP(
+        dslContext: DSLContext,
+        opSetting: OPUserSetting
+    ) {
+        val setting = RemoteDevSettings()
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            dslContext.insertInto(
+                this,
+                USER_ID,
+                DEFAULT_SHELL,
+                BASIC_SETTING,
+                GIT_ATTACHED,
+                TAPD_ATTACHED,
+                GITHUB_ATTACHED,
+                ENVS_FOR_VARIABLE,
+                DOTFILE_REPO,
+                WORKSPACE_MAX_RUNNING_COUNT,
+                WORKSPACE_MAX_HAVING_COUNT,
+                IN_GRAY
+            )
+                .values(
+                    opSetting.userId,
+                    setting.defaultShell,
+                    JsonUtil.toJson(setting.basicSetting, false),
+                    ByteUtils.bool2Byte(setting.gitAttached),
+                    ByteUtils.bool2Byte(setting.tapdAttached),
+                    ByteUtils.bool2Byte(setting.githubAttached),
+                    JsonUtil.toJson(setting.envsForVariable, false),
+                    setting.dotfileRepo,
+                    opSetting.wsMaxRunningCount,
+                    opSetting.wsMaxHavingCount,
+                    ByteUtils.bool2Byte(opSetting.grayFlag ?: false)
+                ).onDuplicateKeyUpdate()
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .let {
+                    if (opSetting.wsMaxRunningCount != null) it.set(
+                        WORKSPACE_MAX_RUNNING_COUNT,
+                        opSetting.wsMaxRunningCount
+                    ) else it
+                }
+                .let {
+                    if (opSetting.wsMaxHavingCount != null) it.set(
+                        WORKSPACE_MAX_HAVING_COUNT,
+                        opSetting.wsMaxHavingCount
+                    ) else it
+                }
+                .let {
+                    if (opSetting.grayFlag != null) it.set(
+                        IN_GRAY,
+                        ByteUtils.bool2Byte(opSetting.grayFlag!!)
+                    ) else it
+                }
+                .execute()
         }
     }
 }

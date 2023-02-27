@@ -100,6 +100,9 @@ CREATE TABLE IF NOT EXISTS `T_REMOTE_DEV_SETTINGS` (
                                                        `ENVS_FOR_VARIABLE` mediumtext NOT NULL COMMENT '远程开发环境变量配置',
                                                        `CUMULATIVE_USAGE_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '当月累计使用时间(月初清空)',
                                                        `CUMULATIVE_BILLING_TIME` int(11) NOT NULL DEFAULT 0 COMMENT '用户累计计费时间(当月计费数据暂不统计)',
+                                                       `WORKSPACE_MAX_RUNNING_COUNT` int(11) NULL COMMENT '最大运行数',
+                                                       `WORKSPACE_MAX_HAVING_COUNT` int(11) NULL COMMENT '最大创建个数(每人拥有的运行中+已休眠的开发环境)',
+                                                       `IN_GRAY` boolean NOT NULL DEFAULT 0 COMMENT '是否灰度',
                                                        `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
                                                        `CREATED_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
 

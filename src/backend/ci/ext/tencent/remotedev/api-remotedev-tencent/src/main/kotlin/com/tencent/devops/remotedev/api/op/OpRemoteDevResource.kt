@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.api.op
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
@@ -106,5 +107,15 @@ interface OpRemoteDevResource {
         userId: String,
         @QueryParam("freeTime")
         freeTime: Int
+    ): Result<Boolean>
+
+    @ApiOperation("更新用户级别设置")
+    @POST
+    @Path("/user_setting")
+    fun updateUserSetting(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        data: List<OPUserSetting>
     ): Result<Boolean>
 }
