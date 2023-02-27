@@ -30,18 +30,21 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class AuthResourceService @Autowired constructor(
-    val dslContext: DSLContext,
-    val authResourceDao: AuthResourceDao
+    private val dslContext: DSLContext,
+    private val authResourceDao: AuthResourceDao,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     companion object {
@@ -55,6 +58,7 @@ class AuthResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        iamResourceCode: String,
         enable: Boolean,
         relationId: String
     ): Int {
@@ -65,6 +69,7 @@ class AuthResourceService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceName,
+            iamResourceCode = iamResourceCode,
             enable = enable,
             relationId = relationId
         )
@@ -91,12 +96,21 @@ class AuthResourceService @Autowired constructor(
         resourceType: String,
         resourceCode: String
     ) {
-        authResourceDao.delete(
-            dslContext = dslContext,
-            projectCode = projectCode,
-            resourceType = resourceType,
-            resourceCode = resourceCode
-        )
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            authResourceDao.delete(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            authResourceGroupDao.delete(
+                dslContext = transactionContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+        }
     }
 
     fun get(
@@ -163,22 +177,21 @@ class AuthResourceService @Autowired constructor(
 
     @SuppressWarnings("LongParameterList")
     fun list(
-        projectCode: String?,
-        resourceType: String?,
+        projectCode: String,
+        resourceType: String,
         resourceName: String?,
-        page: Int,
-        pageSize: Int
+        limit: Int,
+        offset: Int
     ): List<AuthResourceInfo> {
-        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
         val resourceList: MutableList<AuthResourceInfo> = ArrayList()
         authResourceDao.list(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceName = resourceName,
             resourceType = resourceType,
-            limit = sqlLimit.limit,
-            offset = sqlLimit.offset
-        )?.map { resourceList.add(authResourceDao.convert(it)) }
+            limit = limit,
+            offset = offset
+        ).map { resourceList.add(authResourceDao.convert(it)) }
         return resourceList
     }
 
@@ -186,10 +199,21 @@ class AuthResourceService @Autowired constructor(
         projectCode: String,
         resourceType: String
     ): List<String> {
-        return authResourceDao.listByProjectAndType(
+        return authResourceDao.getResourceCodeByType(
             dslContext = dslContext,
             projectCode = projectCode,
             resourceType = resourceType
         )
+    }
+
+    fun listByIamCodes(
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): List<AuthResourceInfo> {
+        return authResourceDao.listByByIamCodes(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            iamResourceCodes = iamResourceCodes
+        ).map { authResourceDao.convert(it) }
     }
 }

@@ -26,18 +26,23 @@
  *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.pojo.event
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.pojo.trace.ITraceEvent
+import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("资源信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
+@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
+data class AuthResourceGroupModifyEvent(
+    @ApiModelProperty("分级管理员ID或二级管理员ID")
+    val managerId: Int,
+    @ApiModelProperty("项目ID")
     val projectCode: String,
+    @ApiModelProperty("资源类型")
     val resourceType: String,
+    @ApiModelProperty("资源ID")
     val resourceCode: String,
-    val resourceName: String,
-    val iamResourceCode: String,
-    val enable: Boolean,
-    val relationId: String
-)
+    @ApiModelProperty("资源名")
+    val resourceName: String
+): ITraceEvent()

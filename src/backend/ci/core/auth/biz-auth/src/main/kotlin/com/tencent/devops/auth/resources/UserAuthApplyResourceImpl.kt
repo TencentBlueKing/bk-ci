@@ -1,6 +1,5 @@
 package com.tencent.devops.auth.resources
 
-import com.tencent.bk.sdk.iam.dto.manager.vo.V2ManagerRoleGroupVO
 import com.tencent.devops.auth.api.user.UserAuthApplyResource
 import com.tencent.devops.auth.pojo.ApplyJoinGroupInfo
 import com.tencent.devops.auth.pojo.ApplyJoinProjectInfo
@@ -8,6 +7,7 @@ import com.tencent.devops.auth.pojo.SearchGroupInfo
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.AuthApplyRedirectInfoVo
 import com.tencent.devops.auth.pojo.vo.GroupPermissionDetailVo
+import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
@@ -30,7 +30,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         searchGroupInfo: SearchGroupInfo
-    ): Result<V2ManagerRoleGroupVO> {
+    ): Result<ManagerRoleGroupVO> {
         return Result(
             permissionApplyService.listGroups(
                 userId = userId,
@@ -49,7 +49,13 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         projectId: String,
         applyJoinProjectInfo: ApplyJoinProjectInfo
     ): Result<Boolean> {
-        TODO("Not yet implemented")
+        return Result(
+            permissionApplyService.applyToJoinProject(
+                userId = userId,
+                projectId = projectId,
+                applyJoinProjectInfo = applyJoinProjectInfo
+            )
+        )
     }
 
     override fun getGroupPermissionDetail(userId: String, groupId: Int): Result<List<GroupPermissionDetailVo>> {

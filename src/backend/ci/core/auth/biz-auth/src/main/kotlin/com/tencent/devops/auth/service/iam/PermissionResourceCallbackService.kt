@@ -23,21 +23,22 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.service.iam
 
-import io.swagger.annotations.ApiModel
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 
-@ApiModel("资源信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
-    val projectCode: String,
-    val resourceType: String,
-    val resourceCode: String,
-    val resourceName: String,
-    val iamResourceCode: String,
-    val enable: Boolean,
-    val relationId: String
-)
+/**
+ * iam回调实现类
+ */
+interface PermissionResourceCallbackService {
+
+    fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO
+
+    fun getInstanceByResource(
+        callBackInfo: CallbackRequestDTO,
+        token: String
+    ): CallbackBaseResponseDTO?
+}

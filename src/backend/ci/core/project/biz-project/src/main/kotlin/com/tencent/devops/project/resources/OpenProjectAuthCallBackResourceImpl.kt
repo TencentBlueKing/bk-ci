@@ -23,29 +23,37 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo.event
+package com.tencent.devops.project.resources
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.project.api.open.OpenProjectAuthCallBackResource
+import org.springframework.beans.factory.annotation.Autowired
 
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP)
-data class AuthResourceGroupEvent(
-    @ApiModelProperty("分级管理员ID或二级管理员ID")
-    val managerId: Int,
-    val userId: String,
-    @ApiModelProperty("项目ID")
-    val projectCode: String,
-    @ApiModelProperty("项目名")
-    val projectName: String,
-    @ApiModelProperty("资源类型")
-    val resourceType: String,
-    @ApiModelProperty("资源ID")
-    val resourceCode: String,
-    @ApiModelProperty("资源名")
-    val resourceName: String
-): ITraceEvent()
+@RestResource
+class OpenProjectAuthCallBackResourceImpl @Autowired constructor(
+    val authProjectService: AuthProjectService
+) : OpenProjectAuthCallBackResource {
+    override fun projectInfo(token: String, callBackInfo: CallbackRequestDTO): CallbackBaseResponseDTO? {
+        val method = callBackInfo.method
+        val page = callBackInfo.page
+        when (method) {
+            CallbackMethodEnum.LIST_INSTANCE -> {
+                return authProjectService.getProjectList(page, token)
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> {
+                val ids = callBackInfo.filter.idList.map { it.toString() }
+                val attribute = callBackInfo.filter.attributeList
+                return authProjectService.getProjectInfo(ids, token, attribute)
+            }
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                return authProjectService.searchProjectInstances(callBackInfo.filter.keyword, page, token)
+            }
+        }
+        return null
+    }
+}

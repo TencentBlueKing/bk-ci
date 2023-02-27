@@ -47,6 +47,7 @@ class AuthResourceDao {
         resourceType: String,
         resourceCode: String,
         resourceName: String,
+        iamResourceCode: String,
         enable: Boolean,
         relationId: String
     ): Int {
@@ -58,6 +59,7 @@ class AuthResourceDao {
                 RESOURCE_TYPE,
                 RESOURCE_CODE,
                 RESOURCE_NAME,
+                IAM_RESOURCE_CODE,
                 ENABLE,
                 RELATION_ID,
                 CREATE_TIME,
@@ -69,6 +71,7 @@ class AuthResourceDao {
                 resourceType,
                 resourceCode,
                 resourceName,
+                iamResourceCode,
                 enable,
                 relationId,
                 now,
@@ -128,6 +131,21 @@ class AuthResourceDao {
         }
     }
 
+    fun getByIamCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        iamResourceCode: String
+    ): TAuthResourceRecord? {
+        with(TAuthResource.T_AUTH_RESOURCE) {
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(IAM_RESOURCE_CODE.eq(iamResourceCode))
+                .fetchOne()
+        }
+    }
+
     fun enable(
         dslContext: DSLContext,
         userId: String,
@@ -168,16 +186,16 @@ class AuthResourceDao {
 
     fun list(
         dslContext: DSLContext,
-        projectCode: String?,
+        projectCode: String,
         resourceName: String?,
-        resourceType: String?,
+        resourceType: String,
         offset: Int,
         limit: Int
-    ): Result<TAuthResourceRecord>? {
+    ): Result<TAuthResourceRecord> {
         with(TAuthResource.T_AUTH_RESOURCE) {
-            return dslContext.selectFrom(this).where()
-                .let { if (projectCode == null) it else it.and(PROJECT_CODE.eq(projectCode)) }
-                .let { if (resourceType == null) it else it.and(RESOURCE_TYPE.eq(resourceType)) }
+            return dslContext.selectFrom(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
                 .let { if (resourceName == null) it else it.and(RESOURCE_NAME.like("%$resourceName%")) }
                 .limit(limit)
                 .offset(offset)
@@ -185,7 +203,35 @@ class AuthResourceDao {
         }
     }
 
-    fun listByProjectAndType(
+    fun getResourceCodeByIamCode(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): List<String> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.select(RESOURCE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(IAM_RESOURCE_CODE.`in`(iamResourceCodes))
+                .fetch(0, String::class.java)
+        }
+    }
+
+    fun listByByIamCodes(
+        dslContext: DSLContext,
+        resourceType: String,
+        iamResourceCodes: List<String>
+    ): Result<TAuthResourceRecord> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.selectFrom(this)
+                .where(RESOURCE_TYPE.eq(resourceType))
+                .and(IAM_RESOURCE_CODE.`in`(iamResourceCodes))
+                .fetch()
+        }
+    }
+
+    fun getResourceCodeByType(
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String
@@ -206,6 +252,7 @@ class AuthResourceDao {
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 resourceName = resourceName,
+                iamResourceCode = iamResourceCode,
                 enable = enable,
                 relationId = relationId
             )

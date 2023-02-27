@@ -26,18 +26,8 @@
  *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.common.auth.code
 
-import io.swagger.annotations.ApiModel
-
-@ApiModel("资源信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
-    val projectCode: String,
-    val resourceType: String,
-    val resourceCode: String,
-    val resourceName: String,
-    val iamResourceCode: String,
-    val enable: Boolean,
-    val relationId: String
-)
+class RbacPipelineGroupAuthServiceCode : PipelineGroupAuthServiceCode {
+    override fun id() = RbacAuthServiceCode.PIPELINE_GROUP.value
+}

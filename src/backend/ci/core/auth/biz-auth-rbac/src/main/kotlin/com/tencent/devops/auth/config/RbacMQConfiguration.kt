@@ -29,7 +29,8 @@
 package com.tencent.devops.auth.config
 
 import com.tencent.devops.auth.listener.AuthItsmCallbackListener
-import com.tencent.devops.auth.listener.AuthResourceGroupListener
+import com.tencent.devops.auth.listener.AuthResourceGroupCreateListener
+import com.tencent.devops.auth.listener.AuthResourceGroupModifyListener
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
@@ -99,31 +100,78 @@ class RbacMQConfiguration {
     }
 
     @Bean
-    fun authResourceGroupQueue(): Queue {
-        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP, true)
+    fun authResourceGroupCreateQueue(): Queue {
+        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP_CREATE, true)
     }
 
     @Bean
-    fun authResourceGroupBind(
-        @Autowired authResourceGroupQueue: Queue,
+    fun authResourceGroupCreateBind(
+        @Autowired authResourceGroupCreateQueue: Queue,
         @Autowired authRbacExchange: DirectExchange
     ): Binding {
-        return BindingBuilder.bind(authResourceGroupQueue).to(authRbacExchange).with(MQ.ROUTE_AUTH_RESOURCE_GROUP)
+        return BindingBuilder
+            .bind(authResourceGroupCreateQueue)
+            .to(authRbacExchange)
+            .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
     }
 
     @Bean
-    fun authResourceGroupEventListenerContainer(
+    fun authResourceGroupCreateEventListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
-        @Autowired authResourceGroupQueue: Queue,
+        @Autowired authResourceGroupCreateQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired authResourceGroupListener: AuthResourceGroupListener,
+        @Autowired authResourceGroupCreateListener: AuthResourceGroupCreateListener,
         @Autowired messageConverter: Jackson2JsonMessageConverter
     ): SimpleMessageListenerContainer {
-        val adapter = MessageListenerAdapter(authResourceGroupListener, authResourceGroupListener::execute.name)
+        val adapter = MessageListenerAdapter(
+            authResourceGroupCreateListener,
+            authResourceGroupCreateListener::execute.name
+        )
         adapter.setMessageConverter(messageConverter)
         return Tools.createSimpleMessageListenerContainerByAdapter(
             connectionFactory = connectionFactory,
-            queue = authResourceGroupQueue,
+            queue = authResourceGroupCreateQueue,
+            rabbitAdmin = rabbitAdmin,
+            adapter = adapter,
+            startConsumerMinInterval = 5000,
+            consecutiveActiveTrigger = 5,
+            concurrency = 10,
+            maxConcurrency = 20
+        )
+    }
+
+    @Bean
+    fun authResourceGroupModifyQueue(): Queue {
+        return Queue(MQ.QUEUE_AUTH_RESOURCE_GROUP_MODIFY, true)
+    }
+
+    @Bean
+    fun authResourceGroupModifyBind(
+        @Autowired authResourceGroupModifyQueue: Queue,
+        @Autowired authRbacExchange: DirectExchange
+    ): Binding {
+        return BindingBuilder
+            .bind(authResourceGroupModifyQueue)
+            .to(authRbacExchange)
+            .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
+    }
+
+    @Bean
+    fun authResourceGroupModifyEventListenerContainer(
+        @Autowired connectionFactory: ConnectionFactory,
+        @Autowired authResourceGroupModifyQueue: Queue,
+        @Autowired rabbitAdmin: RabbitAdmin,
+        @Autowired authResourceGroupModifyListener: AuthResourceGroupModifyListener,
+        @Autowired messageConverter: Jackson2JsonMessageConverter
+    ): SimpleMessageListenerContainer {
+        val adapter = MessageListenerAdapter(
+            authResourceGroupModifyListener,
+            authResourceGroupModifyListener::execute.name
+        )
+        adapter.setMessageConverter(messageConverter)
+        return Tools.createSimpleMessageListenerContainerByAdapter(
+            connectionFactory = connectionFactory,
+            queue = authResourceGroupModifyQueue,
             rabbitAdmin = rabbitAdmin,
             adapter = adapter,
             startConsumerMinInterval = 5000,

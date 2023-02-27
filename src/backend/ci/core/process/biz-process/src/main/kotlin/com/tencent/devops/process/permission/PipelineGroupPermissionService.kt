@@ -26,73 +26,77 @@
  *
  */
 
-package com.tencent.devops.auth.service.sample
+package com.tencent.devops.process.permission
 
-import com.tencent.devops.auth.pojo.AuthResourceInfo
-import com.tencent.devops.auth.service.iam.PermissionResourceService
-import com.tencent.devops.common.api.pojo.Pagination
+import com.tencent.devops.common.auth.api.AuthPermission
 
-class SamplePermissionResourceService : PermissionResourceService {
-    override fun resourceCreateRelation(
-        userId: String,
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
+/**
+ * 流水线组权限操作
+ */
+interface PipelineGroupPermissionService {
 
-    override fun resourceModifyRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String,
-        resourceName: String
-    ) = true
-
-    override fun resourceDeleteRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-
-    override fun resourceCancelRelation(
-        projectCode: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-
-    override fun hasManagerPermission(
+    /**
+     * 校验是否有任意流水线组存在指定的权限
+     * @param userId userId
+     * @param projectId projectId
+     * @param permission 权限
+     * @return 有权限返回true
+     */
+    fun checkPipelineGroupPermission(
         userId: String,
         projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+        permission: AuthPermission
+    ): Boolean
 
-    override fun isEnablePermission(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
-
-    override fun enableResourcePermission(
+    /**
+     * 校验是否有流水线组指定权限
+     * @param userId userId
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param permission 权限
+     * @return 有权限返回true
+     */
+    fun checkPipelineGroupPermission(
         userId: String,
         projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+        viewId: Long,
+        permission: AuthPermission
+    ): Boolean
 
-    override fun disableResourcePermission(
+    /**
+     * 注册流水线组到权限中心与权限关联
+     * @param userId userId
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param pipelineViewName 流水线组名称
+     */
+    fun createResource(
         userId: String,
         projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ) = true
+        viewId: Long,
+        pipelineViewName: String
+    )
 
-    override fun listResoureces(
+    /**
+     * 修改流水线组在权限中心中的资源属性
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     * @param pipelineViewName 流水线组名称
+     */
+    fun modifyResource(
         userId: String,
         projectId: String,
-        resourceType: String,
-        resourceName: String?,
-        page: Int,
-        pageSize: Int
-    ): Pagination<AuthResourceInfo> = Pagination(hasNext = false, records = emptyList())
+        viewId: Long,
+        pipelineViewName: String
+    )
+
+    /**
+     * 从权限中心删除流水线组资源
+     * @param projectId projectId
+     * @param viewId 流水线组ID
+     */
+    fun deleteResource(
+        projectId: String,
+        viewId: Long
+    )
 }

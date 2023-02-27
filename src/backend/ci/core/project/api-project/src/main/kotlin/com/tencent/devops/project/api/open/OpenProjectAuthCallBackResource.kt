@@ -23,21 +23,36 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
- *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.project.api.open
 
-import io.swagger.annotations.ApiModel
+import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
+import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-@ApiModel("资源信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
-    val projectCode: String,
-    val resourceType: String,
-    val resourceCode: String,
-    val resourceName: String,
-    val iamResourceCode: String,
-    val enable: Boolean,
-    val relationId: String
-)
+@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
+@Path("/open/project/callback")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface OpenProjectAuthCallBackResource {
+    @POST
+    @Path("/")
+    @ApiOperation("iam项目回调接口")
+    fun projectInfo(
+        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
+        @ApiParam("token")
+        token: String,
+        @ApiParam(value = "回调信息")
+        callBackInfo: CallbackRequestDTO
+    ): CallbackBaseResponseDTO?
+}

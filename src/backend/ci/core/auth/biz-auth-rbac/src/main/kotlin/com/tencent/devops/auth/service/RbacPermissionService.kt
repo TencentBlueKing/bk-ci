@@ -40,7 +40,8 @@ import org.slf4j.LoggerFactory
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val authResourceCodeConverter: AuthResourceCodeConverter
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
@@ -124,7 +125,11 @@ class RbacPermissionService constructor(
                 resourceType = resourceType
             )
         } else {
-            instanceList
+            authResourceCodeConverter.batchIamCode2Code(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                iamResourceCodes = instanceList
+            )
         }
     }
 

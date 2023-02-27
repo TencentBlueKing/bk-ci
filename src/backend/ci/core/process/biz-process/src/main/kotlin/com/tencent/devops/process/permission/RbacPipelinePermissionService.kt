@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.permission
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -36,13 +35,10 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
-import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
-import org.springframework.beans.factory.annotation.Autowired
-import javax.ws.rs.core.Response
 
-class RbacPipelinePermissionService @Autowired constructor(
+class RbacPipelinePermissionService constructor(
     val authPermissionApi: AuthPermissionApi,
     val authProjectApi: AuthProjectApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
@@ -61,7 +57,12 @@ class RbacPipelinePermissionService @Autowired constructor(
         )
     }
 
-    override fun checkPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission): Boolean {
+    override fun checkPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission
+    ): Boolean {
         if (pipelineId == "*") {
             return checkPipelinePermission(
                 userId = userId,
@@ -69,38 +70,40 @@ class RbacPipelinePermissionService @Autowired constructor(
                 permission = permission
             )
         }
-        val iamId = findInstanceId(projectId, pipelineId)
 
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
-            resourceCode = iamId,
+            resourceCode = pipelineId,
             permission = permission,
             resourceType = resourceType,
             serviceCode = pipelineAuthServiceCode
         )
     }
 
-    override fun validPipelinePermission(userId: String, projectId: String, pipelineId: String, permission: AuthPermission, message: String?) {
+    override fun validPipelinePermission(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        permission: AuthPermission,
+        message: String?
+    ) {
         if (pipelineId == "*") {
             if (!checkPipelinePermission(
                     userId = userId,
                     projectId = projectId,
                     permission = permission
-                )) {
+                )
+            ) {
                 throw PermissionForbiddenException(message)
             }
             return
         }
 
-        val iamId = findInstanceId(projectId, pipelineId)
-        if (iamId.isEmpty()) {
-            throw PermissionForbiddenException("流水线不存在")
-        }
         val permissionCheck = authPermissionApi.validateUserResourcePermission(
             user = userId,
             projectCode = projectId,
-            resourceCode = iamId,
+            resourceCode = pipelineId,
             permission = permission,
             resourceType = resourceType,
             serviceCode = pipelineAuthServiceCode
@@ -111,7 +114,7 @@ class RbacPipelinePermissionService @Autowired constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        val iamInstanceList = authPermissionApi.getUserResourceByPermission(
+        return authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
@@ -119,46 +122,34 @@ class RbacPipelinePermissionService @Autowired constructor(
             supplier = null,
             resourceType = resourceType
         )
-
-        val pipelineIds = mutableListOf<String>()
-        if (iamInstanceList.contains("*")) {
-            pipelineInfoDao.searchByProject(dslContext, projectId)?.map { pipelineIds.add(it.pipelineId) }
-        } else {
-            val ids = iamInstanceList.map { it.toLong() }
-            pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { pipelineIds.add(it.pipelineId) }
-        }
-        return pipelineIds
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
-        val pipelineAutoId = findInstanceId(projectId, pipelineId)
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
-            resourceCode = pipelineAutoId,
+            resourceCode = pipelineId,
             resourceName = pipelineName
         )
     }
 
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
-        val pipelineAutoId = findInstanceId(projectId, pipelineId)
         authResourceApi.deleteResource(
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = pipelineAutoId
+            resourceCode = pipelineId
         )
     }
 
     override fun deleteResource(projectId: String, pipelineId: String) {
-        val pipelineAutoId = findInstanceId(projectId, pipelineId)
         authResourceApi.deleteResource(
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = pipelineAutoId
+            resourceCode = pipelineId
         )
     }
 
@@ -173,16 +164,6 @@ class RbacPipelinePermissionService @Autowired constructor(
 
     override fun checkProjectManager(userId: String, projectId: String): Boolean {
         return authProjectApi.checkProjectManager(userId, pipelineAuthServiceCode, projectId)
-    }
-
-    private fun findInstanceId(projectId: String, pipelineId: String): String {
-        val pipelineInfo = pipelineInfoDao.getPipelineInfo(dslContext, projectId, pipelineId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
-            )
-        return pipelineInfo.id.toString()
     }
 
     companion object {

@@ -26,18 +26,37 @@
  *
  */
 
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.process.permission
 
-import io.swagger.annotations.ApiModel
+import com.tencent.devops.common.auth.api.AuthPermission
 
-@ApiModel("资源信息")
-data class AuthResourceInfo(
-    val id: Long? = null,
-    val projectCode: String,
-    val resourceType: String,
-    val resourceCode: String,
-    val resourceName: String,
-    val iamResourceCode: String,
-    val enable: Boolean,
-    val relationId: String
-)
+class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
+    override fun checkPipelineGroupPermission(userId: String, projectId: String, permission: AuthPermission): Boolean {
+        return true
+    }
+
+    override fun checkPipelineGroupPermission(
+        userId: String,
+        projectId: String,
+        viewId: Long,
+        permission: AuthPermission
+    ): Boolean {
+        return true
+    }
+
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        viewId: Long,
+        pipelineViewName: String
+    ) = Unit
+
+    override fun modifyResource(
+        userId: String,
+        projectId: String,
+        viewId: Long,
+        pipelineViewName: String
+    ) = Unit
+
+    override fun deleteResource(projectId: String, viewId: Long) = Unit
+}
