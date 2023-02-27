@@ -71,7 +71,7 @@ class RbacRepositoryPermissionService(
             action = actions,
             resourceType = AuthResourceType.CODE_REPERTORY.value
         ).data ?: emptyMap()
-        return buildResultMap(permissionResourcesMap)
+        return RbacAuthUtils.buildResultMap(permissionResourcesMap)
     }
 
     override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
@@ -123,21 +123,5 @@ class RbacRepositoryPermissionService(
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             resourceCode = HashUtil.encodeOtherLongId(repositoryId)
         )
-    }
-
-    private fun buildResultMap(
-        instancesMap: Map<AuthPermission, List<String>>
-    ): Map<AuthPermission, List<Long>> {
-        if (instancesMap.isEmpty())
-            return emptyMap()
-        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-        instancesMap.forEach { (key, value) ->
-            val instanceLongIds = mutableListOf<Long>()
-            value.forEach {
-                instanceLongIds.add(HashUtil.decodeOtherIdToLong(it))
-            }
-            resultMap[key] = instanceLongIds
-        }
-        return resultMap
     }
 }
