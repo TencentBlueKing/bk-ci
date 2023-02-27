@@ -459,7 +459,7 @@ open class GitApi {
     ): List<GitCommit> {
         val request = get(
             host, token, "projects/${urlEncode(projectName)}/repository/commits?page=$page&per_page=$size"
-            .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
+                .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_COMMIT, request))
         logger.info(
@@ -603,7 +603,6 @@ open class GitApi {
     }
 
     fun getProjectInfo(host: String, token: String, url: String): GitProjectInfo {
-        logger.info("Start to get projectInfo of host=[$host] by url=[$url] and token=[${StringUtils.length(token)}]")
         val request = get(host, token, url, StringUtils.EMPTY)
         return JsonUtil.getObjectMapper().readValue(getBody(GET_PROJECT_INFO, request))
     }
