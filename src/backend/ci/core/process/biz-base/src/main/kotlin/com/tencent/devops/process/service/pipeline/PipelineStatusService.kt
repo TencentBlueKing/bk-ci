@@ -32,6 +32,7 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
 import com.tencent.devops.process.dao.PipelineSettingDao
+import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -47,6 +48,7 @@ class PipelineStatusService(
     private val pipelineInfoDao: PipelineInfoDao,
     private val pipelineSettingDao: PipelineSettingDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
+    private val pipelineBuildDao: PipelineBuildDao,
     private val pipelineRuntimeService: PipelineRuntimeService
 ) {
 
@@ -76,6 +78,9 @@ class PipelineStatusService(
         val lastBuildFinishCount =
             buildTaskCountList.filter { it.value2() == BuildStatus.SUCCEED.ordinal }.sumOf { it.value3() }
 
+        // 获取触发方式
+        val buildInfo = pipelineBuildDao.getBuildInfo(dslContext, projectId, pipelineBuildSummary.latestBuildId)
+
         // todo还没想好与Pipeline结合，减少这部分的代码，收归一处
         return PipelineStatus(
             taskCount = pipelineInfo.taskCount,
@@ -93,7 +98,8 @@ class PipelineStatusService(
             lock = PipelineRunLockType.checkLock(pipelineSetting.runLockType),
             runningBuildCount = pipelineBuildSummary.runningCount ?: 0,
             lastBuildFinishCount = lastBuildFinishCount,
-            lastBuildTotalCount = lastBuildTotalCount
+            lastBuildTotalCount = lastBuildTotalCount,
+            trigger = buildInfo?.trigger
         )
     }
 
