@@ -48,7 +48,7 @@ class TxStoreLogoServiceImpl : StoreLogoServiceImpl() {
         val serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
         OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${file.name} fail,responseContent:$responseContent")
                 return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)

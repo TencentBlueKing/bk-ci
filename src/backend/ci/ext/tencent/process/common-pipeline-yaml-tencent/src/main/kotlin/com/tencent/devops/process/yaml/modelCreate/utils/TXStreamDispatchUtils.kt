@@ -154,8 +154,7 @@ object TXStreamDispatchUtils {
                         user = userName,
                         password = password
                     )
-                },
-                envs = job.env
+                }
             )
 
             return ThirdPartyAgentEnvDispatchType(

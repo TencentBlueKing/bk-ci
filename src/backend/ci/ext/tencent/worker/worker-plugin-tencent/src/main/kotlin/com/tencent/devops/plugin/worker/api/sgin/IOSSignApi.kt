@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
@@ -47,7 +47,7 @@ class IOSSignApi : AbstractBuildResourceApi() {
         val gatewayDomain = AgentEnv.getGateway()
         val path = "/ios/sign/upload?size=${file.length()}&md5=${FileUtil.getMD5(file)}&" +
             "properties=$props&repoType=$repoType&customPath=$customPath&certId=$certId&p12Id=$p12Id"
-        val fileBody = RequestBody.create(MediaType.parse("application/octet-stream"), file)
+        val fileBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file)
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
             .addFormDataPart("file", file.name, fileBody)

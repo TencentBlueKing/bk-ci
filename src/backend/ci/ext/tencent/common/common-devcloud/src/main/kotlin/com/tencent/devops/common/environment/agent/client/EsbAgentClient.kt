@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -54,7 +54,7 @@ class EsbAgentClient {
 
     companion object {
         private val logger = LoggerFactory.getLogger(EsbAgentClient::class.java)
-        private val JSON = MediaType.parse("application/json;charset=utf-8")
+        private val JSON = "application/json;charset=utf-8".toMediaTypeOrNull()
         private const val DEFAULT_SYTEM_USER = "devops"
     }
 
@@ -80,7 +80,7 @@ class EsbAgentClient {
         val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)
@@ -139,7 +139,7 @@ class EsbAgentClient {
         val request = Request.Builder().url(url).post(RequestBody.create(JSON, requestBody)).build()
         OkhttpUtils.doHttp(request).use { response ->
             try {
-                val responseBody = response.body()?.string()
+                val responseBody = response.body?.string()
                 logger.info("responseBody: $responseBody")
 
                 val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseBody!!)

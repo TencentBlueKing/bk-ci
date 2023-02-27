@@ -75,8 +75,9 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
-import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
@@ -136,7 +137,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             )
@@ -167,7 +168,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             )
@@ -206,7 +207,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -328,7 +329,7 @@ class BkRepoClient constructor(
             }
 
             override fun contentType(): MediaType? {
-                return MediaType.parse("application/octet-stream")
+                return "application/octet-stream".toMediaTypeOrNull()
             }
         }
 
@@ -346,7 +347,7 @@ class BkRepoClient constructor(
         }
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(header))
+            .headers(header.toHeaders())
             .put(requestBody).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -403,8 +404,8 @@ class BkRepoClient constructor(
         properties?.forEach {
             header["$METADATA_PREFIX${it.key}"] = tryEncode(it.value)
         }
-        requestBuilder.headers(Headers.of(header))
-            .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
+        requestBuilder.headers(header.toHeaders())
+            .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
         val request = requestBuilder.build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -469,7 +470,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -507,7 +508,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -529,7 +530,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -664,16 +665,16 @@ class BkRepoClient constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            if (response.code() == 404) {
+            if (response.code == 404) {
                 logger.warn("file($url) not found")
                 throw NotFoundException("File is not exist!")
             }
             if (!response.isSuccessful) {
-                val responseContent = response.body()?.string()
-                logger.warn("download file($url) failed, code ${response.code()}, content: $responseContent")
-                throw RemoteServiceException("download file failed", response.code(), responseContent)
+                val responseContent = response.body?.string()
+                logger.warn("download file($url) failed, code ${response.code}, content: $responseContent")
+                throw RemoteServiceException("download file failed", response.code, responseContent)
             }
-            FileCopyUtils.copy(response.body()!!.byteStream(), outputStream)
+            FileCopyUtils.copy(response.body!!.byteStream(), outputStream)
         }
     }
 
@@ -786,7 +787,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -817,7 +818,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -859,7 +860,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -1067,7 +1068,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(mapOf("expires" to expires))
                 )
             )
@@ -1115,7 +1116,7 @@ class BkRepoClient constructor(
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -1126,13 +1127,13 @@ class BkRepoClient constructor(
         try {
             return OkhttpUtils.doHttp(request)
         } catch (e: IOException) {
-            throw RemoteServiceException("request api[${request.url().url()}] error: ${e.localizedMessage}")
+            throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
-            val responseContent = this.body()!!.string()
+            val responseContent = this.body!!.string()
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
@@ -1140,13 +1141,13 @@ class BkRepoClient constructor(
             val responseData = try {
                 objectMapper.readValue<Response<Void>>(responseContent)
             } catch (e: JacksonException) {
-                throw RemoteServiceException(responseContent, this.code())
+                throw RemoteServiceException(responseContent, this.code)
             }
             if (allowCode == responseData.code) {
                 logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
                 return null
             }
-            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code())
+            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
     }
 

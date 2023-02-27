@@ -38,7 +38,7 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthProjectCodeAndId
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthResponse
 import com.tencent.devops.common.auth.code.AuthServiceCode
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -75,10 +75,10 @@ class BSAuthProjectApi @Autowired constructor(
         logger.info("isProjectMember, user: $user, projectCode: $projectCode, serviceCode: $serviceCode")
         val accessToken = bsAuthTokenApi.getAccessToken(serviceCode)
         val url = "${bkAuthProperties.url}/projects/$projectCode/users/$user/verfiy?access_token=$accessToken"
-        val body = RequestBody.create(MediaType.parse("application/json; charset=utf-8"), "")
+        val body = RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), "")
         val request = Request.Builder().url(url).post(body).build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("verify project user failed, url:$url, responseContent: $responseContent")
                 throw RemoteServiceException("verify project user failed")
@@ -118,7 +118,7 @@ class BSAuthProjectApi @Autowired constructor(
         }
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("Fail to get project users, url:$url,  $responseContent")
                 throw RemoteServiceException("Fail to get project users")
@@ -154,7 +154,7 @@ class BSAuthProjectApi @Autowired constructor(
         val request = Request.Builder().url(url).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("Fail to get project group and user list. $responseContent")
                 throw RemoteServiceException("Fail to get project group and user list")
@@ -190,7 +190,7 @@ class BSAuthProjectApi @Autowired constructor(
         val request = Request.Builder().url(url).get().build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             val escape = System.currentTimeMillis() - startEpoch
             if (escape > SLOW_TIME) {
                 // if > 1 second, print the response
@@ -230,7 +230,7 @@ class BSAuthProjectApi @Autowired constructor(
         val request = Request.Builder().url(url).get().build()
 //
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("Fail to get user projects. $responseContent")
                 throw RemoteServiceException("Fail to get user projects")
@@ -287,12 +287,12 @@ class BSAuthProjectApi @Autowired constructor(
         bodyJson["user_id"] = user
         val content = objectMapper.writeValueAsString(bodyJson)
         logger.info("createProjectUser: url[$url], body:[$content]")
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val body = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url).post(body).build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("create project user fail: user[$user], projectCode[$projectCode]")
                 throw RemoteServiceException("create project user fail: user[$user], projectCode[$projectCode]")
@@ -300,7 +300,7 @@ class BSAuthProjectApi @Autowired constructor(
             val responseObject = objectMapper.readValue<BkAuthResponse<Any>>(responseContent)
             result = if (responseObject.code != 0) {
                 logger.warn("create project user fail: $responseObject")
-        //                throw RemoteServiceException("create project user fail: $responseObject")
+                //                throw RemoteServiceException("create project user fail: $responseObject")
                 // #2836 只有当权限中心出现500系统，才抛出异常
                 if (responseObject.code >= HTTP_500) {
                     throw RemoteServiceException(
@@ -328,7 +328,7 @@ class BSAuthProjectApi @Autowired constructor(
         logger.info("getProjectRoles: url:$url")
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get project roles fail: projectCode[$projectCode]")
                 throw RemoteServiceException("get project roles fail: projectCode[$projectCode]")
@@ -355,7 +355,7 @@ class BSAuthProjectApi @Autowired constructor(
         val url = "${bkAuthProperties.url}/projects/$projectCode?access_token=$accessToken"
         val request = Request.Builder().url(url).get().build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("get project info fail: projectCode[$projectCode]")
                 throw RemoteServiceException("get project inProjectPaasCCServicefo fail: projectCode[$projectCode]")

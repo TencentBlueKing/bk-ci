@@ -240,7 +240,7 @@ class TxProjectServiceImpl @Autowired constructor(
         val serviceUrl =
             "$serviceUrlPrefix/service/file/upload?userId=$userId"
         OkhttpUtils.uploadFile(serviceUrl, logoFile).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn("$userId upload file:${logoFile.name} fail,responseContent:$responseContent")
                 throw ErrorCodeException(errorCode = ProjectMessageCode.SAVE_LOGO_FAIL)
@@ -300,11 +300,11 @@ class TxProjectServiceImpl @Autowired constructor(
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn(
-                    "Fail to request($request) with code ${response.code()}, " +
-                            "message ${response.message()} and response $responseContent"
+                    "Fail to request($request) with code ${response.code}, " +
+                            "message ${response.message} and response $responseContent"
                 )
                 throw OperationException(errorMessage)
             }

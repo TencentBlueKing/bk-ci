@@ -64,18 +64,18 @@ class KubernetesTaskClient @Autowired constructor(
         val request = clientCommon.baseRequest(userId, url).get().build()
         try {
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (response.isSuccessful) {
                     logger.info("Get task: $taskId status response: ${JsonUtil.toJson(responseContent)}")
                     return objectMapper.readValue(responseContent)
                 }
 
-                logger.error("Get task: $taskId status failed, responseCode: ${response.code()}")
+                logger.error("Get task: $taskId status failed, responseCode: ${response.code}")
                 throw BuildFailureException(
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
                     ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                    "获取kubernetes task($taskId)状态接口异常：http response code: ${response.code()}"
+                    "获取kubernetes task($taskId)状态接口异常：http response code: ${response.code}"
                 )
             }
         } catch (e: SocketTimeoutException) {

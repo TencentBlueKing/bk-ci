@@ -77,8 +77,8 @@ class MtaTest {
                 .build()
 
         httpClient.newCall(request).execute().use { response ->
-            val data = response.body()!!.string()
-            println(response.code())
+            val data = response.body!!.string()
+            println(response.code)
             println("response data: $data")
         }
     }
@@ -119,8 +119,8 @@ class MtaTest {
                 .build()
 
         httpClient.newCall(request).execute().use { response ->
-            val data = response.body()!!.string()
-            println(response.code())
+            val data = response.body!!.string()
+            println(response.code)
             println("response data: $data")
         }
     }

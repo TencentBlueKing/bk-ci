@@ -104,7 +104,7 @@ class JobClient @Autowired constructor(
             val url = "${jobProperties.url}/service/task/$projectId/$taskId/detail"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -131,7 +131,7 @@ class JobClient @Autowired constructor(
             val url = "${jobProperties.url}/service/history/$projectId/$taskInstanceId/status"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url, mapOf("X-DEVOPS-JOB-API-TOKEN" to jobProperties.token!!)).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 if (response["status"] == 0) {
@@ -177,7 +177,7 @@ class JobClient @Autowired constructor(
             .post(RequestBody.create(OkhttpUtils.jsonMediaType, requestBody))
             .build()
         OkhttpUtils.doHttp(httpReq).use { resp ->
-            val responseStr = resp.body()!!.string()
+            val responseStr = resp.body!!.string()
             logger.info("response body: $responseStr")
 
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
