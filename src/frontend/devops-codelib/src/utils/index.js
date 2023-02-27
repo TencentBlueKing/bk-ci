@@ -38,11 +38,13 @@ export function parsePathAlias (type, path, authType, svnType) {
             msg = `${codelibLocaleObj.githubRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'ssh':
-            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            aliasIndex = 2
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'http':
-            reg = /^(http|svn)\:\/\/([\-\.a-z0-9A-Z]+)(:[0-9]{2,5})?\/([\w\W\.\-\_\/\+]+)$/i
+            reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            aliasIndex = 3
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type) && authType === 'HTTP':
@@ -84,7 +86,7 @@ export function extendParsePathAlias (type, path, authType, svnType) {
     let alias = ''
     let nameMatchIndex = 1
     const codelibLocaleObj = window.devops.$i18n.t('codelib')
-    const preReg = /\_proj\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
+    // const preReg = /\_proj\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
 
     switch (true) {
         case isGithub(type):
@@ -97,19 +99,23 @@ export function extendParsePathAlias (type, path, authType, svnType) {
             nameMatchIndex = 4
             break
         case isSvn(type) && svnType === 'ssh':
-            if (path.match(preReg)) {
-                reg = /^svn\+ssh\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+\_proj)\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
-            } else {
-                reg = /^svn\+ssh\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+?\_proj)+?(\/[\w\W\.\-\/\+]*)?$/i
-            }
+            reg = /^svn\+ssh\:\/\/([\@\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            nameMatchIndex = 2
+            // if (path.match(preReg)) {
+            //     reg = /^svn\+ssh\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-])\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
+            // } else {
+            //     reg = /^svn\+ssh\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+)+?(\/[\w\W\.\-\/\+]*)?$/i
+            // }
             msg = `${codelibLocaleObj.svnSshRule}${type}${codelibLocaleObj.address}`
             break
         case isSvn(type) && svnType === 'http':
-            if (path.match(preReg)) {
-                reg = /^http\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+\_proj)\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
-            } else {
-                reg = /^http\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+?\_proj)+?(\/[\w\W\.\-\/\+]*)?$/i
-            }
+            reg = /^(http|https|svn)\:\/\/([\-\.a-z0-9A-Z]+)\/([\w\W\.\-\_\/\+]+)$/i
+            nameMatchIndex = 3
+            // if (path.match(preReg)) {
+            //     reg = /^http\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+\_proj)\/(branches|tags|trunk|release|document)(\/[\w\W\.\-\/\+]*)?$/i
+            // } else {
+            //     reg = /^http\:\/\/[\w\@\.\-\/\+]+\.com\/([\w\.\/\-]+?\_proj)+?(\/[\w\W\.\-\/\+]*)?$/i
+            // }
             msg = `${codelibLocaleObj.httpRule}${type}${codelibLocaleObj.address}`
             break
         case isGitLab(type) && authType === 'HTTP':
