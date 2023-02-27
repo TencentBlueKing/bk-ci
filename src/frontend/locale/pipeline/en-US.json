@@ -1004,6 +1004,7 @@
   "allPipeline": "All Pipelines",
   "projectViewList": "Project Pipeline Groups",
   "personalViewList": "My Pipeline Groups",
+  "pipelineGroup": "Pipeline Groups",
   "patchManage": "Batch Manage",
   "searchPipelinePlaceholder": "pipeline name / creator / pipeline group name/ label",
   "ownGroupName": "Pipeline Group",
