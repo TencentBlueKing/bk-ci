@@ -648,7 +648,10 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                     )!!
                 val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
                 // 替换内容里的动态参数
-                val body = replaceContentParams(request.bodyParams, weworkTplRecord.body)
+                val body = replaceContentParams(
+                    request.bodyParams,
+                    if (request.markdownContent == true) weworkTplRecord.bodyMd else weworkTplRecord.body
+                )
                 logger.info("send wework msg: $body ${weworkTplRecord.sender}")
                 sendWeworkNotifyMessage(
                     commonNotifyMessageTemplate = commonNotifyMessageTemplateRecord,
@@ -890,21 +893,17 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             logger.info("wework group is empty, so return.")
             return
         }
-        // markdown格式取Wework Group表，否则取原表
-        val weworkTplRecord = if (request.markdownContent == true) {
-            notifyMessageTemplateDao.getWeworkGroupNotifyMessageTemplate(
-                dslContext = dslContext,
-                commonTemplateId = commonTemplateId
-            )!!.let { Pair(it.title, it.body) }
-        } else {
+        val weworkTplRecord =
             notifyMessageTemplateDao.getRtxNotifyMessageTemplate(
                 dslContext = dslContext,
                 commonTemplateId = commonTemplateId
-            )!!.let { Pair(it.title, it.body) }
-        }
-        val title = replaceContentParams(request.titleParams, weworkTplRecord.first)
+            )!!
+        val title = replaceContentParams(request.titleParams, weworkTplRecord.title)
         // 替换内容里的动态参数
-        val body = replaceContentParams(request.bodyParams, weworkTplRecord.second)
+        val body = replaceContentParams(
+            request.bodyParams,
+            if (request.markdownContent == true) weworkTplRecord.bodyMd else weworkTplRecord.body
+        )
 
         val content = title + "\n\n" + body
 
