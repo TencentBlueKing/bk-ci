@@ -212,7 +212,10 @@ class PipelineBuildRecordService @Autowired constructor(
         } else {
             null
         } ?: run {
-            logger.info("RECORD|turn to detail($buildId)|executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount")
+            logger.info(
+                "RECORD|turn to detail($buildId)|executeCount=$executeCount|" +
+                    "fixedExecuteCount=$fixedExecuteCount"
+            )
             val detail = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return null
             fixDetailTimeCost(buildInfo, detail)
             detail
