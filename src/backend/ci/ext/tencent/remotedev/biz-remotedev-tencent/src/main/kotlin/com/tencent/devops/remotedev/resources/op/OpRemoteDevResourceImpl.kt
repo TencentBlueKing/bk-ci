@@ -3,7 +3,9 @@ package com.tencent.devops.remotedev.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
+import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
+import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import org.springframework.beans.factory.annotation.Autowired
@@ -11,7 +13,8 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService,
-    private val workspaceService: WorkspaceService
+    private val workspaceService: WorkspaceService,
+    private val remoteDevSettingService: RemoteDevSettingService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -36,6 +39,13 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun initBilling(userId: String, freeTime: Int): Result<Boolean> {
         workspaceService.initBilling(freeTime)
+        return Result(true)
+    }
+
+    override fun updateUserSetting(userId: String, data: List<OPUserSetting>): Result<Boolean> {
+        data.forEach {
+            remoteDevSettingService.updateSetting4Op(it)
+        }
         return Result(true)
     }
 }

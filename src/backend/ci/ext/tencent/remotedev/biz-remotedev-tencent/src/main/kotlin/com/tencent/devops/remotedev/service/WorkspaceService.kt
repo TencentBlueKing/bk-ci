@@ -27,8 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
+import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -117,20 +116,16 @@ class WorkspaceService @Autowired constructor(
     private val commonService: CommonService
 ) {
 
-    private val redisCache = CacheBuilder.newBuilder()
+    private val redisCache = Caffeine.newBuilder()
         .maximumSize(20)
         .expireAfterWrite(1, TimeUnit.MINUTES)
-        .build(
-            object : CacheLoader<String, String>() {
-                override fun load(key: String): String {
-                    return redisOperation.get(key) ?: ""
-                }
-            }
-        )
+        .build<String, String?> { key -> redisOperation.get(key) }
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
         private const val REDIS_CALL_LIMIT_KEY = "remotedev:callLimit"
+        private const val REDIS_DEFAULT_MAX_RUNNING_COUNT = "remotedev:defaultMaxRunningCount"
+        private const val REDIS_DEFAULT_MAX_HAVING_COUNT = "remotedev:defaultMaxHavingCount"
         private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
         private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
         private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
@@ -204,7 +199,7 @@ class WorkspaceService @Autowired constructor(
         } else {
             // 防止污传
             workspaceCreate.devFilePath = null
-            redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
+            redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
         }
 
         if (yaml.isBlank()) {
@@ -414,6 +409,7 @@ class WorkspaceService @Autowired constructor(
                 logger.info("${workspace.name} is $status, return error.")
                 throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't start now.")
             }
+            checkUserCreate(userId, true)
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
                 workspaceName = workspaceName,
@@ -955,7 +951,7 @@ class WorkspaceService @Autowired constructor(
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toLong()
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10560
         return WorkspaceUserDetail(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
@@ -981,7 +977,7 @@ class WorkspaceService @Autowired constructor(
 
         val lastHistory = workspaceHistoryDao.fetchAnyHistory(dslContext, workspaceName) ?: return null
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY).toInt()
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560
 
         val usageTime = workspace.usageTime + if (workspaceStatus.checkRunning()) {
             // 如果正在运行，需要加上目前距离该次启动的时间
@@ -1378,8 +1374,11 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun initBilling(freeTime: Int) {
-        remoteDevBillingDao.monthlyInit(dslContext, freeTime)
+    fun initBilling(freeTime: Int? = null) {
+        remoteDevBillingDao.monthlyInit(
+            dslContext,
+            freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560
+        )
     }
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
@@ -1407,9 +1406,9 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun getOpHistory(key: OpHistoryCopyWriting) =
-        redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name).ifBlank {
+        redisCache.get(REDIS_OP_HISTORY_KEY_PREFIX + key.name)?.ifBlank {
             key.default
-        }
+        } ?: key.default
 
     private fun generateWorkspaceName(userId: String): String {
         val subUserId = if (userId.length > Constansts.subUserIdLimitLen) {
@@ -1437,7 +1436,31 @@ class WorkspaceService @Autowired constructor(
     }
 
     fun getDevfile(): String {
-        return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY)
+        return redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
+    }
+
+    fun checkUserCreate(userId: String, runningOnly: Boolean = false): Boolean {
+        val setting = remoteDevSettingDao.fetchSingleUserWsCount(dslContext, userId)
+        val maxRunningCount = setting.first ?: redisCache.get(REDIS_DEFAULT_MAX_RUNNING_COUNT)?.toInt() ?: 1
+        if (!runningOnly) {
+            val maxHavingCount = setting.second ?: redisCache.get(REDIS_DEFAULT_MAX_HAVING_COUNT)?.toInt() ?: 3
+            workspaceDao.countUserWorkspace(dslContext, userId, unionShared = false).let {
+                if (it >= maxHavingCount) {
+                    throw CustomException(Response.Status.BAD_REQUEST, "当前创建个数($it)已达用户限制($maxHavingCount)")
+                }
+            }
+        }
+        workspaceDao.countUserWorkspace(
+            dslContext,
+            userId,
+            unionShared = false,
+            status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
+        ).let {
+            if (it >= maxRunningCount) {
+                throw CustomException(Response.Status.BAD_REQUEST, "当前工作空间正在运行数($it)已达用户限制($maxRunningCount)")
+            }
+        }
+        return true
     }
 
     fun updateBkTicket(userId: String, bkTicket: String, hostName: String): Boolean {

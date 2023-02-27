@@ -77,4 +77,13 @@ class WorkspaceCheckJob @Autowired constructor(
             redisLock.unlock()
         }
     }
+
+    /**
+     * 每月1号4点执行任务触发，对用户收费时间进行重置
+     */
+    @Scheduled(cron = "0 0 4 1 * ?")
+    fun initBilling() {
+        logger.info("=========>> time to initBilling <<=========")
+        workspaceService.initBilling()
+    }
 }

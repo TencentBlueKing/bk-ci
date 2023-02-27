@@ -129,22 +129,34 @@ class WorkspaceDao {
      */
     fun countUserWorkspace(
         dslContext: DSLContext,
-        userId: String? = null
+        userId: String,
+        unionShared: Boolean = true,
+        status: Set<WorkspaceStatus>? = null
     ): Long {
         val shared = TWorkspaceShared.T_WORKSPACE_SHARED
         with(TWorkspace.T_WORKSPACE) {
             return dslContext.selectCount().from(this)
-                .where(CREATOR.eq(userId)).unionAll(
-                    DSL.selectCount().from(this).where(
-                        NAME.`in`(
-                            DSL.select(shared.WORKSPACE_NAME).from(shared).where(
-                                shared.SHARED_USER.eq(
-                                    userId
+                .where(CREATOR.eq(userId))
+                .let {
+                    if (status.isNullOrEmpty()) {
+                        it.and(STATUS.notEqual(WorkspaceStatus.DELETED.ordinal))
+                    } else {
+                        it.and(STATUS.`in`(status.map { s -> s.ordinal }))
+                    }
+                }
+                .let {
+                    if (unionShared) it.unionAll(
+                        DSL.selectCount().from(this).where(
+                            NAME.`in`(
+                                DSL.select(shared.WORKSPACE_NAME).from(shared).where(
+                                    shared.SHARED_USER.eq(
+                                        userId
+                                    )
                                 )
                             )
                         )
-                    )
-                )
+                    ) else it
+                }
                 .fetch(0, Long::class.java).sum()
         }
     }

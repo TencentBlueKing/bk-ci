@@ -29,6 +29,7 @@ package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
+import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
@@ -76,5 +77,10 @@ class RemoteDevSettingService @Autowired constructor(
             }
         }
         return true
+    }
+
+    fun updateSetting4Op(data: OPUserSetting) {
+        logger.info("updateSettingByOp $data")
+        remoteDevSettingDao.createOrUpdateSetting4OP(dslContext, data)
     }
 }
