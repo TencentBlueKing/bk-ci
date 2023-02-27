@@ -189,11 +189,11 @@ open class CodeccApi constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(httpReq).use { response ->
-            val body = response.body()!!.string()
+            val body = response.body!!.string()
             logger.info("codecc opensource measurement response: $body")
             if (!response.isSuccessful) {
                 throw ErrorCodeException(
-                    errorCode = response.code().toString(),
+                    errorCode = response.code.toString(),
                     defaultMessage = "get codecc opensource measurement response fail.$body"
                 )
             }
