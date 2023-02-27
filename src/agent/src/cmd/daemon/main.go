@@ -165,14 +165,16 @@ func doCheckAndLaunchAgent(isDebug bool) {
 }
 
 func launch(agentPath string, isDebug bool) (*os.Process, error) {
-	command := agentPath
+	var cmd *exec.Cmd
 	if isDebug {
-		command = agentPath + " debug"
+		cmd = exec.Command(agentPath, "debug")
+	} else {
+		cmd = exec.Command(agentPath)
 	}
-	cmd := exec.Command(command)
+
 	cmd.Dir = systemutil.GetWorkDir()
 
-	logs.Info("start devops agent: %s", command)
+	logs.Info("start devops agent: %s", cmd.String())
 	if !fileutil.Exists(agentPath) {
 		return nil, fmt.Errorf("agent file %s not exists", agentPath)
 	}
