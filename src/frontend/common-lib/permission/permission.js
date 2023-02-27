@@ -137,7 +137,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                     {
                         class: 'permission-cancel',
                         on: {
-                            click() {
+                            click () {
                                 infoBoxRef?.close?.()
                             }
                         }

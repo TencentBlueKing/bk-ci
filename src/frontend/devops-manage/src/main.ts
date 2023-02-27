@@ -3,6 +3,7 @@ import { createPinia } from 'pinia';
 import router from './router';
 import App from './app.vue';
 import './css/index.css';
+import './css/iconcool.js'
 
 // 全量引入 bkui-vue
 import bkui from 'bkui-vue';

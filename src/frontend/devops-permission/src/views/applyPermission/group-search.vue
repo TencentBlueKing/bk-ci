@@ -107,7 +107,7 @@ watch(() => props.groupList, () => {
 
 watch(() => userGroupList.value, () => {
   const { groupId } = route?.query;
-  if (groupId) {
+  if (groupId && filter.value.length) {
     const group = userGroupList.value.find(group => String(group.id) === groupId);
     group && selections.value.push(group);
   }
@@ -157,7 +157,7 @@ const fetchGroupList = async (payload = []) => {
       params['resourceType'] = values[0].resourceType;
     } else if (i.id === 'resourceCode') {
       const values = i.values;
-      params['iamResourceCode'] = values.map(i => i.resourceCode).join('');
+      params['iamResourceCode'] = values.map(i => i.iamResourceCode).join('');
       params['resourceType'] = values[0].resourceType;
     } else {
       params[i.id] = i.values.join();
@@ -251,6 +251,23 @@ const columns = [
     render: renderSelectionCell,
   },
   {
+    label: t('资源实例'),
+    render ({ cell, row }) {
+      return h(
+        'span',
+        {
+          title: row.resourceName, 
+        },
+        [
+          cell,
+          row.resourceTypeName,
+          ': ',
+          row.resourceName
+        ]
+      );
+    },
+  },
+  {
     label: t('用户组名'),
     render ({ cell, row }) {
       return h(
@@ -268,22 +285,6 @@ const columns = [
         [
           cell,
           row.name
-        ]
-      );
-    },
-  },
-  {
-    label: t('资源实例'),
-    field: 'resourceName',
-    render ({ cell, row }) {
-      return h(
-        'span',
-        {
-          title: row.resourceName, 
-        },
-        [
-          cell,
-          row.resourceName
         ]
       );
     },

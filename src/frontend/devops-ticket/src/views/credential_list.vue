@@ -209,7 +209,7 @@
                     this.handleNoPermission({
                         projectId: this.projectId,
                         resourceType: CRED_RESOURCE_TYPE,
-                        resourceCode: this.projectId,
+                        resourceCode: credential.credentialId,
                         action: CRED_RESOURCE_ACTION.EDIT
                     })
                 }
