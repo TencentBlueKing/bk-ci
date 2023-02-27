@@ -28,35 +28,100 @@
             </form-field>
 
             <form-field :label="$t('settings.runLock')" class="opera-lock-radio">
-                <bk-radio-group v-model="pipelineSetting.runLockType">
-                    <bk-radio v-for="(entry, key) in runTypeList" :key="key" :value="entry.value" class="view-radio">{{ entry.label }}</bk-radio>
-                </bk-radio-group>
+                <bk-form
+                    class="bkdevops-running-lock-setting-tab"
+                    :model="pipelineSetting"
+                    :rules="formRule"
+                    form-type="vertical">
+                    <bk-form-item :label="$t('settings.parallelSetting')">
+                        <bk-radio-group :value="pipelineSetting.runLockType" @change="handleLockTypeChange">
+                            <bk-radio
+                                class="view-radio"
+                                :value="runTypeMap.MULTIPLE"
+                            >
+                                {{$t('settings.runningOption.multiple')}}
+                            </bk-radio>
+                            <bk-radio
+                                class="view-radio"
+                                :value="runTypeMap.GROUP"
+                            >
+                                {{$t('settings.runningOption.single')}}
+                            </bk-radio>
+                        </bk-radio-group>
+                    </bk-form-item>
+
+                    <div class="single-lock-sub-form" v-if="isSingleLock">
+                        <bk-form-item
+                            :required="isSingleLock"
+                            property="concurrencyGroup"
+                            desc-type="icon"
+                            desc-icon="bk-icon icon-info-circle"
+                            :label="$t('settings.groupName')"
+                            :desc="$t('settings.lockGroupDesc')"
+                            error-display-type="normal"
+                        >
+                            <bk-input
+                                :placeholder="$t('settings.itemPlaceholder')"
+                                v-model="pipelineSetting.concurrencyGroup"
+                            />
+                        </bk-form-item>
+
+                        <bk-form-item property="concurrencyCancelInProgress" error-display-type="normal">
+                            <bk-checkbox
+                                :checked="pipelineSetting.concurrencyCancelInProgress"
+                                @change="handleConCurrencyCancel"
+                            >
+                                {{$t('settings.stopWhenNewCome')}}
+                            </bk-checkbox>
+                        </bk-form-item>
+                        <template v-if="!pipelineSetting.concurrencyCancelInProgress">
+                            <bk-form-item
+                                :label="$t('settings.largestNum')"
+                                property="maxQueueSize"
+                                error-display-type="normal"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :placeholder="$t('settings.itemPlaceholder')"
+                                    v-model="pipelineSetting.maxQueueSize"
+                                >
+                                    <template slot="append">
+                                        <span class="pipeline-setting-unit">{{$t('settings.item')}}</span>
+                                    </template>
+                                </bk-input>
+                            </bk-form-item>
+                            <bk-form-item
+                                :label="$t('settings.lagestTime')"
+                                property="waitQueueTimeMinute"
+                                error-display-type="normal"
+                            >
+                                <bk-input
+                                    type="number"
+                                    :placeholder="$t('settings.itemPlaceholder')"
+                                    v-model="pipelineSetting.waitQueueTimeMinute"
+                                >
+                                    <template slot="append">
+                                        <span class="pipeline-setting-unit">{{$t('settings.minutes')}}</span>
+                                    </template>
+                                </bk-input>
+                            </bk-form-item>
+                        </template>
+                    </div>
+
+                    <bk-form-item :label="$t('settings.disableSetting')">
+                        <span @click="handleLockTypeChange(runTypeMap.LOCK)">
+                            <bk-radio
+                                class="view-radio"
+                                :checked="pipelineSetting.runLockType === runTypeMap.LOCK"
+                                :value="runTypeMap.LOCK"
+                            >
+                                {{$t('settings.runningOption.lock')}}
+                            </bk-radio>
+                        </span>
+                    </bk-form-item>
+                </bk-form>
             </form-field>
-            <div class="bk-form-item opera-lock" v-if="pipelineSetting.runLockType === 'SINGLE'">
-                <div class="bk-form-content">
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.largestNum') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="maxQueueSize" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="&quot;required|numeric|max_value:20|min_value:0&quot;" v-model.number="pipelineSetting.maxQueueSize">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.item') }}</div>
-                            </div>
-                            <p v-if="errors.has('maxQueueSize')" class="is-danger">{{errors.first("maxQueueSize")}}</p>
-                        </div>
-                    </div>
-                    <div class="opera-lock-item">
-                        <label class="opera-lock-label">{{ $t('settings.lagestTime') }}：</label>
-                        <div class="bk-form-control control-prepend-group control-append-group">
-                            <input type="text" name="waitQueueTimeMinute" :placeholder="$t('settings.itemPlaceholder')" class="bk-form-input" v-validate.initial="'required|numeric|max_value:1440|min_value:1'" v-model.number="pipelineSetting.waitQueueTimeMinute">
-                            <div class="group-box group-append">
-                                <div class="group-text">{{ $t('settings.minutes') }}</div>
-                            </div>
-                            <p v-if="errors.has('waitQueueTimeMinute')" class="is-danger">{{errors.first("waitQueueTimeMinute")}}</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <form-field :label="$t('settings.notify')" style="margin-bottom: 0px">
+            <form-field :label="$t('settings.notice')" style="margin-bottom: 0px">
                 <bk-tab :active="curNavTab.name" type="unborder-card" @tab-change="changeCurTab">
                     <bk-tab-panel
                         v-for="(entry, index) in subscriptionList"
@@ -167,20 +232,6 @@
                 isEditing: false,
                 isLoading: true,
                 resetFlag: false,
-                runTypeList: [
-                    {
-                        label: this.$t('settings.runningOption.multiple'),
-                        value: 'MULTIPLE'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.lock'),
-                        value: 'LOCK'
-                    },
-                    {
-                        label: this.$t('settings.runningOption.single'),
-                        value: 'SINGLE'
-                    }
-                ],
                 subscriptionList: [
                     { label: this.$t('settings.whenSuc'), name: 'success' },
                     { label: this.$t('settings.whenFail'), name: 'fail' }
@@ -237,6 +288,51 @@
                     })
                     return value
                 })
+            },
+            runTypeMap () {
+                return {
+                    MULTIPLE: 'MULTIPLE',
+                    SINGLE: 'SINGLE',
+                    GROUP: 'GROUP_LOCK',
+                    LOCK: 'LOCK'
+                }
+            },
+            isSingleLock () {
+                return [this.runTypeMap.GROUP, this.runTypeMap.SINGLE].includes(this.pipelineSetting.runLockType)
+            },
+            formRule () {
+                const requiredRule = {
+                    required: this.isSingleLock,
+                    message: this.$t('editPage.checkParamTip'),
+                    trigger: 'blur'
+                }
+                return {
+                    concurrencyGroup: [
+                        requiredRule
+                    ],
+                    maxQueueSize: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 20 && intVal >= 0)
+                            },
+                            message: `${this.$t('settings.largestNum')}${this.$t('numberRange', [0, 20])}`,
+                            trigger: 'change'
+                        }
+                    ],
+                    waitQueueTimeMinute: [
+                        requiredRule,
+                        {
+                            validator: (val) => {
+                                const intVal = parseInt(val, 10)
+                                return !this.isSingleLock || (intVal <= 1440 && intVal >= 1)
+                            },
+                            message: `${this.$t('settings.lagestTime')}${this.$t('numberRange', [1, 1440])}`,
+                            trigger: 'change'
+                        }
+                    ]
+                }
             }
         },
         watch: {
@@ -398,6 +494,9 @@
                 }
                 this.isDisabled = false
                 return result
+            },
+            handleLockTypeChange (type) {
+                this.pipelineSetting.runLockType = type
             }
         }
     }
@@ -557,5 +656,30 @@
         white-space: normal;
         word-wrap: break-word;
         font-weight: 400;
+    }
+    .bkdevops-running-lock-setting-tab {
+        .bk-label {
+            font-weight: 900;
+        }
+        .bk-form-item:nth-child(1) {
+            display: table;
+            width: 100%;
+        }
+        .single-lock-sub-form {
+            margin: 0 0 10px 20px;
+        }
+        .run-lock-radio-item {
+            margin: 10px 0;
+        }
+        .pipeline-setting-unit {
+            display: flex;
+            background: #f1f4f8;
+            color: #63656e;
+            width: 50px;
+            font-size: 12px;
+            height: 100%;
+            align-items: center;
+            justify-content: center;
+        }
     }
 </style>
