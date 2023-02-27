@@ -171,14 +171,14 @@ class TurboRecordMqConfig {
     }
 
     @Bean
-    fun syncTbsWorkStatDataBind(syncTbsWorkStatDataQueue: Queue, syncTbsWorkStatDataExchange: CustomExchange): Binding {
+    fun syncTbsWorkStatDataBind(syncTbsWorkStatDataQueue: Queue, syncTbsWorkStatDataExchange: DirectExchange): Binding {
         return BindingBuilder.bind(syncTbsWorkStatDataQueue).to(syncTbsWorkStatDataExchange)
-            .with(ROUTE_TURBO_WORK_STATS).noargs()
+            .with(ROUTE_TURBO_WORK_STATS)
     }
 
     @Bean
     fun syncTbsWorkStatDataListenerContainer(
-        connectionFactory: ConnectionFactory,
+        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
         syncTbsWorkStatDataQueue: Queue,
         rabbitAdmin: RabbitAdmin,
         turboRecordConsumer: TurboRecordConsumer,

@@ -105,13 +105,20 @@ class TurboWorkStatService @Autowired constructor(
         val jobStatsDataEntityList = jobStatsDataDtoList.map { item ->
             if (null == scene) {
                 val originArgs = item.originArgs
-                when {
-                    originArgs.any { it.contains(EnumEngineScene.UE4SHADER.regexStr())} -> {
-                        scene = EnumEngineScene.UE4SHADER.name
+                run breaking@{
+                    originArgs.forEach {
+                        if (it.contains(EnumEngineScene.UE4COMPILE.regexStr())) {
+                            scene = EnumEngineScene.UE4SHADER.name
+                            return@breaking
+                        } else if (it.contains(EnumEngineScene.UE4SHADER.regexStr())) {
+                            scene = EnumEngineScene.UE4SHADER.name
+                            return@breaking
+                        }
                     }
-                    originArgs.any { it.contains(EnumEngineScene.UE4COMPILE.regexStr())} -> {
-                        scene = EnumEngineScene.UE4COMPILE.name
-                    }
+                }
+                if (null == scene) {
+                    logger.warn("unknown scene: ${tTurboWorkStatsEntity.scene}")
+                    scene = tTurboWorkStatsEntity.scene
                 }
             }
             val tTurboWorkJobStatsDataEntity = TTurboWorkJobStatsDataEntity()
@@ -126,7 +133,7 @@ class TurboWorkStatService @Autowired constructor(
         logger.info("sync TBS work stats data success.")
 
         val turboReportEntity = turboRecordRepository.findByTbsRecordId(tTurboWorkStatsEntity.taskId)
-        turboReportEntity.scene = scene
+        turboReportEntity.scene = scene!!
         turboRecordRepository.save(turboReportEntity)
         logger.info("update record scene success")
     }
