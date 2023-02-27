@@ -14,6 +14,7 @@
         "public:external": "cross-env NODE_ENV=external npm run public --"
     },
     "dependencies": {
+        "@blueking/search-select": "0.0.1-beta.2",
         "@blueking/log": "2.0.10",
         "@icon-cool/bk-icon-devops": "^0.2.1",
         "@vue/composition-api": "^1.6.1",
@@ -39,7 +40,8 @@
         "vuex": "^2.4.0",
         "xterm": "^4.15.0",
         "xterm-addon-attach": "^0.6.0",
-        "xterm-addon-fit": "^0.5.0"
+        "xterm-addon-fit": "^0.5.0",
+        "mavon-editor": "^2.10.4"
     },
     "devDependencies": {
         "@babel/core": "^7.15.8",

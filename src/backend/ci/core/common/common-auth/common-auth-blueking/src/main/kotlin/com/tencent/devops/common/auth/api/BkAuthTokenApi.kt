@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -103,7 +103,7 @@ class BkAuthTokenApi constructor(
         )
 
         val content = objectMapper.writeValueAsString(accessTokenRequest)
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val requestBody = RequestBody.create(mediaType, content)
         val request = Request.Builder().url(url)
             .header("X-BK-APP-CODE", this.appCode)
@@ -113,7 +113,7 @@ class BkAuthTokenApi constructor(
 
         var accessToken = ""
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
 //            logger.info("Get accessToken response: $responseContent")
             if (!response.isSuccessful) {
                 logger.error("Get accessToken response: $responseContent")

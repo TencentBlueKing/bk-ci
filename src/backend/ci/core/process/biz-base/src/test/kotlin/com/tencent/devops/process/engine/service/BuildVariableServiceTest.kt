@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.service
 
-import com.nhaarman.mockito_kotlin.mock
-import com.nhaarman.mockito_kotlin.whenever
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.service.BuildVariableService
@@ -41,16 +39,18 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import io.mockk.every
+import io.mockk.mockk
 import org.jooq.DSLContext
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Test
 
 class BuildVariableServiceTest {
 
-    private val dslContext: DSLContext = mock()
-    private val pipelineBuildVarDao: PipelineBuildVarDao = mock()
-    private val redisOperation: RedisOperation = RedisOperation(mock())
-    private val pipelineAsCodeService: PipelineAsCodeService = mock()
+    private val dslContext: DSLContext = mockk()
+    private val pipelineBuildVarDao: PipelineBuildVarDao = mockk()
+    private val redisOperation: RedisOperation = RedisOperation(mockk())
+    private val pipelineAsCodeService: PipelineAsCodeService = mockk(relaxed = true)
 
     private val buildVariableService = BuildVariableService(
         commonDslContext = dslContext,
@@ -76,7 +76,7 @@ class BuildVariableServiceTest {
             "pipeline.version" to "34"
         )
 
-        whenever(pipelineBuildVarDao.getVars(dslContext, projectId, buildId)).thenReturn(mockVars)
+        every { pipelineBuildVarDao.getVars(dslContext, projectId, buildId) } returns (mockVars)
         val allVariable = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
 
         Assertions.assertEquals(mockVars["pipeline.start.channel"], allVariable[PIPELINE_START_CHANNEL])

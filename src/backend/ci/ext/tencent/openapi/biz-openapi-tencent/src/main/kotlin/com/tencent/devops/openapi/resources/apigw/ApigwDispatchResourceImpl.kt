@@ -55,7 +55,7 @@ class ApigwDispatchResourceImpl @Autowired constructor(
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.error("dispatch-macos VM resource: $url fail. $responseContent")
                 throw RemoteServiceException("dispatch-macos VM resource: $url fail")

@@ -91,7 +91,7 @@ class FileService @Autowired constructor(private val client: Client) {
             "$serviceUrlPrefix/service/bkrepo/statics/file/upload?userId=$userId&destPath=$destPath"
         try {
             OkhttpUtils.uploadFile(serviceUrl, file).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("$userId upload file:$fileName fail,responseContent:$responseContent")
                     return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)

@@ -33,13 +33,13 @@ import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
 import io.micrometer.core.lang.NonNullApi
-import java.util.Optional
 import org.aspectj.lang.ProceedingJoinPoint
 import org.aspectj.lang.annotation.Around
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.util.Optional
 import java.util.concurrent.CompletionStage
 
 /**
@@ -53,9 +53,9 @@ class BkTimedAspect(
     @Value("\${spring.application.name:#{null}}")
     val applicationName: String? = null
 
-    @Around("execution (@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
+    @Around("@annotation(com.tencent.devops.common.service.prometheus.BkTimed)")
     @Throws(Throwable::class)
-    fun timedMethod(pjp: ProceedingJoinPoint): Any {
+    fun timedMethod(pjp: ProceedingJoinPoint): Any? {
         var method = (pjp.signature as MethodSignature).method
         var timed = method.getAnnotation(BkTimed::class.java)
         if (timed == null) {
@@ -77,7 +77,7 @@ class BkTimedAspect(
         timed: BkTimed,
         metricName: String,
         stopWhenCompleted: Boolean
-    ): Any {
+    ): Any? {
         val sample = Timer.start(registry)
         if (stopWhenCompleted) {
             return try {
@@ -153,7 +153,7 @@ class BkTimedAspect(
         timed: BkTimed,
         metricName: String,
         stopWhenCompleted: Boolean
-    ): Any {
+    ): Any? {
         val sample = buildLongTaskTimer(pjp, timed, metricName).map { obj: LongTaskTimer -> obj.start() }
         return if (stopWhenCompleted) {
             try {

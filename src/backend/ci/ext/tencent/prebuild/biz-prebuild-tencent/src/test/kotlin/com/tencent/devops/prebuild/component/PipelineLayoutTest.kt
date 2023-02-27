@@ -2,6 +2,7 @@ package com.tencent.devops.prebuild.component
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientErrorDecoder
 import com.tencent.devops.common.pipeline.container.NormalContainer
@@ -15,8 +16,11 @@ import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.prebuild.ServiceBaseTest
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.v2.component.PipelineLayout
-import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidator
+import com.tencent.devops.prebuild.v2.component.PreCIYAMLValidatorV2
+import com.tencent.devops.process.yaml.v2.models.PreTemplateScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
+import com.tencent.devops.process.yaml.v2.parsers.template.YamlTemplate
+import com.tencent.devops.process.yaml.v2.parsers.template.models.GetTemplateParam
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import org.junit.jupiter.api.Assertions.assertEquals
@@ -37,7 +41,7 @@ import org.springframework.cloud.client.discovery.composite.CompositeDiscoveryCl
 @ExtendWith(MockitoExtension::class)
 class PipelineLayoutTest : ServiceBaseTest() {
     @InjectMocks
-    lateinit var preCIYAMLValidator: PreCIYAMLValidator
+    lateinit var preCIYAMLValidator: PreCIYAMLValidatorV2
 
     @Mock
     lateinit var serviceMarketAtomResource: ServiceMarketAtomResource
@@ -223,9 +227,17 @@ class PipelineLayoutTest : ServiceBaseTest() {
     }
 
     private fun getYamlObject(yamlStr: String): ScriptBuildYaml {
-        val (isPassed, preYamlObject, errorMsg) = preCIYAMLValidator.validate(yamlStr)
-        val scriptBuildYaml = ScriptYmlUtils.normalizePreCiYaml(preYamlObject!!)
-
-        return scriptBuildYaml
+        return ScriptYmlUtils.normalizePreCiYaml(
+            YamlTemplate(
+                filePath = "",
+                yamlObject = YamlUtil.getObjectMapper()
+                    .readValue(yamlStr, PreTemplateScriptBuildYaml::class.java),
+                extraParameters = null,
+                getTemplateMethod = { p: GetTemplateParam<Any?> -> "" },
+                nowRepo = null,
+                repo = null,
+                resourcePoolMapExt = null
+            ).replace()
+        )
     }
 }
