@@ -50,12 +50,12 @@ import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import com.tencent.devops.scm.pojo.TapdWorkItem
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.StringUtils
@@ -343,7 +343,7 @@ open class GitApi {
         }
     }
 
-    private val mediaType = MediaType.parse("application/json; charset=utf-8")
+    private val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
 
     fun post(host: String, token: String, url: String, body: String) =
         request(host, token, url, "").post(RequestBody.create(mediaType, body)).build()
@@ -372,9 +372,9 @@ open class GitApi {
         try {
             return OkhttpUtils.doRedirectHttp(request) { response ->
                 if (!response.isSuccessful) {
-                    handleApiException(operation, response.code(), response.body()?.string() ?: "")
+                    handleApiException(operation, response.code, response.body?.string() ?: "")
                 }
-                JsonUtil.getObjectMapper().readValue(response.body()!!.string(), classOfT)
+                JsonUtil.getObjectMapper().readValue(response.body!!.string(), classOfT)
             }
         } catch (err: Exception) {
             exceptionClass = err.javaClass.simpleName
@@ -419,9 +419,9 @@ open class GitApi {
         try {
             OkhttpUtils.doHttp(request).use { response ->
                 if (!response.isSuccessful) {
-                    handleApiException(operation, response.code(), response.body()?.string() ?: "")
+                    handleApiException(operation, response.code, response.body?.string() ?: "")
                 }
-                return response.body()!!.string()
+                return response.body!!.string()
             }
         } catch (err: Exception) {
             exceptionClass = err.javaClass.simpleName

@@ -43,7 +43,7 @@ class AlertApi constructor(
             val path = "/${getUrlPrefix()}/api/dockerhost/alert?level=$level&title=$title&message=$message"
             val request = buildPost(path)
             OkhttpUtils.doHttp(request).use { response ->
-                val responseContent = response.body()!!.string()
+                val responseContent = response.body!!.string()
                 if (!response.isSuccessful) {
                     logger.warn("BuildDockerResourceApi $path fail. $responseContent")
                 }

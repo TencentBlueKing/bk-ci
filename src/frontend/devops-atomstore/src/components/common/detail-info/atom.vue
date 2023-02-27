@@ -59,7 +59,7 @@
         </hgroup>
 
         <bk-popover placement="top" v-if="buttonInfo.disable">
-            <button class="bk-button bk-primary" type="button" disabled> {{ $t('store.安装') }} </button>
+            <button class="bk-button bk-primary" type="button" disabled> {{ detail.defaultFlag ? $t('store.已安装') : $t('store.安装')}} </button>
             <template slot="content">
                 <p>{{buttonInfo.des}}</p>
             </template>
