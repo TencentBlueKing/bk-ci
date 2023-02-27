@@ -106,7 +106,7 @@ class RbacQualityPermissionServiceImpl(
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
             action = actions
         ).data ?: emptyMap()
-        return buildResultMap(instancesMap)
+        return RbacAuthUtils.buildResultMap(instancesMap)
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
@@ -182,22 +182,6 @@ class RbacQualityPermissionServiceImpl(
             resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
             action = actions
         ).data ?: emptyMap()
-        return buildResultMap(instancesMap)
-    }
-
-    private fun buildResultMap(
-        instancesMap: Map<AuthPermission, List<String>>
-    ): Map<AuthPermission, List<Long>> {
-        if (instancesMap.isEmpty())
-            return emptyMap()
-        val resultMap = mutableMapOf<AuthPermission, List<Long>>()
-        instancesMap.forEach { (key, value) ->
-            val instanceLongIds = mutableListOf<Long>()
-            value.forEach {
-                instanceLongIds.add(HashUtil.decodeIdToLong(it))
-            }
-            resultMap[key] = instanceLongIds
-        }
-        return resultMap
+        return RbacAuthUtils.buildResultMap(instancesMap)
     }
 }
