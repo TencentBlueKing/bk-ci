@@ -43,7 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired
  * deng
  * 2019-12-17
  */
-@Suppress("UNUSED")
+@Suppress("UNUSED", "TooGenericExceptionCaught")
 class TencentProjectEventListener @Autowired constructor(
     val projectPaasCCService: ProjectPaasCCService,
     val bsAuthTokenApi: BSAuthTokenApi,
@@ -68,14 +68,14 @@ class TencentProjectEventListener @Autowired constructor(
                     iamV3Service?.createIamV3Project(event)
                 }
             }
-        } catch (ex: Exception) {
-            logger.error("project listener execute error", ex)
+        } catch (error: Exception) {
+            logger.error("BKSystemMonitor| project listener execute error", error)
         }
     }
 
     // 已改成同步，无需重复添加
     override fun onReceiveProjectCreate(event: ProjectCreateBroadCastEvent) {
-        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+//        val accessToken = bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
         // 过渡期间让新建项目直接设置为灰度v2
 //        opProjectService.setGrayProject(projectCodeList = listOf(event.projectInfo.englishName), operateFlag = 1)
 //        projectPaasCCService.createPaasCCProject(

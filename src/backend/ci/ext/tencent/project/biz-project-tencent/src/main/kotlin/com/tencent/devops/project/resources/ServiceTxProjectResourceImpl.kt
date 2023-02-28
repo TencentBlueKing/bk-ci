@@ -59,6 +59,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
+@Suppress("TooManyFunctions", "LongParameterList")
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val bsAuthPermissionApi: AuthPermissionApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
@@ -373,6 +374,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }
 }

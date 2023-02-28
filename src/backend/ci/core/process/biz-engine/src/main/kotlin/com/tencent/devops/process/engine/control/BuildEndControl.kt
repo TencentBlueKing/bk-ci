@@ -256,16 +256,7 @@ class BuildEndControl @Autowired constructor(
         val buildNo = buildSummary?.buildNo
         if (buildNo != null && pipelineRuntimeService.getBuildInfo(projectId, buildId)?.retryFlag != true) {
             pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
-            // 更新历史表的推荐版本号
-            val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
-            val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
-            if (recommendVersionPrefix != null) {
-                pipelineRuntimeService.updateRecommendVersion(
-                    projectId = projectId,
-                    buildId = buildId,
-                    recommendVersion = "$recommendVersionPrefix.$buildNo"
-                )
-            }
+            // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
     }
 

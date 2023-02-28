@@ -45,6 +45,7 @@ import sun.misc.BASE64Decoder
 import java.util.Random
 
 @Service
+@Suppress("ALL")
 class TOFService @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -100,8 +101,11 @@ class TOFService @Autowired constructor(
             }
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
             return result
         } catch (e: Throwable) {
@@ -144,7 +148,7 @@ class TOFService @Autowired constructor(
             .addFormDataPart("Priority", params["Priority"]!!)
             .addFormDataPart("BodyFormat", params["BodyFormat"]!!)
 
-        postData.codeccAttachFileContent!!.forEach { key, value ->
+        postData.codeccAttachFileContent!!.forEach { (key, value) ->
             val fileBody = RequestBody.create(MultipartBody.FORM, decoder.decodeBuffer(value))
             taskBody.addFormDataPart("file", key, fileBody)
         }
@@ -169,7 +173,11 @@ class TOFService @Autowired constructor(
             }
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("post email formData fail: $result")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
             return result
         } catch (e: Throwable) {
