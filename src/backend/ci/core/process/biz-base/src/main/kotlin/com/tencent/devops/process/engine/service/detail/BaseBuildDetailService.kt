@@ -80,7 +80,8 @@ open class BaseBuildDetailService constructor(
         return buildDetailDao.getBuildCancelUser(dslContext, projectId, buildId)
     }
 
-    @Suppress("LongParameterList", "ComplexMethod") protected fun update(
+    @Suppress("LongParameterList", "ComplexMethod")
+    protected fun update(
         projectId: String,
         buildId: String,
         modelInterface: ModelInterface,

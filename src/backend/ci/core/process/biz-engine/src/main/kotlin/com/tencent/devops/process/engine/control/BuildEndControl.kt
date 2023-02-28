@@ -259,14 +259,14 @@ class BuildEndControl @Autowired constructor(
             val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId, buildId, retryFlag)
+                updateBuildNoInfo(projectId, pipelineId, retryFlag)
             } finally {
                 buildNoLock.unlock()
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String, retryFlag: Boolean) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, retryFlag: Boolean) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
         if (buildNo != null && !retryFlag) {
