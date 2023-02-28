@@ -28,12 +28,15 @@
 package com.tencent.devops.remotedev.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.sun.org.apache.bcel.internal.generic.RETURN
 import com.tencent.devops.common.api.constant.HTTP_401
+import com.tencent.devops.common.api.constant.VALUE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
@@ -61,6 +64,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.RemoteDevClientVersion
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -1504,5 +1508,19 @@ class WorkspaceService @Autowired constructor(
         return redisCache.get(redisKey)?.ifBlank {
             ""
         } ?: ""
+    }
+
+    // 客户端版本升级后调用接口更新记录的版本信息
+    fun updateClientVersion(userId: String, env: String, version: String) {
+        logger.info("updateClientVersion|userId|$userId|env|$env|version|$version")
+        var redisKey = REDIS_REMOTEDEV_PROD_VERSION
+        if (env == "gray") {
+            redisKey = REDIS_REMOTEDEV_GRAY_VERSION
+        }
+        redisOperation.set(
+            key = redisKey,
+            value = version,
+            expired = false
+        )
     }
 }
