@@ -2,17 +2,12 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ItsmResponseDTO
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -34,6 +29,9 @@ class ItsmService @Autowired constructor(
     @Value("\${itsm.application.cancel.url:#{null}}")
     private val itsmCancelApplicationUrl: String = ""
 
+    @Value("\${itsm.token.verify.url:#{null}}")
+    private val itsmVerifyTokenUrl: String = ""
+
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
         val itsmResponseDTO = doHttpPost(
             url = itsmCancelApplicationUrl,
@@ -52,8 +50,8 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val itsmResponseDTO = doHttpPost(
-            url = itsmCancelApplicationUrl,
-            body = token
+            url = itsmVerifyTokenUrl,
+            body = Pair("token", token)
         )
         val itsmApiResData = itsmResponseDTO.data as Map<String, String>
         val isPassed = itsmApiResData["is_passed"].toBoolean()
@@ -70,13 +68,13 @@ class ItsmService @Autowired constructor(
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
-        header["access_token"] = "access_token"
         val jsonBody = objectMapper.writeValueAsString(body)
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonBody)
-        val headerStr = objectMapper.writeValueAsString(header)
+        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
+        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
+        logger.info("headerStr:$headerStr")
         val request = Request.Builder()
             .url(url)
-            .post(body)
+            .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
             .build()
         return doRequest(url, request)
