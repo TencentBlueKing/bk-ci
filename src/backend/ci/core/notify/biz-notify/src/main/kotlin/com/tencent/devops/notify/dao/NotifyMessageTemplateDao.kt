@@ -129,24 +129,6 @@ class NotifyMessageTemplateDao {
     }
 
     /**
-     * 获取企业微信消息模板
-     * @param dslContext 数据库操作对象
-     * @param commonTemplateId
-     */
-    fun getWeworkGroupNotifyMessageTemplate(
-        dslContext: DSLContext,
-        commonTemplateId: String
-    ): TWeworkGroupNotifyMessageTemplateRecord? {
-        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
-            val conditions = mutableListOf<Condition>()
-            conditions.add(COMMON_TEMPLATE_ID.contains(commonTemplateId))
-            return dslContext.selectFrom(this)
-                .where(conditions)
-                .fetchOne()
-        }
-    }
-
-    /**
      * 获取邮件消息模板
      */
     fun getEmailNotifyMessageTemplate(
@@ -305,6 +287,7 @@ class NotifyMessageTemplateDao {
                 COMMON_TEMPLATE_ID,
                 TITLE,
                 BODY,
+                BODY_MD,
                 CREATOR,
                 MODIFIOR,
                 CREATE_TIME,
@@ -315,6 +298,7 @@ class NotifyMessageTemplateDao {
                     id,
                     notifyTemplateMessage.title,
                     notifyTemplateMessage.body,
+                    notifyTemplateMessage.bodyMD,
                     userId,
                     userId,
                     LocalDateTime.now(),
@@ -332,39 +316,6 @@ class NotifyMessageTemplateDao {
         notifyTemplateMessage: NotifyTemplateMessage
     ) {
         with(TWechatNotifyMessageTemplate.T_WECHAT_NOTIFY_MESSAGE_TEMPLATE) {
-            dslContext.insertInto(
-                this,
-                ID,
-                COMMON_TEMPLATE_ID,
-                TITLE,
-                BODY,
-                CREATOR,
-                MODIFIOR,
-                CREATE_TIME,
-                UPDATE_TIME
-            )
-                .values(
-                    newId,
-                    id,
-                    notifyTemplateMessage.title,
-                    notifyTemplateMessage.body,
-                    userId,
-                    userId,
-                    LocalDateTime.now(),
-                    LocalDateTime.now()
-                )
-                .execute()
-        }
-    }
-
-    fun addWeworkGroupNotifyMessageTemplate(
-        dslContext: DSLContext,
-        id: String,
-        newId: String,
-        userId: String,
-        notifyTemplateMessage: NotifyTemplateMessage
-    ) {
-        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
             dslContext.insertInto(
                 this,
                 ID,
@@ -443,17 +394,6 @@ class NotifyMessageTemplateDao {
     }
 
     /**
-     * 删除微信类型的消息通知模板信息
-     */
-    fun deleteWeworkGroupNotifyMessageTemplate(dslContext: DSLContext, id: String): Int {
-        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
-            return dslContext.deleteFrom(this)
-                .where(COMMON_TEMPLATE_ID.eq(id))
-                .execute()
-        }
-    }
-
-    /**
      * 根据模板ID，更新微信消息模板信息
      * @param userId 更新用户ID
      * @param templateId 要修改的模板ID
@@ -493,29 +433,7 @@ class NotifyMessageTemplateDao {
                 .set(this.MODIFIOR, userId)
                 .set(this.TITLE, notifyMessageTemplate.title)
                 .set(this.BODY, notifyMessageTemplate.body)
-                .set(this.UPDATE_TIME, LocalDateTime.now())
-                .where(this.COMMON_TEMPLATE_ID.eq(templateId))
-                .execute()
-        }
-    }
-
-    /**
-     * 根据模板ID，更新企业微信群消息模板信息
-     * @param userId 更新用户ID
-     * @param templateId 要修改的模板ID
-     * @param notifyMessageTemplate 修改信息对象
-     */
-    fun updateWeworkGroupNotifyMessageTemplate(
-        dslContext: DSLContext,
-        userId: String,
-        templateId: String,
-        notifyMessageTemplate: NotifyTemplateMessage
-    ): Int {
-        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
-            return dslContext.update(this)
-                .set(this.MODIFIOR, userId)
-                .set(this.TITLE, notifyMessageTemplate.title)
-                .set(this.BODY, notifyMessageTemplate.body)
+                .set(this.BODY_MD, notifyMessageTemplate.bodyMD)
                 .set(this.UPDATE_TIME, LocalDateTime.now())
                 .where(this.COMMON_TEMPLATE_ID.eq(templateId))
                 .execute()
@@ -598,18 +516,6 @@ class NotifyMessageTemplateDao {
      */
     fun countRtxMessageTemplate(dslContext: DSLContext, templateId: String): Int {
         with(TRtxNotifyMessageTemplate.T_RTX_NOTIFY_MESSAGE_TEMPLATE) {
-            return dslContext.selectCount()
-                .from(this)
-                .where(COMMON_TEMPLATE_ID.eq(templateId))
-                .fetchOne(0, Int::class.java)!!
-        }
-    }
-
-    /**
-     * 根据模板ID判断此模板是否含有企业微信消息类型
-     */
-    fun countWeworkGroupMessageTemplate(dslContext: DSLContext, templateId: String): Int {
-        with(TWeworkGroupNotifyMessageTemplate.T_WEWORK_GROUP_NOTIFY_MESSAGE_TEMPLATE) {
             return dslContext.selectCount()
                 .from(this)
                 .where(COMMON_TEMPLATE_ID.eq(templateId))
