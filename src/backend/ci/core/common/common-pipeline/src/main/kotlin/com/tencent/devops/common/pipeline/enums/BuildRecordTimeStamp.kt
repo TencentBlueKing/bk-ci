@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.pipeline.enums
 
+import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeLine
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -39,9 +40,9 @@ data class BuildRecordTimeStamp(
 ) {
     fun between() = (endTime ?: startTime ?: 0) - (startTime ?: 0)
 
-    fun insert2TimeLine(timeline: MutableList<Pair<Long, Long>>) {
+    fun insert2TimeLine(timeline: MutableList<BuildRecordTimeLine.Moment>) {
         if (startTime != null && endTime != null) {
-            timeline.add(Pair(startTime, endTime))
+            timeline.add(BuildRecordTimeLine.Moment(startTime, endTime))
         }
     }
 }

@@ -302,7 +302,6 @@ class TaskBuildRecordService(
     }
 
     fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
-        taskBuildDetailService.taskEnd(taskBuildEndParam)
 
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
@@ -311,7 +310,6 @@ class TaskBuildRecordService(
         val buildStatus = taskBuildEndParam.buildStatus
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
-        val updateTaskStatusInfos = mutableListOf<PipelineTaskStatusInfo>()
         val executeCount = buildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
@@ -375,7 +373,7 @@ class TaskBuildRecordService(
             }
         }
 
-        return updateTaskStatusInfos
+        return taskBuildDetailService.taskEnd(taskBuildEndParam)
     }
 
     @Suppress("NestedBlockDepth")
