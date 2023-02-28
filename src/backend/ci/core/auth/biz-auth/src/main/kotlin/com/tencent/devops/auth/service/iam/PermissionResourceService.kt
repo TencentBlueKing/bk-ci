@@ -71,6 +71,7 @@ interface PermissionResourceService {
      * 取消权限中心资源
      */
     fun resourceCancelRelation(
+        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String

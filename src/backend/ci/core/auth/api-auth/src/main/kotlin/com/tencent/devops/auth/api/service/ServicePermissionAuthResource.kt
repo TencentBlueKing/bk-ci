@@ -276,6 +276,9 @@ interface ServicePermissionAuthResource {
     @Path("/projects/{projectCode}/cancel/relation")
     @PUT
     fun resourceCancelRelation(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("操作用户ID", required = true)
+        userId: String,
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
         token: String,

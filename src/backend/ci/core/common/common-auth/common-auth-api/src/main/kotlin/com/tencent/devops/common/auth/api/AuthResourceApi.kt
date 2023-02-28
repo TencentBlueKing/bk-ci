@@ -109,6 +109,7 @@ interface AuthResourceApi {
      * @param resourceCode 资源Code唯一标识
      */
     fun cancelCreateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
@@ -123,6 +124,7 @@ interface AuthResourceApi {
      * @param resourceCode 资源Code唯一标识
      */
     fun cancelUpdateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
