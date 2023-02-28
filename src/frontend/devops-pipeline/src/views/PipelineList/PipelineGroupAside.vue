@@ -291,17 +291,17 @@
                             }
                         ]
                         : []),
-                    // {
-                    //     text: this.$t('pipelineGroupAuth'),
-                    //     handler: () => {
-                    //         this.$router.push({
-                    //             name: 'pipelineListAuth',
-                    //             params: {
-                    //                 viewId: group.id
-                    //             }
-                    //         })
-                    //     }
-                    // },
+                    {
+                        text: this.$t('pipelineGroupAuth'),
+                        handler: () => {
+                            this.$router.push({
+                                name: 'PipelineListAuth',
+                                params: {
+                                    id: group.id
+                                }
+                            })
+                        }
+                    },
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,

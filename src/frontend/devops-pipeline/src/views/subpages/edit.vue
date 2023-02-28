@@ -28,7 +28,7 @@
     import emptyTips from '@/components/devops/emptyTips'
     import MiniMap from '@/components/MiniMap'
     import { navConfirm } from '@/utils/util'
-    import { PipelineEditTab, BaseSettingTab, NotifyTab } from '@/components/PipelineEditTabs/'
+    import { PipelineEditTab, BaseSettingTab, NotifyTab, AuthorityTab } from '@/components/PipelineEditTabs/'
     import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import {
         handlePipelineNoPermission,
@@ -41,6 +41,7 @@
             PipelineEditTab,
             BaseSettingTab,
             NotifyTab,
+            AuthorityTab,
             MiniMap
         },
         mixins: [pipelineOperateMixin],
@@ -125,6 +126,13 @@
                                 }
                             }
                         },
+                        ...(this.isDraftEdit
+                            ? []
+                            : [{
+                                name: 'auth',
+                                label: this.$t('settings.auth'),
+                                component: 'AuthorityTab'
+                            }]),
                         {
                             name: 'baseSetting',
                             label: this.$t('editPage.baseSetting'),
