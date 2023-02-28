@@ -224,6 +224,14 @@ object DateTimeUtil {
     }
 
     /**
+     * 转换成天数
+     */
+    fun formatDay(mss: Long): String {
+        if (mss == 0L) return "0"
+        return (mss / (1000 * 60 * 60 * 24)).toString()
+    }
+
+    /**
      * 将格式化的日期时间字符串转换为LocalDateTime对象
      */
     fun stringToLocalDateTime(dateTimeStr: String, formatStr: String = YYYY_MM_DD_HH_MM_SS): LocalDateTime {
