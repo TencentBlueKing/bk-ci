@@ -19,6 +19,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -34,7 +35,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val workspaceHistoryDao: WorkspaceHistoryDao = mockk()
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao = mockk()
     private val workspaceSharedDao: WorkspaceSharedDao = mockk()
-    private val gitTransferService: GitTransferService = mockk()
+    private val gitTransferService: TGitTransferService = mockk()
     private val permissionService: PermissionService = mockk()
     private val sshService: SshPublicKeysService = mockk()
     private val dispatcher: RemoteDevDispatcher = mockk()
