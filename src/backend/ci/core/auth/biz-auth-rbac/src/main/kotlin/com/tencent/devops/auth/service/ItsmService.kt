@@ -71,12 +71,14 @@ class ItsmService @Autowired constructor(
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
         val jsonBody = objectMapper.writeValueAsString(body)
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonBody)
+        logger.info("jsonBody:$jsonBody")
+        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
+        logger.info("requestBody:$requestBody")
         val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
         logger.info("headerStr:$headerStr")
         val request = Request.Builder()
             .url(url)
-            .post(body)
+            .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
             .build()
         return doRequest(url, request)
