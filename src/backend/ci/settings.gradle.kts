@@ -222,12 +222,6 @@ include(":core:dispatch-docker:biz-dispatch-docker-sample")
 include(":core:dispatch-docker:boot-dispatch-docker")
 include(":core:dispatch-docker:model-dispatch-docker")
 
-include(":core:dispatch-bcs")
-include(":core:dispatch-bcs:api-dispatch-bcs")
-include(":core:dispatch-bcs:biz-dispatch-bcs")
-include(":core:dispatch-bcs:boot-dispatch-bcs")
-include(":core:dispatch-bcs:model-dispatch-bcs")
-
 include(":core:dispatch-kubernetes")
 include(":core:dispatch-kubernetes:api-dispatch-kubernetes")
 include(":core:dispatch-kubernetes:biz-dispatch-kubernetes")
