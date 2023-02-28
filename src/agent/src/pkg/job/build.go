@@ -118,10 +118,13 @@ func DoPollAndBuild() {
 		// 根据可以执行的类型接取任务防止出现其他类型任务的干扰
 		var buildInfo *api.ThirdPartyBuildInfo
 		if dockerCanRun && normalCanRun {
+			logs.Info("all job can run")
 			buildInfo, err = getBuild(api.AllBuildType)
 		} else if normalCanRun {
+			logs.Info("binary job can run")
 			buildInfo, err = getBuild(api.BinaryBuildType)
 		} else {
+			logs.Info("docker job can run")
 			buildInfo, err = getBuild(api.DockerBuildType)
 		}
 
