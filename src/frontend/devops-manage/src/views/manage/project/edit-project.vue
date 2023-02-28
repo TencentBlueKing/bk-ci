@@ -11,6 +11,11 @@ import http from '@/http/api';
 import { useI18n } from 'vue-i18n';
 import { InfoBox, Message, Popover } from 'bkui-vue';
 import ProjectForm from '@/components/project-form.vue';
+import {
+  handleProjectManageNoPermission,
+  RESOURCE_ACTION
+} from '@/utils/permission.js'
+
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
@@ -81,12 +86,23 @@ const infoBoxInstance = ref();
 const updateProject = async () => {
   infoBoxInstance.value?.hide()
   btnLoading.value = true;
-  const result = await http.requestUpdateProject({
-    projectId: projectData.value.englishName,
-    projectData: projectData.value,
-  }).finally(() => {
-    btnLoading.value = false;
-  });
+  const result = await http
+    .requestUpdateProject({
+      projectId: projectData.value.englishName,
+      projectData: projectData.value,
+    })
+    .catch((err) => {
+      if (err.code === 403) {
+        handleProjectManageNoPermission({
+          action: RESOURCE_ACTION.EDIT,
+          projectId: projectCode,
+          resourceCode: projectCode,
+        })
+      }
+    })
+    .finally(() => {
+      btnLoading.value = false;
+    });
   if (result) {
     Message({
       theme: 'success',

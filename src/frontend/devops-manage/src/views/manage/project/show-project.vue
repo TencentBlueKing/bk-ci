@@ -9,8 +9,19 @@ import {
   useRoute,
   useRouter,
 } from 'vue-router';
-import { Message, InfoBox, Popover } from 'bkui-vue';
-import { computed, onMounted } from '@vue/runtime-core';
+import {
+  Message,
+  InfoBox,
+  Popover
+} from 'bkui-vue';
+import {
+  onMounted
+} from '@vue/runtime-core';
+import {
+  handleProjectManageNoPermission,
+  RESOURCE_ACTION
+} from '@/utils/permission.js'
+
 const { t } = useI18n();
 const router = useRouter();
 const route = useRoute();
@@ -35,7 +46,7 @@ const fetchProjectData = async () => {
 };
 
 const fetchApprovalInfo = () => {
-  http.requestApprovalInfo(projectCode).then(res => {
+  http.requestApprovalInfo(projectCode as string).then(res => {
     projectData.value = { ...projectData.value, ...res }
   });
 };
@@ -85,10 +96,10 @@ const fetchDiffProjectData = () => {
     if (projectData.value?.subjectScopes.length !== projectDiffData.value?.afterSubjectScopes.length) {
       projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
     } else {
-      const subjectScopesIdMap = projectData.value.subjectScopes.map(i => i.id);
+      const subjectScopesIdMap = projectData.value.subjectScopes.map((i: any) => i.id);
       let isChange = false;
-      subjectScopesIdMap.forEach(id => {
-        isChange = projectDiffData.value.afterSubjectScopes.some(scopes => scopes.id !== id);
+      subjectScopesIdMap.forEach((id: any) => {
+        isChange = projectDiffData.value.afterSubjectScopes.some((scopes: any) => scopes.id !== id);
       });
       if (isChange) {
         projectData.value['afterSubjectScopes'] = projectDiffData.value.afterSubjectScopes
@@ -107,7 +118,7 @@ const handleEdit = () => {
   });
 };
 
-const handleToApprovalDetails = (applyId) => {
+const handleToApprovalDetails = (applyId: any) => {
   window.open(`/console/permission/${projectCode}/my-apply/${applyId}`, '_blank')
 };
 
@@ -143,19 +154,30 @@ const handleCancelUpdate = () => {
  */
 const handleEnabledProject = () => {
   const { englishName, enabled } = projectData.value;
-  http.enabledProject({
-    projectId: englishName,
-    enable: !enabled,
-  }).then(res => {
-    if (res) {
-      const message = enabled ? t('停用项目成功') : t('启用项目成功');
-      Message({
-        theme: 'success',
-        message,
-      });
-      fetchProjectData();
-    }
-  })
+  http
+    .enabledProject({
+      projectId: englishName,
+      enable: !enabled,
+    })
+    .then(res => {
+      if (res) {
+        const message = enabled ? t('停用项目成功') : t('启用项目成功');
+        Message({
+          theme: 'success',
+          message,
+        });
+        fetchProjectData();
+      }
+    })
+    .catch((err) => {
+      if (err.code === 403) {
+        handleProjectManageNoPermission({
+          action: RESOURCE_ACTION.ENABLE,
+          projectId: projectCode,
+          resourceCode: projectCode,
+        })
+      }
+    })
 };
 
 /**
