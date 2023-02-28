@@ -130,9 +130,8 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
-                        <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
+                        <div class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</div>
                     </div>
-                    <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -573,8 +572,6 @@
 
 <style lang="scss" scoped>
     .code-lib-credential {
-        display: flex;
-        align-items: center;
         > .codelib-credential-selector {
             width: 300px;
             display: inline-block;
@@ -584,6 +581,8 @@
             display: block;
         }
         .text-link {
+            position: relative;
+            top: -10px;
             cursor: pointer;
             color: #3c96ff;
             line-height: 1.5;
