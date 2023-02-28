@@ -341,6 +341,8 @@ class InitializeMatrixGroupStageCmd(
                                     Container::name.name to (newContainer.name)
                                 ),
                                 status = null,
+                                startTime = null,
+                                endTime = null,
                                 timestamps = mapOf()
                             )
                         )

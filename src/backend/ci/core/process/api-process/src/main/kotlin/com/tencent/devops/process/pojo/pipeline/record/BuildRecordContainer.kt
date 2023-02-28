@@ -31,6 +31,7 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("构建详情记录-插件任务")
 data class BuildRecordContainer(
@@ -55,9 +56,15 @@ data class BuildRecordContainer(
     @ApiModelProperty("构建状态", required = false)
     var status: String?,
     @ApiModelProperty("是否为构建矩阵组", required = false)
+    val containPostTaskFlag: Boolean? = null,
+    @ApiModelProperty("是否为构建矩阵组", required = false)
     val matrixGroupFlag: Boolean? = null,
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
+    @ApiModelProperty("开始时间", required = true)
+    var startTime: LocalDateTime?,
+    @ApiModelProperty("结束时间", required = true)
+    var endTime: LocalDateTime?,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

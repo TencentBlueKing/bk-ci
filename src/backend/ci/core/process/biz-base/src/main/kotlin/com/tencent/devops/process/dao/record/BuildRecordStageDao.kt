@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -61,6 +62,12 @@ class BuildRecordStageDao {
                     .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
                     .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(STAGE_VAR, JsonUtil.toJson(record.stageVar, false))
+                    .set(STATUS, record.status)
+                    .set(START_TIME, record.startTime)
+                    .set(END_TIME, record.endTime)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -75,6 +82,8 @@ class BuildRecordStageDao {
         executeCount: Int,
         stageVar: Map<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
@@ -82,6 +91,8 @@ class BuildRecordStageDao {
                 .set(STAGE_VAR, JsonUtil.toJson(stageVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            startTime?.let { update.set(START_TIME, startTime) }
+            endTime?.let { update.set(END_TIME, endTime) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -97,7 +108,8 @@ class BuildRecordStageDao {
         projectId: String,
         pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordStage> {
         with(TPipelineBuildRecordStage.T_PIPELINE_BUILD_RECORD_STAGE) {
             val conditions = mutableListOf<Condition>()
@@ -105,6 +117,7 @@ class BuildRecordStageDao {
             conditions.add(PIPELINE_ID.eq(pipelineId))
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
+            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(STAGE_ID.asc()).fetch(mapper)
         }
@@ -127,8 +140,8 @@ class BuildRecordStageDao {
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(STAGE_ID)
             val result = dslContext.select(
-                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION,
-                STAGE_ID, SEQ, EXECUTE_COUNT, STATUS, STAGE_VAR, TIMESTAMPS
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, SEQ,
+                EXECUTE_COUNT, STATUS, STAGE_VAR, START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 STAGE_ID.eq(max.field(KEY_STAGE_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -147,6 +160,8 @@ class BuildRecordStageDao {
                     stageVar = JsonUtil.to(
                         record[STAGE_VAR], object : TypeReference<MutableMap<String, Any>>() {}
                     ),
+                    startTime = record[START_TIME],
+                    endTime = record[END_TIME],
                     timestamps = record[TIMESTAMPS]?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
@@ -168,6 +183,8 @@ class BuildRecordStageDao {
                     stageVar = JsonUtil.to(stageVar, object : TypeReference<Map<String, Any>>() {}).toMutableMap(),
                     stageSeq = seq,
                     status = status,
+                    startTime = startTime,
+                    endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()

@@ -322,8 +322,7 @@ class MutexControl @Autowired constructor(
     ) {
         val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
         val queueKey = mutexGroup.genMutexQueueKey(projectId)
-        val currentTime = LocalDateTime.now().timestamp()
-        redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
+        redisOperation.hset(queueKey, containerMutexId, LocalDateTime.now().timestamp().toString())
         containerBuildRecordService.updateContainerRecord(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId,
             containerId = containerId, executeCount = executeCount,

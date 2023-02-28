@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -66,6 +67,12 @@ class BuildRecordTaskDao {
                     .set(TASK_SEQ, record.taskSeq)
                     .set(ATOM_CODE, record.atomCode)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(TASK_VAR, JsonUtil.toJson(record.taskVar, false))
+                    .set(STATUS, record.status)
+                    .set(START_TIME, record.startTime)
+                    .set(END_TIME, record.endTime)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -80,6 +87,8 @@ class BuildRecordTaskDao {
         executeCount: Int,
         taskVar: Map<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
@@ -87,6 +96,8 @@ class BuildRecordTaskDao {
                 .set(TASK_VAR, JsonUtil.toJson(taskVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            startTime?.let { update.set(START_TIME, startTime) }
+            endTime?.let { update.set(END_TIME, endTime) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -103,7 +114,8 @@ class BuildRecordTaskDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        containerId: String? = null
+        containerId: String? = null,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
             val conditions = mutableListOf<Condition>()
@@ -136,7 +148,8 @@ class BuildRecordTaskDao {
             ).from(this).where(conditions).groupBy(TASK_ID)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
-                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE, TIMESTAMPS
+                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
+                START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 TASK_ID.eq(max.field(KEY_TASK_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -160,6 +173,8 @@ class BuildRecordTaskDao {
                     atomCode = record[ATOM_CODE],
                     status = record[STATUS],
                     originClassType = record[ORIGIN_CLASS_TYPE],
+                    startTime = record[START_TIME],
+                    endTime = record[END_TIME],
                     timestamps = record[TIMESTAMPS]?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
@@ -206,6 +221,8 @@ class BuildRecordTaskDao {
                     atomCode = atomCode,
                     originClassType = originClassType,
                     status = status,
+                    startTime = startTime,
+                    endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()

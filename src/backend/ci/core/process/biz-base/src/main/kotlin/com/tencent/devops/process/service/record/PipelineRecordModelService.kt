@@ -28,14 +28,15 @@
 package com.tencent.devops.process.service.record
 
 import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.EXECUTE_COUNT
-import com.tencent.devops.common.api.constant.ID
 import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.api.constant.STATUS
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
+import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
@@ -46,13 +47,8 @@ import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.utils.KEY_CONTAINERS
-import com.tencent.devops.process.utils.KEY_ELEMENTS
-import com.tencent.devops.process.utils.KEY_GROUP_CONTAINERS
-import com.tencent.devops.process.utils.KEY_MATRIX_CONTROL_OPTION
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
 import com.tencent.devops.process.utils.KEY_PROJECT_ID
-import com.tencent.devops.process.utils.KEY_STAGES
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -137,9 +133,9 @@ class PipelineRecordModelService @Autowired constructor(
         buildRecordStages.forEach { buildRecordStage ->
             val stageVarMap = buildRecordStage.stageVar
             val stageId = buildRecordStage.stageId
-            stageVarMap[ID] = stageId
-            stageVarMap[STATUS] = buildRecordStage.status ?: ""
-            stageVarMap[EXECUTE_COUNT] = buildRecordStage.executeCount
+            stageVarMap[Stage::id.name] = stageId
+            stageVarMap[Stage::status.name] = buildRecordStage.status ?: ""
+            stageVarMap[Stage::executeCount.name] = buildRecordStage.executeCount
             handleStageRecordContainer(
                 buildRecordContainers = buildRecordContainers,
                 stageId = stageId,
@@ -149,7 +145,7 @@ class PipelineRecordModelService @Autowired constructor(
             )
             stages.add(stageVarMap)
         }
-        recordModelMap[KEY_STAGES] = stages
+        recordModelMap[Model::stages.name] = stages
         return recordModelMap
     }
 
@@ -167,15 +163,18 @@ class PipelineRecordModelService @Autowired constructor(
         stageRecordContainers.forEach { stageRecordContainer ->
             val containerVarMap = stageRecordContainer.containerVar
             val containerId = stageRecordContainer.containerId
-            containerVarMap[ID] = containerId
-            containerVarMap[STATUS] = stageRecordContainer.status ?: ""
-            containerVarMap[EXECUTE_COUNT] = stageRecordContainer.executeCount
+            containerVarMap[Container::id.name] = containerId
+            containerVarMap[Container::status.name] = stageRecordContainer.status ?: ""
+            containerVarMap[Container::executeCount.name] = stageRecordContainer.executeCount
+            containerVarMap[Container::containPostTaskFlag.name] = stageRecordContainer.containPostTaskFlag ?: false
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
-                val stageBaseMap = (pipelineBaseMap!![KEY_STAGES] as List<Map<String, Any>>).first { it[ID] == stageId }
-                val containerBaseMap = (stageBaseMap[KEY_CONTAINERS] as List<Map<String, Any>>).first {
-                    it[ID] == containerId
+                val stageBaseMap = (pipelineBaseMap!![Model::stages.name] as List<Map<String, Any>>).first {
+                    it[Stage::id.name] == stageId
+                }
+                val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
+                    it[Container::id.name] == containerId
                 }
                 // 过滤出矩阵分裂出的job数据
                 val matrixRecordContainers = stageRecordContainers.filter { it.matrixGroupId == containerId }
@@ -185,28 +184,30 @@ class PipelineRecordModelService @Autowired constructor(
                     var matrixContainerVarMap = matrixRecordContainer.containerVar
                     val matrixContainerId = matrixRecordContainer.containerId
                     val containerBaseModelMap = containerBaseMap.deepCopy<MutableMap<String, Any>>()
-                    matrixContainerVarMap[ID] = matrixContainerId
-                    matrixContainerVarMap[STATUS] = matrixRecordContainer.status ?: ""
-                    matrixContainerVarMap[EXECUTE_COUNT] = matrixRecordContainer.executeCount
+                    matrixContainerVarMap[Container::id.name] = matrixContainerId
+                    matrixContainerVarMap[Container::status.name] = matrixRecordContainer.status ?: ""
+                    matrixContainerVarMap[Container::executeCount.name] = matrixRecordContainer.executeCount
+                    matrixContainerVarMap[Container::containPostTaskFlag.name] =
+                        matrixRecordContainer.containPostTaskFlag ?: false
                     handleContainerRecordTask(
                         stageRecordTasks = stageRecordTasks,
                         containerId = matrixContainerId,
                         containerVarMap = matrixContainerVarMap,
                         containerBaseMap = containerBaseModelMap
                     )
-                    containerBaseModelMap.remove(KEY_MATRIX_CONTROL_OPTION)
-                    containerBaseModelMap.remove(KEY_GROUP_CONTAINERS)
+                    containerBaseModelMap.remove(VMBuildContainer::matrixControlOption.name)
+                    containerBaseModelMap.remove(VMBuildContainer::groupContainers.name)
                     matrixContainerVarMap = ModelUtils.generateBuildModelDetail(
                         baseModelMap = containerBaseModelMap,
                         modelFieldRecordMap = matrixContainerVarMap
                     )
                     groupContainers.add(matrixContainerVarMap)
                 }
-                containerVarMap[KEY_GROUP_CONTAINERS] = groupContainers
+                containerVarMap[VMBuildContainer::groupContainers.name] = groupContainers
             }
             containers.add(containerVarMap)
         }
-        stageVarMap[KEY_CONTAINERS] = containers
+        stageVarMap[Stage::containers.name] = containers
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -222,17 +223,17 @@ class PipelineRecordModelService @Autowired constructor(
         containerRecordTasks.forEachIndexed { index, containerRecordTask ->
             var taskVarMap = containerRecordTask.taskVar
             val taskId = containerRecordTask.taskId
-            taskVarMap[ID] = taskId
-            taskVarMap[STATUS] = containerRecordTask.status ?: ""
-            taskVarMap[EXECUTE_COUNT] = containerRecordTask.executeCount
+            taskVarMap[Element::id.name] = taskId
+            taskVarMap[Element::status.name] = containerRecordTask.status ?: ""
+            taskVarMap[Element::executeCount.name] = containerRecordTask.executeCount
             containerBaseMap?.let {
                 // 生成矩阵task的变量模型
-                val taskBaseMap = (it[KEY_ELEMENTS] as List<Map<String, Any>>)[index].toMutableMap()
+                val taskBaseMap = (it[Container::elements.name] as List<Map<String, Any>>)[index].toMutableMap()
                 taskVarMap = ModelUtils.generateBuildModelDetail(taskBaseMap, taskVarMap)
             }
             tasks.add(taskVarMap)
         }
         // 将转换后的job变量数据放入stage中
-        containerVarMap[KEY_ELEMENTS] = tasks
+        containerVarMap[Container::elements.name] = tasks
     }
 }

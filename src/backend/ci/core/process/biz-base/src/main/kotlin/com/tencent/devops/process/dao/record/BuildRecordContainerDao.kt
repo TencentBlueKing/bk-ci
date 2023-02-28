@@ -42,6 +42,7 @@ import org.jooq.DSLContext
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 @Suppress("LongParameterList")
@@ -64,6 +65,12 @@ class BuildRecordContainerDao {
                     .set(MATRIX_GROUP_ID, record.matrixGroupId)
                     .set(STATUS, record.status)
                     .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
+                    .onDuplicateKeyUpdate()
+                    .set(CONTAINER_VAR, JsonUtil.toJson(record.containerVar, false))
+                    .set(STATUS, record.status)
+                    .set(START_TIME, record.startTime)
+                    .set(END_TIME, record.endTime)
+                    .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                     .execute()
             }
         }
@@ -78,6 +85,8 @@ class BuildRecordContainerDao {
         executeCount: Int,
         containerVar: Map<String, Any>,
         buildStatus: BuildStatus?,
+        startTime: LocalDateTime?,
+        endTime: LocalDateTime?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
@@ -85,6 +94,8 @@ class BuildRecordContainerDao {
                 .set(CONTAINER_VAR, JsonUtil.toJson(containerVar, false))
             buildStatus?.let { update.set(STATUS, buildStatus.name) }
             timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            startTime?.let { update.set(START_TIME, startTime) }
+            endTime?.let { update.set(END_TIME, endTime) }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
@@ -122,7 +133,8 @@ class BuildRecordContainerDao {
         pipelineId: String,
         buildId: String,
         executeCount: Int,
-        stageId: String?
+        stageId: String? = null,
+        buildStatus: BuildStatus? = null
     ): List<BuildRecordContainer> {
         with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
             val conditions = mutableListOf<Condition>()
@@ -131,6 +143,7 @@ class BuildRecordContainerDao {
             conditions.add(BUILD_ID.eq(buildId))
             conditions.add(EXECUTE_COUNT.eq(executeCount))
             stageId?.let { conditions.add(STAGE_ID.eq(stageId)) }
+            buildStatus?.let { conditions.add(STATUS.eq(it.name)) }
             return dslContext.selectFrom(this)
                 .where(conditions).orderBy(CONTAINER_ID.asc()).fetch(mapper)
         }
@@ -154,8 +167,9 @@ class BuildRecordContainerDao {
                 DSL.max(EXECUTE_COUNT).`as`(KEY_EXECUTE_COUNT)
             ).from(this).where(conditions).groupBy(CONTAINER_ID)
             val result = dslContext.select(
-                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, CONTAINER_VAR,
-                EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG, MATRIX_GROUP_ID, TIMESTAMPS
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
+                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
+                MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
             ).from(this).join(max).on(
                 CONTAINER_ID.eq(max.field(KEY_CONTAINER_ID, String::class.java))
                     .and(EXECUTE_COUNT.eq(max.field(KEY_EXECUTE_COUNT, Int::class.java)))
@@ -177,6 +191,8 @@ class BuildRecordContainerDao {
                     containerType = record[CONTAINER_TYPE],
                     matrixGroupFlag = record[MATRIX_GROUP_FLAG],
                     matrixGroupId = record[MATRIX_GROUP_ID],
+                    startTime = record[START_TIME],
+                    endTime = record[END_TIME],
                     timestamps = record[TIMESTAMPS]?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()
@@ -201,8 +217,11 @@ class BuildRecordContainerDao {
                     ).toMutableMap(),
                     containerType = containerType,
                     status = status,
+                    containPostTaskFlag = containPostTask,
                     matrixGroupFlag = matrixGroupFlag,
                     matrixGroupId = matrixGroupId,
+                    startTime = startTime,
+                    endTime = endTime,
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()

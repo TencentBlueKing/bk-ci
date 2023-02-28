@@ -45,7 +45,8 @@ import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.process.engine.common.BuildTimeCostUtils
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
@@ -70,6 +71,7 @@ class TaskBuildRecordService(
     private val recordTaskDao: BuildRecordTaskDao,
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
+    private val taskBuildDetailService: TaskBuildDetailService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -94,6 +96,14 @@ class TaskBuildRecordService(
         operation: String,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>? = null
     ) {
+        taskBuildDetailService.updateTaskStatus(
+            projectId = projectId,
+            buildId = buildId,
+            taskId = taskId,
+            taskStatus = BuildStatus.FAILED,
+            buildStatus = BuildStatus.RUNNING,
+            operation = "taskConditionInvalid"
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = operation
@@ -121,6 +131,14 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
+        taskBuildDetailService.taskPause(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            buildStatus = BuildStatus.PAUSE
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskPause#$taskId"
@@ -150,6 +168,7 @@ class TaskBuildRecordService(
         taskId: String,
         executeCount: Int
     ) {
+        taskBuildDetailService.taskStart(projectId, buildId, taskId)
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = null, operation = "taskStart#$taskId"
@@ -240,6 +259,8 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = taskStatus,
+                    startTime = LocalDateTime.now(),
+                    endTime = null,
                     timestamps = null
                 )
             }
@@ -257,6 +278,13 @@ class TaskBuildRecordService(
         executeCount: Int,
         cancelUser: String
     ) {
+        taskBuildDetailService.taskCancel(
+            projectId = projectId,
+            buildId = buildId,
+            containerId = containerId,
+            taskId = taskId,
+            cancelUser = cancelUser // fix me: 是否要直接更新取消人，暂时维护原有逻辑
+        )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
             cancelUser = cancelUser, operation = "taskCancel#$taskId"
@@ -274,6 +302,8 @@ class TaskBuildRecordService(
     }
 
     fun taskEnd(taskBuildEndParam: TaskBuildEndParam): List<PipelineTaskStatusInfo> {
+        taskBuildDetailService.taskEnd(taskBuildEndParam)
+
         val projectId = taskBuildEndParam.projectId
         val pipelineId = taskBuildEndParam.pipelineId
         val buildId = taskBuildEndParam.buildId
@@ -328,9 +358,7 @@ class TaskBuildRecordService(
                     taskBuildEndParam.errorCode?.let { taskVar[Element::errorCode.name] = it }
                     taskBuildEndParam.errorMsg?.let { taskVar[Element::errorMsg.name] = it }
                 }
-                buildTaskDao.get(context, projectId, buildId, taskId)?.let {
-                    taskVar[Element::timeCost.name] = BuildTimeCostUtils.generateTaskTimeCost(it, recordTask.timestamps)
-                }
+                taskVar[Element::timeCost.name] = recordTask.generateTaskTimeCost()
                 recordTaskDao.updateRecord(
                     dslContext = context,
                     projectId = projectId,
@@ -340,6 +368,8 @@ class TaskBuildRecordService(
                     executeCount = executeCount,
                     taskVar = taskVar,
                     buildStatus = buildStatus,
+                    startTime = null,
+                    endTime = LocalDateTime.now(),
                     timestamps = null
                 )
             }
@@ -359,6 +389,14 @@ class TaskBuildRecordService(
         executeCount: Int,
         element: Element?
     ) {
+        taskBuildDetailService.taskContinue(
+            projectId = projectId,
+            buildId = buildId,
+            stageId = stageId,
+            containerId = containerId,
+            taskId = taskId,
+            element = element
+        )
         containerBuildRecordService.updateContainerStatus(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -411,6 +449,20 @@ class TaskBuildRecordService(
                 )
                 return@transaction
             }
+            var startTime: LocalDateTime? = null
+            var endTime: LocalDateTime? = null
+            val now = LocalDateTime.now()
+            val newTimestamps = mutableMapOf<BuildTimestampType, BuildRecordTimeStamp>()
+            if (buildStatus?.isRunning() == true && recordTask.startTime == null) {
+                startTime = now
+            }
+            if (buildStatus?.isFinish() == true && recordTask.endTime == null) {
+                endTime = now
+                if (BuildStatus.parse(recordTask.status) == BuildStatus.REVIEWING) {
+                    newTimestamps[BuildTimestampType.TASK_REVIEW_PAUSE_WAITING] =
+                        BuildRecordTimeStamp(null, now.timestampmilli())
+                }
+            }
             recordTaskDao.updateRecord(
                 dslContext = transactionContext,
                 projectId = projectId,
@@ -420,6 +472,8 @@ class TaskBuildRecordService(
                 executeCount = executeCount,
                 taskVar = recordTask.taskVar.plus(taskVar),
                 buildStatus = buildStatus,
+                startTime = startTime,
+                endTime = endTime,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordTask.timestamps) }
             )
         }

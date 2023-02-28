@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.engine.utils
 
-import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildStatus
@@ -60,24 +59,10 @@ object ContainerUtils {
 
     private const val mutexPrefix = "互斥中(Mutex waiting)"
 
-    fun clearMutexContainerName(container: Container) {
-        if (container.name.startsWith(mutexPrefix)) {
-            container.name = container.name.substring(mutexPrefix.length)
-        }
-    }
-
     fun getMutexFixedContainerName(containerName: String) =
         if (containerName.startsWith(mutexPrefix)) {
             containerName.substring(mutexPrefix.length)
         } else containerName
-
-    fun setMutexWaitName(container: Container) {
-        if (container.name.startsWith(mutexPrefix)) {
-            return
-        }
-
-        container.name = "$mutexPrefix${container.name}"
-    }
 
     fun getMutexWaitName(containerName: String) =
         if (containerName.startsWith(mutexPrefix)) {
@@ -89,29 +74,22 @@ object ContainerUtils {
     private const val queuePrefix = "排队中(Queuing)"
     private const val reviewPrefix = "审核中(Pending)"
 
-    fun clearQueueContainerName(container: Container) {
-        if (container.name.startsWith(queuePrefix)) {
-            container.name = container.name.substring(queuePrefix.length)
-        } else if (container.name.startsWith(reviewPrefix)) {
-            container.name = container.name.substring(reviewPrefix.length)
-        }
-    }
-
-    fun getQueueFixedContainerName(containerName: String) =
-        if (containerName.startsWith(queuePrefix)) {
+    fun getClearedQueueContainerName(containerName: String): String {
+        return if (containerName.startsWith(queuePrefix)) {
             containerName.substring(queuePrefix.length)
         } else if (containerName.startsWith(reviewPrefix)) {
             containerName.substring(reviewPrefix.length)
         } else containerName
+    }
 
-    fun setQueuingWaitName(container: Container, startBuildStatus: BuildStatus) {
-        if (container.name.startsWith(queuePrefix) || container.name.startsWith(reviewPrefix)) {
-            return
+    fun getQueuingWaitName(containerName: String, startBuildStatus: BuildStatus): String {
+        if (containerName.startsWith(queuePrefix) || containerName.startsWith(reviewPrefix)) {
+            return containerName
         }
-        if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
-            container.name = "$reviewPrefix${container.name}"
+        return if (startBuildStatus == BuildStatus.TRIGGER_REVIEWING) {
+            "$reviewPrefix$containerName"
         } else {
-            container.name = "$queuePrefix${container.name}"
+            "$queuePrefix$containerName"
         }
     }
 }

@@ -405,7 +405,7 @@ class BuildStartControl @Autowired constructor(
         val stage = model.stages[0]
         val container = stage.containers[0]
         run lit@{
-            ContainerUtils.clearQueueContainerName(container)
+            container.name = ContainerUtils.getClearedQueueContainerName(container.name)
             container.elements.forEach {
                 if (it.id == taskId) {
                     pipelineContainerService.updateContainerStatus(
@@ -472,7 +472,7 @@ class BuildStartControl @Autowired constructor(
             executeCount = executeCount, containerId = container.containerId!!, buildStatus = BuildStatus.SUCCEED,
             containerVar = mutableMapOf(
                 Container::startEpoch.name to now.timestampmilli(),
-                Container::systemElapsed.name to (stage.elapsed ?: 0), // TODO 后续使用时间戳计算
+                Container::systemElapsed.name to (stage.elapsed ?: 0),
                 Container::elementElapsed.name to 0,
                 Container::startVMStatus.name to BuildStatus.SUCCEED.name,
                 Container::name.name to container.name, // 名字刷新成非队列中
@@ -487,8 +487,8 @@ class BuildStartControl @Autowired constructor(
         )
     }
 
-    // TODO #7983 统一改为使用record修改
     @Suppress("ALL")
+    @Deprecated("后台内置插件特殊处理，后续不再维护")
     private fun supplementModel(
         projectId: String,
         pipelineId: String,

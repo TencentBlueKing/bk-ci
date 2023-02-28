@@ -227,13 +227,3 @@ const val KEY_STAGE = "stage"
 const val KEY_JOB = "job"
 
 const val KEY_TASK = "task"
-
-const val KEY_STAGES = "stages"
-
-const val KEY_CONTAINERS = "containers"
-
-const val KEY_GROUP_CONTAINERS = "groupContainers"
-
-const val KEY_ELEMENTS = "elements"
-
-const val KEY_MATRIX_CONTROL_OPTION = "matrixControlOption"

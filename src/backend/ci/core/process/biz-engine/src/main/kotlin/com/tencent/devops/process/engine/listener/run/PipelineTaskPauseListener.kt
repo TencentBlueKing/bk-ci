@@ -123,14 +123,6 @@ class PipelineTaskPauseListener @Autowired constructor(
         }
 
         // 修改详情model
-        taskBuildDetailService.taskContinue(
-            projectId = task.projectId,
-            buildId = task.buildId,
-            stageId = task.stageId,
-            containerId = task.containerId,
-            taskId = task.taskId,
-            element = newElement
-        )
         taskBuildRecordService.taskContinue(
             projectId = task.projectId,
             pipelineId = task.pipelineId,
@@ -181,13 +173,6 @@ class PipelineTaskPauseListener @Autowired constructor(
         pipelineTaskService.updateTaskStatus(task = task, userId = userId, buildStatus = BuildStatus.CANCELED)
 
         // 刷新detail内model
-        taskBuildDetailService.taskCancel(
-            projectId = task.projectId,
-            buildId = task.buildId,
-            containerId = task.containerId,
-            taskId = task.taskId,
-            cancelUser = userId // fix me: 是否要直接更新取消人，暂时维护原有逻辑
-        )
         taskBuildRecordService.taskCancel(
             projectId = task.projectId,
             pipelineId = task.pipelineId,

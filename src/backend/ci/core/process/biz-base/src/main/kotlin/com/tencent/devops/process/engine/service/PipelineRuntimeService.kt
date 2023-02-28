@@ -665,11 +665,6 @@ class PipelineRuntimeService @Autowired constructor(
     ): Boolean {
         logger.info("[$buildId]|SHUTDOWN_BUILD|userId=$userId|status=$buildStatus|terminateFlag=$terminateFlag")
         // 记录该构建取消人信息
-        pipelineBuildDetailService.updateBuildCancelUser(
-            projectId = projectId,
-            buildId = buildId,
-            cancelUserId = userId
-        )
         pipelineBuildRecordService.updateBuildCancelUser(
             projectId = projectId,
             buildId = buildId,
@@ -725,23 +720,6 @@ class PipelineRuntimeService @Autowired constructor(
                 )
             )
         }
-        // #7983 审核插件在被取消时作为审核结束处理，增加时间戳
-        val tasks = pipelineTaskService.listContainerBuildTasks(
-            projectId = projectId,
-            buildId = buildId,
-            containerSeqId = null,
-            buildStatusSet = setOf(BuildStatus.REVIEWING)
-        )
-        tasks.forEach { task ->
-            taskBuildRecordService.updateTaskRecord(
-                projectId = task.projectId, pipelineId = pipelineId, buildId = buildId,
-                taskId = task.taskId, executeCount = task.executeCount ?: 1, buildStatus = null,
-                taskVar = mapOf(), timestamps = mapOf(
-                    BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to
-                        BuildRecordTimeStamp(null, LocalDateTime.now().timestampmilli())
-                )
-            )
-        }
         return true
     }
 
@@ -783,8 +761,9 @@ class PipelineRuntimeService @Autowired constructor(
 
         val buildHistoryRecord = pipelineBuildDao.getBuildInfo(dslContext, projectId, buildId)
 
+        // # 7983 由于container需要使用名称动态展示状态，Record需要特殊保存
         val buildTaskList = mutableListOf<PipelineBuildTask>()
-        val buildContainers = mutableListOf<PipelineBuildContainer>()
+        val buildContainersWithDetail = mutableListOf<Pair<PipelineBuildContainer, Container>>()
         val buildStages = ArrayList<PipelineBuildStage>(fullModel.stages.size)
 
         val stageBuildRecords = mutableListOf<BuildRecordStage>()
@@ -793,7 +772,7 @@ class PipelineRuntimeService @Autowired constructor(
 
         val updateExistsTask: MutableList<PipelineBuildTask> = mutableListOf()
         val updateExistsStage: MutableList<PipelineBuildStage> = ArrayList(fullModel.stages.size)
-        val updateExistsContainer: MutableList<PipelineBuildContainer> = mutableListOf()
+        val updateExistsContainerWithDetail: MutableList<Pair<PipelineBuildContainer, Container>> = mutableListOf()
 
         context.currentBuildNo = buildNo
 //        var buildNoType: BuildNoType? = null
@@ -810,14 +789,14 @@ class PipelineRuntimeService @Autowired constructor(
                     stage.containers.forEach {
                         if (it is TriggerContainer) {
                             it.status = BuildStatus.RUNNING.name
-                            ContainerUtils.setQueuingWaitName(it, startBuildStatus)
+                            it.name = ContainerUtils.getQueuingWaitName(it.name, startBuildStatus)
                         }
                     }
                     stage.executeCount?.let { count -> stage.executeCount = count + 1 }
                 }
                 // record表需要记录被跳过的记录
                 if (stage.stageControlOption?.enable == false) {
-                    saveSkipRecords(
+                    addStageRecords(
                         projectId, pipelineId, version, buildId, stage, context, index,
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
@@ -834,15 +813,27 @@ class PipelineRuntimeService @Autowired constructor(
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
                     context.containerSeq++
+                    addContainerRecords(
+                        projectId, pipelineId, version, buildId, stage, container,
+                        context, containerBuildRecords, taskBuildRecords
+                    )
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
+                        addContainerRecords(
+                            projectId, pipelineId, version, buildId, stage, container,
+                            context, containerBuildRecords, taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
+                        addContainerRecords(
+                            projectId, pipelineId, version, buildId, stage, container,
+                            context, containerBuildRecords, taskBuildRecords
+                        )
                         return@nextContainer
                     }
                 }
@@ -892,7 +883,7 @@ class PipelineRuntimeService @Autowired constructor(
                     )
                     // 去掉要重试的矩阵内部数据
                     updateExistsTask.removeIf { it.containerId == container.id }
-                    updateExistsContainer.removeIf { it.matrixGroupId == container.id }
+                    updateExistsContainerWithDetail.removeIf { it.first.matrixGroupId == container.id }
                 }
                 // --- 第3层循环：Element遍历处理 ---
                 pipelineContainerService.prepareBuildContainerTasks(
@@ -903,9 +894,9 @@ class PipelineRuntimeService @Autowired constructor(
                     startParamMap = startParamMap,
                     context = context,
                     stage = stage,
-                    buildContainers = buildContainers,
+                    buildContainers = buildContainersWithDetail,
                     buildTaskList = buildTaskList,
-                    updateExistsContainer = updateExistsContainer,
+                    updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
@@ -1170,10 +1161,10 @@ class PipelineRuntimeService @Autowired constructor(
                     buildNum = buildNum,
                     resourceVersion = version,
                     updateExistsStage = updateExistsStage,
-                    updateExistsContainer = updateExistsContainer,
+                    updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
                     buildStages = buildStages,
-                    buildContainers = buildContainers,
+                    buildContainers = buildContainersWithDetail,
                     buildTaskList = buildTaskList,
                     stageBuildRecords = stageBuildRecords,
                     containerBuildRecords = containerBuildRecords,
@@ -1218,7 +1209,7 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun saveSkipRecords(
+    private fun addStageRecords(
         projectId: String,
         pipelineId: String,
         version: Int,
@@ -1235,34 +1226,68 @@ class PipelineRuntimeService @Autowired constructor(
                 projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
                 buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
                 stageSeq = stageIndex, stageVar = mutableMapOf(), status = BuildStatus.SKIP.name,
-                timestamps = mapOf()
+                startTime = null, endTime = null, timestamps = mapOf()
             )
         )
         stage.containers.forEach { container ->
-            containerBuildRecords.add(
-                BuildRecordContainer(
-                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                    buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                    containerType = container.getClassType(), executeCount = context.executeCount,
-                    matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                    status = BuildStatus.SKIP.name, timestamps = mapOf(),
-                    containerVar = mutableMapOf(
-                        Container::containerHashId.name to container.containerHashId!!
-                    )
+            addContainerRecords(
+                projectId, pipelineId, version, buildId, stage,
+                container, context, containerBuildRecords, taskBuildRecords
+            )
+        }
+    }
+
+    private fun addContainerRecords(
+        projectId: String,
+        pipelineId: String,
+        version: Int,
+        buildId: String,
+        stage: Stage,
+        container: Container,
+        context: StartBuildContext,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
+        taskBuildRecords: MutableList<BuildRecordTask>
+    ) {
+        val containerVar = mutableMapOf<String, Any>()
+        containerVar[Container::name.name] = container.name
+        container.containerHashId?.let {
+            containerVar[Container::containerHashId.name] = it
+        }
+        if (container is TriggerContainer) {
+            containerVar[container::params.name] = container.params
+            container.buildNo?.let {
+                containerVar[container::buildNo.name] = it
+            }
+            container.templateParams?.let {
+                containerVar[container::templateParams.name] = it
+            }
+        } else if (container is VMBuildContainer) {
+            container.showBuildResource?.let {
+                containerVar[VMBuildContainer::showBuildResource.name] = it
+            }
+        }
+        containerBuildRecords.add(
+            BuildRecordContainer(
+                projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                containerType = container.getClassType(), executeCount = context.executeCount,
+                matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
+                status = BuildStatus.SKIP.name, containerVar = containerVar,
+                startTime = null, endTime = null, timestamps = mapOf()
+            )
+        )
+        container.elements.forEachIndexed { index, element ->
+            taskBuildRecords.add(
+                BuildRecordTask(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    stageId = stage.id!!, containerId = container.containerId!!,
+                    taskId = element.id!!, classType = element.getClassType(),
+                    atomCode = element.getTaskAtom(), executeCount = context.executeCount,
+                    originClassType = null, resourceVersion = version, taskSeq = index,
+                    status = BuildStatus.SKIP.name, taskVar = mutableMapOf(),
+                    startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
-            container.elements.forEachIndexed { index, element ->
-                taskBuildRecords.add(
-                    BuildRecordTask(
-                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                        stageId = stage.id!!, containerId = container.containerId!!,
-                        taskId = element.id!!, classType = element.getClassType(),
-                        atomCode = element.getTaskAtom(), executeCount = context.executeCount,
-                        originClassType = null, resourceVersion = version, taskSeq = index,
-                        status = BuildStatus.SKIP.name, timestamps = mapOf(), taskVar = mutableMapOf()
-                    )
-                )
-            }
         }
     }
 
@@ -1273,10 +1298,10 @@ class PipelineRuntimeService @Autowired constructor(
         buildNum: Int,
         resourceVersion: Int,
         updateExistsStage: MutableList<PipelineBuildStage>,
-        updateExistsContainer: MutableList<PipelineBuildContainer>,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
         buildStages: ArrayList<PipelineBuildStage>,
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         buildTaskList: MutableList<PipelineBuildTask>,
         stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
@@ -1301,11 +1326,15 @@ class PipelineRuntimeService @Autowired constructor(
             saveTaskRecords(buildTaskList, taskBuildRecords, resourceVersion)
         }
         if (updateExistsContainer.isNotEmpty()) {
-            pipelineContainerService.batchUpdate(transactionContext, updateExistsContainer)
+            pipelineContainerService.batchUpdate(
+                transactionContext, updateExistsContainer.map { it.first }
+            )
             saveContainerRecords(updateExistsContainer, containerBuildRecords, resourceVersion)
         }
         if (buildContainers.isNotEmpty()) {
-            pipelineContainerService.batchSave(transactionContext, buildContainers)
+            pipelineContainerService.batchSave(
+                transactionContext, buildContainers.map { it.first }
+            )
             saveContainerRecords(buildContainers, containerBuildRecords, resourceVersion)
         }
 
@@ -1337,30 +1366,36 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null,
-                    timestamps = mapOf(), taskVar = mutableMapOf()
+                    resourceVersion = resourceVersion, status = null, taskVar = mutableMapOf(),
+                    startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
         }
     }
 
     private fun saveContainerRecords(
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         resourceVersion: Int
     ) {
-        buildContainers.forEach {
+        buildContainers.forEach { (build, detail) ->
             val containerVar = mutableMapOf<String, Any>()
-            it.containerHashId?.let { hashId ->
+            containerVar[Container::name.name] = detail.name
+            build.containerHashId?.let { hashId ->
                 containerVar[Container::containerHashId.name] = hashId
+            }
+            if (detail is VMBuildContainer) {
+                detail.showBuildResource?.let {
+                    containerVar[VMBuildContainer::showBuildResource.name] = it
+                }
             }
             containerBuildRecords.add(
                 BuildRecordContainer(
-                    projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
-                    buildId = it.buildId, stageId = it.stageId, containerId = it.containerId,
-                    containerType = it.containerType, executeCount = it.executeCount,
-                    matrixGroupFlag = it.matrixGroupFlag, matrixGroupId = it.matrixGroupId,
-                    status = null, timestamps = mapOf(),
+                    projectId = build.projectId, pipelineId = build.pipelineId, resourceVersion = resourceVersion,
+                    buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
+                    containerType = build.containerType, executeCount = build.executeCount,
+                    matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
+                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
                     containerVar = containerVar
                 )
             )
@@ -1378,7 +1413,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, timestamps = mapOf()
+                    status = null, startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
         }
@@ -1442,14 +1477,7 @@ class PipelineRuntimeService @Autowired constructor(
     ) {
         val newBuildStatus = BuildStatus.FAILED
         logger.info("[$buildId|DISAPPROVE_BUILD|userId($userId)|pipelineId=$pipelineId")
-        val (_, allStageStatus) = pipelineBuildDetailService.buildEnd(
-            projectId = projectId,
-            buildId = buildId,
-            buildStatus = newBuildStatus,
-            errorMsg = "Rejected by $userId"
-        )
-
-        pipelineBuildRecordService.buildEnd(
+        val (_, allStageStatus) = pipelineBuildRecordService.buildEnd(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,

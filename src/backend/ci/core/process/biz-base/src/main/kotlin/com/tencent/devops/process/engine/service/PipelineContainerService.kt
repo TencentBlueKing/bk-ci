@@ -215,15 +215,6 @@ class PipelineContainerService @Autowired constructor(
             containerId = matrixGroupId,
             controlOption = controlOption
         )
-        containerBuildDetailService.updateMatrixGroupContainer(
-            projectId = projectId,
-            buildId = buildId,
-            stageId = stageId,
-            matrixGroupId = matrixGroupId,
-            buildStatus = buildStatus,
-            matrixOption = controlOption.matrixControlOption!!,
-            modelContainer = modelContainer
-        )
         containerBuildRecordService.updateMatrixGroupContainer(
             projectId = projectId,
             pipelineId = pipelineId,
@@ -340,6 +331,8 @@ class PipelineContainerService @Autowired constructor(
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
                         status = null,
+                        startTime = null,
+                        endTime = null,
                         timestamps = mapOf(),
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(
@@ -399,9 +392,9 @@ class PipelineContainerService @Autowired constructor(
         startParamMap: Map<String, Any>,
         context: StartBuildContext,
         buildTaskList: MutableList<PipelineBuildTask>,
-        buildContainers: MutableList<PipelineBuildContainer>,
+        buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
-        updateExistsContainer: MutableList<PipelineBuildContainer>,
+        updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -540,7 +533,7 @@ class PipelineContainerService @Autowired constructor(
                                 startTime = null
                                 endTime = null
                                 executeCount = context.executeCount
-                                updateExistsContainer.add(this)
+                                updateExistsContainer.add(Pair(this, container))
                             }
                             return@findHistoryContainer
                         }
@@ -570,19 +563,22 @@ class PipelineContainerService @Autowired constructor(
                     else -> null
                 }
                 buildContainers.add(
-                    PipelineBuildContainer(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        stageId = stage.id!!,
-                        containerId = container.id!!,
-                        containerHashId = container.containerHashId ?: "",
-                        containerType = container.getClassType(),
-                        seq = context.containerSeq,
-                        status = BuildStatus.QUEUE,
-                        controlOption = controlOption,
-                        matrixGroupFlag = container.matrixGroupFlag,
-                        matrixGroupId = null
+                    Pair(
+                        PipelineBuildContainer(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            stageId = stage.id!!,
+                            containerId = container.id!!,
+                            containerHashId = container.containerHashId ?: "",
+                            containerType = container.getClassType(),
+                            seq = context.containerSeq,
+                            status = BuildStatus.QUEUE,
+                            controlOption = controlOption,
+                            matrixGroupFlag = container.matrixGroupFlag,
+                            matrixGroupId = null
+                        ),
+                        container
                     )
                 )
             }
@@ -944,7 +940,7 @@ class PipelineContainerService @Autowired constructor(
             }
         }
 
-        ContainerUtils.setQueuingWaitName(container, startBuildStatus)
+        container.name = ContainerUtils.getQueuingWaitName(container.name, startBuildStatus)
         container.status = BuildStatus.RUNNING.name
         container.executeCount = context.executeCount
 

@@ -159,8 +159,8 @@ class BuildRecordModelDao {
                         modelVar, object : TypeReference<Map<String, Any>>() {}
                     ).toMutableMap(),
                     queueTime = queueTime.timestampmilli(),
-                    startTime = startTime?.timestampmilli(),
-                    endTime = endTime?.timestampmilli(),
+                    startTime = startTime,
+                    endTime = endTime,
                     startUser = startUser,
                     startType = startType,
                     status = status,
