@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_GIT_TYPE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -125,6 +126,28 @@ interface ServicePermissionAuthResource {
         @QueryParam("relationResourceType")
         @ApiParam("关联资源,一般为Project", required = false)
         relationResourceType: String? = null
+    ): Result<Boolean>
+
+    @POST
+    @Path("/projects/{projectCode}/instance/validate")
+    @ApiOperation("校验用户是否有action的权限")
+    fun validateUserResourcePermissionByInstance(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
+        @QueryParam("action")
+        @ApiParam("action类型", required = true)
+        action: String,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        resource: AuthResourceInstance
     ): Result<Boolean>
 
     @POST

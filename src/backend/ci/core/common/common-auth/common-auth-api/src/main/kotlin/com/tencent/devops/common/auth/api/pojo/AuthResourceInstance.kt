@@ -23,54 +23,23 @@
  * NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY,
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+ *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface PermissionService {
-    fun validateUserActionPermission(
-        userId: String,
-        action: String
-    ): Boolean
-
-    fun validateUserResourcePermission(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceType: String?
-    ): Boolean
-
-    @Suppress("LongParameterList")
-    fun validateUserResourcePermissionByRelation(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceCode: String,
-        resourceType: String,
-        relationResourceType: String?
-    ): Boolean
-
-    fun validateUserResourcePermissionByInstance(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resource: AuthResourceInstance
-    ): Boolean
-
-    fun getUserResourceByAction(
-        userId: String,
-        action: String,
-        projectCode: String,
-        resourceType: String
-    ): List<String>
-
-    fun getUserResourcesByActions(
-        userId: String,
-        actions: List<String>,
-        projectCode: String,
-        resourceType: String
-    ): Map<AuthPermission, List<String>>
-}
+/**
+ * 权限资源实例关系
+ */
+@ApiModel("权限资源实例关系")
+data class AuthResourceInstance(
+    @ApiModelProperty("资源类型")
+    val resourceType: String,
+    @ApiModelProperty("资源ID")
+    val resourceCode: String,
+    @ApiModelProperty("父资源, 流水线有项目和流水线组父资源,其他资源父资源都只有项目资源, 项目没有父资源")
+    val parents: List<AuthResourceInstance>? = null
+)

@@ -109,7 +109,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     )
                 )
                 val expiredAt = result.expiredAt * 1000
-                val between = System.currentTimeMillis() - expiredAt
+                val between = expiredAt - System.currentTimeMillis()
                 val (status, expiredDisplay) = if (between <= 0) {
                     Pair(
                         GroupMemberStatus.EXPIRED.name,

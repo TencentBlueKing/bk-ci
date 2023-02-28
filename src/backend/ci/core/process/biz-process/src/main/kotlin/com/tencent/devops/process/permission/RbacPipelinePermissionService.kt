@@ -33,6 +33,7 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
@@ -70,14 +71,23 @@ class RbacPipelinePermissionService constructor(
                 permission = permission
             )
         }
-
+        val projectInstance = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        val pipelineInstance = AuthResourceInstance(
+            resourceType = resourceType.value,
+            resourceCode = pipelineId,
+            parents = listOf(
+                projectInstance
+            )
+        )
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
+            serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
-            resourceCode = pipelineId,
             permission = permission,
-            resourceType = resourceType,
-            serviceCode = pipelineAuthServiceCode
+            resource = pipelineInstance
         )
     }
 
