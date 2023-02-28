@@ -5,9 +5,9 @@
                 class="exception-wrap-item exception-part"
                 type="403"
                 scene="part"
-                :description="title"
                 :class="{ 'exception-gray': isGray }"
             >
+                <div>{{ title }}</div>
                 <bk-button
                     class="btn"
                     theme="primary"
@@ -35,7 +35,8 @@
             title () {
                 const titleMap = {
                     pipeline: this.$t('尚未开启此流水线权限管理功能'),
-                    project: this.$t('尚未开启此项目权限管理功能')
+                    project: this.$t('尚未开启此项目权限管理功能'),
+                    pipeline_group: this.$t('尚未开启此流水线组权限管理功能')
                 }
                 return titleMap[this.resourceType]
             }
@@ -43,9 +44,8 @@
     }
 </script>
 
-<style lang="postcss" scoped>
+<style lang="scss" scoped>
 .group-manage {
-  padding: 20px;
   flex: 1;
 }
 .content-wrapper {

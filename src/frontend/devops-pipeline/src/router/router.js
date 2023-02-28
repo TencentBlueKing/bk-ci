@@ -23,6 +23,7 @@ const pipelinesNewList = () => import(/* webpackChunkName: "pipelinesNewList" */
 const PipelineManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PipelineManageList')
 const PatchManageList = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/PatchManageList')
 const AddPipeline = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/AddPipeline')
+const PipelineListAuth = () => import(/* webpackChunkName: "pipelinesNewList" */'../views/PipelineList/Auth')
 
 const pipelineListEntry = () => import(/* webpackChunkName: "pipelineListEntry" */'../views/PipelineList')
 const pipelinesGroup = () => import(/* webpackChunkName: "pipelinesGroup" */'../views/list/group')
@@ -92,6 +93,11 @@ const routes = [
                         path: 'new',
                         name: 'addPipeline',
                         component: AddPipeline
+                    },
+                    {
+                        path: 'listAuth/:id',
+                        name: 'PipelineListAuth',
+                        component: PipelineListAuth
                     },
                     {
                         path: ':viewId',
