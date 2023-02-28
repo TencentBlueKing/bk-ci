@@ -72,7 +72,8 @@ class ItsmService @Autowired constructor(
         header["bk_app_secret"] = appSecret
         val jsonBody = objectMapper.writeValueAsString(body)
         val body = RequestBody.create(MediaType.parse("application/json"), jsonBody)
-        val headerStr = objectMapper.writeValueAsString(header)
+        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
+        logger.info("headerStr:$headerStr")
         val request = Request.Builder()
             .url(url)
             .post(body)
