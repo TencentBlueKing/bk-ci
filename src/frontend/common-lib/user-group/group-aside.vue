@@ -96,7 +96,7 @@
                 default: () => {}
             },
             showCreateGroup: {
-                type: Boolean,
+                type: Boolean
             }
         },
         data () {

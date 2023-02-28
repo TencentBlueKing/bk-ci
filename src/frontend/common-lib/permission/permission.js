@@ -162,7 +162,7 @@ export const handleNoPermission = (ui, params, ajax, h) => {
                     h(
                         'section',
                         {
-                            class: 'permission-refresh-dialog',
+                            class: 'permission-refresh-dialog'
                         },
                         [
                             h(
