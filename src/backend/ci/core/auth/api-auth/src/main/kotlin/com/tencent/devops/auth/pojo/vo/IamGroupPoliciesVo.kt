@@ -34,7 +34,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("组策略")
 data class IamGroupPoliciesVo(
     @ApiModelProperty("操作")
-    private val action: String,
+    val action: String,
     @ApiModelProperty("操作名")
     val actionName: String,
     @ApiModelProperty("是否该action操作权限")

@@ -34,6 +34,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
@@ -95,6 +96,24 @@ class TxV3AuthPermissionApi @Autowired constructor(
             resourceCode = resourceCode,
             relationResourceType = relationResourceType?.value ?: null
         ).data!!
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null,
+        )
     }
 
     override fun getUserResourceByPermission(
@@ -164,6 +183,16 @@ class TxV3AuthPermissionApi @Autowired constructor(
             projectCode = scopeId,
             action = actions
         ).data ?: emptyMap()
+    }
+
+    override fun filterUserResourceByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return resources.map { it.resourceCode }
     }
 
     override fun addResourcePermissionForUsers(

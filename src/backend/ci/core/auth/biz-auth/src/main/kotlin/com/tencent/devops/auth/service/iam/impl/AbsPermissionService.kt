@@ -10,6 +10,7 @@ import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.AuthUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -83,6 +84,22 @@ open class AbsPermissionService @Autowired constructor(
 
         logger.info("[iam V3] validateUserResourcePermission : instanceDTO = $instanceDTO")
         return authHelper.isAllowed(userId, action, instanceDTO)
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            resourceType = resource.resourceType,
+            relationResourceType = null
+        )
     }
 
     override fun getUserResourceByAction(
