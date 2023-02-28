@@ -49,6 +49,7 @@ import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -86,12 +87,14 @@ class PermissionGradeManagerService @Autowired constructor(
     private val authResourceService: AuthResourceService,
     private val authResourceGroupDao: AuthResourceGroupDao,
     private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val itsmService: ItsmService
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(PermissionGradeManagerService::class.java)
         private const val DEPARTMENT = "department"
+        private const val CANCEL_CREATE_APPLICATION = "WITHDRAW"
     }
 
     @Value("\${itsm.callback.update.url:#{null}}")
@@ -446,11 +449,20 @@ class PermissionGradeManagerService @Autowired constructor(
     /**
      * 用户主动取消申请
      */
-    fun userCancelApplication(projectCode: String): Boolean {
+    fun userCancelApplication(
+        userId: String,
+        projectCode: String
+    ): Boolean {
         val callbackRecord =
             authItsmCallbackDao.getCallbackByEnglishName(dslContext = dslContext, projectCode = projectCode)
                 ?: return true
-        // TODO 调用itsm接口取消申请
+        itsmService.cancelItsmApplication(
+            ItsmCancelApplicationInfo(
+                sn = callbackRecord.sn,
+                operator = userId,
+                actionType = CANCEL_CREATE_APPLICATION
+            )
+        )
         logger.info("cancel create gradle manager|${callbackRecord.callbackId}|${callbackRecord.sn}")
         return iamV2ManagerService.cancelCallbackApplication(callbackRecord.callbackId)
     }

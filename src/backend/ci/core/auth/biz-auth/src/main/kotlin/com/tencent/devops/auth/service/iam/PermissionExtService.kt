@@ -51,6 +51,7 @@ interface PermissionExtService {
     ): Boolean
 
     fun resourceCancelRelation(
+        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String

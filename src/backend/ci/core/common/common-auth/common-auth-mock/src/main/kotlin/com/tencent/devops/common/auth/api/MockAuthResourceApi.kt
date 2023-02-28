@@ -106,6 +106,7 @@ class MockAuthResourceApi : AuthResourceApi {
     ) = Unit
 
     override fun cancelCreateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
@@ -113,6 +114,7 @@ class MockAuthResourceApi : AuthResourceApi {
     ) = Unit
 
     override fun cancelUpdateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,

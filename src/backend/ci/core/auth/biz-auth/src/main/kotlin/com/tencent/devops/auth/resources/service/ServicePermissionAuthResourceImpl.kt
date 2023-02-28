@@ -205,6 +205,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     }
 
     override fun resourceCancelRelation(
+        userId: String,
         token: String,
         type: String?,
         projectCode: String,
@@ -213,6 +214,7 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         return Result(
             permissionExtService.resourceCancelRelation(
+                userId = userId,
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
@@ -226,9 +228,11 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         projectCode: String,
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
-        return Result(permissionGrantService.grantInstancePermission(
-            projectId = projectCode,
-            grantInfo = grantInstance
-        ))
+        return Result(
+            permissionGrantService.grantInstancePermission(
+                projectId = projectCode,
+                grantInfo = grantInstance
+            )
+        )
     }
 }

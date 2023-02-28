@@ -280,6 +280,7 @@ class BkAuthResourceApi constructor(
     }
 
     override fun cancelCreateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,
@@ -287,6 +288,7 @@ class BkAuthResourceApi constructor(
     ) = Unit
 
     override fun cancelUpdateResource(
+        userId: String,
         serviceCode: AuthServiceCode,
         resourceType: AuthResourceType,
         projectCode: String,

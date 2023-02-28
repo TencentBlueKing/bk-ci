@@ -209,6 +209,7 @@ class RbacPermissionResourceService(
     }
 
     override fun resourceCancelRelation(
+        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String
@@ -216,7 +217,10 @@ class RbacPermissionResourceService(
         logger.info("resource cancel relation|$projectCode|$resourceType|$resourceCode")
         // 只有项目才可以取消
         if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.userCancelApplication(projectCode)
+            permissionGradeManagerService.userCancelApplication(
+                userId = userId,
+                projectCode = projectCode
+            )
         }
         return true
     }

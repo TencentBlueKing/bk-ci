@@ -46,11 +46,13 @@ import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
+import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
@@ -184,5 +186,15 @@ class RbacAuthConfiguration {
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
         iamConfiguration = iamConfiguration
+    )
+
+    @Bean
+    @Primary
+    fun rbacPermissionResourceCallbackService(
+        client: Client,
+        authResourceService: AuthResourceService
+    ) = RbacPermissionResourceCallbackService(
+        client = client,
+        authResourceService = authResourceService
     )
 }
