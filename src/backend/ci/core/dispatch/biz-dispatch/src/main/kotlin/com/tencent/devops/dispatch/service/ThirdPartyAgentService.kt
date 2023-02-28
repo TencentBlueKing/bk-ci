@@ -193,11 +193,11 @@ class ThirdPartyAgentService @Autowired constructor(
                 // 判断任务是否符合接取要求
                 if (buildType != BuildJobType.ALL) {
                     if (buildType == BuildJobType.DOCKER && build.dockerInfo == null) {
-                        logger.debug("job is binary but type $buildType not support")
+                        logger.debug("job ${build.buildId}|${build.vmSeqId} is binary but type $buildType not support")
                         return AgentResult(AgentStatus.IMPORT_OK, null)
                     }
                     if (buildType == BuildJobType.BINARY && build.dockerInfo != null) {
-                        logger.debug("job is docker but type $buildType not support")
+                        logger.debug("job ${build.buildId}|${build.vmSeqId} is docker but type $buildType not support")
                         return AgentResult(AgentStatus.IMPORT_OK, null)
                     }
                 }
