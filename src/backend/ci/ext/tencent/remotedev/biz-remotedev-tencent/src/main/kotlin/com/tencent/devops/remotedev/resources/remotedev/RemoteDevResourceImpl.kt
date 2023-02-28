@@ -33,9 +33,9 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.remotedev.RemoteDevResource
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
-import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import com.tencent.devops.remotedev.utils.RsaUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -44,7 +44,7 @@ import java.util.Base64
 
 @RestResource
 class RemoteDevResourceImpl @Autowired constructor(
-    private val gitTransferService: GitTransferService,
+    private val tgitTransferService: TGitTransferService,
     private val redisHeartBeat: RedisHeartBeat,
     private val workspaceService: WorkspaceService
 ) : RemoteDevResource {
@@ -65,7 +65,7 @@ class RemoteDevResourceImpl @Autowired constructor(
         val rsaPublicKey = RsaUtil.generatePublicKey(Base64.getDecoder().decode(key))
 
         // TODO 根据 workspaceName 查找 git 平台以区分不同的oauth
-        val oauth = gitTransferService.getAndCheckOauthToken(userId)
+        val oauth = tgitTransferService.getAndCheckOauthToken(userId)
         return Result(
             RemoteDevOauthBack(
                 host = workspaceService.getWorkspaceHost(workspaceName),

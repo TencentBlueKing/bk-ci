@@ -39,10 +39,10 @@ import com.tencent.devops.remotedev.pojo.WorkspaceDetail
 import com.tencent.devops.remotedev.pojo.WorkspaceOpHistory
 import com.tencent.devops.remotedev.pojo.WorkspaceResponse
 import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
-import com.tencent.devops.remotedev.service.GitTransferService
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +50,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserWorkspaceResourceImpl @Autowired constructor(
-    private val gitTransferService: GitTransferService,
+    private val tgitTransferService: TGitTransferService,
     private val workspaceService: WorkspaceService,
     private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService
@@ -155,7 +155,7 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         // 权限校验？
-        return gitTransferService.isOAuth(
+        return tgitTransferService.isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,
