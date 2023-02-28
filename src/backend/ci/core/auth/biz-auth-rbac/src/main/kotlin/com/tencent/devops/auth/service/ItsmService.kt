@@ -86,13 +86,16 @@ class ItsmService @Autowired constructor(
         url: String,
         request: Request
     ): ItsmResponseDTO {
+        logger.info("doRequest:responseDTO($request)")
         OkhttpUtils.doHttp(request).use {
             if (!it.isSuccessful) {
                 logger.warn("itsm request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("itsm request failed, response:($it)")
             }
+            logger.info("doRequest:responseDTO($it)")
             val responseStr = it.body()!!.string()
             val responseDTO = objectMapper.readValue<ItsmResponseDTO>(responseStr)
+            logger.info("doRequest:responseDTO($responseDTO)")
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
                 logger.warn("itsm request failed, url:($url)|response:($it)")
