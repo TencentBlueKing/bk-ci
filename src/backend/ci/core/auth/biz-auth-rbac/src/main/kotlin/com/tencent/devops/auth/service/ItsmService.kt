@@ -29,6 +29,9 @@ class ItsmService @Autowired constructor(
     @Value("\${itsm.application.cancel.url:#{null}}")
     private val itsmCancelApplicationUrl: String = ""
 
+    @Value("\${itsm.token.verify.url:#{null}}")
+    private val itsmVerifyTokenUrl: String = ""
+
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
         val itsmResponseDTO = doHttpPost(
             url = itsmCancelApplicationUrl,
@@ -47,7 +50,7 @@ class ItsmService @Autowired constructor(
 
     fun verifyItsmToken(token: String) {
         val itsmResponseDTO = doHttpPost(
-            url = itsmCancelApplicationUrl,
+            url = itsmVerifyTokenUrl,
             body = Pair("token", token)
         )
         val itsmApiResData = itsmResponseDTO.data as Map<String, String>
