@@ -40,8 +40,8 @@ class ServiceBuildApiPermissionResourceImpl @Autowired constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val pipelinePermissionService: PipelinePermissionService
 ) : ServiceBuildApiPermissionResource {
-    override fun getTriggerUser(projectId: String, buildId: String): Result<String?> {
-        return Result(pipelineRuntimeService.getTriggerUser(projectId, buildId))
+    override fun getStartUser(projectId: String, buildId: String): Result<String?> {
+        return Result(pipelineRuntimeService.getStartUser(projectId, buildId))
     }
 
     override fun verifyApi(

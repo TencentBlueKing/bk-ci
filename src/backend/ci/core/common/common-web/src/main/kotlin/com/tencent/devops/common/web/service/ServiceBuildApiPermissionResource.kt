@@ -49,15 +49,15 @@ import javax.ws.rs.core.MediaType
 interface ServiceBuildApiPermissionResource {
 
     /**
-     * 验证api调用是否越权
+     * 获取流水线启动用户
      *
      * @param projectId 项目编码
      * @param buildId 构建ID
      * @return 触发用户ID
      */
-    @Path("triggerUser/{projectId}/{buildId}/get")
+    @Path("startUser/{projectId}/{buildId}/get")
     @GET
-    fun getTriggerUser(
+    fun getStartUser(
         @PathParam("projectId")
         projectId: String,
         @PathParam("buildId")

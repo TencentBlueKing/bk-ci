@@ -214,9 +214,9 @@ class PipelineBuildDao {
         }
     }
 
-    fun getTriggerUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
+    fun getStartUser(dslContext: DSLContext, projectId: String, buildId: String): String? {
         with(T_PIPELINE_BUILD_HISTORY) {
-            return dslContext.select(TRIGGER_USER)
+            return dslContext.select(START_USER)
                 .from(this)
                 .where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId)))
                 .fetchOne(0, String::class.java)
