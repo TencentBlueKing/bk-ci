@@ -27,7 +27,7 @@
 
 package com.tencent.devops.websocket.servcie
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
@@ -36,17 +36,19 @@ import com.tencent.devops.websocket.keys.WebsocketKeys
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.util.concurrent.TimeUnit
 
 @Service
 class TencentProjectProxyServiceImpl @Autowired constructor(
     private val client: Client,
     private val redisOperation: RedisOperation,
-    private val objectMapper: ObjectMapper,
     private val bkTag: BkTag
 ) : ProjectProxyService {
+
+    @Suppress("ReturnCount")
     override fun checkProject(projectId: String, userId: String): Boolean {
         val tag = bkTag.getLocalTag()
-        if (tag.isNotBlank() && tag.contains(IGNORETAG)) {
+        if (tag.isNotBlank() && tag.contains(IGNORE_TAG)) {
             return true
         }
 
@@ -65,10 +67,11 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
             projectList?.map {
                 privilegeProjectCodeList.add(it.projectCode)
             }
+
             redisOperation.set(
-                redisKey,
-                objectMapper.writeValueAsString(privilegeProjectCodeList),
-                86400
+                key = redisKey,
+                value = JsonUtil.toJson(privilegeProjectCodeList, formatted = false),
+                expiredInSecond = ONE_DAY
             )
 
             return if (privilegeProjectCodeList.contains(projectId)) {
@@ -80,15 +83,16 @@ class TencentProjectProxyServiceImpl @Autowired constructor(
                 )
                 false
             }
-        } catch (e: Exception) {
-            logger.error("checkProject fail,message:{}", e)
+        } catch (ignore: Exception) {
+            logger.warn("checkProject fail,message:", ignore)
             // 此处为了解耦，假设调用超时，默认还是做changePage的操作
             return true
         }
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(TencentProjectProxyServiceImpl::class.java)
-        const val IGNORETAG = "gitci"
+        private val logger = LoggerFactory.getLogger(TencentProjectProxyServiceImpl::class.java)
+        private const val IGNORE_TAG = "gitci"
+        private val ONE_DAY: Long = TimeUnit.DAYS.toSeconds(1)
     }
 }

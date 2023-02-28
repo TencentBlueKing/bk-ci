@@ -27,12 +27,40 @@
 
 package com.tencent.devops.scm.utils
 
-import java.net.SocketTimeoutException
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.util.HttpRetryUtils
+import okhttp3.Request
 import org.slf4j.LoggerFactory
+import java.net.HttpRetryException
+import java.net.SocketTimeoutException
 
 object RetryUtils {
 
     private val logger = LoggerFactory.getLogger(RetryUtils::class.java)
+
+    private val RETRY_CODE = listOf(429)
+
+    fun doRetryHttp(request: Request): okhttp3.Response {
+        return HttpRetryUtils.retry(retryPeriodMills = 2000) {
+            val response = OkhttpUtils.doHttp(request)
+            if (RETRY_CODE.contains(response.code)) {
+                logger.info("request will be retry |${response.code}|${request.url.toUrl()}")
+                throw HttpRetryException(response.message, response.code)
+            }
+            response
+        }
+    }
+
+    fun doRetryLongHttp(request: Request): okhttp3.Response {
+        return HttpRetryUtils.retry(retryPeriodMills = 2000) {
+            val response = OkhttpUtils.doLongHttp(request)
+            if (RETRY_CODE.contains(response.code)) {
+                logger.info("request will be retry |${response.code}|${request.url.toUrl()}")
+                throw HttpRetryException(response.message, response.code)
+            }
+            response
+        }
+    }
 
     fun <T> retryFun(
         funName: String,

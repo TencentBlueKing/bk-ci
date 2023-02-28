@@ -115,12 +115,7 @@ class CountService @Autowired constructor(
             projectUserRefreshService.synUserInfo(userDeptDetail, userId)
         }
 
-        val userDailyFirstAndLastLoginRecord = userDailyFirstAndLastLoginDao.get(dslContext, userId, date)
-        if (userDailyFirstAndLastLoginRecord == null) {
-            userDailyFirstAndLastLoginDao.create(dslContext, userId, date, time, time)
-        } else {
-            userDailyFirstAndLastLoginDao.update(dslContext, userDailyFirstAndLastLoginRecord.id, time)
-        }
+        userDailyFirstAndLastLoginDao.upsert(dslContext, userId, date, firstLoginTime = time, lastLoginTime = time)
 
         userDailyLoginDao.create(dslContext, userId, os, ip)
     }

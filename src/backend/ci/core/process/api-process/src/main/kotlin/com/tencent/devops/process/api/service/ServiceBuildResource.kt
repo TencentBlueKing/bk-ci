@@ -78,14 +78,29 @@ import javax.ws.rs.core.MediaType
 interface ServiceBuildResource {
     @ApiOperation("通过buildId获取流水线pipelineId")
     @GET
-    @Path("/getPipelineIdFromBuildId")
+    @Path("/{projectId}/get_pipeline_id_from_build_id")
     fun getPipelineIdFromBuildId(
         @ApiParam(value = "项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
+    ): Result<String>
+
+    @ApiOperation("通过buildNumber 和 pipelineId 获取流水线buildId")
+    @GET
+    @Path("/{projectId}/get_build_id_from_build_number")
+    fun getBuildIdFromBuildNumber(
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建号", required = true)
+        @QueryParam("buildNumber")
+        buildNumber: Int
     ): Result<String>
 
     @ApiOperation("Notify process that the vm startup for the build")

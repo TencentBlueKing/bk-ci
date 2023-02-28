@@ -44,6 +44,7 @@ import sun.misc.BASE64Decoder
 import java.util.Random
 
 @Service
+@Suppress("ALL")
 class TOF4Service @Autowired constructor(
     private val objectMapper: ObjectMapper
 ) {
@@ -75,10 +76,7 @@ class TOF4Service @Autowired constructor(
 
         val requestBody = RequestBody.create(CONTENT_TYPE.toMediaTypeOrNull(), body)
         val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
-        if (headers == null) {
-            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
-            return TOFResult("TOF error, generate signature failure")
-        }
+            ?: return TOFResult("TOF error, generate signature failure")
         logger.info("[$url] Start to request tof with body size: ${body.length}")
 
         val finalUrl = tofConfig["host"]!! + url
@@ -105,8 +103,11 @@ class TOF4Service @Autowired constructor(
 
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("[id--${headers["timestamp"]}]request >>>> $body")
-                logger.error("[id--${headers["timestamp"]}]response >>>>$responseBody")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
 
             return result
@@ -130,10 +131,7 @@ class TOF4Service @Autowired constructor(
         }
 
         val headers = generateHeaders(tofConfig["paasId"]!!, tofConfig["token"]!!)
-        if (headers == null) {
-            logger.error(String.format("TOF error, generate signature failure, url: %s", url))
-            return TOFResult("TOF error, generate signature failure")
-        }
+            ?: return TOFResult("TOF error, generate signature failure")
 
         val params = mapOf(
             "EmailType" to postData.emailType.toString(),
@@ -195,7 +193,11 @@ class TOF4Service @Autowired constructor(
 
             val result = objectMapper.readValue(responseBody, TOFResult::class.java)
             if (result.Ret != 0 || result.ErrCode != 0) {
-                logger.error("post email formData fail: $result")
+                if (result.ErrCode == 10002) { // 接收者验证失败
+                    logger.info("post email formData fail: $result")
+                } else {
+                    logger.error("post email formData fail: $result")
+                }
             }
 
             return result
