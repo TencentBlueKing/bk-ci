@@ -51,9 +51,7 @@ class RemoteDevSettingDao {
                 USER_ID,
                 DEFAULT_SHELL,
                 BASIC_SETTING,
-                GIT_ATTACHED,
                 TAPD_ATTACHED,
-                GITHUB_ATTACHED,
                 ENVS_FOR_VARIABLE,
                 DOTFILE_REPO
             )
@@ -61,17 +59,13 @@ class RemoteDevSettingDao {
                     userId,
                     setting.defaultShell,
                     JsonUtil.toJson(setting.basicSetting, false),
-                    ByteUtils.bool2Byte(setting.gitAttached),
                     ByteUtils.bool2Byte(setting.tapdAttached),
-                    ByteUtils.bool2Byte(setting.githubAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo
                 ).onDuplicateKeyUpdate()
                 .set(DEFAULT_SHELL, setting.defaultShell)
                 .set(BASIC_SETTING, JsonUtil.toJson(setting.basicSetting, false))
-                .set(GIT_ATTACHED, ByteUtils.bool2Byte(setting.gitAttached))
                 .set(TAPD_ATTACHED, ByteUtils.bool2Byte(setting.tapdAttached))
-                .set(GITHUB_ATTACHED, ByteUtils.bool2Byte(setting.githubAttached))
                 .set(ENVS_FOR_VARIABLE, JsonUtil.toJson(setting.envsForVariable, false))
                 .set(DOTFILE_REPO, setting.dotfileRepo)
                 .set(UPDATE_TIME, LocalDateTime.now())
@@ -91,9 +85,9 @@ class RemoteDevSettingDao {
                         it.basicSetting,
                         object : TypeReference<Map<String, String>>() {}
                     ) ?: emptyMap(),
-                    gitAttached = ByteUtils.byte2Bool(it.gitAttached),
+                    gitAttached = false,
                     tapdAttached = ByteUtils.byte2Bool(it.tapdAttached),
-                    githubAttached = ByteUtils.byte2Bool(it.githubAttached),
+                    githubAttached = false,
                     envsForVariable = JsonUtil.toOrNull(
                         it.envsForVariable,
                         object : TypeReference<Map<String, String>>() {}
@@ -157,9 +151,7 @@ class RemoteDevSettingDao {
                 USER_ID,
                 DEFAULT_SHELL,
                 BASIC_SETTING,
-                GIT_ATTACHED,
                 TAPD_ATTACHED,
-                GITHUB_ATTACHED,
                 ENVS_FOR_VARIABLE,
                 DOTFILE_REPO,
                 WORKSPACE_MAX_RUNNING_COUNT,
@@ -170,9 +162,7 @@ class RemoteDevSettingDao {
                     opSetting.userId,
                     setting.defaultShell,
                     JsonUtil.toJson(setting.basicSetting, false),
-                    ByteUtils.bool2Byte(setting.gitAttached),
                     ByteUtils.bool2Byte(setting.tapdAttached),
-                    ByteUtils.bool2Byte(setting.githubAttached),
                     JsonUtil.toJson(setting.envsForVariable, false),
                     setting.dotfileRepo,
                     opSetting.wsMaxRunningCount,

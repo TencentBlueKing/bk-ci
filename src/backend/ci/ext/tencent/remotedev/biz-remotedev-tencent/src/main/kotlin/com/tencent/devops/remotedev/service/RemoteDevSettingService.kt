@@ -31,6 +31,8 @@ import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.RemoteDevSettings
+import com.tencent.devops.remotedev.service.transfer.GithubTransferService
+import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import org.apache.commons.codec.digest.DigestUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -41,7 +43,9 @@ import org.springframework.stereotype.Service
 class RemoteDevSettingService @Autowired constructor(
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
-    private val remoteDevFileDao: RemoteDevFileDao
+    private val remoteDevFileDao: RemoteDevFileDao,
+    private val tGitTransferService: TGitTransferService,
+    private val githubTransferService: GithubTransferService
 ) {
 
     companion object {
@@ -52,7 +56,11 @@ class RemoteDevSettingService @Autowired constructor(
         logger.info("$userId get remote dev setting")
         val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId) ?: return RemoteDevSettings()
 
-        return setting.copy(envsForFile = remoteDevFileDao.fetchFile(dslContext, userId))
+        return setting.copy(
+            envsForFile = remoteDevFileDao.fetchFile(dslContext, userId),
+            gitAttached = kotlin.runCatching { tGitTransferService.getAndCheckOauthToken(userId) }.isSuccess,
+            githubAttached = kotlin.runCatching { githubTransferService.getAndCheckOauthToken(userId) }.isSuccess
+        )
     }
 
     fun updateRemoteDevSettings(userId: String, setting: RemoteDevSettings): Boolean {

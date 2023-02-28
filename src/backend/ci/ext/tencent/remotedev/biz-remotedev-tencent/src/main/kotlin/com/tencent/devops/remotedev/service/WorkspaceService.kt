@@ -80,6 +80,7 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.transfer.TGitTransferService
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
@@ -108,7 +109,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val gitTransferService: GitTransferService,
+    private val gitTransferService: TGitTransferService,
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
     private val client: Client,
@@ -269,7 +270,7 @@ class WorkspaceService @Autowired constructor(
                 branch = workspace.branch,
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
-                gitOAuth = gitTransferService.getAndCheckOauthToken(userId).accessToken,
+                gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
                 settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
             )
         )

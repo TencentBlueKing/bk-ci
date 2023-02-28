@@ -15,11 +15,12 @@ import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.enums.RepoAuthType
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.git.GitUserInfo
-import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.stereotype.Service
 import java.net.URLEncoder
 
+@Service
 class TGitTransferService @Autowired constructor(
     private val client: Client
 ) : GitTransferService {
@@ -47,7 +48,7 @@ class TGitTransferService @Autowired constructor(
         minAccessLevel: GitAccessLevelEnum?
     ): List<RemoteDevRepository> {
         return client.get(ServiceGitResource::class).getGitCodeProjectList(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
+            accessToken = getAndCheckOauthToken(userId),
             page = page,
             pageSize = pageSize,
             search = search,
@@ -66,7 +67,7 @@ class TGitTransferService @Autowired constructor(
         search: String?
     ): List<String>? {
         return client.get(ServiceGitResource::class).getBranch(
-            accessToken = getAndCheckOauthToken(userId).accessToken,
+            accessToken = getAndCheckOauthToken(userId),
             userId = userId,
             repository = URLEncoder.encode(pathWithNamespace, "UTF-8"),
             page = page,
@@ -77,7 +78,7 @@ class TGitTransferService @Autowired constructor(
 
     override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {
         return client.get(ServiceGitResource::class).getGitFileContent(
-            token = getAndCheckOauthToken(userId).accessToken,
+            token = getAndCheckOauthToken(userId),
             authType = RepoAuthType.OAUTH,
             repoName = URLEncoder.encode(pathWithNamespace, "UTF-8"),
             ref = ref,
@@ -95,7 +96,7 @@ class TGitTransferService @Autowired constructor(
         return client.get(ServiceGitResource::class).getGitFileTree(
             gitProjectId = URLEncoder.encode(pathWithNamespace, "UTF-8"),
             path = path ?: "",
-            token = getAndCheckOauthToken(userId).accessToken,
+            token = getAndCheckOauthToken(userId),
             ref = ref,
             recursive = recursive,
             tokenType = TokenTypeEnum.OAUTH
@@ -110,15 +111,16 @@ class TGitTransferService @Autowired constructor(
 
     override fun getAndCheckOauthToken(
         userId: String
-    ): GitToken {
-        return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
-        )
+    ): String {
+        return client.get(ServiceOauthResource::class).gitGet(userId).data?.accessToken
+            ?: throw OauthForbiddenException(
+                message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            )
     }
 
     override fun getUserInfo(userId: String): GitUserInfo {
         return client.get(ServiceGitResource::class).getUserInfoByToken(
-            token = getAndCheckOauthToken(userId).accessToken,
+            token = getAndCheckOauthToken(userId),
             tokenType = TokenTypeEnum.OAUTH
         ).data!!
     }

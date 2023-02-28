@@ -91,7 +91,7 @@ interface GitTransferService {
     /**
      * 获得用户oauth
      */
-    fun getAndCheckOauthToken(userId: String): GitToken
+    fun getAndCheckOauthToken(userId: String): String
 
     /**
      * 获取用户git信息

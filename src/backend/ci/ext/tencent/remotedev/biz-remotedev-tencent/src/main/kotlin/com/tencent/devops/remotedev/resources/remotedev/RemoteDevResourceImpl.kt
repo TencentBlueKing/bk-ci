@@ -69,7 +69,7 @@ class RemoteDevResourceImpl @Autowired constructor(
         return Result(
             RemoteDevOauthBack(
                 host = workspaceService.getWorkspaceHost(workspaceName),
-                value = RsaUtil.rsaEncrypt(oauth.accessToken, rsaPublicKey)
+                value = RsaUtil.rsaEncrypt(oauth, rsaPublicKey)
             )
         )
     }
