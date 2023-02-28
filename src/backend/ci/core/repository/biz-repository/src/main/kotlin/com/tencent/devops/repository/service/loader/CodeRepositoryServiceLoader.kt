@@ -25,38 +25,18 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.repository.service.loader
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.repository.service.code.CodeRepositoryService
+import org.springframework.beans.factory.config.BeanPostProcessor
+import org.springframework.stereotype.Service
 
-@ApiModel("代码库模型-Code平台P4")
-data class CodeP4Repository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("凭据id", required = true)
-    override val credentialId: String,
-    @ApiModelProperty("项目名称(与aliasName相同)", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String,
-    @ApiModelProperty("项目id", required = true)
-    override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
-) : Repository {
-
-    companion object {
-        const val classType = "codeP4"
-    }
-
-    override fun getStartPrefix(): String {
-        return ""
-    }
-
-    override fun isLegal(): Boolean {
-        return true
+@Service
+class CodeRepositoryServiceLoader : BeanPostProcessor {
+    override fun postProcessAfterInitialization(bean: Any, beanName: String): Any {
+        if (bean is CodeRepositoryService<*>) {
+            CodeRepositoryServiceRegistrar.register(bean)
+        }
+        return bean
     }
 }

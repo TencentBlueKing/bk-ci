@@ -24,39 +24,36 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.repository.service.code
 
-package com.tencent.devops.repository.pojo
+import com.tencent.devops.model.repository.tables.records.TRepositoryRecord
+import com.tencent.devops.repository.pojo.Repository
+import com.tencent.devops.repository.pojo.auth.RepoAuthInfo
 
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+interface CodeRepositoryService<T> {
 
-@ApiModel("代码库模型-Code平台P4")
-data class CodeP4Repository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("凭据id", required = true)
-    override val credentialId: String,
-    @ApiModelProperty("项目名称(与aliasName相同)", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String,
-    @ApiModelProperty("项目id", required = true)
-    override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
-) : Repository {
+    /**
+     * 代码库类型
+     */
+    fun repositoryType(): String
 
-    companion object {
-        const val classType = "codeP4"
-    }
+    /**
+     * 创建代码库
+     */
+    fun create(projectId: String, userId: String, repository: T): Long
 
-    override fun getStartPrefix(): String {
-        return ""
-    }
+    /**
+     * 编辑代码库
+     */
+    fun edit(userId: String, projectId: String, repositoryHashId: String, repository: T, record: TRepositoryRecord)
 
-    override fun isLegal(): Boolean {
-        return true
-    }
+    /**
+     * 代码库组成
+     */
+    fun compose(repository: TRepositoryRecord): Repository
+
+    /**
+     * 获取授权信息
+     */
+    fun getAuthInfo(repositoryIds: List<Long>): Map<Long, RepoAuthInfo>
 }
