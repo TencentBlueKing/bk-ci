@@ -77,9 +77,13 @@ object BuildTimeCostUtils {
         val startTime = startTime ?: return BuildRecordTimeCost()
         val endTime = endTime ?: LocalDateTime.now()
         val totalCost = Duration.between(startTime, endTime).toMillis()
-        var containerExecuteCost = emptyList<Pair<Long, Long>>()
-        var containerWaitCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
-        var containerQueueCost = listOf(Pair(startTime.timestampmilli(), endTime.timestampmilli()))
+        var containerExecuteCost = emptyList<BuildRecordTimeLine.Moment>()
+        var containerWaitCost = listOf(
+            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
+        )
+        var containerQueueCost = listOf(
+            BuildRecordTimeLine.Moment(startTime.timestampmilli(), endTime.timestampmilli())
+        )
         containerPairs.forEach { record ->
             val containerTimeLine = JsonUtil.anyTo(
                 record.containerVar[BuildRecordTimeLine::class.java.simpleName] ?: return@forEach,
@@ -92,15 +96,15 @@ object BuildTimeCostUtils {
             // 排队时间取交集
             containerQueueCost = intersectionTimeLine(containerQueueCost, containerTimeLine.queueCostMoments)
         }
-        val executeCost = containerExecuteCost.sumOf { it.second - it.first }
-        val queueCost = containerQueueCost.sumOf { it.second - it.first }
+        val executeCost = containerExecuteCost.sumOf { it.endTime - it.startTime }
+        val queueCost = containerQueueCost.sumOf { it.endTime - it.startTime }
         val waitCost = timestamps.toList().sumOf { (type, time) ->
             if (!type.stageCheckWait()) return@sumOf 0L
             logWhenNull(
                 time, "$buildId|STAGE|$stageId|${type.name}"
             )
             return@sumOf time.between()
-        } + containerWaitCost.sumOf { it.second - it.first }
+        } + containerWaitCost.sumOf { it.endTime - it.startTime }
         val systemCost = totalCost - executeCost - queueCost - waitCost
         return BuildRecordTimeCost(
             totalCost = totalCost,
@@ -179,7 +183,7 @@ object BuildTimeCostUtils {
             timeLine.executeCostMoments.addAll(
                 differenceTimeLine(
                     listOf(
-                        Pair(
+                        BuildRecordTimeLine.Moment(
                             startTime.timestampmilli(),
                             endTime.timestampmilli()
                         )
@@ -199,23 +203,31 @@ object BuildTimeCostUtils {
     /**
      * 区间求差集 left - right
      */
-    fun differenceTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
+    fun differenceTimeLine(
+        left: List<BuildRecordTimeLine.Moment>,
+        right: List<BuildRecordTimeLine.Moment>
+    ): List<BuildRecordTimeLine.Moment> {
         val line: MutableList<Pair<Long, Char>> = mutableListOf()
-        val ans: MutableList<Pair<Long, Long>> = mutableListOf()
+        val ans: MutableList<BuildRecordTimeLine.Moment> = mutableListOf()
         left.forEach {
-            line.add(Pair(it.first, 'L'))
-            line.add(Pair(it.second, 'L'))
+            line.add(Pair(it.startTime, 'L'))
+            line.add(Pair(it.endTime, 'L'))
         }
         right.forEach {
-            line.add(Pair(it.first, 'R'))
-            line.add(Pair(it.second, 'R'))
+            line.add(Pair(it.startTime, 'R'))
+            line.add(Pair(it.endTime, 'R'))
         }
         line.sortBy { it.first }
         var cnt = true
         var index = 0
         while (index < line.size) {
             if (line[index].second == 'R') cnt = !cnt
-            if (cnt && index < line.size - 1) ans.add(Pair(line[index].first, line[index + 1].first))
+            if (cnt && index < line.size - 1) ans.add(
+                BuildRecordTimeLine.Moment(
+                    line[index].first,
+                    line[index + 1].first
+                )
+            )
             index++
         }
         return ans
@@ -224,19 +236,22 @@ object BuildTimeCostUtils {
     /**
      * 区间求交集 left ∩ right
      */
-    fun intersectionTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
-        val ans: MutableList<Pair<Long, Long>> = mutableListOf()
+    fun intersectionTimeLine(
+        left: List<BuildRecordTimeLine.Moment>,
+        right: List<BuildRecordTimeLine.Moment>
+    ): List<BuildRecordTimeLine.Moment> {
+        val ans: MutableList<BuildRecordTimeLine.Moment> = mutableListOf()
         var i = 0
         var j = 0
         while (i < left.size && j < right.size) {
             // 我们来检查A[i]是否与B[j]相交。
             // lo -- 相交的起始点
             // hi -- 交点的端点
-            val lo = left[i].first.coerceAtLeast(right[j].first)
-            val hi = left[i].second.coerceAtMost(right[j].second)
-            if (lo <= hi) ans.add(Pair(lo, hi))
+            val lo = left[i].startTime.coerceAtLeast(right[j].startTime)
+            val hi = left[i].endTime.coerceAtMost(right[j].endTime)
+            if (lo <= hi) ans.add(BuildRecordTimeLine.Moment(lo, hi))
             // 移除具有最小端点的区间
-            if (left[i].second < right[j].second) i++ else j++
+            if (left[i].endTime < right[j].endTime) i++ else j++
         }
         return ans
     }
@@ -244,17 +259,20 @@ object BuildTimeCostUtils {
     /**
      * 区间求并集 left ∪ right
      */
-    fun mergeTimeLine(left: List<Pair<Long, Long>>, right: List<Pair<Long, Long>>): List<Pair<Long, Long>> {
-        val intervals = left.plus(right).sortedBy { it.first }
-        val res = mutableListOf<Pair<Long, Long>>()
+    fun mergeTimeLine(
+        left: List<BuildRecordTimeLine.Moment>,
+        right: List<BuildRecordTimeLine.Moment>
+    ): List<BuildRecordTimeLine.Moment> {
+        val intervals = left.plus(right).sortedBy { it.startTime }
+        val res = mutableListOf<BuildRecordTimeLine.Moment>()
         for (interval in intervals) {
             // 如果列表为空,或者当前区间与上一区间不重合,直接添加
-            if (res.size == 0 || res[res.size - 1].second < interval.first) {
+            if (res.size == 0 || res[res.size - 1].endTime < interval.startTime) {
                 res.add(interval)
             } else {
                 // 否则的话,我们就可以与上一区间进行合并
                 val m = res.removeLast()
-                res.add(Pair(m.first, m.second.coerceAtLeast(interval.second)))
+                res.add(BuildRecordTimeLine.Moment(m.startTime, m.endTime.coerceAtLeast(interval.endTime)))
             }
         }
         return res
