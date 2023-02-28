@@ -31,13 +31,11 @@ import com.tencent.devops.model.notify.tables.TCommonNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TEmailsNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TRtxNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWechatNotifyMessageTemplate
-import com.tencent.devops.model.notify.tables.TWeworkGroupNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.TWeworkNotifyMessageTemplate
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TEmailsNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TRtxNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWechatNotifyMessageTemplateRecord
-import com.tencent.devops.model.notify.tables.records.TWeworkGroupNotifyMessageTemplateRecord
 import com.tencent.devops.model.notify.tables.records.TWeworkNotifyMessageTemplateRecord
 import com.tencent.devops.notify.pojo.NotifyTemplateMessage
 import com.tencent.devops.notify.pojo.NotifyTemplateMessageRequest
