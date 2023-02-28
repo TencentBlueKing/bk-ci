@@ -68,9 +68,9 @@ class ItsmService @Autowired constructor(
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
+        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
         val jsonBody = objectMapper.writeValueAsString(body)
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
-        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
         logger.info("headerStr:$headerStr")
         val request = Request.Builder()
             .url(url)
