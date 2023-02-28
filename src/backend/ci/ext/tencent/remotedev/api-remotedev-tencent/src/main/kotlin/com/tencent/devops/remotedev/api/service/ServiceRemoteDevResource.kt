@@ -6,8 +6,8 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
+import javax.ws.rs.PUT
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceRemoteDevResource {
     @ApiOperation("更新client对应环境的稳定版本")
-    @GET
+    @PUT
     @Path("/updateClientVersion")
     fun updateClientVersion(
         @ApiParam("userId", required = true)

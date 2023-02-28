@@ -132,7 +132,7 @@ class ProjectPaasCCService @Autowired constructor(
 
         if (result.code.toInt() != 0) {
             logger.warn("Fail to update the project in bcs with response $responseContent")
-            throw OperationException("更新bcs的项目信息失败")
+            throw OperationException("更新bcs的项目信息失败: $responseContent")
         }
     }
 
@@ -162,10 +162,10 @@ class ProjectPaasCCService @Autowired constructor(
         }
     }
 
+    @Suppress("MagicNumber")
     fun getPaasCCProjectInfo(projectCode: String, accessToken: String): BcsProjectInfo? {
         logger.info("get the bsc projectInfo $projectCode with token $accessToken")
         val url = "$ccUrl/$projectCode"
-        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val request = Request.Builder().url(url)
             .addHeader("Authorization", "Bearer $bcsToken")
             .get().build()
@@ -198,6 +198,6 @@ class ProjectPaasCCService @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ProjectPaasCCService::class.java)
+        private val logger = LoggerFactory.getLogger(ProjectPaasCCService::class.java)
     }
 }
