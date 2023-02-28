@@ -33,8 +33,8 @@ import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.sdk.enums.HttpStatus
 import com.tencent.devops.common.sdk.exception.SdkException
 import com.tencent.devops.common.sdk.exception.SdkNotFoundException
-import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -91,7 +91,7 @@ object SdkHttpUtil {
     fun build(url: String, headers: Map<String, String>? = null): Request.Builder {
         val builder = Request.Builder().url(url)
         if (headers != null) {
-            builder.headers(Headers.of(headers))
+            builder.headers(headers.toHeaders())
         }
         return builder
     }
@@ -99,16 +99,16 @@ object SdkHttpUtil {
     fun request(request: Request): String {
         val response = okHttpClient.newCall(request).execute()
         return response.use { resp ->
-            val responseContent = resp.body()?.string() ?: ""
+            val responseContent = resp.body?.string() ?: ""
             if (!resp.isSuccessful) {
                 logger.error(
-                    "Fail to request(${request.url()})" +
-                        " with code ${resp.code()} message ${resp.message()} and response $responseContent"
+                    "Fail to request(${request.url})" +
+                        " with code ${resp.code} message ${resp.message} and response $responseContent"
                 )
-                if (resp.code() == HttpStatus.NOT_FOUND.statusCode) {
+                if (resp.code == HttpStatus.NOT_FOUND.statusCode) {
                     throw SdkNotFoundException(errMsg = responseContent)
                 }
-                throw SdkException(errCode = resp.code(), errMsg = responseContent)
+                throw SdkException(errCode = resp.code, errMsg = responseContent)
             }
             responseContent
         }
@@ -118,7 +118,7 @@ object SdkHttpUtil {
      * 生成post请求体对象
      */
     fun generaRequestBody(jsonStr: String, mediaType: String = "application/json"): RequestBody {
-        return RequestBody.create(MediaType.parse(mediaType), jsonStr)
+        return RequestBody.create(mediaType.toMediaTypeOrNull(), jsonStr)
     }
 
     /**

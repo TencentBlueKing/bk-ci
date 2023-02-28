@@ -27,7 +27,7 @@
 
 package com.tencent.devops.stream.trigger.git.pojo.tgit
 
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
 
 data class TGitProjectInfo(

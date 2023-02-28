@@ -37,6 +37,12 @@ backendImage:
   tag: __image_backend_tag__
   pullPolicy: IfNotPresent 
   pullSecrets: []
+frontendImage:
+  registry: __image_registry__
+  repository: bkci-frontend
+  tag: __image_frontend_tag__
+  pullPolicy: IfNotPresent 
+  pullSecrets: []
 
 # 日志采集配置
 bkLogConfig:
@@ -61,7 +67,7 @@ serviceMonitor:
 init:
   sql: true
   iam: true
-  turbo: true
+  turbo: false
   bkrepo: true
   defaultImage: true
   plugin:
@@ -111,7 +117,7 @@ mysql:
       datadir=/bitnami/mysql/data
       tmpdir=/opt/bitnami/mysql/tmp
       max_allowed_packet=16M
-      bind-address=0.0.0.0
+      bind-address=*
       pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
       log-error=/opt/bitnami/mysql/logs/mysqld.log
       character-set-server=UTF8
@@ -166,6 +172,26 @@ rabbitmq:
     default_permissions.configure = .*
     default_permissions.read = .*
     default_permissions.write = .*
+  # 如果想在ipv6环境中运行, 需要开启这些选项
+  # initContainers:
+  # - name: ipv6-init
+  #   image: "docker.io/busybox:1.33.1"
+  #   imagePullPolicy: IfNotPresent
+  #   volumeMounts:
+  #   - name: ipv6-cfg
+  #     mountPath: /ipv6
+  #   command: ['sh', '-c', 'echo "{inet6, true}." > /ipv6/erl_inetrc']
+  # extraVolumes:
+  # - name: ipv6-cfg
+  #   emptyDir: {}
+  # extraVolumeMounts:
+  # - name: ipv6-cfg
+  #   mountPath: /ipv6
+  # extraEnvVars:
+  # - name: RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
+  #   value: "-kernel inetrc '/ipv6/erl_inetrc' -proto_dist inet6_tcp"
+  # - name: RABBITMQ_CTL_ERL_ARGS
+  #   value: "-proto_dist inet6_tcp"
 influxdb:
   enabled: true
   image:
@@ -179,9 +205,13 @@ influxdb:
   persistence:
     size: 10Gi
   influxdb:
+    readinessProbe:
+      enabled: false
+    livenessProbe:
+      enabled: false
     initdbScripts: 
       creata_db.sh: |
-        influx -host 127.0.0.1 -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
+        influx -host localhost -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
@@ -198,7 +228,7 @@ mongodb:
     size: 10Gi
   initdbScripts:
     create_admin_user.sh: |
-      $MONGODB_BIN_DIR/mongo admin --host 127.0.0.1 --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
+      $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
       use db_turbo
       db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
       use db_quartz

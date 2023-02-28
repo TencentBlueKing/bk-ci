@@ -80,8 +80,7 @@ open class BaseBuildDetailService constructor(
         return buildDetailDao.getBuildCancelUser(dslContext, projectId, buildId)
     }
 
-    @Suppress("LongParameterList")
-    protected fun update(
+    @Suppress("LongParameterList", "ComplexMethod") protected fun update(
         projectId: String,
         buildId: String,
         modelInterface: ModelInterface,
@@ -91,6 +90,7 @@ open class BaseBuildDetailService constructor(
     ): Model {
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
+        var record: TPipelineBuildDetailRecord? = null // 在异常catch处共享，减少一次db查询
         val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
 
         try {
@@ -98,7 +98,7 @@ open class BaseBuildDetailService constructor(
             lock.lock()
 
             watcher.start("getDetail")
-            val record = buildDetailDao.get(dslContext, projectId, buildId)
+            record = buildDetailDao.get(dslContext, projectId, buildId)
             Preconditions.checkArgument(record != null, "The build detail is not exist")
 
             watcher.start("model")
@@ -132,22 +132,22 @@ open class BaseBuildDetailService constructor(
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null
             )
 
-            watcher.start("dispatchEvent")
-            pipelineDetailChangeEvent(projectId, buildId)
             message = "update done"
             return model
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
             logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
             watcher.start("getDetail")
-            val record = buildDetailDao.get(dslContext, projectId, buildId)
             Preconditions.checkArgument(record != null, "The build detail is not exist")
             watcher.start("model")
             return JsonUtil.to(record!!.model, Model::class.java)
         } finally {
             lock.unlock()
-            watcher.stop()
             logger.info("[$buildId|$buildStatus]|$operation|update_detail_model| $message")
+            if (message == "update done") { // 防止MQ异常导致锁时间过长，将推送事件移出锁定范围
+                watcher.start("dispatchEvent")
+                pipelineDetailChangeEvent(projectId, buildId)
+            }
             LogUtils.printCostTimeWE(watcher)
         }
     }
@@ -171,18 +171,18 @@ open class BaseBuildDetailService constructor(
             buildStatus.isSuccess() -> Pair(BUILD_COMPLETED, null)
             else -> Pair(BUILD_RUNNING, null)
         }
-        return model.stages.map {
+        return model.stages.map { stage ->
             BuildStageStatus(
-                stageId = it.id!!,
-                name = it.name ?: it.id!!,
-                status = it.status,
-                startEpoch = it.startEpoch,
-                elapsed = it.elapsed,
-                tag = it.tag?.map { _it ->
-                    stageTagMap.getOrDefault(_it, "null")
+                stageId = stage.id!!,
+                name = stage.name ?: stage.id!!,
+                status = stage.status,
+                startEpoch = stage.startEpoch,
+                elapsed = stage.elapsed,
+                tag = stage.tag?.map { tag ->
+                    stageTagMap.getOrDefault(tag, "null")
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (it.id == TRIGGER_STAGE) {
+                showMsg = if (stage.id == TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
