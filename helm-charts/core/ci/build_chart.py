@@ -61,7 +61,8 @@ default_value_dict = {
     'bkCiKubernetesToken': 'landun',
     'bkCiDevopsToken': 'devops',
     'bkCiAppToken': 'test',
-    'bkCiNotifyEmailSendChannel': 'blueking'
+    'bkCiNotifyEmailSendChannel': 'blueking',
+    'initLocale': 'zh-CN',
 }
 
 if os.path.isfile(default_value_json):
