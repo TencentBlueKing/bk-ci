@@ -48,11 +48,10 @@ type ThirdPartyBuildInfo struct {
 }
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId        string            `json:"agentId"`
-	SecretKey      string            `json:"secretKey"`
-	Image          string            `json:"image"`
-	Credential     *Credential       `json:"credential"`
-	Envs           map[string]string `json:"envs"`
+	AgentId        string      `json:"agentId"`
+	SecretKey      string      `json:"secretKey"`
+	Image          string      `json:"image"`
+	Credential     *Credential `json:"credential"`
 	DockerResource *DockerResourceOptions
 }
 

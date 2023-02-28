@@ -44,6 +44,7 @@ interface OpAtomService {
      */
     fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,

@@ -28,11 +28,14 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
+import com.tencent.devops.process.utils.PipelineVarUtil.MAX_VERSION_LEN
 import org.junit.jupiter.api.Assertions.assertEquals
 import org.junit.jupiter.api.Assertions.assertNotEquals
 import org.junit.jupiter.api.Test
@@ -159,5 +162,121 @@ class PipelineVarUtilTest {
         assertEquals("pipeline.time.duration", PipelineVarUtil.newVarToOldVar(PIPELINE_TIME_DURATION))
         assertEquals("project.name.chinese", PipelineVarUtil.newVarToOldVar(PROJECT_NAME_CHINESE))
         assertEquals("pipeline.name", PipelineVarUtil.newVarToOldVar(PIPELINE_NAME))
+    }
+
+    @Test
+    fun testGetRecommendVersion() {
+        val plist = mutableListOf<BuildParameters>()
+        val expect = "1.0.2.99"
+        plist.add(BuildParameters(key = MAJORVERSION, value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = MINORVERSION, value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = FIXVERSION, value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        var actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "BuildNo", value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = MAJORVERSION, value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = MINORVERSION, value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = FIXVERSION, value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "BuildNo", value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = MAJORVERSION, value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = MINORVERSION, value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = MAJORVERSION, value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = FIXVERSION, value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = MINORVERSION, value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = FIXVERSION, value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = MAJORVERSION, value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "BuildNo", value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expect, actual)
+
+        // 测试不全的情况 ==========================
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(null, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(null, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "FixVersion", value = 2, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(null, actual)
+
+        plist.clear()
+        plist.add(BuildParameters(key = "MajorVersion", value = 1, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = "MinorVersion", value = 0, valueType = BuildFormPropertyType.LONG))
+        plist.add(BuildParameters(key = BUILD_NO, value = 99, valueType = BuildFormPropertyType.LONG))
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(null, actual)
+
+        // 在参数数据异常情况下，超过64直接截断，防止异常影响主流程
+        plist.clear()
+        val illegalMajor = "\${{ $MAJORVERSION }}"
+        val illegalMinor = "\${{ $MINORVERSION }}"
+        val illegalFixVer = "\${{ $FIXVERSION }}"
+        val illegalBuildNo = "\${{ $BUILD_NO }}"
+        plist.add(BuildParameters(key = MAJORVERSION, value = illegalMajor, valueType = BuildFormPropertyType.STRING))
+        plist.add(BuildParameters(key = MINORVERSION, value = illegalMinor, valueType = BuildFormPropertyType.STRING))
+        plist.add(BuildParameters(key = FIXVERSION, value = illegalFixVer, valueType = BuildFormPropertyType.STRING))
+        plist.add(BuildParameters(key = BUILD_NO, value = illegalBuildNo, valueType = BuildFormPropertyType.STRING))
+        val expectCut = CommonUtils.interceptStringInLength(
+            illegalMajor
+                .plus(".").plus(illegalMinor)
+                .plus(".").plus(illegalFixVer)
+                .plus(".").plus(illegalBuildNo), MAX_VERSION_LEN
+        )
+        actual = PipelineVarUtil.getRecommendVersion(plist)
+        assertEquals(expectCut, actual)
     }
 }

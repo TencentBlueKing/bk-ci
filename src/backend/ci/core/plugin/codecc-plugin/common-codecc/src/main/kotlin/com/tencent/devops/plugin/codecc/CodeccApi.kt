@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.plugin.codecc.pojo.CodeccMeasureInfo
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -63,7 +63,7 @@ open class CodeccApi constructor(
     ): String {
         val jsonBody = objectMapper.writeValueAsString(body)
         val requestBody = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"), jsonBody
+            "application/json; charset=utf-8".toMediaTypeOrNull(), jsonBody
         )
 
         val builder = Request.Builder()
@@ -92,7 +92,7 @@ open class CodeccApi constructor(
         val request = builder.build()
 
         OkhttpUtils.doHttp(request).use { response ->
-            val responseBody = response.body()!!.string()
+            val responseBody = response.body!!.string()
             if (!response.isSuccessful) {
                 throw RemoteServiceException("Fail to invoke codecc request")
             }

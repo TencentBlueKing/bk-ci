@@ -93,7 +93,7 @@ data class PipelineSetting(
             throw InvalidParamException(message = "流水线编排数量非法", params = arrayOf("maxPipelineResNum"))
         }
         if (runLockType == PipelineRunLockType.SINGLE ||
-            runLockType == PipelineRunLockType.SINGLE_LOCK
+            runLockType == PipelineRunLockType.SINGLE_LOCK || runLockType == PipelineRunLockType.GROUP_LOCK
         ) {
             if (waitQueueTimeMinute < PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MIN ||
                 waitQueueTimeMinute > PIPELINE_SETTING_WAIT_QUEUE_TIME_MINUTE_MAX

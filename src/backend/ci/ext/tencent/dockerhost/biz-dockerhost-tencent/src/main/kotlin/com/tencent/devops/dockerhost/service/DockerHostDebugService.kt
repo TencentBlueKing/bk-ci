@@ -29,6 +29,7 @@ package com.tencent.devops.dockerhost.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.github.dockerjava.api.command.PullImageResultCallback
 import com.github.dockerjava.api.exception.NotFoundException
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
@@ -40,15 +41,12 @@ import com.github.dockerjava.api.model.Volume
 import com.github.dockerjava.api.model.VolumeOptions
 import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
-import com.github.dockerjava.core.command.PullImageResultCallback
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.common.ErrorCodeEnum
 import com.tencent.devops.dockerhost.config.DockerHostConfig
-import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
@@ -57,7 +55,7 @@ import com.tencent.devops.dockerhost.services.LocalImageCache
 import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.RandomUtil
 import com.tencent.devops.store.pojo.app.BuildEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -66,22 +64,25 @@ import org.springframework.stereotype.Component
 import java.io.File
 
 @Component
+@Suppress("ALL")
 class DockerHostDebugService(
     private val dockerHostConfig: DockerHostConfig,
-    private val alertApi: AlertApi,
     private val dockerHostBuildApi: DockerHostBuildResourceApi
 ) : AbstractDockerHostBuildService(dockerHostConfig, dockerHostBuildApi) {
 
-    private val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
-    private val TURBO_PATH = "/data/bkdevops/apps/turbo/1.0"
-    private val OS_PATH = "/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/java/bin"
+    companion object {
+        private const val ENVIRONMENT_LINUX_PATH_PREFIX = "/data/bkdevops/apps/"
+        private const val TURBO_PATH = "/data/bkdevops/apps/turbo/1.0"
+        private const val OS_PATH =
+            "/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/local/java/bin"
 
-    private val envKeyProjectId = "devops_project_id"
-    private val envKeyGateway = "devops_gateway"
-    private val envDockerHostIP = "docker_host_ip"
-    private val bkDistccLocalIp = "BK_DISTCC_LOCAL_IP"
+        private const val envKeyProjectId = "devops_project_id"
+        private const val envKeyGateway = "devops_gateway"
+        private const val envDockerHostIP = "docker_host_ip"
+        private const val bkDistccLocalIp = "BK_DISTCC_LOCAL_IP"
 
-    private val entryPointCmd = "/data/sleep.sh"
+        private const val entryPointCmd = "/data/sleep.sh"
+    }
 
     @Value("\${dockerhost.dockerDebug.authToken:#{null}}")
     val dockerDebugAuthToken: String? = ""
@@ -92,9 +93,9 @@ class DockerHostDebugService(
     private val logger = LoggerFactory.getLogger(DockerHostDebugService::class.java)
 
     private val config = DefaultDockerClientConfig.createDefaultConfigBuilder()
-            .withDockerConfig(dockerHostConfig.dockerConfig)
-            .withApiVersion(dockerHostConfig.apiVersion)
-            .build()
+        .withDockerConfig(dockerHostConfig.dockerConfig)
+        .withApiVersion(dockerHostConfig.apiVersion)
+        .build()
 
     override fun createContainer(dockerHostBuildInfo: DockerHostBuildInfo): String {
         return ""
@@ -119,7 +120,8 @@ class DockerHostDebugService(
             // docker pull
             try {
                 LocalImageCache.saveOrUpdate(imageName)
-                dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig).exec(PullImageResultCallback()).awaitCompletion()
+                dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
+                    .exec(PullImageResultCallback()).awaitCompletion()
             } catch (t: Throwable) {
                 logger.error("Pull images failed， imageName:$imageName")
             }
@@ -158,7 +160,7 @@ class DockerHostDebugService(
                             "${envFile.absolutePath}:$PATH"
                         }
                         if (buildEnv.env.isNotEmpty()) {
-                            buildEnv.env.forEach { name, path ->
+                            buildEnv.env.forEach { (name, path) ->
                                 val p = File(home, path)
                                 envList.add("$name=${p.absolutePath}")
                             }
@@ -176,24 +178,35 @@ class DockerHostDebugService(
             )?.data
 
             var qpcUniquePath = ""
-            if (qpcGitProjectList != null && qpcGitProjectList.isNotEmpty()) {
+            if (!qpcGitProjectList.isNullOrEmpty()) {
                 qpcUniquePath = qpcGitProjectList.first()
             }
 
             val tailPath = getTailPath(containerInfo)
             val binds = mutableListOf(
-                    Bind("${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/",
-                        volumeMavenRepo),
-                    Bind("${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/",
-                        volumeNpmPrefix),
-                    Bind("${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/",
-                        volumeNpmCache),
-                    Bind("${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/",
-                        volumeCcache),
-                    Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
-                    Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
-                    Bind("${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/",
-                        volumeGradleCache))
+                Bind(
+                    "${dockerHostConfig.hostPathMavenRepo}/${containerInfo.pipelineId}/$tailPath/",
+                    volumeMavenRepo
+                ),
+                Bind(
+                    "${dockerHostConfig.hostPathNpmPrefix}/${containerInfo.pipelineId}/$tailPath/",
+                    volumeNpmPrefix
+                ),
+                Bind(
+                    "${dockerHostConfig.hostPathNpmCache}/${containerInfo.pipelineId}/$tailPath/",
+                    volumeNpmCache
+                ),
+                Bind(
+                    "${dockerHostConfig.hostPathCcache}/${containerInfo.pipelineId}/$tailPath/",
+                    volumeCcache
+                ),
+                Bind(dockerHostConfig.hostPathApps, volumeApps, AccessMode.ro),
+                Bind(dockerHostConfig.hostPathSleep, volumeSleep, AccessMode.ro),
+                Bind(
+                    "${dockerHostConfig.hostPathGradleCache}/${containerInfo.pipelineId}/$tailPath/",
+                    volumeGradleCache
+                )
+            )
 
             if (qpcUniquePath.isBlank()) {
                 binds.add(Bind(getWorkspace(containerInfo.pipelineId, tailPath), volumeWs))
@@ -213,13 +226,10 @@ class DockerHostDebugService(
             )
 
             // 脚本解析器类型
-            val cmd = if (containerInfo.token.isEmpty()) {
-                "/bin/sh"
-            } else {
-                containerInfo.token
-            }
+            val cmd = containerInfo.token.ifEmpty { "/bin/sh" }
 
-            val containerName = "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
+            val containerName =
+                "debug-${containerInfo.pipelineId}-${containerInfo.vmSeqId}-${RandomUtil.randomString()}"
             val container = dockerCli.createContainerCmd(imageName)
                 .withName(containerName)
                 .withCmd(cmd, entryPointCmd)
@@ -246,14 +256,11 @@ class DockerHostDebugService(
 
             return container.id
         } catch (er: Throwable) {
-            logger.error(er.toString())
-            logger.error(er.cause.toString())
-            logger.error(er.message)
             if (er is NotFoundException) {
+                logger.warn("BKSystemMonitor|Create container failed: ${er.message}", er)
                 throw NoSuchImageException("Create container failed: ${er.message}")
             } else {
-                alertApi.alert(AlertLevel.HIGH.name, "Docker构建机创建容器失败", "Docker构建机创建容器失败, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 失败信息：${er.message}")
+                logger.error("BKSystemMonitor| Create container failed: ${er.message}", er)
                 throw ContainerException(
                     errorCodeEnum = ErrorCodeEnum.CREATE_CONTAINER_ERROR,
                     message = "Create container failed"
@@ -299,28 +306,31 @@ class DockerHostDebugService(
         containerId: String
     ): String {
         val requestBody = mapOf("cmd" to listOf("/bin/bash"), "container_id" to containerId)
-        val request = Request.Builder().url("http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
-                "pipelineId=$pipelineId&projectId=$projectId&targetIp=$dockerIp")
+        val request = Request.Builder().url(
+            "http://$dockerIp" + ":9999/bcsapi/v1/consoleproxy/create_exec?" +
+                "pipelineId=$pipelineId&projectId=$projectId&targetIp=$dockerIp"
+        )
             .addHeader("Accept", "application/json; charset=utf-8")
             .addHeader("Content-Type", "application/json; charset=utf-8")
             .addHeader("X-AUTH-TOKEN", dockerDebugAuthToken ?: "")
             .post(RequestBody.create(
-                MediaType.parse("application/json; charset=utf-8"),
-                JsonUtil.toJson(requestBody)))
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            ))
             .build()
 
         logger.info("start get docker webconsole id, ${JsonUtil.toJson(requestBody)}  $dockerDebugAuthToken")
         var eventId: String
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             logger.info("[$projectId|$pipelineId] get docker webconsole id responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             eventId = response["Id"] as String
         }
 
         return "wss://$dockerDebugGateway/docker-console-new-v2?" +
-                "eventId=$eventId&pipelineId=$pipelineId&projectId=$projectId" +
-                "&targetIP=$dockerIp&containerId=$containerId"
+            "eventId=$eventId&pipelineId=$pipelineId&projectId=$projectId" +
+            "&targetIP=$dockerIp&containerId=$containerId"
     }
 
     fun getContainerNum(): Int {
@@ -340,7 +350,7 @@ class DockerHostDebugService(
         qpcUniquePath: String?,
         hostConfig: HostConfig
     ) {
-        if (qpcUniquePath != null && qpcUniquePath.isNotBlank()) {
+        if (!qpcUniquePath.isNullOrBlank()) {
             val upperDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}upper"
             val workDir = "${getWorkspace(pipelineId, vmSeqId, poolNo, dockerHostConfig.hostPathWorkspace!!)}work"
             val lowerDir = "${dockerHostConfig.hostPathOverlayfsCache}/$qpcUniquePath"

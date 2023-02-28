@@ -176,7 +176,7 @@ object BcsClientUtils {
                 .withName(secretName)
                 .withNamespace(namespaceName)
                 .endMetadata()
-                .withData(secretData)
+                .addToData(secretData)
                 .withType("kubernetes.io/dockerconfigjson")
             secret = bcsKubernetesClient.secrets().inNamespace(namespaceName).createOrReplace(secretBuilder.build())
             logger.info("create new secret: $secret")

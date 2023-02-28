@@ -54,7 +54,7 @@ import com.tencent.devops.worker.common.api.atom.AtomArchiveSDKApi
 import com.tencent.devops.worker.common.api.utils.ApiUrlUtils
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.logger.LoggerService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import java.io.File
 
@@ -103,7 +103,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     ): Result<Boolean> {
         val path = "/store/api/build/market/atom/env/$projectCode/$atomCode/$atomVersion"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
@@ -141,7 +141,7 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     ): Result<Boolean> {
         val path = "/store/api/build/store/docking/platforms/types/ATOM/codes/$atomCode/add"
         val body = RequestBody.create(
-            MediaType.parse("application/json; charset=utf-8"),
+            "application/json; charset=utf-8".toMediaTypeOrNull(),
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)

@@ -68,6 +68,9 @@ interface ApigwGitResourceV2 {
         projectId: String,
         @ApiParam(value = "repo hash iD", required = false)
         @QueryParam("repoHashId")
-        repoHashId: String?
+        repoHashId: String?,
+        @ApiParam(value = "工蜂代码库名字", required = false)
+        @QueryParam("search")
+        search: String? = null
     ): Result<AuthorizeResult>
 }

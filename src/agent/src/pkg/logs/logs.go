@@ -3,16 +3,17 @@ package logs
 import (
 	"bytes"
 	"fmt"
-	"github.com/sirupsen/logrus"
-	"gopkg.in/natefinch/lumberjack.v2"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/sirupsen/logrus"
+	"gopkg.in/natefinch/lumberjack.v2"
 )
 
 var logs *logrus.Logger
 
-func Init(filepath string) error {
+func Init(filepath string, isDebug bool) error {
 	logInfo := logrus.New()
 
 	lumLog := &lumberjack.Logger{
@@ -27,6 +28,10 @@ func Init(filepath string) error {
 	logInfo.SetFormatter(&MyFormatter{})
 
 	go DoDailySplitLog(filepath, lumLog)
+
+	if isDebug {
+		logInfo.SetLevel(logrus.DebugLevel)
+	}
 
 	logs = logInfo
 
@@ -99,8 +104,20 @@ func Warn(f interface{}, v ...interface{}) {
 	logs.Warn(formatLog(f, v...))
 }
 
+func Warnf(format string, args ...interface{}) {
+	logs.Warnf(format, args...)
+}
+
 func Error(f interface{}, v ...interface{}) {
 	logs.Error(formatLog(f, v...))
+}
+
+func Debug(args ...interface{}) {
+	logs.Debug(args...)
+}
+
+func Debugf(format string, args ...interface{}) {
+	logs.Debugf(format, args...)
 }
 
 func formatLog(f interface{}, v ...interface{}) string {

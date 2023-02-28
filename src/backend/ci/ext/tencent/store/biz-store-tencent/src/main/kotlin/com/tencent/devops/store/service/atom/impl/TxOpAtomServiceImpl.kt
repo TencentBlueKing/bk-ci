@@ -33,7 +33,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.repository.api.ServiceGitRepositoryResource
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.service.atom.TxOpAtomService

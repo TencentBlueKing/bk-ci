@@ -29,21 +29,17 @@ package com.tencent.devops.dockerhost.api
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.ContainerInfo
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
-import com.tencent.devops.dockerhost.dispatch.AlertApi
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.service.DockerHostDebugService
-import com.tencent.devops.dockerhost.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceDockerDebugResourceImpl @Autowired constructor(
-    private val dockerHostDebugService: DockerHostDebugService,
-    private val alertApi: AlertApi
+    private val dockerHostDebugService: DockerHostDebugService
 ) : ServiceDockerDebugResource {
     companion object {
         private val logger = LoggerFactory.getLogger(ServiceDockerDebugResourceImpl::class.java)
@@ -55,8 +51,6 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(
             val containerNum = dockerHostDebugService.getContainerNum()
             if (containerNum >= maxRunningContainerNum) {
                 logger.warn("Too many containers in this host, break to start debug.")
-                alertApi.alert(AlertLevel.HIGH.name, "Docker构建机运行的容器太多", "Docker构建机运行的容器太多, " +
-                        "母机IP:${CommonUtils.getInnerIP()}， 容器数量: $containerNum")
                 return Result(1, "Too many containers in this host, break to start debug.", "")
             }
 
@@ -66,15 +60,22 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(
                     val containerId = dockerHostDebugService.createContainer(dockerStartDebugInfo)
                     Result(containerId)
                 } catch (e: NoSuchImageException) {
-                    logger.error("Create debug container failed, no such image. pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}, err: ${e.message}")
+                    logger.warn(
+                        "BKSystemMonitor|Create debug container failed, no such image. " +
+                            "pipelineId: ${dockerStartDebugInfo.pipelineId}," +
+                            " vmSeqId: ${dockerStartDebugInfo.vmSeqId}, err: ${e.message}"
+                    )
                     Result(2, "Create debug container failed, no such image.", "")
                 } catch (e: ContainerException) {
-                    logger.error("Create debug container failed. pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}")
+                    logger.error(
+                        "BKSystemMonitor|Create debug container failed. " +
+                            "pipelineId: ${dockerStartDebugInfo.pipelineId}, vmSeqId: ${dockerStartDebugInfo.vmSeqId}"
+                    )
                     Result(3, "Create debug container failed.", "")
                 }
             }
-        } catch (t: Throwable) {
-            logger.error("Start debug encounter unknown exception", t)
+        } catch (ignore: Throwable) {
+            logger.error("BKSystemMonitor|Start debug encounter unknown exception", ignore)
             return Result(4, "Start debug encounter unknown exception.", "")
         }
 
@@ -87,12 +88,12 @@ class ServiceDockerDebugResourceImpl @Autowired constructor(
 
     override fun endDebug(dockerEndDebugInfo: ContainerInfo): Result<Boolean> {
         return try {
-            logger.warn("Stop the container, containerId: ${dockerEndDebugInfo.containerId}")
+            logger.info("Stop the container, containerId: ${dockerEndDebugInfo.containerId}")
             dockerHostDebugService.stopContainer(dockerEndDebugInfo)
 
             Result(true)
         } catch (t: Throwable) {
-            logger.error("EndBuild encounter unknown exception", t)
+            logger.error("BKSystemMonitor|EndBuild encounter unknown exception", t)
             Result(1, "EndBuild encounter unknown exception", false)
         }
     }
