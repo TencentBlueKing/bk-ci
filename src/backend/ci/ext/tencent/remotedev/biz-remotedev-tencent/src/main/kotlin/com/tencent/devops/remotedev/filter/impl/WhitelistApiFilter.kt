@@ -33,6 +33,7 @@ class WhitelistApiFilter constructor(
         USER("/api/user/", true),
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
+        SERVICE("/api/service/", false),
         OP("/api/op/", false),
         SWAGGER("/api/swagger.json", false);
 
