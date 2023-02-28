@@ -344,7 +344,7 @@ class PipelineViewService @Autowired constructor(
                 userId = userId,
                 projectId = projectId,
                 viewId = viewId,
-                pipelineViewName = pipelineView.name
+                viewName = pipelineView.name
             )
             return viewId
         } catch (t: DuplicateKeyException) {
@@ -394,7 +394,7 @@ class PipelineViewService @Autowired constructor(
                     userId = userId,
                     projectId = projectId,
                     viewId = viewId,
-                    pipelineViewName = pipelineView.name
+                    viewName = pipelineView.name
                 )
             }
             return success
