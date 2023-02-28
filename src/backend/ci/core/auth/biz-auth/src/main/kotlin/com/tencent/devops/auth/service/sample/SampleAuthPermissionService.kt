@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 
 class SampleAuthPermissionService : PermissionService {
@@ -25,6 +26,15 @@ class SampleAuthPermissionService : PermissionService {
         resourceCode: String,
         resourceType: String,
         relationResourceType: String?
+    ): Boolean {
+        return true
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
     ): Boolean {
         return true
     }

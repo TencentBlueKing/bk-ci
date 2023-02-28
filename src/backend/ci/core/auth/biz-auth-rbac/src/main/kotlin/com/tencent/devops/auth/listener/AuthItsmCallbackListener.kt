@@ -70,7 +70,9 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create callback info:$itsmCallBackInfo")
-        // itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        if (itsmCallBackInfo.currentStatus == CANCEL_ITSM_APPLICATION_STATUS)
+            return
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
@@ -125,7 +127,7 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun updateProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
-        // itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        itsmService.verifyItsmToken(itsmCallBackInfo.token)
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
@@ -176,5 +178,9 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         }
+    }
+
+    companion object {
+        private const val CANCEL_ITSM_APPLICATION_STATUS = "REVOKED"
     }
 }

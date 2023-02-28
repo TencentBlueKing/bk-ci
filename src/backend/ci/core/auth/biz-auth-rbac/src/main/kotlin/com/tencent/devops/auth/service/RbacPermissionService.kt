@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 
 class RbacPermissionService constructor(
@@ -98,6 +99,29 @@ class RbacPermissionService constructor(
         }
 
         logger.info("[rbac] validateUserResourcePermission : instanceDTO = $instanceDTO")
+        return authHelper.isAllowed(userId, action, instanceDTO)
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        val instanceDTO = InstanceDTO()
+        instanceDTO.system = iamConfiguration.systemId
+        instanceDTO.id = resource.resourceCode
+        instanceDTO.type = resource.resourceType
+        instanceDTO.system = iamConfiguration.systemId
+        if (!resource.parents.isNullOrEmpty()) {
+            instanceDTO.paths = resource.parents!!.map {
+                val path = PathInfoDTO()
+                path.type = it.resourceType
+                path.id = it.resourceCode
+                path
+            }.reversed()
+        }
+        logger.info("[rbac] validateUserResourcePermissionByInstance : instanceDTO = $instanceDTO")
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
 

@@ -42,6 +42,7 @@ import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
@@ -135,13 +136,15 @@ class RbacAuthConfiguration {
         authResourceService: AuthResourceService,
         permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService,
-        permissionResourceService: PermissionResourceService
+        permissionResourceService: PermissionResourceService,
+        permissionGroupPoliciesService: PermissionGroupPoliciesService
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
-        permissionResourceService = permissionResourceService
+        permissionResourceService = permissionResourceService,
+        permissionGroupPoliciesService = permissionGroupPoliciesService
     )
 
     @Bean

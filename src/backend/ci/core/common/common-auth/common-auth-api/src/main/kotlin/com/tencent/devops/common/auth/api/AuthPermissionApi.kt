@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 @Suppress("ALL")
@@ -66,6 +67,23 @@ interface AuthPermissionApi {
         resourceCode: String,
         permission: AuthPermission,
         relationResourceType: AuthResourceType? = null
+    ): Boolean
+
+    /**
+     * 校验用户是否有指定资源的指定权限
+     * @param user 用户ID
+     * @param serviceCode 服务模块代码
+     * @param projectCode projectCode英文id
+     * @param permission 权限类型
+     * @param resource 鉴权的资源
+     * @return Boolean 有权限则true
+     */
+    fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
     ): Boolean
 
     /**
@@ -115,6 +133,23 @@ interface AuthPermissionApi {
         systemId: AuthServiceCode,
         supplier: (() -> List<String>)? = null
     ): Map<AuthPermission, List<String>>
+
+    /**
+     * 过滤resources下用户所拥有指定权限下的指定类型资源的资源code列表
+     *
+     * @param user 用户ID
+     * @param serviceCode 服务模块代码
+     * @param projectCode projectCode英文id
+     * @param permission 权限类型
+     * @return 返回资源code列表
+     */
+    fun filterUserResourceByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resources: List<AuthResourceInstance>
+    ): List<String>
 
     fun addResourcePermissionForUsers(
         userId: String,

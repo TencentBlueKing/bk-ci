@@ -101,4 +101,5 @@ object AuthMessageCode {
     const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "21211513" // iam回调方法${0}不支持
     const val ERROR_ITSM_APPLICATION_CANCEL_FAIL = "21211514" // ITSM单据取消失败
     const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "21211515" // 检验ITSM的token失败
+    const val AUTH_GROUP_MEMBER_EXPIRED_DESC = "21211516" // 已过期
 }
