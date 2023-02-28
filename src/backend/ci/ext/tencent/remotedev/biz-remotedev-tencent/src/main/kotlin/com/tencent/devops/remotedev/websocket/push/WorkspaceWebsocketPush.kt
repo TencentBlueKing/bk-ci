@@ -35,7 +35,7 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
 import io.swagger.annotations.ApiModelProperty
 import org.slf4j.LoggerFactory
@@ -64,15 +64,15 @@ data class WorkspaceWebsocketPush(
     }
 
     // 同时向 user 和 page 的 session 推送。可以同时兼容概览页面和详情页面
-    override fun findSession(page: String): List<String> {
+    override fun findSession(page: String): Set<String>? {
         val userSession = mutableSetOf<String>()
         userIds.forEach {
             userSession.addAll(
-                RedisUtlis.getSessionIdByUserId(redisOperation, it)?.split(",") ?: emptyList()
+                WsRedisUtils.getSessionIdByUserId(redisOperation, it) ?: emptySet()
             )
         }
-        val pageSession = super.findSession(page) ?: emptyList()
-        return userSession.plus(pageSession).toList()
+        val pageSession = super.findSession(page) ?: emptySet()
+        return userSession.plus(pageSession)
     }
 
     override fun buildMqMessage(): SendMessage {
