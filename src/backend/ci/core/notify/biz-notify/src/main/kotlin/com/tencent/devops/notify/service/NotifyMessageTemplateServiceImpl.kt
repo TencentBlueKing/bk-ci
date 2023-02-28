@@ -587,7 +587,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
                 // 替换内容里的动态参数
                 val body = replaceContentParams(
                     request.bodyParams,
-                    if (request.markdownContent == true) weworkTplRecord.bodyMd else weworkTplRecord.body
+                    if (request.markdownContent == true) {
+                        weworkTplRecord.bodyMd ?: weworkTplRecord.body
+                    } else {
+                        weworkTplRecord.body
+                    }
                 )
                 logger.info("send wework msg: $body ${weworkTplRecord.sender}")
                 sendWeworkNotifyMessage(
@@ -839,7 +843,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         // 替换内容里的动态参数
         val body = replaceContentParams(
             request.bodyParams,
-            if (request.markdownContent == true) weworkTplRecord.bodyMd else weworkTplRecord.body
+            if (request.markdownContent == true) {
+                weworkTplRecord.bodyMd ?: weworkTplRecord.body
+            } else {
+                weworkTplRecord.body
+            }
         )
 
         val content = title + "\n\n" + body
