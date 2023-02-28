@@ -41,6 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.StageReviewRequest
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.vmbuild.EngineVMBuildService
 import com.tencent.devops.process.pojo.BuildBasicInfo
 import com.tencent.devops.process.pojo.BuildHistory
@@ -65,7 +66,8 @@ class ServiceBuildResourceImpl @Autowired constructor(
     private val pipelineBuildFacadeService: PipelineBuildFacadeService,
     private val engineVMBuildService: EngineVMBuildService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
-    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService
+    private val pipelinePauseBuildFacadeService: PipelinePauseBuildFacadeService,
+    private val pipelineRuntimeService: PipelineRuntimeService
 ) : ServiceBuildResource {
     override fun getPipelineIdFromBuildId(projectId: String, buildId: String): Result<String> {
         if (buildId.isBlank()) {
@@ -74,6 +76,20 @@ class ServiceBuildResourceImpl @Autowired constructor(
         return Result(
             pipelineBuildDetailService.getBuildDetailPipelineId(projectId, buildId)
                 ?: throw ParamBlankException("Invalid buildId")
+        )
+    }
+
+    override fun getBuildIdFromBuildNumber(projectId: String, pipelineId: String, buildNumber: Int): Result<String> {
+        if (pipelineId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineRuntimeService.getBuildHistoryByBuildNum(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildNum = buildNumber,
+                statusSet = null
+            )?.id ?: throw ParamBlankException("build not find, check projectId & pipelineId & buildNumber ")
         )
     }
 
