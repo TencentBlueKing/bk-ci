@@ -97,6 +97,7 @@ class TxPermissionExtServiceImpl @Autowired constructor(
     ) = true
 
     override fun resourceCancelRelation(
+        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String
