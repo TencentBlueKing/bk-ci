@@ -23,7 +23,7 @@ import javax.ws.rs.core.MediaType
 @Suppress("ALL")
 interface ApigwAuthGrantResourceV3 {
 
-    @ApiOperation("实例授权", tags = ["v3_app_permission_grant", "v3_user_permission_grant"])
+    @ApiOperation("实例授权", tags = ["v3_app_permission_grant"])
     @POST
     @Path("/projects/{projectId}/instance/grant")
     fun grantInstancePermission(
