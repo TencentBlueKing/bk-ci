@@ -5,7 +5,6 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 
 object RbacAuthUtils {
-
     fun buildAction(authPermission: AuthPermission, authResourceType: AuthResourceType): String {
         return "${extResourceType(authResourceType)}_${authPermission.value}"
     }

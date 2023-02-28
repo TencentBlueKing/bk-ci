@@ -86,12 +86,14 @@ class RbacPermissionExtService(
     }
 
     override fun resourceCancelRelation(
+        userId: String,
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ) : Boolean {
+    ): Boolean {
         logger.info("resourceCancelRelation $projectCode|$resourceCode|$resourceType")
         return permissionResourceService.resourceCancelRelation(
+            userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode

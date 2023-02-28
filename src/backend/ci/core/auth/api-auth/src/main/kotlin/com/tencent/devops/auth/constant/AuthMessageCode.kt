@@ -99,4 +99,6 @@ object AuthMessageCode {
     const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121511" // 用户组配置{0}不存在
     const val ERROR_ITSM_CALLBACK_APPLICATION_FAIL = "2121512" // 查询不到有效的项目审批回调单
     const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "21211513" // iam回调方法${0}不支持
+    const val ERROR_ITSM_APPLICATION_CANCEL_FAIL = "21211514" // ITSM单据取消失败
+    const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "21211515" // 检验ITSM的token失败
 }

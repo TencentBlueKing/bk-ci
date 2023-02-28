@@ -154,6 +154,7 @@ class RbacProjectPermissionService(
             projectId = projectCode
         )
         authResourceApi.cancelCreateResource(
+            userId = userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = projectCode,
@@ -168,6 +169,7 @@ class RbacProjectPermissionService(
             approvalStatus = ProjectApproveStatus.APPROVED.status
         )
         authResourceApi.cancelUpdateResource(
+            userId = userId,
             serviceCode = projectAuthServiceCode,
             resourceType = AuthResourceType.PROJECT,
             projectCode = projectCode,
