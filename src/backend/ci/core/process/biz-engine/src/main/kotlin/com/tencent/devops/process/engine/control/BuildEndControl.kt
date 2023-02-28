@@ -181,7 +181,7 @@ class BuildEndControl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
-                retryFlag = buildInfo.executeCount?.let { it > 1 } == true
+                retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
             )
         }
 
