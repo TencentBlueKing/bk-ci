@@ -266,6 +266,19 @@ class PipelineBuildTaskDao {
         }
     }
 
+    fun getByContainerId(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        containerId: String
+    ): Collection<PipelineBuildTask> {
+        return with(T_PIPELINE_BUILD_TASK) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)).and(CONTAINER_ID.eq(containerId)))
+                .orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
     fun deletePipelineBuildTasks(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
         return with(T_PIPELINE_BUILD_TASK) {
             dslContext.delete(this)

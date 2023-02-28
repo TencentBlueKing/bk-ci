@@ -54,6 +54,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelinePauseBuildFacadeService
@@ -292,6 +293,30 @@ class ServiceBuildResourceImpl @Autowired constructor(
             pipelineBuildFacadeService.getBuildDetail(
                 userId, projectId, pipelineId, buildId, channelCode,
                 ChannelCode.isNeedAuth(channelCode)
+            )
+        )
+    }
+
+    override fun getBuildRecordByExecuteCount(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?,
+        channelCode: ChannelCode
+    ): Result<ModelRecord> {
+        checkParam(projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecord(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount,
+                channelCode = channelCode
             )
         )
     }

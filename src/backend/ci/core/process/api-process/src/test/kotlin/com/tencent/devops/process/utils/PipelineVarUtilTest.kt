@@ -27,7 +27,11 @@
 
 package com.tencent.devops.process.utils
 
+import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_REPO_NAME
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
@@ -41,6 +45,11 @@ class PipelineVarUtilTest {
 
     @Test
     fun fillOldVarWithType() {
+        val timestamps = JsonUtil.toJson(
+            mapOf(BuildTimestampType.TASK_REVIEW_PAUSE_WAITING to BuildRecordTimeStamp(null, null))
+        )
+        val map = JsonUtil.to(timestamps, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp >>() {})
+        println(map)
         val vars = mutableMapOf(
             PIPELINE_START_USER_NAME to Pair("admin", BuildFormPropertyType.STRING),
             "userName" to Pair("hello", BuildFormPropertyType.STRING),

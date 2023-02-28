@@ -75,6 +75,7 @@ import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -82,6 +83,7 @@ import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -96,6 +98,7 @@ import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.StageQualityRequest
 import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.ParamFacadeService
@@ -136,7 +139,9 @@ class PipelineBuildFacadeService(
     private val pipelineStageService: PipelineStageService,
     private val redisOperation: RedisOperation,
     private val buildDetailService: PipelineBuildDetailService,
+    private val buildRecordService: PipelineBuildRecordService,
     private val pipelineTaskPauseService: PipelineTaskPauseService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val jmxApi: ProcessJmxApi,
     private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineBuildQualityService: PipelineBuildQualityService,
@@ -873,7 +878,7 @@ class PipelineBuildFacadeService(
             }
         )
         if (params.status == ManualReviewAction.ABORT) {
-            buildDetailService.updateBuildCancelUser(projectId, buildId, userId)
+            buildRecordService.updateBuildCancelUser(projectId, buildId, userId)
         }
     }
 
@@ -918,10 +923,11 @@ class PipelineBuildFacadeService(
                 params = arrayOf(userId)
             )
         }
+        val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
-            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId)
+            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
         } else {
-            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId)
+            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
         }
         return true
     }
@@ -1022,7 +1028,7 @@ class PipelineBuildFacadeService(
                     reviewRequest = reviewRequest
                 )
             } else {
-                pipelineStageService.startStage(
+                pipelineStageService.stageManualStart(
                     userId = userId,
                     buildStage = buildStage,
                     reviewRequest = reviewRequest
@@ -1299,6 +1305,70 @@ class PipelineBuildFacadeService(
             )
         return getBuildDetail(
             projectId = projectId, pipelineId = pipelineId, buildId = buildId, channelCode = channelCode
+        )
+    }
+
+    fun getBuildRecord(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?,
+        channelCode: ChannelCode
+    ): ModelRecord {
+        val buildInfo = pipelineRuntimeService.getBuildInfo(
+            projectId = projectId,
+            buildId = buildId
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在",
+            params = arrayOf(buildId)
+        )
+        if (projectId != buildInfo.projectId || pipelineId != buildInfo.pipelineId) {
+            throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_PIPELINE_EXISTS_BY_ID,
+                defaultMessage = "构建任务${buildId}查找失败，请核对参数",
+                params = arrayOf(buildId)
+            )
+        }
+        return buildRecordService.get(
+            buildInfo = buildInfo,
+            executeCount = executeCount
+        ) ?: throw ErrorCodeException(
+            statusCode = Response.Status.NOT_FOUND.statusCode,
+            errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+            defaultMessage = "构建任务${buildId}不存在第${executeCount}次执行",
+            params = arrayOf(buildId)
+        )
+    }
+
+    fun getBuildRecord(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?,
+        channelCode: ChannelCode,
+        checkPermission: Boolean = true
+    ): ModelRecord {
+
+        if (checkPermission) {
+            pipelinePermissionService.validPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW,
+                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+            )
+        }
+
+        return getBuildRecord(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            executeCount = executeCount,
+            channelCode = channelCode
         )
     }
 
@@ -2072,12 +2142,20 @@ class PipelineBuildFacadeService(
     }
 
     fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, vmSeqId: String, vmInfo: VmInfo) {
-        buildDetailService.saveBuildVmInfo(
+        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
+                defaultMessage = "流水线构建[$buildId]不存在",
+                params = arrayOf(buildId)
+            )
+        containerBuildRecordService.saveBuildVmInfo(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             containerId = vmSeqId,
-            vmInfo = vmInfo
+            vmInfo = vmInfo,
+            executeCount = buildInfo.executeCount
         )
     }
 
