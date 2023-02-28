@@ -53,11 +53,11 @@ class ItsmService @Autowired constructor(
             url = itsmVerifyTokenUrl,
             body = Pair("token", token)
         )
-        val itsmApiResData = itsmResponseDTO.data as Pair<String, Boolean>
+        val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
         logger.info("itsmApiResData:$itsmApiResData")
-        logger.info("is_passed:${itsmApiResData.second}")
-        val isPassed = itsmApiResData.second
-        if (!isPassed) {
+        logger.info("is_passed:${itsmApiResData["is_passed"]}")
+        val isPassed = itsmApiResData["is_passed"]
+        if (!isPassed!!) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_ITSM_APPLICATION_CANCEL_FAIL,
