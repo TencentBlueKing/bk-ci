@@ -76,7 +76,7 @@ open class BaseBuildDetailService constructor(
         return JsonUtil.to(record.model, Model::class.java)
     }
 
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "ComplexMethod")
     protected fun update(
         projectId: String,
         buildId: String,
