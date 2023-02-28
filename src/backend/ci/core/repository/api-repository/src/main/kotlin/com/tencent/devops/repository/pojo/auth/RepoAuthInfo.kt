@@ -24,23 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.plugin.pojo.wetest
+package com.tencent.devops.repository.pojo.auth
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.apache.commons.lang3.StringUtils
 
-@ApiModel("weTestEmailGroup")
-data class WetestEmailGroupResponse(
-    @ApiModelProperty("总数")
-    val count: String,
-    @ApiModelProperty("当前页数")
-    val page: Int,
-    @ApiModelProperty("每页数量")
-    val pageSize: Int,
-    @ApiModelProperty("配置详情")
-    val records: List<WetestEmailGroup>,
-    @ApiModelProperty("总页数")
-    val totalPages: Int
-
+@ApiModel("代码库授权信息")
+data class RepoAuthInfo(
+    @ApiModelProperty("授权类型", required = true)
+    val authType: String,
+    @ApiModelProperty("授权凭证ID", required = true)
+    val credentialId: String,
+    @ApiModelProperty("SVN类型", required = false)
+    val svnType: String? = StringUtils.EMPTY
 )

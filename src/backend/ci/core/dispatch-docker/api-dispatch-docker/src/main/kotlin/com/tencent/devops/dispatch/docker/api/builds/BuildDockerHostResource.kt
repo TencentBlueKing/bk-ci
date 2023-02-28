@@ -28,7 +28,6 @@
 package com.tencent.devops.dispatch.docker.api.builds
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.dispatch.docker.pojo.DockerIpInfoVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsVO
 import com.tencent.devops.store.pojo.image.response.ImageRepoInfo
@@ -49,21 +48,6 @@ import javax.ws.rs.core.MediaType
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)@Suppress("ALL")
 interface BuildDockerHostResource {
-    @ApiOperation("系统监控告警")
-    @POST
-    @Path("/alert")
-    fun alert(
-        @ApiParam("级别", required = true)
-        @QueryParam("level")
-        level: AlertLevel,
-        @ApiParam("标题", required = true)
-        @QueryParam("title")
-        title: String,
-        @ApiParam("消息", required = true)
-        @QueryParam("message")
-        message: String
-    ): Result<Boolean>?
-
     @GET
     @Path("/resource-config/pipelines/{pipelineId}/vmSeqs/{vmSeqId}")
     @ApiOperation("获取蓝盾项目的docker性能配置")

@@ -24,27 +24,23 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.plugin.pojo
+package com.tencent.devops.repository.pojo.credential
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
-@ApiModel("Gcloud配置")
-data class GcloudConf(
-    @ApiModelProperty("ID")
-    val id: String,
-    @ApiModelProperty("区域")
-    val region: String,
-    @ApiModelProperty("地址")
-    val address: String,
-    @ApiModelProperty("文件地址")
-    val fileAddress: String,
-    @ApiModelProperty("更新时间")
-    val updateTime: Long,
-    @ApiModelProperty("操作人")
-    val userId: String,
-    @ApiModelProperty("备注")
-    val remark: String?
-
+@ApiModel("仓库授权信息")
+data class RepoCredentialInfo(
+    @ApiModelProperty("授权Token")
+    val token: String = "",
+    @ApiModelProperty("授权私钥")
+    val privateKey: String = "",
+    @ApiModelProperty("私钥密码")
+    val passPhrase: String? = "",
+    @ApiModelProperty("用户名")
+    val username: String = "",
+    @ApiModelProperty("密码")
+    val password: String = "",
+    @ApiModelProperty("凭证类型")
+    val credentialType: String = ""
 )

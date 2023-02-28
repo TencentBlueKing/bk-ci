@@ -163,7 +163,10 @@ func DoPollAndBuild() {
 func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
-	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
+	// 临时方案，避免一直丢弃二进制任务，没有开docker的先不接受docker任务
+	if !config.GAgentConfig.EnableDockerBuild {
+		dockerCanRun = false
+	} else if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
 		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
 			"maxJob config: %d, instance count: %d",
 			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))

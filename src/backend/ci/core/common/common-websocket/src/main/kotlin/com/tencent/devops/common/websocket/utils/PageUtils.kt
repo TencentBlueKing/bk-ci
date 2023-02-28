@@ -28,7 +28,7 @@
 package com.tencent.devops.common.websocket.utils
 
 object PageUtils {
-    fun buildTagPage(page: String, tagName: String): String {
+    private fun buildTagPage(page: String, tagName: String): String {
         if (page.endsWith("/")) {
             return page + tagName
         } else {
@@ -36,7 +36,7 @@ object PageUtils {
         }
     }
 
-    fun replacePage(page: String, newPageTage: String, oldPageTage: String): String? {
+    private fun replacePage(page: String, newPageTage: String, oldPageTage: String): String? {
         var newPage: String? = null
         if (page.contains(oldPageTage)) {
             newPage = page.replace(oldPageTage, newPageTage)
@@ -60,9 +60,9 @@ object PageUtils {
     fun createAllTagPage(page: String): MutableList<String> {
         val pageList = mutableListOf<String>()
         pageList.add(page)
-        pageList.add(PageUtils.buildTagPage(page, "allPipeline"))
-        pageList.add(PageUtils.buildTagPage(page, "collect"))
-        pageList.add(PageUtils.buildTagPage(page, "myPipeline"))
+        pageList.add(buildTagPage(page, "allPipeline"))
+        pageList.add(buildTagPage(page, "collect"))
+        pageList.add(buildTagPage(page, "myPipeline"))
         return pageList
     }
 }

@@ -165,7 +165,7 @@ interface ApigwProjectResourceV4 {
 
     @POST
     @Path("/{projectId}/project_user")
-    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users", "v4_user_project_create_users"])
+    @ApiOperation("添加指定用户到指定项目用户组", tags = ["v4_app_project_create_users"])
     fun createProjectUser(
         @ApiParam(value = "appCode", required = true, defaultValue = AUTH_HEADER_DEVOPS_APP_CODE_DEFAULT_VALUE)
         @HeaderParam(AUTH_HEADER_DEVOPS_APP_CODE)
@@ -173,6 +173,9 @@ interface ApigwProjectResourceV4 {
         @ApiParam(value = "apigw Type", required = true)
         @PathParam("apigwType")
         apigwType: String?,
+        @ApiParam("userId")
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String?,
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
