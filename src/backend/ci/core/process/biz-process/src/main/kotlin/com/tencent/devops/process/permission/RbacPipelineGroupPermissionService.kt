@@ -74,23 +74,24 @@ class RbacPipelineGroupPermissionService constructor(
         )
     }
 
-    override fun createResource(userId: String, projectId: String, viewId: Long, pipelineViewName: String) {
+    override fun createResource(userId: String, projectId: String, viewId: Long, viewName: String) {
         return authResourceApi.createResource(
             user = userId,
             projectCode = projectId,
             serviceCode = pipelineGroupAuthServiceCode,
             resourceType = resourceType,
             resourceCode = HashUtil.encodeLongId(viewId),
-            resourceName = pipelineViewName
+            resourceName = viewName
         )
     }
 
-    override fun modifyResource(userId: String, projectId: String, viewId: Long, pipelineViewName: String) {
-        authResourceApi.deleteResource(
+    override fun modifyResource(userId: String, projectId: String, viewId: Long, viewName: String) {
+        authResourceApi.modifyResource(
             serviceCode = pipelineGroupAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(viewId)
+            resourceCode = HashUtil.encodeLongId(viewId),
+            resourceName = viewName
         )
     }
 

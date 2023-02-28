@@ -136,11 +136,12 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun modifyResource(projectId: String, pipelineId: String, pipelineName: String) {
-        authResourceApi.deleteResource(
+        authResourceApi.modifyResource(
             serviceCode = pipelineAuthServiceCode,
             resourceType = resourceType,
             projectCode = projectId,
-            resourceCode = pipelineId
+            resourceCode = pipelineId,
+            resourceName = pipelineName
         )
     }
 

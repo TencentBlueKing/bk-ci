@@ -68,26 +68,26 @@ interface PipelineGroupPermissionService {
      * @param userId userId
      * @param projectId projectId
      * @param viewId 流水线组ID
-     * @param pipelineViewName 流水线组名称
+     * @param viewName 流水线组名称
      */
     fun createResource(
         userId: String,
         projectId: String,
         viewId: Long,
-        pipelineViewName: String
+        viewName: String
     )
 
     /**
      * 修改流水线组在权限中心中的资源属性
      * @param projectId projectId
      * @param viewId 流水线组ID
-     * @param pipelineViewName 流水线组名称
+     * @param viewName 流水线组名称
      */
     fun modifyResource(
         userId: String,
         projectId: String,
         viewId: Long,
-        pipelineViewName: String
+        viewName: String
     )
 
     /**

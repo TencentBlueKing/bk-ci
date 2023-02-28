@@ -48,14 +48,14 @@ class MockPipelineGroupPermissionService : PipelineGroupPermissionService {
         userId: String,
         projectId: String,
         viewId: Long,
-        pipelineViewName: String
+        viewName: String
     ) = Unit
 
     override fun modifyResource(
         userId: String,
         projectId: String,
         viewId: Long,
-        pipelineViewName: String
+        viewName: String
     ) = Unit
 
     override fun deleteResource(projectId: String, viewId: Long) = Unit
