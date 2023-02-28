@@ -32,7 +32,15 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.manager.AuthorizationScopes
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_AUTH_GROUP_NOT_EXIST
+import com.tencent.devops.auth.dao.AuthActionDao
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 
@@ -44,6 +52,10 @@ import org.springframework.stereotype.Service
 class PermissionGroupPoliciesService(
     private val iamConfiguration: IamConfiguration,
     private val iamV2ManagerService: V2ManagerService,
+    private val authActionDao: AuthActionDao,
+    private val dslContext: DSLContext,
+    private val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) {
 
     companion object {
@@ -93,6 +105,43 @@ class PermissionGroupPoliciesService(
         )
         authorizationScopes.forEach { authorizationScope ->
             iamV2ManagerService.grantRoleGroupV2(iamGroupId, authorizationScope)
+        }
+    }
+
+    fun getGroupPolices(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int
+    ): List<IamGroupPoliciesVo> {
+        val groupInfo = authResourceGroupDao.getByRelationId(
+            dslContext = dslContext,
+            projectCode = projectId,
+            iamGroupId = groupId.toString()
+        ) ?: throw ErrorCodeException(
+            errorCode = ERROR_AUTH_GROUP_NOT_EXIST,
+            params = arrayOf(groupId.toString()),
+            defaultMessage = "group $groupId not exist"
+        )
+        val groupConfigInfo = authResourceGroupConfigDao.get(
+            dslContext = dslContext,
+            resourceType = resourceType,
+            groupCode = groupInfo.groupCode
+        ) ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST,
+            params = arrayOf("${resourceType}_${groupInfo.groupCode}"),
+            defaultMessage = "${resourceType}_${groupInfo.groupCode} group config  not exist"
+        )
+        val groupActions = JsonUtil.to(groupConfigInfo.actions, object : TypeReference<List<String>>() {})
+        return authActionDao.list(
+            dslContext = dslContext,
+            resourceType = resourceType
+        ).map {
+            IamGroupPoliciesVo(
+                action = it.action,
+                actionName = it.actionName,
+                permission = groupActions.contains(it.action)
+            )
         }
     }
 }
