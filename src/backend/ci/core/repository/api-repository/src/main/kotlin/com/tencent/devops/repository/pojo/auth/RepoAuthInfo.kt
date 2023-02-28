@@ -24,39 +24,18 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-
-package com.tencent.devops.repository.pojo
+package com.tencent.devops.repository.pojo.auth
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import org.apache.commons.lang3.StringUtils
 
-@ApiModel("代码库模型-Code平台P4")
-data class CodeP4Repository(
-    @ApiModelProperty("代码库别名", required = true)
-    override val aliasName: String,
-    @ApiModelProperty("URL", required = true)
-    override val url: String,
-    @ApiModelProperty("凭据id", required = true)
-    override val credentialId: String,
-    @ApiModelProperty("项目名称(与aliasName相同)", required = true)
-    override val projectName: String,
-    @ApiModelProperty("用户名", required = true)
-    override var userName: String,
-    @ApiModelProperty("项目id", required = true)
-    override var projectId: String?,
-    @ApiModelProperty("仓库hash id", required = false)
-    override val repoHashId: String?
-) : Repository {
-
-    companion object {
-        const val classType = "codeP4"
-    }
-
-    override fun getStartPrefix(): String {
-        return ""
-    }
-
-    override fun isLegal(): Boolean {
-        return true
-    }
-}
+@ApiModel("代码库授权信息")
+data class RepoAuthInfo(
+    @ApiModelProperty("授权类型", required = true)
+    val authType: String,
+    @ApiModelProperty("授权凭证ID", required = true)
+    val credentialId: String,
+    @ApiModelProperty("SVN类型", required = false)
+    val svnType: String? = StringUtils.EMPTY
+)
