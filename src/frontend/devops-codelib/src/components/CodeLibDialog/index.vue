@@ -75,7 +75,7 @@
                         <span class="error-tips" v-if="(urlErrMsg || errors.has('codelibUrl') && !isP4)">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
-                        <div class="example-tips">{{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}</div>
+                        <div v-if="isSvn" class="example-tips">{{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}</div>
                     </div>
                 </div>
                 <!-- 源代码地址 end -->
@@ -130,8 +130,8 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                        <div class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</div>
                     </div>
-                    <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
                 <!-- 访问凭据 end -->
             </div>
@@ -259,6 +259,9 @@
             },
             isP4 () {
                 return isP4(this.codelibTypeName)
+            },
+            isSvn () {
+                return isSvn(this.codelibTypeName)
             },
             isGithub () {
                 return isGithub(this.codelibTypeName)
@@ -562,8 +565,6 @@
 
 <style lang="scss">
     .code-lib-credential {
-        display: flex;
-        align-items: center;
         > .codelib-credential-selector {
             width: 300px;
             display: inline-block;
@@ -573,6 +574,8 @@
             display: block;
         }
         .text-link {
+            position: relative;
+            top: -10px;
             cursor: pointer;
             color: #3c96ff;
             line-height: 1.5;
