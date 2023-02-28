@@ -53,7 +53,7 @@ interface ServiceBuildApiPermissionResource {
      *
      * @param projectId 项目编码
      * @param buildId 构建ID
-     * @return 触发用户ID
+     * @return 启动用户ID
      */
     @Path("startUser/{projectId}/{buildId}/get")
     @GET
@@ -69,7 +69,6 @@ interface ServiceBuildApiPermissionResource {
      *
      * @param projectId 项目编码
      * @param pipelineId 流水线ID
-     * @param buildId 构建ID
      */
     @Path("verify/{projectId}/{pipelineId}")
     @GET

@@ -101,20 +101,20 @@ class BuildApiAspect constructor(private val client: Client) {
         logger.info("Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
                 "user pipeline param[$pipelineId]")
         if (projectId != null && pipelineId != null) {
-            val buildTriggerUser = client.get(ServiceBuildApiPermissionResource::class)
+            val buildStartUser = client.get(ServiceBuildApiPermissionResource::class)
                 .getStartUser(authProjectId!!, authBuildId!!).data!!
-            logger.info("verify that user [$buildTriggerUser] has permission to access information " +
+            logger.info("verify that user [$buildStartUser] has permission to access information " +
                     "in pipeline [$pipelineId] under project [$projectId].")
             val checkPipelinePermissionResult = client.get(ServiceBuildApiPermissionResource::class).verifyApi(
-                userId = buildTriggerUser,
+                userId = buildStartUser,
                 projectId = projectId,
                 pipelineId = pipelineId
             ).data!!
             if (checkPipelinePermissionResult) {
-                logger.info("verify that user [$buildTriggerUser] has permission to access information " +
+                logger.info("verify that user [$buildStartUser] has permission to access information " +
                         "in pipeline [$pipelineId] under project [$projectId].【verify succeed】")
             } else {
-                logger.info("verify that user [$buildTriggerUser] has permission to access information " +
+                logger.info("verify that user [$buildStartUser] has permission to access information " +
                         "in pipeline [$pipelineId] under project [$projectId].【verify fail】")
             }
         }
