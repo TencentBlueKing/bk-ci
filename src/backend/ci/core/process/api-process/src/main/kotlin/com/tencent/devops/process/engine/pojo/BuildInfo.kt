@@ -55,6 +55,8 @@ data class BuildInfo(
     val channelCode: ChannelCode,
     val buildParameters: List<BuildParameters>?,
     var errorInfoList: List<ErrorInfo>?,
+    @Deprecated("后续只用executeCount做判断")
+    val retryFlag: Boolean? = null,
     val executeCount: Int? = 1,
     val concurrencyGroup: String? = null,
     val webhookInfo: WebhookInfo? = null,

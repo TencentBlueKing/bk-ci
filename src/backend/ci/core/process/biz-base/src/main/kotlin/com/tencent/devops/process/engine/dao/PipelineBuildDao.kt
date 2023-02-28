@@ -529,6 +529,7 @@ class PipelineBuildDao {
                 buildParameters = t.buildParameters?.let { self ->
                     JsonUtil.getObjectMapper().readValue(self) as List<BuildParameters>
                 },
+                retryFlag = t.isRetry,
                 executeCount = t.executeCount,
                 executeTime = t.executeTime ?: 0,
                 concurrencyGroup = t.concurrencyGroup,
