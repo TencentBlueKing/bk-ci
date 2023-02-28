@@ -49,9 +49,11 @@ class ItsmService @Autowired constructor(
     }
 
     fun verifyItsmToken(token: String) {
+        val param: MutableMap<String, String> = mutableMapOf()
+        param["token"] = token
         val itsmResponseDTO = doHttpPost(
             url = itsmVerifyTokenUrl,
-            body = Pair("token", token)
+            body = param
         )
         val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
         logger.info("itsmApiResData:$itsmApiResData")
