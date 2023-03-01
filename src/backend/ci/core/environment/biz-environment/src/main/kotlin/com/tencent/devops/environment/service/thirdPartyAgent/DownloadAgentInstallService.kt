@@ -122,6 +122,7 @@ class DownloadAgentInstallService @Autowired constructor(
         val goUpgraderFile = getGoFile(record.os, "upgrader", arch)
         val packageFiles = getAgentPackageFiles(record.os)
         val scriptFiles = getGoAgentScriptFiles(record)
+        val configFiles = getGoAgentConfFiles(record)
         val propertyFile = getPropertyFile(record)
 
         logger.info("Get the script files (${scriptFiles.keys})")
@@ -150,6 +151,16 @@ class DownloadAgentInstallService @Autowired constructor(
             zipBinaryFile(os = record.os, goAgentFile = goUpgraderFile, fileName = "tmp/upgrader", zipOut = zipOut)
 
             scriptFiles.forEach { (name, content) ->
+                val entry = ZipArchiveEntry(name)
+                val bytes = content.toByteArray()
+                entry.size = bytes.size.toLong()
+                entry.unixMode = AGENT_FILE_MODE
+                zipOut.putArchiveEntry(entry)
+                IOUtils.copy(ByteArrayInputStream(bytes), zipOut)
+                zipOut.closeArchiveEntry()
+            }
+
+            configFiles.forEach { (name, content) ->
                 val entry = ZipArchiveEntry(name)
                 val bytes = content.toByteArray()
                 entry.size = bytes.size.toLong()
@@ -224,6 +235,17 @@ class DownloadAgentInstallService @Autowired constructor(
         val scripts = file.listFiles()
         val map = getAgentReplaceProperties(agentRecord)
         return scripts?.associate {
+            var content = it.readText(Charsets.UTF_8)
+            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
+            it.name to content
+        } ?: emptyMap()
+    }
+
+    private fun getGoAgentConfFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
+        val file = File(agentPackage, "config/${agentRecord.os.toLowerCase()}")
+        val configFiles = file.listFiles()
+        val map = getAgentReplaceProperties(agentRecord)
+        return configFiles?.associate {
             var content = it.readText(Charsets.UTF_8)
             map.forEach { (key, value) -> content = content.replace("##$key##", value) }
             it.name to content
