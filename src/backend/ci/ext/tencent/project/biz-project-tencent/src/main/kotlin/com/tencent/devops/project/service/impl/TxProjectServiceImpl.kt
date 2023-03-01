@@ -94,7 +94,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
-    private val bsAuthProjectApi: AuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
@@ -314,11 +314,12 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        return if (permission == AuthPermission.MANAGE) {
-            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
-        } else {
-            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
-        }
+        return authProjectApi.validateUserProjectPermission(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            permission = permission,
+            projectCode = projectCode
+        )
     }
 
     override fun modifyProjectAuthResource(
