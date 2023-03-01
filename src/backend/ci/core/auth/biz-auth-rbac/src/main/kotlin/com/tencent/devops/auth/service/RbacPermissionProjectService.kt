@@ -116,7 +116,6 @@ class RbacPermissionProjectService(
             groupMemberInfoList.forEach { memberInfo ->
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[RBAC-IAM] department:$memberInfo")
-                    // todo 若部门人数太多，存在拉取速度比较慢的问题
                     val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
@@ -129,7 +128,7 @@ class RbacPermissionProjectService(
                 displayName = it.name,
                 roleId = it.id,
                 roleName = it.name,
-                userIdList = members,
+                userIdList = members.toSet().toList(),
                 type = ""
             )
             result.add(groupAndUser)
