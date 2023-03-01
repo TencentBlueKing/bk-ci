@@ -51,11 +51,8 @@ data class MiscNodeWebsocketPush(
     page = page,
     notifyPost = notifyPost
 ) {
-    override fun findSession(page: String): List<String>? {
-        return super.findSession(page)
-    }
 
-    override fun buildMqMessage(): SendMessage? {
+    override fun buildMqMessage(): SendMessage {
         return NodeMessage(
                 project = projectId,
                 userId = userId,

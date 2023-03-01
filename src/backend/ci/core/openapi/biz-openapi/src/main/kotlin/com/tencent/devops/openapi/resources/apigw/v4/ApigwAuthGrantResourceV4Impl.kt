@@ -7,13 +7,15 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.openapi.api.apigw.v4.ApigwAuthGrantResourceV4
+import com.tencent.devops.openapi.service.OpenapiPermissionService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ApigwAuthGrantResourceV4Impl @Autowired constructor(
-    val client: Client,
-    val tokenService: ClientTokenService
+    private val client: Client,
+    private val tokenService: ClientTokenService,
+    private val openapiPermissionService: OpenapiPermissionService
 ) : ApigwAuthGrantResourceV4 {
     override fun grantInstancePermission(
         appCode: String?,
@@ -23,6 +25,7 @@ class ApigwAuthGrantResourceV4Impl @Autowired constructor(
         grantInstance: GrantInstanceDTO
     ): Result<Boolean> {
         logger.info("OPENAPI_AUTH_GRANT_V4|$userId|grant instance permission|$projectId|$grantInstance")
+        openapiPermissionService.validProjectManagerPermission(appCode, apigwType, userId, projectId)
         return Result(
             client.get(ServicePermissionAuthResource::class).grantInstancePermission(
                 userId = userId,

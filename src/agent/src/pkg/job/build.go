@@ -39,14 +39,14 @@ import (
 	"sync"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/httputil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/httputil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 type BuildTotalManagerType struct {
@@ -163,7 +163,10 @@ func DoPollAndBuild() {
 func checkParallelTaskCount() (dockerCanRun bool, normalCanRun bool) {
 	// 检查docker任务
 	dockerInstanceCount := GBuildDockerManager.GetInstanceCount()
-	if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
+	// 临时方案，避免一直丢弃二进制任务，没有开docker的先不接受docker任务
+	if !config.GAgentConfig.EnableDockerBuild {
+		dockerCanRun = false
+	} else if config.GAgentConfig.DockerParallelTaskCount != 0 && dockerInstanceCount >= config.GAgentConfig.DockerParallelTaskCount {
 		logs.Info(fmt.Sprintf("DOCKER_JOB|parallel docker task count exceed , wait job done, "+
 			"maxJob config: %d, instance count: %d",
 			config.GAgentConfig.DockerParallelTaskCount, dockerInstanceCount))

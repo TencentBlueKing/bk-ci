@@ -61,7 +61,8 @@ default_value_dict = {
     'bkCiKubernetesToken': 'landun',
     'bkCiDevopsToken': 'devops',
     'bkCiAppToken': 'test',
-    'bkCiNotifyEmailSendChannel': 'blueking'
+    'bkCiNotifyEmailSendChannel': 'blueking',
+    'initLocale': 'zh-CN',
 }
 
 if os.path.isfile(default_value_json):
@@ -111,11 +112,13 @@ env_file.close()
 image_registry = sys.argv[1]
 image_gateway_tag = sys.argv[2]
 image_backend_tag = sys.argv[3]
+image_frontend_tag = sys.argv[4]
 value_file = open(output_value_yaml, 'w')
 for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_registry__", image_registry)
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
+    line = line.replace("__image_frontend_tag__", image_frontend_tag)
     value_file.write(line)
 
 value_file.write('\nconfig:\n')

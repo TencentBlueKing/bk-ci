@@ -66,4 +66,9 @@ interface OPRepositoryResource {
         @QueryParam("grayWhiteProject")
         grayWhiteProject: String?
     ): Result<Boolean>
+
+    @ApiOperation("更新git项目ID")
+    @POST
+    @Path("/updateGitProjectId")
+    fun updateGitProjectId()
 }
