@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -46,6 +47,7 @@ import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.DELETE
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -191,7 +193,11 @@ interface UserWorkspaceResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam(value = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("T_GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
     ): Result<List<RemoteDevRepository>>
 
     @ApiOperation("获取目标授权代码库分支")
@@ -212,7 +218,11 @@ interface UserWorkspaceResource {
         page: Int?,
         @ApiParam("每页多少条", required = false, defaultValue = "20")
         @QueryParam("pageSize")
-        pageSize: Int?
+        pageSize: Int?,
+        @ApiParam(value = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("T_GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
     ): Result<List<String>>
 
     @ApiOperation("返回目标代码库devfile路径")
@@ -227,7 +237,11 @@ interface UserWorkspaceResource {
         pathWithNamespace: String,
         @ApiParam("分支", required = true)
         @QueryParam("branch")
-        branch: String
+        branch: String,
+        @ApiParam(value = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("T_GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
     ): Result<List<String>>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
@@ -245,7 +259,11 @@ interface UserWorkspaceResource {
         redirectUrl: String?,
         @ApiParam(value = "是否刷新token", required = false)
         @QueryParam("refreshToken")
-        refreshToken: Boolean? = true
+        refreshToken: Boolean? = true,
+        @ApiParam(value = "git 类型", required = true)
+        @QueryParam("gitType")
+        @DefaultValue("T_GIT")
+        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
     ): Result<AuthorizeResult>
 
     @ApiOperation("工作空间心跳请求")

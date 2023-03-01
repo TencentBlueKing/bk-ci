@@ -28,12 +28,14 @@
 package com.tencent.devops.remotedev.api.remotedev
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevOauthBack
 import com.tencent.devops.remotedev.pojo.WorkspaceProxyDetail
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST

@@ -30,6 +30,8 @@ package com.tencent.devops.remotedev.service
 import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -61,7 +63,12 @@ class PermissionService @Autowired constructor(
         if (!enablePermission) return
 
         if (!projectUserCache.get(workspaceName).contains(userId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "拒绝访问")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                defaultMessage = ErrorCodeEnum.FORBIDDEN.formatErrorMessage
+                    .format("You need permission to access workspace $workspaceName"),
+                params = arrayOf("You need permission to access workspace $workspaceName")
+            )
         }
     }
 

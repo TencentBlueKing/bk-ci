@@ -18,8 +18,9 @@ import com.tencent.devops.remotedev.dao.WorkspaceDao
 import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.spyk
@@ -35,7 +36,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
     private val workspaceHistoryDao: WorkspaceHistoryDao = mockk()
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao = mockk()
     private val workspaceSharedDao: WorkspaceSharedDao = mockk()
-    private val gitTransferService: TGitTransferService = mockk()
+    private val remoteDevGitTransfer: RemoteDevGitTransfer = mockk()
     private val permissionService: PermissionService = mockk()
     private val sshService: SshPublicKeysService = mockk()
     private val dispatcher: RemoteDevDispatcher = mockk()
@@ -53,7 +54,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             workspaceHistoryDao = workspaceHistoryDao,
             workspaceOpHistoryDao = workspaceOpHistoryDao,
             workspaceSharedDao = workspaceSharedDao,
-            gitTransferService = gitTransferService,
+            remoteDevGitTransfer = remoteDevGitTransfer,
             permissionService = permissionService,
             sshService = sshService,
             client = client,
@@ -129,7 +130,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         @Test
         fun getAuthorizedGitRepository_1() {
             every {
-                gitTransferService.getProjectList(
+                remoteDevGitTransfer.load(RemoteDevGitType.T_GIT).getProjectList(
                     any(), any(), any(), any(), any(), any()
                 )
             } throws RemoteServiceException(
@@ -137,7 +138,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             )
             Assertions.assertThrows(ErrorCodeException::class.java) {
                 self.getAuthorizedGitRepository(
-                    userId = "user00", search = null, page = null, pageSize = null
+                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.T_GIT
                 )
             }
         }
@@ -145,13 +146,13 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         @Test
         fun getAuthorizedGitRepository_2() {
             every {
-                gitTransferService.getProjectList(
+                remoteDevGitTransfer.load(RemoteDevGitType.T_GIT).getProjectList(
                     any(), any(), any(), any(), any(), any()
                 )
             } throws OauthForbiddenException("用户[user00]尚未进行OAUTH授权，请先授权。")
             Assertions.assertThrows(ErrorCodeException::class.java) {
                 self.getAuthorizedGitRepository(
-                    userId = "user00", search = null, page = null, pageSize = null
+                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.T_GIT
                 )
             }
         }

@@ -25,48 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.remotedev.service.redis
+package com.tencent.devops.remotedev.pojo
 
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
-import org.slf4j.LoggerFactory
+import io.swagger.annotations.ApiModel
 
-/**
- * 主要用于一些同一时间只允许有一个实例运行的地方。
- */
-open class RedisCallLimit(
-    private val redisOperation: RedisOperation,
-    private val lockKey: String,
-    private val expiredTimeInSeconds: Long
-) : AutoCloseable {
+@ApiModel("remoteDev 支持git类型")
+enum class RemoteDevGitType(val flag: String) {
+    T_GIT("woa"),
+    GITHUB("github");
+
     companion object {
-        private val logger = LoggerFactory.getLogger(RedisCallLimit::class.java)
-    }
-
-    private val redisLock = RedisLock(redisOperation, lockKey, expiredTimeInSeconds)
-
-    /**
-     *
-     *
-     * @return 该 lock 需要放在 finally 外
-     * @throws CustomException 已经存在 key ，说明是重复请求
-     */
-    fun lock(): RedisCallLimit {
-        val result = redisLock.tryLock()
-        if (!result) {
-            logger.warn("$lockKey call duplicate, reject it.")
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.REPEAT_REQUEST.errorCode,
-                defaultMessage = ErrorCodeEnum.REPEAT_REQUEST.formatErrorMessage
-            )
+        private const val tail = ".com"
+        fun load4Url(url: String): RemoteDevGitType {
+            values().forEach {
+                if (url.contains(it.flag + tail)) return it
+            }
+            throw Exception("load fail: unknown $url")
         }
-        return this
-    }
-
-    override fun close() {
-        redisLock.close()
     }
 }

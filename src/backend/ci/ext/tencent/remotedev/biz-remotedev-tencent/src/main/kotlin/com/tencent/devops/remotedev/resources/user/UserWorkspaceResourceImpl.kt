@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWorkspaceResource
 import com.tencent.devops.remotedev.pojo.BkTicketInfo
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceCreate
@@ -42,7 +43,7 @@ import com.tencent.devops.remotedev.pojo.WorkspaceUserDetail
 import com.tencent.devops.remotedev.service.PermissionService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +51,7 @@ import org.springframework.beans.factory.annotation.Autowired
 @RestResource
 @Suppress("ALL")
 class UserWorkspaceResourceImpl @Autowired constructor(
-    private val tgitTransferService: TGitTransferService,
+    private val gitTransfer: RemoteDevGitTransfer,
     private val workspaceService: WorkspaceService,
     private val redisHeartBeat: RedisHeartBeat,
     private val permissionService: PermissionService
@@ -92,14 +93,16 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         search: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        gitType: RemoteDevGitType
     ): Result<List<RemoteDevRepository>> {
         return Result(
             workspaceService.getAuthorizedGitRepository(
                 userId = userId,
                 search = search,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                gitType = gitType
             )
         )
     }
@@ -109,7 +112,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         pathWithNamespace: String,
         search: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        gitType: RemoteDevGitType
     ): Result<List<String>> {
         return Result(
             workspaceService.getRepositoryBranch(
@@ -117,7 +121,8 @@ class UserWorkspaceResourceImpl @Autowired constructor(
                 pathWithNamespace = pathWithNamespace,
                 search = search,
                 page = page,
-                pageSize = pageSize
+                pageSize = pageSize,
+                gitType = gitType
             )
         )
     }
@@ -138,12 +143,18 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): Result<List<String>> {
+    override fun checkDevfile(
+        userId: String,
+        pathWithNamespace: String,
+        branch: String,
+        gitType: RemoteDevGitType
+    ): Result<List<String>> {
         return Result(
             workspaceService.checkDevfile(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
-                branch = branch
+                branch = branch,
+                gitType = gitType
             )
         )
     }
@@ -152,10 +163,11 @@ class UserWorkspaceResourceImpl @Autowired constructor(
         userId: String,
         redirectUrlType: RedirectUrlTypeEnum?,
         redirectUrl: String?,
-        refreshToken: Boolean?
+        refreshToken: Boolean?,
+        gitType: RemoteDevGitType
     ): Result<AuthorizeResult> {
         // 权限校验？
-        return tgitTransferService.isOAuth(
+        return gitTransfer.load(gitType).isOAuth(
             userId = userId,
             redirectUrlType = redirectUrlType,
             redirectUrl = redirectUrl,

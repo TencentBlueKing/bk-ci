@@ -29,7 +29,6 @@ package com.tencent.devops.remotedev.service
 
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.constant.HTTP_401
-import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OauthForbiddenException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -61,6 +60,7 @@ import com.tencent.devops.remotedev.dao.WorkspaceHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceOpHistoryDao
 import com.tencent.devops.remotedev.dao.WorkspaceSharedDao
 import com.tencent.devops.remotedev.pojo.OpHistoryCopyWriting
+import com.tencent.devops.remotedev.pojo.RemoteDevGitType
 import com.tencent.devops.remotedev.pojo.RemoteDevRepository
 import com.tencent.devops.remotedev.pojo.Workspace
 import com.tencent.devops.remotedev.pojo.WorkspaceAction
@@ -76,7 +76,7 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
-import com.tencent.devops.remotedev.service.transfer.TGitTransferService
+import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
 import com.tencent.devops.remotedev.websocket.pojo.WebSocketActionType
@@ -98,6 +98,7 @@ import java.util.concurrent.TimeUnit
 import javax.ws.rs.core.Response
 
 @Service
+@Suppress("LongMethod")
 class WorkspaceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val redisOperation: RedisOperation,
@@ -105,7 +106,7 @@ class WorkspaceService @Autowired constructor(
     private val workspaceHistoryDao: WorkspaceHistoryDao,
     private val workspaceOpHistoryDao: WorkspaceOpHistoryDao,
     private val workspaceSharedDao: WorkspaceSharedDao,
-    private val gitTransferService: TGitTransferService,
+    private val remoteDevGitTransfer: RemoteDevGitTransfer,
     private val permissionService: PermissionService,
     private val sshService: SshPublicKeysService,
     private val client: Client,
@@ -142,13 +143,14 @@ class WorkspaceService @Autowired constructor(
         userId: String,
         search: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        gitType: RemoteDevGitType
     ): List<RemoteDevRepository> {
         logger.info("$userId get user git repository|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         return checkOauthIllegal(userId) {
-            gitTransferService.getProjectList(
+            remoteDevGitTransfer.load(gitType).getProjectList(
                 userId = userId,
                 page = pageNotNull,
                 pageSize = pageSizeNotNull,
@@ -164,13 +166,14 @@ class WorkspaceService @Autowired constructor(
         pathWithNamespace: String,
         search: String?,
         page: Int?,
-        pageSize: Int?
+        pageSize: Int?,
+        gitType: RemoteDevGitType
     ): List<String> {
         logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
         val pageNotNull = page ?: 1
         val pageSizeNotNull = pageSize ?: defaultPageSize
         return checkOauthIllegal(userId) {
-            gitTransferService.getProjectBranches(
+            remoteDevGitTransfer.load(gitType).getProjectBranches(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
                 page = pageNotNull,
@@ -182,7 +185,7 @@ class WorkspaceService @Autowired constructor(
 
     fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
-
+        val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
         val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
         val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
         val yaml = if (workspaceCreate.useOfficialDevfile != true) {
@@ -195,7 +198,12 @@ class WorkspaceService @Autowired constructor(
                 )
             }.getOrElse {
                 logger.warn("get yaml failed ${it.message}")
-                throw CustomException(Response.Status.BAD_REQUEST, "获取 devfile 异常 ${it.message}")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                    defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
+                        .format("获取 devfile 异常 ${it.message}"),
+                    params = arrayOf("获取 devfile 异常 ${it.message}")
+                )
             }
         } else {
             // 防止污传
@@ -208,7 +216,11 @@ class WorkspaceService @Autowired constructor(
                 "create workspace get devfile blank,return." +
                     "|useOfficialDevfile=${workspaceCreate.useOfficialDevfile}"
             )
-            throw CustomException(Response.Status.BAD_REQUEST, "devfile 为空，请确认。")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage.format("devfile 为空，请确认。"),
+                params = arrayOf("devfile 为空，请确认。")
+            )
         }
 
         val userInfo = kotlin.runCatching {
@@ -242,7 +254,12 @@ class WorkspaceService @Autowired constructor(
                 )
             }.getOrElse {
                 logger.warn("get user $userId info failed ${it.message}")
-                throw CustomException(Response.Status.BAD_REQUEST, "获取 user $userId info 异常 ${it.message}")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.USERINFO_ERROR.errorCode,
+                    defaultMessage = ErrorCodeEnum.USERINFO_ERROR.formatErrorMessage
+                        .format("get user($userId) info from git failed"),
+                    params = arrayOf("get user($userId) info from git failed")
+                )
             }.email
 
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.dotfileRepo ?: ""
@@ -306,7 +323,11 @@ class WorkspaceService @Autowired constructor(
     fun afterCreateWorkspace(event: RemoteDevUpdateEvent) {
         if (event.status) {
             val ws = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = event.workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace ${event.workspaceName} not find")
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(event.workspaceName),
+                    params = arrayOf(event.workspaceName)
+                )
             val pathWithNamespace = GitUtils.getDomainAndRepoName(ws.url).second
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
@@ -390,7 +411,11 @@ class WorkspaceService @Autowired constructor(
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.checkRunning()) {
@@ -408,7 +433,12 @@ class WorkspaceService @Autowired constructor(
 
             if (notOk2doNextAction(workspace)) {
                 logger.info("${workspace.name} is $status, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't start now.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                        .format(workspace.name, "status is already $status, can't start now"),
+                    params = arrayOf(workspace.name, "status is already $status, can't start now")
+                )
             }
             checkUserCreate(userId, true)
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -513,7 +543,11 @@ class WorkspaceService @Autowired constructor(
         errorMsg: String? = null
     ) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkRunning()) return
         if (status) {
@@ -620,17 +654,31 @@ class WorkspaceService @Autowired constructor(
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.checkSleeping()) {
                 logger.info("${workspace.name} has been stopped, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been stopped")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                        .format(workspace.name, "status is already $status, can't stop again"),
+                    params = arrayOf(workspace.name, "status is already $status, can't stop again")
+                )
             }
 
             if (notOk2doNextAction(workspace)) {
                 logger.info("${workspace.name} is $status, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't stop now.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                        .format(workspace.name, "status is already $status, can't stop now"),
+                    params = arrayOf(workspace.name, "status is already $status, can't stop now")
+                )
             }
             workspaceOpHistoryDao.createWorkspaceHistory(
                 dslContext = dslContext,
@@ -723,17 +771,31 @@ class WorkspaceService @Autowired constructor(
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
             // 校验状态
             val status = WorkspaceStatus.values()[workspace.status]
             if (status.checkDeleted()) {
                 logger.info("${workspace.name} has been deleted, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} has been deleted")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                        .format(workspace.name, "status is already $status, can't delete again"),
+                    params = arrayOf(workspace.name, "status is already $status, can't delete again")
+                )
             }
 
             if (notOk2doNextAction(workspace)) {
                 logger.info("${workspace.name} is $status, return error.")
-                throw CustomException(Response.Status.BAD_REQUEST, "${workspace.name} is $status , can't delete now.")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                        .format(workspace.name, "status is already $status, can't delete now"),
+                    params = arrayOf(workspace.name, "status is already $status, can't delete now")
+                )
             }
 
             dslContext.transaction { configuration ->
@@ -828,12 +890,28 @@ class WorkspaceService @Autowired constructor(
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-                ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
-            if (userId != workspace.creator) throw CustomException(Response.Status.FORBIDDEN, "你没有权限操作")
+                ?: throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                    params = arrayOf(workspaceName)
+                )
+            if (userId != workspace.creator) {
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.FORBIDDEN.errorCode,
+                    defaultMessage = ErrorCodeEnum.FORBIDDEN.formatErrorMessage
+                        .format("only workspace creator can share"),
+                    params = arrayOf("only workspace creator can share")
+                )
+            }
             val shareInfo = WorkspaceShared(workspaceName, userId, sharedUser)
             if (workspaceSharedDao.existWorkspaceSharedInfo(shareInfo, dslContext)) {
                 logger.info("$workspaceName has already shared to $sharedUser")
-                throw CustomException(Response.Status.BAD_REQUEST, "$workspaceName has already shared to $sharedUser")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_SHARE_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_SHARE_FAIL.formatErrorMessage
+                        .format("$workspaceName has already shared to $sharedUser"),
+                    params = arrayOf("$workspaceName has already shared to $sharedUser")
+                )
             }
 
             dslContext.transaction { configuration ->
@@ -1059,10 +1137,15 @@ class WorkspaceService @Autowired constructor(
         )
     }
 
-    fun checkDevfile(userId: String, pathWithNamespace: String, branch: String): List<String> {
+    fun checkDevfile(
+        userId: String,
+        pathWithNamespace: String,
+        branch: String,
+        gitType: RemoteDevGitType
+    ): List<String> {
         logger.info("$userId get devfile list from git. $pathWithNamespace|$branch")
         return checkOauthIllegal(userId) {
-            gitTransferService.getFileNameTree(
+            remoteDevGitTransfer.load(gitType).getFileNameTree(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
                 path = Constansts.devFileDirectoryName, // 根目录
@@ -1072,14 +1155,23 @@ class WorkspaceService @Autowired constructor(
         }
     }
 
-    fun heartBeatStopWS(workSpaceName: String): Boolean {
-        val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workSpaceName)
-            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workSpaceName not find")
+    fun heartBeatStopWS(workspaceName: String): Boolean {
+        val workspace = workspaceDao.fetchAnyWorkspace(dslContext = dslContext, workspaceName = workspaceName)
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
         // 校验状态
         val status = WorkspaceStatus.values()[workspace.status]
         if (status.checkSleeping()) {
             logger.info("$workspace has been stopped, return error.")
-            throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been stopped")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                    .format(workspace.name, "status is already $status, can't stop again"),
+                params = arrayOf(workspace.name, "status is already $status, can't stop again")
+            )
         }
         RedisCallLimit(
             redisOperation,
@@ -1111,13 +1203,13 @@ class WorkspaceService @Autowired constructor(
                     type = WebSocketActionType.WORKSPACE_SLEEP,
                     status = true,
                     anyMessage = WorkspaceResponse(
-                        workspaceName = workSpaceName,
+                        workspaceName = workspaceName,
                         status = WorkspaceAction.SLEEPING
                     ),
                     projectId = "",
-                    userIds = getWebSocketUsers(ADMIN_NAME, workSpaceName),
+                    userIds = getWebSocketUsers(ADMIN_NAME, workspaceName),
                     redisOperation = redisOperation,
-                    page = WorkspacePageBuild.buildPage(workSpaceName),
+                    page = WorkspacePageBuild.buildPage(workspaceName),
                     notifyPost = NotifyPost(
                         module = "remotedev",
                         level = NotityLevel.LOW_LEVEL.getLevel(),
@@ -1125,7 +1217,7 @@ class WorkspaceService @Autowired constructor(
                         dealUrl = null,
                         code = 200,
                         webSocketType = "IFRAME",
-                        page = WorkspacePageBuild.buildPage(workSpaceName)
+                        page = WorkspacePageBuild.buildPage(workspaceName)
                     )
                 )
             )
@@ -1155,7 +1247,12 @@ class WorkspaceService @Autowired constructor(
         val status = WorkspaceStatus.values()[workspace.status]
         if (status.checkDeleted()) {
             logger.info("$workspace has been deleted, return error.")
-            throw CustomException(Response.Status.BAD_REQUEST, "$workspace has been deleted")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_STATUS_CHANGE_FAIL.formatErrorMessage
+                    .format(workspace.name, "status is already $status, can't delete again"),
+                params = arrayOf(workspace.name, "status is already $status, can't delete again")
+            )
         }
         RedisCallLimit(
             redisOperation,
@@ -1208,7 +1305,11 @@ class WorkspaceService @Autowired constructor(
 
     private fun doDeleteWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkDeleted()) return
         if (status) {
@@ -1282,7 +1383,11 @@ class WorkspaceService @Autowired constructor(
 
     private fun doStopWS(status: Boolean, operator: String, workspaceName: String, errorMsg: String? = null) {
         val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
-            ?: throw CustomException(Response.Status.NOT_FOUND, "workspace $workspaceName not find")
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkSleeping()) return
         if (status) {
@@ -1383,9 +1488,9 @@ class WorkspaceService @Autowired constructor(
     }
 
     private fun getWebSocketUsers(operator: String, workspaceName: String): Set<String> {
-        return if (operator == ADMIN_NAME)
+        return if (operator == ADMIN_NAME) {
             workspaceDao.fetchWorkspaceUser(dslContext, workspaceName).toSet()
-        else setOf(operator)
+        } else setOf(operator)
     }
 
     /**
@@ -1397,8 +1502,7 @@ class WorkspaceService @Autowired constructor(
         }.onFailure {
             if (it is RemoteServiceException && it.httpStatus == HTTP_401 || it is OauthForbiddenException) {
                 throw ErrorCodeException(
-                    statusCode = 400,
-                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode.toString(),
+                    errorCode = ErrorCodeEnum.OAUTH_ILLEGAL.errorCode,
                     defaultMessage = ErrorCodeEnum.OAUTH_ILLEGAL.formatErrorMessage.format(userId),
                     params = arrayOf(userId)
                 )
@@ -1432,7 +1536,11 @@ class WorkspaceService @Autowired constructor(
 
     fun getWorkspaceHost(workspaceName: String): String {
         val url = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)?.url
-            ?: throw CustomException(Response.Status.NOT_FOUND, "not find workspaceName $workspaceName")
+            ?: throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.WORKSPACE_NOT_FIND.errorCode,
+                defaultMessage = ErrorCodeEnum.WORKSPACE_NOT_FIND.formatErrorMessage.format(workspaceName),
+                params = arrayOf(workspaceName)
+            )
         return GitUtils.getDomainAndRepoName(url).first
     }
 
@@ -1447,7 +1555,12 @@ class WorkspaceService @Autowired constructor(
             val maxHavingCount = setting.second ?: redisCache.get(REDIS_DEFAULT_MAX_HAVING_COUNT)?.toInt() ?: 3
             workspaceDao.countUserWorkspace(dslContext, userId, unionShared = false).let {
                 if (it >= maxHavingCount) {
-                    throw CustomException(Response.Status.BAD_REQUEST, "当前创建个数($it)已达用户限制($maxHavingCount)")
+                    throw ErrorCodeException(
+                        errorCode = ErrorCodeEnum.WORKSPACE_MAX_HAVING.errorCode,
+                        defaultMessage = ErrorCodeEnum.WORKSPACE_MAX_HAVING.formatErrorMessage
+                            .format(it, maxHavingCount),
+                        params = arrayOf(it.toString(), maxHavingCount.toString())
+                    )
                 }
             }
         }
@@ -1458,7 +1571,12 @@ class WorkspaceService @Autowired constructor(
             status = setOf(WorkspaceStatus.RUNNING, WorkspaceStatus.PREPARING, WorkspaceStatus.STARTING)
         ).let {
             if (it >= maxRunningCount) {
-                throw CustomException(Response.Status.BAD_REQUEST, "当前工作空间正在运行数($it)已达用户限制($maxRunningCount)")
+                throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.WORKSPACE_MAX_RUNNING.errorCode,
+                    defaultMessage = ErrorCodeEnum.WORKSPACE_MAX_RUNNING.formatErrorMessage
+                        .format(it, maxRunningCount),
+                    params = arrayOf(it.toString(), maxRunningCount.toString())
+                )
             }
         }
         return true
@@ -1483,7 +1601,11 @@ class WorkspaceService @Autowired constructor(
             val data = response.body!!.string()
             logger.info("updateBkTicket|response code|${response.code}|content|$data")
             if (!response.isSuccessful) {
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "update fail,please check hostName exists")
+                throw ErrorCodeException(
+                    statusCode = Response.Status.INTERNAL_SERVER_ERROR.statusCode,
+                    errorCode = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.errorCode,
+                    defaultMessage = ErrorCodeEnum.UPDATE_BK_TICKET_FAIL.formatErrorMessage
+                )
             }
 
             val dataMap = JsonUtil.toMap(data)

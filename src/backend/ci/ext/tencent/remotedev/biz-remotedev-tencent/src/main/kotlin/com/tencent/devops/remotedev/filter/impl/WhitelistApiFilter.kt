@@ -3,12 +3,15 @@ package com.tencent.devops.remotedev.filter.impl
 import com.github.benmanes.caffeine.cache.Caffeine
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
 import javax.ws.rs.container.PreMatching
+import javax.ws.rs.core.MediaType
 import javax.ws.rs.core.Response
 import javax.ws.rs.ext.Provider
 
@@ -75,8 +78,15 @@ class WhitelistApiFilter constructor(
     override fun filter(requestContext: ContainerRequestContext) {
         if (!verify(requestContext)) {
             requestContext.abortWith(
-                Response.status(Response.Status.BAD_REQUEST)
-                    .entity("Sorry, you are not authorized to access this resource.")
+                Response.status(Response.Status.BAD_REQUEST).type(MediaType.APPLICATION_JSON_TYPE)
+                    .entity(
+                        MessageCodeUtil.generateResponseDataObject(
+                            messageCode = ErrorCodeEnum.DENIAL_OF_SERVICE.errorCode,
+                            params = null,
+                            data = null,
+                            defaultMessage = ErrorCodeEnum.DENIAL_OF_SERVICE.formatErrorMessage
+                        )
+                    )
                     .build()
             )
             return

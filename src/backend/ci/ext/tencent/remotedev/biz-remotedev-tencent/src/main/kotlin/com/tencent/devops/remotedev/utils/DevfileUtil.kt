@@ -1,15 +1,14 @@
 package com.tencent.devops.remotedev.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.exception.CustomException
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.Devfile
 import com.tencent.devops.dispatch.kubernetes.pojo.remotedev.DevfileImage
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
+import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.pojo.PreDevfile
 import org.slf4j.LoggerFactory
-import javax.ws.rs.core.Response
 
 object DevfileUtil {
     private val logger = LoggerFactory.getLogger(DevfileUtil::class.java)
@@ -18,7 +17,12 @@ object DevfileUtil {
             YamlCommonUtils.getObjectMapper().readValue(fileContent, object : TypeReference<PreDevfile>() {})
         }.getOrElse {
             logger.warn("yaml parse error $fileContent|${it.message}")
-            throw CustomException(Response.Status.BAD_REQUEST, "devfile解析报错，请检查文件内容。错误信息: ${it.message}")
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
+                    .format("Please check the file content. Error message: ${it.message}"),
+                params = arrayOf("Please check the file content. Error message: ${it.message}")
+            )
         }
 
         val devfileImage = kotlin.runCatching {
@@ -33,13 +37,26 @@ object DevfileUtil {
                         )
                     }
                 }
-                else -> throw ParamBlankException("devfile parse image error")
+                else -> throw ErrorCodeException(
+                    errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                    defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
+                        .format("devfile parse image error"),
+                    params = arrayOf("devfile parse image error")
+                )
             }
         }.getOrElse {
             logger.warn("yaml parse image error ${preDevfile.image}|${it.message}")
-            throw CustomException(
-                Response.Status.BAD_REQUEST,
-                "devfile解析image信息报错，请检查文件内容。错误信息: ${it.message}"
+            throw ErrorCodeException(
+                errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
+                defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
+                    .format(
+                        "An error was reported when parsing the image information, " +
+                            "please check the file content. Error message ${it.message}"
+                    ),
+                params = arrayOf(
+                    "An error was reported when parsing the image information, " +
+                        "please check the file content. Error message ${it.message}"
+                )
             )
         }
 
