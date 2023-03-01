@@ -2,7 +2,8 @@
     <bk-dialog
         :value="isShow"
         :width="700"
-        :title="$t('applyProject')"
+        :title="title"
+        @value-change="handleChange"
     >
         <bk-form
             ref="applyFrom"
@@ -60,9 +61,27 @@
                 </div>
             </bk-form-item>
             <bk-form-item
+                v-if="type === 'renewal'"
                 :label="$t('expirationTime')"
             >
-                <span>{{ expiredTime }}</span>
+                <span class="expired">{{ expiredDisplay }}{{ $t('day')}}</span>
+                <img class="arrows-icon" src="./svg/arrows-right.svg">
+                <span class="new-expired">{{ newExpiredDisplay }}{{ $t('day')}}</span>
+            </bk-form-item>
+            <bk-form-item
+                v-else
+                :label="$t('reason')"
+                property="reason"
+                required
+                error-display-type="normal"
+            >
+                <bk-input
+                    v-model="formData.reason"
+                    type="textarea"
+                    :rows="3"
+                    :maxlength="100"
+                >
+                </bk-input>
             </bk-form-item>
         </bk-form>
         <template slot="footer">
@@ -95,7 +114,17 @@
             groupId: {
                 type: String
             },
-            expiredTime: {
+            expiredDisplay: {
+                type: String
+            },
+            title: {
+                type: String
+            },
+            type: {
+                type: String,
+                default: 'apply'
+            },
+            resourceType: {
                 type: String
             }
         },
@@ -109,7 +138,8 @@
                 },
                 customTime: 1,
                 formData: {
-                    expireTime: 0
+                    expireTime: 0,
+                    reason: ''
                 },
                 currentActive: 2592000,
                 timeFilters: {
@@ -130,14 +160,44 @@
                             message: this.$t('selectPeriod'),
                             trigger: 'blur'
                         }
+                    ],
+                    reason: [
+                        {
+                            required: true,
+                            message: this.$t('fillReason'),
+                            trigger: 'blur'
+                        }
                     ]
                 }
+            }
+        },
+        computed: {
+            userName () {
+                return this.$userInfo && this.$userInfo.username ? this.$userInfo.username : ''
+            },
+            projectId () {
+                return this.$route.params.projectId
+            },
+            newExpiredDisplay () {
+                const timeMap = {
+                    2592000: 30,
+                    7776000: 90,
+                    15552000: 180,
+                    31104000: 360
+                }
+                if (this.currentActive === 'custom') {
+                    return Number(this.expiredDisplay) + Number(this.customTime)
+                }
+                return Number(this.expiredDisplay) + timeMap[this.currentActive]
             }
         },
         created () {
             this.formData.expireTime = this.formatTimes(2592000)
             if (this.projectCode) {
                 this.formData.englishName = this.projectCode
+            }
+            if (this.type === 'apply') {
+                this.formData.reason = ''
             }
         },
         methods: {
@@ -146,29 +206,21 @@
                     const timestamp = this.customTime * 24 * 3600
                     this.formData.expireTime = this.formatTimes(timestamp)
                 }
-                this.isLoading = true
-                this.$store.dispatch('applyToJoinProject', {
-                    englishName: this.formData.englishName,
-                    ApplicationInfo: this.formData
-                }).then(res => {
-                    this.$bkMessage({
-                        theme: 'success',
-                        message: this.$t('applySuccess')
-                    })
-                }).catch((err) => {
-                    this.$bkMessage({
-                        theme: 'error',
-                        message: err.message
-                    })
-                }).finally(() => {
-                    this.isLoading = false
-                    this.handleCancel()
-                })
+                if (this.type === 'renewal') {
+                    this.handleRenewalGroup()
+                } else {
+                    this.handleApplyGroup()
+                }
             },
             handleCancel () {
                 this.$emit('update:isShow', false)
                 this.customTime = 1
-                this.formData.expireTime = 0
+                this.formData.expireTime = this.formatTimes(2592000)
+                this.formData.reason = ''
+                this.currentActive = 2592000
+                setTimeout(() => {
+                    this.$refs.applyFrom.clearError()
+                }, 500)
             },
             handleChangeCustomTime (value) {
                 if (!/^[0-9]*$/.test(value)) {
@@ -195,6 +247,58 @@
                 const dotIndex = tempArr.findIndex(i => i === '.')
                 const nowSecond = parseInt(tempArr.splice(0, dotIndex).join(''), 10)
                 return Number(value) + nowSecond
+            },
+            handleChange (val) {
+                if (!val) this.handleCancel()
+            },
+            handleApplyGroup () {
+                this.$refs.applyFrom.validate().then(() => {
+                    this.isLoading = true
+                    this.$ajax
+                        .post('/auth/api/user/auth/apply/applyToJoinGroup', {
+                            groupIds: [this.groupId],
+                            expiredAt: this.formData.expireTime,
+                            reason: this.formData.reason,
+                            applicant: this.userName
+                        })
+                        .then(res => {
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('applySuccess')
+                            })
+                        }).catch((err) => {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err.message
+                            })
+                        }).finally(() => {
+                            this.isLoading = false
+                            this.handleCancel()
+                        })
+                })
+            },
+            handleRenewalGroup () {
+                this.isLoading = true
+                this.$ajax
+                    .put(`/auth/api/user/auth/resource/group/${this.projectCode}/${this.resourceType}/${this.groupId}/member/renewal`, {
+                        expiredAt: this.formData.expireTime,
+                        projectId: this.projectId,
+                        resourceType: this.resourceType
+                    })
+                    .then(res => {
+                        this.$bkMessage({
+                            theme: 'success',
+                            message: this.$t('applySuccess')
+                        })
+                    }).catch((err) => {
+                        this.$bkMessage({
+                            theme: 'error',
+                            message: err.message
+                        })
+                    }).finally(() => {
+                        this.isLoading = false
+                        this.handleCancel()
+                    })
             }
         }
     }
@@ -214,5 +318,15 @@
     }
     .custom-time-select {
         width: 110px;
+    }
+    .expired {
+        padding-right: 10px;
+    }
+    .new-expired {
+        padding-left: 10px;
+    }
+    .arrows-icon {
+        width: 12px;
+        height: 12px;
     }
 </style>
