@@ -83,8 +83,18 @@ interface ProjectService {
     fun getByEnglishName(
         userId: String,
         englishName: String,
-        accessToken: String?,
-        needTips: Boolean = false
+        accessToken: String?
+    ): ProjectVO?
+
+    /**
+     * 根据项目ID/英文ID获取项目信息对象
+     * @param englishName projectCode 英文ID
+     * @return ProjectVO 如果没有则为null
+     */
+    fun show(
+        userId: String,
+        englishName: String,
+        accessToken: String?
     ): ProjectVO?
 
     /**

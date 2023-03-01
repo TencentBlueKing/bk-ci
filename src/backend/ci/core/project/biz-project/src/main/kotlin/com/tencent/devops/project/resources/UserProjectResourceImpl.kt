@@ -83,10 +83,20 @@ class UserProjectResourceImpl @Autowired constructor(
             projectService.getByEnglishName(
                 userId = userId,
                 englishName = projectId,
-                accessToken = accessToken,
-                needTips = true
+                accessToken = accessToken
             )
-                ?: throw OperationException("项目不存在")
+                ?: throw OperationException("project $projectId not found")
+        )
+    }
+
+    override fun show(userId: String, projectId: String, accessToken: String?): Result<ProjectVO> {
+        return Result(
+            projectService.show(
+                userId = userId,
+                englishName = projectId,
+                accessToken = accessToken
+            )
+                ?: throw OperationException("project $projectId not found")
         )
     }
 
