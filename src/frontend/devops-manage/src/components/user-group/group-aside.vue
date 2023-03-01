@@ -28,7 +28,7 @@
             <template #content>
               <bk-button
                 class="btn"
-                :disabled="[1, 2].includes(group.id)"
+                :disabled="['manager', 'visitor'].includes(group.groupCode)"
                 text
                 @click="handleShowDeleteGroup(group)">
                 {{ $t('删除') }}
@@ -47,20 +47,22 @@
         </span>
       </div>
     </section>
-    <!-- <div class="close-btn">
-      <bk-button @click="handleShowDeleteGroup">{{ $t('关闭权限管理') }}</bk-button>
-    </div> -->
     <bk-dialog
       header-align="center"
       theme="danger"
       quick-close
       :is-show="deleteObj.isShow"
-      :title="$t('删除')"
+      :title="$t('确认删除用户组？')"
       :is-loading="deleteObj.isLoading"
       @closed="handleHiddenDeleteGroup"
       @confirm="handleDeleteGroup"
     >
-      {{ $t('是否删除用户组', [deleteObj.group.name]) }}
+      <div>{{ $t('删除【】，将产生以下影响：', [deleteObj.group.name]) }}</div>
+      <div class="delete-tips">
+        <p>{{ $t('组内用户和组织将被全部移除') }}</p>
+        <p>{{ $t('组权限将全部移除') }}</p>
+        <p>{{ $t('组内用户继承该组的权限将失效') }}</p>
+      </div>
     </bk-dialog>
   </article>
 </template>
@@ -273,5 +275,8 @@ export default {
   }
   .small-size {
     scale: 0.9;
+  }
+  .delete-tips {
+    padding: 10px 0 25px;
   }
 </style>
