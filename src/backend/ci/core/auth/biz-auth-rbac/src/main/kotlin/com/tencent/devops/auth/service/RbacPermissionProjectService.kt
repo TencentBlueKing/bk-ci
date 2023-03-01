@@ -35,7 +35,6 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -71,7 +70,7 @@ class RbacPermissionProjectService(
                 groupCode = group.value
             ) ?: return emptyList()
             val groupInfo = allGroupAndUser.filter { it.roleId == dbGroupInfo.id }
-            return if (groupInfo.isEmpty())
+            if (groupInfo.isEmpty())
                 emptyList()
             else
                 groupInfo[0].userIdList
