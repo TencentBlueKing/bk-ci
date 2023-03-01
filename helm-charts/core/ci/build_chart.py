@@ -63,6 +63,8 @@ default_value_dict = {
     'bkCiAppToken': 'test',
     'bkCiNotifyEmailSendChannel': 'blueking',
     'initLocale': 'zh-CN',
+    'bkCiRedisSsl': 'false',
+    'bkCiEsHttps': 'false'
 }
 
 if os.path.isfile(default_value_json):
