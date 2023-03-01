@@ -127,7 +127,7 @@ class TemplateInstanceCronService @Autowired constructor(
                     return@forEach
                 }
                 val templateVersion = templateInstanceBase.templateVersion.toLong()
-                var template: TTemplateRecord? = null
+                val template: TTemplateRecord?
                 try {
                     template = templateDao.getTemplate(dslContext = dslContext, version = templateVersion)
                 } catch (e: ErrorCodeException) {
@@ -135,13 +135,10 @@ class TemplateInstanceCronService @Autowired constructor(
                         // 模板版本记录如果已经被删，则无需执行更新任务并把任务记录删除
                         logger.warn("the version[$templateVersion] of template[$templateId] is not exist,skip the task")
                         deleteTemplateInstanceTaskRecord(projectId, baseId)
+                        return@forEach
                     } else {
                         throw e
                     }
-                }
-                if (template == null) {
-                    deleteTemplateInstanceTaskRecord(projectId, baseId)
-                    return@forEach
                 }
                 val totalPages = PageUtil.calTotalPage(PAGE_SIZE, templateInstanceItemCount)
                 // 分页切片处理当前批次的待处理任务
