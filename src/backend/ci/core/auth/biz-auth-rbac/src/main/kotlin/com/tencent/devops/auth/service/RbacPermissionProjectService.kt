@@ -99,8 +99,8 @@ class RbacPermissionProjectService(
             // 3、获取组成员
             // todo 最多获取1000个用户或组是否合理
             val pageInfoDTO = PageInfoDTO()
-            pageInfoDTO.limit = 0
-            pageInfoDTO.offset = 1000
+            pageInfoDTO.limit = 1000
+            pageInfoDTO.offset = 0
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
             logger.info(
                 "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
