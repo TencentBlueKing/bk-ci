@@ -340,7 +340,7 @@ class InitializeMatrixGroupStageCmd(
                                     Container::containerHashId.name to (newContainer.containerHashId ?: ""),
                                     Container::name.name to (newContainer.name)
                                 ),
-                                status = null,
+                                status = newContainer.status,
                                 startTime = null,
                                 endTime = null,
                                 timestamps = mapOf()

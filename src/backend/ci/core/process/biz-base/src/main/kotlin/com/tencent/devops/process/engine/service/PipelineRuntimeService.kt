@@ -796,7 +796,7 @@ class PipelineRuntimeService @Autowired constructor(
                 if (stage.stageControlOption?.enable == false) {
                     addStageRecords(
                         projectId, pipelineId, version, buildId, stage, context, index,
-                        stageBuildRecords, containerBuildRecords, taskBuildRecords
+                        BuildStatus.SKIP, stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
                 }
                 return@nextStage
@@ -813,7 +813,7 @@ class PipelineRuntimeService @Autowired constructor(
                     context.containerSeq++
                     addContainerRecords(
                         projectId, pipelineId, version, buildId, stage, container,
-                        context, containerBuildRecords, taskBuildRecords
+                        context, null, containerBuildRecords, taskBuildRecords
                     )
                     return@nextContainer
                 } else if (container is NormalContainer) {
@@ -821,7 +821,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         addContainerRecords(
                             projectId, pipelineId, version, buildId, stage, container,
-                            context, containerBuildRecords, taskBuildRecords
+                            context, BuildStatus.SKIP, containerBuildRecords, taskBuildRecords
                         )
                         return@nextContainer
                     }
@@ -830,7 +830,7 @@ class PipelineRuntimeService @Autowired constructor(
                         context.containerSeq++
                         addContainerRecords(
                             projectId, pipelineId, version, buildId, stage, container,
-                            context, containerBuildRecords, taskBuildRecords
+                            context, BuildStatus.SKIP, containerBuildRecords, taskBuildRecords
                         )
                         return@nextContainer
                     }
@@ -1215,6 +1215,7 @@ class PipelineRuntimeService @Autowired constructor(
         stage: Stage,
         context: StartBuildContext,
         stageIndex: Int,
+        buildStatus: BuildStatus?,
         stageBuildRecords: MutableList<BuildRecordStage>,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
@@ -1223,14 +1224,14 @@ class PipelineRuntimeService @Autowired constructor(
             BuildRecordStage(
                 projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
                 buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
-                stageSeq = stageIndex, stageVar = mutableMapOf(), status = BuildStatus.SKIP.name,
+                stageSeq = stageIndex, stageVar = mutableMapOf(), status = buildStatus?.name,
                 startTime = null, endTime = null, timestamps = mapOf()
             )
         )
         stage.containers.forEach { container ->
             addContainerRecords(
-                projectId, pipelineId, version, buildId, stage,
-                container, context, containerBuildRecords, taskBuildRecords
+                projectId, pipelineId, version, buildId, stage, container,
+                context, buildStatus, containerBuildRecords, taskBuildRecords
             )
         }
     }
@@ -1243,6 +1244,7 @@ class PipelineRuntimeService @Autowired constructor(
         stage: Stage,
         container: Container,
         context: StartBuildContext,
+        buildStatus: BuildStatus?,
         containerBuildRecords: MutableList<BuildRecordContainer>,
         taskBuildRecords: MutableList<BuildRecordTask>
     ) {
@@ -1270,7 +1272,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
                 containerType = container.getClassType(), executeCount = context.executeCount,
                 matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                status = BuildStatus.SKIP.name, containerVar = containerVar,
+                status = buildStatus?.name, containerVar = containerVar,
                 startTime = null, endTime = null, timestamps = mapOf()
             )
         )
@@ -1282,7 +1284,7 @@ class PipelineRuntimeService @Autowired constructor(
                     taskId = element.id!!, classType = element.getClassType(),
                     atomCode = element.getTaskAtom(), executeCount = context.executeCount,
                     originClassType = null, resourceVersion = version, taskSeq = index,
-                    status = BuildStatus.SKIP.name, taskVar = mutableMapOf(),
+                    status = buildStatus?.name, taskVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
@@ -1364,7 +1366,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null, taskVar = mutableMapOf(),
+                    resourceVersion = resourceVersion, status = it.status.name, taskVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
@@ -1393,7 +1395,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
+                    status = build.status.name, startTime = null, endTime = null, timestamps = mapOf(),
                     containerVar = containerVar
                 )
             )
@@ -1411,7 +1413,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, startTime = null, endTime = null, timestamps = mapOf()
+                    status = it.status.name, startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
         }
