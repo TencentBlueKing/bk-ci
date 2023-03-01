@@ -1366,7 +1366,7 @@ class PipelineRuntimeService @Autowired constructor(
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
                     executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = it.status.name, taskVar = mutableMapOf(),
+                    resourceVersion = resourceVersion, status = null, taskVar = mutableMapOf(),
                     startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
@@ -1395,7 +1395,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildId = build.buildId, stageId = build.stageId, containerId = build.containerId,
                     containerType = build.containerType, executeCount = build.executeCount,
                     matrixGroupFlag = build.matrixGroupFlag, matrixGroupId = build.matrixGroupId,
-                    status = build.status.name, startTime = null, endTime = null, timestamps = mapOf(),
+                    status = null, startTime = null, endTime = null, timestamps = mapOf(),
                     containerVar = containerVar
                 )
             )
@@ -1413,7 +1413,7 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
                     executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = it.status.name, startTime = null, endTime = null, timestamps = mapOf()
+                    status = null, startTime = null, endTime = null, timestamps = mapOf()
                 )
             )
         }
