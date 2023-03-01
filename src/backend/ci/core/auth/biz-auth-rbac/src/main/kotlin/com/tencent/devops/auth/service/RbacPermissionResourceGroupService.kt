@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
@@ -47,16 +48,20 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
     private val permissionResourceService: PermissionResourceService,
-    private val permissionGroupPoliciesService: PermissionGroupPoliciesService
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val dslContext: DSLContext,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) : PermissionResourceGroupService {
 
     companion object {
@@ -73,11 +78,28 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        return if (resourceType == AuthResourceType.PROJECT.value) {
+        val iamGroupInfoList =  if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.listGroup(resourceInfo.relationId)
         } else {
             permissionSubsetManagerService.listGroup(resourceInfo.relationId)
         }
+        val resourceGroupMap = authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+        ).associateBy { it.relationId.toInt() }
+        return iamGroupInfoList.map {
+            IamGroupInfoVo(
+                managerId = resourceInfo.relationId.toInt(),
+                groupCode = resourceGroupMap[it.id]?.groupCode ?: "",
+                groupId = it.id,
+                name = it.name,
+                displayName = it.name,
+                userCount = it.userCount,
+                departmentCount = it.departmentCount
+            )
+        }.sortedBy { it.groupId }
     }
 
     override fun listUserBelongGroup(

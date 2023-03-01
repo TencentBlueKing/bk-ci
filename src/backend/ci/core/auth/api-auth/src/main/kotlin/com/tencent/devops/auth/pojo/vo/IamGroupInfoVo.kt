@@ -7,6 +7,8 @@ import io.swagger.annotations.ApiModelProperty
 data class IamGroupInfoVo(
     @ApiModelProperty("分级管理员或二级管理员ID")
     val managerId: Int,
+    @ApiModelProperty("组code,如果用户创建的组,值为空")
+    val groupCode: String,
     @ApiModelProperty("用户组ID")
     val groupId: Int,
     @ApiModelProperty("用户组名称")

@@ -133,6 +133,15 @@ class AuthResourceGroupDao {
         }
     }
 
+    fun deleteByIds(
+        dslContext: DSLContext,
+        ids: List<Long>
+    ) {
+        return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
+            dslContext.deleteFrom(this).where(ID.`in`(ids))
+        }
+    }
+
     fun getByRelationId(
         dslContext: DSLContext,
         projectCode: String,
