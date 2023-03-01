@@ -49,11 +49,6 @@ interface ContainerService {
     fun getAllPipelineContainer(): Result<List<Container>>
 
     /**
-     * 判断是否有无编译环境
-     */
-    fun checkNoCompilation(): Result<Boolean>
-
-    /**
      * 获取构建容器信息
      */
     fun getAllContainerInfos(userId: String, projectCode: String, type: String?, os: OS?): Result<List<ContainerResp>>

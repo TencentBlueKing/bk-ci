@@ -50,7 +50,6 @@ import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
-import com.tencent.devops.store.pojo.container.enums.ContainerTypeEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -100,20 +99,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             )
         }
         return Result(pipelineContainerList)
-    }
-
-    /**
-     * 判断是否有无编译环境
-     */
-    override fun checkNoCompilation(): Result<Boolean> {
-        val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
-        logger.info("Starting checkNoCompilation $containers")
-        containers?.forEach {
-            if (it.type.equals(ContainerTypeEnum.NORMAL.name, true)) {
-                return Result(true)
-            }
-        }
-        return Result(false)
     }
 
     /**

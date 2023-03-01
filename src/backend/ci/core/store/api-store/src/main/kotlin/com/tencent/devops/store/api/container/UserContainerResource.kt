@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResp
 import io.swagger.annotations.Api
@@ -136,8 +137,8 @@ interface UserContainerResource {
         os: OS
     ): Result<List<ContainerResp>>
 
-    @ApiOperation("判断是否有无编译环境")
+    @ApiOperation("获取全部流水线构建容器信息")
     @GET
-    @Path("/check")
-    fun checkNoCompilation(): Result<Boolean>
+    @Path("/all")
+    fun getAllContainers(): Result<List<Container>>
 }
