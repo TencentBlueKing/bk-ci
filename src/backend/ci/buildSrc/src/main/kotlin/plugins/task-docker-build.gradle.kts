@@ -37,7 +37,9 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     val service = name.replace("boot-", "").replace("-tencent", "")
 
     if (toImage.isNullOrBlank() && !toImageRepo.isNullOrBlank()) {
-        toImage = toImageRepo.let { if (toImageRepo.endsWith("/")) it else it + "/" } + service + ":" + toImageTag
+        toImage = toImageRepo.let {
+            if (toImageRepo.endsWith("/")) it else it + "/"
+        } + "bk-ci" + service + ":" + toImageTag
     }
     println("the image will to : $toImage")
 
