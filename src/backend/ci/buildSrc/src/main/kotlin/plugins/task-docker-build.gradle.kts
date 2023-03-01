@@ -39,7 +39,7 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
     if (toImage.isNullOrBlank() && !toImageRepo.isNullOrBlank()) {
         toImage = toImageRepo.let {
             if (toImageRepo.endsWith("/")) it else it + "/"
-        } + "bk-ci-" + service + ":" + toImageTag
+        } + "bkci-" + service + ":" + toImageTag
     }
     println("the image will to : $toImage")
 
