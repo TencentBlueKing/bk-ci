@@ -27,11 +27,16 @@
 
 package com.tencent.devops.environment.resources.thirdPartyAgent
 
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.AgentResult
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_VIEW_PERMISSSION
+import com.tencent.devops.environment.permission.EnvironmentPermissionService
 import com.tencent.devops.environment.pojo.AgentPipelineRefRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.AgentPipelineRef
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
@@ -52,7 +57,8 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
     private val thirdPartyAgentService: ThirdPartyAgentMgrService,
     private val upgradeService: UpgradeService,
     private val thirdPartyAgentPipelineService: ThirdPartyAgentPipelineService,
-    private val agentPipelineService: AgentPipelineService
+    private val agentPipelineService: AgentPipelineService,
+    private val permissionService: EnvironmentPermissionService
 ) : ServiceThirdPartyAgentResource {
     override fun getAgentById(projectId: String, agentId: String): AgentResult<ThirdPartyAgent?> {
         return thirdPartyAgentService.getAgent(projectId, agentId)
@@ -160,5 +166,20 @@ class ServiceThirdPartyAgentResourceImpl @Autowired constructor(
         agentHashId: String
     ): Result<ThirdPartyAgentDetail?> {
         return Result(thirdPartyAgentService.getAgentDetailById(userId, projectId, agentHashId = agentHashId))
+    }
+
+    override fun getNodeDetail(userId: String, projectId: String, nodeHashId: String): Result<ThirdPartyAgentDetail?> {
+        if (!permissionService.checkNodePermission(
+                userId = userId,
+                projectId = projectId,
+                nodeId = HashUtil.decodeIdToLong(nodeHashId),
+                permission = AuthPermission.VIEW
+            )
+        ) {
+            throw ErrorCodeException(
+                errorCode = ERROR_NODE_NO_VIEW_PERMISSSION
+            )
+        }
+        return Result(thirdPartyAgentService.getAgentDetail(userId, projectId, nodeHashId))
     }
 }
