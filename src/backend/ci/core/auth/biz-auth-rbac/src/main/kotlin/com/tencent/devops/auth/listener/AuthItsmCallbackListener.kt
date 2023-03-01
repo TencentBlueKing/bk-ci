@@ -70,6 +70,7 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create callback info:$itsmCallBackInfo")
+        // 校验itsm回调token
         itsmService.verifyItsmToken(itsmCallBackInfo.token)
         if (itsmCallBackInfo.currentStatus == CANCEL_ITSM_APPLICATION_STATUS)
             return
@@ -127,6 +128,7 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun updateProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
+        // 校验itsm回调token
         itsmService.verifyItsmToken(itsmCallBackInfo.token)
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
