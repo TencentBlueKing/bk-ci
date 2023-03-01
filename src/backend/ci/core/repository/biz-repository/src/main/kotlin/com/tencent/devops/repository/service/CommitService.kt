@@ -89,9 +89,8 @@ class CommitService @Autowired constructor(
             val elementId = a.value[0].elementId
             val repoId = a.value[0].repoId
             val repoName = a.value[0].repoName
-            val repoUrl = a.value[0].url
             CommitResponse(
-                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoUrl ?: "unknown repo"),
+                name = (idRepos[repoId]?.aliasName ?: nameRepos[repoName]?.aliasName ?: repoName ?: "unknown repo"),
                 elementId = elementId,
                 records = a.value.filter { it.commit.isNotBlank() }
             )
