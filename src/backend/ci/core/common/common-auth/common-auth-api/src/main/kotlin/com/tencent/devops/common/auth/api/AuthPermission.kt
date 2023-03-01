@@ -46,7 +46,8 @@ enum class AuthPermission(val value: String, val alias: String) {
 
     VIEWS_MANAGER("views_manager", "视图管理"), // 项目视图管理
     WEB_CHECK("webcheck", "页面按钮校验"), // 页面按钮校验
-    MANAGE("manage", "管理"); // 项目管理
+    MANAGE("manage", "管理"), // 项目管理
+    VISIT("visit", "访问"); // 项目访问权限
 
     companion object {
         fun get(value: String): AuthPermission {

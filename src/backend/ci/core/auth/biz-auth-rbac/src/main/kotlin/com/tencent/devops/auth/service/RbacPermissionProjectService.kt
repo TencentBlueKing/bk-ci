@@ -32,7 +32,6 @@ import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -64,7 +63,7 @@ class RbacPermissionProjectService(
     override fun getUserProjects(userId: String): List<String> {
         val projectList = authHelper.getInstanceList(
             userId,
-            Constants.PROJECT_VIEW,
+            RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
             RbacAuthUtils.extResourceType(AuthResourceType.PROJECT)
         )
         logger.info("get user projects:$projectList")
@@ -81,7 +80,11 @@ class RbacPermissionProjectService(
         instanceDTO.system = iamConfiguration.systemId
         instanceDTO.id = projectCode
         instanceDTO.type = AuthResourceType.PROJECT.value
-        return authHelper.isAllowed(userId, Constants.PROJECT_VIEW, instanceDTO)
+        return authHelper.isAllowed(
+            userId,
+            RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
+            instanceDTO
+        )
     }
 
     override fun checkProjectManager(userId: String, projectCode: String): Boolean {

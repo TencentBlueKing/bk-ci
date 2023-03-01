@@ -58,7 +58,6 @@ class ItsmService @Autowired constructor(
         )
         val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
         logger.info("itsmApiResData:$itsmApiResData")
-        logger.info("is_passed:${itsmApiResData["is_passed"]}")
         val isPassed = itsmApiResData["is_passed"]
         if (!isPassed!!) {
             logger.warn("verify itsm token failed!$token")
