@@ -118,7 +118,7 @@ interface UserProjectResource {
     ): Result<ProjectVO>
 
     @GET
-    @Path("/{english_name}")
+    @Path("/{english_name}/show")
     @ApiOperation("前端获取项目详情,有project_view权限校验")
     fun show(
         @ApiParam("userId", required = true)
