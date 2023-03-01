@@ -13,6 +13,10 @@ commonLabels: {}
 remoteDebug:
   enabled: false
 
+# java 启动参数
+java:
+  options: ""
+
 # ingress 配置
 ingress:
   enabled: false

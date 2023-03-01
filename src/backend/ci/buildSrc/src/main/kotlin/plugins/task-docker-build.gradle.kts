@@ -39,7 +39,18 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
         toImage = toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag)
     }
 
-    val springProfiles = System.getProperty("spring.profiles")
+    // TODO 这种获取方式要废弃
+    var springProfiles = System.getProperty("spring.profiles", "")
+
+    if (springProfiles.isBlank()) {
+        val runtimeEnvironment = System.getProperty("runtime.environment")
+        if (!setOf("prod", "test", "dev").contains(runtimeEnvironment)) {
+            throw RuntimeException("runtimeEnvironment is illegal")
+        }
+        springProfiles="$runtimeEnvironment,\$NAMESPACE"
+    }
+
+
     val serviceNamespace = System.getProperty("service.namespace")
     val configNamespace = System.getProperty("config.namespace")
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let {
