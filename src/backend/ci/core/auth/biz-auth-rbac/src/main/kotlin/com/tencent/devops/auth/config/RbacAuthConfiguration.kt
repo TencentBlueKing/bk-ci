@@ -39,8 +39,10 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
+import com.tencent.devops.auth.service.AuthGroupService
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
+import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
@@ -183,12 +185,16 @@ class RbacAuthConfiguration {
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
         iamV2ManagerService: V2ManagerService,
-        iamConfiguration: IamConfiguration
+        iamConfiguration: IamConfiguration,
+        deptService: DeptService,
+        authGroupService: AuthGroupService
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
-        iamConfiguration = iamConfiguration
+        iamConfiguration = iamConfiguration,
+        deptService = deptService,
+        authGroupService = authGroupService
     )
 
     @Bean
