@@ -51,6 +51,7 @@ class ItsmService @Autowired constructor(
     fun verifyItsmToken(token: String) {
         val param: MutableMap<String, String> = mutableMapOf()
         param["token"] = token
+        logger.info("param:${param["token"]}")
         val itsmResponseDTO = doHttpPost(
             url = itsmVerifyTokenUrl,
             body = param
