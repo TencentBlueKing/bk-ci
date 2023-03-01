@@ -41,7 +41,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
             if (toImageRepo.endsWith("/")) it else it + "/"
         } + "bkci-" + service + ":" + toImageTag
     }
-    println("the image will to : $toImage")
 
     val configNamespace = System.getProperty("config.namespace")
 
