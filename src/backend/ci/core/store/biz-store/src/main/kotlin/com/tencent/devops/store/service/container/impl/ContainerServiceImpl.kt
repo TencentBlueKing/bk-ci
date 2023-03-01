@@ -52,7 +52,6 @@ import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
-import com.tencent.devops.store.pojo.container.enums.ContainerTypeEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -113,9 +112,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         val containertypes = mutableListOf<ContainerType>()
 
         containers?.forEach {
-            if (it.type.equals(ContainerTypeEnum.NORMAL.name, true)) {
                 containertypes.add(convertContainer(it))
-            }
         }
         return Result(containertypes)
     }
