@@ -64,6 +64,8 @@ class AgentGrayUtils constructor(
         private const val LOCK_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:lock_upgrade"
         private const val LOCK_UPGRADE_DOCKER_INIT_FILE_SET_KEY =
             "environment:thirdparty:docker_init_file:lock_upgrade"
+        private const val LOCK_UPGRADE_TELEGRAF_CONF_SET_KEY =
+            "environment:thirdparty:telegraf_conf:lock_upgrade"
 
         private const val FORCE_UPGRADE_AGENT_SET_KEY = "environment:thirdparty:force_upgrade"
 
@@ -72,6 +74,8 @@ class AgentGrayUtils constructor(
         private const val FORCE_UPGRADE_AGENT_JDK_SET_KEY = "environment:thirdparty:jdk:force_upgrade"
         private const val FORCE_UPGRADE_AGENT_DOCKER_INIT_FILE_SET_KEY =
             "environment:thirdparty:docker_init_file:force_upgrade"
+        private const val FORCE_UPGRADE_AGENT_TELEGRAF_CONF_SET_KEY =
+            "environment:thirdparty:telegraf_conf:force_upgrade"
 
         private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"
@@ -122,6 +126,7 @@ class AgentGrayUtils constructor(
             AgentUpgradeType.GO_AGENT -> FORCE_UPGRADE_AGENT_GO_SET_KEY
             AgentUpgradeType.JDK -> FORCE_UPGRADE_AGENT_JDK_SET_KEY
             AgentUpgradeType.DOCKER_INIT_FILE -> FORCE_UPGRADE_AGENT_DOCKER_INIT_FILE_SET_KEY
+            AgentUpgradeType.TELEGRAF_CONF -> FORCE_UPGRADE_AGENT_TELEGRAF_CONF_SET_KEY
         }
     }
 
@@ -164,6 +169,7 @@ class AgentGrayUtils constructor(
             AgentUpgradeType.GO_AGENT -> LOCK_UPGRADE_AGENT_GO_SET_KEY
             AgentUpgradeType.JDK -> LOCK_UPGRADE_AGENT_JDK_SET_KEY
             AgentUpgradeType.DOCKER_INIT_FILE -> LOCK_UPGRADE_DOCKER_INIT_FILE_SET_KEY
+            AgentUpgradeType.TELEGRAF_CONF -> LOCK_UPGRADE_TELEGRAF_CONF_SET_KEY
         }
     }
 

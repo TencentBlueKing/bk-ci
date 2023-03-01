@@ -115,7 +115,8 @@ class UpgradeService @Autowired constructor(
                     agent = false,
                     worker = false,
                     jdk = false,
-                    dockerInitFile = false
+                    dockerInitFile = false,
+                    telegrafConf = false
                 )
             )
         }
@@ -123,7 +124,7 @@ class UpgradeService @Autowired constructor(
         if (!checkProjectUpgrade(projectId)) {
             return AgentResult(
                 AgentStatus.IMPORT_OK,
-                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false)
+                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false, telegrafConf = false)
             )
         }
 
@@ -131,6 +132,7 @@ class UpgradeService @Autowired constructor(
         val currentGoAgentVersion = agentPropsScope.getAgentVersion()
         val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
         val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
+        val currentTelegrafConfFileMd5 = agentPropsScope.getTelegrafConfMd5(os)
 
         val canUpgrade = agentScope.checkCanUpgrade(agentId)
 
@@ -198,13 +200,28 @@ class UpgradeService @Autowired constructor(
             else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
         }
 
+        val telegrafConf = when {
+            info.telegrafConfInfo == null -> false
+            currentTelegrafConfFileMd5.isNullOrBlank() -> {
+                logger.warn(
+                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}| telegraf conf md5 is null"
+                )
+                false
+            }
+
+            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.TELEGRAF_CONF) -> false
+            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.TELEGRAF_CONF) -> true
+            else -> canUpgrade && info.telegrafConfInfo?.fileMd5 != currentTelegrafConfFileMd5
+        }
+
         return AgentResult(
             status = AgentStatus.IMPORT_OK,
             data = UpgradeItem(
                 agent = goAgentVersion,
                 worker = workerVersion,
                 jdk = jdkVersion,
-                dockerInitFile = dockerInitFile
+                dockerInitFile = dockerInitFile,
+                telegrafConf = telegrafConf
             )
         )
     }

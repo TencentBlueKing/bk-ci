@@ -12,5 +12,7 @@ data class UpgradeItem(
     @ApiModelProperty("升级jdk")
     val jdk: Boolean,
     @ApiModelProperty("升级docker init 脚本")
-    val dockerInitFile: Boolean
+    val dockerInitFile: Boolean,
+    @ApiModelProperty("升级telegraf配置文件")
+    val telegrafConf: Boolean
 )
