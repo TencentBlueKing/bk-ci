@@ -70,6 +70,8 @@ const (
 	JdkClientFile = "jdk.zip"
 
 	DockerInitFile = "agent_docker_init.sh"
+
+	TelegrafConfFile = "telegraf.conf"
 )
 
 // Auth Header

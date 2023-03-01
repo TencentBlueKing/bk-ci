@@ -29,16 +29,11 @@ package upgrade
 
 import (
 	"os"
-	"strings"
-	"sync"
-	"sync/atomic"
 	"time"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/item"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
-
-	"github.com/pkg/errors"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
@@ -47,49 +42,16 @@ import (
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
-var JdkVersion = &JdkVersionType{}
-
-// JdkVersion jdk版本信息缓存
-type JdkVersionType struct {
-	JdkFileModTime time.Time
-	// 版本信息，原子级的 []string
-	version atomic.Value
-}
-
-func (j *JdkVersionType) GetVersion() []string {
-	data := j.version.Load()
-	if data == nil {
-		return []string{}
-	} else {
-		return j.version.Load().([]string)
-	}
-}
-
-func (j *JdkVersionType) SetVersion(version []string) {
-	if version == nil {
-		version = []string{}
-	}
-	j.version.Swap(version)
-}
-
-// DockerFileMd5 缓存，用来计算md5
-var DockerFileMd5 struct {
-	// 目前非linux机器不支持，以及一些机器不使用docker就不用计算md5
-	NeedUpgrade bool
-	FileModTime time.Time
-	Lock        sync.Mutex
-	Md5         string
-}
-
 type upgradeChangeItem struct {
 	AgentChanged     bool
 	WorkAgentChanged bool
 	JdkChanged       bool
 	DockerInitFile   bool
+	TelegrafConf     bool
 }
 
 func (u upgradeChangeItem) checkNoChange() bool {
-	if !u.AgentChanged && !u.WorkAgentChanged && !u.JdkChanged && !u.DockerInitFile {
+	if !u.AgentChanged && !u.WorkAgentChanged && !u.JdkChanged && !u.DockerInitFile && !u.TelegrafConf {
 		return true
 	}
 
@@ -129,22 +91,30 @@ func agentUpgrade() {
 		}
 	}()
 
-	jdkVersion, err := SyncJdkVersion()
+	jdkVersion, err := item.SyncJdkVersion()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync jdk version err: ", err.Error())
 		return
 	}
 
-	err = SyncDockerInitFileMd5()
+	err = item.DockerFileMd5.Sync()
 	if err != nil {
 		logs.Error("[agentUpgrade]|sync docker file md5 err: ", err.Error())
 		return
 	}
+	dockerMd5, needUpgrade := item.DockerFileMd5.Read()
+
+	err = item.TelegrafConf.Sync()
+	if err != nil {
+		logs.Error("[agentUpgrade]|sync telegraf conf file md5 err: ", err.Error())
+		return
+	}
+	telegrafMd5 := item.TelegrafConf.Read()
 
 	checkResult, err := api.CheckUpgrade(jdkVersion, api.DockerInitFileInfo{
-		FileMd5:     DockerFileMd5.Md5,
-		NeedUpgrade: DockerFileMd5.NeedUpgrade,
-	})
+		FileMd5:     dockerMd5,
+		NeedUpgrade: needUpgrade,
+	}, api.TelegrafConfInfo{FileMd5: telegrafMd5})
 	if err != nil {
 		ack = true
 		logs.Error("[agentUpgrade]|check upgrade err: ", err.Error())
@@ -183,159 +153,6 @@ func agentUpgrade() {
 	}
 }
 
-// SyncJdkVersion 同步jdk版本信息
-func SyncJdkVersion() ([]string, error) {
-	// 获取jdk文件状态以及时间
-	stat, err := os.Stat(config.GAgentConfig.JdkDirPath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			logs.Error("syncJdkVersion no jdk dir find", err)
-			// jdk版本置为空，否则会一直保持有版本的状态
-			JdkVersion.SetVersion([]string{})
-			return nil, nil
-		}
-		return nil, errors.Wrap(err, "agent check jdk dir error")
-	}
-	nowModTime := stat.ModTime()
-
-	// 如果为空则必获取
-	if len(JdkVersion.GetVersion()) == 0 {
-		version, err := getJdkVersion()
-		if err != nil {
-			// 拿取错误时直接下载新的
-			logs.Error("syncJdkVersion getJdkVersion err", err)
-			return nil, nil
-		}
-		JdkVersion.SetVersion(version)
-		JdkVersion.JdkFileModTime = nowModTime
-		return version, nil
-	}
-
-	// 判断文件夹最后修改时间，不一致时不用更改
-	if nowModTime == JdkVersion.JdkFileModTime {
-		return JdkVersion.GetVersion(), nil
-	}
-
-	version, err := getJdkVersion()
-	if err != nil {
-		// 拿取错误时直接下载新的
-		logs.Error("syncJdkVersion getJdkVersion err", err)
-		JdkVersion.SetVersion([]string{})
-		return nil, nil
-	}
-	JdkVersion.SetVersion(version)
-	JdkVersion.JdkFileModTime = nowModTime
-	return version, nil
-}
-
-func SyncDockerInitFileMd5() error {
-	if !systemutil.IsLinux() || !config.GAgentConfig.EnableDockerBuild {
-		DockerFileMd5.NeedUpgrade = false
-		return nil
-	}
-	DockerFileMd5.Lock.Lock()
-	defer func() {
-		DockerFileMd5.Lock.Unlock()
-	}()
-	DockerFileMd5.NeedUpgrade = true
-
-	filePath := config.GetDockerInitFilePath()
-
-	stat, err := os.Stat(filePath)
-	if err != nil {
-		if os.IsNotExist(err) {
-			logs.Warn("syncDockerInitFileMd5 no docker init file find", err)
-			DockerFileMd5.Md5 = ""
-			return nil
-		}
-		return errors.Wrap(err, "agent check docker init file error")
-	}
-	nowModTime := stat.ModTime()
-
-	if DockerFileMd5.Md5 == "" {
-		DockerFileMd5.Md5, err = fileutil.GetFileMd5(filePath)
-		if err != nil {
-			DockerFileMd5.Md5 = ""
-			return errors.Wrapf(err, "agent get docker init file %s md5 error", filePath)
-		}
-		DockerFileMd5.FileModTime = nowModTime
-		return nil
-	}
-
-	if nowModTime == DockerFileMd5.FileModTime {
-		return nil
-	}
-
-	DockerFileMd5.Md5, err = fileutil.GetFileMd5(filePath)
-	if err != nil {
-		DockerFileMd5.Md5 = ""
-		return errors.Wrapf(err, "agent get docker init file %s md5 error", filePath)
-	}
-	DockerFileMd5.FileModTime = nowModTime
-	return nil
-}
-
-func getJdkVersion() ([]string, error) {
-	jdkVersion, err := command.RunCommand(config.GetJava(), []string{"-version"}, "", nil)
-	if err != nil {
-		logs.Error("agent get jdk version failed: ", err.Error())
-		return nil, errors.Wrap(err, "agent get jdk version failed")
-	}
-	var jdkV []string
-	if jdkVersion != nil {
-		versionOutputString := strings.TrimSpace(string(jdkVersion))
-		jdkV = trimJdkVersionList(versionOutputString)
-	}
-
-	return jdkV, nil
-}
-
-// parseJdkVersionList 清洗在解析一些版本信息的干扰信息,避免因tmp空间满等导致识别不准确造成重复不断的升级
-func trimJdkVersionList(versionOutputString string) []string {
-	/*
-		OpenJDK 64-Bit Server VM warning: Insufficient space for shared memory file:
-		   32490
-		Try using the -Djava.io.tmpdir= option to select an alternate temp location.
-
-		openjdk version "1.8.0_352"
-		OpenJDK Runtime Environment (Tencent Kona 8.0.12) (build 1.8.0_352-b1)
-		OpenJDK 64-Bit Server VM (Tencent Kona 8.0.12) (build 25.352-b1, mixed mode)
-		Picked up _JAVA_OPTIONS: -Xmx8192m -Xms256m -Xss8m
-	*/
-	// 一个JVM版本只需要识别3行。
-	var jdkV = make([]string, 3)
-
-	var sep = "\n"
-	if strings.HasSuffix(versionOutputString, "\r\n") {
-		sep = "\r\n"
-	}
-
-	lines := strings.Split(strings.TrimSuffix(versionOutputString, sep), sep)
-
-	var pos = 0
-	for i := range lines {
-
-		if pos == 0 {
-			if strings.Contains(lines[i], " version ") {
-				jdkV[pos] = lines[i]
-				pos++
-			}
-		} else if pos == 1 {
-			if strings.Contains(lines[i], " Runtime Environment ") {
-				jdkV[pos] = lines[i]
-				pos++
-			}
-		} else if pos == 2 {
-			if strings.Contains(lines[i], " Server VM ") {
-				jdkV[pos] = lines[i]
-				break
-			}
-		}
-	}
-
-	return jdkV
-}
-
 // downloadUpgradeFiles 下载升级文件
 func downloadUpgradeFiles(item *api.UpgradeItem) upgradeChangeItem {
 	workDir := systemutil.GetWorkDir()
@@ -366,6 +183,12 @@ func downloadUpgradeFiles(item *api.UpgradeItem) upgradeChangeItem {
 		result.DockerInitFile = false
 	} else {
 		result.DockerInitFile = downloadUpgradeDockerInit(upgradeDir)
+	}
+
+	if !item.TelegrafConf {
+		result.TelegrafConf = false
+	} else {
+		result.TelegrafConf = downloadUpgradeTelegrafConf(upgradeDir)
 	}
 
 	return result
@@ -467,6 +290,18 @@ func downloadUpgradeDockerInit(upgradeDir string) bool {
 		return false
 	}
 	logs.Info("[agentUpgrade]|download docker init shell done")
+
+	return true
+}
+
+func downloadUpgradeTelegrafConf(upgradeDir string) bool {
+	logs.Info("[agentUpgrade]|download telegraf config file start")
+	_, err := download.DownloadTelegrafConfFile(upgradeDir)
+	if err != nil {
+		logs.Error("[agentUpgrade]|download telegraf config failed", err)
+		return false
+	}
+	logs.Info("[agentUpgrade]|download telegraf config done")
 
 	return true
 }

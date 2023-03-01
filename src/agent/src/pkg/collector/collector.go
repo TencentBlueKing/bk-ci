@@ -52,11 +52,11 @@ const (
 	telegrafConfigFile   = "telegraf.conf"
 	telegrafRelaunchTime = 5 * time.Second
 
-	templateKeyAgentId     = "###{agentId}###"
-	templateKeyAgentSecret = "###{agentSecret}###"
-	templateKeyGateway     = "###{gateway}###"
-	templateKeyTlsCa       = "###{tls_ca}###"
-	templateKeyProjectId   = "###{projectId}###"
+	templateKeyAgentId     = "##{agentId}##"
+	templateKeyAgentSecret = "##{agentSecretKey}##"
+	templateKeyGateway     = "##{gateway}##"
+	templateKeyTlsCa       = "##{tls_ca}##"
+	templateKeyProjectId   = "##{projectId}##"
 )
 
 const configTemplateLinux = `[global_tags]

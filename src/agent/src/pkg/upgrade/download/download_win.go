@@ -36,3 +36,9 @@ func DownloadJdkFile(saveDir string) (string, error) {
 func DownloadDockerInitFile(saveDir string) (string, error) {
 	return "", errors.New("not support windows use docker agent")
 }
+
+func DownloadTelegrafConfFile(saveDir string)(string, error) {
+	return api.DownloadUpgradeFile(
+		"config/windows/telegraf.conf", saveDir+"/"+config.TelegrafConfFile,
+	)
+}

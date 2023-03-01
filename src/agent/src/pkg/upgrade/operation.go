@@ -208,5 +208,26 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 		logs.Info("[agentUpgrade]|docker init file not changed, skip agent upgrade")
 	}
 
+	if changeItems.TelegrafConf {
+		logs.Info("[agentUpgrade]|telegraf conf file changed, replace telegraf conf file")
+		_, err := fileutil.CopyFile(
+			systemutil.GetUpgradeDir()+"/"+config.TelegrafConfFile,
+			config.GetTelegrafConfFilePath(),
+			true)
+		if err != nil {
+			logs.Error("[agentUpgrade]|replace work telegraf conf file failed: ", err.Error())
+			return errors.New("replace work telegraf conf file failed")
+		}
+		// 授予文件可执行权限，每次升级后赋予权限可以减少直接在启动时赋予的并发赋予的情况
+		if err = systemutil.Chmod(config.GetTelegrafConfFilePath(), os.ModePerm); err != nil {
+			logs.Error("[agentUpgrade]|chmod work telegraf conf file failed: ", err.Error())
+			return errors.New("chmod work telegraf conf file failed")
+		}
+
+		logs.Info("[agentUpgrade]|replace telegraf conf file done")
+	} else {
+		logs.Info("[agentUpgrade]|telegraf conf file not changed, skip agent upgrade")
+	}
+
 	return nil
 }

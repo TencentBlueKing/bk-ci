@@ -46,6 +46,7 @@ func Heartbeat(
 	jdkVersion []string,
 	dockerTaskList []ThirdPartyDockerTaskInfo,
 	dockerInitFileMd5 DockerInitFileInfo,
+	TelegrafMd5 TelegrafConfInfo,
 ) (*httputil.DevopsResult, error) {
 	url := buildUrl("/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/newHeartbeat")
 
@@ -79,7 +80,7 @@ func Heartbeat(
 	return httputil.NewHttpClient().Post(url).Body(agentHeartbeatInfo).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoDevopsResult()
 }
 
-func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*httputil.AgentResult, error) {
+func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo, telegrafConf TelegrafConfInfo) (*httputil.AgentResult, error) {
 	url := buildUrl("/ms/dispatch/api/buildAgent/agent/thirdPartyAgent/upgradeNew")
 
 	info := &UpgradeInfo{
@@ -87,6 +88,7 @@ func CheckUpgrade(jdkVersion []string, dockerInitFileMd5 DockerInitFileInfo) (*h
 		GoAgentVersion:     config.AgentVersion,
 		JdkVersion:         jdkVersion,
 		DockerInitFileInfo: dockerInitFileMd5,
+		TelegrafConfInfo:   telegrafConf,
 	}
 
 	return httputil.NewHttpClient().Post(url).Body(info).SetHeaders(config.GAgentConfig.GetAuthHeaderMap()).Execute().IntoAgentResult()

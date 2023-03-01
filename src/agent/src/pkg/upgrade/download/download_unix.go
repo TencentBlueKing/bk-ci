@@ -52,3 +52,9 @@ func DownloadDockerInitFile(saveDir string) (string, error) {
 		"script/linux/agent_docker_init.sh", saveDir+"/"+config.DockerInitFile,
 	)
 }
+
+func DownloadTelegrafConfFile(saveDir string)(string, error) {
+	return api.DownloadUpgradeFile(
+		"config/linux/telegraf.conf", saveDir+"/"+config.TelegrafConfFile,
+	)
+}
