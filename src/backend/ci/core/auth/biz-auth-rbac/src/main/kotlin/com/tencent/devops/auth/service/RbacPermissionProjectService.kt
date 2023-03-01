@@ -29,7 +29,10 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
+import com.tencent.bk.sdk.iam.dto.PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.common.Constants
@@ -46,7 +49,9 @@ class RbacPermissionProjectService(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamV2ManagerService: V2ManagerService,
-    private val iamConfiguration: IamConfiguration
+    private val iamConfiguration: IamConfiguration,
+    private val deptService: DeptService,
+    private val authGroupService: AuthGroupService
 ) : PermissionProjectService {
 
     companion object {
@@ -54,11 +59,76 @@ class RbacPermissionProjectService(
     }
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
-        TODO("Not yet implemented")
+        // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员!
+        val allGroupAndUser = getProjectGroupAndUserList(projectCode)
+        return if (group == null) {
+            val allMembers = mutableSetOf<String>()
+            allGroupAndUser.map { allMembers.addAll(it.userIdList) }
+            allMembers.toList()
+        } else {
+            val dbGroupInfo = authGroupService.getGroupByCode(
+                projectCode = projectCode,
+                groupCode = group.value
+            ) ?: return emptyList()
+            val groupInfo = allGroupAndUser.filter { it.roleId == dbGroupInfo.id }
+            return if (groupInfo.isEmpty())
+                emptyList()
+            else
+                groupInfo[0].userIdList
+        }
     }
 
     override fun getProjectGroupAndUserList(projectCode: String): List<BkAuthGroupAndUserList> {
-        TODO("Not yet implemented")
+        // 1、获取分级管理员id
+        val gradeManagerId = authResourceService.get(
+            projectCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectCode
+        ).relationId
+        // 2、获取分级管理员下所有的用户组
+        // todo 最多获取1000个用户组是否合理
+        val pageInfoDTO = V2PageInfoDTO()
+        pageInfoDTO.page = 1
+        pageInfoDTO.pageSize = 1000
+        val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(gradeManagerId, null, pageInfoDTO).results
+        logger.info(
+            "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
+                " gradeManagerId = $gradeManagerId | groupInfoList: $groupInfoList"
+        )
+        val result = mutableListOf<BkAuthGroupAndUserList>()
+        groupInfoList.forEach {
+            // 3、获取组成员
+            // todo 最多获取1000个用户或组是否合理
+            val pageInfoDTO = PageInfoDTO()
+            pageInfoDTO.limit = 0
+            pageInfoDTO.offset = 1000
+            val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
+            logger.info(
+                "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
+                    "| groupMemberInfoList: $groupMemberInfoList"
+            )
+            val members = mutableListOf<String>()
+            groupMemberInfoList.forEach { memberInfo ->
+                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
+                    logger.info("[RBAC-IAM] department:$memberInfo")
+                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
+                    if (deptUsers != null) {
+                        members.addAll(deptUsers)
+                    }
+                } else {
+                    members.add(memberInfo.id)
+                }
+            }
+            val groupAndUser = BkAuthGroupAndUserList(
+                displayName = it.name,
+                roleId = it.id,
+                roleName = it.name,
+                userIdList = members,
+                type = ""
+            )
+            result.add(groupAndUser)
+        }
+        return result
     }
 
     override fun getUserProjects(userId: String): List<String> {
