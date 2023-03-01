@@ -39,7 +39,6 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
         toImage = toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag)
     }
 
-    val springProfiles = System.getProperty("spring.profiles")
     val serviceNamespace = System.getProperty("service.namespace")
     val configNamespace = System.getProperty("config.namespace")
     val jvmFlagList = System.getProperty("jvmFlags.file")?.let {
@@ -67,7 +66,6 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
         "-XX:MaxRAMPercentage=70.0",
         "-XX:MaxRAMPercentage=70.0",
         "-XX:-UseAdaptiveSizePolicy",
-        "-Dspring.profiles.active=$springProfiles",
         "-Dspring.jmx.enabled=true",
         "-Dservice.log.dir=/data/workspace/$service/logs/",
         "-Dsun.jnu.encoding=UTF-8",
