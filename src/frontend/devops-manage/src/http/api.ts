@@ -56,7 +56,7 @@ export default {
    */
   requestProjectData(params: any) {
     const { englishName } = params;
-    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}`);
+    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/show`);
   },
 
   /**

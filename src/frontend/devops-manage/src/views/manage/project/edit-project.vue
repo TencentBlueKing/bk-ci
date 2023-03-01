@@ -26,6 +26,7 @@ const isLoading = ref(false);
 const isChange = ref(false);
 const isToBeApproved = ref(false);
 const btnLoading = ref(false);
+const hasPermission = ref(true)
 const statusDisabledTips = {
   1: t('新建项目申请审批中，暂不可修改'),
   4: t('更新项目信息审批中，暂不可修改'),
@@ -38,6 +39,15 @@ const fetchProjectData = async () => {
   }).then((res) => {
     projectData.value = res;
     if (projectData.value.centerId === '0') projectData.value.centerId = ''
+  }).catch((err) => {
+    if (err.code === 403) {
+      hasPermission.value = false
+    } else {
+      Message({
+        theme: 'error',
+        message: err.message || err,
+      })
+    }
   });
   isLoading.value = false;
 };
@@ -141,6 +151,14 @@ const handleUpdate = async () => {
   };
 };
 
+const handleNoPermission = () => {
+  handleProjectManageNoPermission({
+    action: RESOURCE_ACTION.VIEW,
+    projectId: projectCode,
+    resourceCode: projectCode,
+  })
+};
+
 onMounted(() => {
   fetchProjectData();
 });
@@ -148,7 +166,7 @@ onMounted(() => {
 
 <template>
   <bk-loading class="edit-project-content" :loading="isLoading">
-    <section class="edit-project-form">
+    <section class="edit-project-form" v-if="hasPermission">
       <project-form
         v-if="!isLoading"
         class="edit-form"
@@ -183,6 +201,17 @@ onMounted(() => {
         </bk-form-item>
       </project-form>
     </section>
+    <bk-exception
+      v-else
+      class="edit-project-form"
+      type="403"
+      title="无业务权限"
+      description="你没有相应业务的访问权限，请前往申请相关业务权限"
+    >
+      <bk-button theme="primary" @click="handleNoPermission">
+        去申请
+      </bk-button>
+    </bk-exception>
   </bk-loading>
 </template>
 
