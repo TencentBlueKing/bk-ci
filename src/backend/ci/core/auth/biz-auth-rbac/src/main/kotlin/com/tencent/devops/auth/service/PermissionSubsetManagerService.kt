@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
+import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateSubsetManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.UpdateSubsetManagerDTO
@@ -36,7 +37,6 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -165,22 +165,13 @@ class PermissionSubsetManagerService @Autowired constructor(
 
     fun listGroup(
         subsetManagerId: String
-    ): List<IamGroupInfoVo> {
+    ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
         val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId.toInt(), pageInfoDTO)
-        return iamGroupInfoList.results.map {
-            IamGroupInfoVo(
-                managerId = subsetManagerId.toInt(),
-                groupId = it.id,
-                name = it.name,
-                displayName = IamGroupUtils.getGroupDisplayName(it.name),
-                userCount = it.userCount,
-                departmentCount = it.departmentCount
-            )
-        }.sortedBy { it.groupId }
+        return iamGroupInfoList.results
     }
 
     /**
@@ -298,7 +289,7 @@ class PermissionSubsetManagerService @Autowired constructor(
     }
 
     @Suppress("LongParameterList")
-    fun modifyGradeDefaultGroup(
+    fun modifySubsetManagerDefaultGroup(
         subsetManagerId: Int,
         projectCode: String,
         resourceType: String,
@@ -319,6 +310,25 @@ class PermissionSubsetManagerService @Autowired constructor(
                 groupCode = groupConfig.groupCode,
                 groupName = groupConfig.groupName
             )
+        }
+    }
+
+    fun deleteSubsetManagerDefaultGroup(
+        subsetManagerId: Int,
+        projectCode: String,
+        resourceType: String,
+        resourceCode: String,
+    ) {
+        authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        ).filter {
+            it.groupCode != DefaultGroupType.MANAGER.value
+        }.forEach {
+            logger.info("delete subset manage default group|$subsetManagerId|${it.relationId}")
+            iamV2ManagerService.deleteRoleGroupV2(it.relationId.toInt())
         }
     }
 }
