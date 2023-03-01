@@ -28,25 +28,24 @@ plugins {
     id("com.google.cloud.tools.jib")
 }
 
-val toImageTemplate = System.getProperty("to.image.template")
+val toImageRepo = System.getProperty("to.image.repo")
 val toImageTag = System.getProperty("to.image.tag")
 var toImage = System.getProperty("jib.to.image")
 
-if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.isNullOrBlank())) {
+// 加这个判断 , 主要是为了编译kts时不报错
+if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNullOrBlank())) {
     val service = name.replace("boot-", "").replace("-tencent", "")
-    if (toImage.isNullOrBlank() && !toImageTemplate.isNullOrBlank()) {
-        // 替换掉模板的__service__和__tag__
-        toImage = toImageTemplate.replace("__service__", service).replace("__tag__", toImageTag)
-    }
 
-    val serviceNamespace = System.getProperty("service.namespace")
+    if (toImage.isNullOrBlank() && !toImageRepo.isNullOrBlank()) {
+        toImage = toImageRepo.let {
+            if (toImageRepo.endsWith("/")) it else it + "/"
+        } + "bkci-" + service + ":" + toImageTag
+    }
+    println("the image will to : $toImage")
+
     val configNamespace = System.getProperty("config.namespace")
-    val jvmFlagList = System.getProperty("jvmFlags.file")?.let {
-        File(it).readLines().map {
-            it.replace("__service__", service)
-                .replace("__namespace__", serviceNamespace)
-        }
-    } ?: emptyList()
+
+    val jvmFlagList = System.getProperty("jvmFlags.file")?.let { File(it).readLines() } ?: emptyList()
 
     val finalJvmFlags = mutableListOf(
         "-server",
