@@ -35,7 +35,6 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
-import com.tencent.devops.auth.common.Constants
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -71,7 +70,7 @@ class RbacPermissionProjectService(
                 groupCode = group.value
             ) ?: return emptyList()
             val groupInfo = allGroupAndUser.filter { it.roleId == dbGroupInfo.id }
-            return if (groupInfo.isEmpty())
+            if (groupInfo.isEmpty())
                 emptyList()
             else
                 groupInfo[0].userIdList
@@ -100,8 +99,8 @@ class RbacPermissionProjectService(
             // 3、获取组成员
             // todo 最多获取1000个用户或组是否合理
             val pageInfoDTO = PageInfoDTO()
-            pageInfoDTO.limit = 0
-            pageInfoDTO.offset = 1000
+            pageInfoDTO.limit = 1000
+            pageInfoDTO.offset = 0
             val groupMemberInfoList = iamV2ManagerService.getRoleGroupMemberV2(it.id, pageInfoDTO).results
             logger.info(
                 "[RBAC-IAM] getProjectGroupAndUserList ,groupId: ${it.id} " +
@@ -111,6 +110,7 @@ class RbacPermissionProjectService(
             groupMemberInfoList.forEach { memberInfo ->
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[RBAC-IAM] department:$memberInfo")
+                    // todo 若部门人数太多，存在拉取速度比较慢的问题
                     val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
