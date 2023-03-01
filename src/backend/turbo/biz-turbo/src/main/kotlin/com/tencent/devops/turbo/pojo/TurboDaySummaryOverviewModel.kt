@@ -1,5 +1,6 @@
 package com.tencent.devops.turbo.pojo
 
+import com.tencent.devops.turbo.model.pojo.EngineSceneEntity
 import org.springframework.data.mongodb.core.mapping.Field
 import java.time.LocalDate
 
@@ -20,5 +21,12 @@ data class TurboDaySummaryOverviewModel(
     val summaryDay: LocalDate?,
 
     @Field("plan_num")
-    val instanceNum: Int?
+    val instanceNum: Int?,
+
+    /**
+     * 按加速场景的加速次数
+     */
+    @Field("engine_scene_list")
+    val engineSceneList: List<EngineSceneEntity>
+
 )

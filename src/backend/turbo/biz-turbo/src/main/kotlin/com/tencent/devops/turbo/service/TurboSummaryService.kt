@@ -1,12 +1,16 @@
 package com.tencent.devops.turbo.service
 
+import com.tencent.devops.common.util.DateTimeUtils.YYYY_MM_DD_FORMAT
 import com.tencent.devops.common.util.MathUtil
 import com.tencent.devops.turbo.dao.mongotemplate.TurboSummaryDao
 import com.tencent.devops.turbo.dao.repository.TurboDaySummaryRepository
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
+import com.tencent.devops.turbo.enums.EnumEngineScene
 import com.tencent.devops.turbo.model.TTurboDaySummaryEntity
+import com.tencent.devops.turbo.model.pojo.EngineSceneEntity
 import com.tencent.devops.turbo.pojo.TurboDaySummaryOverviewModel
 import com.tencent.devops.turbo.pojo.TurboPlanInstanceModel
+import com.tencent.devops.turbo.vo.EngineSceneVO
 import com.tencent.devops.turbo.vo.TurboOverviewStatRowVO
 import com.tencent.devops.turbo.vo.TurboOverviewTrendVO
 import org.slf4j.LoggerFactory
@@ -51,6 +55,7 @@ class TurboSummaryService @Autowired constructor(
      */
     fun upsertSummaryInfo(
         projectId: String,
+        engineCode: String,
         status: String,
         executeTime: Double?,
         estimateTime: Double?,
@@ -60,12 +65,37 @@ class TurboSummaryService @Autowired constructor(
             logger.info("status is not finish and create flag is false")
             return
         }
-        turboSummaryDao.upsertTurboSummary(
+        val tTurboDaySummaryEntity = turboSummaryDao.upsertTurboSummary(
             projectId = projectId,
             executeTime = executeTime,
             estimateTime = estimateTime,
             createFlag = createFlag
         )
+
+        if (createFlag) {
+            val engineSceneList = tTurboDaySummaryEntity!!.engineSceneList
+            val engineSceneEntityMap = engineSceneList.associateBy { it.sceneCode }.toMutableMap()
+
+            val engineSceneEntity = engineSceneEntityMap.computeIfAbsent(engineCode) {
+                when (engineCode) {
+                    EnumEngineScene.DISTTASKCC.getCode() -> {
+                        EngineSceneEntity(EnumEngineScene.DISTTASKCC.getName(), engineCode)
+                    }
+                    // 暂存，后面从workStat数据中识别区分
+                    EnumEngineScene.UE4COMPILE.getCode() -> {
+                        EngineSceneEntity(EnumEngineScene.UE4COMPILE.getName(), engineCode)
+                    }
+                    // distcc和未知的场景都默认
+                    else -> {
+                        EngineSceneEntity(engineCode, engineCode)
+                    }
+                }
+            }
+
+            engineSceneEntity.incCount()
+            tTurboDaySummaryEntity.engineSceneList = engineSceneEntityMap.values.toList()
+            turboDaySummaryRepository.save(tTurboDaySummaryEntity)
+        }
     }
 
     /**
@@ -187,5 +217,44 @@ class TurboSummaryService @Autowired constructor(
         estimateTime: Double
     ) {
         turboSummaryDao.updateEstimateTime(projectId, summaryDay, estimateTime)
+    }
+
+    /**
+     * 获取总览页格场景的加速次数趋势图数据
+     */
+    fun getExecuteCountTrendData(dateType: String, projectId: String): List<TurboOverviewTrendVO> {
+        val startDay = getStartTimeAndEndTimeByDatetype(dateType)
+
+        val executeCountTrendDataList = turboSummaryDao.getExecuteCountTrendData(
+            projectId,
+            startDay,
+            LocalDate.now()
+        )
+        val executeCountTrendDataMap =
+            executeCountTrendDataList.groupBy { DateTimeFormatter.ofPattern(YYYY_MM_DD_FORMAT).format(it
+                .summaryDay) }
+
+        val executeCountTrendData = mutableListOf<TurboOverviewTrendVO>()
+        for (i in 0..startDay.until(LocalDate.now(), ChronoUnit.DAYS)) {
+            val dayStr = DateTimeFormatter.ofPattern(YYYY_MM_DD_FORMAT).format(startDay.plusDays(i))
+            val turboDaySummaryOverviewList = executeCountTrendDataMap[dayStr]
+            val turboDaySummaryOverviewModel =
+                if (turboDaySummaryOverviewList.isNullOrEmpty()) null else turboDaySummaryOverviewList[0]
+            val engineSceneList = turboDaySummaryOverviewModel?.engineSceneList?.map {
+                    EngineSceneVO(it.sceneName, it.sceneCode, it.executeCount)
+            }
+            logger.info("engineSceneVOList: ${engineSceneList?.size}")
+
+            executeCountTrendData.add(
+                TurboOverviewTrendVO(
+                    date = dayStr,
+                    engineSceneList = engineSceneList ?: listOf(),
+                    executeCount = turboDaySummaryOverviewModel?.executeCount ?: 0,
+                    executeTime = turboDaySummaryOverviewModel?.executeTime ?: 0.0,
+                    estimateTime = turboDaySummaryOverviewModel?.estimateTime ?: 0.0
+                )
+            )
+        }
+        return executeCountTrendData
     }
 }

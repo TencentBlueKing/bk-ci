@@ -30,7 +30,7 @@ class TurboSummaryDao @Autowired constructor(
         executeTime: Double?,
         estimateTime: Double?,
         createFlag: Boolean
-    ) {
+    ): TTurboDaySummaryEntity? {
         val query = Query()
         query.addCriteria(Criteria.where("project_id").`is`(projectId))
             .addCriteria(Criteria.where("summary_day").`is`(LocalDate.now()))
@@ -51,7 +51,7 @@ class TurboSummaryDao @Autowired constructor(
 
         val findAndModifyOptions = FindAndModifyOptions()
         findAndModifyOptions.upsert(true)
-        mongoTemplate.findAndModify(query, update, findAndModifyOptions, TTurboDaySummaryEntity::class.java)
+        return mongoTemplate.findAndModify(query, update, findAndModifyOptions, TTurboDaySummaryEntity::class.java)
     }
 
     /**
@@ -149,5 +149,25 @@ class TurboSummaryDao @Autowired constructor(
         val queryResults: AggregationResults<TurboDaySummaryOverviewModel> =
             mongoTemplate.aggregate(aggregation, "t_turbo_day_summary_entity", TurboDaySummaryOverviewModel::class.java)
         return queryResults.mappedResults
+    }
+
+    /**
+     * 查询开始时间和结束时间之间的数据 并以时间分组统计编译次数
+     */
+    fun getExecuteCountTrendData(
+        projectId: String,
+        startTime: LocalDate?,
+        endTime: LocalDate?
+    ): List<TurboDaySummaryOverviewModel> {
+        val fieldsObj = Document()
+        fieldsObj["summary_day"] = true
+        fieldsObj["execute_count"] = true
+        fieldsObj["engine_scene_list"] = true
+        val query = BasicQuery(Document(), fieldsObj)
+        query.addCriteria(Criteria.where("project_id").`is`(projectId))
+        if (startTime != null && endTime != null) {
+            query.addCriteria(Criteria.where("summary_day").gte(startTime).lte(endTime))
+        }
+        return mongoTemplate.find(query, TurboDaySummaryOverviewModel::class.java, "t_turbo_day_summary_entity")
     }
 }

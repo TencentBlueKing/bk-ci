@@ -1,5 +1,6 @@
 package com.tencent.devops.turbo.model
 
+import com.tencent.devops.turbo.model.pojo.EngineSceneEntity
 import org.springframework.data.annotation.Id
 import org.springframework.data.mongodb.core.index.CompoundIndex
 import org.springframework.data.mongodb.core.index.CompoundIndexes
@@ -34,6 +35,9 @@ data class TTurboDaySummaryEntity(
     // 统计日期
     @Field("summary_day")
     var summaryDay: LocalDate,
+    // 加速场景分别加速次数 enum EnumEngineScene
+    @Field("engine_scene_list")
+    var engineSceneList: List<EngineSceneEntity>,
 
     @Field("updated_by")
     var updatedBy: String,

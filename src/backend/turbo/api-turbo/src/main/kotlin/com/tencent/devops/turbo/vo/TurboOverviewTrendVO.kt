@@ -9,7 +9,10 @@ data class TurboOverviewTrendVO(
     @ApiModelProperty("日期")
     val date: String = "",
 
-    @ApiModelProperty("编译次数")
+    @ApiModelProperty("加速场景类型 Enum EnumEngineScene")
+    val engineSceneList: List<EngineSceneVO>? = null,
+
+    @ApiModelProperty("编译次数(现改为加速次数)")
     val executeCount: Int = 0,
 
     @ApiModelProperty("实际耗时")

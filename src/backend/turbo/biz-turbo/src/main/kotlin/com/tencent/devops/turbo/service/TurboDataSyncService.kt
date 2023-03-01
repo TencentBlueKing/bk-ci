@@ -152,6 +152,7 @@ class TurboDataSyncService @Autowired constructor(
         // (3)完成总览页面的统计工作
         turboSummaryService.upsertSummaryInfo(
             projectId = turboPlanEntity.projectId,
+            engineCode = turboEngineConfig.engineCode,
             status = turboRecordEntity?.status ?: EnumDistccTaskStatus.STAGING.getTBSStatus(),
             executeTime = turboRecordEntity?.executeTimeSecond?.toDouble()?.div(3600),
             estimateTime = turboRecordEntity?.estimateTimeSecond?.toDouble()?.div(3600),
@@ -227,6 +228,7 @@ class TurboDataSyncService @Autowired constructor(
         // (3)完成总览页面的统计工作
         turboSummaryService.upsertSummaryInfo(
             projectId = turboRecordEntity.projectId,
+            engineCode = turboEngineConfig.engineCode,
             status = status,
             executeTime = turboRecordEntity.executeTimeSecond.toDouble().div(3600),
             estimateTime = turboRecordEntity.estimateTimeSecond.toDouble().div(3600),

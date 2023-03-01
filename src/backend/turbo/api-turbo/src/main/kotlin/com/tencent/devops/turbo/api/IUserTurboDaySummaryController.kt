@@ -66,4 +66,21 @@ interface IUserTurboDaySummaryController {
         @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
         user: String
     ): Response<List<TurboOverviewTrendVO>>
+
+    @ApiOperation("获取总览页格场景的加速次数趋势图数据")
+    @GetMapping(
+        "/executeCount/dateType/{dateType}/projectId/{projectId}",
+        produces = [MediaType.APPLICATION_JSON_VALUE]
+    )
+    fun getExecuteCountTrendData(
+        @ApiParam(value = "日期类型", required = true)
+        @PathVariable("dateType")
+        dateType: String,
+        @ApiParam(value = "项目id", required = true)
+        @PathVariable("projectId")
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @RequestHeader(AUTH_HEADER_DEVOPS_USER_ID)
+        user: String
+    ): Response<List<TurboOverviewTrendVO>>
 }

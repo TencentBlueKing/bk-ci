@@ -144,8 +144,10 @@ class TurboRecordConsumer @Autowired constructor(
     fun syncTbsWorkStatData(turboRecordId: String) {
         logger.info("sync TBS work stats data, turbo record id: $turboRecordId")
         try {
+            // distcc无法同步WorkStat数据，更新场景后退出
             if (turboRecordId.startsWith(EnumEngineScene.DISTCC.regexStr())) {
                 turboRecordService.updateRecordScene(turboRecordId, EnumEngineScene.DISTCC)
+                return
             }
 
             turboWorkDataService.syncTbsWorkStatData(

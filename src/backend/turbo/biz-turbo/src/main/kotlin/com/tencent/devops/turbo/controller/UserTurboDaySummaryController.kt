@@ -57,4 +57,15 @@ class UserTurboDaySummaryController @Autowired constructor(
         }
         return Response.success(turboSummaryService.getCompileNumberTrendData(dateType, projectId))
     }
+
+    override fun getExecuteCountTrendData(
+        dateType: String,
+        projectId: String,
+        user: String
+    ): Response<List<TurboOverviewTrendVO>> {
+        if (!turboAuthService.getAuthResult(projectId, user)) {
+            throw TurboException(errorCode = IS_NOT_ADMIN_MEMBER, errorMessage = NO_ADMIN_MEMBER_MESSAGE)
+        }
+        return Response.success(turboSummaryService.getExecuteCountTrendData(dateType, projectId))
+    }
 }

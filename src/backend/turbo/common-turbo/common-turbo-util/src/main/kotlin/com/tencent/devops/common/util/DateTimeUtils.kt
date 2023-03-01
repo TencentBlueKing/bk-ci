@@ -16,7 +16,7 @@ import java.util.TimeZone
 object DateTimeUtils {
     private val logger = LoggerFactory.getLogger(DateTimeUtils::class.java)
 
-    private const val YYYY_MM_DD_FORMAT = "yyyy-MM-dd"
+    const val YYYY_MM_DD_FORMAT = "yyyy-MM-dd"
 
     /**
      * 获取当前日期前X天的日期
