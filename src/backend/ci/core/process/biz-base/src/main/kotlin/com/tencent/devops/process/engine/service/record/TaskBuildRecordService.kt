@@ -100,9 +100,9 @@ class TaskBuildRecordService(
             projectId = projectId,
             buildId = buildId,
             taskId = taskId,
-            taskStatus = BuildStatus.FAILED,
+            taskStatus = buildStatus,
             buildStatus = BuildStatus.RUNNING,
-            operation = "taskConditionInvalid"
+            operation = operation
         )
         update(
             projectId, pipelineId, buildId, executeCount, BuildStatus.RUNNING,
