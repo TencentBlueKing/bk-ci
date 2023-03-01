@@ -493,8 +493,11 @@ include(":ext:tencent:dispatch-docker")
 include(":ext:tencent:dispatch-docker:biz-dispatch-docker-tencent")
 include(":ext:tencent:dispatch-docker:boot-dispatch-docker-tencent")
 
-include(":ext:tencent:dispatch-bcs")
-include(":ext:tencent:dispatch-bcs:boot-dispatch-bcs-tencent")
+include(":ext:tencent:dispatch-devcloud")
+include(":ext:tencent:dispatch-devcloud:api-dispatch-devcloud-tencent")
+include(":ext:tencent:dispatch-devcloud:biz-dispatch-devcloud-tencent")
+include(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent")
+include(":ext:tencent:dispatch-devcloud:boot-dispatch-devcloud-tencent")
 
 include(":ext:tencent:sign")
 include(":ext:tencent:sign:api-sign-tencent")
