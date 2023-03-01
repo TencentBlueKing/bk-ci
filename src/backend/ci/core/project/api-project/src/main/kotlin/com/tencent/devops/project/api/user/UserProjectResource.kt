@@ -118,6 +118,21 @@ interface UserProjectResource {
     ): Result<ProjectVO>
 
     @GET
+    @Path("/{english_name}/show")
+    @ApiOperation("前端获取项目详情,有project_view权限校验")
+    fun show(
+        @ApiParam("userId", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        userId: String,
+        @ApiParam("项目ID英文名标识", required = true)
+        @PathParam("english_name")
+        projectId: String,
+        @ApiParam("access_token")
+        @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
+        accessToken: String?
+    ): Result<ProjectVO>
+
+    @GET
     @Path("/{english_name}/diff")
     @ApiOperation("获取项目编辑信息对比")
     fun diff(
