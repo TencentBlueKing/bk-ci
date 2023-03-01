@@ -29,6 +29,7 @@
 package com.tencent.devops.common.auth.api
 
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
@@ -71,6 +72,23 @@ class RbacAuthPermissionApi(
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
             resourceCode = resourceCode,
             relationResourceType = relationResourceType?.value
+        ).data!!
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        val resourceType = RbacAuthUtils.getResourceTypeByStr(resource.resourceType)
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByInstance(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            projectCode = projectCode,
+            action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
+            resource = resource
         ).data!!
     }
 
@@ -126,6 +144,16 @@ class RbacAuthPermissionApi(
             projectCode = scopeId,
             action = actions
         ).data ?: emptyMap()
+    }
+
+    override fun filterUserResourceByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return resources.map { it.resourceCode }
     }
 
     override fun addResourcePermissionForUsers(

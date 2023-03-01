@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
 class MockAuthPermissionApi : AuthPermissionApi {
@@ -49,6 +50,16 @@ class MockAuthPermissionApi : AuthPermissionApi {
         resourceType: AuthResourceType,
         projectCode: String,
         permission: AuthPermission
+    ): Boolean {
+        return true
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
     ): Boolean {
         return true
     }
@@ -111,5 +122,15 @@ class MockAuthPermissionApi : AuthPermissionApi {
             mock[permission] = list
         }
         return mock
+    }
+
+    override fun filterUserResourceByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
     }
 }
