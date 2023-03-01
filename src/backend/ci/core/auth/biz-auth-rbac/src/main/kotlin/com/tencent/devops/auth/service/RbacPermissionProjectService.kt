@@ -91,7 +91,6 @@ class RbacPermissionProjectService(
             resourceCode = projectCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
-        // todo 最多获取1000个用户组是否合理
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = 1
         pageInfoDTO.pageSize = 1000
@@ -103,7 +102,6 @@ class RbacPermissionProjectService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         groupInfoList.forEach {
             // 3、获取组成员
-            // todo 最多获取1000个用户或组是否合理
             val pageInfoDTO = PageInfoDTO()
             pageInfoDTO.limit = 1000
             pageInfoDTO.offset = 0
@@ -116,7 +114,6 @@ class RbacPermissionProjectService(
             groupMemberInfoList.forEach { memberInfo ->
                 if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
                     logger.info("[RBAC-IAM] department:$memberInfo")
-                    // todo 若部门人数太多，存在拉取速度比较慢的问题
                     val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
                     if (deptUsers != null) {
                         members.addAll(deptUsers)
@@ -129,7 +126,7 @@ class RbacPermissionProjectService(
                 displayName = it.name,
                 roleId = it.id,
                 roleName = it.name,
-                userIdList = members,
+                userIdList = members.toSet().toList(),
                 type = ""
             )
             result.add(groupAndUser)
