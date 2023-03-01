@@ -49,13 +49,17 @@ class ItsmService @Autowired constructor(
     }
 
     fun verifyItsmToken(token: String) {
+        val param: MutableMap<String, String> = mutableMapOf()
+        param["token"] = token
+        logger.info("param:${param["token"]}")
         val itsmResponseDTO = doHttpPost(
             url = itsmVerifyTokenUrl,
-            body = Pair("token", token)
+            body = param
         )
-        val itsmApiResData = itsmResponseDTO.data as Map<String, String>
-        val isPassed = itsmApiResData["is_passed"].toBoolean()
-        if (!isPassed) {
+        val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
+        logger.info("itsmApiResData:$itsmApiResData")
+        val isPassed = itsmApiResData["is_passed"]
+        if (!isPassed!!) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_ITSM_APPLICATION_CANCEL_FAIL,
@@ -68,9 +72,10 @@ class ItsmService @Autowired constructor(
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
-        val jsonBody = objectMapper.writeValueAsString(body)
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
         val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
+        val jsonBody = objectMapper.writeValueAsString(body)
+        logger.info("jsonBody:$jsonBody")
+        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
         logger.info("headerStr:$headerStr")
         val request = Request.Builder()
             .url(url)

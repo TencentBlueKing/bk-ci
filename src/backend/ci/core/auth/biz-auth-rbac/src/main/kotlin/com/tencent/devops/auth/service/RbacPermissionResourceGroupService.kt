@@ -61,7 +61,6 @@ class RbacPermissionResourceGroupService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
-        private const val NO_TIME_PLACEHOLDER = "--"
     }
 
     override fun listGroup(
@@ -136,10 +135,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     userId = userId,
                     groupId = iamGroupId,
                     groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
-                    createdTime = NO_TIME_PLACEHOLDER,
+                    createdTime = "",
                     status = status,
                     expiredAt = 0L,
-                    expiredDisplay = NO_TIME_PLACEHOLDER,
+                    expiredDisplay = "",
                 )
             }
         }
