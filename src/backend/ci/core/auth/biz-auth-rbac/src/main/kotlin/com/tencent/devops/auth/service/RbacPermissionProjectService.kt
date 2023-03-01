@@ -91,7 +91,6 @@ class RbacPermissionProjectService(
             resourceCode = projectCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
-        // todo 最多获取1000个用户组是否合理
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = 1
         pageInfoDTO.pageSize = 1000
@@ -103,7 +102,6 @@ class RbacPermissionProjectService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         groupInfoList.forEach {
             // 3、获取组成员
-            // todo 最多获取1000个用户或组是否合理
             val pageInfoDTO = PageInfoDTO()
             pageInfoDTO.limit = 1000
             pageInfoDTO.offset = 0
