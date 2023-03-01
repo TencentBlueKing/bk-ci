@@ -390,7 +390,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             listOf(SubjectScopeInfo(id = ALL_MEMBERS, type = ALL_MEMBERS, name = ALL_MEMBERS_NAME))
         }
         val subjectScopesStr = objectMapper.writeValueAsString(subjectScopes)
-        validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        val verify = validatePermission(projectUpdateInfo.englishName, userId, AuthPermission.EDIT)
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
         logger.info(
             "update project : $userId | $englishName | $projectUpdateInfo | " +
                 "$needApproval | $subjectScopes"
@@ -739,6 +743,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         accessToken: String?
     ): Result<ProjectLogo> {
         logger.info("Update the logo of project : englishName = $englishName")
+        val verify = validatePermission(englishName, userId, AuthPermission.EDIT)
+        if (!verify) {
+            logger.info("$englishName| $userId| ${AuthPermission.EDIT} validatePermission fail")
+            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        }
         val projectRecord = projectDao.getByEnglishName(dslContext, englishName)
         if (projectRecord != null) {
             var logoFile: File? = null
@@ -808,10 +817,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val verify = validatePermission(
             userId = userId,
             projectCode = englishName,
-            permission = AuthPermission.MANAGE
+            permission = AuthPermission.ENABLE
         )
         if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.DELETE} validatePermission fail")
+            logger.info("$englishName| $userId| ${AuthPermission.ENABLE} validatePermission fail")
             throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
         }
         projectDao.updateUsableStatus(
