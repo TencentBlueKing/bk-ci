@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -84,7 +85,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val txProjectServiceImpl: TxProjectServiceImpl,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val authTokenApi: AuthTokenApi
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -250,6 +252,10 @@ class ProjectLocalService @Autowired constructor(
             jmxApi.execute(api = "getProjectEnNamesByOrganization", elapse = elapse, success = success)
             logger.info("It took ${elapse}ms to list project EnNames,userName:$userId")
         }
+    }
+
+    fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
+        return getOrCreatePreProject(userId, authTokenApi.getAccessToken(bsPipelineAuthServiceCode))
     }
 
     fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
@@ -628,7 +634,8 @@ class ProjectLocalService @Autowired constructor(
                     accessToken = null,
                     projectCode = projectId,
                     userId = userId
-                )) {
+                )
+            ) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
                     (MessageCodeUtil.getCodeLanMessage(

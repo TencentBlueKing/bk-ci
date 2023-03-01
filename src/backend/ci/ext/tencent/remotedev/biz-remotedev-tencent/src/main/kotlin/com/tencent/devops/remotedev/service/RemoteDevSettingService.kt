@@ -27,6 +27,8 @@
 
 package com.tencent.devops.remotedev.service
 
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.remotedev.dao.RemoteDevFileDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.pojo.OPUserSetting
@@ -41,6 +43,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class RemoteDevSettingService @Autowired constructor(
+    private val client: Client,
     private val dslContext: DSLContext,
     private val remoteDevSettingDao: RemoteDevSettingDao,
     private val remoteDevFileDao: RemoteDevFileDao,
@@ -54,7 +57,19 @@ class RemoteDevSettingService @Autowired constructor(
 
     fun getRemoteDevSettings(userId: String): RemoteDevSettings {
         logger.info("$userId get remote dev setting")
-        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId) ?: return RemoteDevSettings()
+        val setting = remoteDevSettingDao.fetchAnySetting(dslContext, userId)
+
+        if (setting.projectId.isBlank()) {
+            kotlin.runCatching {
+                client.get(ServiceTxProjectResource::class).getRemoteDevUserProject(userId)
+            }.onFailure { logger.warn("create user project fail ${it.message}", it) }.getOrNull().let {
+                if (it?.data == null) {
+                    logger.warn("create user project fail ${it?.message}")
+                }
+                remoteDevSettingDao.updateProjectId(dslContext, userId, it?.data?.englishName ?: "")
+                setting.projectId = it?.data?.englishName ?: ""
+            }
+        }
 
         return setting.copy(
             envsForFile = remoteDevFileDao.fetchFile(dslContext, userId),

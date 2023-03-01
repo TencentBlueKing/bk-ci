@@ -28,6 +28,7 @@
 package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
@@ -76,7 +77,7 @@ class RemoteDevSettingDao {
     fun fetchAnySetting(
         dslContext: DSLContext,
         userId: String
-    ): RemoteDevSettings? {
+    ): RemoteDevSettings {
         return with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
             dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchAny()?.let {
                 RemoteDevSettings(
@@ -93,9 +94,23 @@ class RemoteDevSettingDao {
                         object : TypeReference<Map<String, String>>() {}
                     ) ?: emptyMap(),
                     envsForFile = emptyList(),
-                    dotfileRepo = it.dotfileRepo
+                    dotfileRepo = it.dotfileRepo,
+                    projectId = it.projectId ?: ""
                 )
+            } ?: run {
+                createOrUpdateSetting(dslContext, RemoteDevSettings(), userId)
+                return RemoteDevSettings()
             }
+        }
+    }
+
+    fun updateProjectId(
+        dslContext: DSLContext,
+        userId: String,
+        projectId: String
+    ): Boolean {
+        with(TRemoteDevSettings.T_REMOTE_DEV_SETTINGS) {
+            return dslContext.update(this).set(PROJECT_ID, projectId).where(USER_ID.eq(userId)).execute() == 1
         }
     }
 

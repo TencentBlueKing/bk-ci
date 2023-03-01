@@ -262,7 +262,7 @@ class WorkspaceService @Autowired constructor(
                 )
             }.email
 
-            dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.dotfileRepo ?: ""
+            dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
         }
 
         workspaceDao.createWorkspace(
@@ -284,7 +284,7 @@ class WorkspaceService @Autowired constructor(
                 devFilePath = workspace.devFilePath,
                 devFile = devfile,
                 gitOAuth = gitTransferService.getAndCheckOauthToken(userId),
-                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
+                settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable
             )
         )
 
@@ -481,7 +481,7 @@ class WorkspaceService @Autowired constructor(
                         ).toSet()
                     ),
                     workspaceName = workspace.name,
-                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId)?.envsForVariable ?: emptyMap()
+                    settingEnvs = remoteDevSettingDao.fetchAnySetting(dslContext, userId).envsForVariable
                 )
             )
 
