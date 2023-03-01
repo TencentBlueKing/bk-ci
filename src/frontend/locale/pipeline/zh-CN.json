@@ -1111,5 +1111,22 @@
   "groupNameTooLong": "流水线组名称长度不能超过16个字符",
   "groupNameNotAllowEmpty": "流水线组名称不能为空",
   "pipelineLockTips": "流水线已禁用执行；可前往基础设置中恢复",
-  "pipelineManualDisable": "该流水线未配置手动触发"
+  "pipelineManualDisable": "该流水线未配置手动触发",
+  "userGroupName": "用户组名",
+  "applicationPeriod": "授权期限",
+  "custom": "自定义",
+  "day": "天",
+  "expirationTime": "到期时间",
+  "oneMonth": "1个月",
+  "threeMonth": "3个月",
+  "sixMonth": "6个月",
+  "twelveMonth": "12个月",
+  "renewal": "续期",
+  "applyJoin": "申请加入",
+  "exit": "退出",
+  "reason": "理由",
+  "exitGroupTips": "退出后，将无法再使用【{0}】所赋予的权限。",
+  "selectPeriod": "请选择申请期限",
+  "fillReason": "请填写申请理由",
+  "applySuccess": "申请成功，请等待审批"
 }

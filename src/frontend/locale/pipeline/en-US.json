@@ -1108,5 +1108,18 @@
   "groupNameTooLong": "Pipeline group names cannot exceed 16 characters in length",
   "groupNameNotAllowEmpty": "The pipeline group name cannot be empty",
   "pipelineLockTips": "Execute is disabled; You can go to Basic Settings to restore it",
-  "pipelineManualDisable": "This pipeline is not configured for manual trigger"
+  "pipelineManualDisable": "This pipeline is not configured for manual trigger",
+  "userGroupName": "User Group",
+  "applicationPeriod": "ApplicationPeriod",
+  "custom": "custom",
+  "day": "day",
+  "expirationTime": "ExpirationTime",
+  "oneMonth": "One Month",
+  "threeMonth": "Three Month",
+  "sixMonth": "Six Month",
+  "twelveMonth": "Twelve Month",
+  "selectPeriod": "Please select the application period",
+  "reason": "Reason",
+  "applySuccess": "Application succeeded, please wait for approval",
+  "fillReason": "Please fill in the application reason"
 }
