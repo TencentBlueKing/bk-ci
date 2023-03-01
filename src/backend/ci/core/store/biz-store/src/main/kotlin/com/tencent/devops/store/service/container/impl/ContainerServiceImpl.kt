@@ -45,11 +45,14 @@ import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
+import com.tencent.devops.store.pojo.container.ContainerInfo
 import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
+import com.tencent.devops.store.pojo.container.enums.ContainerTypeEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -99,6 +102,22 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             )
         }
         return Result(pipelineContainerList)
+    }
+
+    /**
+     * 获取编译环境信息
+     */
+    override fun getAllContainers(): Result<List<ContainerType>> {
+        val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
+        logger.info("Starting getAllContainers $containers")
+        val containertypes = mutableListOf<ContainerType>()
+
+        containers?.forEach {
+            if (it.type.equals(ContainerTypeEnum.NORMAL.name, true)) {
+                containertypes.add(convertContainer(it))
+            }
+        }
+        return Result(containertypes)
     }
 
     /**
@@ -360,6 +379,16 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             resourceIdList = resourceIdList,
             props = convertString(tContainerRecord.props)
         )
+    }
+
+    private fun convertContainer(tContainerRecord: TContainerRecord): ContainerType{
+        val containerInfos = mutableListOf<ContainerInfo>()
+        containerInfos.add(ContainerInfo(os = tContainerRecord.os, name = tContainerRecord.name))
+        logger.info("convertContainer containerInfos:$containerInfos")
+        return ContainerType(
+                    type = tContainerRecord.type,
+                    info = containerInfos
+                )
     }
 
     @Suppress("UNCHECKED_CAST")

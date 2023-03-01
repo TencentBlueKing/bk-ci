@@ -32,9 +32,9 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResp
+import com.tencent.devops.store.pojo.container.ContainerType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
@@ -140,5 +140,5 @@ interface UserContainerResource {
     @ApiOperation("获取全部流水线构建容器信息")
     @GET
     @Path("/all")
-    fun getAllContainers(): Result<List<Container>>
+    fun getAllContainers(): Result<List<ContainerType>>
 }
