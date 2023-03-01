@@ -18,7 +18,7 @@
         },
         mounted () {
             this.$refs.reportIframe.addEventListener('load', () => {
-                this.$refs.reportIframe.style.height = this.$refs.reportIframe.contentDocument.body.scrollHeight
+                this.$refs.reportIframe.style.height = `${this.$refs.reportIframe.contentDocument.body.scrollHeight}px`
             })
         }
     }

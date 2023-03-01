@@ -73,7 +73,8 @@ import {
     SET_ATOMS_CLASSIFY,
     SET_ATOM_PAGE_OVER,
     CLEAR_ATOM_DATA,
-    SET_COMMEND_ATOM_PAGE_OVER
+    SET_COMMEND_ATOM_PAGE_OVER,
+    SET_HIDE_SKIP_EXEC_TASK
 } from './constants'
 import { PipelineEditActionCreator, actionCreator } from './atomUtil'
 import { hashID, randomString } from '@/utils/util'
@@ -185,7 +186,7 @@ export default {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    
+
     requestBuildParams: async ({ commit }, { projectId, pipelineId, buildId }) => {
         try {
             const { data } = await request.get(`/${PROCESS_API_URL_PREFIX}/user/builds/${projectId}/${pipelineId}/${buildId}/parameters`)
@@ -252,7 +253,7 @@ export default {
             let pageSize = requestAtomData.pageSize || 50
             let queryFitAgentBuildLessAtomFlag
             const curOs = os
-            
+
             if (keyword) {
                 // 关键字查询 => 搜索研发商店插件数据 (全局搜索 => 无操作系统、无编译环境限制)
                 pageSize = 100
@@ -316,7 +317,7 @@ export default {
                     commit(SET_COMMEND_ATOM_COUNT, count)
                     commit(SET_COMMEND_ATOM_PAGE_OVER, atomCodeList.length === count)
                 }
-                
+
                 let isAtomPageOver = false
                 if (category === 'TRIGGER') {
                     isAtomPageOver = atomList.length === count
@@ -490,6 +491,7 @@ export default {
         }
     },
     setPipelineDetail: actionCreator(SET_PIPELINE_EXEC_DETAIL),
+    setHideSkipExecTask: actionCreator(SET_HIDE_SKIP_EXEC_TASK),
     getRemoteTriggerToken: async ({ commit }, { projectId, pipelineId, element, preToken }) => {
         try {
             const { data: { token } } = await request.put(`${PROCESS_API_URL_PREFIX}/user/pipelines/${projectId}/${pipelineId}/remoteToken`)

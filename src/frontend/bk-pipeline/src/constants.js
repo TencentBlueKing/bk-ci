@@ -25,8 +25,6 @@ export const DOCKER_BUILD_TYPE = 'DOCKER'
 export const PUBLIC_DEVCLOUD_BUILD_TYPE = 'PUBLIC_DEVCLOUD'
 export const PUBLIC_BCS_BUILD_TYPE = 'PUBLIC_BCS'
 
-export const TOGGLE_POST_ACTION_VISIBLE = 'toggle-post-action-visible'
-
 export const STATUS_MAP = {
     WAITING: 'WAITING',
     RUNNING: 'RUNNING',

@@ -69,7 +69,8 @@ import {
     SET_COMMEND_ATOM_COUNT,
     SET_ATOM_PAGE_OVER,
     CLEAR_ATOM_DATA,
-    SET_COMMEND_ATOM_PAGE_OVER
+    SET_COMMEND_ATOM_PAGE_OVER,
+    SET_HIDE_SKIP_EXEC_TASK
 } from './constants'
 import {
     getAtomModalKey,
@@ -364,6 +365,10 @@ export default {
         Object.assign(state, {
             execDetail
         })
+    },
+    [SET_HIDE_SKIP_EXEC_TASK]: (state, hideSkipExecTask) => {
+        Vue.set(state, 'hideSkipExecTask', hideSkipExecTask)
+        return state
     },
     [SET_REMOTE_TRIGGER_TOKEN]: (state, { atom, token }) => {
         Vue.set(atom, 'remoteToken', token)

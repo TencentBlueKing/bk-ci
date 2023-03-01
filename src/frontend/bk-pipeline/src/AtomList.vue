@@ -46,7 +46,7 @@
                 :class="{
                     'post-action-arrow': true,
                     [postActionStatus]: true,
-                    'post-action-arrow-hide': container.hidePostAction
+                    'post-action-arrow-show': showPostAction
                 }"
                 @click.stop="togglePostAction"
                 v-bk-tooltips="hookToggleTips"
@@ -67,7 +67,6 @@
         DELETE_EVENT_NAME,
         COPY_EVENT_NAME,
         ATOM_ADD_EVENT_NAME,
-        TOGGLE_POST_ACTION_VISIBLE,
         STATUS_MAP
     } from './constants'
     export default {
@@ -107,6 +106,7 @@
         data () {
             return {
                 atomMap: {},
+                showPostAction: false,
                 DELETE_EVENT_NAME,
                 COPY_EVENT_NAME
             }
@@ -124,7 +124,7 @@
                 return this.container.elements.some(this.isHookAtom)
             },
             hookToggleTips () {
-                return `${this.$t(this.container?.hidePostAction ? 'open' : 'fold')}POST`
+                return `${this.$t(this.showPostAction ? 'fold' : 'open')}POST`
             },
             hookToggleTop () {
                 const firstHookIndex = this.container.elements.findIndex(this.isHookAtom)
@@ -139,7 +139,7 @@
             atomList: {
                 get () {
                     return this.container.elements
-                        .filter((atom) => !(this.container.hidePostAction && this.isHookAtom(atom)))
+                        .filter((atom) => !this.isHookAtom(atom) || this.showPostAction)
                         .map((atom) => {
                             atom.isReviewing = atom.status === STATUS_MAP.REVIEWING
                             if (atom.isReviewing) {
@@ -250,11 +250,7 @@
                 })
             },
             togglePostAction () {
-                eventBus.$emit(TOGGLE_POST_ACTION_VISIBLE, {
-                    stageIndex: this.stageIndex,
-                    containerGroupIndex: this.containerGroupIndex,
-                    containerIndex: this.containerIndex
-                })
+                this.showPostAction = !this.showPostAction
             }
         }
     }
@@ -338,7 +334,7 @@
       display: block;
       transition: all 0.5s ease;
     }
-    &.post-action-arrow-hide {
+    &.post-action-arrow-show {
       .toggle-post-action-icon {
         transform: rotate(180deg);
       }

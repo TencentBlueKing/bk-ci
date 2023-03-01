@@ -22,6 +22,10 @@ import { buildNoRules, defaultBuildNo, platformList } from './constants'
 import { getAtomModalKey, isVmContainer, isTriggerContainer, isNormalContainer, isCodePullAtom, isNewAtomTemplate } from './atomUtil'
 import { jobConst, buildEnvMap } from '@/utils/pipelineConst'
 
+function isSkip (status) {
+    return status === 'SKIP'
+}
+
 export default {
     getAtomCodeListByCategory: state => category => {
         return state.atomCodeList.filter(atomCode => {
@@ -42,7 +46,7 @@ export default {
         })
         return list
     },
-    
+
     isAtomDisabled: state => ({ os, atom, category }) => {
         if (atom.category === 'TRIGGER') return atom.category !== category
         return (!os && atom.os.length > 0 && category !== 'TRIGGER') || (os && atom.os.length > 0 && !atom.os.includes(os)) || (os && atom.os.length === 0 && !atom.buildLessRunFlag) || false
@@ -118,7 +122,7 @@ export default {
             if (pipelineSetting && !pipelineSetting.pipelineName) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.emptyPipelineName'))
             }
-           
+
             if (pipelineSetting && pipelineSetting.buildNumRule && !/^[\w-{}() +?.:$"]{1,256}$/.test(pipelineSetting.buildNumRule)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('settings.correctBuildNumber'))
             }
@@ -297,5 +301,50 @@ export default {
     getPlatformList: state => platformList,
     getAtomModalKey: state => getAtomModalKey,
     isNewAtomTemplate: state => isNewAtomTemplate,
-    atomVersionChangedKeys: state => state.atomVersionChangedKeys
+    atomVersionChangedKeys: state => state.atomVersionChangedKeys,
+    getExecDetail: state => {
+        if (!state.execDetail) return null
+        if (!state.hideSkipExecTask) {
+            return state.execDetail
+        }
+        const stages = state.execDetail.model?.stages?.filter(stage => !isSkip(stage.status)).map(stage => {
+            const containers = stage.containers.filter((container) => !isSkip(container.status)).map(container => {
+                const elements = container.elements.filter(
+                    (element) => !isSkip(element.status)
+                )
+                if (container.matrixGroupFlag && Array.isArray(container.groupContainers)) {
+                    return {
+                        ...container,
+                        elements,
+                        groupContainers: container.groupContainers.filter(groupContainer => !isSkip(groupContainer.status)).map(groupContainer => {
+                            const subElements = groupContainer.elements.filter(
+                                (element, index) => !isSkip(element.status ?? container.elements?.[index]?.status)
+                            )
+                            console.log(subElements, elements, 123)
+                            return {
+                                ...groupContainer,
+                                elements: subElements
+                            }
+                        })
+                    }
+                }
+                console.log(container)
+                return {
+                    ...container,
+                    elements
+                }
+            })
+            return {
+                ...stage,
+                containers
+            }
+        })
+        return {
+            ...state.execDetail,
+            model: {
+                ...state.execDetail.model,
+                stages
+            }
+        }
+    }
 }

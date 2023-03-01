@@ -127,7 +127,7 @@
 </template>
 
 <script>
-    import { mapState, mapActions } from 'vuex'
+    import { mapState, mapActions, mapGetters } from 'vuex'
     import webSocketMessage from '@/utils/webSocketMessage'
     import codeRecord from '@/components/codeRecord'
     import StartParams from '@/components/StartParams'
@@ -198,7 +198,6 @@
 
         computed: {
             ...mapState('atom', [
-                'execDetail',
                 'editingElementPos',
                 'isPropertyPanelVisible',
                 'isShowCompleteLog',
@@ -207,6 +206,9 @@
                 'pipeline',
                 'showStageReviewPanel'
             ]),
+            ...mapGetters('atom', {
+                execDetail: 'getExecDetail'
+            }),
             ...mapState(['fetchError']),
             panels () {
                 return [
@@ -277,8 +279,7 @@
             stage () {
                 const { editingElementPos, execDetail } = this
                 if (editingElementPos) {
-                    const model = execDetail?.model ?? {}
-                    const stages = model.stages ?? []
+                    const stages = execDetail?.model?.stages ?? []
                     const stage = stages[editingElementPos.stageIndex]
                     return stage
                 }

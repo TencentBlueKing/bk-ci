@@ -45,15 +45,13 @@
         ADD_STAGE,
         STAGE_CHECK,
         STAGE_RETRY,
-        DEBUG_CONTAINER,
-        TOGGLE_POST_ACTION_VISIBLE
+        DEBUG_CONTAINER
     } from './constants'
 
     const customEvents = [
         CLICK_EVENT_NAME,
         DELETE_EVENT_NAME,
         ATOM_REVIEW_EVENT_NAME,
-        TOGGLE_POST_ACTION_VISIBLE,
         ATOM_CONTINUE_EVENT_NAME,
         ATOM_EXEC_EVENT_NAME,
         ATOM_QUALITY_CHECK_EVENT_NAME,

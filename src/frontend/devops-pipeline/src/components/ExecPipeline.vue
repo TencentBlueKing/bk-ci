@@ -58,7 +58,8 @@
                 <bk-checkbox
                     :true-value="true"
                     :false-value="false"
-                    v-model="hideSkipTask"
+                    :value="hideSkipExecTask"
+                    @change="setHideSkipExecTask"
                     ext-cls="hide-skip-pipeline-task"
                 >
                     {{ $t("details.hideSkipStep") }}
@@ -84,7 +85,6 @@
                     @atom-review="reviewAtom"
                     @atom-continue="handleContinue"
                     @atom-exec="handleExec"
-                    @toggle-post-action-visible="togglePostActionVisible"
                 />
             </div>
             <footer
@@ -225,7 +225,6 @@
                 failedContainer: false,
                 currentAtom: {},
                 pipelineMode: 'uiMode',
-                hideSkipTask: true,
                 showErrors: false,
                 activeErrorAtom: null,
                 pipelineErrorGuideLink:
@@ -234,6 +233,10 @@
         },
         computed: {
             ...mapState('common', ['ruleList', 'templateRuleList']),
+            ...mapState('atom', ['hideSkipExecTask']),
+            curPipeline () {
+                return this.execDetail?.model
+            },
             panels () {
                 return [
                     {
@@ -325,27 +328,6 @@
                 console.log(this.execDetail?.executeCount ?? 1)
                 return this.execDetail?.executeCount ?? 1
             },
-            curPipeline () {
-                const stages = this.hideSkipTask
-                    ? this.execDetail?.model?.stages.filter((stage) => {
-            if (this.isSkip(stage.status)) return false
-            stage.containers = stage.containers.filter((container) => {
-              if (this.isSkip(container.status)) return false
-              container.elements = container.elements.filter(
-                (element) => !this.isSkip(element.status)
-              )
-              return container.elements.length > 0
-            })
-            return stage.containers.length > 0
-          })
-                    : this.execDetail?.model?.stages
-                return this.execDetail?.model
-        ? {
-            ...this.execDetail.model,
-            stages
-          }
-                : null
-            },
             pipelineModes () {
                 return [
                     {
@@ -412,6 +394,7 @@
         },
         methods: {
             ...mapActions('atom', [
+                'setHideSkipExecTask',
                 'reviewExcuteAtom',
                 'togglePropertyPanel',
                 'toggleStageReviewPanel',
@@ -592,14 +575,6 @@
                     this.retryTaskId = ''
                     this.skipTask = false
                 }
-            },
-            togglePostActionVisible ({ stageIndex, containerGroupIndex, containerIndex }) {
-                const stage = this.curPipeline.stages[stageIndex]
-                let container = stage.containers[containerIndex]
-                if (typeof containerGroupIndex !== 'undefined') {
-                    container = stage.containers[containerIndex].groupContainers[containerGroupIndex]
-                }
-                this.$set(container, 'hidePostAction', !container.hidePostAction)
             },
             locateAtom (row, isLocate = true) {
                 try {
