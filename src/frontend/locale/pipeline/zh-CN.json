@@ -1128,5 +1128,15 @@
   "exitGroupTips": "退出后，将无法再使用【{0}】所赋予的权限。",
   "selectPeriod": "请选择申请期限",
   "fillReason": "请填写申请理由",
-  "applySuccess": "申请成功，请等待审批"
+  "applySuccess": "申请成功，请等待审批",
+  "closeManageTitle": "确定关闭流水线【{0}】的权限管理?",
+  "closeManageTips": "关闭后，这条流水线权限设置仅失效，数据并不会删除。项目的`管理员`、所属的流水线组权限设置和流水线`拥有者`的权限不受影响，关闭的同时，会删除除了「拥有者」之外的用户组",
+  "userGroup": "用户组",
+  "createdTime": "添加时间",
+  "expiredTiem": "到期时间",
+  "permissionDetail": "权限详情",
+  "pipelineManage": "流水线管理",
+  "notJoined": "未加入",
+  "normal": "正常",
+  "expired": "已过期"
 }

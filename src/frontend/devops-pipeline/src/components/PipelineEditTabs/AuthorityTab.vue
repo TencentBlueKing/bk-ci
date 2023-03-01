@@ -18,6 +18,7 @@
 
 <script>
     import UserGroup from '../../../../common-lib/user-group/index.vue'
+    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
     import { mapActions } from 'vuex'
 
     export default {
@@ -25,6 +26,7 @@
         components: {
             UserGroup
         },
+        mixins: [pipelineOperateMixin],
         data () {
             return {
                 hasPermission: false,
@@ -161,33 +163,41 @@
              * 关闭权限管理
              */
             handleCloseManage () {
+                const { name } = this.pipeline
                 const {
                     resourceType,
                     resourceCode,
                     projectCode
                 } = this
-
-                return this
-                    .disableGroupPermission({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        if (res?.data) {
-                            this.isEnablePermission = false
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('关闭成功')
-                            })
-                        }
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
+                const confirmFn = () => {
+                    this
+                        .disableGroupPermission({
+                            resourceType,
+                            resourceCode,
+                            projectCode
                         })
-                    })
+                        .then((res) => {
+                            if (res?.data) {
+                                this.isEnablePermission = false
+                                this.$bkMessage({
+                                    theme: 'success',
+                                    message: this.$t('关闭成功')
+                                })
+                            }
+                        })
+                        .catch((err) => {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err.message || err
+                            })
+                        })
+                }
+                this.$bkInfo({
+                    extCls: 'close-manage-dialog',
+                    title: this.$t('closeManageTitle', [name]),
+                    subTitle: this.$t('closeManageTips'),
+                    confirmFn
+                })
             },
 
             /**
@@ -250,3 +260,12 @@
         }
     }
 </script>
+
+<style lang="scss">
+    .close-manage-dialog {
+        .bk-dialog-header-inner {
+            overflow: initial !important;
+            white-space: normal !important;
+        }
+    }
+</style>

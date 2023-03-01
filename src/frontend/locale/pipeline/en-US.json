@@ -1121,5 +1121,19 @@
   "selectPeriod": "Please select the application period",
   "reason": "Reason",
   "applySuccess": "Application succeeded, please wait for approval",
-  "fillReason": "Please fill in the application reason"
+  "fillReason": "Please fill in the application reason",
+  "exitGroupTips": "",
+  "closeManageTitle": "",
+  "closeManageTips": "",
+  "applyJoin": "Apply to join",
+  "renewal": "Renewal",
+  "exit": "Exit",
+  "userGroup": "User group",
+  "createdTime": "Add time",
+  "expiredTime": "Expire time",
+  "permissionDetail": "Permission details",
+  "pipelineManage": "Pipeline manage",
+  "notJoined": "Not joined",
+  "normal": "Normal",
+  "expired": "Expired"
 }
