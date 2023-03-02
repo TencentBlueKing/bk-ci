@@ -39,16 +39,16 @@ object MessageUtil {
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
-     * @param locale 语言环境
+     * @param language 语言信息
      * @param baseName 基础资源名称
      * @return 描述信息
      */
     fun getMessageByLocale(
         messageCode: String,
-        locale: String,
+        language: String,
         baseName: String = DEFAULT_BASE_NAME
     ): String {
-        val localeObj = Locale(locale)
+        val localeObj = Locale(language)
         // 根据locale和baseName生成resourceBundle对象
         val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
         // 通过resourceBundle获取对应语言的描述信息

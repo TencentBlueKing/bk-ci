@@ -112,6 +112,7 @@ import com.tencent.devops.store.service.atom.AtomReleaseService
 import com.tencent.devops.store.service.atom.MarketAtomArchiveService
 import com.tencent.devops.store.service.atom.MarketAtomCommonService
 import com.tencent.devops.store.service.common.StoreCommonService
+import com.tencent.devops.store.service.common.StoreI18nMessageService
 import com.tencent.devops.store.service.websocket.StoreWebsocketService
 import com.tencent.devops.store.utils.StoreUtils
 import com.tencent.devops.store.utils.VersionUtils
@@ -159,6 +160,8 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
     lateinit var atomQualityService: AtomQualityService
     @Autowired
     lateinit var storeCommonService: StoreCommonService
+    @Autowired
+    lateinit var storeI18nMessageService: StoreI18nMessageService
     @Autowired
     lateinit var redisOperation: RedisOperation
     @Autowired
@@ -335,7 +338,14 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
                 getAtomConfResult.errorParams
             )
         }
-        val taskDataMap = getAtomConfResult.taskDataMap
+        val taskDataMap = storeI18nMessageService.parseJsonMap(
+            userId = userId,
+            projectCode = projectCode,
+            jsonMap = getAtomConfResult.taskDataMap.toMutableMap(),
+            fileDir = "$atomCode/$version",
+            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            repositoryHashId = atomRecord.repositoryHashId
+        )
         // 校验前端传的版本号是否正确
         val osList = marketAtomUpdateRequest.os
         val validateAtomVersionResult =

@@ -35,6 +35,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
+import java.time.LocalDateTime
 
 @Repository
 class I18nMessageDao {
@@ -60,6 +61,8 @@ class I18nMessageDao {
                         userId
                     ).onDuplicateKeyUpdate()
                     .set(VALUE, i18nMessage.language)
+                    .set(UPDATE_TIME, LocalDateTime.now())
+                    .set(MODIFIER, userId)
             }).execute()
         }
     }

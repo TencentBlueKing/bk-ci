@@ -27,17 +27,23 @@
 package com.tencent.devops.store.service.common.impl
 
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE
+import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.FieldLocaleInfo
+import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.project.api.service.ServiceI18nMessageResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreI18nMessageService
+import org.apache.commons.collections4.ListUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.util.*
+import java.util.concurrent.Executors
+import java.util.Properties
 
 @Service
 abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
@@ -53,6 +59,8 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
 
     companion object {
         private const val MESSAGE_NAME_TEMPLATE = "message_%s.properties"
+        private const val BATCH_HANDLE_NUM = 50
+        private val executors = Executors.newFixedThreadPool(5)
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
     }
 
@@ -64,6 +72,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         keyPrefix: String?,
         repositoryHashId: String?
     ): Map<String, Any> {
+        logger.info("parseJsonMap params:[$userId|$projectCode|$fileDir|$keyPrefix|$repositoryHashId]")
         // 获取蓝盾默认语言信息
         val devopsDefaultLocale = commonConfig.devopsDefaultLocale
         val jsonLocale = jsonMap[KEY_DEFAULT_LOCALE]
@@ -85,24 +94,72 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
                 dataMap = jsonMap,
                 properties = defaultProperties
             )
-            // 获取资源文件名称列表
-            val propertiesFileNames = getPropertiesFileNames(
-                projectCode = projectCode,
-                fileDir = fileDir,
-                repositoryHashId = repositoryHashId
-            )
-            propertiesFileNames?.forEach { propertiesFileName ->
-
-                val fileProperties = getMessageProperties(
+            // 异步解析处理国际化资源文件信息
+            executors.submit {
+                // 获取资源文件名称列表
+                val propertiesFileNames = getPropertiesFileNames(
                     projectCode = projectCode,
                     fileDir = fileDir,
-                    fileName = propertiesFileName,
-                    repositoryHashId = repositoryHashId,
-                    language = ""
+                    repositoryHashId = repositoryHashId
                 )
+                logger.info("parseJsonMap propertiesFileNames:$propertiesFileNames")
+                val regex = MESSAGE_NAME_TEMPLATE.format("(.*)").toRegex()
+                propertiesFileNames?.forEach { propertiesFileName ->
+                    val matchResult = regex.find(propertiesFileName)
+                    // 根据资源文件名称获取资源文件的语言信息
+                    val language = matchResult?.groupValues?.get(1) ?: return@forEach
+                    val fileProperties = getMessageProperties(
+                        projectCode = projectCode,
+                        fileDir = fileDir,
+                        fileName = propertiesFileName,
+                        repositoryHashId = repositoryHashId,
+                        language = language
+                    )
+                    val i18nMessages = generateI18nMessages(
+                        fieldLocaleInfos = fieldLocaleInfos,
+                        fileProperties = fileProperties,
+                        language = language,
+                        keyPrefix = keyPrefix
+                    )
+                    // 按批次保存字段的国际化信息
+                    ListUtils.partition(i18nMessages, BATCH_HANDLE_NUM).forEach { partitionMessages ->
+                        client.get(ServiceI18nMessageResource::class).batchAddI18nMessage(userId, partitionMessages)
+                    }
+                }
             }
         }
         return jsonMap
+    }
+
+    private fun generateI18nMessages(
+        fieldLocaleInfos: MutableList<FieldLocaleInfo>,
+        fileProperties: Properties,
+        language: String,
+        keyPrefix: String? = null
+    ): MutableList<I18nMessage> {
+        val i18nMessages = mutableListOf<I18nMessage>()
+        fieldLocaleInfos.forEach { fieldLocaleInfo ->
+            val fieldName = fieldLocaleInfo.fieldName
+            val fieldI18nValue = fileProperties[fieldName]
+            fieldI18nValue?.let {
+                // 国际化资源文件中有该字段的值则把该字段信息加入国际化信息集合中
+                val key = if (!keyPrefix.isNullOrBlank()) {
+                    // 如果字段key前缀不为空，需为key加上前缀
+                    "$keyPrefix.$fieldName"
+                } else {
+                    fieldName
+                }
+                i18nMessages.add(
+                    I18nMessage(
+                        moduleCode = SystemModuleEnum.STORE,
+                        language = language,
+                        key = key,
+                        value = it.toString()
+                    )
+                )
+            }
+        }
+        return i18nMessages
     }
 
     private fun getMessageProperties(
