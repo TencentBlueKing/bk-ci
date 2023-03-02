@@ -180,6 +180,8 @@
   padding-left: 24px;
   width: 100%;
   background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px);
+  font-size: 14px;
+  margin-bottom: 8px;
 }
 .group-item {
   display: flex;

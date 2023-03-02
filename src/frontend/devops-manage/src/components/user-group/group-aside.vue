@@ -2,6 +2,7 @@
   <article class="group-aside">
     <section class="group-list">
       <bk-loading :style="{ 'min-height': '100px' }" :loading="!groupList.length">
+        <span class="group-title">{{ $t('权限角色') }}</span>
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           v-for="(group, index) in groupList"
@@ -161,16 +162,26 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
+  .group-title {
+    display: inline-block;
+    line-height: 50px;
+    padding-left: 24px;
+    width: 100%;
+    background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px);
+    font-size: 14px;
+    margin-bottom: 8px;
+  }
   .group-aside {
     width: 240px;
     height: 100%;
-    background-color: #FAFBFD;
+    background-color: #fff;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
   }
   .group-list {
-    margin-top: 8px;
+    max-height: calc(100% - 62px);
+    overflow-y: auto;
   }
   .group-item {
     display: flex;

@@ -65,7 +65,7 @@ onMounted(() => {
       </span>
     </span>
   </manage-header>
-  <router-view></router-view>
+  <router-view class="manage-main"></router-view>
 </template>
 
 <style lang="postcss" scoped>
@@ -83,7 +83,6 @@ onMounted(() => {
   text-align: center;
   cursor: pointer;
   &.active {
-    opacity: 0.5;
     background-color: #E1ECFF;
     color: #3A84FF;
     &:before {
@@ -96,5 +95,12 @@ onMounted(() => {
       background-color: #3A84FF;
     }
   }
+}
+.manage-main {
+  margin: 24px;
+  width: calc(100% - 48px);
+  height: 100%;
+  background-color: #fff;
+  box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
 }
 </style>

@@ -56,12 +56,12 @@ const goToUrl = (url) => {
 }
 .permission-header {
   height: 60px;
-  background: #FFFFFF;
-  box-shadow: 0 2px 5px 0 rgba(51,60,72,0.03);
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 25px;
+  background: #FFFFFF;
+  box-shadow: 0 2px 5px 0 #333c48;
 }
 .permission-icon {
   font-size: 18px;

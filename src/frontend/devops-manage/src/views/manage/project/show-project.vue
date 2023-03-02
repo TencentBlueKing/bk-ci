@@ -455,7 +455,6 @@ onMounted(async () => {
   .project-info-content {
     display: flex;
     flex-direction: column;
-    padding: 24px;
     width: 100%;
     height: 100%;
     &::-webkit-scrollbar-thumb {
@@ -476,11 +475,7 @@ onMounted(async () => {
     margin-left: 5px;
   }
   .content-main {
-    flex: 1;
     padding: 32px 48px;
-    margin-top: 16px;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
   }
   .detail-content-form {
     :deep(.bk-form-label) {
