@@ -16,52 +16,48 @@ const goToUrl = (url) => {
 </script>
 
 <template>
-  <section class="header-wrapper">
-    <div class="permission-header">
-      <bk-breadcrumb
-        class="permission-breadcrumb"
-        separator="/"
+  <section class="permission-header">
+    <bk-breadcrumb
+      class="permission-breadcrumb"
+      separator="/"
+    >
+      <bk-breadcrumb-item
+        v-for="(nav, index) in navs"
+        :key="index"
+        :class="{
+          'bk-breadcrumb-item-inner': nav.url
+        }"
+        @click.native.stop="goToUrl(nav.url)"
       >
-        <bk-breadcrumb-item
-          v-for="(nav, index) in navs"
-          :key="index"
+        <span
           :class="{
-            'bk-breadcrumb-item-inner': nav.url
+            'nav-item': index === 0 && navs.length > 1,
           }"
-          @click.native.stop="goToUrl(nav.url)"
+        >{{ nav.name }}</span>
+        <template
+          #separator
+          v-if="index < navs.length - 1"
         >
-          <span
-            :class="{
-              'nav-item': index === 0 && navs.length > 1,
-            }"
-          >{{ nav.name }}</span>
-          <template
-            #separator
-            v-if="index < navs.length - 1"
-          >
-            <angle-right class="permission-icon" />
-          </template>
-        </bk-breadcrumb-item>
-      </bk-breadcrumb>
-      <!-- <bk-button text theme="primary">{{ t('返回旧版') }}</bk-button> -->
-    </div>
+          <angle-right class="permission-icon" />
+        </template>
+      </bk-breadcrumb-item>
+    </bk-breadcrumb>
+    <!-- <bk-button text theme="primary">{{ t('返回旧版') }}</bk-button> -->
   </section>
 </template>
 
 <style lang="postcss" scoped>
-.header-wrapper {
-  display: flex;
-  flex-direction: column;
-  z-index: 1000;
-}
 .permission-header {
+  z-index: 1000;
   height: 60px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 25px;
   background: #FFFFFF;
-  box-shadow: 0 2px 5px 0 #333c48;
+  box-shadow: 0 1px 1px 0 #DCDEE5;
+  font-size: 16px;
+  color: #313238;
 }
 .permission-icon {
   font-size: 18px;
@@ -74,6 +70,7 @@ const goToUrl = (url) => {
   }
   :deep(.bk-breadcrumb-item-inner) {
     color: #313238;
+    font-size: 16px;
   }
   :deep(.is-link) {
     color: #3A84FF;

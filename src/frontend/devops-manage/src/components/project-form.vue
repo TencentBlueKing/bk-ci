@@ -5,6 +5,7 @@ import {
   onBeforeUnmount,
   computed,
   onMounted,
+  getCurrentInstance,
 } from 'vue';
 import {
   EditLine,
@@ -34,6 +35,7 @@ const logoFiles = computed(() => {
   }
   return files;
 });
+const instance = getCurrentInstance();
 const projectForm = ref(null);
 const rules = {
   bgId: [
@@ -98,6 +100,7 @@ const setOrgName = (type: string, id: any) => {
     projectData.value[`${type}Name`] = item.name;
   }
 };
+
 const handleChangeBg = (type: string, id: any) => {
   handleChangeForm();
   projectData.value.deptId = '';
@@ -111,6 +114,7 @@ const handleChangeBg = (type: string, id: any) => {
     getDepartment('dept', id);
   }
 };
+
 const handleChangeDept = (type: string, id: any) => {
   handleChangeForm();
   projectData.value.centerId = '';
@@ -181,13 +185,7 @@ const handleMessage = (event: any) => {
     switch (data.code) {
       case 'success':
         handleChangeForm();
-        projectData.value.subjectScopes = [
-          ...data.data.subject_scopes,
-        ].map(item => ({
-          id: item.id,
-          type: item.type,
-          name: item.name,
-        }));
+        projectData.value.subjectScopes = data.data.subject_scopes;
         showDialog.value = false;
         break;
       case 'cancel':
@@ -196,6 +194,7 @@ const handleMessage = (event: any) => {
     }
   }
 };
+
 const fetchUserDetail = async () => {
   if (props.type !== 'apply') return
   await http.getUserDetail().then(res => {
@@ -203,6 +202,13 @@ const fetchUserDetail = async () => {
     projectData.value.bgId = bgId;
     projectData.value.centerId = centerId;
     projectData.value.deptId = deptId;
+  })
+};
+
+const showMemberDialog = () => {
+  showDialog.value = true
+  instance?.refs?.iframeRef?.$refs?.iframeRef?.contentWindow?.postMessage({
+    subject_scopes: projectData.value.subjectScopes
   })
 };
 
@@ -351,7 +357,7 @@ onBeforeUnmount(() => {
       </bk-tag>
       <EditLine
         class="edit-line ml5"
-        @click="(showDialog = true)"
+        @click="showMemberDialog"
       />
     </bk-form-item>
     <div>
@@ -368,6 +374,7 @@ onBeforeUnmount(() => {
     @closed="() => showDialog = false"
   >
     <IAMIframe
+      ref="iframeRef"
       class="member-iframe"
       path="add-member-boundary"
     />

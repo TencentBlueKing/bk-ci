@@ -69,6 +69,8 @@ const handleChangeMenu = (menu: any) => {
     width: 240px;
     height: 100%;
     background-color: #fff;
+    box-shadow: 1px 0 0 0 #DCDEE5;
+    z-index: 900;
   }
   .menu-list {
     margin-top: 8px;
