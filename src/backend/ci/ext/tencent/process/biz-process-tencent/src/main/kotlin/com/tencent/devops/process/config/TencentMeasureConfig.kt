@@ -30,12 +30,14 @@ package com.tencent.devops.process.config
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
+import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
+import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,6 +49,9 @@ import org.springframework.context.annotation.Configuration
 @Suppress("ALL")
 @Configuration
 class TencentMeasureConfig {
+
+    @Bean
+    fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
 
     @Value("\${queueConcurrency.measure:3}")
     private val measureConcurrency: Int? = null
