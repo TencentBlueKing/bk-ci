@@ -412,8 +412,8 @@
                         routerTag
                     } = data.data || {}
                     const url = /rbac/.test(routerTag)
-                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
-                            : `/console/perm/apply-perm?project_code=${projectCode}`
+                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
+                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(
                         {
                             projectId: projectCode,
