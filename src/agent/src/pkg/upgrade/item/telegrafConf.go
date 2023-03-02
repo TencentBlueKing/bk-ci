@@ -11,13 +11,11 @@ import (
 	"github.com/pkg/errors"
 )
 
-// DockerFileMd5 缓存，用来计算md5
+// TelegrafConf 缓存，用来计算md5
 var TelegrafConf *TelegrafConfType
 
 func init() {
-	DockerFileMd5 = &DockerFileMd5Type{
-		needUpgrade: false,
-	}
+	TelegrafConf = &TelegrafConfType{}
 }
 
 type TelegrafConfType struct {
