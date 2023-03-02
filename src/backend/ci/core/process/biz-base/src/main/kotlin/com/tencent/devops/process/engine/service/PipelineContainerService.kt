@@ -48,7 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
-import com.tencent.devops.process.engine.context.StartBuildContext
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -393,6 +393,7 @@ class PipelineContainerService @Autowired constructor(
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -581,6 +582,18 @@ class PipelineContainerService @Autowired constructor(
                 )
             }
             context.needUpdateStage = true
+        } else if (lastTimeBuildContainers.isEmpty()) {
+            // 新的构建需要为跳过的container增加SKIP的状态记录
+            containerBuildRecords.add(
+                BuildRecordContainer(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    resourceVersion = context.resourceVersion, stageId = stage.id!!,
+                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
+                    matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
+                    startTime = null, endTime = null, timestamps = mapOf()
+                )
+            )
         }
     }
 
