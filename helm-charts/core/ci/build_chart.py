@@ -162,7 +162,7 @@ for config_name in os.listdir(config_parent):
 
 # 生成网关的configmap
 gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__", "__BK_CI_PAAS_LOGIN_URL__",
-                    "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__", "__BK_REPO_HOST__","__INIT_LOCALE__"])  # frondend需要的变量
+                    "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__", "__BK_REPO_HOST__","__BK_CI_INIT_LOCALE__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):
