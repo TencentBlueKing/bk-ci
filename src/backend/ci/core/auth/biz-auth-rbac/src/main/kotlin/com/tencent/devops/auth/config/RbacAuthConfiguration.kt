@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.HttpClientService
@@ -208,9 +209,11 @@ class RbacAuthConfiguration {
     @Primary
     fun rbacPermissionResourceCallbackService(
         client: Client,
-        authResourceService: AuthResourceService
+        authResourceService: AuthResourceService,
+        objectMapper: ObjectMapper
     ) = RbacPermissionResourceCallbackService(
         client = client,
-        authResourceService = authResourceService
+        authResourceService = authResourceService,
+        objectMapper = objectMapper
     )
 }
