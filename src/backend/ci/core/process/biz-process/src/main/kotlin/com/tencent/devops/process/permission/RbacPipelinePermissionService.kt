@@ -128,7 +128,7 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        // 先获取项目下的流水线id列表
+        // 先获取项目下有权限的流水线id列表
         val authPipelineIds = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
@@ -137,6 +137,13 @@ class RbacPipelinePermissionService constructor(
             supplier = null,
             resourceType = resourceType
         )
+
+        // 如果由所有流水线权限,则不再查流水线组的权限
+        if (authPipelineIds.contains("*")) {
+            return pipelineInfoDao.searchByProject(
+                dslContext = dslContext, projectId = projectId
+            )?.map { it.pipelineId }?.toList() ?: emptyList()
+        }
 
         // 再获取有权限的流水线组Id列表,通过流水线组ID获取流水线ID列表
         val resources = mutableListOf<AuthResourceInstance>()

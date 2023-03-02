@@ -132,10 +132,15 @@ class RbacPermissionService constructor(
             authHelper.getInstanceList(userId, action, resourceType, pathInfoDTO)
         }
         return if (instanceList.contains("*")) {
-            authResourceService.listByProjectAndType(
-                projectCode = projectCode,
-                resourceType = resourceType
-            )
+            // 如果有项目下所有流水线权限,由流水线自己查询所有的流水线
+            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+                instanceList
+            } else {
+                authResourceService.listByProjectAndType(
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            }
         } else {
             authResourceCodeConverter.batchIamCode2Code(
                 projectCode = projectCode,
