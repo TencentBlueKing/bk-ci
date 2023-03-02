@@ -202,6 +202,7 @@ class MeasureServiceImpl : MeasureService {
                     monitorData = atomMonitorData
                 )
             )
+            logger.warn("MK_postTaskData|$atomCode")
         } catch (ignored: Throwable) { // MK = Monitor Key
             logger.warn("MK_postTaskData|${task.buildId}|message: ${ignored.message}")
         }
