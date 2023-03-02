@@ -69,20 +69,20 @@ class DevcloudWorkspaceRedisUtils @Autowired constructor(
     }
 
     /*-------------------------*/
-    fun setDevcloudClusterIdHost(clusterId: String, host: String) {
+    fun setDevcloudClusterIdHost(clusterId: String, devCloudAppId: String, host: String) {
         redisOperation.set(
-            key = devcloudClusterIdKey(clusterId),
+            key = devcloudClusterIdKey(clusterId, devCloudAppId),
             value = host,
             expired = false
         )
     }
 
-    fun getDevcloudClusterIdHost(clusterId: String): String {
-        return redisOperation.get(devcloudClusterIdKey(clusterId)) ?: ""
+    fun getDevcloudClusterIdHost(clusterId: String, devCloudAppId: String): String {
+        return redisOperation.get(devcloudClusterIdKey(clusterId, devCloudAppId)) ?: ""
     }
 
-    private fun devcloudClusterIdKey(clusterId: String): String {
-        return "dispatchkubernetes:devcloud_cluster_id_$clusterId"
+    private fun devcloudClusterIdKey(clusterId: String, devCloudAppId: String): String {
+        return "dispatchkubernetes:remotedev-ws-host-$clusterId-$devCloudAppId"
     }
 
     companion object {

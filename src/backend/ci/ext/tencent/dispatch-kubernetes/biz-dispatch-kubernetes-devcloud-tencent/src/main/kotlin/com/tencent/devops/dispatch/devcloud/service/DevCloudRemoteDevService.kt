@@ -83,6 +83,9 @@ class DevCloudRemoteDevService @Autowired constructor(
     @Value("\${devCloud.workspace.backendHost:}")
     val backendHost: String = ""
 
+    @Value("\${devCloud.appId}")
+    val devCloudAppId: String = ""
+
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
         val imagePullCertificateList = if (event.devFile.image?.imagePullCertificate != null) {
@@ -230,7 +233,7 @@ class DevCloudRemoteDevService @Autowired constructor(
     }
 
     private fun getEnvironmentHost(clusterId: String, workspaceName: String): String {
-        return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId)}"
+        return "$workspaceName.${devcloudWorkspaceRedisUtils.getDevcloudClusterIdHost(clusterId, devCloudAppId)}"
     }
 
     private fun generateContainerEnvVar(
