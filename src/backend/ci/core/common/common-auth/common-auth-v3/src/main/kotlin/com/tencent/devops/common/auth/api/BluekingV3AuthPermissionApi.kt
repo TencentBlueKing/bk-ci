@@ -217,6 +217,7 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
+        resourceType: AuthResourceType,
         resources: List<AuthResourceInstance>
     ): List<String> {
         return resources.map { it.resourceCode }

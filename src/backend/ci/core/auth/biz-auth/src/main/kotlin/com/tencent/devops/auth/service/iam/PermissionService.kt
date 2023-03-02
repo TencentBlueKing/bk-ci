@@ -73,4 +73,11 @@ interface PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>>
+
+    fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String>
 }

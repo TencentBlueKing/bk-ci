@@ -137,6 +137,15 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
+    }
+
     companion object {
         val logger = LoggerFactory.getLogger(V0AuthPermissionServiceImpl::class.java)
     }

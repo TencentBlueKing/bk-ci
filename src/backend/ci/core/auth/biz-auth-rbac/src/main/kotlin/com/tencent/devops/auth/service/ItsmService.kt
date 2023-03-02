@@ -65,7 +65,7 @@ class ItsmService @Autowired constructor(
         }
     }
 
-    fun doHttpPost(uri: String, body: Any): ItsmResponseDTO {
+    private fun doHttpPost(uri: String, body: Any): ItsmResponseDTO {
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
@@ -83,7 +83,7 @@ class ItsmService @Autowired constructor(
         return doRequest(url, request)
     }
 
-    fun doRequest(
+    private fun doRequest(
         url: String,
         request: Request
     ): ItsmResponseDTO {

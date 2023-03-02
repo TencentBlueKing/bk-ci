@@ -28,6 +28,7 @@
 package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -77,7 +78,7 @@ class RbacPipelinePermissionService constructor(
             parents.add(
                 AuthResourceInstance(
                     resourceType = AuthResourceType.PIPELINE_GROUP.value,
-                    resourceCode = viewId.toString(),
+                    resourceCode = HashUtil.encodeLongId(viewId),
                     parents = listOf(projectInstance)
                 )
             )
@@ -115,13 +116,11 @@ class RbacPipelinePermissionService constructor(
             return
         }
 
-        val permissionCheck = authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            projectCode = projectId,
-            resourceCode = pipelineId,
-            permission = permission,
-            resourceType = resourceType,
-            serviceCode = pipelineAuthServiceCode
+        val permissionCheck = checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission
         )
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
@@ -129,7 +128,8 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        return authPermissionApi.getUserResourceByPermission(
+        // 先获取项目下有权限的流水线id列表
+        val authPipelineIds = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
@@ -137,6 +137,47 @@ class RbacPipelinePermissionService constructor(
             supplier = null,
             resourceType = resourceType
         )
+
+        // 如果由所有流水线权限,则不再查流水线组的权限
+        if (authPipelineIds.contains("*")) {
+            return pipelineInfoDao.searchByProject(
+                dslContext = dslContext, projectId = projectId
+            )?.map { it.pipelineId }?.toList() ?: emptyList()
+        }
+
+        // 再获取有权限的流水线组Id列表,通过流水线组ID获取流水线ID列表
+        val resources = mutableListOf<AuthResourceInstance>()
+        val projectResource = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        pipelineViewGroupService.listViewIdsByProjectId(projectId = projectId).forEach { viewId ->
+            val pipelineGroupResource = AuthResourceInstance(
+                resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                resourceCode = HashUtil.encodeLongId(viewId),
+                parents = listOf(projectResource)
+            )
+            val pipelineResource = AuthResourceInstance(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = HashUtil.encodeLongId(viewId),
+                parents = listOf(pipelineGroupResource)
+            )
+            resources.add(pipelineResource)
+        }
+        val authViewIds = authPermissionApi.filterUserResourceByPermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            resources = resources
+        )
+        val viewPipelineIds = pipelineViewGroupService.listPipelineIdsByViewIds(projectId, authViewIds)
+
+        val pipelineIds = mutableSetOf<String>()
+        pipelineIds.addAll(authPipelineIds)
+        pipelineIds.addAll(viewPipelineIds)
+        return pipelineIds.toList()
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
