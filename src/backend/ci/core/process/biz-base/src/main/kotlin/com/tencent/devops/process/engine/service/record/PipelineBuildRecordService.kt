@@ -233,7 +233,7 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
-        if (refreshStatus || fixedExecuteCount == buildInfo.executeCount) {
+        if (refreshStatus && fixedExecuteCount == buildInfo.executeCount) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             // #6400 无需流水线是终态就可以进行task重试
             if (checkPassDays(buildInfo.startTime)) {
@@ -457,7 +457,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
-                if (BuildStatus.parse(stage.status).isRunning()) {
+                if (!BuildStatus.parse(stage.status).isRunning()) {
                     return@nextStage
                 }
                 stage.status = buildStatus.name
@@ -467,7 +467,7 @@ class PipelineBuildRecordService @Autowired constructor(
                     stage.stageId, BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
-                    if (BuildStatus.parse(container.status).isRunning()) {
+                    if (!BuildStatus.parse(container.status).isRunning()) {
                         return@nextContainer
                     }
                     container.status = buildStatus.name
@@ -477,7 +477,7 @@ class PipelineBuildRecordService @Autowired constructor(
                         container.containerId, BuildStatus.RUNNING
                     )
                     recordTasks.forEach nextTask@{ task ->
-                        if (BuildStatus.parse(task.status).isRunning()) {
+                        if (!BuildStatus.parse(task.status).isRunning()) {
                             return@nextTask
                         }
                         task.status = buildStatus.name
