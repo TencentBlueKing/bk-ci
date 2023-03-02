@@ -255,10 +255,10 @@ class ProjectLocalService @Autowired constructor(
     }
 
     fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
-        return getOrCreatePreProject(userId, authTokenApi.getAccessToken(bsPipelineAuthServiceCode))
+        return getOrCreatePreProject(userId, null)
     }
 
-    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
+    fun getOrCreatePreProject(userId: String, accessToken: String?): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -285,7 +285,9 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
-        val projectId = getProjectIdInAuth(projectCode, accessToken)
+        val projectId = getProjectIdInAuth(
+            projectCode, accessToken ?: authTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        )
 
         val startEpoch = System.currentTimeMillis()
         var success = false
