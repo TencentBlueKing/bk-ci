@@ -132,6 +132,15 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         return instanceMap
     }
 
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
+    }
+
     /**
      * 是否是开源项目
      * projectCode: stream侧项目编码

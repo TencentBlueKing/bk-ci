@@ -53,7 +53,7 @@ class AuthResourceGroupModifyListener(
                     projectName = resourceName
                 )
             } else {
-                permissionSubsetManagerService.modifyGradeDefaultGroup(
+                permissionSubsetManagerService.modifySubsetManagerDefaultGroup(
                     subsetManagerId = managerId,
                     projectCode = projectCode,
                     resourceType = resourceType,

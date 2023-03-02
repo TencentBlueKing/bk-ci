@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.HttpClientService
@@ -39,13 +40,16 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.bk.sdk.iam.service.v2.impl.V2GrantServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2ManagerServiceImpl
 import com.tencent.bk.sdk.iam.service.v2.impl.V2PolicyServiceImpl
-import com.tencent.devops.auth.service.AuthGroupService
+import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
+import com.tencent.devops.auth.service.RbacCacheService
+import com.tencent.devops.auth.service.RbacPermissionApplyService
 import com.tencent.devops.auth.service.RbacPermissionExtService
 import com.tencent.devops.auth.service.RbacPermissionItsmCallbackService
 import com.tencent.devops.auth.service.RbacPermissionProjectService
@@ -53,10 +57,13 @@ import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
+import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import com.tencent.devops.common.service.config.CommonConfig
+import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
@@ -139,14 +146,18 @@ class RbacAuthConfiguration {
         permissionGradeManagerService: PermissionGradeManagerService,
         permissionSubsetManagerService: PermissionSubsetManagerService,
         permissionResourceService: PermissionResourceService,
-        permissionGroupPoliciesService: PermissionGroupPoliciesService
+        permissionGroupPoliciesService: PermissionGroupPoliciesService,
+        authResourceGroupDao: AuthResourceGroupDao,
+        dslContext: DSLContext
     ) = RbacPermissionResourceGroupService(
         iamV2ManagerService = iamV2ManagerService,
         authResourceService = authResourceService,
         permissionGradeManagerService = permissionGradeManagerService,
         permissionSubsetManagerService = permissionSubsetManagerService,
         permissionResourceService = permissionResourceService,
-        permissionGroupPoliciesService = permissionGroupPoliciesService
+        permissionGroupPoliciesService = permissionGroupPoliciesService,
+        authResourceGroupDao = authResourceGroupDao,
+        dslContext = dslContext
     )
 
     @Bean
@@ -181,29 +192,57 @@ class RbacAuthConfiguration {
 
     @Bean
     @Primary
+    @Suppress("LongParameterList")
     fun rbacPermissionProjectService(
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
         iamV2ManagerService: V2ManagerService,
         iamConfiguration: IamConfiguration,
         deptService: DeptService,
-        authGroupService: AuthGroupService
+        authResourceGroupDao: AuthResourceGroupDao,
+        dslContext: DSLContext
     ) = RbacPermissionProjectService(
         authHelper = authHelper,
         authResourceService = authResourceService,
         iamV2ManagerService = iamV2ManagerService,
         iamConfiguration = iamConfiguration,
         deptService = deptService,
-        authGroupService = authGroupService
+        authResourceGroupDao = authResourceGroupDao,
+        dslContext = dslContext
     )
 
     @Bean
     @Primary
     fun rbacPermissionResourceCallbackService(
-        client: Client,
-        authResourceService: AuthResourceService
+        authResourceService: AuthResourceService,
+        resourceService: ResourceService
     ) = RbacPermissionResourceCallbackService(
+        authResourceService = authResourceService,
+        resourceService = resourceService
+    )
+
+    @Bean
+    @Primary
+    @Suppress("LongParameterList")
+    fun rbacPermissionApplyService(
+        dslContext: DSLContext,
+        v2ManagerService: V2ManagerService,
+        authResourceService: AuthResourceService,
+        authResourceGroupConfigDao: AuthResourceGroupConfigDao,
+        authResourceGroupDao: AuthResourceGroupDao,
+        rbacCacheService: RbacCacheService,
+        config: CommonConfig,
+        client: Client,
+        authResourceCodeConverter: AuthResourceCodeConverter
+    ) = RbacPermissionApplyService(
+        dslContext = dslContext,
+        v2ManagerService = v2ManagerService,
+        authResourceService = authResourceService,
+        authResourceGroupConfigDao = authResourceGroupConfigDao,
+        authResourceGroupDao = authResourceGroupDao,
+        rbacCacheService = rbacCacheService,
+        config = config,
         client = client,
-        authResourceService = authResourceService
+        authResourceCodeConverter = authResourceCodeConverter
     )
 }

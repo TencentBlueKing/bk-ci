@@ -37,19 +37,14 @@ import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
 
 class RbacPermissionResourceCallbackService constructor(
-    private val client: Client,
-    private val authResourceService: AuthResourceService
+    private val authResourceService: AuthResourceService,
+    private val resourceService: ResourceService
 ) : PermissionResourceCallbackService {
 
     override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
-        return client.get(ServiceProjectAuthCallBackResource::class).projectInfo(
-            token = token,
-            callBackInfo = callBackInfo
-        ).data!!
+        return resourceService.getProject(callBackInfo, token)
     }
 
     override fun getInstanceByResource(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {

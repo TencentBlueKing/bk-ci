@@ -33,7 +33,7 @@ import com.tencent.devops.auth.dao.AuthResourceDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.AuthResourceInfo
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.PageUtil
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -165,14 +165,29 @@ class AuthResourceService @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String
-    ): Boolean {
-        return authResourceDao.disable(
+    ) {
+        val groupIds = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
-            userId = userId,
             projectCode = projectCode,
             resourceType = resourceType,
             resourceCode = resourceCode
-        )
+        ).filter {
+            it.groupCode != DefaultGroupType.MANAGER.value
+        }.map { it.id }
+        dslContext.transaction { configuration ->
+            val transactionContext = DSL.using(configuration)
+            authResourceDao.disable(
+                dslContext = transactionContext,
+                userId = userId,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
+            authResourceGroupDao.deleteByIds(
+                dslContext = transactionContext,
+                ids = groupIds
+            )
+        }
     }
 
     @SuppressWarnings("LongParameterList")

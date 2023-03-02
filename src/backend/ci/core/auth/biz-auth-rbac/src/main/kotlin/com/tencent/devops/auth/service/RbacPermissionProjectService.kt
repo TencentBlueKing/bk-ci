@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.iam.PermissionProjectService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -42,6 +43,7 @@ import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
 class RbacPermissionProjectService(
@@ -50,7 +52,8 @@ class RbacPermissionProjectService(
     private val iamV2ManagerService: V2ManagerService,
     private val iamConfiguration: IamConfiguration,
     private val deptService: DeptService,
-    private val authGroupService: AuthGroupService
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val dslContext: DSLContext
 ) : PermissionProjectService {
 
     companion object {
@@ -65,11 +68,14 @@ class RbacPermissionProjectService(
             allGroupAndUser.map { allMembers.addAll(it.userIdList) }
             allMembers.toList()
         } else {
-            val dbGroupInfo = authGroupService.getGroupByCode(
+            val dbGroupInfo = authResourceGroupDao.get(
+                dslContext = dslContext,
                 projectCode = projectCode,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode,
                 groupCode = group.value
             ) ?: return emptyList()
-            val groupInfo = allGroupAndUser.filter { it.roleId == dbGroupInfo.id }
+            val groupInfo = allGroupAndUser.filter { it.roleId == dbGroupInfo.relationId.toInt() }
             if (groupInfo.isEmpty())
                 emptyList()
             else
@@ -85,7 +91,6 @@ class RbacPermissionProjectService(
             resourceCode = projectCode
         ).relationId
         // 2、获取分级管理员下所有的用户组
-        // todo 最多获取1000个用户组是否合理
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = 1
         pageInfoDTO.pageSize = 1000
@@ -97,7 +102,6 @@ class RbacPermissionProjectService(
         val result = mutableListOf<BkAuthGroupAndUserList>()
         groupInfoList.forEach {
             // 3、获取组成员
-            // todo 最多获取1000个用户或组是否合理
             val pageInfoDTO = PageInfoDTO()
             pageInfoDTO.limit = 1000
             pageInfoDTO.offset = 0
@@ -108,14 +112,8 @@ class RbacPermissionProjectService(
             )
             val members = mutableListOf<String>()
             groupMemberInfoList.forEach { memberInfo ->
-                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
-                    logger.info("[RBAC-IAM] department:$memberInfo")
-                    // todo 若部门人数太多，存在拉取速度比较慢的问题
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
-                    if (deptUsers != null) {
-                        members.addAll(deptUsers)
-                    }
-                } else {
+                // todo 暂时不返回部门的用户
+                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
                     members.add(memberInfo.id)
                 }
             }
@@ -123,7 +121,7 @@ class RbacPermissionProjectService(
                 displayName = it.name,
                 roleId = it.id,
                 roleName = it.name,
-                userIdList = members,
+                userIdList = members.toSet().toList(),
                 type = ""
             )
             result.add(groupAndUser)
