@@ -27,26 +27,15 @@
 
 package com.tencent.devops.process.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
-import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.process.engine.service.PipelineInfoService
-import com.tencent.devops.process.engine.service.PipelineTaskService
-import com.tencent.devops.process.engine.service.measure.MeasureServiceImpl
 import com.tencent.devops.process.listener.MeasurePipelineBuildFinishListener
-import com.tencent.devops.process.service.BuildVariableService
-import com.tencent.devops.process.service.ProjectCacheService
-import com.tencent.devops.process.service.measure.MeasureEventDispatcher
-import com.tencent.devops.process.template.service.TemplateService
-import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
