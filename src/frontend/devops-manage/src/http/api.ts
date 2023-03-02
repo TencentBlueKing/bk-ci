@@ -56,7 +56,7 @@ export default {
    */
   requestProjectData(params: any) {
     const { englishName } = params;
-    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/show`, null, { globalError: false });
+    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/show`, { globalError: false });
   },
 
   /**
