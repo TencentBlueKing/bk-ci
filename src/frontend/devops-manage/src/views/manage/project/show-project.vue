@@ -107,8 +107,8 @@ const handleEdit = () => {
   });
 };
 
-const handleToApprovalDetails = (applyId) => {
-  window.open(`/console/permission/${projectCode}/my-apply/${applyId}`, '_blank')
+const handleToApprovalDetails = (applyId: any) => {
+  window.open(`/console/permission/my-apply/${applyId}`, '_blank')
 };
 
 /**
