@@ -124,7 +124,6 @@ class MeasureServiceImpl : MeasureService {
             val vmSeqId = task.containerId
             val taskParams = task.taskParams
             val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
-            logger.warn("MK_postTaskData1|$atomCode")
             pipelineEventDispatcher.dispatch(
                 PipelineBuildTaskFinishBroadCastEvent(
                     source = "build-element-$taskId",
@@ -202,7 +201,6 @@ class MeasureServiceImpl : MeasureService {
                     monitorData = atomMonitorData
                 )
             )
-            logger.warn("MK_postTaskData2|$atomCode")
         } catch (ignored: Throwable) { // MK = Monitor Key
             logger.warn("MK_postTaskData|${task.buildId}|message: ${ignored.message}")
         }
