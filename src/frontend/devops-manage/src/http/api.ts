@@ -49,14 +49,14 @@ export default {
    */
   requestUpdateProject(params: any) {
     const { projectId, projectData } = params;
-    return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, projectData);
+    return http.put(`${PROJECT_PERFIX}/user/projects/${projectId}`, projectData, { globalError: false });
   },
   /**
    * 获取项目详情
    */
   requestProjectData(params: any) {
     const { englishName } = params;
-    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/show`);
+    return http.get(`${PROJECT_PERFIX}/user/projects/${englishName}/show`, null, { globalError: false });
   },
 
   /**
