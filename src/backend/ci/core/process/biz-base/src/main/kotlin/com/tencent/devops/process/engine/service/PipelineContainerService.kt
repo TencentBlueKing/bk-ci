@@ -90,7 +90,6 @@ class PipelineContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {

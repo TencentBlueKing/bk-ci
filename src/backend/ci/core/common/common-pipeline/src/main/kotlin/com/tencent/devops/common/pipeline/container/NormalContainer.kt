@@ -92,7 +92,7 @@ data class NormalContainer(
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost(),
+    override var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
     @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)

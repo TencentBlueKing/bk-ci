@@ -68,7 +68,7 @@ data class Stage(
     @ApiModelProperty("步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     var executeCount: Int? = null,
     @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
+    var timeCost: BuildRecordTimeCost? = null
 ) {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据
