@@ -34,6 +34,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/collector"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
 
 	"github.com/pkg/errors"
@@ -223,6 +224,9 @@ func DoUpgradeOperation(changeItems upgradeChangeItem) error {
 			logs.Error("[agentUpgrade]|chmod work telegraf conf file failed: ", err.Error())
 			return errors.New("chmod work telegraf conf file failed")
 		}
+
+		// 更新后需要重启telegraf
+		collector.RestartTelegraf()
 
 		logs.Info("[agentUpgrade]|replace telegraf conf file done")
 	} else {
