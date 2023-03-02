@@ -59,39 +59,6 @@ import org.springframework.context.annotation.Configuration
 @Configuration
 class TencentMeasureConfig {
 
-    @Value("\${build.atomMonitorData.report.switch:false}")
-    private val atomMonitorSwitch: String = "false"
-
-    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
-    private val maxMonitorDataSize: String = "1677216"
-
-    @Bean
-    fun measureEventDispatcher(rabbitTemplate: RabbitTemplate) = MeasureEventDispatcher(rabbitTemplate)
-
-    @Bean
-    fun measureService(
-        @Autowired projectCacheService: ProjectCacheService,
-        @Autowired pipelineTaskService: PipelineTaskService,
-        @Autowired buildVariableService: BuildVariableService,
-        @Autowired dslContext: DSLContext,
-        @Autowired templateService: TemplateService,
-        @Autowired pipelineInfoService: PipelineInfoService,
-        @Autowired redisOperation: RedisOperation,
-        @Autowired pipelineEventDispatcher: PipelineEventDispatcher,
-        @Autowired measureEventDispatcher: MeasureEventDispatcher
-    ) = MeasureServiceImpl(
-        projectCacheService = projectCacheService,
-        pipelineTaskService = pipelineTaskService,
-        buildVariableService = buildVariableService,
-        templateService = templateService,
-        pipelineInfoService = pipelineInfoService,
-        redisOperation = redisOperation,
-        pipelineEventDispatcher = pipelineEventDispatcher,
-        atomMonitorSwitch = atomMonitorSwitch,
-        maxMonitorDataSize = maxMonitorDataSize,
-        measureEventDispatcher = measureEventDispatcher
-    )
-
     @Value("\${queueConcurrency.measure:3}")
     private val measureConcurrency: Int? = null
 
