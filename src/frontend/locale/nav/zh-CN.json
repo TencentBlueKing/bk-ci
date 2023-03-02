@@ -151,5 +151,6 @@
     "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",
     "permissionRefreshOkText": "刷新页面",
     "project": "项目",
-    "enableDisableProject": "禁用/启用项目"
+    "enableDisableProject": "禁用/启用项目",
+    "createProject": "创建项目"
 }

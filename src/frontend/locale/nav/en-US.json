@@ -151,5 +151,6 @@
     "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",
     "permissionRefreshOkText": "Reload Page",
     "project": "Project",
-    "enableDisableProject": "Disable/Enable Project"
+    "enableDisableProject": "Disable/Enable Project",
+    "createProject": "Create Project"
 }

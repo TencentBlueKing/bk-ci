@@ -38,5 +38,6 @@ export const handleProjectNoPermission = (query, data) => {
 // 流水线权限动作
 export const RESOURCE_ACTION = {
     ENABLE: 'project_enable',
-    EDIT: 'project_edit'
+    EDIT: 'project_edit',
+    CREATE: 'project create'
 }

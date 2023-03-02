@@ -382,8 +382,35 @@
                 } else {
                     throw Error(String(this.$t('exception.apiError')))
                 }
-            } catch (err) {
-                this.handleError(err, this.$permissionActionMap.create, null, '/backend/api/perm/apply/subsystem/?client_id=project&service_code=project&role_creator=project')
+            } catch (e: any) {
+                if (e.code === 403) {
+                    const {
+                        projectCode,
+                        projectName,
+                        routerTag
+                    } = data.data || {}
+                    const url = /rbac/.test(routerTag)
+                        ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_create&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
+                        : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
+                    handleProjectNoPermission(
+                        {
+                            projectId: projectCode,
+                            resourceCode: projectCode,
+                            action: RESOURCE_ACTION.CREATE
+                        },
+                        {
+                            actionName: this.$t('createProject'),
+                            groupInfoList: [{ url }],
+                            resourceName: projectName,
+                            resourceTypeName: this.$t('project')
+                        }
+                    )
+                } else {
+                    this.$bkMessage({
+                        theme: 'error',
+                        message: e.message || this.$t('exception.apiError')
+                    })
+                }
             } finally {
               setTimeout(() => {
                     this.isCreating = false
@@ -412,8 +439,8 @@
                         routerTag
                     } = data.data || {}
                     const url = /rbac/.test(routerTag)
-                            ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
-                            : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
+                        ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId&x-devops-project-id=${projectCode}`
+                        : `/console/perm/apply-perm?project_code=${projectCode}&x-devops-project-id=${projectCode}`
                     handleProjectNoPermission(
                         {
                             projectId: projectCode,
@@ -495,24 +522,6 @@
         cancelProject () {
             this.isCreating = false
             this.showDialog = false
-        }
-
-        handleError (e, actionId, instanceId = [], url) {
-          if (e.code === 403) {
-            this.$showAskPermissionDialog({
-                noPermissionList: [{
-                    actionId,
-                    instanceId,
-                    resourceId: this.$permissionResourceMap.project
-                }],
-                applyPermissionUrl: url
-            })
-          } else {
-            this.$bkMessage({
-                theme: 'error',
-                message: e.message || this.$t('exception.apiError')
-            })
-          }
         }
     }
 </script>

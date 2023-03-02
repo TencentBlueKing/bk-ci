@@ -483,8 +483,8 @@
                         if (error.code === 403) {
                             const projectTag = this.getProjectTag(routerTag)
                             const url = projectTag === 'rbac'
-                                    ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
-                                    : `/console/perm/apply-perm?project_code=${projectCode}`
+                                ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
+                                : `/console/perm/apply-perm?project_code=${projectCode}`
                             handleProjectNoPermission(
                                 {
                                     projectId: projectCode,
