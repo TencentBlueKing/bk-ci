@@ -37,14 +37,17 @@ import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
+import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
 
+@Suppress("LongParameterList")
 class RbacPipelinePermissionService constructor(
     val authPermissionApi: AuthPermissionApi,
     val authProjectApi: AuthProjectApi,
     val pipelineAuthServiceCode: PipelineAuthServiceCode,
     val dslContext: DSLContext,
     val pipelineInfoDao: PipelineInfoDao,
+    val pipelineViewGroupService: PipelineViewGroupService,
     val authResourceApi: AuthResourceApi
 ) : PipelinePermissionService {
 
@@ -64,23 +67,25 @@ class RbacPipelinePermissionService constructor(
         pipelineId: String,
         permission: AuthPermission
     ): Boolean {
-        if (pipelineId == "*") {
-            return checkPipelinePermission(
-                userId = userId,
-                projectId = projectId,
-                permission = permission
-            )
-        }
+        val parents = mutableListOf<AuthResourceInstance>()
         val projectInstance = AuthResourceInstance(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId
         )
+        parents.add(projectInstance)
+        pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
+            parents.add(
+                AuthResourceInstance(
+                    resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                    resourceCode = viewId.toString(),
+                    parents = listOf(projectInstance)
+                )
+            )
+        }
         val pipelineInstance = AuthResourceInstance(
             resourceType = resourceType.value,
             resourceCode = pipelineId,
-            parents = listOf(
-                projectInstance
-            )
+            parents = parents
         )
         return authPermissionApi.validateUserResourcePermission(
             user = userId,

@@ -138,7 +138,7 @@ class AuthResourceGroupDao {
         ids: List<Long>
     ) {
         return with(TAuthResourceGroup.T_AUTH_RESOURCE_GROUP) {
-            dslContext.deleteFrom(this).where(ID.`in`(ids))
+            dslContext.deleteFrom(this).where(ID.`in`(ids)).execute()
         }
     }
 
