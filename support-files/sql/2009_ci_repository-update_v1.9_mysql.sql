@@ -45,7 +45,7 @@ BEGIN
                     AND TABLE_NAME = 'T_REPOSITORY_COMMIT'
                     AND COLUMN_NAME = 'URL') THEN
     ALTER TABLE `T_REPOSITORY_COMMIT`
-        ADD COLUMN `URL` varchar(255) DEFAULT NULL COMMENT '代码库URL，仅URL拉取代码库时启用';
+        ADD COLUMN `URL` varchar(255) DEFAULT NULL COMMENT '代码库URL';
     END IF;
 
     COMMIT;
