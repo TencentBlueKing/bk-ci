@@ -11,7 +11,7 @@
                     height="28"
                 />
             </router-link>
-            <template v-if="showProjectList && !isMooc">
+            <template v-if="showProjectList">
                 <bk-select ref="projectDropdown"
                     class="bkdevops-project-selector"
                     :placeholder="$t('selectProjectPlaceholder')"
@@ -50,9 +50,9 @@
                     </template>
                 </bk-select>
             </template>
-            <nav-menu v-if="showNav && !isMooc" />
+            <nav-menu v-if="showNav" />
             <h3
-                v-if="title && !isMooc"
+                v-if="title"
                 class="service-title"
                 @click="goHome"
             >
@@ -67,24 +67,21 @@
             </h3>
         </div>
         <div class="header-right-bar">
-            <locale-switcher v-if="!isMooc || !isInIframe"></locale-switcher>
-            <qrcode v-if="!isMooc" class="feed-back-icon" />
-            <span v-if="!isMooc" class="seperate-line">|</span>
+            <locale-switcher v-if="!isInIframe"></locale-switcher>
+            <qrcode  class="feed-back-icon" />
+            <span  class="seperate-line">|</span>
             
             <i
-                v-if="!isMooc"
                 class="devops-icon icon-helper"
                 @click.stop="goToDocs"
             />
             <User
                 class="user-info"
-                :disabled="isMooc"
                 v-bind="user"
             />
         </div>
 
         <project-dialog
-            v-if="!isMooc"
             :init-show-dialog="showProjectDialog"
             :title="projectDialogTitle"
         />
@@ -131,9 +128,6 @@
         isDropdownMenuVisible: boolean = false
         isShowTooltip: boolean = true
         isAbsoluteUrl = isAbsoluteUrl
-
-        @Inject()
-        isMooc: boolean
 
         get showProjectList (): boolean {
             return this.headerConfig.showProjectList

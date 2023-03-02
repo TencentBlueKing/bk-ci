@@ -86,7 +86,6 @@ router.beforeEach((to, from, next) => {
 })
 window.eventBus = eventBus
 window.vuexStore = store
-window.isMooc = false
 Vue.prototype.iframeUtil = iframeUtil(router)
 Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
@@ -139,9 +138,6 @@ window.devops = new Vue({
     i18n,
     router,
     store,
-    provide: {
-        isMooc
-    },
     render (h) {
         return h(App)
     }
