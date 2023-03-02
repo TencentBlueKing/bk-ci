@@ -112,13 +112,8 @@ class RbacPermissionProjectService(
             )
             val members = mutableListOf<String>()
             groupMemberInfoList.forEach { memberInfo ->
-                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.DEPARTMENT)) {
-                    logger.info("[RBAC-IAM] department:$memberInfo")
-                    val deptUsers = deptService.getDeptUser(memberInfo.id.toInt(), null)
-                    if (deptUsers != null) {
-                        members.addAll(deptUsers)
-                    }
-                } else {
+                // todo 暂时不返回部门的用户
+                if (memberInfo.type == ManagerScopesEnum.getType(ManagerScopesEnum.USER)) {
                     members.add(memberInfo.id)
                 }
             }
