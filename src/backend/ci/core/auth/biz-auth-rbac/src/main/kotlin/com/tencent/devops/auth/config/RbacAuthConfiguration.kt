@@ -57,6 +57,7 @@ import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
 import com.tencent.devops.auth.service.RbacPermissionService
+import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.client.Client
@@ -213,13 +214,11 @@ class RbacAuthConfiguration {
     @Bean
     @Primary
     fun rbacPermissionResourceCallbackService(
-        client: Client,
         authResourceService: AuthResourceService,
-        objectMapper: ObjectMapper
+        resourceService: ResourceService
     ) = RbacPermissionResourceCallbackService(
-        client = client,
         authResourceService = authResourceService,
-        objectMapper = objectMapper
+        resourceService = resourceService
     )
 
     @Bean
