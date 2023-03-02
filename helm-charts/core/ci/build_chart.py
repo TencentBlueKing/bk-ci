@@ -62,7 +62,7 @@ default_value_dict = {
     'bkCiDevopsToken': 'devops',
     'bkCiAppToken': 'test',
     'bkCiNotifyEmailSendChannel': 'blueking',
-    'initLocale': 'zh-CN',
+    'bkCiInitLocale': 'zh-CN',
     'bkCiRedisSsl': 'false',
     'bkCiEsHttps': 'false'
 }
