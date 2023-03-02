@@ -32,6 +32,8 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PIPELINE_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.annotation.BuildApiPermission
+import com.tencent.devops.common.web.constant.BuildApiHandleType.UNAUTHORIZED
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
 import io.swagger.annotations.Api
@@ -54,6 +56,7 @@ interface BuildBuildResource {
     @ApiOperation("获取流水线构建单条历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
+    @BuildApiPermission([UNAUTHORIZED])
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
         @ApiParam("项目ID", required = true)
@@ -72,6 +75,7 @@ interface BuildBuildResource {
 
     @ApiOperation("获取流水线最近成功构建")
     @GET
+    @BuildApiPermission([UNAUTHORIZED])
     @Path("/{projectId}/{pipelineId}/latestSuccessBuild")
     fun getLatestSuccessBuild(
         @ApiParam("项目ID", required = true)
@@ -88,6 +92,7 @@ interface BuildBuildResource {
     @ApiOperation("获取构建详情")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/builds/{buildId}/detail")
+    @BuildApiPermission([UNAUTHORIZED])
     @Path("/{projectId}/{pipelineId}/{buildId}/detail")
     fun getBuildDetail(
         @ApiParam("项目ID", required = true)
