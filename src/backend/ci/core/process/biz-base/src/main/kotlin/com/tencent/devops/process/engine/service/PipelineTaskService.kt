@@ -163,7 +163,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
-        val listByStatus = pipelineBuildTaskDao.listByStatus(
+        val listByStatus = pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
@@ -282,7 +282,7 @@ class PipelineTaskService @Autowired constructor(
         containerSeqId: String?,
         buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
-        return pipelineBuildTaskDao.listByStatus(
+        return pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,

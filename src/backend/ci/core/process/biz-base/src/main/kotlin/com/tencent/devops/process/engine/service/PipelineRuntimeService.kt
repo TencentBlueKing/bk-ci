@@ -46,7 +46,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.NormalContainer
-import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -110,9 +109,9 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.context.StartBuildContext
-import com.tencent.devops.process.engine.control.DependOnUtils
 import com.tencent.devops.process.engine.control.lock.PipelineBuildHistoryLock
+import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
@@ -151,8 +150,10 @@ import com.tencent.devops.process.pojo.code.WebhookInfo
 import com.tencent.devops.process.pojo.pipeline.PipelineLatestBuild
 import com.tencent.devops.process.pojo.pipeline.enums.PipelineRuleBusCodeEnum
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage.Companion.addRecords
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
@@ -748,7 +749,7 @@ class PipelineRuntimeService @Autowired constructor(
         val detailUrl = pipelineUrlBean.genBuildDetailUrl(
             projectId, pipelineId, buildId, null, null, false
         )
-        val context = StartBuildContext.init(projectId, pipelineId, buildId, startParamMap)
+        val context = StartBuildContext.init(projectId, pipelineId, buildId, version, startParamMap)
         buildLogPrinter.startLog(buildId, null, null, context.executeCount)
 
         val defaultStageTagId by lazy { stageTagService.getDefaultStageTag().data?.id }
@@ -794,9 +795,9 @@ class PipelineRuntimeService @Autowired constructor(
                 }
                 // record表需要记录被跳过的记录
                 if (stage.stageControlOption?.enable == false) {
-                    addStageRecords(
+                    stageBuildRecords.addRecords(
                         projectId, pipelineId, version, buildId, stage, context, index,
-                        BuildStatus.SKIP, stageBuildRecords, containerBuildRecords, taskBuildRecords
+                        BuildStatus.SKIP, containerBuildRecords, taskBuildRecords
                     )
                 }
                 return@nextStage
@@ -811,26 +812,26 @@ class PipelineRuntimeService @Autowired constructor(
                         stageBuildRecords, containerBuildRecords, taskBuildRecords
                     )
                     context.containerSeq++
-                    addContainerRecords(
+                    containerBuildRecords.addRecords(
                         projectId, pipelineId, version, buildId, stage, container,
-                        context, null, containerBuildRecords, taskBuildRecords
+                        context, null, taskBuildRecords
                     )
                     return@nextContainer
                 } else if (container is NormalContainer) {
                     if (!ContainerUtils.isNormalContainerEnable(container)) {
                         context.containerSeq++
-                        addContainerRecords(
+                        containerBuildRecords.addRecords(
                             projectId, pipelineId, version, buildId, stage, container,
-                            context, BuildStatus.SKIP, containerBuildRecords, taskBuildRecords
+                            context, BuildStatus.SKIP, taskBuildRecords
                         )
                         return@nextContainer
                     }
                 } else if (container is VMBuildContainer) {
                     if (!ContainerUtils.isVMBuildContainerEnable(container)) {
                         context.containerSeq++
-                        addContainerRecords(
+                        containerBuildRecords.addRecords(
                             projectId, pipelineId, version, buildId, stage, container,
-                            context, BuildStatus.SKIP, containerBuildRecords, taskBuildRecords
+                            context, BuildStatus.SKIP, taskBuildRecords
                         )
                         return@nextContainer
                     }
@@ -896,6 +897,7 @@ class PipelineRuntimeService @Autowired constructor(
                     buildTaskList = buildTaskList,
                     updateExistsContainer = updateExistsContainerWithDetail,
                     updateExistsTask = updateExistsTask,
+                    containerBuildRecords = containerBuildRecords,
                     lastTimeBuildTasks = lastTimeBuildTasks,
                     lastTimeBuildContainers = lastTimeBuildContainers
                 )
@@ -1207,90 +1209,6 @@ class PipelineRuntimeService @Autowired constructor(
         return buildId
     }
 
-    private fun addStageRecords(
-        projectId: String,
-        pipelineId: String,
-        version: Int,
-        buildId: String,
-        stage: Stage,
-        context: StartBuildContext,
-        stageIndex: Int,
-        buildStatus: BuildStatus?,
-        stageBuildRecords: MutableList<BuildRecordStage>,
-        containerBuildRecords: MutableList<BuildRecordContainer>,
-        taskBuildRecords: MutableList<BuildRecordTask>
-    ) {
-        stageBuildRecords.add(
-            BuildRecordStage(
-                projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
-                stageSeq = stageIndex, stageVar = mutableMapOf(), status = buildStatus?.name,
-                startTime = null, endTime = null, timestamps = mapOf()
-            )
-        )
-        stage.containers.forEach { container ->
-            addContainerRecords(
-                projectId, pipelineId, version, buildId, stage, container,
-                context, buildStatus, containerBuildRecords, taskBuildRecords
-            )
-        }
-    }
-
-    private fun addContainerRecords(
-        projectId: String,
-        pipelineId: String,
-        version: Int,
-        buildId: String,
-        stage: Stage,
-        container: Container,
-        context: StartBuildContext,
-        buildStatus: BuildStatus?,
-        containerBuildRecords: MutableList<BuildRecordContainer>,
-        taskBuildRecords: MutableList<BuildRecordTask>
-    ) {
-        val containerVar = mutableMapOf<String, Any>()
-        containerVar[Container::name.name] = container.name
-        container.containerHashId?.let {
-            containerVar[Container::containerHashId.name] = it
-        }
-        if (container is TriggerContainer) {
-            containerVar[container::params.name] = container.params
-            container.buildNo?.let {
-                containerVar[container::buildNo.name] = it
-            }
-            container.templateParams?.let {
-                containerVar[container::templateParams.name] = it
-            }
-        } else if (container is VMBuildContainer) {
-            container.showBuildResource?.let {
-                containerVar[VMBuildContainer::showBuildResource.name] = it
-            }
-        }
-        containerBuildRecords.add(
-            BuildRecordContainer(
-                projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
-                buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
-                containerType = container.getClassType(), executeCount = context.executeCount,
-                matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                status = buildStatus?.name, containerVar = containerVar,
-                startTime = null, endTime = null, timestamps = mapOf()
-            )
-        )
-        container.elements.forEachIndexed { index, element ->
-            taskBuildRecords.add(
-                BuildRecordTask(
-                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
-                    stageId = stage.id!!, containerId = container.containerId!!,
-                    taskId = element.id!!, classType = element.getClassType(),
-                    atomCode = element.getTaskAtom(), executeCount = context.executeCount,
-                    originClassType = null, resourceVersion = version, taskSeq = index,
-                    status = buildStatus?.name, taskVar = mutableMapOf(),
-                    startTime = null, endTime = null, timestamps = mapOf()
-                )
-            )
-        }
-    }
-
     private fun saveBuildRuntimeRecord(
         transactionContext: DSLContext,
         context: StartBuildContext,
@@ -1424,6 +1342,7 @@ class PipelineRuntimeService @Autowired constructor(
         buildId: String,
         pipelineId: String,
         projectId: String,
+        resourceVersion: Int,
         executeCount: Int
     ) {
         val newBuildStatus = BuildStatus.QUEUE
@@ -1462,7 +1381,7 @@ class PipelineRuntimeService @Autowired constructor(
                 buildId = buildId,
                 pipelineId = pipelineId,
                 projectId = projectId,
-                context = StartBuildContext.init(projectId, pipelineId, buildId, variables),
+                context = StartBuildContext.init(projectId, pipelineId, buildId, resourceVersion, variables),
                 startBuildStatus = newBuildStatus
             )
         }

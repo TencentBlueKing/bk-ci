@@ -240,7 +240,7 @@ class ContainerBuildRecordService(
                     val recordTasks = recordTaskDao.getRecords(
                         context, projectId, pipelineId, buildId, executeCount, containerId
                     )
-                    buildTaskDao.getByContainerId(context, projectId, buildId, containerId)
+                    buildTaskDao.getTasksInCondition(context, projectId, buildId, containerId, null)
                         .associateBy { it.taskId }
                     val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
                     containerVar[Container::timeCost.name] = cost
