@@ -243,6 +243,10 @@
     import { Component, Watch } from 'vue-property-decorator'
     import { State, Action, Getter } from 'vuex-class'
     import logoDialog from '../components/logoDialog/index.vue'
+    import {
+        handleProjectNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
 
     @Component({
         components: {
@@ -399,10 +403,31 @@
             })
         }
 
-        goProject ({ projectCode, enabled }): void {
+        goProject ({ projectCode, enabled, routerTag, relationId }): void {
             if (enabled) {
-                window.open(`/console/perm/my-project?project_code=${projectCode}`, '_blank')
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'v3':
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'rbac':
+                        window.open(`console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                }
             }
+        }
+
+        getProjectTag (routerTag) {
+            if (/v3/.test(routerTag)) {
+                return 'v3'
+            }
+            if (/rbac/.test(routerTag)) {
+                return 'rbac'
+            }
+            return 'v0'
         }
         
         toApplyPermission () {
@@ -420,12 +445,21 @@
             })
         }
 
-        goServiceManage ({ projectCode }): void {
-            window.open(`/console/store/serviceManage/${projectCode}`, '_blank')
+        goServiceManage ({ projectCode, routerTag }): void {
+            const projectTag = this.getProjectTag(routerTag)
+            switch (projectTag) {
+                case 'v0':
+                case 'v3':
+                    window.open(`/console/store/serviceManage/${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                    break
+                case 'rbac':
+                    window.open(`console/manage/${projectCode}/expand?x-devops-project-id=${projectCode}`, '_blank')
+                    break
+            }
         }
 
         toggleProject (project: any): void {
-            const { enabled, projectCode, projectName = '' } = project
+            const { enabled, projectCode, projectName = '', routerTag } = project
             this.curProjectData = JSON.parse(JSON.stringify(project))
 
             const message = (enabled ? this.$t('disableProjectConfirm') : this.$t('enableProjectConfirm')) + projectName
@@ -445,19 +479,25 @@
                         theme = 'success'
                         await this.getProjects(true)
                         return true
-                    } catch (error) {
+                    } catch (error: any) {
                         if (error.code === 403) {
-                            this.$showAskPermissionDialog({
-                              noPermissionList: [{
-                                  actionId: this.$permissionActionMap.edit,
-                                  resourceId: this.$permissionResourceMap.project,
-                                  instanceId: [{
-                                    id: projectCode,
-                                    name: projectName
-                                  }],
-                                  applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=project&project_code=${projectCode}&service_code=project&role_manager=project`
-                              }]
-                            })
+                            const projectTag = this.getProjectTag(routerTag)
+                            const url = projectTag === 'rbac'
+                                    ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
+                                    : `/console/perm/apply-perm?project_code=${projectCode}`
+                            handleProjectNoPermission(
+                                {
+                                    projectId: projectCode,
+                                    resourceCode: projectCode,
+                                    action: RESOURCE_ACTION.ENABLE
+                                },
+                                {
+                                    actionName: this.$t('enableDisableProject'),
+                                    groupInfoList: [{ url }],
+                                    resourceName: projectName,
+                                    resourceTypeName: this.$t('project')
+                                }
+                            )
                         } else {
                             msg = error.message || ((enabled ? this.$t('disableLabel') : this.$t('enableLabel')) + projectName + this.$t('projectFail'))
                         }
