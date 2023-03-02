@@ -158,6 +158,11 @@
 <script>
     import { mapActions } from 'vuex'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
+    import {
+        handleProjectNoPermission,
+        RESOURCE_ACTION
+    } from '@/utils/permission'
+
     export default ({
         name: 'ProjectManage',
         components: {
@@ -224,9 +229,19 @@
             },
 
             handleGoUserGroup (row) {
-                const { origin } = window.location
-                const { englishName } = row
-                window.open(`${origin}/console/manage/${englishName}/group`, '_blank')
+                const { projectCode, relationId } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'v3':
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'rbac':
+                        window.open(`console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                }
             },
 
             handleGoExtend (row) {
@@ -245,20 +260,65 @@
             },
 
             goToProjectManage (row) {
-                const { origin } = window.location
-                const { englishName } = row
-                window.open(`${origin}/console/manage/${englishName}/show`, '_blank')
+                const { englishName: projectCode, relationId } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'v3':
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                    case 'rbac':
+                        window.open(`console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`, '_blank')
+                        break
+                }
             },
             handleChangeEnabled (row) {
+                const { englishName: projectCode, enabled, projectName } = row
                 this.toggleProjectEnable({
-                    projectCode: row.englishName,
-                    enabled: row.enabled
+                    projectCode: projectCode,
+                    enabled: enabled
                 }).then(res => {
                     this.$bkMessage({
                         message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'
                     })
+                }).catch((error) => {
+                    if (error.code === 403) {
+                        const projectTag = this.getProjectTag(routerTag)
+                        const url = projectTag === 'rbac'
+                                ? `/console/permission/apply?project_code=${projectCode}&resourceType=project&resourceName=${projectName}&action=project_enable&iamResourceCode=${projectCode}&groupId`
+                                : `/console/perm/apply-perm?project_code=${projectCode}`
+                        handleProjectNoPermission(
+                            {
+                                projectId: projectCode,
+                                resourceCode: projectCode,
+                                action: RESOURCE_ACTION.ENABLE
+                            },
+                            {
+                                actionName: this.$t('enableDisableProject'),
+                                groupInfoList: [{ url }],
+                                resourceName: projectName,
+                                resourceTypeName: this.$t('project')
+                            }
+                        )
+                    } else {
+                        this.$bkMessage({
+                            message: error.message || error,
+                            theme: 'error'
+                        })
+                    }
                 })
+            },
+            getProjectTag (routerTag) {
+                if (/v3/.test(routerTag)) {
+                    return 'v3'
+                }
+                if (/rbac/.test(routerTag)) {
+                    return 'rbac'
+                }
+                return 'v0'
             }
         }
     })

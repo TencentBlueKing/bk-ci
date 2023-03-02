@@ -197,5 +197,7 @@
     "administrator": "Administrator",
     "projectStatus": "Project Status",
     "userGroupManage": "User Manage",
-    "extendManage": "Extended Manage"
+    "extendManage": "Extended Manage",
+    "enableDisableProject": "Disable/Enable Project",
+    "createProject": "Create Project"
 }

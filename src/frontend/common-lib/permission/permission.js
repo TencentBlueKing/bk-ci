@@ -6,8 +6,9 @@ import './permission.css'
  * @param {*} params 接口请求数据
  * @param {*} ajax 发送请求方法
  * @param {*} h createElement 方法
+ * @param {*} data 弹框需要的数据，不传就通过接口获取
  */
-export const handleNoPermission = (ui, params, ajax, h) => {
+export const handleNoPermission = (ui, params, ajax, h, data) => {
     let infoBoxRef = {}
     let refreshBoxRef = {}
 
@@ -200,24 +201,31 @@ export const handleNoPermission = (ui, params, ajax, h) => {
             showFooter: false
         })
     }
-    return ajax
-        .get('/ms/auth/api/user/auth/apply/getRedirectInformation', { params })
-        .then((res = {}) => {
-            const data = res.data ? res.data : res
-            infoBoxRef = ui.bkInfoBox({
-                subHeader: h(
-                    'section',
-                    [
-                        renderException(),
-                        renderTable(data),
-                        renderFooter(data)
-                    ]
-                ),
-                extCls: 'permission-dialog',
-                width: 640,
-                showFooter: false
-            })
+    const showDialog = (data) => {
+        infoBoxRef = ui.bkInfoBox({
+            subHeader: h(
+                'section',
+                [
+                    renderException(),
+                    renderTable(data),
+                    renderFooter(data)
+                ]
+            ),
+            extCls: 'permission-dialog',
+            width: 640,
+            showFooter: false
         })
+    }
+    if (data) {
+        showDialog(data)
+    } else {
+        ajax
+            .get('/ms/auth/api/user/auth/apply/getRedirectInformation', { params })
+            .then((res = {}) => {
+                const data = res.data ? res.data : res
+                showDialog(data)
+            })
+    }
 }
 
 /**
@@ -226,8 +234,9 @@ export const handleNoPermission = (ui, params, ajax, h) => {
  * @param {*} params 接口请求数据
  * @param {*} ajax 发送请求方法
  * @param {*} h createElement 方法
+ * @param {*} data 弹框需要的数据，不传就通过接口获取
  */
-export const handleNoPermissionV3 = (ui, params, ajax, h) => {
+export const handleNoPermissionV3 = (ui, params, ajax, h, data) => {
     let infoBoxRef = {}
     let refreshBoxRef = {}
 
@@ -403,23 +412,30 @@ export const handleNoPermissionV3 = (ui, params, ajax, h) => {
             dialogType: 'show'
         })
     }
-    return ajax
-        .get('/ms/auth/api/user/auth/apply/getRedirectInformation', params)
-        .then((res = {}) => {
-            const data = res.data ? res.data : res
-            infoBoxRef = ui.InfoBox({
-                title: '',
-                subTitle: h(
-                    'section',
-                    [
-                        renderException(),
-                        renderTable(data),
-                        renderFooter(data)
-                    ]
-                ),
-                extCls: 'permission-dialog-v3',
-                width: 640,
-                dialogType: 'show'
-            })
+    const showDialog = () => {
+        infoBoxRef = ui.InfoBox({
+            title: '',
+            subTitle: h(
+                'section',
+                [
+                    renderException(),
+                    renderTable(data),
+                    renderFooter(data)
+                ]
+            ),
+            extCls: 'permission-dialog-v3',
+            width: 640,
+            dialogType: 'show'
         })
+    }
+    if (data) {
+        showDialog(data)
+    } else {
+        ajax
+            .get('/ms/auth/api/user/auth/apply/getRedirectInformation', params)
+            .then((res = {}) => {
+                const data = res.data ? res.data : res
+                showDialog(data)
+            })
+    }
 }
