@@ -52,6 +52,7 @@ import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
+import com.tencent.devops.store.pojo.container.enums.ContainerTypeEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -110,10 +111,24 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
         logger.info("Starting getAllContainers $containers")
         val containertypes = mutableListOf<ContainerType>()
-
+        val triggers = mutableListOf<ContainerInfo>()
+        val vmbuilds = mutableListOf<ContainerInfo>()
+        val normals = mutableListOf<ContainerInfo>()
         containers?.forEach {
-                containertypes.add(convertContainer(it))
+            if (ContainerTypeEnum.TRIGGER.name.equals(it.type,true)) {
+                triggers.add(ContainerInfo(it.os, it.name))
+            }
+            if (ContainerTypeEnum.VMBUILD.name.equals(it.type,true)) {
+                vmbuilds.add(ContainerInfo(it.os, it.name))
+            }
+            if (ContainerTypeEnum.NORMAL.name.equals(it.type,true)) {
+                normals.add(ContainerInfo(it.os, it.name))
+            }
         }
+        containertypes.add(ContainerType(ContainerTypeEnum.TRIGGER.name,triggers))
+        containertypes.add(ContainerType(ContainerTypeEnum.VMBUILD.name,vmbuilds))
+        containertypes.add(ContainerType(ContainerTypeEnum.NORMAL.name,normals))
+
         return Result(containertypes)
     }
 
@@ -378,7 +393,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
         )
     }
 
-    private fun convertContainer(tContainerRecord: TContainerRecord): ContainerType{
+    private fun convertContainer(tContainerRecord: TContainerRecord, containertypes: List<ContainerType> ): ContainerType{
         val containerInfos = mutableListOf<ContainerInfo>()
         containerInfos.add(ContainerInfo(os = tContainerRecord.os, name = tContainerRecord.name))
         logger.info("convertContainer containerInfos:$containerInfos")
