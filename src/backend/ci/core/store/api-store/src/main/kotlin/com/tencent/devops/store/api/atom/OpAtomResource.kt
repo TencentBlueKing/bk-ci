@@ -211,4 +211,16 @@ interface OpAtomResource {
         @FormDataParam("file")
         disposition: FormDataContentDisposition
     ): Result<Boolean>
+
+    @ApiOperation("设置插件为默认插件")
+    @POST
+    @Path("/default/atomCodes/{atomCode}")
+    fun setDefault(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
+    ): Result<Boolean>
 }
