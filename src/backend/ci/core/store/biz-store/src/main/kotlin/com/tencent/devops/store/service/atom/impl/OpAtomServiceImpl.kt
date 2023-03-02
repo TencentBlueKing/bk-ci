@@ -522,7 +522,7 @@ class OpAtomServiceImpl @Autowired constructor(
             dslContext.transaction { t ->
                 val context = DSL.using(t)
                 atomDao.updateAtomByCode(context, userId, atomCode, AtomFeatureUpdateRequest(defaultFlag = true))
-                redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name))// 直接删除重建
+                redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)) // 直接删除重建
             }
             true
         } catch (e: Exception) {
