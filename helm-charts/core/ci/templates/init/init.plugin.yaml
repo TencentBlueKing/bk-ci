@@ -37,9 +37,6 @@ spec:
                 echo "{{ include "bkci.names.fullname" . }}-$service is available";
               done 
 
-              touch atom.sql
-              touch atom.redis
-
               {{ range .Values.init.plugin.atoms }}
               atom_code={{ .code }}
               check_atom_url=http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/service/pipeline/atom/codes/$atom_code/versions/1.0.0
@@ -54,12 +51,7 @@ spec:
               else
                   echo "atomCode exists"
               fi
-
-              echo 'UPDATE devops_ci_store.T_ATOM SET DEFAULT_FLAG=true WHERE ATOM_CODE="'$atom_code'";' >> atom.sql
-              echo 'SADD STORE_PUBLIC_FLAG_KEY:ATOM '$atom_code >> atom.redis
+              curl -XPOST "http://{{ include "bkci.names.fullname" $ }}-store.{{ $.Release.Namespace }}.svc.cluster.local/api/op/pipeline/atom/default/atomCodes/$atom_code" -H "X-DEVOPS-UID: admin"
               {{ end }}
-
-              mysql -u{{- include "bkci.mysqlUsername" . }} -p{{- include "bkci.mysqlPassword" . }} -h{{ $mysqlData._0 }} -P{{ $mysqlData._1 }} < atom.sql
-              redis-cli -h {{ include "bkci.redisHost" . }} -a {{ include "bkci.redisPassword" . }} -p {{ include "bkci.redisPort" . }} < atom.redis
       restartPolicy: OnFailure
 {{- end -}}
