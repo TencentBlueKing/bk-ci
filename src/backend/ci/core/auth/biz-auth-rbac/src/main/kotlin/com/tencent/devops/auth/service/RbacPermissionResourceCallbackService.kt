@@ -27,6 +27,8 @@
 
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.bk.sdk.iam.constants.CallbackMethodEnum
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
@@ -42,14 +44,16 @@ import com.tencent.devops.project.api.service.ServiceProjectAuthCallBackResource
 
 class RbacPermissionResourceCallbackService constructor(
     private val client: Client,
-    private val authResourceService: AuthResourceService
+    private val authResourceService: AuthResourceService,
+    private val objectMapper: ObjectMapper
 ) : PermissionResourceCallbackService {
 
     override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
-        return client.get(ServiceProjectAuthCallBackResource::class).projectInfo(
+        val response = client.get(ServiceProjectAuthCallBackResource::class).projectInfo(
             token = token,
             callBackInfo = callBackInfo
-        ).data!!
+        )
+        return buildResult(callBackInfo.method, response.toString())
     }
 
     override fun getInstanceByResource(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO? {
@@ -161,6 +165,22 @@ class RbacPermissionResourceCallbackService constructor(
             result.buildSearchInstanceFailResult()
         } else {
             result.buildSearchInstanceResult(instanceInfoList, instanceInfoList.size.toLong())
+        }
+    }
+
+    private fun buildResult(method: CallbackMethodEnum, response: String): CallbackBaseResponseDTO {
+        return when (method) {
+            CallbackMethodEnum.SEARCH_INSTANCE -> {
+                val searchResult = objectMapper.readValue<SearchInstanceInfo>(response)
+                if (searchResult.data?.count!! > 100L) {
+                    searchResult.buildSearchInstanceResultFailResult()
+                } else {
+                    searchResult
+                }
+            }
+            CallbackMethodEnum.FETCH_INSTANCE_INFO -> objectMapper.readValue<FetchInstanceInfoResponseDTO>(response)
+            CallbackMethodEnum.LIST_INSTANCE -> objectMapper.readValue<ListInstanceResponseDTO>(response)
+            else -> objectMapper.readValue(response)
         }
     }
 }
