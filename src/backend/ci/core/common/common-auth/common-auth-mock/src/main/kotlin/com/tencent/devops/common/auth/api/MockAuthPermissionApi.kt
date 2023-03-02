@@ -129,6 +129,7 @@ class MockAuthPermissionApi : AuthPermissionApi {
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
+        resourceType: AuthResourceType,
         resources: List<AuthResourceInstance>
     ): List<String> {
         return emptyList()

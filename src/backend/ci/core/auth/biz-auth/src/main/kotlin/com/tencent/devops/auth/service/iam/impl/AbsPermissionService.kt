@@ -173,6 +173,15 @@ open class AbsPermissionService @Autowired constructor(
         return result
     }
 
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(AbsPermissionService::class.java)
     }

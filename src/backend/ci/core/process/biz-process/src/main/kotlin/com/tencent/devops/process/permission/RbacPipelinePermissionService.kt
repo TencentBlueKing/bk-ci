@@ -128,7 +128,8 @@ class RbacPipelinePermissionService constructor(
     }
 
     override fun getResourceByPermission(userId: String, projectId: String, permission: AuthPermission): List<String> {
-        return authPermissionApi.getUserResourceByPermission(
+        // 先获取项目下的流水线id列表
+        val authPipelineIds = authPermissionApi.getUserResourceByPermission(
             user = userId,
             serviceCode = pipelineAuthServiceCode,
             projectCode = projectId,
@@ -136,6 +137,40 @@ class RbacPipelinePermissionService constructor(
             supplier = null,
             resourceType = resourceType
         )
+
+        // 再获取有权限的流水线组Id列表,通过流水线组ID获取流水线ID列表
+        val resources = mutableListOf<AuthResourceInstance>()
+        val projectResource = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        pipelineViewGroupService.listViewIdsByProjectId(projectId = projectId).forEach { viewId ->
+            val pipelineGroupResource = AuthResourceInstance(
+                resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                resourceCode = HashUtil.encodeLongId(viewId),
+                parents = listOf(projectResource)
+            )
+            val pipelineResource = AuthResourceInstance(
+                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
+                resourceCode = HashUtil.encodeLongId(viewId),
+                parents = listOf(pipelineGroupResource)
+            )
+            resources.add(pipelineResource)
+        }
+        val authViewIds = authPermissionApi.filterUserResourceByPermission(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            projectCode = projectId,
+            permission = permission,
+            resourceType = resourceType,
+            resources = resources
+        )
+        val viewPipelineIds = pipelineViewGroupService.listPipelineIdsByViewIds(projectId, authViewIds)
+
+        val pipelineIds = mutableSetOf<String>()
+        pipelineIds.addAll(authPipelineIds)
+        pipelineIds.addAll(viewPipelineIds)
+        return pipelineIds.toList()
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {
