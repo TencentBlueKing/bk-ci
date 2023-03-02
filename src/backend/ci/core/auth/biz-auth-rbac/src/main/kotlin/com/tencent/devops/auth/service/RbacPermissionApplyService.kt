@@ -377,11 +377,9 @@ class RbacPermissionApplyService @Autowired constructor(
             )
         } else {
             if (isEnablePermission) {
-                // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
-                val actionId = action.substring(action.lastIndexOf("_") + 1)
                 authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
                     val actions = JsonUtil.to(it.actions, object : TypeReference<List<String>>() {})
-                    if (actions.contains(actionId)) {
+                    if (actions.contains(action)) {
                         buildRedirectGroupInfo(
                             groupInfoList = groupInfoList,
                             projectId = projectId,

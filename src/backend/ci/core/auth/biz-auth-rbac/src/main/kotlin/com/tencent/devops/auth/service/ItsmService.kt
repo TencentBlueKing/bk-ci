@@ -26,15 +26,12 @@ class ItsmService @Autowired constructor(
     @Value("\${auth.appSecret:}")
     private val appSecret = ""
 
-    @Value("\${itsm.application.cancel.url:#{null}}")
-    private val itsmCancelApplicationUrl: String = ""
-
-    @Value("\${itsm.token.verify.url:#{null}}")
-    private val itsmVerifyTokenUrl: String = ""
+    @Value("\${itsm.url:#{null}}")
+    private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
         val itsmResponseDTO = doHttpPost(
-            url = itsmCancelApplicationUrl,
+            uri = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
         if (itsmResponseDTO.message != "success") {
@@ -53,7 +50,7 @@ class ItsmService @Autowired constructor(
         param["token"] = token
         logger.info("param:${param["token"]}")
         val itsmResponseDTO = doHttpPost(
-            url = itsmVerifyTokenUrl,
+            uri = ITSM_TOKEN_VERITY_URL_SUFFIX,
             body = param
         )
         val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
@@ -68,7 +65,7 @@ class ItsmService @Autowired constructor(
         }
     }
 
-    fun doHttpPost(url: String, body: Any): ItsmResponseDTO {
+    private fun doHttpPost(uri: String, body: Any): ItsmResponseDTO {
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
@@ -77,6 +74,7 @@ class ItsmService @Autowired constructor(
         logger.info("jsonBody:$jsonBody")
         val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
         logger.info("headerStr:$headerStr")
+        val url = itsmUrlPrefix + uri
         val request = Request.Builder()
             .url(url)
             .post(requestBody)
@@ -85,7 +83,7 @@ class ItsmService @Autowired constructor(
         return doRequest(url, request)
     }
 
-    fun doRequest(
+    private fun doRequest(
         url: String,
         request: Request
     ): ItsmResponseDTO {
@@ -108,5 +106,7 @@ class ItsmService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ItsmService::class.java)
+        private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
+        private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
     }
 }
