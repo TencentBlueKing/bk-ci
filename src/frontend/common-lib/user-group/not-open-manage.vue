@@ -12,6 +12,7 @@
                     class="btn"
                     theme="primary"
                     @click="openManage"
+                    :loading="isOpenManageLoading"
                 >{{ $t('开启权限管理') }}</bk-button>
             </bk-exception>
         </div>
@@ -28,6 +29,9 @@
             resourceType: {
                 type: String,
                 default: ''
+            },
+            isOpenManageLoading: {
+                type: Boolean
             }
         },
 

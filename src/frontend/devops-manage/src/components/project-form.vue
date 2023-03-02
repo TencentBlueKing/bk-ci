@@ -182,8 +182,7 @@ const handleMessage = (event: any) => {
       case 'success':
         handleChangeForm();
         projectData.value.subjectScopes = [
-          ...data.data.departments,
-          ...data.data.users,
+          ...data.data.subject_scopes,
         ].map(item => ({
           id: item.id,
           type: item.type,

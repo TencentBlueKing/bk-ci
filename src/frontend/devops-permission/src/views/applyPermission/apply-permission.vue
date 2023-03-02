@@ -129,7 +129,7 @@ const getAllProjectList = () => {
 };
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
-  formData.value.projectCode = route.params.projectCode || '';
+  formData.value.projectCode = route?.query.project_code || '';
   getUserInfo();
   getAllProjectList();
 });

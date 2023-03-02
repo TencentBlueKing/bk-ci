@@ -298,6 +298,9 @@
                                 name: 'PipelineListAuth',
                                 params: {
                                     id: group.id
+                                },
+                                query: {
+                                    groupName: group.name
                                 }
                             })
                         }

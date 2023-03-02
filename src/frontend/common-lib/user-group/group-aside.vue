@@ -1,5 +1,5 @@
 <template>
-    <article class="group-aside">
+    <article class="group-aside" v-bkloading="{ isLoading: !groupList.length }">
         <section class="group-list">
             <span class="group-title">{{ $t('权限角色') }}</span>
             <div

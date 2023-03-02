@@ -112,7 +112,7 @@
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
                             <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
-                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
+                                v-if="!['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
                         </div>

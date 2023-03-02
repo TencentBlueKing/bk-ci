@@ -241,7 +241,6 @@
             }
             .is-disabled span {
                 color: #CCC;
-                cursor: default;
             }
             .bk-form-input {
                 height: 28px;

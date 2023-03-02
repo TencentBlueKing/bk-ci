@@ -3,18 +3,18 @@
         <bk-table
             v-bkloading="{ isLoading }"
             :data="memberList">
-            <bk-table-column :label="$t('用户组')" prop="groupName"></bk-table-column>
-            <bk-table-column :label="$t('添加时间')" prop="createdTime">
+            <bk-table-column :label="$t('userGroup')" prop="groupName"></bk-table-column>
+            <bk-table-column :label="$t('createdTime')" prop="createdTime">
                 <template #default="{ row }">
                     <span>{{ row.createdTime ? row.createdTime : '--' }} </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('到期时间')" prop="expiredDisplay">
+            <bk-table-column :label="$t('expiredTime')" prop="expiredDisplay">
                 <template #default="{ row }">
                     <span>{{ row.expiredDisplay ? row.expiredDisplay + $t('day') : '--' }} </span>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('状态')" prop="status">
+            <bk-table-column :label="$t('status')" prop="status">
                 <template #default="{ row }">
                     <div class="status-content">
                         <img :src="statusIcon(row.status)" class="status-icon">
@@ -22,9 +22,9 @@
                     </div>
                 </template>
             </bk-table-column>
-            <bk-table-column :label="$t('操作')">
+            <bk-table-column :label="$t('operation')">
                 <template #default="{ row }">
-                    <bk-button class="btn" theme="primary" text @click="handleViewDetail(row)">{{ $t('权限详情') }}</bk-button>
+                    <bk-button class="btn" theme="primary" text @click="handleViewDetail(row)">{{ $t('permissionDetail') }}</bk-button>
                     <bk-button class="btn" theme="primary" text v-if="row.status === 'NOT_JOINED'" @click="handleApply(row)">{{ $t('applyJoin') }}</bk-button>
                     <bk-button class="btn" theme="primary" text v-if="['EXPIRED', 'NORMAL'].includes(row.status)" @click="handleRenewal(row)">{{ $t('renewal') }}</bk-button>
                     <bk-button class="btn" theme="primary" text v-if="['EXPIRED', 'NORMAL'].includes(row.status)" @click="handleShowLogout(row)">{{ $t('exit') }}</bk-button>
@@ -39,13 +39,13 @@
         >
             <template #header>
                 <div class="detail-title">
-                    {{ $t('权限详情') }}
+                    {{ $t('permissionDetail') }}
                     <span class="group-name">{{ groupName }}</span>
                 </div>
             </template>
             <template #content>
                 <div class="detail-content" v-bkloading="{ isLoading: isDetailLoading }">
-                    <div class="title">{{ $t('流水线管理') }}</div>
+                    <div class="title">{{ $t('pipelineManage') }}</div>
                     <div class="content">
                         <bk-checkbox
                             v-for="(item, index) in groupPolicies"
@@ -186,9 +186,9 @@
 
             statusFormatter (status) {
                 const map = {
-                    NOT_JOINED: this.$t('未加入'),
-                    NORMAL: this.$t('正常'),
-                    EXPIRED: this.$t('已过期')
+                    NOT_JOINED: this.$t('notJoined'),
+                    NORMAL: this.$t('normal'),
+                    EXPIRED: this.$t('expired')
                 }
                 return map[status]
             },

@@ -207,7 +207,6 @@
         }
         .is-disabled {
             color: #CCC;
-            cursor: default;
         }
         .footer-handle {
             margin-top: 20px;
