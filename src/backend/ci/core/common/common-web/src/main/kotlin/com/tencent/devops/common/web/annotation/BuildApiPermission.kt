@@ -1,5 +1,7 @@
 package com.tencent.devops.common.web.annotation
 
+import com.tencent.devops.common.web.constant.BuildApiHandleType
+
 /**
  * BuildAPI校验
  *
@@ -9,5 +11,5 @@ package com.tencent.devops.common.web.annotation
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)
 annotation class BuildApiPermission(
-    val values: Array<String>
+    val types: Array<BuildApiHandleType>
 )

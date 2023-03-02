@@ -26,19 +26,15 @@
  */
 package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.annotation.BuildApiPermission
-import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
+import com.tencent.devops.common.web.factory.BuildApiHandleFactory
 import org.aspectj.lang.JoinPoint
 import org.aspectj.lang.annotation.Aspect
 import org.aspectj.lang.annotation.Before
 import org.aspectj.lang.annotation.Pointcut
 import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
-import org.springframework.web.context.request.RequestContextHolder
-import org.springframework.web.context.request.ServletRequestAttributes
 
 @Aspect
 class BuildApiAspect constructor(private val client: Client) {
@@ -59,64 +55,17 @@ class BuildApiAspect constructor(private val client: Client) {
     fun doBefore(jp: JoinPoint) {
         val method = (jp.signature as MethodSignature).method
         val methodName: String = method.name
-        val types = method.getAnnotation(BuildApiPermission::class.java)?.values?.toList()
+        val types = method.getAnnotation(BuildApiPermission::class.java)?.types?.toList()
         logger.info("[doBefore] the method 【$methodName】 types$types")
-        types?.forEach {
-            when (it) {
-                "auth" -> {
-                    // 参数value
-                    val parameterValue = jp.args
-                    // 参数key
-                    val parameterNames = (jp.signature as MethodSignature).parameterNames
-                    authPermission(parameterNames, parameterValue)
-                }
-            }
-        }
-    }
-
-    private fun authPermission(parameterNames: Array<String>, parameterValue: Array<Any>) {
-        val request = (RequestContextHolder.getRequestAttributes() as ServletRequestAttributes).request
-        val authBuildId = request.getHeader(AUTH_HEADER_DEVOPS_BUILD_ID)
-        val authProjectId = request.getHeader(AUTH_HEADER_DEVOPS_PROJECT_ID)
-        if (!parameterNames.contains("projectId") || !parameterNames.contains("pipelineId")) return
-        var projectId: String? = null
-        var pipelineId: String? = null
-        parameterNames.forEach {
-            logger.info("ParamName[$it]")
-        }
-
-        parameterValue.forEach {
-            logger.info("ParamValue[$it]")
-        }
-        for (index in parameterValue.indices) {
-            when (parameterNames[index]) {
-                "projectId" -> {
-                    projectId = parameterValue[index].toString()
-                }
-                "pipelineId" -> {
-                    pipelineId = parameterValue[index].toString()
-                }
-            }
-        }
-        logger.info("Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
-                "user pipeline param[$pipelineId]")
-        if (projectId != null && pipelineId != null) {
-            val buildStartUser = client.get(ServiceBuildApiPermissionResource::class)
-                .getStartUser(authProjectId!!, authBuildId!!).data!!
-            logger.info("verify that user [$buildStartUser] has permission to access information " +
-                    "in pipeline [$pipelineId] under project [$projectId].")
-            val checkPipelinePermissionResult = client.get(ServiceBuildApiPermissionResource::class).verifyApi(
-                userId = buildStartUser,
-                projectId = projectId,
-                pipelineId = pipelineId
-            ).data!!
-            if (checkPipelinePermissionResult) {
-                logger.info("verify that user [$buildStartUser] has permission to access information " +
-                        "in pipeline [$pipelineId] under project [$projectId].【verify succeed】")
-            } else {
-                logger.info("verify that user [$buildStartUser] has permission to access information " +
-                        "in pipeline [$pipelineId] under project [$projectId].【verify fail】")
-            }
+        // 参数value
+        val parameterValue = jp.args
+        // 参数key
+        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        types?.forEach{ type ->
+            BuildApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
+                parameterNames,
+                parameterValue
+            )
         }
     }
 }
