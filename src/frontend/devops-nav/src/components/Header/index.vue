@@ -68,8 +68,8 @@
         </div>
         <div class="header-right-bar">
             <locale-switcher v-if="!isInIframe"></locale-switcher>
-            <qrcode  class="feed-back-icon" />
-            <span  class="seperate-line">|</span>
+            <qrcode class="feed-back-icon" />
+            <span class="seperate-line">|</span>
             
             <i
                 class="devops-icon icon-helper"
