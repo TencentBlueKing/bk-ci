@@ -106,7 +106,7 @@ class ItsmService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ItsmService::class.java)
-        private val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
-        private val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
+        private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
+        private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
     }
 }
