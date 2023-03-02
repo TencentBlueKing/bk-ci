@@ -186,14 +186,8 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
-        if (resourceType == AuthResourceType.PROJECT.value) {
-            val projectInfo = authResourceService.get(
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            permissionGradeManagerService.deleteGradeManager(projectInfo.relationId)
-        } else {
+        // 项目不能删除,不需要删除分级管理员
+        if (resourceType != AuthResourceType.PROJECT.value) {
             val resourceInfo = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = resourceType,
