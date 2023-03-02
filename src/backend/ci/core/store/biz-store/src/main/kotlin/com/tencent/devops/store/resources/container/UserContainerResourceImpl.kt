@@ -82,7 +82,7 @@ class UserContainerResourceImpl @Autowired constructor(private val containerServ
         return containerService.getAllContainerInfos(userId, projectCode, type, os)
     }
 
-    override fun getAllContainers(): Result<List<ContainerType>> {
+    override fun getAllContainers(): Result<List<ContainerType>?> {
         return containerService.getAllContainers()
     }
 }

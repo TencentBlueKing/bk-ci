@@ -140,5 +140,5 @@ interface UserContainerResource {
     @ApiOperation("获取全部流水线构建容器信息")
     @GET
     @Path("/all")
-    fun getAllContainers(): Result<List<ContainerType>>
+    fun getAllContainers(): Result<List<ContainerType>?>
 }

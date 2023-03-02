@@ -105,32 +105,10 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     /**
      * 获取编译环境信息
      */
-    override fun getAllContainers(): Result<List<ContainerType>> {
+    override fun getAllContainers(): Result<List<ContainerType>?> {
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
         logger.info("Starting getAllContainers $containers")
-        //val containertypes = mutableListOf<ContainerType>()
-       /* val triggers = mutableListOf<ContainerInfo>()
-        val vmbuilds = mutableListOf<ContainerInfo>()
-        val normals = mutableListOf<ContainerInfo>()
-        containers?.forEach {
-          *//*  if (ContainerTypeEnum.TRIGGER.name.equals(it.type,true)) {
-                triggers.add(ContainerInfo(it.os, it.name))
-            }
-            if (ContainerTypeEnum.VMBUILD.name.equals(it.type,true)) {
-                vmbuilds.add(ContainerInfo(it.os, it.name))
-            }
-            if (ContainerTypeEnum.NORMAL.name.equals(it.type,true)) {
-                normals.add(ContainerInfo(it.os, it.name))
-            }*//*
-            containertypes.add(
-                convertContainer(it,containertypes)
-            )
-        }*/
-        /*containertypes.add(ContainerType(ContainerTypeEnum.TRIGGER.name,triggers))
-        containertypes.add(ContainerType(ContainerTypeEnum.VMBUILD.name,vmbuilds))
-        containertypes.add(ContainerType(ContainerTypeEnum.NORMAL.name,normals))*/
-
-        val map1 = containers?.groupBy { it.type }?.map {
+        val containerTypeMap = containers?.groupBy { it.type }?.map {
             val map = it.value.map {
                 mapOf(
                     "os" to it.os,
@@ -142,35 +120,8 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
                 info = map
             )
         }
-        //println(JSONObject.toJSONString(map1))
-
-
-        return Result(map1) as Result<List<ContainerType>>
+        return Result(containerTypeMap)
     }
-
-    /*private fun convertContainer(tContainerRecord: TContainerRecord, containertypes: List<ContainerType> ): ContainerType{
-
-
-        val containerInfos = mutableListOf<ContainerInfo>()
-        containerInfos.add(ContainerInfo(os = tContainerRecord.os, name = tContainerRecord.name))
-        logger.info("convertContainer containerInfos:$containerInfos")
-        if (containertypes.isEmpty()){
-            return ContainerType(
-                type = tContainerRecord.type,
-                info = containerInfos
-            )
-        }else{
-            containertypes.forEach {
-                if (tContainerRecord.type.equals(it.type,true)){
-                    it.info
-                }
-            }
-        }
-        return ContainerType(
-            type = tContainerRecord.type,
-            info = containerInfos
-        )
-    }*/
     /**
      * 获取构建容器信息
      */
