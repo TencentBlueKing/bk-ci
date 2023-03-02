@@ -103,7 +103,11 @@ value_re = re.compile(r'')
 for line in env_file:
     if line.startswith('BK_'):
         # 排除掉数据库的相关值
-        if ('_MYSQL_' in line) or ('_REDIS_' in line and 'DB' not in line and 'SENTINEL' not in line) or ('_ES_' in line and 'CLUSTER' not in line) or ('_RABBITMQ_' in line) or ('_INFLUXDB_' in line and 'DB' not in line):
+        if ('_MYSQL_' in line) \
+                or ('_REDIS_' in line and 'DB' not in line and 'SENTINEL' not in line and 'SSL' not in line) \
+                or ('_ES_' in line and 'CLUSTER' not in line and 'HTTPS' not in line) \
+                or ('_RABBITMQ_' in line) \
+                or ('_INFLUXDB_' in line and 'DB' not in line):
             continue
         datas = line.split("=")
         key = datas[0]
