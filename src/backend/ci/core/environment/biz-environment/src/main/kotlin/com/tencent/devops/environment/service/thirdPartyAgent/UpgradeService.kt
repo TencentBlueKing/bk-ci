@@ -139,11 +139,12 @@ class UpgradeService @Autowired constructor(
         if (logger.isDebugEnabled) {
             logger.debug(
                 "$projectId|$agentId|canUpgrade=$canUpgrade" +
-                    "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
-                    "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
-                    "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
-                    "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
-                    "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
+                        "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
+                        "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
+                        "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
+                        "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
+                        "|currentTelegrafConfFileMd5=$currentTelegrafConfFileMd5," +
+                        "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
             )
         }
 
