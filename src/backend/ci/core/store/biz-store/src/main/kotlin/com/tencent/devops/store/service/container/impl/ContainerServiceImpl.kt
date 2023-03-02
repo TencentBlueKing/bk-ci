@@ -45,14 +45,12 @@ import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
-import com.tencent.devops.store.pojo.container.ContainerInfo
 import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
 import com.tencent.devops.store.pojo.container.ContainerResp
 import com.tencent.devops.store.pojo.container.ContainerType
 import com.tencent.devops.store.pojo.container.enums.ContainerRequiredEnum
-import com.tencent.devops.store.pojo.container.enums.ContainerTypeEnum
 import com.tencent.devops.store.service.container.BuildResourceService
 import com.tencent.devops.store.service.container.ContainerAppService
 import com.tencent.devops.store.service.container.ContainerService
@@ -110,12 +108,12 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     override fun getAllContainers(): Result<List<ContainerType>> {
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
         logger.info("Starting getAllContainers $containers")
-        val containertypes = mutableListOf<ContainerType>()
-        val triggers = mutableListOf<ContainerInfo>()
+        //val containertypes = mutableListOf<ContainerType>()
+       /* val triggers = mutableListOf<ContainerInfo>()
         val vmbuilds = mutableListOf<ContainerInfo>()
         val normals = mutableListOf<ContainerInfo>()
         containers?.forEach {
-            if (ContainerTypeEnum.TRIGGER.name.equals(it.type,true)) {
+          *//*  if (ContainerTypeEnum.TRIGGER.name.equals(it.type,true)) {
                 triggers.add(ContainerInfo(it.os, it.name))
             }
             if (ContainerTypeEnum.VMBUILD.name.equals(it.type,true)) {
@@ -123,15 +121,56 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             }
             if (ContainerTypeEnum.NORMAL.name.equals(it.type,true)) {
                 normals.add(ContainerInfo(it.os, it.name))
-            }
-        }
-        containertypes.add(ContainerType(ContainerTypeEnum.TRIGGER.name,triggers))
+            }*//*
+            containertypes.add(
+                convertContainer(it,containertypes)
+            )
+        }*/
+        /*containertypes.add(ContainerType(ContainerTypeEnum.TRIGGER.name,triggers))
         containertypes.add(ContainerType(ContainerTypeEnum.VMBUILD.name,vmbuilds))
-        containertypes.add(ContainerType(ContainerTypeEnum.NORMAL.name,normals))
+        containertypes.add(ContainerType(ContainerTypeEnum.NORMAL.name,normals))*/
 
-        return Result(containertypes)
+        val map1 = containers?.groupBy { it.type }?.map {
+            val map = it.value.map {
+                mapOf(
+                    "os" to it.os,
+                    "name" to it.name
+                )
+            }
+            ContainerType(
+                type = it.key,
+                info = map
+            )
+        }
+        //println(JSONObject.toJSONString(map1))
+
+
+        return Result(map1) as Result<List<ContainerType>>
     }
 
+    /*private fun convertContainer(tContainerRecord: TContainerRecord, containertypes: List<ContainerType> ): ContainerType{
+
+
+        val containerInfos = mutableListOf<ContainerInfo>()
+        containerInfos.add(ContainerInfo(os = tContainerRecord.os, name = tContainerRecord.name))
+        logger.info("convertContainer containerInfos:$containerInfos")
+        if (containertypes.isEmpty()){
+            return ContainerType(
+                type = tContainerRecord.type,
+                info = containerInfos
+            )
+        }else{
+            containertypes.forEach {
+                if (tContainerRecord.type.equals(it.type,true)){
+                    it.info
+                }
+            }
+        }
+        return ContainerType(
+            type = tContainerRecord.type,
+            info = containerInfos
+        )
+    }*/
     /**
      * 获取构建容器信息
      */
@@ -391,16 +430,6 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             resourceIdList = resourceIdList,
             props = convertString(tContainerRecord.props)
         )
-    }
-
-    private fun convertContainer(tContainerRecord: TContainerRecord, containertypes: List<ContainerType> ): ContainerType{
-        val containerInfos = mutableListOf<ContainerInfo>()
-        containerInfos.add(ContainerInfo(os = tContainerRecord.os, name = tContainerRecord.name))
-        logger.info("convertContainer containerInfos:$containerInfos")
-        return ContainerType(
-                    type = tContainerRecord.type,
-                    info = containerInfos
-                )
     }
 
     @Suppress("UNCHECKED_CAST")
