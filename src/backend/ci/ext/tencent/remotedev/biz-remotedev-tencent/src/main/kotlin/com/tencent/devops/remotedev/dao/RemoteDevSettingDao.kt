@@ -28,7 +28,6 @@
 package com.tencent.devops.remotedev.dao
 
 import com.fasterxml.jackson.core.type.TypeReference
-import com.tencent.devops.common.api.constant.NAME
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.service.utils.ByteUtils
 import com.tencent.devops.model.remotedev.tables.TRemoteDevSettings
