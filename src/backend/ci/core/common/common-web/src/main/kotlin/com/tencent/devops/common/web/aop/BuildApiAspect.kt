@@ -61,7 +61,7 @@ class BuildApiAspect constructor(private val client: Client) {
         val parameterValue = jp.args
         // 参数key
         val parameterNames = (jp.signature as MethodSignature).parameterNames
-        types?.forEach{ type ->
+        types?.forEach { type ->
             BuildApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
                 parameterNames,
                 parameterValue
