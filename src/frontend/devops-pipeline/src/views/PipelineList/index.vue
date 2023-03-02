@@ -24,7 +24,7 @@
                     <bk-breadcrumb-item
                         class="pipeline-breadcrumb-item"
                     >
-                        {{$t('authManage')}}
+                        {{groupName}}
                     </bk-breadcrumb-item>
                 </template>
                 <!-- <bk-breadcrumb-item
@@ -69,7 +69,6 @@
                     </li>
 
                 </ul>
-
             </bk-dropdown-menu>
         </pipeline-header>
         <router-view></router-view>
@@ -106,6 +105,9 @@
             },
             routeName () {
                 return this.$route.name
+            },
+            groupName () {
+                return this.$route.query.groupName
             },
             dropTitle () {
                 return this.dropdownMenus.find(menu => menu.routeName === this.routeName)?.label ?? 'more'

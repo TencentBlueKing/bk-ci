@@ -5,6 +5,7 @@
         :project-code="projectCode"
         :group-list="groupList"
         :is-loading="isLoading"
+        :is-open-manage-loading="isOpenManageLoading"
         :iam-iframe-path="iamIframePath"
         :has-permission="hasPermission"
         :is-enable-permission="isEnablePermission"
@@ -35,7 +36,8 @@
                 resourceType: 'pipeline',
                 groupList: [],
                 memberGroupList: [],
-                isLoading: false
+                isLoading: false,
+                isOpenManageLoading: false
             }
         },
         computed: {
@@ -136,6 +138,8 @@
                     projectCode
                 } = this
 
+                this.isOpenManageLoading = true
+
                 return this
                     .enableGroupPermission({
                         resourceType,
@@ -157,6 +161,9 @@
                             theme: 'error',
                             message: err.message || err
                         })
+                    })
+                    .finally(() => {
+                        this.isOpenManageLoading = false
                     })
             },
             /**

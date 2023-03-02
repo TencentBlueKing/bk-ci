@@ -1135,5 +1135,6 @@
   "pipelineManage": "Pipeline manage",
   "notJoined": "Not joined",
   "normal": "Normal",
-  "expired": "Expired"
+  "expired": "Expired",
+  "operation": "Operation"
 }
