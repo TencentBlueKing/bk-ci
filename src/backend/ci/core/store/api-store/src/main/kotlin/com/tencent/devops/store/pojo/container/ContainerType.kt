@@ -9,5 +9,4 @@ data class ContainerType(
     var type: String,
     @ApiModelProperty("操作系统", required = true)
     var info: List<Map<String, String>>
-
 )
