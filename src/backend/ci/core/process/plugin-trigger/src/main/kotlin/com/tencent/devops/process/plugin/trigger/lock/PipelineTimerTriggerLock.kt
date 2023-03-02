@@ -25,19 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.lock
+package com.tencent.devops.process.plugin.trigger.lock
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+class PipelineTimerTriggerLock(redisOperation: RedisOperation, pipelineId: String, scheduledFireTime: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
-        expiredTimeInSeconds = 60L
+        lockKey = "process:pipeline:timer:trigger:$pipelineId:$scheduledFireTime",
+        expiredTimeInSeconds = 30L
     ) {
     override fun decorateKey(key: String): String {
-        // buildId在各集群唯一，key无需加上集群信息前缀来区分
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
         return key
     }
 }

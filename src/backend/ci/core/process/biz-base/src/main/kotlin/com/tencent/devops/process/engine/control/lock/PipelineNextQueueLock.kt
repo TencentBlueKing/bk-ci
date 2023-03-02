@@ -29,15 +29,25 @@ package com.tencent.devops.process.engine.control.lock
 
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import java.util.concurrent.TimeUnit
 
-class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+class PipelineNextQueueLock(redisOperation: RedisOperation, pipelineId: String, buildId: String? = null) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
-        expiredTimeInSeconds = 60L
+        lockKey = getLockKey(pipelineId, buildId),
+        expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(1)
     ) {
     override fun decorateKey(key: String): String {
-        // buildId在各集群唯一，key无需加上集群信息前缀来区分
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
         return key
+    }
+}
+
+private fun getLockKey(pipelineId: String, buildId: String? = null): String {
+    val defaultKey = "pipelineNextQueueInfo:concurrency:$pipelineId"
+    return if (!buildId.isNullOrBlank()) {
+        "$defaultKey:$buildId"
+    } else {
+        defaultKey
     }
 }
