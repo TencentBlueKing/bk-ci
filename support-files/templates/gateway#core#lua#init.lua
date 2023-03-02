@@ -58,7 +58,7 @@ config = {
         max_idle_time = 600000, -- 保留在连接池的时间
         pool_size = 10, -- 连接池的大小
         backlog = 10, -- 池外连接最大值
-        ssl = "__BK_CI_REDIS_SSL__"
+        ssl = __BK_CI_REDIS_SSL__
     },
     oauth = { -- 对接蓝鲸权限中心才需要的配置
         ip = "__BK_SSM_HOST__",
