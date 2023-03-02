@@ -414,7 +414,7 @@
                         window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
                         break
                     case 'rbac':
-                        window.open(`console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
                         break
                 }
             }
@@ -453,7 +453,7 @@
                     window.open(`/console/store/serviceManage/${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
                     break
                 case 'rbac':
-                    window.open(`console/manage/${projectCode}/expand?x-devops-project-id=${projectCode}`, '_blank')
+                    window.open(`/console/manage/${projectCode}/expand?x-devops-project-id=${projectCode}`, '_blank')
                     break
             }
         }
