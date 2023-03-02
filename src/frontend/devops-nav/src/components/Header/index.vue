@@ -90,7 +90,7 @@
 
 <script lang="ts">
     import Vue from 'vue'
-    import { Component, Inject } from 'vue-property-decorator'
+    import { Component } from 'vue-property-decorator'
     import { State, Action, Getter } from 'vuex-class'
     import User from '../User/index.vue'
     import NavMenu from './NavMenu.vue'
