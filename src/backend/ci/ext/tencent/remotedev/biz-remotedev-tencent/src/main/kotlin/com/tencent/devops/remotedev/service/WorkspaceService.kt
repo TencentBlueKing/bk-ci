@@ -1483,7 +1483,7 @@ class WorkspaceService @Autowired constructor(
     fun initBilling(freeTime: Int? = null) {
         remoteDevBillingDao.monthlyInit(
             dslContext,
-            freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560
+            (freeTime ?: redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toInt() ?: 10560) * 60
         )
     }
 

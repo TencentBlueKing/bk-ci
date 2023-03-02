@@ -105,6 +105,7 @@ interface OpRemoteDevResource {
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
+        @ApiParam(value = "freeTime (单位分钟)", required = true)
         @QueryParam("freeTime")
         freeTime: Int
     ): Result<Boolean>
