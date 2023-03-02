@@ -228,8 +228,7 @@ class PipelineBuildRecordService @Autowired constructor(
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
         logger.info(
             "RECORD|turn to detail($buildId)|buildInfoExecuteCount=${buildInfo.executeCount}" +
-                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount\n\n" +
-                JsonUtil.toJson(model)
+                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount"
         )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态

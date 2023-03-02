@@ -87,7 +87,8 @@ open class BaseBuildRecordService(
 
             watcher.start("getRecord")
             val record = buildRecordModelDao.getRecord(
-                dslContext, projectId, pipelineId, buildId, executeCount
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
             ) ?: run {
                 message = "Will not update"
                 return

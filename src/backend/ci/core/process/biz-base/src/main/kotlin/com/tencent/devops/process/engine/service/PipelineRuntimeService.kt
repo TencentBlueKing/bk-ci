@@ -1817,7 +1817,7 @@ class PipelineRuntimeService @Autowired constructor(
                 dslContext = transactionContext,
                 projectId = latestRunningBuild.projectId,
                 buildId = latestRunningBuild.buildId,
-                startTime = startTime,
+                startTime = if (executeCount == 1) startTime else null,
                 executeCount = executeCount
             )
             pipelineInfoDao.updateLatestStartTime(
