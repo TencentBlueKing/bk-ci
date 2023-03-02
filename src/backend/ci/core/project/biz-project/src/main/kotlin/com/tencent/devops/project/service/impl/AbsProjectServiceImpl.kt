@@ -315,18 +315,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
-        val verify = validatePermission(
-            userId = userId,
-            projectCode = englishName,
-            permission = AuthPermission.VIEW
-        )
-        if (!verify) {
-            logger.info("$englishName| $userId| ${AuthPermission.VIEW} validatePermission fail")
-            throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+        val projectInfo =
+            getByEnglishName(userId = userId, englishName = englishName, accessToken = accessToken) ?: return null
+        if (projectInfo.approvalStatus != ProjectApproveStatus.CREATE_PENDING.status) {
+            val verify = validatePermission(
+                userId = userId,
+                projectCode = englishName,
+                permission = AuthPermission.VIEW
+            )
+            if (!verify) {
+                logger.info("$englishName| $userId| ${AuthPermission.VIEW} validatePermission fail")
+                throw PermissionForbiddenException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CHECK_FAIL))
+            }
         }
-        val projectInfo = getByEnglishName(userId = userId, englishName = englishName, accessToken = accessToken)
         val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
-        return projectInfo?.copy(tipsStatus = tipsStatus)
+        return projectInfo.copy(tipsStatus = tipsStatus)
     }
 
     protected fun getAndUpdateTipsStatus(userId: String, projectId: String): Int {
