@@ -28,6 +28,7 @@
 package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -77,7 +78,7 @@ class RbacPipelinePermissionService constructor(
             parents.add(
                 AuthResourceInstance(
                     resourceType = AuthResourceType.PIPELINE_GROUP.value,
-                    resourceCode = viewId.toString(),
+                    resourceCode = HashUtil.encodeLongId(viewId),
                     parents = listOf(projectInstance)
                 )
             )
@@ -115,13 +116,11 @@ class RbacPipelinePermissionService constructor(
             return
         }
 
-        val permissionCheck = authPermissionApi.validateUserResourcePermission(
-            user = userId,
-            projectCode = projectId,
-            resourceCode = pipelineId,
-            permission = permission,
-            resourceType = resourceType,
-            serviceCode = pipelineAuthServiceCode
+        val permissionCheck = checkPipelinePermission(
+            userId = userId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            permission = permission
         )
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
