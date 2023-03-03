@@ -50,7 +50,7 @@
                     />
                 </p>
                 <span class="ml6">{{ atom.score }}</span>
-                <img v-if="atom.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
+                <img v-if="atom.hotFlag" class="hot-icon" src="../../images/hot-red.png">
                 <img v-else class="hot-icon" src="../../images/hot.png">
                 <span class="ml3">{{ getShowNum(atom.recentExecuteNum) }}</span>
             </section>
