@@ -47,7 +47,7 @@ class GithubTransferService @Autowired constructor(
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userId).data?.accessToken
-        if (accessToken == null) {
+        if (accessToken == null || refreshToken == true) {
             val url = client.get(ServiceGithubOauthResource::class).oauthUrl(
                 redirectUrl = redirectUrl ?: ""
             ).data ?: ""
