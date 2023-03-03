@@ -58,9 +58,9 @@ class AuthResourceCodeConverter @Autowired constructor(
     /**
      * 蓝盾资源code转换成iam资源code
      */
-    fun code2IamCode(resourceType: String, resourceCode: String): String {
+    fun generateIamCode(resourceType: String, resourceCode: String): String {
         // 如果是流水线或者凭证,iam资源code自动生成
-        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
+        return if (needConvert(resourceType)) {
             client.get(ServiceAllocIdResource::class)
                 .generateSegmentId(AUTH_RESOURCE_ID_TAG).data.toString()
         } else {
@@ -72,7 +72,7 @@ class AuthResourceCodeConverter @Autowired constructor(
      * 权限中心资源code转成蓝盾资源code
      */
     fun iamCode2Code(projectCode: String, resourceType: String, iamResourceCode: String): String {
-        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
+        return if (needConvert(resourceType)) {
             authResourceDao.getByIamCode(
                 dslContext = dslContext,
                 projectCode = projectCode,
@@ -92,8 +92,8 @@ class AuthResourceCodeConverter @Autowired constructor(
      * 批量权限中心资源code转成蓝盾资源code
      */
     fun batchIamCode2Code(projectCode: String, resourceType: String, iamResourceCodes: List<String>): List<String> {
-        return if (resourceType == AuthResourceType.TICKET_CREDENTIAL.value) {
-            authResourceDao.getResourceCodeByIamCode(
+        return if (needConvert(resourceType)) {
+            authResourceDao.getResourceCodeByIamCodes(
                 dslContext = dslContext,
                 projectCode = projectCode,
                 resourceType = resourceType,
@@ -102,5 +102,17 @@ class AuthResourceCodeConverter @Autowired constructor(
         } else {
             iamResourceCodes
         }
+    }
+
+    /**
+     * 是否由auth生成id
+     *
+     * 凭证和证书名可能太长,超过iam限制,需要由auth生成
+     * 流水线ID太长会导致表达式很长,影响性能,需要由auth生辰
+     */
+    private fun needConvert(resourceType: String): Boolean {
+        return resourceType == AuthResourceType.TICKET_CREDENTIAL.value ||
+            resourceType == AuthResourceType.TICKET_CERT.value ||
+            resourceType == AuthResourceType.PIPELINE_DEFAULT.value
     }
 }
