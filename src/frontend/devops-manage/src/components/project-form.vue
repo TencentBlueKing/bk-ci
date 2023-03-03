@@ -6,6 +6,7 @@ import {
   computed,
   onMounted,
   getCurrentInstance,
+  nextTick
 } from 'vue';
 import {
   EditLine,
@@ -207,9 +208,11 @@ const fetchUserDetail = async () => {
 
 const showMemberDialog = () => {
   showDialog.value = true
-  instance?.refs?.iframeRef?.$refs?.iframeRef?.contentWindow?.postMessage({
-    subject_scopes: projectData.value.subjectScopes
-  })
+  nextTick(() => {
+    instance?.refs?.iframeRef?.$refs?.iframeRef?.contentWindow?.postMessage(JSON.parse(JSON.stringify({
+      subject_scopes: projectData.value.subjectScopes
+    })), window.BK_IAM_URL_PREFIX);
+  });
 };
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () =>{
