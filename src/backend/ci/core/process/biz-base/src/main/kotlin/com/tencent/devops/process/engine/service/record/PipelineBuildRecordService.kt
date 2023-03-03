@@ -204,7 +204,10 @@ class PipelineBuildRecordService @Autowired constructor(
                     modelFieldRecordMap = recordMap
                 )
             } catch (t: Throwable) {
-                logger.warn("RECORD|parse record($buildId)-$executeCount with error: ", t)
+                logger.warn(
+                    "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap)})-$executeCount with error: ",
+                    t
+                )
                 // 遇到解析问题直接返回最新记录，表现为前端无法切换
                 fixedExecuteCount = buildInfo.executeCount!!
                 null
