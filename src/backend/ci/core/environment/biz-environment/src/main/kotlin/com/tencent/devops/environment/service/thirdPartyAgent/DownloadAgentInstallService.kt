@@ -244,11 +244,9 @@ class DownloadAgentInstallService @Autowired constructor(
     private fun getGoAgentConfFiles(agentRecord: TEnvironmentThirdpartyAgentRecord): Map<String/*Name*/, String> {
         val file = File(agentPackage, "config/${agentRecord.os.toLowerCase()}")
         val configFiles = file.listFiles()
-        val map = getAgentReplaceProperties(agentRecord)
         return configFiles?.associate {
-            var content = it.readText(Charsets.UTF_8)
-            map.forEach { (key, value) -> content = content.replace("##$key##", value) }
-            it.name to content
+            // 配置文件目前只有telegraf,暂时不替换防止下下来的和服务器上的不同直接更新
+            it.name to it.readText(Charsets.UTF_8)
         } ?: emptyMap()
     }
 
