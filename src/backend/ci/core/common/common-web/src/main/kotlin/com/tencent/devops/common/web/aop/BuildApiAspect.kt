@@ -26,7 +26,6 @@
  */
 package com.tencent.devops.common.web.aop
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.annotation.BuildApiPermission
 import com.tencent.devops.common.web.factory.BuildApiHandleFactory
 import org.aspectj.lang.JoinPoint
@@ -37,7 +36,7 @@ import org.aspectj.lang.reflect.MethodSignature
 import org.slf4j.LoggerFactory
 
 @Aspect
-class BuildApiAspect constructor(private val client: Client) {
+class BuildApiAspect {
 
     @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
     fun pointCut() = Unit

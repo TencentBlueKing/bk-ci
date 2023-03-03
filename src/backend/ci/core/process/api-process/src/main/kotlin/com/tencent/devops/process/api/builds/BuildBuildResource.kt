@@ -56,7 +56,6 @@ interface BuildBuildResource {
     @ApiOperation("获取流水线构建单条历史")
     @GET
     // @Path("/projects/{projectId}/pipelines/{pipelineId}/buildNums/{buildNum}/history")
-    @BuildApiPermission([UNAUTHORIZED])
     @Path("/{projectId}/{pipelineId}/{buildNum}/history")
     fun getSingleHistoryBuild(
         @ApiParam("项目ID", required = true)
