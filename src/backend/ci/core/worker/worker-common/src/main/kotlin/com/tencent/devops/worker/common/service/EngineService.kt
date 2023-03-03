@@ -110,14 +110,14 @@ object EngineService {
         }
     }
 
-    fun endBuild(buildVariables: BuildVariables) {
+    fun endBuild(variables: Map<String, String>, buildId: String = "") {
         var retryCount = 0
         val result = HttpRetryUtils.retry {
             if (retryCount > 0) {
                 logger.warn("retry|time=$retryCount|endBuild")
                 sleepInterval(retryCount)
             }
-            buildApi.endTask(buildVariables, retryCount++)
+            buildApi.endTask(variables, buildId, retryCount++)
         }
         if (result.isNotOk()) {
             throw RemoteServiceException("Failed to end build task")

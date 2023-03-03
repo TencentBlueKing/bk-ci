@@ -95,7 +95,7 @@ spec:
             httpGet:
               path: /management/health/livenessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -104,7 +104,7 @@ spec:
             httpGet:
               path: /management/health/readinessState
               port: http
-            initialDelaySeconds: 270
+            initialDelaySeconds: 60
             periodSeconds: 15
             timeoutSeconds: 10
             failureThreshold: 20
@@ -113,6 +113,11 @@ spec:
           - mountPath: /data/workspace/openapi/jvm
             name: log-volume
             subPathExpr: bkci/jvm/$(POD_NAME)
+          {{ if .Values.openapi.secret.enabled }}
+          - mountPath: {{ .Values.config.bkCiOpenapiApiPubOuter | splitList "/" | initial | join "/" }}
+            name: bk-key-volume
+            readOnly: true
+          {{ end }}
           lifecycle:
               preStop:
                 exec:
@@ -124,4 +129,9 @@ spec:
       - hostPath:
           path: /data
         name: log-volume
+      {{ if .Values.openapi.secret.enabled }}
+      - name: bk-key-volume
+        secret:
+          secretName: openapi-bk-key
+      {{ end }}
 {{- end -}}

@@ -34,11 +34,12 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
+
 	"github.com/gofrs/flock"
 )
 
@@ -49,7 +50,7 @@ const (
 
 func DoUpgradeAgent() error {
 	logs.Info("start upgrade agent")
-	config.Init()
+	config.Init(false)
 
 	totalLock := flock.New(fmt.Sprintf("%s/%s.lock", systemutil.GetRuntimeDir(), systemutil.TotalLock))
 	err := totalLock.Lock()

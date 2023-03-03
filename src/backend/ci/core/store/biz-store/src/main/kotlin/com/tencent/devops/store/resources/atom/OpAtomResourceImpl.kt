@@ -65,6 +65,7 @@ class OpAtomResourceImpl @Autowired constructor(
 
     override fun listAllPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -78,6 +79,7 @@ class OpAtomResourceImpl @Autowired constructor(
     ): Result<AtomResp<Atom>?> {
         return opAtomService.getOpPipelineAtoms(
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -133,5 +135,9 @@ class OpAtomResourceImpl @Autowired constructor(
             inputStream = inputStream,
             disposition = disposition
         )
+    }
+
+    override fun setDefault(userId: String, atomCode: String): Result<Boolean> {
+        return Result(opAtomService.setDefault(userId = userId, atomCode = atomCode))
     }
 }

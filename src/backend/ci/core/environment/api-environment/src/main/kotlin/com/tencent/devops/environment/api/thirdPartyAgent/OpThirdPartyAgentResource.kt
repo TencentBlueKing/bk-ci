@@ -70,34 +70,6 @@ interface OpThirdPartyAgentResource {
     @Path("/projects")
     fun listEnableProjects(): Result<List<String>>
 
-    @ApiOperation("设置Agent升级")
-    @PUT
-    @Path("/agents/upgrade/{version}")
-    fun setAgentUpgrade(
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String
-    ): Result<Boolean>
-
-    @ApiOperation("设置Agent Master版本")
-    @PUT
-    @Path("/agents/masterVersion/{version}")
-    fun setMasterVersion(
-        @ApiParam("版本号", required = true)
-        @PathParam("version")
-        version: String
-    ): Result<Boolean>
-
-    @ApiOperation("获取当前Agent版本")
-    @GET
-    @Path("/agent/upgrade")
-    fun getAgentVersion(): Result<String?>
-
-    @ApiOperation("获取当前Master版本")
-    @GET
-    @Path("/agent/masterVersion")
-    fun getAgentMasterVersion(): Result<String?>
-
     @ApiOperation("执行第三方构建机管道")
     @POST
     @Path("/agents/{nodeId}/pipelines")
@@ -129,78 +101,6 @@ interface OpThirdPartyAgentResource {
         @QueryParam("seqId")
         seqId: String
     ): Result<PipelineResponse>
-
-    @ApiOperation("设置agent强制升级")
-    @POST
-    @Path("/agents/setForceUpdateAgents")
-    fun setForceUpdateAgents(
-        @ApiParam("agentIds", required = true)
-        agentIds: List<Long>,
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
-
-    @ApiOperation("取消agent强制升级")
-    @POST
-    @Path("/agents/unsetForceUpdateAgents")
-    fun unsetForceUpdateAgents(
-        @ApiParam("agentIds", required = true)
-        agentIds: List<Long>,
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
-
-    @ApiOperation("获取所有强制升级agent")
-    @POST
-    @Path("/agents/getAllForceUpgradeAgents")
-    fun getAllForceUpgradeAgents(
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<List<Long>>
-
-    @ApiOperation("取消所有强制升级agent")
-    @POST
-    @Path("/agents/cleanAllForceUpgradeAgents")
-    fun cleanAllForceUpgradeAgents(
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
-
-    @ApiOperation("设置agent锁定升级")
-    @POST
-    @Path("/agents/setLockUpdateAgents")
-    fun setLockUpdateAgents(
-        @ApiParam("agentIds", required = true)
-        agentIds: List<Long>,
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
-
-    @ApiOperation("取消agent锁定升级")
-    @POST
-    @Path("/agents/unsetLockUpdateAgents")
-    fun unsetLockUpdateAgents(
-        @ApiParam("agentIds", required = true)
-        agentIds: List<Long>,
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
-
-    @ApiOperation("获取所有强制锁定agent")
-    @POST
-    @Path("/agents/getAllLockUpgradeAgents")
-    fun getAllLockUpgradeAgents(
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<List<Long>>
-
-    @ApiOperation("取消所有强制锁定agent")
-    @POST
-    @Path("/agents/cleanAllLockUpgradeAgents")
-    fun cleanAllLockUpgradeAgents(
-        @QueryParam("upgradeType")
-        agentUpgradeType: String?
-    ): Result<Boolean>
 
     @ApiOperation("设置Agent网关")
     @POST

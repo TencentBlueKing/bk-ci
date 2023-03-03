@@ -9,7 +9,7 @@ import com.tencent.devops.common.webhook.service.code.GitScmService
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterBody
 import com.tencent.devops.common.webhook.service.code.pojo.ThirdFilterResult
 import io.github.resilience4j.circuitbreaker.CircuitBreakerRegistry
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -64,7 +64,7 @@ class ThirdFilter(
         val builder = Request.Builder()
             .url(thirdUrl!!)
             .post(
-                RequestBody.create(MediaType.parse("application/json;charset=utf-8"), body)
+                RequestBody.create("application/json;charset=utf-8".toMediaTypeOrNull(), body)
             )
         if (!thirdSecretToken.isNullOrBlank()) {
             val thirdSecretTokenValue = gitScmService.getCredential(
@@ -75,11 +75,11 @@ class ThirdFilter(
         }
         return HttpRetryUtils.retry(MAX_RETRY_COUNT) {
             OkhttpUtils.doShortHttp(request = builder.build()).use { response ->
-                val data = response.body()!!.string()
+                val data = response.body!!.string()
                 if (!response.isSuccessful) {
                     throw CustomException(
-                        status = Response.Status.fromStatusCode(response.code()) ?: Response.Status.BAD_REQUEST,
-                        message = "Failed to call third filter|code:${response.code()}|data:$data"
+                        status = Response.Status.fromStatusCode(response.code) ?: Response.Status.BAD_REQUEST,
+                        message = "Failed to call third filter|code:${response.code}|data:$data"
                     )
                 }
                 logger.info("$pipelineId|third filter result:$data")

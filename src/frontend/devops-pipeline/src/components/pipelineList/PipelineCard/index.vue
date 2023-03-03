@@ -27,12 +27,9 @@
                 <span
                     :class="{
                         'bk-pipeline-card-trigger-btn': true,
-                        'disabled': disabled
+                        'disabled': pipeline.disabled
                     }"
-                    v-bk-tooltips="{
-                        content: disabledTips,
-                        disabled: !disabled
-                    }"
+                    v-bk-tooltips="pipeline.tooltips"
                     @click.stop="exec"
                 >
                     <logo v-if="pipeline.lock" name="minus-circle"></logo>
@@ -41,6 +38,17 @@
                         name="play"
                     />
                 </span>
+                <bk-button
+                    text
+                    class="bk-pipeline-card-collect-btn"
+                    :theme="pipeline.hasCollect ? 'warning' : ''"
+                    @click="collectPipeline(pipeline)">
+                    <i :class="{
+                        'devops-icon': true,
+                        'icon-star': !pipeline.hasCollect,
+                        'icon-star-shape': pipeline.hasCollect
+                    }" />
+                </bk-button>
                 <ext-menu :data="pipeline" ext-cls="bk-pipeline-card-more-trigger" :config="pipeline.pipelineActions" />
             </aside>
         </header>
@@ -84,6 +92,7 @@
         <div v-if="pipeline.delete" class="pipeline-card-delete-mask">
             <span>{{$t('alreadyDeleted')}}</span>
             <bk-button
+                v-if="!isRecentView"
                 text
                 size="small"
                 theme="primary"
@@ -92,7 +101,7 @@
                 {{$t('removeFromGroup')}}
             </bk-button>
         </div>
-        <div v-else-if="!pipeline.hasPermission" class="pipeline-card-apply-mask">
+        <div v-else-if="!pipeline.hasPermission && !pipeline.delete" class="pipeline-card-apply-mask">
             <bk-button outline theme="primary" @click="applyPermission(pipeline)">
                 {{$t('applyPermission')}}
             </bk-button>
@@ -105,6 +114,7 @@
     import PipelineStatusIcon from '@/components/PipelineStatusIcon'
     import Logo from '@/components/Logo'
     import { statusColorMap } from '@/utils/pipelineStatus'
+    import { RECENT_USED_VIEW_ID } from '@/store/constants'
 
     export default {
         components: {
@@ -125,6 +135,10 @@
                 type: Function,
                 default: () => () => ({})
             },
+            collectPipeline: {
+                type: Function,
+                default: () => () => ({})
+            },
             applyPermission: {
                 type: Function,
                 default: () => () => ({})
@@ -140,20 +154,16 @@
             timeTag () {
                 return this.pipeline.progress || `${this.pipeline.latestBuildStartDate}(${this.pipeline.duration})`
             },
-            disabled () {
-                return !this.pipeline.canManualStartup || this.pipeline.lock
-            },
-            disabledTips () {
-                if (!this.disabled) return ''
-                return this.$t(this.pipeline.lock ? '流水线已禁用执行；可前往基础设置中恢复' : '该流水线未配置手动触发')
-            },
             viewNamesStr () {
                 return this.pipeline.viewNames.join(';')
+            },
+            isRecentView () {
+                return this.$route.params.viewId === RECENT_USED_VIEW_ID
             }
         },
         methods: {
             exec () {
-                if (this.disabled) return
+                if (this.pipeline.disabled) return
                 this.execPipeline(this.pipeline)
             }
         }
@@ -216,15 +226,18 @@
             .bk-pipeline-card-header-right-aside {
                 display: flex;
                 align-items: center;
-                .bk-pipeline-card-trigger-btn {
+                .bk-pipeline-card-trigger-btn,
+                .bk-pipeline-card-collect-btn {
                     display: inline-flex;
                     cursor: pointer;
                     margin: 0 8px;
+                    font-size: 16px;
+
                     &.disabled {
                         color: #DCDEE5;
                         cursor: not-allowed;
                     }
-                    &:not(.disabled):hover {
+                    &.bk-pipeline-card-trigger-btn:not(.disabled):hover {
                         color: $primaryColor;
                     }
                 }

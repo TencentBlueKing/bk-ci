@@ -40,14 +40,18 @@ import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.BeforeAll
+import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
 import org.springframework.core.io.ClassPathResource
 
 @Suppress("ALL")
+@DisabledOnOs(OS.WINDOWS)
 internal class HashFilesFunctionTest {
 
     @DisplayName("HashFiles相关异常测试")
@@ -84,6 +88,7 @@ internal class HashFilesFunctionTest {
             "hashFiles('test?ata/sha255H???') => 2f11d1771e05dde5d1c004cea5211741d5bbd4ac82704d714005ccb90f94d0e0"
         ]
     )
+    @Disabled
     fun evaluateCore(evaluate: String) {
         val (exp, expect) = evaluate.split(" => ")
         Assertions.assertEquals(

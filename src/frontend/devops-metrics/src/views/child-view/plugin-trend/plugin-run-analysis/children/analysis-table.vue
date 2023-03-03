@@ -144,17 +144,17 @@ const getData = () => {
             record.classifyCode = '--'
         }
         const timeMap = timeFormatter(record.avgCostTime)
-        let timeStr = '0'
+        let timeStr = ''
         if (timeMap.h) {
-            timeStr = timeMap.h + 'h'
+            timeStr += timeMap.h + 'h'
         }
         if (timeMap.m) {
-            timeStr = timeMap.m + 'm'
+            timeStr += timeMap.m + 'm'
         }
         if (timeMap.s) {
-            timeStr = timeMap.s + 's'
+            timeStr += timeMap.s + 's'
         }
-        record.avgCostTime = timeStr
+        record.avgCostTime = timeStr || '0'
 
         Object.keys(data.headerInfo).forEach(i => {
           if (i.includes('errorCount') && !record.atomFailInfos[i]) {

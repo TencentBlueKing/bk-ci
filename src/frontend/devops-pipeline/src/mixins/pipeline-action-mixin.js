@@ -27,7 +27,8 @@ import {
     COLLECT_VIEW_ID,
     MY_PIPELINE_VIEW_ID,
     DELETED_VIEW_ID,
-    UNCLASSIFIED_PIPELINE_VIEW_ID
+    UNCLASSIFIED_PIPELINE_VIEW_ID,
+    RECENT_USED_VIEW_ID
 } from '@/store/constants'
 
 import { ORDER_ENUM, PIPELINE_SORT_FILED } from '@/utils/pipelineConst'
@@ -78,8 +79,8 @@ export default {
             try {
                 const { viewId, ...restQuery } = query
                 const queryParams = {
-                    sortType: PIPELINE_SORT_FILED.createTime,
-                    collation: ORDER_ENUM.descending,
+                    sortType: localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
+                    collation: localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending,
                     ...this.$route.query,
                     ...restQuery
                 }
@@ -107,6 +108,8 @@ export default {
                         progress: this.calcProgress(item),
                         pipelineActions: this.getPipelineActions(item, index),
                         trigger: triggerType[item.trigger],
+                        disabled: this.isDisabledPipeline(item),
+                        tooltips: this.disabledTips(item),
                         historyRoute: {
                             name: 'pipelinesHistory',
                             params: {
@@ -152,6 +155,13 @@ export default {
             }
             return '--'
         },
+        isDisabledPipeline (pipeline) {
+            return pipeline.lock || !pipeline.canManualStartup
+        },
+        disabledTips (pipeline) {
+            if (!this.isDisabledPipeline(pipeline)) return { disabled: true }
+            return this.$t(pipeline.lock ? 'pipelineLockTips' : 'pipelineManualDisable')
+        },
         calcProgress ({ latestBuildStatus, lastBuildFinishCount = 0, lastBuildTotalCount = 1, currentTimestamp, latestBuildStartTime }) {
             if (latestBuildStatus === statusAlias.RUNNING) {
                 return `${this.$t('execedTimes')}${convertMStoStringByRule(currentTimestamp - latestBuildStartTime)}(${Math.floor((lastBuildFinishCount / lastBuildTotalCount) * 100)}%)`
@@ -163,14 +173,11 @@ export default {
                 ALL_PIPELINE_VIEW_ID,
                 COLLECT_VIEW_ID,
                 MY_PIPELINE_VIEW_ID,
-                UNCLASSIFIED_PIPELINE_VIEW_ID
+                UNCLASSIFIED_PIPELINE_VIEW_ID,
+                RECENT_USED_VIEW_ID
             ].includes(this.$route.params.viewId)
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
-                {
-                    text: (pipeline.hasCollect ? this.$t('uncollect') : this.$t('collect')),
-                    handler: this.collectHandler
-                },
                 {
                     text: this.$t('addTo'),
                     handler: this.addToHandler
@@ -212,8 +219,8 @@ export default {
                     ...pipeline,
                     isCollect
                 })
+                
                 this.pipelineMap[pipeline.pipelineId].hasCollect = isCollect
-                this.pipelineMap[pipeline.pipelineId].pipelineActions = this.getPipelineActions(this.pipelineMap[pipeline.pipelineId])
                 this.addCollectViewPipelineCount(isCollect ? 1 : -1)
 
                 this.$showTips({
@@ -293,7 +300,8 @@ export default {
                 }
             })
         },
-        execPipeline ({ pipelineId }) {
+        execPipeline ({ pipelineId, disabled }) {
+            if (disabled) return
             this.$router.push({
                 name: 'pipelinesPreview',
                 params: {
