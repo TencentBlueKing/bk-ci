@@ -160,7 +160,7 @@ class PipelineRecordModelService @Autowired constructor(
         val stageRecordContainers = buildRecordContainers.filter { it.stageId == stageId }
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
         val containers = mutableListOf<Map<String, Any>>()
-        stageRecordContainers.forEach { stageRecordContainer ->
+        stageRecordContainers.filter { it.matrixGroupId.isNullOrBlank() }.forEach { stageRecordContainer ->
             val containerVarMap = stageRecordContainer.containerVar
             val containerId = stageRecordContainer.containerId
             containerVarMap[Container::id.name] = containerId
