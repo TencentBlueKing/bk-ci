@@ -33,11 +33,9 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.service.BuildApiHandleService
 import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-@Service("UNAUTHORIZED_HandleAuthService")
 class BuildApiHandleAuthServiceImpl constructor(val client: Client) : BuildApiHandleService {
 
     companion object {
