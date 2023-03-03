@@ -192,8 +192,9 @@ class PipelineBuildRecordService @Autowired constructor(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                 params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
             )
+            var recordMap: Map<String, Any>? = null
             try {
-                val recordMap = recordModelService.generateFieldRecordModelMap(
+                recordMap = recordModelService.generateFieldRecordModelMap(
                     projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
                 )
                 val fullModel = JsonUtil.to(resourceStr, Model::class.java)
@@ -205,8 +206,8 @@ class PipelineBuildRecordService @Autowired constructor(
                 )
             } catch (t: Throwable) {
                 logger.warn(
-                    "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap)})-$executeCount with error: ",
-                    t
+                    "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
+                        "-$executeCount with error: ", t
                 )
                 // 遇到解析问题直接返回最新记录，表现为前端无法切换
                 fixedExecuteCount = buildInfo.executeCount!!
