@@ -196,7 +196,7 @@ interface UserWorkspaceResource {
         pageSize: Int?,
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
-        @DefaultValue("T_GIT")
+        @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<RemoteDevRepository>>
 
@@ -221,7 +221,7 @@ interface UserWorkspaceResource {
         pageSize: Int?,
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
-        @DefaultValue("T_GIT")
+        @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
@@ -240,7 +240,7 @@ interface UserWorkspaceResource {
         branch: String,
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
-        @DefaultValue("T_GIT")
+        @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
@@ -262,7 +262,7 @@ interface UserWorkspaceResource {
         refreshToken: Boolean? = true,
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
-        @DefaultValue("T_GIT")
+        @DefaultValue("GIT")
         gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<AuthorizeResult>
 
