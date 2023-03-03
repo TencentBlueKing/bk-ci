@@ -300,7 +300,7 @@ class RepositoryDao {
                 .where(ALIAS_NAME.eq(repositoryName))
                 .and(PROJECT_ID.eq(projectId))
                 .and(IS_DELETED.eq(false))
-                .fetchOne() ?: throw NotFoundException("代码库${repositoryName}不存在")
+                .fetchAny() ?: throw NotFoundException("代码库${repositoryName}不存在")
         }
     }
 

@@ -31,13 +31,14 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.api.ServiceScmOauthResource
 import com.tencent.devops.scm.enums.CodeSvnRegion
+import com.tencent.devops.scm.pojo.CommitCheckRequest
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.pojo.TokenCheckResult
 import com.tencent.devops.scm.services.ScmOauthService
@@ -268,6 +269,22 @@ class ServiceScmOauthResourceImpl @Autowired constructor(private val scmOauthSer
                 mrId = mrId,
                 page = page,
                 size = size
+            )
+        )
+    }
+
+    override fun getProjectInfo(
+        projectName: String,
+        url: String,
+        type: ScmType,
+        token: String?
+    ): Result<GitProjectInfo?> {
+        return Result(
+            scmOauthService.getProjectInfo(
+                projectName = projectName,
+                url = url,
+                type = type,
+                token = token
             )
         )
     }

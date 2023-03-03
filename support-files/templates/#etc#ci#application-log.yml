@@ -83,7 +83,7 @@ log:
     username: __BK_CI_ES_USER__
     password: __BK_CI_ES_PASSWORD__
     #  ES集群如果要求HTTPS协议请求，则需要需要打开以下5个配置项， 设置keystore文件和truststore文件以及密码
-#    https: true
+    https: __BK_CI_ES_HTTPS__
 #    keystore:
 #      filePath:
 #      password:

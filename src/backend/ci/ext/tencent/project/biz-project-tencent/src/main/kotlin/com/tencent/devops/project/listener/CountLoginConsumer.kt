@@ -57,8 +57,8 @@ class CountLoginConsumer @Autowired constructor(
         logger.info("Count consume login($countLogin)")
         try {
             countService.consume(countLogin)
-        } catch (t: Throwable) {
-            logger.error("Count login consume error.", t)
+        } catch (ignore: Throwable) {
+            logger.warn("BKSystemMonitor| Count login consume error.", ignore)
         }
     }
 
