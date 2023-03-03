@@ -81,7 +81,7 @@ class GithubOAuthService @Autowired constructor(
     }
 
     fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
-        return if (channelCode == ChannelCode.GIT.name) {
+        return if (channelCode == ChannelCode.GIT.name || state?.contains("redirectUrl") == true) {
             githubCallbackForGIT(code = code, state = state)
         } else {
             githubCallbackForBS(code = code, state = state)
