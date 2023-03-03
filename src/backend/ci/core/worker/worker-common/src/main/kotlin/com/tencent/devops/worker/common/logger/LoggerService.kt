@@ -356,6 +356,14 @@ object LoggerService {
 
                 val zipLog = ZipUtil.zipDir(property.logFile, property.logFile.absolutePath + ".zip")
                 zipLog.deleteOnExit()
+                // 如果日志文件过大，则取消归档
+                if (zipLog.length() > LOG_FILE_LENGTH_LIMIT) {
+                    logger.warn(
+                        "Cancel archiving task[$elementId] build log " +
+                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
+                    )
+                    return@forEach
+                }
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 try {
