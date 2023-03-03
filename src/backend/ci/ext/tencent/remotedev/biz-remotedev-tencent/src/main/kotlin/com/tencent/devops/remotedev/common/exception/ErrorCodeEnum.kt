@@ -11,12 +11,12 @@ enum class ErrorCodeEnum(
     USER_NOT_EXISTS(
         errorType = ErrorType.USER,
         errorCode = "2130001",
-        formatErrorMessage = "账号[%s]不存在，请先联系 DevOps-helper 注册"
+        formatErrorMessage = "Account [%s] does not exist, please contact DevOps-helper to register"
     ),
     OAUTH_ILLEGAL(
         errorType = ErrorType.USER,
         errorCode = "2130002",
-        formatErrorMessage = "%s oauth失效，需重新授权"
+        formatErrorMessage = "%s oauth invalid, need to re-authorize"
     ),
     WORKSPACE_NOT_FIND(
         errorType = ErrorType.USER,
