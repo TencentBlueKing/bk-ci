@@ -29,6 +29,11 @@ package com.tencent.devops.environment.client
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_idle
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_iowait
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_system
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.f_cpu_usage_user
+import com.tencent.devops.environment.client.AgentMetricsTargetConstant.t_cpu
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import org.influxdb.dto.Query
 import org.springframework.beans.factory.annotation.Autowired
@@ -45,16 +50,11 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         private const val usage_user_idx = 2
         private const val usage_system_idx = 3
 
-        private const val k_usage_idle = "usage_idle"
-        private const val k_usage_iowait = "usage_iowait"
-        private const val k_usage_user = "usage_user"
-        private const val k_usage_system = "usage_system"
-
         private val emptyCpuMetrics = mapOf(
-            k_usage_idle to UsageMetrics.emptyMetrics,
-            k_usage_iowait to UsageMetrics.emptyMetrics,
-            k_usage_user to UsageMetrics.emptyMetrics,
-            k_usage_system to UsageMetrics.emptyMetrics
+            f_cpu_usage_idle to UsageMetrics.emptyMetrics,
+            f_cpu_usage_iowait to UsageMetrics.emptyMetrics,
+            f_cpu_usage_user to UsageMetrics.emptyMetrics,
+            f_cpu_usage_system to UsageMetrics.emptyMetrics
         )
     }
 
@@ -66,14 +66,14 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
     override fun loadQuery(agentHashId: String, timeRange: String): Map<String, List<Map<String, Any>>> {
         val timePart = getTimePart(timeRange)
         val queryStr =
-            "SELECT mean(\"$k_usage_idle\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                " AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_iowait\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_user\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
-                "AND $timePart fill(null); " +
-                "SELECT mean(\"$k_usage_system\") FROM \"cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
-                " AND $timePart fill(null)"
+            "SELECT mean(\"$f_cpu_usage_idle\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                    " AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_iowait\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_user\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/ " +
+                    "AND $timePart fill(null); " +
+                    "SELECT mean(\"$f_cpu_usage_system\") FROM \"$t_cpu\" WHERE \"agentId\" =~ /^$agentHashId\$/" +
+                    " AND $timePart fill(null)"
 
         val queryResult = try {
             influxdbClient.getInfluxDb()?.query(Query(queryStr, UsageMetrics.DB)) ?: return emptyCpuMetrics
@@ -89,10 +89,10 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData[k_usage_idle] = loadSerialData(queryResult.results[usage_idle_idx], k_usage_idle)
-        resultData[k_usage_iowait] = loadSerialData(queryResult.results[usage_iowait_idx], k_usage_iowait)
-        resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
-        resultData[k_usage_system] = loadSerialData(queryResult.results[usage_system_idx], k_usage_system)
+        resultData[f_cpu_usage_idle] = loadSerialData(queryResult.results[usage_idle_idx], f_cpu_usage_idle)
+        resultData[f_cpu_usage_iowait] = loadSerialData(queryResult.results[usage_iowait_idx], f_cpu_usage_iowait)
+        resultData[f_cpu_usage_user] = loadSerialData(queryResult.results[usage_user_idx], f_cpu_usage_user)
+        resultData[f_cpu_usage_system] = loadSerialData(queryResult.results[usage_system_idx], f_cpu_usage_system)
         return resultData
     }
 }
