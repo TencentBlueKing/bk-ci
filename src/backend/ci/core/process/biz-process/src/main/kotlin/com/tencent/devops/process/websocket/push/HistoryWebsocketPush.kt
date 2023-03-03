@@ -60,23 +60,23 @@ data class HistoryWebsocketPush(
         private val logger = LoggerFactory.getLogger(HistoryWebsocketPush::class.java)
     }
 
-    override fun findSession(page: String): List<String>? {
+    override fun findSession(page: String): Set<String>? {
         if (page == "") {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
         return super.findSession(page)
     }
 
-    override fun buildMqMessage(): SendMessage? {
+    override fun buildMqMessage(): SendMessage {
         return PipelineMessage(
-                buildId = buildId,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                notifyPost = notifyPost,
-                userId = userId,
-                page = page,
-                sessionList = findSession(page!!),
-                startTime = System.currentTimeMillis()
+            buildId = buildId,
+            projectId = projectId,
+            pipelineId = pipelineId,
+            notifyPost = notifyPost,
+            userId = userId,
+            page = page,
+            sessionList = findSession(page!!),
+            startTime = System.currentTimeMillis()
         )
     }
 

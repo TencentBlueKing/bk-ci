@@ -28,6 +28,7 @@
 package com.tencent.devops.process.utils
 
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
+import com.tencent.devops.common.pipeline.pojo.BuildParameters
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_ACTION
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_AUTHORIZER
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_BASE_REF
@@ -58,6 +59,7 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_SHA_SHORT
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_FROM
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_TAG_MESSAGE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_UPDATE_USER
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_DESCRIPTION
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_ID
 import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ISSUE_IID
@@ -417,4 +419,41 @@ object PipelineVarUtil {
     fun oldVarToNewVar(oldVarName: String): String? = oldVarMappingNewVar[oldVarName]
 
     fun newVarToOldVar(newVarName: String): String? = newVarMappingOldVar[newVarName]
+
+    const val MAX_VERSION_LEN = 64
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出推荐版本号,由[MAJORVERSION].[MINORVERSION].[FIXVERSION].[BUILD_NO]组成
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion}.{BuildNo} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
+        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
+        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
+            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
+        } else return null
+        return CommonUtils.interceptStringInLength("$recommendVersionPrefix.$buildNo", MAX_VERSION_LEN)
+    }
+
+    /**
+     * 从流水线启动参数[buildParameters]中找出版本号前缀，由[MAJORVERSION].[MINORVERSION].[FIXVERSION] 组成，
+     * 如果[buildParameters]中不存在上述3类参数，则返回空
+     * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion} 组成，所以启动参数切记
+     * 不要与此命名相同造成了冲突
+     */
+    private fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
+        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
+            buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
+        } else return null
+
+        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion" }) {
+            buildParameters.filter { it.key == MINORVERSION || it.key == "MinorVersion" }[0].value.toString()
+        } else return null
+
+        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion" }) {
+            buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
+        } else return null
+
+        return "$majorVersion.$minorVersion.$fixVersion"
+    }
 }

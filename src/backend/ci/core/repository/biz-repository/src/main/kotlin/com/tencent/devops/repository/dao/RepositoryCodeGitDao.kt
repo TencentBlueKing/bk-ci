@@ -46,7 +46,8 @@ class RepositoryCodeGitDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        authType: RepoAuthType?
+        authType: RepoAuthType?,
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
@@ -58,7 +59,8 @@ class RepositoryCodeGitDao {
                 CREDENTIAL_ID,
                 CREATED_TIME,
                 UPDATED_TIME,
-                AUTH_TYPE
+                AUTH_TYPE,
+                GIT_PROJECT_ID
             )
                 .values(
                     repositoryId,
@@ -67,7 +69,8 @@ class RepositoryCodeGitDao {
                     credentialId,
                     now,
                     now,
-                    authType?.name
+                    authType?.name,
+                    gitProjectId
                 ).execute()
         }
     }
@@ -98,17 +101,21 @@ class RepositoryCodeGitDao {
         projectName: String,
         userName: String,
         credentialId: String,
-        authType: RepoAuthType?
+        authType: RepoAuthType?,
+        gitProjectId: Long
     ) {
         val now = LocalDateTime.now()
         with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
-            dslContext.update(this)
+            val updateSetStep = dslContext.update(this)
                 .set(PROJECT_NAME, projectName)
                 .set(USER_NAME, userName)
                 .set(CREDENTIAL_ID, credentialId)
                 .set(UPDATED_TIME, now)
                 .set(AUTH_TYPE, authType?.name ?: RepoAuthType.SSH.name)
-                .where(REPOSITORY_ID.eq(repositoryId))
+            if (gitProjectId >= 0) {
+                updateSetStep.set(GIT_PROJECT_ID, gitProjectId)
+            }
+            updateSetStep.where(REPOSITORY_ID.eq(repositoryId))
                 .execute()
         }
     }
@@ -134,6 +141,39 @@ class RepositoryCodeGitDao {
             }
             baseStep.set(UPDATED_TIME, LocalDateTime.now())
                 .where(REPOSITORY_ID.eq(repositoryId))
+                .execute()
+        }
+    }
+
+    /**
+     * 分页查询
+     */
+    fun getAllRepo(
+        dslContext: DSLContext,
+        limit: Int,
+        offset: Int
+    ): Result<TRepositoryCodeGitRecord>? {
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            return dslContext.selectFrom(this)
+                .orderBy(CREATED_TIME.desc())
+                .limit(limit).offset(offset)
+                .fetch()
+        }
+    }
+
+    fun updateGitProjectId(
+        dslContext: DSLContext,
+        id: Long,
+        gitProjectId: Long
+    ) {
+        with(TRepositoryCodeGit.T_REPOSITORY_CODE_GIT) {
+            val conditions = mutableListOf(
+                REPOSITORY_ID.eq(id),
+                GIT_PROJECT_ID.le(0)
+            )
+            dslContext.update(this)
+                .set(GIT_PROJECT_ID, gitProjectId)
+                .where(conditions)
                 .execute()
         }
     }

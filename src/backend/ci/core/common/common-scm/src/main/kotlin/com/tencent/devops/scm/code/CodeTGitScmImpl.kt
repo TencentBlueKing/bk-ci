@@ -39,6 +39,7 @@ import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.RevisionInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils.urlEncode
@@ -218,7 +219,9 @@ class CodeTGitScmImpl constructor(
         }
     }
 
-    override fun addMRComment(mrId: Long, comment: String) = Unit
+    override fun addMRComment(mrId: Long, comment: String) {
+        gitApi.addMRComment(apiUrl, token, projectName, mrId, comment)
+    }
 
     override fun lock(repoName: String, applicant: String, subpath: String) {
         logger.info("Git can not lock")
@@ -263,6 +266,15 @@ class CodeTGitScmImpl constructor(
             url = url,
             page = page,
             size = size
+        )
+    }
+
+    override fun getProjectInfo(projectName: String): GitProjectInfo {
+        val url = "projects/${urlEncode(projectName)}"
+        return gitApi.getProjectInfo(
+            host = apiUrl,
+            token = token,
+            url = url
         )
     }
 
