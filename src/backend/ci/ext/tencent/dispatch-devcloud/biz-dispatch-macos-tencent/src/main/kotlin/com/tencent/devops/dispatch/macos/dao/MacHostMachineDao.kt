@@ -1,8 +1,8 @@
-package com.tencent.devops.dispatcher.macos.dao
+package com.tencent.devops.dispatch.macos.dao
 
-import com.tencent.devops.dispatcher.macos.pojo.HostMachineInfo
-import com.tencent.devops.model.dispatcher.macos.tables.TMacHostMachine
-import com.tencent.devops.model.dispatcher.macos.tables.records.TMacHostMachineRecord
+import com.tencent.devops.dispatch.macos.pojo.HostMachineInfo
+import com.tencent.devops.model.dispatch.macos.tables.TMacHostMachine
+import com.tencent.devops.model.dispatch.macos.tables.records.TMacHostMachineRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result

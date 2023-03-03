@@ -5,17 +5,15 @@ import com.tencent.devops.common.dispatch.sdk.listener.DispatcherContext
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.macos.pojo.MacRedisBuild
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-open class MacosVMRedisService @Autowired constructor(
+class MacosVMRedisService @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val objectMapper: ObjectMapper
 ) {
     companion object {
-        private val logger = LoggerFactory.getLogger(MacosVMRedisService::class.java)
         private const val REDIS_PRE = "dispatcher:devops_macos_"
         private const val REDIS_KEY_EXPIRE_IN_SECOND = 36000L
     }

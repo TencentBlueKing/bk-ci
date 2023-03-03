@@ -1,9 +1,9 @@
-package com.tencent.devops.dispatcher.macos.dao
+package com.tencent.devops.dispatch.macos.dao
 
-import com.tencent.devops.dispatcher.macos.pojo.VMTypeCreate
-import com.tencent.devops.dispatcher.macos.pojo.VMTypeUpdate
-import com.tencent.devops.model.dispatcher.macos.tables.TVirtualMachineType
-import com.tencent.devops.model.dispatcher.macos.tables.records.TVirtualMachineTypeRecord
+import com.tencent.devops.dispatch.macos.pojo.VMTypeCreate
+import com.tencent.devops.dispatch.macos.pojo.VMTypeUpdate
+import com.tencent.devops.model.dispatch.macos.tables.TVirtualMachineType
+import com.tencent.devops.model.dispatch.macos.tables.records.TVirtualMachineTypeRecord
 import org.apache.commons.lang3.StringUtils
 import org.jooq.Condition
 import org.jooq.DSLContext
@@ -13,7 +13,7 @@ import java.net.URLDecoder
 import java.time.LocalDateTime
 
 @Repository
-open class VirtualMachineTypeDao {
+class VirtualMachineTypeDao {
     fun getNameById(dslContext: DSLContext, vmTypeId: Int): String? {
         with(TVirtualMachineType.T_VIRTUAL_MACHINE_TYPE) {
             return dslContext.selectFrom(this).where(ID.eq(vmTypeId)).fetchOne()!!.name

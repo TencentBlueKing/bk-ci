@@ -56,9 +56,6 @@ import javax.sql.DataSource
 @Import(DataSourceConfig::class, DBBaseConfiguration::class)
 class JooqConfiguration {
 
-    @Value("\${spring.datasource.dispatchDevcloud.pkgRegex:}")
-    private val pkgRegex = "\\.(devcloud|macos)"
-
     companion object {
         private val LOG = LoggerFactory.getLogger(JooqConfiguration::class.java)
     }
@@ -77,21 +74,26 @@ class JooqConfiguration {
 
             if ((packageName == "com.tencent.devops.dispatch.macos.service") ||
                 (packageName == "com.tencent.devops.dispatch.macos.listener")) {
-                val configuration = configurationMap["lambdaJooqConfiguration"]
-                    ?: throw NoSuchBeanDefinitionException("no lambdaJooqConfiguration")
-                LOG.info("dslContext_init|lambdaJooqConfiguration|${declaringClass.name}")
+                val configuration = configurationMap["dispatchMacosJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no dispatchMacosJooqConfiguration")
+                LOG.info("dslContext_init|dispatchMacosJooqConfiguration|${declaringClass.name}")
                 return DSL.using(configuration)
             }
 
-            val matchResult = pkgRegex.toRegex().find(packageName)
-            if (matchResult != null) {
-                val configuration = configurationMap["${matchResult.groupValues[1]}JooqConfiguration"]
-                return if (configuration != null) {
-                    LOG.info("dslContext_init|${matchResult.groupValues[1]}JooqConfiguration|${declaringClass.name}")
-                    DSL.using(configuration)
-                } else {
-                    null
-                }
+            if ((packageName == "com.tencent.devops.dispatch.devcloud.service") ||
+                (packageName == "com.tencent.devops.dispatch.devcloud.listener")) {
+                val configuration = configurationMap["dispatchDevcloudJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no dispatchDevcloudJooqConfiguration")
+                LOG.info("dslContext_init|dispatchDevcloudJooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
+            }
+
+            if ((packageName == "com.tencent.devops.dispatch.windows.service") ||
+                (packageName == "com.tencent.devops.dispatch.windows.listener")) {
+                val configuration = configurationMap["dispatchWindowsJooqConfiguration"]
+                    ?: throw NoSuchBeanDefinitionException("no dispatchWindowsJooqConfiguration")
+                LOG.info("dslContext_init|dispatchWindowsJooqConfiguration|${declaringClass.name}")
+                return DSL.using(configuration)
             }
         }
         return DSL.using(configurationMap["defaultJooqConfiguration"]!!)
@@ -99,7 +101,7 @@ class JooqConfiguration {
 
     @Bean
     fun dispatchDevcloudJooqConfiguration(
-        @Qualifier("dispatchDevcloudDataSource")
+        @Qualifier("dispatchDevCloudDataSource")
         shardingDataSource: DataSource,
         @Qualifier("bkJooqExecuteListenerProvider")
         bkJooqExecuteListenerProvider: DefaultExecuteListenerProvider

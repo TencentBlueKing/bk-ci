@@ -1,8 +1,8 @@
-package com.tencent.devops.dispatcher.macos.dao
+package com.tencent.devops.dispatch.macos.dao
 
 import com.tencent.devops.dispatch.macos.enums.MacJobStatus
-import com.tencent.devops.model.dispatcher.macos.tables.TBuildHistory
-import com.tencent.devops.model.dispatcher.macos.tables.records.TBuildHistoryRecord
+import com.tencent.devops.model.dispatch.macos.tables.TBuildHistory
+import com.tencent.devops.model.dispatch.macos.tables.records.TBuildHistoryRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-open class BuildHistoryDao {
+class BuildHistoryDao {
 
     fun saveBuildHistory(dslContext: DSLContext, rec: TBuildHistoryRecord): Int {
         with(TBuildHistory.T_BUILD_HISTORY) {

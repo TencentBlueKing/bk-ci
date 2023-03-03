@@ -1,14 +1,14 @@
-package com.tencent.devops.dispatcher.macos.dao
+package com.tencent.devops.dispatch.macos.dao
 
-import com.tencent.devops.model.dispatcher.macos.tables.TBuildTask
-import com.tencent.devops.model.dispatcher.macos.tables.records.TBuildTaskRecord
+import com.tencent.devops.model.dispatch.macos.tables.TBuildTask
+import com.tencent.devops.model.dispatch.macos.tables.records.TBuildTaskRecord
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
 
 @Repository
-open class BuildTaskDao {
+class BuildTaskDao {
 
     fun save(dslContext: DSLContext, record: TBuildTaskRecord): Int {
         with(TBuildTask.T_BUILD_TASK) {

@@ -1,14 +1,14 @@
-package com.tencent.devops.dispatcher.macos.dao
+package com.tencent.devops.dispatch.macos.dao
 
-import com.tencent.devops.dispatcher.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
-import com.tencent.devops.model.dispatcher.macos.tables.TDevcloudVirtualMachine
-import com.tencent.devops.model.dispatcher.macos.tables.records.TDevcloudVirtualMachineRecord
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
+import com.tencent.devops.model.dispatch.macos.tables.TDevcloudVirtualMachine
+import com.tencent.devops.model.dispatch.macos.tables.records.TDevcloudVirtualMachineRecord
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import org.slf4j.LoggerFactory
 
 @Repository
-open class DevcloudVirtualMachineDao {
+class DevcloudVirtualMachineDao {
 
     fun getById(dslContext: DSLContext, id: Int): TDevcloudVirtualMachineRecord? {
         with(TDevcloudVirtualMachine.T_DEVCLOUD_VIRTUAL_MACHINE) {

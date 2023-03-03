@@ -3,19 +3,15 @@ package com.tencent.devops.dispatch.macos.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.google.common.cache.CacheBuilder
-import com.google.common.cache.CacheLoader
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dispatcher.macos.dao.DevcloudVirtualMachineDao
-import com.tencent.devops.dispatcher.macos.dao.BuildTaskDao
+import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
-import com.tencent.devops.dispatcher.macos.pojo.devcloud.DevCloudMacosVmCreate
-import com.tencent.devops.dispatcher.macos.pojo.devcloud.DevCloudMacosVmDelete
-import com.tencent.devops.dispatcher.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
-import com.tencent.devops.dispatcher.macos.pojo.devcloud.DevCloudMacosVmInfo
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
 import com.tencent.devops.dispatch.macos.util.SmartProxyUtil
-import okhttp3.Headers
-import okhttp3.MediaType
+import okhttp3.Headers.Companion.toHeaders
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.jooq.DSLContext
@@ -23,154 +19,28 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
-import java.util.concurrent.TimeUnit
 
 @Service
 class DevCloudMacosService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao,
-    private val buildTaskDao: BuildTaskDao
+    private val devcloudVirtualMachineDao: DevcloudVirtualMachineDao
 ) {
 
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudMacosService::class.java)
     }
 
-    @Value("\${devCloud.appId:}")
+    @Value("\${macos.devCloud.appId:}")
     private lateinit var devCloudAppId: String
 
-    @Value("\${devCloud.token:}")
+    @Value("\${macos.devCloud.token:}")
     private lateinit var devCloudToken: String
 
-    @Value("\${devCloud.url:}")
+    @Value("\${macos.devCloud.url:}")
     private lateinit var devCloudUrl: String
 
-    @Value("\${devCloud.smartProxyToken:}")
+    @Value("\${macos.devCloud.smartProxyToken:}")
     private lateinit var smartProxyToken: String
-
-    @Value("\${devCloud.rsaPrivateKey:}")
-    private lateinit var rsaPrivateKey: String
-
-    @Value("\${credential.aes-key:C/R%3{?OS}IeGT21}")
-    private lateinit var aesKey: String
-
-    private val devCloudProjectCache = CacheBuilder.newBuilder()
-        .maximumSize(10000)
-        .expireAfterWrite(5, TimeUnit.MINUTES)
-        .build<String/*projectId*/, Boolean/*Boolean*/>(
-            object : CacheLoader<String, Boolean>() {
-                override fun load(projectId: String): Boolean {
-                    return try {
-                        val projectList = getDevCloudProjectList("")
-                        logger.info("devcloud project list:$projectList")
-                        if (projectList.contains(projectId)) {
-                            logger.info("projectId[$projectId] is in  devcloud project.")
-                            true
-                        } else {
-                            logger.info("projectId[$projectId] is not in  devcloud project")
-                            false
-                        }
-                    } catch (t: Throwable) {
-                        logger.info("projectId[$projectId] failed to get devcloud gray project： $t")
-                        false
-                    }
-                }
-            }
-        )
-
-    private fun getDevCloudProjectList(creator: String): List<String> {
-        val url = "$devCloudUrl/api/mac/devops_project_list?page=1&size=9999"
-        val request = Request.Builder()
-            .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator)))
-            .get()
-            .build()
-        val projectList = mutableListOf<String>()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            logger.info("DevCloud getDevCloudProjectList http code is ${response.code()}, $responseContent")
-            if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud getDevCloudProjectList, http response code: ${response.code()}, msg: $responseContent")
-                return projectList
-            }
-            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            val code = responseData["actionCode"] as Int
-            if (200 == code) {
-                val dataMap = responseData["data"] as Map<String, Any>
-                if (dataMap.containsKey("items")) {
-                    val itemsList = dataMap["items"] as List<Any>
-                    itemsList.forEach { item ->
-                        var itemTmp = item as Map<String, Any>
-                        if (itemTmp["project_name"] != null) {
-                            projectList.add(itemTmp["project_name"] as String ?: "")
-                        }
-                    }
-                } else {
-                    logger.error("Fail to request to DevCloud getDevCloudProjectList, http response code: ${response.code()}, msg: $responseContent")
-                    return projectList
-                }
-            } else {
-                logger.error("Fail to request to DevCloud getDevCloudProjectList, http response code: ${response.code()}, msg: $responseContent")
-                return projectList
-            }
-            return projectList
-        }
-    }
-
-    fun getVmList(creator: String): List<DevCloudMacosVmInfo> {
-        val url = "$devCloudUrl/api/mac/pool/list?page=1&size=9999"
-        val request = Request.Builder()
-            .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator)))
-            .get()
-            .build()
-        val vmInfoList = mutableListOf<DevCloudMacosVmInfo>()
-        OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            logger.info("DevCloud getVmList http code is ${response.code()}, $responseContent")
-            if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code()}, msg: $responseContent")
-                return vmInfoList
-            }
-            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            val code = responseData["actionCode"] as Int
-            if (200 == code) {
-                val dataMap = responseData["data"] as Map<String, Any>
-                if (dataMap.containsKey("items")) {
-                    val itemsList = dataMap["items"] as List<Any>
-                    itemsList.forEach { item ->
-                        var itemTmp = item as Map<String, Any>
-                        if (itemTmp["ip"] != null) {
-                            vmInfoList.add(
-                                DevCloudMacosVmInfo(
-                                    name = itemTmp["name"] as String ?: "",
-                                    memory = itemTmp["memory"] as String ?: "",
-                                    assetId = itemTmp["assetId"] as String ?: "",
-                                    ip = itemTmp["ip"] as String ?: "",
-                                    disk = itemTmp["disk"] as String ?: "",
-                                    os = itemTmp["os"] as String ?: "",
-                                    id = itemTmp["id"] as Int ?: 0,
-                                    cpu = itemTmp["cpu"] as String ?: ""
-                                )
-                            )
-                        }
-                    }
-                } else {
-                    logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code()}, msg: $responseContent")
-                    return vmInfoList
-                }
-            } else {
-                logger.error("Fail to request to DevCloud getVmList, http response code: ${response.code()}, msg: $responseContent")
-                return vmInfoList
-            }
-            return vmInfoList
-        }
-    }
-
-    fun isDevCloudGrayProject(projectId: String): Boolean {
-        return true
-//         return devCloudProjectCache.get(projectId)
-    }
 
     fun creatVM(
         projectId: String,
@@ -199,14 +69,15 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            logger.info("$buildId DevCloud creatVM http code is ${response.code()}, $responseContent")
+            val responseContent = response.body!!.string()
+            logger.info("$buildId DevCloud creatVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("$buildId Fail to request to DevCloud creatVM, http response code: ${response.code()}, msg: $responseContent")
+                logger.error("$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
+                                 "msg: $responseContent")
                 return null
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -281,13 +152,13 @@ class DevCloudMacosService @Autowired constructor(
         // var body= jacksonObjectMapper().writeValueAsString(bodyMap)
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator)))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
             .get()
             // .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
             .build()
         //  logger.info("start request")
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             logger.info("request is $request")
             logger.info("responseContent is $responseContent")
             // 如果网络波动导致的失败,就不需要返回failed状态,而是返回running状态,过几秒再来轮询
@@ -360,24 +231,20 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("DevCloud deleteVM body:$body")
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator)))
-            .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
-            logger.info("DevCloud deleteVM http code is ${response.code()}, $responseContent")
+            val responseContent = response.body!!.string()
+            logger.info("DevCloud deleteVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud deleteVM, http response code: ${response.code()}, msg: $responseContent")
+                logger.error("Fail to request to DevCloud deleteVM, http response code: ${response.code}, msg: $responseContent")
                 result = false
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
             val code = responseData["actionCode"] as Int
-            if (200 == code) {
-                result = true
-            } else {
-                result = false
-            }
+            result = 200 == code
         }
         return result
     }
