@@ -13,13 +13,15 @@ export default defineComponent({
       type: Object,
     },
   },
-  setup(props) {
+  emits: ['load'],
+  setup(props, { emit }) {
     const commonQuery = {
       system_id: 'bk_ci_rbac',
       source: 'externalApp',
     };
     const iframeUrl = ref('');
     const isLoading = ref(true);
+    const iframeRef = ref(null);
 
     // deep watch 数据变化，iframe 销毁重建
     watch(
@@ -54,7 +56,7 @@ export default defineComponent({
         loading={isLoading.value}
       >
         <iframe
-          ref="iframeRef"
+          ref={iframeRef}
           width="100%"
           height="100%"
           frameborder={0}

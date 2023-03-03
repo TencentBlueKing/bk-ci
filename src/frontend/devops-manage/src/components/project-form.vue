@@ -6,7 +6,6 @@ import {
   computed,
   onMounted,
   getCurrentInstance,
-  nextTick
 } from 'vue';
 import {
   EditLine,
@@ -36,7 +35,7 @@ const logoFiles = computed(() => {
   }
   return files;
 });
-const instance = getCurrentInstance();
+const vm = getCurrentInstance();
 const projectForm = ref(null);
 const rules = {
   bgId: [
@@ -192,6 +191,15 @@ const handleMessage = (event: any) => {
       case 'cancel':
         showDialog.value = false;
         break;
+      case 'load':
+        // 回显数据
+        vm.refs.iframeRef.iframeRef.value.contentWindow.postMessage(
+          JSON.parse(JSON.stringify({
+            subject_scopes: projectData.value.subjectScopes
+          })),
+          window.BK_IAM_URL_PREFIX
+        )
+        break;
     }
   }
 };
@@ -207,12 +215,7 @@ const fetchUserDetail = async () => {
 };
 
 const showMemberDialog = () => {
-  showDialog.value = true
-  nextTick(() => {
-    instance?.refs?.iframeRef?.$refs?.iframeRef?.contentWindow?.postMessage(JSON.parse(JSON.stringify({
-      subject_scopes: projectData.value.subjectScopes
-    })), window.BK_IAM_URL_PREFIX);
-  });
+  showDialog.value = true;
 };
 
 watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () =>{
