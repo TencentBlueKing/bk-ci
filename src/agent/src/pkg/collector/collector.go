@@ -59,22 +59,14 @@ const (
 	templateKeyProjectId   = "##{projectId}##"
 )
 
-var (
-	telegrafAgentCtx    context.Context
-	telegrafAgentCancel context.CancelFunc
-)
+var cancelChan chan int
 
 func init() {
-	telegrafAgentCtx, telegrafAgentCancel = context.WithCancel(context.Background())
+	cancelChan = make(chan int)
 }
 
 func RestartTelegraf() {
-	// 拿到旧的
-	oldCancel := telegrafAgentCancel
-	// 给新的赋值
-	telegrafAgentCtx, telegrafAgentCancel = context.WithCancel(context.Background())
-	// 取消旧的
-	oldCancel()
+	cancelChan <- 1
 }
 
 func DoAgentCollect() {
@@ -95,11 +87,17 @@ func DoAgentCollect() {
 		_ = fileutil.TryRemoveFile(logFile)
 	}
 
-	RunTelegrafAgent(telegrafAgentCtx, logFile)
+	RunTelegrafAgent(logFile)
 }
 
-func RunTelegrafAgent(ctx context.Context, logFile string) {
+func RunTelegrafAgent(logFile string) {
 	for {
+		// 当重启信号过来时重启telegraf
+		ctx, cancel := context.WithCancel(context.Background())
+		go func() {
+			<-cancelChan
+			cancel()
+		}()
 		// 读取telegraf文件中的内容如果没有则拿代码中的
 		var confData []byte
 		confFilePath := config.GetTelegrafConfFilePath()
@@ -127,6 +125,7 @@ func RunTelegrafAgent(ctx context.Context, logFile string) {
 		if err = tAgent.Run(ctx); err != nil {
 			logs.Error("telegraf agent exit: %v", err)
 		}
+
 		time.Sleep(telegrafRelaunchTime)
 	}
 }
