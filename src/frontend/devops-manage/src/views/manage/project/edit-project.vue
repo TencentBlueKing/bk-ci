@@ -219,7 +219,6 @@ onMounted(() => {
   .edit-project-content {
     display: flex;
     flex-direction: column;
-    padding: 24px;
     height: 100%;
     overflow: auto;
     &::-webkit-scrollbar-thumb {
@@ -237,9 +236,7 @@ onMounted(() => {
       width: 100%;
       flex: 1;
       margin: 0 auto;
-      background-color: #fff;
       padding: 32px 48px;
-      box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
       :deep(.bk-form-label) {
         font-size: 12px;
       }

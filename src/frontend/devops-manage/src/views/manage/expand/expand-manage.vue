@@ -201,12 +201,10 @@ onMounted(() => {
   }
   .service-filter {
     width: 94%;
-    max-width: 1400px;
     margin: 32px auto 16px;
     background: #ffffff;
-    box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
     .filter-button {
-      margin: 32px;
+      margin: 10px 32px 0;
     }
     .fliter-list {
       padding-bottom: 20px;
@@ -235,11 +233,9 @@ onMounted(() => {
     margin: 0 auto;
     flex: 1;
     width: 94%;
-    max-width: 1400px;
     padding: 15px 32px 24px;
     margin-bottom: 32px;
     background: #ffffff;
-    box-shadow: 1px 2px 3px 0px rgba(0,0,0,0.05);
   }
 
   .btn {
