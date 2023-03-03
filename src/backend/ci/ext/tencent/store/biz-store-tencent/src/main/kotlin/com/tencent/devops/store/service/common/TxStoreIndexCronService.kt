@@ -253,8 +253,10 @@ class TxStoreIndexCronService(
                         if (complianceInfo.failExecuteCount != 0) {
                             complianceRate =
                                 complianceInfo.failComplianceCount.toDouble() / complianceInfo.failExecuteCount * 100.0
+                            String.format("%.2f", complianceRate)
+                        } else {
+                            null
                         }
-                        String.format("%.2f", complianceRate)
                     }
                     val codeccOpensourceMeasurement = getCodeccOpensourceMeasurement(atomCode)
                     val result = if (complianceRate > 99.9 && codeccOpensourceMeasurement == 100.0) "达标" else "不达标"
