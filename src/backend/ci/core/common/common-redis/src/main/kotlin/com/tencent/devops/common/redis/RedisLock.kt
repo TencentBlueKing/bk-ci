@@ -105,7 +105,7 @@ open class RedisLock(
      * @param seconds 过去时间（秒）
      * @return
      */
-    fun set(key: String, value: String, seconds: Long): Boolean {
+    private fun set(key: String, value: String, seconds: Long): Boolean {
         val finalLockKey = redisOperation.getKeyByRedisName(key)
         return redisOperation.execute(RedisCallback { connection ->
             val result =
