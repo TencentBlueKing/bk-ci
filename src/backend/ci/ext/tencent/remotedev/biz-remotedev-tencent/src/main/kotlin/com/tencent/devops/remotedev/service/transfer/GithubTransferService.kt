@@ -65,16 +65,6 @@ class GithubTransferService @Autowired constructor(
         owned: Boolean?,
         minAccessLevel: GitAccessLevelEnum?
     ): List<RemoteDevRepository> {
-        client.get(ServiceGitResource::class).getGitCodeProjectList(
-            accessToken = getAndCheckOauthToken(userId),
-            page = page,
-            pageSize = pageSize,
-            search = search,
-            orderBy = GitCodeProjectsOrder.ACTIVITY,
-            sort = GitCodeBranchesSort.DESC,
-            owned = owned,
-            minAccessLevel = minAccessLevel
-        ).data?.map { RemoteDevRepository(it.pathWithNamespace, it.httpsUrlToRepo) } ?: emptyList()
         // search  owned  minAccessLevel 参数暂时没使用
         var githubPage = DEFAULT_PAGE
         val repos = mutableListOf<RemoteDevRepository>()
