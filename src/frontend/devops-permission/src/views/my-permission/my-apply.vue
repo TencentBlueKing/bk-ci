@@ -13,7 +13,7 @@ const applyId = computed(() => route.params.applyId || '')
   <iam-iframe
     path="apply"
     :query="{
-      applyId
+      id: applyId
     }"
   />
 </template>

@@ -72,6 +72,7 @@
 <script>
     import nodeSelect from '@/components/devops/environment/node-select-dialog'
     import empty from '@/components/common/empty'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'node-tab',
         components: {
@@ -191,15 +192,21 @@
 
                     message = this.$t('environment.successfullyImported')
                     theme = 'success'
-                } catch (err) {
-                    message = err.message ? err.message : err
-                    theme = 'error'
-                } finally {
                     this.$bkMessage({
                         message,
                         theme
                     })
-
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: this.envHashId,
+                            action: ENV_RESOURCE_ACTION.EDIT
+                        }
+                    )
+                } finally {
                     this.nodeSelectConf.isShow = false
                     this.nodeDialogLoading.isLoading = false
                     this.nodeSelectConf.importText = this.$t('environment.import')
@@ -423,14 +430,21 @@
 
                             message = this.$t('environment.successfullyDeleted')
                             theme = 'success'
-                        } catch (err) {
-                            message = err.data ? err.data.message : err
-                            theme = 'error'
-                        } finally {
                             this.$bkMessage({
                                 message,
                                 theme
                             })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: this.envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            )
+                        } finally {
                             this.requestList()
                         }
                     }

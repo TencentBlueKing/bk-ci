@@ -37,7 +37,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span :class="{ 'handler-text': props.row.canDelete, 'no-env-delete-permission': !props.row.canDelete }" @click.stop="confirmDelete(props.row)">{{ $t('environment.delete') }}</span>
+                        <span :class="{ 'handler-text': props.row.canDelete, 'no-env-delete-permission disabled': !props.row.canDelete }" @click.stop="confirmDelete(props.row)">{{ $t('environment.delete') }}</span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -245,7 +245,12 @@
               }
             }
             .no-env-delete-permission {
-              cursor: url('../images/cursor-lock.png'), auto;
+                &.disabled {
+                color: #C4C6CC;
+                &:hover {
+                    color: #C4C6CC;
+                }
+                cursor: url(../images/cursor-lock.png), auto !important;
             }
         }
 
