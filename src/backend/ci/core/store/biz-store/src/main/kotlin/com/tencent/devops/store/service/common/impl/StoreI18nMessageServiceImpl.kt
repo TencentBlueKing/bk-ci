@@ -26,7 +26,7 @@
  */
 package com.tencent.devops.store.service.common.impl
 
-import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE
+import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
@@ -74,20 +74,20 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
     ): Map<String, Any> {
         logger.info("parseJsonMap params:[$userId|$projectCode|$fileDir|$keyPrefix|$repositoryHashId]")
         // 获取蓝盾默认语言信息
-        val devopsDefaultLocale = commonConfig.devopsDefaultLocale
-        val jsonLocale = jsonMap[KEY_DEFAULT_LOCALE]
-        if (jsonLocale == devopsDefaultLocale) {
+        val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
+        val jsonLocaleLanguage = jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE]
+        if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
             return jsonMap
         } else {
             // 获取蓝盾默认语言的资源文件
-            val fileName = MESSAGE_NAME_TEMPLATE.format(devopsDefaultLocale)
+            val fileName = MESSAGE_NAME_TEMPLATE.format(devopsDefaultLocaleLanguage)
             val defaultProperties = getMessageProperties(
                 projectCode = projectCode,
                 fileDir = fileDir,
                 fileName = fileName,
                 repositoryHashId = repositoryHashId,
-                language = devopsDefaultLocale
+                language = devopsDefaultLocaleLanguage
             )
             // 遍历map集合获取字段列表
             val fieldLocaleInfos = MessageUtil.traverseMap(

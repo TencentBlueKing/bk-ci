@@ -31,7 +31,9 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.LocaleUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.PROFILE_AUTO
 import com.tencent.devops.common.service.PROFILE_DEFAULT
 import com.tencent.devops.common.service.PROFILE_DEVELOPMENT
@@ -39,6 +41,7 @@ import com.tencent.devops.common.service.PROFILE_PRODUCTION
 import com.tencent.devops.common.service.PROFILE_STREAM
 import com.tencent.devops.common.service.PROFILE_TEST
 import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.config.CommonConfig
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.context.i18n.LocaleContextHolder
@@ -236,5 +239,24 @@ object CommonUtils {
                 PROFILE_PRODUCTION
             }
         }
+    }
+
+    /**
+     * 从redis缓存获取用户的国际化语言信息
+     * @param userId 用户ID
+     * @return 语言信息
+     */
+    fun getUserLocaleLanguageFromCache(userId: String): String? {
+        val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
+        return redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
+    }
+
+    /**
+     * 获取蓝盾默认支持的语言
+     * @return 系统默认语言
+     */
+    fun getDefaultLocaleLanguage(): String {
+        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
+        return commonConfig.devopsDefaultLocaleLanguage
     }
 }

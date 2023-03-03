@@ -58,9 +58,9 @@ class UserLocaleServiceImpl @Autowired constructor(
                 // 已添加则无需重复添加
                 return true
             }
-            // locale信息入库
+            // locale语言信息入库
             userLocaleDao.add(dslContext, userId, language)
-            // locale写入redis缓存
+            // locale语言信息写入redis缓存
             redisOperation.set(
                 key = key,
                 value = language
@@ -102,8 +102,13 @@ class UserLocaleServiceImpl @Autowired constructor(
         if (language.isNullOrBlank()) {
             // 缓存中未取到则直接从db查
             language = userLocaleDao.getLocaleByUserId(dslContext, userId)
+            if (language.isNullOrBlank()) {
+                // 用户没有设置国际化语言信息，则给该用户分配系统默认的语言信息
+                language = commonConfig.devopsDefaultLocaleLanguage
+                addUserLocale(userId, language)
+            }
         }
         // 用户未配置locale语言信息则默认返回系统默认配置
-        return LocaleInfo(language ?: commonConfig.devopsDefaultLocale)
+        return LocaleInfo(language)
     }
 }
