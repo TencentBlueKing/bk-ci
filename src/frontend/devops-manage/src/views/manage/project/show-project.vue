@@ -276,7 +276,7 @@ onMounted(async () => {
     <article class="project-info-content">
       <template v-if="hasPermission">
         <template v-if="projectData.projectCode">
-          <bk-alert v-if="projectData.tipsStatus !== 0 && projectData.approvalStatus !== 2" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
+          <bk-alert v-if="projectData.tipsStatus !== 0" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
             <template #title>
               {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
               <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
@@ -425,11 +425,11 @@ onMounted(async () => {
         v-else
         class="content-main mt20"
         type="403"
-        title="无业务权限"
-        description="你没有相应业务的访问权限，请前往申请相关业务权限"
+        :title="t('无业务权限')"
+        :description="t('你没有相应业务的访问权限，请前往申请相关业务权限')"
       >
         <bk-button theme="primary" @click="handleNoPermission">
-          去申请
+          {{ t('去申请') }}
         </bk-button>
       </bk-exception>
     </article>

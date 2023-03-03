@@ -83,6 +83,7 @@
 
 <script>
     import { convertTime } from '@/utils/util'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'base-tab',
         props: {
@@ -201,16 +202,22 @@
                             message = this.$t('environment.successfullySaved')
                             theme = 'success'
                         }
-                    } catch (err) {
-                        message = err.message ? err.message : err
-                        theme = 'error'
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: this.envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        )
                     } finally {
-                        this.$bkMessage({
-                            message,
-                            theme
-                        })
-
                         if (theme === 'success') {
+                            this.$bkMessage({
+                                message,
+                                theme
+                            })
                             this.requestEnvDetail()
                             if (type === 'name') {
                                 this.curEnvDetail.name = modifyEenv.name

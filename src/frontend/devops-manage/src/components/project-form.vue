@@ -218,7 +218,43 @@ const showMemberDialog = () => {
   showDialog.value = true;
 };
 
-watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () =>{
+const validateProjectNameTips = ref('');
+watch(() => projectData.value.projectName, (val) => {
+  if (props.type === 'apply' && val) {
+    http.validateProjectName(val)
+      .then(() => {
+        validateProjectNameTips.value = ''
+      })
+      .catch(() => {
+        projectForm.value.clearValidate();
+        validateProjectNameTips.value = t('项目名称已存在')
+      })
+  } else if (!val) {
+    validateProjectNameTips.value = ''
+  }
+}, {
+  deep: true,
+})
+
+const validateEnglishNameTips = ref('');
+watch(() => projectData.value.englishName, (val) => {
+  if (props.type === 'apply' && val) {
+    http.validateEnglishName(val)
+      .then(() => {
+        validateEnglishNameTips.value = ''
+      })
+      .catch(() => {
+        projectForm.value.clearValidate();
+        validateEnglishNameTips.value = t('项目ID已存在')
+      })
+  } else if (!val) {
+    validateEnglishNameTips.value = ''
+  }
+}, {
+  deep: true,
+})
+
+watch(() => [projectData.value.authSecrecy, projectData.value.subjectScopes], () => {
   projectForm.value.validate();
   emits('approvedChange', true);
 }, {
@@ -251,6 +287,9 @@ onBeforeUnmount(() => {
         :placeholder="t('请输入1-32字符的项目名称')"
         @change="handleChangeForm"
       ></bk-input>
+      <div class="error-tips" v-if="validateProjectNameTips">
+        {{ validateProjectNameTips }}
+      </div>
     </bk-form-item>
     <bk-form-item :label="t('项目ID')" property="englishName" :required="true">
       <bk-input
@@ -258,6 +297,9 @@ onBeforeUnmount(() => {
         :disabled="type === 'edit'"
         :placeholder="t('请输入2-32 字符的项目ID，由小写字母、数字、中划线组成，以小写字母开头。提交后不可修改。')"
       ></bk-input>
+      <div class="error-tips" v-if="validateEnglishNameTips">
+        {{ validateEnglishNameTips }}
+      </div>
     </bk-form-item>
     <bk-form-item :label="t('项目描述')" property="description" :required="true">
       <bk-input
@@ -372,7 +414,7 @@ onBeforeUnmount(() => {
   </bk-form>
 
   <bk-dialog
-    title="设置项目最大可授权人员范围"
+    :title="t('设置项目最大可授权人员范围')"
     width="1328"
     size="large"
     dialog-type="show"
@@ -414,5 +456,15 @@ onBeforeUnmount(() => {
   }
   .authSecrecy-item {
     border-bottom: 1px dashed #979ba5;
+  }
+  .error-tips {
+    color: #ff5656;
+    font-size: 12px;
+    position: absolute;
+    top: 26px;
+  }
+  .text-link {
+    font-size: 12px;
+    color: #3c96ff;
   }
 </style>

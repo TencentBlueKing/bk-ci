@@ -130,7 +130,7 @@ const handleShowInstances = (data, name) => {
         >
           <bk-tab-panel
             name="instances"
-            :label="`${relatedResourceInfo.name} 实例`"
+            :label="`${relatedResourceInfo.name} ${t('实例')}`"
           >
             <div class="resource-instance">
               <div class="header">
