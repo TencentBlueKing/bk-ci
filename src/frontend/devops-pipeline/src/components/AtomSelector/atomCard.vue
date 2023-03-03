@@ -50,8 +50,9 @@
                     />
                 </p>
                 <span class="ml6">{{ atom.score }}</span>
-                <img class="hot-icon" src="../../images/hot.png">
-                <span class="ml3">{{ atom.recentExecuteNum }}</span>
+                <img v-if="atom.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
+                <img v-else class="hot-icon" src="../../images/hot.png">
+                <span class="ml3">{{ getShowNum(atom.recentExecuteNum) }}</span>
             </section>
         </div>
         <div class="atom-operate">
@@ -220,6 +221,14 @@
                 }).finally(() => {
                     this.isInstalling = false
                 })
+            },
+
+            getShowNum (num) {
+                if (+num > 10000) {
+                    return Math.floor(+num / 10000) + 'W+'
+                } else {
+                    return num
+                }
             }
         }
     }
