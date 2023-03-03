@@ -50,7 +50,7 @@ interface ContainerService {
     fun getAllPipelineContainer(): Result<List<Container>>
 
     /**
-     * 获取编译环境信息
+     * 获取容器信息
      */
     fun getAllContainers(): Result<List<ContainerType>?>
 

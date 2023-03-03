@@ -45,6 +45,7 @@ import com.tencent.devops.store.pojo.app.ContainerAppWithVersion
 import com.tencent.devops.store.pojo.common.enums.BusinessEnum
 import com.tencent.devops.store.pojo.container.Container
 import com.tencent.devops.store.pojo.container.ContainerBuildType
+import com.tencent.devops.store.pojo.container.ContainerOsInfo
 import com.tencent.devops.store.pojo.container.ContainerRequest
 import com.tencent.devops.store.pojo.container.ContainerResource
 import com.tencent.devops.store.pojo.container.ContainerResourceValue
@@ -103,24 +104,23 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
     }
 
     /**
-     * 获取编译环境信息
+     * 获取容器信息
      */
     override fun getAllContainers(): Result<List<ContainerType>?> {
         val containers = containerDao.getAllPipelineContainer(dslContext, null, null)
-        logger.info("Starting getAllContainers $containers")
-        val containerTypeMap = containers?.groupBy { it.type }?.map {
-            val map = it.value.map {
-                mapOf(
-                    "os" to it.os,
-                    "name" to it.name
+        val containerTypes = containers?.groupBy { it.type }?.map {
+            val list = it.value.map {
+                ContainerOsInfo(
+                    os = it.os,
+                    name = it.name
                 )
             }
             ContainerType(
                 type = it.key,
-                info = map
+                system = list
             )
         }
-        return Result(containerTypeMap)
+        return Result(containerTypes)
     }
     /**
      * 获取构建容器信息
