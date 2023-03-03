@@ -69,6 +69,42 @@ class AuthResourceCodeConverter @Autowired constructor(
     }
 
     /**
+     * 蓝盾资源code转换iam code
+     */
+    fun code2IamCode(projectCode: String, resourceType: String, resourceCode: String): String {
+        return if (needConvert(resourceType)) {
+            authResourceDao.get(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )?.iamResourceCode ?: throw ErrorCodeException(
+                errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+                params = arrayOf(resourceCode),
+                defaultMessage = "the resource not exists, resourceCode:$resourceCode"
+            )
+        } else {
+            resourceCode
+        }
+    }
+
+    /**
+     * 批量权限中心资源code转成蓝盾资源code
+     */
+    fun batchCode2IamCode(projectCode: String, resourceType: String, resourceCodes: List<String>): List<String> {
+        return if (needConvert(resourceType)) {
+            authResourceDao.getIamCodeByResourceCodes(
+                dslContext = dslContext,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCodes = resourceCodes
+            )
+        } else {
+            resourceCodes
+        }
+    }
+
+    /**
      * 权限中心资源code转成蓝盾资源code
      */
     fun iamCode2Code(projectCode: String, resourceType: String, iamResourceCode: String): String {

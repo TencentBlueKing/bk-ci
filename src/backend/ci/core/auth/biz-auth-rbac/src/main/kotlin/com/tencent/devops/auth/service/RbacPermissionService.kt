@@ -84,7 +84,11 @@ class RbacPermissionService constructor(
             instanceDTO.id = projectCode
             instanceDTO.type = AuthResourceType.PROJECT.value
         } else {
-            instanceDTO.id = resourceCode
+            instanceDTO.id = authResourceCodeConverter.code2IamCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
             instanceDTO.type = resourceType
 
             // 因除项目外的所有资源都需关联项目, 需要拼接策略path供sdk计算
@@ -108,7 +112,7 @@ class RbacPermissionService constructor(
         projectCode: String,
         resource: AuthResourceInstance
     ): Boolean {
-        val instanceDTO = resource2InstanceDTO(resource = resource)
+        val instanceDTO = resource2InstanceDTO(projectCode = projectCode, resource = resource)
         logger.info("[rbac] validateUserResourcePermissionByInstance : instanceDTO = $instanceDTO")
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
@@ -182,15 +186,19 @@ class RbacPermissionService constructor(
     ): List<String> {
         logger.info("filter user resource by permission|$userId|$action|$projectCode")
         val instanceDTOList = resources.map { resource ->
-            resource2InstanceDTO(resource)
+            resource2InstanceDTO(projectCode = projectCode, resource = resource)
         }
         return authHelper.isAllowed(userId, action, instanceDTOList)
     }
 
-    private fun resource2InstanceDTO(resource: AuthResourceInstance): InstanceDTO {
+    private fun resource2InstanceDTO(projectCode: String, resource: AuthResourceInstance): InstanceDTO {
         val instanceDTO = InstanceDTO()
         instanceDTO.system = iamConfiguration.systemId
-        instanceDTO.id = resource.resourceCode
+        instanceDTO.id = authResourceCodeConverter.code2IamCode(
+            projectCode = projectCode,
+            resourceType = resource.resourceType,
+            resourceCode = resource.resourceCode
+        )
         instanceDTO.type = resource.resourceType
         if (!resource.parents.isNullOrEmpty()) {
             instanceDTO.paths = resource.parents!!.map {
