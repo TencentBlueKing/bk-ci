@@ -276,7 +276,7 @@ onMounted(async () => {
     <article class="project-info-content">
       <template v-if="hasPermission">
         <template v-if="projectData.projectCode">
-          <bk-alert v-if="projectData.tipsStatus !== 0 && projectData.approvalStatus !== 2" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
+          <bk-alert v-if="projectData.tipsStatus !== 0" :theme="tipsStatusMap[projectData.tipsStatus].type" closable>
             <template #title>
               {{ tipsStatusMap[projectData.tipsStatus].message || '--' }}
               <a class="approval-details" v-if="[1, 4].includes(projectData.tipsStatus)" @click="handleToApprovalDetails(projectData.applyId)">{{ t('审批详情') }}</a>
