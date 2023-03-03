@@ -47,7 +47,9 @@ class StreamLoginService @Autowired constructor(
     fun loginUrl(type: String): String {
         return when (type) {
             StreamLoginType.GITHUB.value ->
-                client.get(ServiceGithubOauthResource::class).oauthUrl(streamLoginConfig.githubRedirectUrl).data!!
+                client.get(ServiceGithubOauthResource::class).oauthUrl(
+                    streamLoginConfig.githubRedirectUrl, null
+                ).data!!
             else ->
                 throw ClientException(message = "stream login not support $type type")
         }
