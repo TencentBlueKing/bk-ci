@@ -102,7 +102,7 @@ const TelegrafConf = `
     dest = "system.mem"
   [[processors.rename.replace]]
     field = "used_percent"
-    dest = "used"
+    dest = "pct_used"
   # diskio
   [[processors.rename.replace]]
     measurement = "diskio"
@@ -113,4 +113,12 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "write_bytes"
     dest = "wkb_s"
+  # disk
+  [[processors.rename.replace]]
+    measurement = "disk"
+    dest = "system.disk"
+  [[processors.rename.replace]]
+    field = "used_percent"
+    dest = "in_use"    
+
 `

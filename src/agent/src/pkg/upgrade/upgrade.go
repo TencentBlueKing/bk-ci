@@ -132,7 +132,7 @@ func agentUpgrade() {
 
 	upgradeItem := new(api.UpgradeItem)
 	err = util.ParseJsonToData(checkResult.Data, &upgradeItem)
-	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile {
+	if !upgradeItem.Agent && !upgradeItem.Worker && !upgradeItem.Jdk && !upgradeItem.DockerInitFile && !upgradeItem.TelegrafConf{
 		logs.Info("[agentUpgrade]|no need to upgrade agent, skip")
 		return
 	}
