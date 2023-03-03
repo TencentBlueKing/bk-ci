@@ -234,6 +234,16 @@ mongodb:
       use db_quartz
       db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
       EOF
+  # 如果想在ipv6环境中运行, 则不用上面的脚本 , 注释掉上面的脚本并使用下面
+  #     $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
+  #     use db_turbo
+  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
+  #     use db_quartz
+  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
+  #     EOF
+  # extraEnvVars:
+  # - name: MONGODB_CLIENT_EXTRA_FLAGS
+  #   value: "--ipv6"
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
