@@ -1157,8 +1157,7 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                         arch = newHeartbeatInfo.props!!.arch,
                         jdkVersion = newHeartbeatInfo.props!!.jdkVersion ?: listOf(),
                         userProps = oldUserProps,
-                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo,
-                        telegrafConfInfo = newHeartbeatInfo.props?.telegrafConfInfo
+                        dockerInitFileInfo = newHeartbeatInfo.props?.dockerInitFileInfo
                     ),
                     false
                 )

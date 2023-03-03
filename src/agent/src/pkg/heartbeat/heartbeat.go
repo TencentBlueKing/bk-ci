@@ -37,7 +37,6 @@ import (
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/item"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
@@ -52,19 +51,18 @@ func DoAgentHeartbeat() {
 	// 部分逻辑只在启动时运行一次
 	var jdkOnce = &sync.Once{}
 	var dockerfileSyncOnce = &sync.Once{}
-	var telegrafConf = &sync.Once{}
 
 	for {
-		_ = agentHeartbeat(jdkOnce, dockerfileSyncOnce, telegrafConf)
+		_ = agentHeartbeat(jdkOnce, dockerfileSyncOnce)
 		time.Sleep(10 * time.Second)
 	}
 }
 
-func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce, telegrafConfOnce *sync.Once) error {
+func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce *sync.Once) error {
 	// 在第一次启动时同步一次jdk version，防止重启时因为upgrade的执行慢导致了升级jdk
 	var jdkVersion []string
 	jdkSyncOnce.Do(func() {
-		version, err := item.SyncJdkVersion()
+		version, err := upgrade.SyncJdkVersion()
 		if err != nil {
 			logs.Error("agent heart sync jdkVersion error", err)
 			return
@@ -72,7 +70,7 @@ func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce, telegrafConfOnce *sync.Once
 		jdkVersion = version
 	})
 	if jdkVersion == nil {
-		version := item.JdkVersion.GetVersion()
+		version := upgrade.JdkVersion.GetVersion()
 		if version != nil {
 			jdkVersion = version
 		}
@@ -80,29 +78,18 @@ func agentHeartbeat(jdkSyncOnce, dockerfileSyncOnce, telegrafConfOnce *sync.Once
 
 	// 获取docker的filemd5前也同步一次
 	dockerfileSyncOnce.Do(func() {
-		if err := item.DockerFileMd5.Sync(); err != nil {
+		if err := upgrade.SyncDockerInitFileMd5(); err != nil {
 			logs.Error("agent heart sync docker file md5 error", err)
 		}
 	})
-	dockerMd5, needUpgrade := item.DockerFileMd5.Read()
-
-	telegrafConfOnce.Do(func() {
-		if err := item.TelegrafConf.Sync(); err != nil {
-			logs.Error("agent heart sync telegraf conf file md5 error", err)
-		}
-	})
-	telegrafMd5 := item.TelegrafConf.Read()
 
 	result, err := api.Heartbeat(
 		job.GBuildManager.GetInstances(),
 		jdkVersion,
 		job.GBuildDockerManager.GetInstances(),
 		api.DockerInitFileInfo{
-			FileMd5:     dockerMd5,
-			NeedUpgrade: needUpgrade,
-		},
-		api.TelegrafConfInfo{
-			FileMd5: telegrafMd5,
+			FileMd5:     upgrade.DockerFileMd5.Md5,
+			NeedUpgrade: upgrade.DockerFileMd5.NeedUpgrade,
 		})
 	if err != nil {
 		logs.Error("agent heartbeat failed: ", err.Error())

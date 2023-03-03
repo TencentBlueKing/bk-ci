@@ -285,8 +285,7 @@ class ThirdPartyAgentService @Autowired constructor(
                     agent = false,
                     worker = false,
                     jdk = false,
-                    dockerInitFile = false,
-                    telegrafConf = false
+                    dockerInitFile = false
                 )
             )
         }

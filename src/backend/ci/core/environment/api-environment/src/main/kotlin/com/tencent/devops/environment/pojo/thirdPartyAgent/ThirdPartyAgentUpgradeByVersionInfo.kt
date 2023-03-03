@@ -1,7 +1,6 @@
 package com.tencent.devops.environment.pojo.thirdPartyAgent
 
 import com.tencent.devops.common.api.pojo.agent.DockerInitFileInfo
-import com.tencent.devops.common.api.pojo.agent.TelegrafConfInfo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -14,7 +13,5 @@ data class ThirdPartyAgentUpgradeByVersionInfo(
     @ApiModelProperty("jdk版本")
     val jdkVersion: List<String>?,
     @ApiModelProperty("docker init 文件升级信息")
-    val dockerInitFileInfo: DockerInitFileInfo?,
-    @ApiModelProperty("telegraf config 文件升级信息")
-    val telegrafConfInfo: TelegrafConfInfo?
+    val dockerInitFileInfo: DockerInitFileInfo?
 )

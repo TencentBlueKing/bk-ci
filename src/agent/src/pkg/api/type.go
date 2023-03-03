@@ -119,8 +119,7 @@ type ThirdPartyDockerTaskInfo struct {
 type AgentPropsInfo struct {
 	Arch              string             `json:"arch"`
 	JdkVersion        []string           `json:"jdkVersion"`
-	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileInfo"`
-	TelegrafConfInfo  TelegrafConfInfo   `json:"telegrafConfInfo"`
+	DockerInitFileMd5 DockerInitFileInfo `json:"dockerInitFileMd5"`
 }
 
 type AgentHeartbeatResponse struct {
@@ -145,7 +144,6 @@ type UpgradeInfo struct {
 	GoAgentVersion     string             `json:"goAgentVersion"`
 	JdkVersion         []string           `json:"jdkVersion"`
 	DockerInitFileInfo DockerInitFileInfo `json:"dockerInitFileInfo"`
-	TelegrafConfInfo   TelegrafConfInfo   `json:"telegrafConfInfo"`
 }
 
 type DockerInitFileInfo struct {
@@ -153,16 +151,11 @@ type DockerInitFileInfo struct {
 	NeedUpgrade bool   `json:"needUpgrade"`
 }
 
-type TelegrafConfInfo struct {
-	FileMd5 string `json:"fileMd5"`
-}
-
 type UpgradeItem struct {
 	Agent          bool `json:"agent"`
 	Worker         bool `json:"worker"`
 	Jdk            bool `json:"jdk"`
 	DockerInitFile bool `json:"dockerInitFile"`
-	TelegrafConf   bool `json:"telegrafConf"`
 }
 
 func NewPipelineResponse(seqId string, status string, response string) *PipelineResponse {

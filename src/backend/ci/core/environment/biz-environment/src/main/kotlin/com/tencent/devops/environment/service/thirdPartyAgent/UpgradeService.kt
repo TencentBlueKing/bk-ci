@@ -115,8 +115,7 @@ class UpgradeService @Autowired constructor(
                     agent = false,
                     worker = false,
                     jdk = false,
-                    dockerInitFile = false,
-                    telegrafConf = false
+                    dockerInitFile = false
                 )
             )
         }
@@ -124,7 +123,7 @@ class UpgradeService @Autowired constructor(
         if (!checkProjectUpgrade(projectId)) {
             return AgentResult(
                 AgentStatus.IMPORT_OK,
-                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false, telegrafConf = false)
+                UpgradeItem(agent = false, worker = false, jdk = false, dockerInitFile = false)
             )
         }
 
@@ -132,19 +131,17 @@ class UpgradeService @Autowired constructor(
         val currentGoAgentVersion = agentPropsScope.getAgentVersion()
         val currentJdkVersion = agentPropsScope.getJdkVersion(os, props?.arch)
         val currentDockerInitFileMd5 = agentPropsScope.getDockerInitFileMd5()
-        val currentTelegrafConfFileMd5 = agentPropsScope.getTelegrafConfMd5(os)
 
         val canUpgrade = agentScope.checkCanUpgrade(agentId)
 
         if (logger.isDebugEnabled) {
             logger.debug(
                 "$projectId|$agentId|canUpgrade=$canUpgrade" +
-                        "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
-                        "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
-                        "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
-                        "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
-                        "|currentTelegrafConfFileMd5=$currentTelegrafConfFileMd5," +
-                        "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
+                    "|currentWorkerVersion=$currentWorkerVersion,agent_WorkerVersion=${info.workerVersion}" +
+                    "|currentGoAgentVersion=$currentGoAgentVersion,agent_GoAgentVersion=${info.goAgentVersion}" +
+                    "|currentJdkVersion=$currentJdkVersion,agent_JdkVersion=${info.jdkVersion}" +
+                    "|currentDockerInitFileMd5=$currentDockerInitFileMd5," +
+                    "agent_DockerInitFileMd5=${info.dockerInitFileInfo?.fileMd5}"
             )
         }
 
@@ -201,28 +198,13 @@ class UpgradeService @Autowired constructor(
             else -> canUpgrade && info.dockerInitFileInfo?.fileMd5 != currentDockerInitFileMd5
         }
 
-        val telegrafConf = when {
-            info.telegrafConfInfo == null -> false
-            currentTelegrafConfFileMd5.isNullOrBlank() -> {
-                logger.warn(
-                    "project: $projectId|agent: $agentId|os: $os|arch: ${props?.arch}| telegraf conf md5 is null"
-                )
-                false
-            }
-
-            agentScope.checkLockUpgrade(agentId, AgentUpgradeType.TELEGRAF_CONF) -> false
-            agentScope.checkForceUpgrade(agentId, AgentUpgradeType.TELEGRAF_CONF) -> true
-            else -> canUpgrade && info.telegrafConfInfo?.fileMd5 != currentTelegrafConfFileMd5
-        }
-
         return AgentResult(
             status = AgentStatus.IMPORT_OK,
             data = UpgradeItem(
                 agent = goAgentVersion,
                 worker = workerVersion,
                 jdk = jdkVersion,
-                dockerInitFile = dockerInitFile,
-                telegrafConf = telegrafConf
+                dockerInitFile = dockerInitFile
             )
         )
     }

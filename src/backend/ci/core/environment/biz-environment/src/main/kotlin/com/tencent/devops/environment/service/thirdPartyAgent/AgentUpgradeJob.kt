@@ -147,7 +147,6 @@ class AgentUpgradeJob @Autowired constructor(
         currentDockerInitFileMd5: String,
         record: TEnvironmentThirdpartyAgentRecord
     ): Boolean {
-        val props = agentPropsScope.parseAgentProps(record.agentProps)
         AgentUpgradeType.values().forEach { type ->
             val res = when (type) {
                 AgentUpgradeType.GO_AGENT -> {
@@ -159,9 +158,7 @@ class AgentUpgradeJob @Autowired constructor(
                 }
 
                 AgentUpgradeType.JDK -> {
-                    if (props == null) {
-                        return@forEach
-                    }
+                    val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
                     val currentJdkVersion =
                         agentPropsScope.getJdkVersion(record.os, props.arch)?.ifBlank { null } ?: return@forEach
                     if (props.jdkVersion.size > 2) {
@@ -175,27 +172,12 @@ class AgentUpgradeJob @Autowired constructor(
                     if (currentDockerInitFileMd5.isBlank()) {
                         return@forEach
                     }
-                    if (props == null) {
-                        return@forEach
-                    }
+                    val props = agentPropsScope.parseAgentProps(record.agentProps) ?: return@forEach
                     if (props.dockerInitFileInfo?.needUpgrade != true) {
                         return@forEach
                     }
                     (props.dockerInitFileInfo.fileMd5.isNotBlank() &&
                             props.dockerInitFileInfo.fileMd5.trim() != currentDockerInitFileMd5.trim())
-                }
-
-                AgentUpgradeType.TELEGRAF_CONF -> {
-                    val currentTelegrafConfMd5 =
-                        agentPropsScope.getTelegrafConfMd5(record.os)?.ifBlank { null } ?: return@forEach
-                    if (props == null) {
-                        return@forEach
-                    }
-                    if (props.telegrafConfInfo == null) {
-                        return@forEach
-                    }
-                    (props.telegrafConfInfo.fileMd5.isNotBlank() &&
-                            props.telegrafConfInfo.fileMd5.trim() != currentTelegrafConfMd5.trim())
                 }
             }
             if (res) {

@@ -10,7 +10,5 @@ data class AgentPropsInfo(
     @ApiModelProperty("jdk版本信息")
     val jdkVersion: List<String>?,
     @ApiModelProperty("docker init 文件升级信息")
-    val dockerInitFileInfo: DockerInitFileInfo?,
-    @ApiModelProperty("telegraf 配置文件信息")
-    val telegrafConfInfo: TelegrafConfInfo?
+    val dockerInitFileInfo: DockerInitFileInfo?
 )

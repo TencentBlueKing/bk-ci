@@ -508,10 +508,6 @@ func GetDockerInitFilePath() string {
 	return systemutil.GetWorkDir() + "/" + DockerInitFile
 }
 
-func GetTelegrafConfFilePath() string {
-	return systemutil.GetWorkDir() + "/" + TelegrafConfFile
-}
-
 func GetGateWay() string {
 	if strings.HasPrefix(GAgentConfig.Gateway, "http") || strings.HasPrefix(GAgentConfig.Gateway, "https") {
 		return GAgentConfig.Gateway

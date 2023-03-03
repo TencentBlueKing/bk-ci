@@ -145,20 +145,6 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
 
     fun getDockerInitFileMd5(): String = loadCache(getDockerInitFileMd5Key())
 
-    fun getTelegrafConfMd5(os: String?): String? {
-        return OS.parse(os)?.let { osE ->
-            loadCache(getTelegrafConfMd5Key(osE))
-        }
-    }
-
-    fun getTelegrafConfMd5Key(os: OS): String {
-        return when (os) {
-            OS.WINDOWS -> CURRENT_AGENT_WIN_TELEGRAF_CONF_MD5
-            OS.LINUX -> CURRENT_AGENT_LINUX_TELEGRAF_CONF_MD5
-            OS.MACOS -> CURRENT_AGENT_MACOS_TELEGRAF_CONF_MD5
-        }
-    }
-
     private fun getAgentMasterVersionKey(): String = CURRENT_AGENT_MASTER_VERSION
 
     private fun getAgentVersionKey(): String = CURRENT_AGENT_VERSION
@@ -206,10 +192,6 @@ class AgentPropsScope @Autowired constructor(private val redisOperation: RedisOp
 
         private const val CURRENT_AGENT_LINUX_AMD64_DOCKER_INIT_FILE_MD5 =
             "environment.thirdparty.agent.linux_amd64.docker_init_file.md5"
-
-        private const val CURRENT_AGENT_WIN_TELEGRAF_CONF_MD5 = "environment.thirdparty.agent.win.telegraf_conf.md5"
-        private const val CURRENT_AGENT_LINUX_TELEGRAF_CONF_MD5 = "environment.thirdparty.agent.linux.telegraf_conf.md5"
-        private const val CURRENT_AGENT_MACOS_TELEGRAF_CONF_MD5 = "environment.thirdparty.agent.linux.telegraf_conf.md5"
 
         private const val DEFAULT_GATEWAY_KEY = "environment:thirdparty:default_gateway"
         private const val DEFAULT_FILE_GATEWAY_KEY = "environment:thirdparty:default_file_gateway"

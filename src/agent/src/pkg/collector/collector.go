@@ -30,10 +30,8 @@ package collector
 import (
 	"context"
 	"fmt"
-	"os"
 	"time"
 
-	telegrafconf "github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/collector/telegrafConf"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
 
 	"github.com/influxdata/telegraf/logger"
@@ -43,6 +41,7 @@ import (
 	"github.com/influxdata/telegraf/agent"
 	telegrafConfig "github.com/influxdata/telegraf/config"
 
+	"io/ioutil"
 	"strings"
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
@@ -50,24 +49,171 @@ import (
 )
 
 const (
+	telegrafConfigFile   = "telegraf.conf"
 	telegrafRelaunchTime = 5 * time.Second
 
-	templateKeyAgentId     = "##{agentId}##"
-	templateKeyAgentSecret = "##{agentSecretKey}##"
-	templateKeyGateway     = "##{gateway}##"
-	templateKeyTlsCa       = "##{tls_ca}##"
-	templateKeyProjectId   = "##{projectId}##"
+	templateKeyAgentId     = "###{agentId}###"
+	templateKeyAgentSecret = "###{agentSecret}###"
+	templateKeyGateway     = "###{gateway}###"
+	templateKeyTlsCa       = "###{tls_ca}###"
+	templateKeyProjectId   = "###{projectId}###"
 )
 
-var cancelChan chan int
+const configTemplateLinux = `[global_tags]
+  projectId = "###{projectId}###"
+  agentId = "###{agentId}###"
+  agentSecret = "###{agentSecret}###"
+[agent]
+  interval = "1m"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "1m"
+  flush_jitter = "0s"
+  precision = ""
+  debug = false
+  quiet = false
+  logfile = ""
+  hostname = ""
+  omit_hostname = false
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetrix"
+  skip_database_creation = true
+  ###{tls_ca}###
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.kernel]]
+[[inputs.mem]]
+[[inputs.processes]]
+# [[inputs.swap]]
+[[inputs.system]]
+[[inputs.net]]
+`
 
-func init() {
-	cancelChan = make(chan int)
-}
-
-func RestartTelegraf() {
-	cancelChan <- 1
-}
+const configTemplateWindows = `[global_tags]
+  projectId = "###{projectId}###"
+  agentId = "###{agentId}###"
+  agentSecret = "###{agentSecret}###"
+[agent]
+  interval = "1m"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "1m"
+  flush_jitter = "0s"
+  precision = ""
+  debug = false
+  quiet = false
+  logfile = ""
+  hostname = ""
+  omit_hostname = false
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetrix"
+  skip_database_creation = true
+  ###{tls_ca}###
+[[inputs.mem]]
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.win_perf_counters]]
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Processor"
+    Instances = ["*"]
+    Counters = [
+      "% Idle Time",
+      "% Interrupt Time",
+      "% Privileged Time",
+      "% User Time",
+      "% Processor Time",
+      "% DPC Time",
+    ]
+    Measurement = "win_cpu"
+    IncludeTotal=true
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "LogicalDisk"
+    Instances = ["*"]
+    Counters = [
+      "% Idle Time",
+      "% Disk Time",
+      "% Disk Read Time",
+      "% Disk Write Time",
+      "Current Disk Queue Length",
+      "% Free Space",
+      "Free Megabytes",
+    ]
+    Measurement = "win_disk"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "PhysicalDisk"
+    Instances = ["*"]
+    Counters = [
+      "Disk Read Bytes/sec",
+      "Disk Write Bytes/sec",
+      "Current Disk Queue Length",
+      "Disk Reads/sec",
+      "Disk Writes/sec",
+      "% Disk Time",
+      "% Disk Read Time",
+      "% Disk Write Time",
+    ]
+    Measurement = "win_diskio"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Network Interface"
+    Instances = ["*"]
+    Counters = [
+      "Bytes Received/sec",
+      "Bytes Sent/sec",
+      "Packets Received/sec",
+      "Packets Sent/sec",
+      "Packets Received Discarded",
+      "Packets Outbound Discarded",
+      "Packets Received Errors",
+      "Packets Outbound Errors",
+    ]
+    Measurement = "win_net"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "System"
+    Counters = [
+      "Context Switches/sec",
+      "System Calls/sec",
+      "Processor Queue Length",
+      "System Up Time",
+    ]
+    Instances = ["------"]
+    Measurement = "win_system"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Memory"
+    Counters = [
+      "Available Bytes",
+      "Cache Faults/sec",
+      "Demand Zero Faults/sec",
+      "Page Faults/sec",
+      "Pages/sec",
+      "Transition Faults/sec",
+      "Pool Nonpaged Bytes",
+      "Pool Paged Bytes",
+      "Standby Cache Reserve Bytes",
+      "Standby Cache Normal Priority Bytes",
+      "Standby Cache Core Bytes",
+    ]
+    Instances = ["------"]
+    Measurement = "win_mem"
+  [[inputs.win_perf_counters.object]]
+    ObjectName = "Paging File"
+    Counters = [
+      "% Usage",
+    ]
+    Instances = ["_Total"]
+    Measurement = "win_swap"
+`
 
 func DoAgentCollect() {
 	defer func() {
@@ -81,59 +227,35 @@ func DoAgentCollect() {
 		return
 	}
 
+	writeTelegrafConfig()
+
 	// 每次重启agent要清理掉无意义的telegraf.log日志，重新记录
 	logFile := fmt.Sprintf("%s/logs/telegraf.log", systemutil.GetWorkDir())
 	if fileutil.Exists(logFile) {
 		_ = fileutil.TryRemoveFile(logFile)
 	}
+	tAgent, err := getTelegrafAgent(
+		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
+		logFile,
+	)
+	if err != nil {
+		logs.Error("init telegraf agent failed: %v", err)
+		return
+	}
 
-	RunTelegrafAgent(logFile)
-}
-
-func RunTelegrafAgent(logFile string) {
 	for {
-		// 当重启信号过来时重启telegraf
-		ctx, cancel := context.WithCancel(context.Background())
-		go func() {
-			<-cancelChan
-			cancel()
-		}()
-		// 读取telegraf文件中的内容如果没有则拿代码中的
-		var confData []byte
-		confFilePath := config.GetTelegrafConfFilePath()
-		_, err := os.Stat(confFilePath)
-		if err == nil || (err != nil && os.IsExist(err)) {
-			confData, err = os.ReadFile(confFilePath)
-			if err != nil {
-				logs.Errorf("read conf file %s error,use code data %s", confFilePath, err.Error())
-				confData = []byte(telegrafconf.TelegrafConf)
-			}
-		} else {
-			logs.Warnf("read conf file %s error,no file", confFilePath)
-			confData = []byte(telegrafconf.TelegrafConf)
-		}
-
-		confData = replaceTelegrafConfig(confData)
-
-		tAgent, err := getTelegrafAgent(confData, logFile)
-		if err != nil {
-			logs.Error("init telegraf agent failed: %v", err)
-			return
-		}
-
 		logs.Info("launch telegraf agent")
-		if err = tAgent.Run(ctx); err != nil {
+		if err = tAgent.Run(context.Background()); err != nil {
 			logs.Error("telegraf agent exit: %v", err)
 		}
-
 		time.Sleep(telegrafRelaunchTime)
 	}
 }
 
-func getTelegrafAgent(configData []byte, logFile string) (*agent.Agent, error) {
+func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
 	// get a new config and parse configuration from file.
 	c := telegrafConfig.NewConfig()
-	if err := c.LoadConfigData(configData); err != nil {
+	if err := c.LoadConfig(configFile); err != nil {
 		return nil, err
 	}
 
@@ -147,9 +269,15 @@ func getTelegrafAgent(configData []byte, logFile string) (*agent.Agent, error) {
 	return agent.NewAgent(c)
 }
 
-func replaceTelegrafConfig(configData []byte) []byte {
-	configContent := string(configData)
-	configContent = strings.Replace(configContent, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
+func writeTelegrafConfig() {
+	var configTemplate string
+	if systemutil.IsWindows() {
+		configTemplate = configTemplateWindows
+	} else {
+		configTemplate = configTemplateLinux
+	}
+
+	configContent := strings.Replace(configTemplate, templateKeyAgentId, config.GAgentConfig.AgentId, 1)
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
 	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 1)
@@ -159,7 +287,11 @@ func replaceTelegrafConfig(configData []byte) []byte {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, "", 1)
 	}
 
-	return []byte(configContent)
+	err := ioutil.WriteFile(systemutil.GetWorkDir()+"/telegraf.conf", []byte(configContent), 0666)
+	if err != nil {
+		logs.Error("write telegraf config err: ", err)
+		return
+	}
 }
 
 func buildGateway(gateway string) string {
