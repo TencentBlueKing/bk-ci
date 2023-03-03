@@ -130,7 +130,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         @Test
         fun getAuthorizedGitRepository_1() {
             every {
-                remoteDevGitTransfer.load(RemoteDevGitType.T_GIT).getProjectList(
+                remoteDevGitTransfer.load(RemoteDevGitType.GIT).getProjectList(
                     any(), any(), any(), any(), any(), any()
                 )
             } throws RemoteServiceException(
@@ -138,7 +138,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
             )
             Assertions.assertThrows(ErrorCodeException::class.java) {
                 self.getAuthorizedGitRepository(
-                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.T_GIT
+                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.GIT
                 )
             }
         }
@@ -146,13 +146,13 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         @Test
         fun getAuthorizedGitRepository_2() {
             every {
-                remoteDevGitTransfer.load(RemoteDevGitType.T_GIT).getProjectList(
+                remoteDevGitTransfer.load(RemoteDevGitType.GIT).getProjectList(
                     any(), any(), any(), any(), any(), any()
                 )
             } throws OauthForbiddenException("用户[user00]尚未进行OAUTH授权，请先授权。")
             Assertions.assertThrows(ErrorCodeException::class.java) {
                 self.getAuthorizedGitRepository(
-                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.T_GIT
+                    userId = "user00", search = null, page = null, pageSize = null, gitType = RemoteDevGitType.GIT
                 )
             }
         }

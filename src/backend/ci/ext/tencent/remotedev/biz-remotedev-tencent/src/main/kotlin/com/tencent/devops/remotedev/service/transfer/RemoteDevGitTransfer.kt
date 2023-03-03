@@ -37,7 +37,7 @@ class RemoteDevGitTransfer @Autowired constructor(
         gitType: RemoteDevGitType
     ): GitTransferService {
         return when (gitType) {
-            RemoteDevGitType.T_GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> tGitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
         }
     }
@@ -46,7 +46,7 @@ class RemoteDevGitTransfer @Autowired constructor(
         workspaceName: String
     ): GitTransferService {
         return when (urlCache.get(workspaceName)) {
-            RemoteDevGitType.T_GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> tGitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
             null -> {
                 logger.info("workspace $workspaceName not find")
@@ -62,7 +62,7 @@ class RemoteDevGitTransfer @Autowired constructor(
         url: String
     ): GitTransferService {
         return when (RemoteDevGitType.load4Url(url)) {
-            RemoteDevGitType.T_GIT -> tGitTransferService
+            RemoteDevGitType.GIT -> tGitTransferService
             RemoteDevGitType.GITHUB -> githubTransferService
         }
     }

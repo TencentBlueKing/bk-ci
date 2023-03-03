@@ -31,7 +31,7 @@ import io.swagger.annotations.ApiModel
 
 @ApiModel("remoteDev 支持git类型")
 enum class RemoteDevGitType(val flag: String) {
-    T_GIT("woa"),
+    GIT("woa"),
     GITHUB("github");
 
     companion object {

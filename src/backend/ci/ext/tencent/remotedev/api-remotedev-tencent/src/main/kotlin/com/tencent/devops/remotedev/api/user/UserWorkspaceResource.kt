@@ -197,7 +197,7 @@ interface UserWorkspaceResource {
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("T_GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<RemoteDevRepository>>
 
     @ApiOperation("获取目标授权代码库分支")
@@ -222,7 +222,7 @@ interface UserWorkspaceResource {
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("T_GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
     @ApiOperation("返回目标代码库devfile路径")
@@ -241,7 +241,7 @@ interface UserWorkspaceResource {
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("T_GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<List<String>>
 
     @ApiOperation("根据用户ID判断用户是否已经oauth认证")
@@ -263,7 +263,7 @@ interface UserWorkspaceResource {
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("T_GIT")
-        gitType: RemoteDevGitType = RemoteDevGitType.T_GIT
+        gitType: RemoteDevGitType = RemoteDevGitType.GIT
     ): Result<AuthorizeResult>
 
     @ApiOperation("工作空间心跳请求")
