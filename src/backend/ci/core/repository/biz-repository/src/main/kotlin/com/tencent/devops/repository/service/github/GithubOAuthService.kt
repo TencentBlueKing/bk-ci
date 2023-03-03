@@ -74,10 +74,10 @@ class GithubOAuthService @Autowired constructor(
         val stateParams = mutableMapOf(
             "redirectUrl" to redirectUrl,
             "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
-        ).let {
-            // 如果非空将以该userId入库，否则会以github login name 入库
-            if (userId != null) it["userId"] = userId
-        }
+        )
+        // 如果非空将以该userId入库，否则会以github login name 入库
+        if (userId != null) stateParams["userId"] = userId
+
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
         return "$GITHUB_URL/login/oauth/authorize" +
             "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
