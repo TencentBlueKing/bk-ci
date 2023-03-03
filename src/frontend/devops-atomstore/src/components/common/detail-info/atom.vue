@@ -48,7 +48,7 @@
                     <span class="ml6">{{ detail.score }}</span>
                 </section>
                 <section class="num-wraper">
-                    <img v-if="atom.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
+                    <img v-if="detail.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
                     <img v-else class="hot-icon" src="../../../images/hot.png">
                     <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
