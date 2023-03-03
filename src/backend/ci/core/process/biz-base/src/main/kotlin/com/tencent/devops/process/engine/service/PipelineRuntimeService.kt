@@ -71,7 +71,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerEleme
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.pipeline.utils.SkipElementUtils
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -110,6 +109,7 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_PARAMS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_SUGGEST
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.control.lock.PipelineBuildHistoryLock
 import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.engine.control.lock.PipelineVersionLock
@@ -966,7 +966,7 @@ class PipelineRuntimeService @Autowired constructor(
             }
         }
         val lock = if (!buildNumRule.isNullOrBlank()) {
-            RedisLock(redisOperation, "process:build:history:lock:$pipelineId", 10)
+            PipelineBuildHistoryLock(redisOperation, pipelineId)
         } else null
         try {
             lock?.lock()

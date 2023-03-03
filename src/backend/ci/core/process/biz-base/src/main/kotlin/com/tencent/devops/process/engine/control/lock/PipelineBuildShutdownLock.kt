@@ -30,11 +30,11 @@ package com.tencent.devops.process.engine.control.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+class PipelineBuildShutdownLock(redisOperation: RedisOperation, buildId: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
-        expiredTimeInSeconds = 60L
+        lockKey = "process.pipeline.build.shutdown.$buildId",
+        expiredTimeInSeconds = 10L
     ) {
     override fun decorateKey(key: String): String {
         // buildId在各集群唯一，key无需加上集群信息前缀来区分

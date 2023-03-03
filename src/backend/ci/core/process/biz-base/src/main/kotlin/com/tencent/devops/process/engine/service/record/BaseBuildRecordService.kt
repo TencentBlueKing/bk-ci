@@ -41,12 +41,12 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -76,11 +76,7 @@ open class BaseBuildRecordService(
     ) {
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
-        val lock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "process.build.record.lock.$buildId.$executeCount",
-            expiredTimeInSeconds = ExpiredTimeInSeconds
-        )
+        val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
         try {
             watcher.start("lock")
             lock.lock()
@@ -210,7 +206,6 @@ open class BaseBuildRecordService(
     }
 
     companion object {
-        private const val ExpiredTimeInSeconds: Long = 10
         private val logger = LoggerFactory.getLogger(BaseBuildRecordService::class.java)
 
         fun mergeTimestamps(
