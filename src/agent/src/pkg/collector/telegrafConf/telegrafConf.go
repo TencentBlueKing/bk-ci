@@ -50,7 +50,7 @@ const TelegrafConf = `
   hostname = ""
   omit_hostname = false
 [[outputs.influxdb]]
-  urls = ["##{gateWay}##/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["##{gateway}##/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
   ##{tls_ca}##

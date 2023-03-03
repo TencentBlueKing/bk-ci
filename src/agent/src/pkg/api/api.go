@@ -72,6 +72,7 @@ func Heartbeat(
 			Arch:              runtime.GOARCH,
 			JdkVersion:        jdkVersion,
 			DockerInitFileMd5: dockerInitFileMd5,
+			TelegrafConfInfo:  TelegrafMd5,
 		},
 		DockerParallelTaskCount: config.GAgentConfig.DockerParallelTaskCount,
 		DockerTaskList:          dockerTaskList,
