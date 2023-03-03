@@ -1,6 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.dao
 
-import com.tencent.devops.model.dispatch_devcloud.tables.TBuildContainerPoolNo
+import com.tencent.devops.model.dispatch.devcloud.tables.TBuildContainerPoolNo
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

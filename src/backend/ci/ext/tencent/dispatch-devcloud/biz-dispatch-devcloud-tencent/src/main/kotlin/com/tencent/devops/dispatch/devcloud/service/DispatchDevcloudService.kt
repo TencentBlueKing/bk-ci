@@ -12,7 +12,7 @@ import com.tencent.devops.dispatch.devcloud.dao.DcPerformanceOptionsDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildDao
 import com.tencent.devops.dispatch.devcloud.dao.DevCloudBuildHisDao
 import com.tencent.devops.dispatch.devcloud.dao.DevcloudPerformanceConfigDao
-import com.tencent.devops.model.dispatch_devcloud.tables.records.TDevcloudBuildHisRecord
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import com.tencent.devops.dispatch.devcloud.pojo.Action
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudContainerStatus
 import com.tencent.devops.dispatch.devcloud.pojo.DevCloudDebugResponse

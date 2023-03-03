@@ -1,0 +1,154 @@
+spring:
+  application:
+    name: dispatch-macos
+    desc: SODA Dispatch Service
+    version: 3.3.2
+    packageName: com.tencent.devops.dispatcher.macos
+  datasource:
+    url: jdbc:mysql://10.125.48.80:3306/devops_dispatch_macos?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true
+    username: tig4php
+    password: tig4php
+  rabbitmq:
+    virtual-host: soda4
+    username: soda
+    password: soda
+    addresses: 9.134.79.35:5672
+    core:
+      virtual-host: dev-gray
+      username: dev-gray
+      password: dev-gray
+      addresses: 100.97.154.15:5672
+    extend:
+      virtual-host: dev-gray
+      username: dev-gray
+      password: dev-gray
+      addresses: 100.97.106.54:5672
+  redis:
+    database: 2
+    host: 10.125.48.80
+    password: itdev@db
+  cloud:
+    consul:
+      discovery:
+        instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
+        tags: local
+server:
+  port: 21940
+
+proxy.url: http://idc.devops.oa.com/macosVm/proxy/sdk
+
+devCloud:
+  appId: 10008
+  token: 123456789
+  url: http://api-idc.sgw.woa.com/bkdevops_token_prod/test_devcloud
+  smartProxyToken: 9c597cc44eb67ae649b203d4afe9b8a7b70ab2cf8c8277e28707
+  rsaPrivateKey: |
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDJuYCLdzQ+a7EJ
+    EO84f6cSIj6jhEhyBFdA+TFpp2EUy8pdqd/XHRZCYVSNKe4JWWzkgHviQABoqenN
+    d8kQJW/SbExxZH5CX5DznvzUC3uapVn76XTNW43rNd9odW6O3a7KiHblASbKtpl9
+    oe5CJ+Klbc8CjsYB8eFIKMmsJm9U+INH1MC/a0K7WIoZL5XPhEf/AaClbo3n3zK+
+    4IG4T+kSHTuAQ+UoYG24jmsMmYMPv3ZlBf9p2zWRpLSOaf/77A5aekAx4N6fCavh
+    F7ft2g4sclwSYm26AMbWfYR748d6C62qfkWdhZL4puTkbmZyRZtgY1B9mXafKhDr
+    hT+xUq9bAgMBAAECggEBAJxMkg/9tcojsRFAQMp7Bh1j0TrrNSK6wEyEiEe/u9Xc
+    LRkzlU9cpzGZrmSON3ShCGFoOBTO2EJAXPqptG1BRIo7BWPapIWS/IH3DxjRKN1i
+    /vzUH386UBUOMeMDEj26AEPHRrAbm033+6e/PxedRdw93+awbzV0j8RUbiZnxV2E
+    qblyQ/JoRO1hGO6UA+HrDswUPq+dD3nJGTky7md6xUxSaCvJ/igcf3GhsM6UBcVK
+    SzKHtDOF6Mx3xjZEyVM4YxN087jLS0NS7Q9Ms544nj1wXUOvgzVdLvefWYhltdSx
+    uHJF23G3Vw4vQV9T1zIO8pvBfLawhD4WvYXDllBS8UkCgYEA/9r8uNyEgJfnb+iQ
+    tGLmenexvrqQKAWdom1DQe/rIzK9rulH8A+3Gr1AvEcACeSXsMY+RthMNo1PYyFl
+    whApqNsIRaVSE4JE5/7fAjYRHAO/DFapQAc95Y0r6wLjCGT7sL8e4TNvUg8vGulY
+    IuVC/v4fAhi12WkXwlGQcN+g+Y8CgYEAydavKGKcROkWO8r4VXQkw5YMSbEDqK8R
+    PH+CyJSgil4oPzpJQh/Ksh5HxuYfbt4H5wflHS9OHGv823c3Jww+Ls8VvpEuQ6+L
+    aBfAvR/LQz7VnCbCdI/EPAiXBQDMXVORk+0XGWZTvDkqrVjym6p2Ls8xJsCTrqQ6
+    NQIoVMaqz3UCgYBUFoHGs9rsdIBA3FtqnbKH/3ywZZppPOdA8c4QBqzuBYgny020
+    TUXtiNOUzXTqy3E7TPw8xmvN5gV4XAqYjD1U3J/MW/gspzzETpS2olRfM6//ex/n
+    BjpGjm4nr+wz3xSFU1rvwrrMamcd3iD0Xwr0yUoho0No78w6NhpVrnm2awKBgHJf
+    jhfzcRv3fRra1EgQLXkLgOENRsaCleDTXLfuyN4/pszVaYfn3gN69y91XaCEfrPj
+    HGiiUr/2TW3Lq1wcKux5epfnSvEd+4A73YMODi+H3qHCsPQ+N3PRZkp2flfwMBFE
+    C4/gFVkWh+F9AtVFDf1OeUq9W7Jd64H4PAR2I3q1AoGAdk8ImlF+/aL2Gy9WJkxi
+    AY86s4dRV7n+ZAKFxlOqwHDkWleGw4v4xlFhgk/rPq2kHKVaw1ai5leNNXd6sn4f
+    pZqEPhHE+ioLjXb1zOpiQfRuA84Fed8JNJNY5S7pyf5OdIuqYu9wfVYYne5HVxGv
+    +GYPeYy6sPaY45J7l/nTSDs=
+dispatch:
+  jobQuota:
+    systemAlertReceiver: null
+    enable: true
+
+---
+spring:
+  profiles: dev
+
+gateway.url: dev.devgw.devops.oa.com
+proxy.url: http://dev.idc.devops.oa.com/macosVm/proxy/sdk
+
+swagger:
+  append:
+    name: true
+
+---
+spring:
+  profiles: test
+
+gateway.url: test.devops.oa.com
+proxy.url: http://test.idc.devops.oa.com/macosVm/proxy/sdk
+
+devCloud:
+  appId: 10008
+  token: 123456789
+  url: http://api-idc.sgw.woa.com/bkdevops_token_prod/test_devcloud
+  smartProxyToken: 9c597cc44eb67ae649b203d4afe9b8a7b70ab2cf8c8277e28707
+  rsaPrivateKey: |
+    MIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQDJuYCLdzQ+a7EJ
+    EO84f6cSIj6jhEhyBFdA+TFpp2EUy8pdqd/XHRZCYVSNKe4JWWzkgHviQABoqenN
+    d8kQJW/SbExxZH5CX5DznvzUC3uapVn76XTNW43rNd9odW6O3a7KiHblASbKtpl9
+    oe5CJ+Klbc8CjsYB8eFIKMmsJm9U+INH1MC/a0K7WIoZL5XPhEf/AaClbo3n3zK+
+    4IG4T+kSHTuAQ+UoYG24jmsMmYMPv3ZlBf9p2zWRpLSOaf/77A5aekAx4N6fCavh
+    F7ft2g4sclwSYm26AMbWfYR748d6C62qfkWdhZL4puTkbmZyRZtgY1B9mXafKhDr
+    hT+xUq9bAgMBAAECggEBAJxMkg/9tcojsRFAQMp7Bh1j0TrrNSK6wEyEiEe/u9Xc
+    LRkzlU9cpzGZrmSON3ShCGFoOBTO2EJAXPqptG1BRIo7BWPapIWS/IH3DxjRKN1i
+    /vzUH386UBUOMeMDEj26AEPHRrAbm033+6e/PxedRdw93+awbzV0j8RUbiZnxV2E
+    qblyQ/JoRO1hGO6UA+HrDswUPq+dD3nJGTky7md6xUxSaCvJ/igcf3GhsM6UBcVK
+    SzKHtDOF6Mx3xjZEyVM4YxN087jLS0NS7Q9Ms544nj1wXUOvgzVdLvefWYhltdSx
+    uHJF23G3Vw4vQV9T1zIO8pvBfLawhD4WvYXDllBS8UkCgYEA/9r8uNyEgJfnb+iQ
+    tGLmenexvrqQKAWdom1DQe/rIzK9rulH8A+3Gr1AvEcACeSXsMY+RthMNo1PYyFl
+    whApqNsIRaVSE4JE5/7fAjYRHAO/DFapQAc95Y0r6wLjCGT7sL8e4TNvUg8vGulY
+    IuVC/v4fAhi12WkXwlGQcN+g+Y8CgYEAydavKGKcROkWO8r4VXQkw5YMSbEDqK8R
+    PH+CyJSgil4oPzpJQh/Ksh5HxuYfbt4H5wflHS9OHGv823c3Jww+Ls8VvpEuQ6+L
+    aBfAvR/LQz7VnCbCdI/EPAiXBQDMXVORk+0XGWZTvDkqrVjym6p2Ls8xJsCTrqQ6
+    NQIoVMaqz3UCgYBUFoHGs9rsdIBA3FtqnbKH/3ywZZppPOdA8c4QBqzuBYgny020
+    TUXtiNOUzXTqy3E7TPw8xmvN5gV4XAqYjD1U3J/MW/gspzzETpS2olRfM6//ex/n
+    BjpGjm4nr+wz3xSFU1rvwrrMamcd3iD0Xwr0yUoho0No78w6NhpVrnm2awKBgHJf
+    jhfzcRv3fRra1EgQLXkLgOENRsaCleDTXLfuyN4/pszVaYfn3gN69y91XaCEfrPj
+    HGiiUr/2TW3Lq1wcKux5epfnSvEd+4A73YMODi+H3qHCsPQ+N3PRZkp2flfwMBFE
+    C4/gFVkWh+F9AtVFDf1OeUq9W7Jd64H4PAR2I3q1AoGAdk8ImlF+/aL2Gy9WJkxi
+    AY86s4dRV7n+ZAKFxlOqwHDkWleGw4v4xlFhgk/rPq2kHKVaw1ai5leNNXd6sn4f
+    pZqEPhHE+ioLjXb1zOpiQfRuA84Fed8JNJNY5S7pyf5OdIuqYu9wfVYYne5HVxGv
+    +GYPeYy6sPaY45J7l/nTSDs=
+---
+spring:
+  profiles: prod
+
+gateway.url: v2.devops.oa.com
+proxy.url: http://idc.devops.oa.com/macosVm/proxy/sdk
+
+devCloud:
+  appId: 10008
+  token: oIdAd@ia2ts4RE89
+  url: http://api-idc.sgw.woa.com/bkdevops_token_prod/devcloud
+  smartProxyToken: 9c597cc44eb67ae649b203d4afe9b8a7b70ab2cf8c8277e28707
+
+---
+spring:
+  profiles: prod-gray
+
+---
+spring:
+  profiles: prod-auto
+
+---
+spring:
+  profiles: prod-gitci
+
+---
+spring:
+  profiles: prod-gitci-gray

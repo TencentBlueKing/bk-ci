@@ -25,20 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.devcloud
+dependencies {
+    api(project(":ext:tencent:dispatch-devcloud:api-dispatch-macos-tencent"))
+    api(project(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent"))
 
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
+    api(project(":core:common:common-dispatch-sdk"))
+    api(project(":core:common:common-service"))
+    api(project(":core:common:common-client"))
+    api(project(":core:common:common-redis"))
+    api(project(":core:common:common-db"))
+    api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:log:api-log"))
 
-@ComponentScan(
-    "com.tencent.devops.dispatch.devcloud",
-    "com.tencent.devops.dispatch.macos",
-    "com.tencent.devops.common.dispatch.sdk"
-)
-@MicroService
-class Application
+    api(project(":ext:tencent:common:common-devcloud"))
+    api(project(":ext:tencent:common:common-pipeline-tencent"))
 
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+    api("org.apache.commons:commons-collections4")
+    api("ch.qos.logback:logback-classic")
+    api("org.json:json")
+    api("io.github.openfeign.form:feign-form")
 }

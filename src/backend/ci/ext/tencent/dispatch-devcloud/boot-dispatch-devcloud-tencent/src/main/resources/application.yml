@@ -1,7 +1,12 @@
 # 该配置只能定义应用名， 其他配置信息请再devops-config修改
 spring:
+  main:
+    allow-bean-definition-overriding: true
   application:
-    name: dispatch-devcloud
+    name: dispatch-devcloud${service-suffix}
     desc: DevOps Dispatch DevCloud Service
     version: 4.0.0
     packageName: com.tencent.devops.dispatch.devcloud
+
+server:
+  port: 21942

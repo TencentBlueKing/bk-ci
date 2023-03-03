@@ -1,7 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.dao
 
-import com.tencent.devops.model.dispatch_devcloud.tables.TDevcloudBuild
-import com.tencent.devops.model.dispatch_devcloud.tables.records.TDevcloudBuildRecord
+import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudBuild
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import org.jooq.DSLContext
 import org.jooq.DatePart
 import org.jooq.Field
@@ -266,7 +266,7 @@ class DevCloudBuildDao {
 
 /*
 
-CREATE DATABASE `devops_dispatch_devcloud` /*!40100 DEFAULT CHARACTER SET utf8 */
+CREATE DATABASE `devops_dispatch.devcloud` /*!40100 DEFAULT CHARACTER SET utf8 */
 
 DROP TABLE IF EXISTS `T_DEVCLOUD_BUILD`;
 CREATE TABLE `T_DEVCLOUD_BUILD` (

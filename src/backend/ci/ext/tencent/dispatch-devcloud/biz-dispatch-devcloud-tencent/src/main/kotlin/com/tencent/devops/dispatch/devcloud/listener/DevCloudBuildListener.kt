@@ -110,7 +110,8 @@ class DevCloudBuildListener @Autowired constructor(
     private val shutdownLockBaseKey = "dispatch_devcloud_shutdown_lock_"
 
     private val devCloudHelpUrl =
-        "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>【DevCloud容器问题FAQ】</a>"
+        "<a target='_blank' href='https://iwiki.woa.com/pages/viewpage.action?pageId=218952404'>" +
+            "【DevCloud容器问题FAQ】</a>"
 
     override fun getShutdownQueue(): String {
         return ".devcloud.public"
@@ -223,22 +224,27 @@ class DevCloudBuildListener @Autowired constructor(
 
             // 用户第一次构建，或者用户更换了镜像，或者容器配置有变更，则重新创建容器。否则，使用已有容器，start起来即可
             if (null == lastIdleContainer || containerChanged) {
-                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create new container, poolNo: $poolNo")
+                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                                "create new container, poolNo: $poolNo")
                 createNewContainer(dispatchMessage, containerPool, poolNo)
             } else {
-                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} start idle container, containerName: $lastIdleContainer")
+                logger.info("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                                "start idle container, containerName: $lastIdleContainer")
                 startContainer(lastIdleContainer, dispatchMessage, poolNo)
             }
         } catch (e: BuildFailureException) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create devCloud failed. msg:${e.message}. \n$devCloudHelpUrl")
+            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                             "create devCloud failed. msg:${e.message}. \n$devCloudHelpUrl")
             onFailure(
                 e.errorType,
                 e.errorCode,
                 e.formatErrorMessage,
-                (e.message ?: "启动DevCloud构建容器失败，请联系devopsHelper反馈处理.") + "\n容器构建异常请参考：$devCloudHelpUrl"
+                (e.message ?: "启动DevCloud构建容器失败，请联系devopsHelper反馈处理.") +
+                    "\n容器构建异常请参考：$devCloudHelpUrl"
             )
         } catch (e: Exception) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} create devCloud failed, msg:${e.message}")
+            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                             "create devCloud failed, msg:${e.message}")
             if (e.message.equals("timeout")) {
                 onFailure(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorType,
@@ -329,7 +335,8 @@ class DevCloudBuildListener @Autowired constructor(
                     )
                 )
             )
-            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo createContainer, taskId:($devCloudTaskId)")
+            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                            "createContainer, taskId:($devCloudTaskId)")
             printLogs(this, "下发创建构建机请求成功，containerName: $createName 等待机器启动...")
 
             // 缓存创建容器信息，防止服务中断或重启引起的信息丢失
@@ -348,7 +355,8 @@ class DevCloudBuildListener @Autowired constructor(
             if (createResult.first == TaskStatus.SUCCEEDED) {
                 // 启动成功
                 val containerName = createResult.second
-                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
+                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                                "start dev cloud vm success, wait for agent startup...")
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
                 devCloudBuildDao.createOrUpdate(
@@ -439,7 +447,8 @@ class DevCloudBuildListener @Autowired constructor(
                 )
             )
 
-            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start container, taskId:($devCloudTaskId)")
+            logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                            "start container, taskId:($devCloudTaskId)")
             printLogs(this, "下发启动构建机请求成功，containerName: $containerName 等待机器启动...")
             buildContainerPoolNoDao.setDevCloudBuildLastContainer(
                 dslContext = dslContext,
@@ -462,7 +471,8 @@ class DevCloudBuildListener @Autowired constructor(
             if (startResult.first == TaskStatus.SUCCEEDED) {
                 // 启动成功
                 val instContainerName = startResult.second
-                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start dev cloud vm success, wait for agent startup...")
+                logger.info("buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
+                                "start dev cloud vm success, wait for agent startup...")
                 printLogs(this, "构建机启动成功，等待Agent启动...")
 
                 devCloudBuildDao.createOrUpdate(
@@ -539,7 +549,10 @@ class DevCloudBuildListener @Autowired constructor(
             if (dispatchMessage.dispatchMessage.startsWith(registryHost!!)) {
                 Pool(dispatchMessage.dispatchMessage, Credential(registryUser!!, registryPwd!!))
             } else {
-                Pool(registryHost + "/" + dispatchMessage.dispatchMessage, Credential(registryUser!!, registryPwd!!))
+                Pool(
+                    registryHost + "/" + dispatchMessage.dispatchMessage,
+                    Credential(registryUser!!, registryPwd!!)
+                )
             }
         }
 
@@ -639,7 +652,8 @@ class DevCloudBuildListener @Autowired constructor(
 
         containerNameList.filter { it.second != null }.forEach {
             try {
-                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud container,vmSeqId: ${it.first}, containerName:${it.second}")
+                logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                                "stop dev cloud container,vmSeqId: ${it.first}, containerName:${it.second}")
                 val taskId = dispatchDevCloudClient.operateContainer(
                     projectId = event.projectId,
                     pipelineId = event.pipelineId,
@@ -656,14 +670,17 @@ class DevCloudBuildListener @Autowired constructor(
                     taskId
                 )
                 if (opResult.first == TaskStatus.SUCCEEDED) {
-                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm success.")
+                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                                    "stop dev cloud vm success.")
                 } else {
                     // TODO 告警通知
-                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed, msg: ${opResult.second}")
+                    logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                                    "stop dev cloud vm failed, msg: ${opResult.second}")
                 }
             } catch (e: Exception) {
                 logger.error(
-                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] stop dev cloud vm failed. containerName: ${it.second}",
+                    "[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                        "stop dev cloud vm failed. containerName: ${it.second}",
                     e
                 )
             } finally {
@@ -679,7 +696,8 @@ class DevCloudBuildListener @Autowired constructor(
             event.executeCount ?: 1
         )
         containerPoolList.filter { it.second != null }.forEach {
-            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
+            logger.info("[${event.buildId}]|[${event.vmSeqId}]|[${event.executeCount}] " +
+                            "update status in db,vmSeqId: ${it.first}, poolNo:${it.second}")
             devCloudBuildDao.updateStatus(
                 dslContext,
                 event.pipelineId,
@@ -797,12 +815,16 @@ class DevCloudBuildListener @Autowired constructor(
                     )
                     val actionCode = statusResponse.optInt("actionCode")
                     if (actionCode == 200) {
-                        if ("stopped" == statusResponse.optString("data") || "stop" == statusResponse.optString("data")) {
+                        if ("stopped" == statusResponse.optString("data") ||
+                            "stop" == statusResponse.optString("data")) {
                             var containerChanged = false
                             // 查看构建性能配置是否变更
-                            if (threadLocalCpu.get() != containerInfo.cpu || threadLocalDisk.get() != containerInfo.disk || threadLocalMemory.get() != containerInfo.memory) {
+                            if (threadLocalCpu.get() != containerInfo.cpu ||
+                                threadLocalDisk.get() != containerInfo.disk ||
+                                threadLocalMemory.get() != containerInfo.memory) {
                                 containerChanged = true
-                                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} performanceConfig changed.")
+                                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId}" +
+                                                " performanceConfig changed.")
                             }
 
                             // 镜像是否变更
@@ -862,7 +884,10 @@ class DevCloudBuildListener @Autowired constructor(
             if (dispatchMessage.dispatchMessage.startsWith(registryHost!!)) {
                 Pool(dispatchMessage.dispatchMessage, Credential(registryUser!!, registryPwd!!))
             } else {
-                Pool(registryHost + "/" + dispatchMessage.dispatchMessage, Credential(registryUser!!, registryPwd!!))
+                Pool(
+                    registryHost + "/" + dispatchMessage.dispatchMessage,
+                    Credential(registryUser!!, registryPwd!!)
+                )
             }
         }
 
@@ -874,13 +899,16 @@ class DevCloudBuildListener @Autowired constructor(
 
         // 兼容旧版本，数据库中存储的非pool结构值
         if (lastContainerPool != null) {
-            if (lastContainerPool.container != containerPool.container || lastContainerPool.credential != containerPool.credential) {
-                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} image changed. old image: $lastContainerPool, new image: $containerPool")
+            if (lastContainerPool.container != containerPool.container ||
+                lastContainerPool.credential != containerPool.credential) {
+                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                                "old image: $lastContainerPool, new image: $containerPool")
                 return true
             }
         } else {
             if (containerPool.container != images && dispatchMessage.dispatchMessage != images) {
-                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} image changed. old image: $images, new image: ${dispatchMessage.dispatchMessage}")
+                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId} image changed. " +
+                                "old image: $images, new image: ${dispatchMessage.dispatchMessage}")
                 return true
             }
         }
@@ -891,7 +919,8 @@ class DevCloudBuildListener @Autowired constructor(
     private fun clearExceptionContainer(dispatchMessage: DispatchMessage, containerName: String) {
         try {
             // 下发删除，不管成功失败
-            logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, userId: ${dispatchMessage.userId}, containerName: $containerName")
+            logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] Delete container, " +
+                            "userId: ${dispatchMessage.userId}, containerName: $containerName")
             dispatchDevCloudClient.operateContainer(
                 projectId = dispatchMessage.projectId,
                 pipelineId = dispatchMessage.pipelineId,

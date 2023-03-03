@@ -1,7 +1,7 @@
 package com.tencent.devops.dispatch.devcloud.dao
 
-import com.tencent.devops.model.dispatch_devcloud.tables.TDevcloudPerformanceConfig
-import com.tencent.devops.model.dispatch_devcloud.tables.TDevcloudPerformanceOptions
+import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudPerformanceConfig
+import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudPerformanceOptions
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record5
