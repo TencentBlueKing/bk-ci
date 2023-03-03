@@ -19,10 +19,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubDatabaseResource
 import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.repository.api.github.ServiceGithubRepositoryResource
 import com.tencent.devops.repository.api.github.ServiceGithubUserResource
-import com.tencent.devops.repository.api.scm.ServiceGitResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
-import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
-import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
