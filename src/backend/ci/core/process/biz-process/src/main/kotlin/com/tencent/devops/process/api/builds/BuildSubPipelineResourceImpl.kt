@@ -31,6 +31,8 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.annotation.BuildApiPermission
+import com.tencent.devops.common.web.constant.BuildApiHandleType
 import com.tencent.devops.process.pojo.PipelineId
 import com.tencent.devops.process.pojo.pipeline.ProjectBuildId
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStartUpInfo
@@ -90,6 +92,7 @@ class BuildSubPipelineResourceImpl @Autowired constructor(
         )
     }
 
+    @BuildApiPermission([BuildApiHandleType.UNAUTHORIZED])
     override fun getSubPipelineStatus(
         projectId: String,
         pipelineId: String,

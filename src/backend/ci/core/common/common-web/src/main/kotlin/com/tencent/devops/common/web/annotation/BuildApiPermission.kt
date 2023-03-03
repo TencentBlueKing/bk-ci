@@ -1,7 +1,6 @@
 package com.tencent.devops.common.web.annotation
 
 import com.tencent.devops.common.web.constant.BuildApiHandleType
-import java.lang.annotation.Inherited
 
 /**
  * BuildAPI校验
@@ -10,7 +9,6 @@ import java.lang.annotation.Inherited
  * 使用方式: 在BuildAPI的实现方法上加上此注解
  */
 @Target(AnnotationTarget.FUNCTION)
-@Inherited
 @Retention(AnnotationRetention.RUNTIME)
 annotation class BuildApiPermission(
     val types: Array<BuildApiHandleType>
