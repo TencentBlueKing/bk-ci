@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.devcloud
 
+import com.tencent.devops.common.dispatch.sdk.config.MQConfiguration
 import com.tencent.devops.common.service.MicroService
 import com.tencent.devops.common.service.MicroServiceApplication
 import org.springframework.context.annotation.ComponentScan
@@ -35,6 +36,10 @@ import org.springframework.context.annotation.ComponentScan
     "com.tencent.devops.dispatch.devcloud",
     "com.tencent.devops.dispatch.macos",
     "com.tencent.devops.common.dispatch.sdk"
+)
+@ComponentScan(
+    basePackages = ["com.tencent.devops.common.dispatch.sdk"],
+    excludeFilters = [ComponentScan.Filter(MQConfiguration::class)]
 )
 @MicroService
 class Application
