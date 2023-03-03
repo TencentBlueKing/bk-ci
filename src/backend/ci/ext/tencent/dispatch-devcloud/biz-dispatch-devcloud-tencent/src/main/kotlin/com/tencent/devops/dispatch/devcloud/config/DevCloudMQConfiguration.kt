@@ -27,6 +27,8 @@
 
 package com.tencent.devops.dispatch.devcloud.config
 
+import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
@@ -44,6 +46,7 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.core.Ordered
@@ -64,6 +67,22 @@ class DevCloudMQConfiguration @Autowired constructor() {
 
     @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
     private val agentStartQueueMaxConcurrency: Int = 100
+
+    @Bean
+    @ConditionalOnMissingBean(RabbitAdmin::class)
+    fun rabbitAdmin(connectionFactory: ConnectionFactory): RabbitAdmin {
+        return RabbitAdmin(connectionFactory)
+    }
+
+    @Bean
+    fun exchange(): DirectExchange {
+        val directExchange = DirectExchange(MQ.EXCHANGE_AGENT_LISTENER_DIRECT, true, false)
+        directExchange.isDelayed = true
+        return directExchange
+    }
+
+    @Bean
+    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     /**
      * 启动构建队列
