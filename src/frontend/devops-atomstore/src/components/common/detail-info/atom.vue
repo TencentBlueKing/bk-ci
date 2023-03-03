@@ -48,8 +48,9 @@
                     <span class="ml6">{{ detail.score }}</span>
                 </section>
                 <section class="num-wraper">
-                    <img class="hot-icon" src="../../../images/hot.png">
-                    <span class="ml3">{{ detail.recentExecuteNum }}</span>
+                    <img v-if="atom.hotFlag" class="hot-icon" src="../../../images/hot-red.png">
+                    <img v-else class="hot-icon" src="../../../images/hot.png">
+                    <span class="ml3">{{ getShowNum(detail.recentExecuteNum) }}</span>
                 </section>
             </h3>
             <h5 class="detail-info">
@@ -307,6 +308,14 @@
                         from: 'details'
                     }
                 })
+            },
+
+            getShowNum (num) {
+                if (+num > 10000) {
+                    return Math.floor(+num / 10000) + 'W+'
+                } else {
+                    return num
+                }
             }
         }
     }
