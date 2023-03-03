@@ -317,7 +317,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
         val projectInfo =
             getByEnglishName(userId = userId, englishName = englishName, accessToken = accessToken) ?: return null
-        if (projectInfo.approvalStatus != ProjectApproveStatus.CREATE_PENDING.status) {
+        val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+        if (approvalStatus.isSuccess()) {
             val verify = validatePermission(
                 userId = userId,
                 projectCode = englishName,

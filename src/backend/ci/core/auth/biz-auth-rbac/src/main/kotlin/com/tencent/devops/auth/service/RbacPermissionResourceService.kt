@@ -68,7 +68,7 @@ class RbacPermissionResourceService(
         resourceName: String
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
-        val iamResourceCode = authResourceCodeConverter.code2IamCode(
+        val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
         )

@@ -203,7 +203,7 @@ class AuthResourceDao {
         }
     }
 
-    fun getResourceCodeByIamCode(
+    fun getResourceCodeByIamCodes(
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
