@@ -59,7 +59,7 @@ const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
   // merge payload
   const body = config.disabledResponseType ? payload : JSON.stringify(payload)
   if (methodsWithData.includes(method)) {
-    fetchConfig = deepMerge(fetchConfig, { body });
+    fetchConfig = deepMerge(fetchConfig, { body }, payload);
   } else {
     fetchConfig = deepMerge(fetchConfig, payload);
   }

@@ -8,7 +8,7 @@ import {
 const { t } = useI18n();
 
 const navs = ref([
-  { name: '我的权限', url: '' },
+  { name: t('我的权限'), url: '' },
 ]);
 </script>
 

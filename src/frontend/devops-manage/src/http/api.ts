@@ -11,6 +11,14 @@ export default {
     return http.get(`${PROJECT_PERFIX}/user/users`);
   },
 
+  validateProjectName(name: string) {
+    return http.put(`${PROJECT_PERFIX}/user/projects/project_name/names/validate/?name=${name}`, { globalError: false })
+  },
+
+  validateEnglishName(name: string) {
+    return http.put(`${PROJECT_PERFIX}/user/projects/english_name/names/validate/?name=${name}`, { globalError: false })
+  },
+
   getUserDetail() {
     return http.get(`${PROJECT_PERFIX}/user/users/detail/`);
   },

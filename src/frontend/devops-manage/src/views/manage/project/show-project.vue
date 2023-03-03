@@ -425,11 +425,11 @@ onMounted(async () => {
         v-else
         class="content-main mt20"
         type="403"
-        title="无业务权限"
-        description="你没有相应业务的访问权限，请前往申请相关业务权限"
+        :title="t('无业务权限')"
+        :description="t('你没有相应业务的访问权限，请前往申请相关业务权限')"
       >
         <bk-button theme="primary" @click="handleNoPermission">
-          去申请
+          {{ t('去申请') }}
         </bk-button>
       </bk-exception>
     </article>

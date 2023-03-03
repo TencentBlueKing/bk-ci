@@ -15,6 +15,7 @@ export default (error: any, config: IFetchConfig) => {
   }
   // 全局捕获错误给出提示
   if (config.globalError) {
+    console.log(config, 123)
     Message({ theme: 'error', message });
   }
   return Promise.reject(error);
