@@ -267,7 +267,7 @@ class TxStoreIndexCronService(
                         elementValue = "- （近一月未运行）"
                         elementValue
                     } else {
-                        "$elementValue%(${if (complianceRate > 99.9) "达标" else "不达标"}"
+                        "$elementValue%(${if (complianceRate > 99.9) "达标" else "不达标"}）"
                     }
                     val tStoreIndexElementDetailRecord1 = TStoreIndexElementDetailRecord()
                     tStoreIndexElementDetailRecord1.id = UUIDUtil.generate()
