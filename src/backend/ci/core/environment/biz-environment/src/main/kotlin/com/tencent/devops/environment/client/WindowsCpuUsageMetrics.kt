@@ -48,10 +48,14 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         private const val usage_user_idx = 1
         private const val usage_interrupt_idx = 2
 
+        private const val k_usage_privileged = "usage_privileged"
+        private const val k_usage_user = "usage_user"
+        private const val k_usage_interrupt = "usage_interrupt"
+
         private val emptyCpuMetrics = mapOf(
-            f_cpu_usage_system to UsageMetrics.emptyMetrics,
-            f_cpu_usage_user to UsageMetrics.emptyMetrics,
-            f_cpu_usage_interrupt to UsageMetrics.emptyMetrics
+            k_usage_privileged to UsageMetrics.emptyMetrics,
+            k_usage_user to UsageMetrics.emptyMetrics,
+            k_usage_interrupt to UsageMetrics.emptyMetrics
         )
     }
 
@@ -84,10 +88,10 @@ class WindowsCpuUsageMetrics @Autowired constructor(val influxdbClient: Influxdb
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData[f_cpu_usage_system] = loadSerialData(queryResult.results[usage_privileged_idx], f_cpu_usage_system)
-        resultData[f_cpu_usage_user] = loadSerialData(queryResult.results[usage_user_idx], f_cpu_usage_user)
-        resultData[f_cpu_usage_interrupt] =
-            loadSerialData(queryResult.results[usage_interrupt_idx], f_cpu_usage_interrupt)
+        resultData[k_usage_privileged] = loadSerialData(queryResult.results[usage_privileged_idx], k_usage_privileged)
+        resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
+        resultData[k_usage_interrupt] =
+            loadSerialData(queryResult.results[usage_interrupt_idx], k_usage_interrupt)
         return resultData
     }
 }

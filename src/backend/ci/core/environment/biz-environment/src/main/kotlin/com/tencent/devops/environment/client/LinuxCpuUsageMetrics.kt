@@ -50,11 +50,16 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         private const val usage_user_idx = 2
         private const val usage_system_idx = 3
 
+        private const val k_usage_idle = "usage_idle"
+        private const val k_usage_iowait = "usage_iowait"
+        private const val k_usage_user = "usage_user"
+        private const val k_usage_system = "usage_system"
+
         private val emptyCpuMetrics = mapOf(
-            f_cpu_usage_idle to UsageMetrics.emptyMetrics,
-            f_cpu_usage_iowait to UsageMetrics.emptyMetrics,
-            f_cpu_usage_user to UsageMetrics.emptyMetrics,
-            f_cpu_usage_system to UsageMetrics.emptyMetrics
+            k_usage_idle to UsageMetrics.emptyMetrics,
+            k_usage_iowait to UsageMetrics.emptyMetrics,
+            k_usage_user to UsageMetrics.emptyMetrics,
+            k_usage_system to UsageMetrics.emptyMetrics
         )
     }
 
@@ -89,10 +94,10 @@ class LinuxCpuUsageMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData[f_cpu_usage_idle] = loadSerialData(queryResult.results[usage_idle_idx], f_cpu_usage_idle)
-        resultData[f_cpu_usage_iowait] = loadSerialData(queryResult.results[usage_iowait_idx], f_cpu_usage_iowait)
-        resultData[f_cpu_usage_user] = loadSerialData(queryResult.results[usage_user_idx], f_cpu_usage_user)
-        resultData[f_cpu_usage_system] = loadSerialData(queryResult.results[usage_system_idx], f_cpu_usage_system)
+        resultData[k_usage_idle] = loadSerialData(queryResult.results[usage_idle_idx], k_usage_idle)
+        resultData[k_usage_iowait] = loadSerialData(queryResult.results[usage_iowait_idx], k_usage_iowait)
+        resultData[k_usage_user] = loadSerialData(queryResult.results[usage_user_idx], k_usage_user)
+        resultData[k_usage_system] = loadSerialData(queryResult.results[usage_system_idx], k_usage_system)
         return resultData
     }
 }

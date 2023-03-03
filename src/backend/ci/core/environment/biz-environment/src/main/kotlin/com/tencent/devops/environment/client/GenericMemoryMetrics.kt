@@ -42,7 +42,8 @@ import javax.annotation.PostConstruct
 class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbClient) : UsageMetrics {
 
     companion object {
-        private val emptyMemoryMetrics = mapOf(f_mem_used_percent to listOf(mapOf("time" to "0")))
+        private const val k_used_percent = "used_percent"
+        private val emptyMemoryMetrics = mapOf(k_used_percent to listOf(mapOf("time" to "0")))
     }
 
     @PostConstruct
@@ -67,7 +68,7 @@ class GenericMemoryMetrics @Autowired constructor(val influxdbClient: InfluxdbCl
         }
 
         val resultData = mutableMapOf<String, List<Map<String, Any>>>()
-        resultData[f_mem_used_percent] = loadSerialData(queryResult.results[0], f_mem_used_percent)
+        resultData[k_used_percent] = loadSerialData(queryResult.results[0], k_used_percent)
         return resultData
     }
 }
