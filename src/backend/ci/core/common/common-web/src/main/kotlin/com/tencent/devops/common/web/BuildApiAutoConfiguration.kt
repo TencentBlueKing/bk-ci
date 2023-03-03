@@ -27,7 +27,6 @@
 
 package com.tencent.devops.common.web
 
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.aop.BuildApiAspect
 import org.springframework.beans.factory.annotation.Configurable
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
@@ -39,5 +38,5 @@ import org.springframework.core.Ordered
 class BuildApiAutoConfiguration {
 
     @Bean
-    fun buildApiAspect(cline: Client) = BuildApiAspect(cline)
+    fun buildApiAspect() = BuildApiAspect()
 }
