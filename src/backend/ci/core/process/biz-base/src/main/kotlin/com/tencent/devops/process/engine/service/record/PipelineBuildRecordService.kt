@@ -112,21 +112,6 @@ class PipelineBuildRecordService @Autowired constructor(
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
     }
 
-    fun batchGet(
-        transactionContext: DSLContext?,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int
-    ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
-        val context = transactionContext ?: dslContext
-        return Triple(
-            recordStageDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordContainerDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordTaskDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount)
-        )
-    }
-
     fun batchSave(
         transactionContext: DSLContext?,
         model: BuildRecordModel,

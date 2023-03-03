@@ -92,7 +92,6 @@ class InitializeMatrixGroupStageCmd(
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val modelContainerIdGenerator: ModelContainerIdGenerator,
-    private val modelTaskIdGenerator: ModelTaskIdGenerator,
     private val dispatchTypeParser: DispatchTypeParser,
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation
@@ -271,7 +270,7 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, postParentIdMap
+                        modelContainer.elements, context.executeCount, postParentIdMap, contextCase.hashCode()
                     )
                     val newContainer = VMBuildContainer(
                         name = EnvReplacementParser.parse(modelContainer.name, allContext, asCodeEnabled, contextPair),
@@ -381,7 +380,7 @@ class InitializeMatrixGroupStageCmd(
                     // 刷新所有插件的ID，并生成对应的纯状态插件
                     val postParentIdMap = mutableMapOf<String, String>()
                     val statusElements = generateMatrixElements(
-                        modelContainer.elements, context.executeCount, postParentIdMap
+                        modelContainer.elements, context.executeCount, postParentIdMap, contextCase.hashCode()
                     )
                     val replacement = if (asCodeEnabled) {
                         EnvReplacementParser.getCustomExecutionContextByMap(variables)
@@ -550,12 +549,13 @@ class InitializeMatrixGroupStageCmd(
     private fun generateMatrixElements(
         elements: List<Element>,
         executeCount: Int,
-        postParentIdMap: MutableMap<String, String>
+        postParentIdMap: MutableMap<String, String>,
+        contextCaseHash: Int
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
         return elements.map { e ->
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
-            val newTaskId = modelTaskIdGenerator.getNextId()
+            val newTaskId = "${e.id!!}-$contextCaseHash"
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
             e.additionalOptions?.elementPostInfo?.parentElementId?.let { originId ->
