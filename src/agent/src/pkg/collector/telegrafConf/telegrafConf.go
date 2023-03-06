@@ -28,98 +28,151 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
- package telegrafconf
+package telegrafconf
 
- const TelegrafConf = `
+const TelegrafConf = `
  [global_tags]
-   projectId = "##{projectId}##"
-   agentId = "##{agentId}##"
-   agentSecret = "##{agentSecretKey}##"
- [agent]
-   interval = "1m"
-   round_interval = true
-   metric_batch_size = 1000
-   metric_buffer_limit = 10000
-   collection_jitter = "0s"
-   flush_interval = "1m"
-   flush_jitter = "0s"
-   precision = ""
-   debug = false
-   quiet = false
-   logfile = ""
-   hostname = ""
-   omit_hostname = false
- [[outputs.influxdb]]
-   urls = ["##{gateway}##/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-   database = "agentMetrix"
-   skip_database_creation = true
-   ##{tls_ca}##
- [[inputs.cpu]]
-   percpu = true
-   totalcpu = true
-   collect_cpu_time = false
-   report_active = false
- [[inputs.disk]]
-   ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
- [[inputs.diskio]]
- [[inputs.kernel]]
- [[inputs.mem]]
- [[inputs.processes]]
- # [[inputs.swap]]
- [[inputs.system]]
- [[inputs.net]]
- 
- [[processors.rename]]
-   # cpu
-   [[processors.rename.replace]]
-     measurement = "cpu"
-     dest = "system.cpu_summary"
-   [[processors.rename.replace]]
-     field = "usage_user"
-     dest = "user"
-   [[processors.rename.replace]]
-     field = "usage_system"
-     dest = "system"
-   [[processors.rename.replace]]
-     field = "usage_idle"
-     dest = "idle"
-   [[processors.rename.replace]]
-     field = "usage_iowait"
-     dest = "iowait"   
-   # net
-   [[processors.rename.replace]]
-     measurement = "net"
-     dest = "system.net"
-   [[processors.rename.replace]]
-     field = "bytes_recv"
-     dest = "speed_recv"
-   [[processors.rename.replace]]
-     field = "bytes_sent"
-     dest = "speed_sent"
-   # mem
-   [[processors.rename.replace]]
-     measurement = "mem"
-     dest = "system.mem"
-   [[processors.rename.replace]]
-     field = "used_percent"
-     dest = "pct_used"
-   # diskio
-   [[processors.rename.replace]]
-     measurement = "diskio"
-     dest = "system.io"
-   [[processors.rename.replace]]
-     field = "read_bytes"
-     dest = "rkb_s"
-   [[processors.rename.replace]]
-     field = "write_bytes"
-     dest = "wkb_s"
-   # disk
-   [[processors.rename.replace]]
-     measurement = "disk"
-     dest = "system.disk"
-   [[processors.rename.replace]]
-     field = "used_percent"
-     dest = "in_use"    
+  projectId = "###{projectId}###"
+  agentId = "###{agentId}###"
+  agentSecret = "###{agentSecret}###"
+[agent]
+  interval = "1m"
+  round_interval = true
+  metric_batch_size = 1000
+  metric_buffer_limit = 10000
+  collection_jitter = "0s"
+  flush_interval = "1m"
+  flush_jitter = "0s"
+  precision = ""
+  debug = false
+  quiet = false
+  logfile = ""
+  hostname = ""
+  omit_hostname = false
+[[outputs.influxdb]]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  database = "agentMetrix"
+  skip_database_creation = true
+  ###{tls_ca}###
+[[inputs.cpu]]
+  percpu = true
+  totalcpu = true
+  collect_cpu_time = false
+  report_active = false
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.diskio]]
+[[inputs.mem]]
+[[inputs.net]]
+[[inputs.system]]
+[[inputs.netstat]]
+[[inputs.swap]]
+
+[[processors.rename]]
+  # cpu
+  [[processors.rename.replace]]
+    measurement = "cpu"
+    dest = "system.cpu_detail"
+  [[processors.rename.replace]]
+    field = "usage_user"
+    dest = "user"
+  [[processors.rename.replace]]
+    field = "usage_system"
+    dest = "system"
+  [[processors.rename.replace]]
+    field = "usage_idle"
+    dest = "idle"
+  [[processors.rename.replace]]
+    field = "usage_iowait"
+    dest = "iowait"   
+  # net
+  [[processors.rename.replace]]
+    measurement = "net"
+    dest = "system.net"
+  [[processors.rename.replace]]
+    field = "bytes_recv"
+    dest = "speed_recv"
+  [[processors.rename.replace]]
+    field = "bytes_sent"
+    dest = "speed_sent"
+  [[processors.rename.replace]]
+    field = "packets_recv"
+    dest = "speed_packets_recv"
+  [[processors.rename.replace]]
+    field = "packets_sent"
+    dest = "speed_packets_sent"  
+  # mem
+  [[processors.rename.replace]]
+    measurement = "mem"
+    dest = "system.mem"
+  [[processors.rename.replace]]
+    field = "used_percent"
+    dest = "pct_used"
+  # diskio
+  [[processors.rename.replace]]
+    measurement = "diskio"
+    dest = "system.io"
+  [[processors.rename.replace]]
+    field = "read_bytes"
+    dest = "rkb_s"
+  [[processors.rename.replace]]
+    field = "write_bytes"
+    dest = "wkb_s"  
+  # netstat
+  [[processors.rename.replace]]
+    measurement = "netstat"
+    dest = "system.netstat"
+  [[processors.rename.replace]]
+    field = "tcp_close_wait"
+    dest = "cur_tcp_closewait"
+  [[processors.rename.replace]]
+    field = "tcp_time_wait"
+    dest = "cur_tcp_timewait"
+  [[processors.rename.replace]]
+    field = "tcp_close"
+    dest = "cur_tcp_closed"
+  [[processors.rename.replace]]
+    field = "tcp_closing"
+    dest = "cur_tcp_closing"
+  [[processors.rename.replace]]
+    field = "tcp_established"
+    dest = "cur_tcp_estab"  
+  [[processors.rename.replace]]
+    field = "tcp_fin_wait1"
+    dest = "cur_tcp_finwait1"  
+  [[processors.rename.replace]]
+    field = "tcp_fin_wait2"
+    dest = "cur_tcp_finwait2"  
+  [[processors.rename.replace]]
+    field = "tcp_last_ack"
+    dest = "cur_tcp_lastack"    
+  [[processors.rename.replace]]
+    field = "tcp_listen"
+    dest = "cur_tcp_listen"      
+  [[processors.rename.replace]]
+    field = "tcp_syn_recv"
+    dest = "cur_tcp_syn_recv"
+  [[processors.rename.replace]]
+    field = "tcp_syn_sent"
+    dest = "cur_tcp_syn_sent"  
+  # swap
+  [[processors.rename.replace]]
+    measurement = "swap"
+    dest = "system.swap"
+  # load
+  [[processors.rename.replace]]
+    measurement = "system"
+    dest = "system.load"  
+
+# disk的指标同名但改完名不同单独拿出来    
+[[processors.rename]]
+  namepass = ["disk"]
+  # disk
+  [[processors.rename.replace]]
+    measurement = "disk"
+    dest = "system.disk"
+  [[processors.rename.replace]]
+    field = "used_percent"
+    dest = "in_use"      
  
  `
- 
