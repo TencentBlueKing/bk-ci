@@ -3,7 +3,6 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.HTTP_200
 import com.tencent.devops.common.api.constant.HttpStatus
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -27,7 +26,6 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import okhttp3.Response
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -84,7 +82,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if ( HttpStatus.OK.value == environmentOpRsp.code) {
+                if (HttpStatus.OK.value == environmentOpRsp.code) {
                     return environmentOpRsp.data
                 } else {
                     throw BuildFailureException(
