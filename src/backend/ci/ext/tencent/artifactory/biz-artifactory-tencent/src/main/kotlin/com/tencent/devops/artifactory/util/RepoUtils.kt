@@ -51,6 +51,7 @@ object RepoUtils {
             ArtifactoryType.PIPELINE -> PIPELINE_REPO
             ArtifactoryType.CUSTOM_DIR -> CUSTOM_REPO
             ArtifactoryType.IMAGE -> IMAGE_REPO
+            ArtifactoryType.REPORT -> REPORT_REPO
         }
     }
 

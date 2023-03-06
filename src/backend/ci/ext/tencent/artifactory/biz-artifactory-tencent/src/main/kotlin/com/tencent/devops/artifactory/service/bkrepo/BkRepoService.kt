@@ -111,8 +111,8 @@ class BkRepoService @Autowired constructor(
             ArtifactoryType.CUSTOM_DIR -> {
                 bkRepoCustomDirService.list(userId, projectId, path)
             }
-            // 镜像不支持按路径查询列表
-            ArtifactoryType.IMAGE -> throw ErrorCodeException(
+            // 镜像/报告不支持按路径查询列表
+            else -> throw ErrorCodeException(
                 errorCode = CommonMessageCode.PARAMETER_IS_INVALID,
                 params = arrayOf(ArtifactoryType.IMAGE.name)
             )
