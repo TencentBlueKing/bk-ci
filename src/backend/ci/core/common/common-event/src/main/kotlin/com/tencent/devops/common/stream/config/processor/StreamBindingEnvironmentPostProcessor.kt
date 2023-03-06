@@ -153,7 +153,7 @@ class StreamBindingEnvironmentPostProcessor : EnvironmentPostProcessor, Ordered 
             setProperty("$pulsarPropPrefix.consumer.subscriptionMode", SubscriptionMode.NonDurable.name)
             setProperty("$pulsarPropPrefix.consumer.subscriptionName", hostName)
         } else {
-            setProperty("$bindingPrefix.group",  consumer.group)
+            setProperty("$bindingPrefix.group", consumer.group)
         }
 
         setProperty("$rabbitPropPrefix.consumer.delayedExchange", "true")

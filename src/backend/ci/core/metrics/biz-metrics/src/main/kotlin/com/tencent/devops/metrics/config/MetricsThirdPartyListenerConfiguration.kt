@@ -29,8 +29,6 @@ package com.tencent.devops.metrics.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.EXCHANGE_QUALITY_DAILY_FANOUT
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.QUEUE_QUALITY_DAILY_EVENT
 import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener

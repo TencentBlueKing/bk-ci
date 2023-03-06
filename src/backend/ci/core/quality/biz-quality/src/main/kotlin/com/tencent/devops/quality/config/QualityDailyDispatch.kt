@@ -30,7 +30,6 @@ package com.tencent.devops.quality.config
 import com.rabbitmq.client.ChannelContinuationTimeoutException
 import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.RabbitEvent
-import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate

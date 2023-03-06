@@ -3,7 +3,6 @@ package com.tencent.devops.notify.blueking.config
 import com.tencent.devops.notify.blueking.service.inner.EmailServiceImpl
 import com.tencent.devops.notify.blueking.utils.NotifyService
 import com.tencent.devops.notify.dao.EmailNotifyDao
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean

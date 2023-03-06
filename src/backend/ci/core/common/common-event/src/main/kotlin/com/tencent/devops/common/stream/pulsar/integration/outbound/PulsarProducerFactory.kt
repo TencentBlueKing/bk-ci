@@ -37,7 +37,6 @@ import org.apache.pulsar.client.api.HashingScheme
 import org.apache.pulsar.client.api.MessageRoutingMode
 import org.apache.pulsar.client.api.Producer
 import org.apache.pulsar.client.api.ProducerCryptoFailureAction
-import org.apache.pulsar.client.api.SubscriptionType
 import java.util.concurrent.TimeUnit
 
 object PulsarProducerFactory {

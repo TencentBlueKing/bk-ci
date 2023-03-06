@@ -1,10 +1,7 @@
-// go:build out
-// +build out
-
 /*
  * Tencent is pleased to support the open source community by making BK-CI 蓝鲸持续集成平台 available.
  *
- * Copyright (C) 2021 THL A29 Limited, a Tencent company.  All rights reserved.
+ * Copyright (C) 2019 THL A29 Limited, a Tencent company.  All rights reserved.
  *
  * BK-CI 蓝鲸持续集成平台 is licensed under the MIT license.
  *
@@ -28,17 +25,33 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.stream.config
+package com.tencent.devops.common.event.dispatcher.mq
 
-import com.tencent.devops.common.stream.config.processor.StreamBindingEnvironmentPostProcessor
-import org.springframework.context.annotation.Bean
-import org.springframework.context.annotation.Configuration
+import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
+import org.slf4j.LoggerFactory
+import org.springframework.cloud.stream.function.StreamBridge
 
-@Configuration
-class StreamBindingConfiguration {
+/**
+ * 基于MQ实现的流水线事件下发器
+ *
+ * @version 1.0
+ */
+class MQEventDispatcher constructor(
+    private val streamBridge: StreamBridge
+) : PipelineEventDispatcher {
 
-    @Bean
-    fun streamBindingEnvironmentPostProcessor(): StreamBindingEnvironmentPostProcessor {
-        return StreamBindingEnvironmentPostProcessor()
+    override fun dispatch(vararg events: IPipelineEvent) {
+        events.forEach { event ->
+            try {
+                event.sendTo(bridge = streamBridge)
+            } catch (ignored: Exception) {
+                logger.error("[ENGINE_MQ_SEVERE] Fail to dispatch the event($event)", ignored)
+            }
+        }
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MQEventDispatcher::class.java)
     }
 }
