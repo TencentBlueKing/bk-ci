@@ -209,7 +209,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 defaultMessage = "请联系流水线负责人授予下载构件权限。"
             )
         }
-        val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
+        val pipelineId = fileDetail.meta["pipelineId"]?.toString() ?: StringUtils.EMPTY
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
         val pipelineInfo = if (pipelineId != StringUtils.EMPTY) {
             client.get(ServicePipelineResource::class).getPipelineInfo(projectId, pipelineId, null).data
@@ -236,16 +236,18 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 createdTime = fileDetail.createdTime,
                 projectName = projectName,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
-                creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID] ?: StringUtils.EMPTY,
-                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER] ?: StringUtils.EMPTY,
-                logoUrl = UrlUtil.toOuterPhotoAddr(fileDetail.meta[ARCHIVE_PROPS_APP_ICON] ?: backUpIcon.value),
+                creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID]?.toString() ?: StringUtils.EMPTY,
+                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString() ?: StringUtils.EMPTY,
+                logoUrl = UrlUtil.toOuterPhotoAddr(
+                    fileDetail.meta[ARCHIVE_PROPS_APP_ICON]?.toString() ?: backUpIcon.value
+                ),
                 path = fileDetail.path,
                 fullName = fileDetail.fullName,
                 fullPath = fileDetail.fullPath,
                 artifactoryType = artifactoryType,
                 modifiedTime = fileDetail.modifiedTime,
                 md5 = fileDetail.checksums.md5,
-                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO], 0),
+                buildNum = NumberUtils.toInt(fileDetail.meta[ARCHIVE_PROPS_BUILD_NO]?.toString(), 0),
                 nodeMetadata = fileDetail.nodeMetadata
             )
         )
