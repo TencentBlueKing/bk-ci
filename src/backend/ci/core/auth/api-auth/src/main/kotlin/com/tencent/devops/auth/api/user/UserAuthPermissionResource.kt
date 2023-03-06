@@ -1,3 +1,4 @@
+import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.pojo.Result
 import io.swagger.annotations.Api
@@ -18,22 +19,13 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAuthPermissionResource {
     @POST
-    @Path("/{projectCode}/{resourceType}/{resourceCode}/validate/batch")
+    @Path("//validate/batch")
     @ApiOperation("批量校验用户是否拥有某个资源实例的操作")
     fun batchValidateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
-        @PathParam("projectCode")
-        @ApiParam("项目ID", required = true)
-        projectCode: String,
-        @PathParam("resourceType")
-        @ApiParam("资源类型", required = true)
-        resourceType: String,
-        @PathParam("resourceCode")
-        @ApiParam("资源code", required = true)
-        resourceCode: String,
-        @ApiParam("action类型列表", required = true)
-        action: List<String>
+        @ApiParam("权限批量校验实体", required = true)
+        permissionBatchValidateDTO : PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>>
 }
