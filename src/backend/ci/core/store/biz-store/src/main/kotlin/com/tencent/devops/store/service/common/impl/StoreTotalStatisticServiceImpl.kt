@@ -92,6 +92,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val taskName = "StoreTotalStatisticTask"
             logger.info("$taskName:stat:start")
             StoreTypeEnum.values().forEach { storeType ->
+                logger.info("StoreTotalStatisticTask getStorePercentileValue ${getStorePercentileValue(storeType)}")
                 var offset = 0
                 do {
                     val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
@@ -338,5 +339,22 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 recentExecuteNum = totalExecuteNum
             )
         }
+    }
+
+    private fun getStorePercentileValue(storeType: StoreTypeEnum): Double {
+        val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
+        val index = (count + 1) * 0.8
+        val indexTwo = if ("$index".contains(".")) index.toInt() + 1 else null
+        val result = storeStatisticTotalDao.getStorePercentileValue(
+            dslContext = dslContext,
+            storeType = storeType,
+            indexOne = index.toInt(),
+            indexTwo = indexTwo
+        )
+        var value = 0.0
+        result.forEach {
+            value += it.value1() as Double
+        }
+        return if (indexTwo == null) value else value / 2
     }
 }

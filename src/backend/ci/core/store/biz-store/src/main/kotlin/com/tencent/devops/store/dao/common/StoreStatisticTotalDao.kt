@@ -29,13 +29,17 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
+import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
 import org.jooq.Record6
 import org.jooq.Result
+import org.jooq.impl.DSL
+import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -43,6 +47,10 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class StoreStatisticTotalDao {
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(StoreStatisticTotalDao::class.java)
+    }
 
     fun initStatisticData(
         dslContext: DSLContext,
@@ -208,6 +216,40 @@ class StoreStatisticTotalDao {
                 baseStep.orderBy(CREATE_TIME.asc(), ID)
             }
             return baseStep.limit((page - 1) * pageSize, pageSize).fetch()
+        }
+    }
+
+    fun getCountByType(dslContext: DSLContext, storeType: StoreTypeEnum): Int {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            return dslContext.selectCount().from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .fetchOne(0, Int::class.java) ?: 0
+        }
+    }
+
+    fun getStorePercentileValue(
+        dslContext: DSLContext,
+        storeType: StoreTypeEnum,
+        indexOne: Int,
+        indexTwo: Int? = null
+    ): Result<out Record1<out Any>> {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            val rnField = DSL.rowNumber().over().orderBy(RECENT_EXECUTE_NUM).`as`("rowNum")
+            val t = dslContext.select(rnField, RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM))
+                .from(this)
+                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .orderBy(RECENT_EXECUTE_NUM)
+                .asTable("t")
+            val step = if (indexTwo == null) {
+                t.field("rowNum", Int::class.java)!!.eq(indexOne)
+            } else {
+                t.field("rowNum", Int::class.java)!!.eq(indexOne)
+                    .or(t.field("rowNum", Int::class.java)!!.eq(indexTwo))
+            }
+            val where = dslContext.select(t.field(KEY_RECENT_EXECUTE_NUM)).from(t)
+                .where(step)
+            logger.info("getStorePercentileValue sql:$where")
+            return where.fetch()
         }
     }
 }
