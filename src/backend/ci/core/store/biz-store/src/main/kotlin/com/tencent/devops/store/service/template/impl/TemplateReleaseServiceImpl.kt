@@ -37,7 +37,7 @@ import com.tencent.devops.model.store.tables.records.TTemplateRecord
 import com.tencent.devops.process.api.template.ServicePTemplateResource
 import com.tencent.devops.process.pojo.template.AddMarketTemplateRequest
 import com.tencent.devops.store.constant.StoreMessageCode
-import com.tencent.devops.store.constant.StoreMessageCode.USER_IMAGE_VERSION_NOT_EXIST
+import com.tencent.devops.store.constant.StoreMessageCode.USER_TEMPLATE_IMAGE_IS_INVALID
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -187,8 +187,8 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         val flag = releaseResult.data
         if (flag != true) {
             throw ErrorCodeException(
-                errorCode = USER_IMAGE_VERSION_NOT_EXIST,
-                defaultMessage = "The template image fail to release"
+                errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
+                defaultMessage = "The template image is not published"
             )
         }
         if (templateCount > 0) {

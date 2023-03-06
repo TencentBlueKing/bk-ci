@@ -72,12 +72,12 @@ class PipelineTemplateService @Autowired constructor(
         )
     }
 
-    fun getCheckTemplate(userId: String, templateCode: String): Result<Boolean> {
-        logger.info("start getCheckTemplate templateCode is:$templateCode")
+    fun checkImageReleaseStatus(userId: String, templateCode: String): Result<Boolean> {
+        logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
         var flag = true
-        val images = ArrayList<String>()
+        val images = mutableSetOf<String>()
         run releaseStatus@{
             templateModel.stages.forEach { stage ->
                 stage.containers.forEach imageInfo@{ container ->
@@ -88,7 +88,7 @@ class PipelineTemplateService @Autowired constructor(
                         if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) {
                             return@imageInfo
                         } else {
-                            if (image in images) {
+                            if (images.contains(image) ) {
                                 return@imageInfo
                             } else {
                                 images.add(image)
