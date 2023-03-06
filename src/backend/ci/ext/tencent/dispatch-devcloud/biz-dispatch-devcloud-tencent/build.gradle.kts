@@ -34,6 +34,7 @@ dependencies {
     api(project(":core:common:common-client"))
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-auth:common-auth-api"))
+    api(project(":core:common:common-db-base"))
     api(project(":core:log:api-log"))
 
     api(project(":ext:tencent:common:common-devcloud"))
