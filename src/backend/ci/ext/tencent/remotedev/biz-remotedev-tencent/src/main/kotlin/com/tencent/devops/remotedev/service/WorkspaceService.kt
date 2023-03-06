@@ -185,6 +185,7 @@ class WorkspaceService @Autowired constructor(
 
     fun createWorkspace(userId: String, workspaceCreate: WorkspaceCreate): WorkspaceResponse {
         logger.info("$userId create workspace ${JsonUtil.toJson(workspaceCreate, false)}")
+        checkUserCreate(userId)
         val gitTransferService = remoteDevGitTransfer.loadByGitUrl(workspaceCreate.repositoryUrl)
         val pathWithNamespace = GitUtils.getDomainAndRepoName(workspaceCreate.repositoryUrl).second
         val projectName = pathWithNamespace.substring(pathWithNamespace.lastIndexOf("/") + 1)
