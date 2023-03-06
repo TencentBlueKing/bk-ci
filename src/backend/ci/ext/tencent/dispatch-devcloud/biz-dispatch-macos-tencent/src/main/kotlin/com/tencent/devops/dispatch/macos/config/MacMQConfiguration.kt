@@ -53,18 +53,6 @@ import org.springframework.core.Ordered
 @AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
 class MacMQConfiguration @Autowired constructor() {
 
-    @Value("\${dispatch.demoteQueue.concurrency:2}")
-    private val demoteQueueConcurrency: Int = 2
-
-    @Value("\${dispatch.demoteQueue.maxConcurrency:2}")
-    private val demoteQueueMaxConcurrency: Int = 2
-
-    @Value("\${dispatch.agentStartQueue.concurrency:60}")
-    private val agentStartQueueConcurrency: Int = 60
-
-    @Value("\${dispatch.agentStartQueue.maxConcurrency:100}")
-    private val agentStartQueueMaxConcurrency: Int = 100
-
     /**
      * 启动构建队列
      */
@@ -211,5 +199,13 @@ class MacMQConfiguration @Autowired constructor() {
 
     companion object {
         private val logger = LoggerFactory.getLogger(MacMQConfiguration::class.java)
+
+        private const val demoteQueueConcurrency = 2
+
+        private const val demoteQueueMaxConcurrency = 2
+
+        private const val agentStartQueueConcurrency = 20
+
+        private const val agentStartQueueMaxConcurrency = 30
     }
 }
