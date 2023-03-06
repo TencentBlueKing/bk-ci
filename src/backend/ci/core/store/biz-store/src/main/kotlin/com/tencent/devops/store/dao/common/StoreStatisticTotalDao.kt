@@ -29,17 +29,14 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
-import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
-import org.checkerframework.checker.units.qual.t
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
 import org.jooq.Record6
 import org.jooq.Result
-import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
