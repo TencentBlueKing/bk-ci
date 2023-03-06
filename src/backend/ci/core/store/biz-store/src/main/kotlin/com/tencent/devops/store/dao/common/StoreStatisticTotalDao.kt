@@ -32,6 +32,7 @@ import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
 import com.tencent.devops.store.pojo.common.KEY_RECENT_EXECUTE_NUM
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import org.checkerframework.checker.units.qual.t
 import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
@@ -230,26 +231,16 @@ class StoreStatisticTotalDao {
     fun getStorePercentileValue(
         dslContext: DSLContext,
         storeType: StoreTypeEnum,
-        indexOne: Int,
-        indexTwo: Int? = null
+        index: Int,
+        pluralFlag: Boolean
     ): Result<out Record1<out Any>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            val rnField = DSL.rowNumber().over().orderBy(RECENT_EXECUTE_NUM).`as`("rowNum")
-            val t = dslContext.select(rnField, RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM))
+            return dslContext.select(RECENT_EXECUTE_NUM)
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()))
-                .orderBy(RECENT_EXECUTE_NUM)
-                .asTable("t")
-            val step = if (indexTwo == null) {
-                t.field("rowNum", Int::class.java)!!.eq(indexOne)
-            } else {
-                t.field("rowNum", Int::class.java)!!.eq(indexOne)
-                    .or(t.field("rowNum", Int::class.java)!!.eq(indexTwo))
-            }
-            val where = dslContext.select(t.field(KEY_RECENT_EXECUTE_NUM)).from(t)
-                .where(step)
-            logger.info("getStorePercentileValue sql:$where")
-            return where.fetch()
+                .orderBy(RECENT_EXECUTE_NUM, CREATE_TIME, STORE_CODE)
+                .limit(index - 1, if (pluralFlag) 2 else 1)
+                .fetch()
         }
     }
 }

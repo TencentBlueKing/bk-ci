@@ -344,17 +344,17 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     private fun getStorePercentileValue(storeType: StoreTypeEnum): Double {
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
         val index = (count + 1) * 0.8
-        val indexTwo = if ("$index".contains(".")) index.toInt() + 1 else null
+        val pluralFlag = "$index".contains(".")
         val result = storeStatisticTotalDao.getStorePercentileValue(
             dslContext = dslContext,
             storeType = storeType,
-            indexOne = index.toInt(),
-            indexTwo = indexTwo
+            index = index.toInt(),
+            pluralFlag = pluralFlag
         )
         var value = 0.0
         result.forEach {
             value += it.value1() as Double
         }
-        return if (indexTwo == null) value else value / 2
+        return if (pluralFlag) value / 2 else value
     }
 }
