@@ -59,8 +59,7 @@ class BkRepoPipelineOutputServiceImpl(
         val pipelineOutputList = mutableListOf<PipelineOutput>()
         pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
         pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
-        pipelineOutputList.sortedByDescending { it.createTime }
 
-        return pipelineOutputList
+        return pipelineOutputList.sortedByDescending { it.createTime }
     }
 }
