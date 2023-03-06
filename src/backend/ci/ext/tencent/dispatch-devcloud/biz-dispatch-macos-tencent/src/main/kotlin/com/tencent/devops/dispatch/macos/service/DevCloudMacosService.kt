@@ -54,7 +54,6 @@ class DevCloudMacosService @Autowired constructor(
     ): DevCloudMacosVmCreateInfo? {
 
         val url = "$devCloudUrl/api/mac/vm/create"
-        //  val url ="http:// localhost:9797/create"
         val macosVmCreate = DevCloudMacosVmCreate(
             project = projectId,
             pipelineId = pipelineId,
@@ -120,7 +119,7 @@ class DevCloudMacosService @Autowired constructor(
         var times = 0
         logger.info("start query")
         while (times < 200) {
-            var temp = queryTaskStaus(taskId = taskId, creator = creator)
+            var temp = queryTaskStatus(taskId = taskId, creator = creator)
 
             var staus = temp.first
             if (staus == DevCloudCreateMacVMStatus.failed.title) {
@@ -145,39 +144,33 @@ class DevCloudMacosService @Autowired constructor(
     }
 
     // 返回值为三元组,分别代表devcloud构建状态,构建成功时返回的数据,构建失败时的错误信息
-    fun queryTaskStaus(taskId: String, creator: String): Triple<String, DevCloudMacosVmCreateInfo?, String> {
+    fun queryTaskStatus(taskId: String, creator: String): Triple<String, DevCloudMacosVmCreateInfo?, String> {
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
-        // val url ="http:// localhost:9797/task"
-        // val bodyMap=mutableMapOf("taskId" to taskId)
-        // var body= jacksonObjectMapper().writeValueAsString(bodyMap)
         val request = Request.Builder()
             .url(url)
             .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
             .get()
-            // .post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), body.toString()))
             .build()
-        //  logger.info("start request")
         OkhttpUtils.doHttp(request).use { response ->
             val responseContent = response.body!!.string()
-            logger.info("request is $request")
-            logger.info("responseContent is $responseContent")
             // 如果网络波动导致的失败,就不需要返回failed状态,而是返回running状态,过几秒再来轮询
             if (!response.isSuccessful) {
-                logger.info("request fail,retry later")
+                logger.info("$taskId request fail,retry later, $responseContent")
                 return Triple(DevCloudCreateMacVMStatus.running.title, null, "")
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
-            logger.info("responseData is $responseData")
             val code = responseData["actionCode"] as Int
             val message = responseData["actionMessage"] as String
             // 如果actionCode不是200,就是devcloud出问题了,返回错误状态
             if (code != 200) {
+                logger.info("$taskId response code not 200, $responseContent")
                 return Triple(DevCloudCreateMacVMStatus.failed.title, null, message)
             }
             val vm = responseData["data"] as Map<String, Any>
             val status = vm["status"] as String
             // 如果返回状态为成功,就从response里取出数据并返回
             if (status == DevCloudCreateMacVMStatus.succeeded.title) {
+                logger.info("$taskId request success. $responseContent")
                 return Triple(status,
                     DevCloudMacosVmCreateInfo(
                         creator = vm["creator"] as String,
@@ -195,10 +188,12 @@ class DevCloudMacosService @Autowired constructor(
                     ), "")
             }
             if (status == DevCloudCreateMacVMStatus.failed.title) {
+                logger.info("$taskId response status failed. $responseContent")
                 return Triple(DevCloudCreateMacVMStatus.failed.title, null, message)
             }
 
             if (status == DevCloudCreateMacVMStatus.canceled.title) {
+                logger.info("$taskId response status canceled. $responseContent")
                 return Triple(DevCloudCreateMacVMStatus.canceled.title, null, message)
             }
 
@@ -239,7 +234,8 @@ class DevCloudMacosService @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("DevCloud deleteVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud deleteVM, http response code: ${response.code}, msg: $responseContent")
+                logger.error("Fail to request to DevCloud deleteVM, http response code: ${response.code}," +
+                                 " msg: $responseContent")
                 result = false
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)

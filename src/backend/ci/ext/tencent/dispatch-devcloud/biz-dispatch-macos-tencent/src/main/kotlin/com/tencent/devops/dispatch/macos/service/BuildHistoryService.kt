@@ -44,7 +44,11 @@ class BuildHistoryService @Autowired constructor(
             val context = DSL.using(configuration)
             val resultBuildHistory = buildHistoryDao.saveBuildHistory(context, rec)
             if (resultBuildHistory > 0) {
-                val buildHistoryRecord = buildHistoryDao.getByBuildIdAndVmSeqId(context, dispatchMessage.buildId, dispatchMessage.vmSeqId)
+                val buildHistoryRecord = buildHistoryDao.getByBuildIdAndVmSeqId(
+                    context,
+                    dispatchMessage.buildId,
+                    dispatchMessage.vmSeqId
+                )
                 val buildTaskRecord = TBuildTaskRecord()
                 buildTaskRecord.projectId = dispatchMessage.projectId
                 buildTaskRecord.pipelineId = dispatchMessage.pipelineId
@@ -56,8 +60,8 @@ class BuildHistoryService @Autowired constructor(
                 buildTaskRecord.resourceType = resourceType
                 buildTaskRecord.containerHashId = dispatchMessage.containerHashId
                 buildTaskRecord.executeCount = dispatchMessage.executeCount
-                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] save buildHistoryId: ${buildHistoryRecord.id}, " +
-                        "vmIp: $vmIp")
+                logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] " +
+                                "save buildHistoryId: ${buildHistoryRecord.id}, vmIp: $vmIp")
                 val taskId = buildTaskDao.save(context, buildTaskRecord)
             } else {
                 logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] fail to save buildTask.")

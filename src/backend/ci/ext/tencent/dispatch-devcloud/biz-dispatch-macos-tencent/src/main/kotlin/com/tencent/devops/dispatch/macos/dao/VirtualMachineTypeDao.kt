@@ -27,7 +27,8 @@ class VirtualMachineTypeDao {
             return if (version != "latest") {
                 dslContext.selectFrom(this).where(VERSION.eq(version)).fetchOne()?.systemVersion
             } else {
-                dslContext.selectFrom(this).orderBy(VERSION.desc()).limit(1).fetchOne()!!.systemVersion
+                dslContext.selectFrom(this).orderBy(VERSION.desc()).limit(1)
+                    .fetchOne()!!.systemVersion
             }
         }
     }
@@ -74,7 +75,11 @@ class VirtualMachineTypeDao {
         }
     }
 
-    fun search(dslContext: DSLContext, systemVersion: String?, xcodeVersion: String?): Result<TVirtualMachineTypeRecord>? {
+    fun search(
+        dslContext: DSLContext,
+        systemVersion: String?,
+        xcodeVersion: String?
+    ): Result<TVirtualMachineTypeRecord>? {
         with(TVirtualMachineType.T_VIRTUAL_MACHINE_TYPE) {
             val conditions = mutableListOf<Condition>()
             if (!systemVersion.isNullOrBlank()) {
