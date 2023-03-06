@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS `T_WORKSPACE` (
                                              `CREATOR_BG_NAME` varchar(128) NOT NULL DEFAULT ''  COMMENT '预留字段，CI开启人所在事业群，用作度量统计',
                                              `CREATOR_DEPT_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '预留字段，CI开启人所在部门，用作度量统计',
                                              `CREATOR_CENTER_NAME` varchar(128) NOT NULL DEFAULT '' COMMENT '预留字段，CI开启人所在中心，用作度量统计',
-                                             `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '工作空间状态,0-PREPARING,1-RUNNING,2-STOPPED,3-SLEEP,4-DELETED,5-EXCEPTION',
+                                             `STATUS` int(11) NOT NULL DEFAULT 0 COMMENT '工作空间状态,0-PREPARING,1-RUNNING,2-STOPPED,3-SLEEP,4-DELETED,5-EXCEPTION,6-STARTING,7-SLEEPING,8-DELETING',
                                              `CREATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
                                              `UPDATE_TIME` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '修改时间',
                                              `LAST_STATUS_UPDATE_TIME` timestamp NULL DEFAULT NULL COMMENT '状态最近修改时间',
