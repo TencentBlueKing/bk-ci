@@ -1,12 +1,10 @@
 package com.tencent.devops.artifactory.pojo
 
-import com.fasterxml.jackson.annotation.JsonIgnore
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.pojo.TaskReport
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
-import java.time.LocalDateTime
 
 @ApiModel("流水线产出物")
 data class PipelineOutput(
