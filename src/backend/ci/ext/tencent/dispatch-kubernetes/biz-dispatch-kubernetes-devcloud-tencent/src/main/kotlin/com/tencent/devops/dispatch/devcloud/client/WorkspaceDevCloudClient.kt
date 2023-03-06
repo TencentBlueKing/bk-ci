@@ -142,7 +142,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
                 logger.info("User $userId ${environmentAction.getValue()} environment response: $responseContent")
                 val environmentOpRsp: EnvironmentOpRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentOpRsp.code) {
+                if (HttpStatus.OK.value == environmentOpRsp.code) {
                     // 记录操作历史
                     dispatchWorkspaceOpHisDao.createWorkspaceHistory(
                         dslContext = dslContext,
@@ -216,7 +216,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                 }
 
                 val environmentStatusRsp: EnvironmentStatusRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentStatusRsp.code) {
+                if (HttpStatus.OK.value == environmentStatusRsp.code) {
                     return environmentStatusRsp.data
                 } else {
                     throw BuildFailureException(
@@ -285,7 +285,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
                     )
                 }
                 val environmentListRsp: EnvironmentListRsp = jacksonObjectMapper().readValue(responseContent)
-                if (200 == environmentListRsp.code) {
+                if (HttpStatus.OK.value == environmentListRsp.code) {
                     return environmentListRsp.data
                 } else {
                     throw BuildFailureException(
@@ -402,7 +402,7 @@ class WorkspaceDevCloudClient @Autowired constructor(
         try {
             val taskResponse = getTasks(userId, taskId)
             val actionCode = taskResponse.code
-            return if (200 != actionCode) {
+            return if (HttpStatus.OK.value != actionCode) {
                 // 创建失败
                 val msg = taskResponse.message
                 logger.error("Execute task: $taskId failed, actionCode is $actionCode, msg: $msg")
