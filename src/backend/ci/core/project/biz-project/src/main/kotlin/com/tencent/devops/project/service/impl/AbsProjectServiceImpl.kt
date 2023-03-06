@@ -127,7 +127,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 if (projectDao.existByProjectName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = "project name already exists!",
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PROJECT_NAME_EXIST),
                         errorCode = ProjectMessageCode.PROJECT_NAME_EXIST
                     )
                 }
@@ -151,7 +151,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 }
                 if (projectDao.existByEnglishName(dslContext, name, projectId)) {
                     throw ErrorCodeException(
-                        defaultMessage = "project id or english name already exists!",
+                        defaultMessage = MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.EN_NAME_EXIST),
                         errorCode = ProjectMessageCode.EN_NAME_EXIST
                     )
                 }
