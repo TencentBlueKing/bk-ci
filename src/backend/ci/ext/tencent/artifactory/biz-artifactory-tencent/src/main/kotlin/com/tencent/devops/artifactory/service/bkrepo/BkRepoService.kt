@@ -507,9 +507,9 @@ class BkRepoService @Autowired constructor(
                 } else {
                     it.metadata!!.map { itp ->
                         if (itp.key == "appVersion") {
-                            appVersion = itp.value ?: ""
+                            appVersion = itp.value.toString()
                         }
-                        Property(itp.key, itp.value ?: "")
+                        Property(itp.key, itp.value.toString())
                     }
                 }
                 if (RepoUtils.isPipelineFile(it)) {
