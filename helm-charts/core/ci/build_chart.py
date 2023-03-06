@@ -50,15 +50,21 @@ default_value_dict = {
     'bkCiStreamHost': 'devops.example.com',
     'bkCiStreamGitUrl': 'www.github.com',
     'bkCiClusterTag': 'devops',
-    'bkCiRepositoryGithubServer':'repository',
-    'bkCiDockerRoutingType':'KUBERNETES',
-    'bkCiDockerJobQuotaEnable':'false',
-    'bkCiBcsCpu':'8.0',
-    'bkCiBcsMemory':'16048',
-    'bkCiKubernetesCpu':'8',
-    'bkCiKubernetesMemory':'16048',
+    'bkCiRepositoryGithubServer': 'repository',
+    'bkCiDockerRoutingType': 'KUBERNETES',
+    'bkCiDockerJobQuotaEnable': 'false',
+    'bkCiBcsCpu': '8.0',
+    'bkCiBcsMemory': '16048',
+    'bkCiKubernetesCpu': '8',
+    'bkCiKubernetesMemory': '16048',
     'bkCiKubernetesHost': 'http://kubernetes-manager',
-    'bkCiKubernetesToken': 'landun'
+    'bkCiKubernetesToken': 'landun',
+    'bkCiDevopsToken': 'devops',
+    'bkCiAppToken': 'test',
+    'bkCiNotifyEmailSendChannel': 'blueking',
+    'bkCiInitLocale': 'zh-CN',
+    'bkCiRedisSsl': 'false',
+    'bkCiEsHttps': 'false'
 }
 
 if os.path.isfile(default_value_json):
@@ -97,7 +103,11 @@ value_re = re.compile(r'')
 for line in env_file:
     if line.startswith('BK_'):
         # 排除掉数据库的相关值
-        if ('_MYSQL_' in line) or ('_REDIS_' in line and 'DB' not in line and 'SENTINEL' not in line) or ('_ES_' in line and 'CLUSTER' not in line) or ('_RABBITMQ_' in line) or ('_INFLUXDB_' in line and 'DB' not in line):
+        if ('_MYSQL_' in line) \
+                or ('_REDIS_' in line and 'DB' not in line and 'SENTINEL' not in line and 'SSL' not in line) \
+                or ('_ES_' in line and 'CLUSTER' not in line and 'HTTPS' not in line) \
+                or ('_RABBITMQ_' in line) \
+                or ('_INFLUXDB_' in line and 'DB' not in line):
             continue
         datas = line.split("=")
         key = datas[0]
@@ -108,11 +118,13 @@ env_file.close()
 image_registry = sys.argv[1]
 image_gateway_tag = sys.argv[2]
 image_backend_tag = sys.argv[3]
+image_frontend_tag = sys.argv[4]
 value_file = open(output_value_yaml, 'w')
 for line in open(default_value_yaml, 'r'):
     line = line.replace("__image_registry__", image_registry)
     line = line.replace("__image_gateway_tag__", image_gateway_tag)
     line = line.replace("__image_backend_tag__", image_backend_tag)
+    line = line.replace("__image_frontend_tag__", image_frontend_tag)
     value_file.write(line)
 
 value_file.write('\nconfig:\n')
@@ -149,8 +161,8 @@ for config_name in os.listdir(config_parent):
         config_file.close()
 
 # 生成网关的configmap
-gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__",
-                    "__BK_CI_PAAS_LOGIN_URL__", "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__","__BK_REPO_HOST__"])  # frondend需要的变量
+gateway_envs = set(["__BK_CI_PUBLIC_URL__", "__BK_CI_DOCS_URL__", "__BK_CI_PAAS_LOGIN_URL__",
+                    "__BK_CI_VERSION__", "__BK_CI_BADGE_URL__", "__BK_REPO_HOST__","__BK_CI_INIT_LOCALE__"])  # frondend需要的变量
 for file in os.listdir(config_parent):
     if file.startswith('gateway'):
         for line in open(config_parent+file, 'r'):

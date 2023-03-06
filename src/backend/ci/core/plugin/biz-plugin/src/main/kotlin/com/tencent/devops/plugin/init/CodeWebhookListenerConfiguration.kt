@@ -28,7 +28,7 @@
 package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -56,7 +56,7 @@ class CodeWebhookListenerConfiguration {
     }
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookFinishListener(

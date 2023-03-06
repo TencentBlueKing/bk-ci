@@ -27,12 +27,12 @@
 
 package com.tencent.devops.common.websocket.dispatch.push
 
-import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 
 abstract class WebsocketPush(
     open val userId: String,
@@ -41,9 +41,8 @@ abstract class WebsocketPush(
     open var page: String?,
     open var notifyPost: NotifyPost
 ) : IEvent() {
-
-    open fun findSession(page: String): List<String>? {
-        return RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, page)
+    open fun findSession(page: String): Set<String>? {
+        return WsRedisUtils.getSessionListFormPageSessionByPage(redisOperation, page)
     }
 
     abstract fun buildMqMessage(): SendMessage?

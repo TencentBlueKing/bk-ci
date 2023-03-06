@@ -64,7 +64,7 @@ data class DetailWebsocketPush(
         private val pipelineBuildService = SpringContextUtil.getBean(PipelineBuildFacadeService::class.java)
     }
 
-    override fun findSession(page: String): List<String>? {
+    override fun findSession(page: String): Set<String>? {
         if (page == "") {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }

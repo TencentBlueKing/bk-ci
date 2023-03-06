@@ -27,7 +27,7 @@
 
 package com.tencent.devops.websocket.listener
 
-import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.dispatch.message.PipelineMessage
@@ -39,9 +39,7 @@ import org.springframework.messaging.simp.SimpMessagingTemplate
 import org.springframework.stereotype.Component
 
 @Component
-@Suppress("NestedBlockDepth", "MagicNumber")
 class WebSocketListener @Autowired constructor(
-    val objectMapper: ObjectMapper,
     val messagingTemplate: SimpMessagingTemplate,
     val websocketService: WebsocketService
 ) {
@@ -51,7 +49,9 @@ class WebSocketListener @Autowired constructor(
     }
 
     fun handleWebsocketEvent(event: SendMessage) {
-        logger.debug("WebSocketListener: user:${event.userId},page:${event.page},sessionList:${event.sessionList}")
+        if (logger.isDebugEnabled) {
+            logger.debug("WebSocket| user:${event.userId},page:${event.page},size:${event.sessionList?.size}")
+        }
         val watcher = Watcher(id = "websocketPush|${event.userId}|${event.page}|${event.sessionList?.size ?: 0}")
         try {
 
@@ -60,22 +60,20 @@ class WebSocketListener @Autowired constructor(
             }
 
             val sessionList = event.sessionList
-            if (sessionList != null && sessionList.isNotEmpty()) {
-                watcher.start("addLongSession")
-                addLongSession(sessionList, event.page ?: "")
-                watcher.stop()
-                sessionList.forEach { session ->
-                    if (websocketService.isCacheSession(session)) {
-                        watcher.start("PushMsg:$session")
-                        messagingTemplate.convertAndSend(
-                            "/topic/bk/notify/$session",
-                            objectMapper.writeValueAsString(event.notifyPost)
-                        )
-                        watcher.stop()
-                    }
+            if (sessionList.isNullOrEmpty()) {
+                logger.info("WebSocket| session is empty. page:${event.page} user:${event.userId} ")
+                return
+            }
+
+            addLongSession(sessionList, event.page ?: "")
+
+            val message = JsonUtil.toJson(event.notifyPost, formatted = false)
+            sessionList.forEach { session ->
+                if (websocketService.isCacheSession(session)) {
+                    watcher.start("PushMsg:$session")
+                    messagingTemplate.convertAndSend("/topic/bk/notify/$session", message)
+                    watcher.stop()
                 }
-            } else {
-                logger.info("webSocketListener sessionList is empty. page:${event.page} user:${event.userId} ")
             }
         } catch (ignored: Exception) {
             logger.error("webSocketListener error", ignored)
@@ -84,11 +82,14 @@ class WebSocketListener @Autowired constructor(
         }
     }
 
-    private fun addLongSession(sessionList: List<String>, page: String) {
+    private fun addLongSession(sessionList: Set<String>, page: String) {
         if (sessionList.size < websocketService.getMaxSession()!!) {
             return
         }
-        logger.warn("page[$page] sessionCount more ${websocketService.getMaxSession()}, sessionList[$sessionList]")
+        logger.warn(
+            "BKSystemErrorMonitor|page[$page]|" +
+                " SessionMaxCount ${websocketService.getMaxSession()} current[${sessionList.size}]"
+        )
         websocketService.createLongSessionPage(page)
     }
 

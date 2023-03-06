@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.engine
 
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.cloud.stream.function.StreamBridge
@@ -47,5 +47,5 @@ import org.springframework.core.Ordered
 class EventDispatcherConfiguration {
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 }

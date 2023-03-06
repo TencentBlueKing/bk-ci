@@ -995,8 +995,8 @@ class PipelineListFacadeService @Autowired constructor(
 
         return if (logic == Logic.AND) {
             nameFilterPipelines
-                .intersect(creatorFilterPipelines.asIterable())
-                .intersect(labelFilterPipelines.asIterable())
+                .intersect(creatorFilterPipelines.toSet())
+                .intersect(labelFilterPipelines.toSet())
                 .toList()
         } else {
             nameFilterPipelines
@@ -1054,14 +1054,6 @@ class PipelineListFacadeService @Autowired constructor(
             LogUtils.printCostTimeWE(watcher = watcher)
         }
         return pipelines
-    }
-
-    fun getPipelineInfoNum(
-        dslContext: DSLContext,
-        projectIds: Set<String>?,
-        channelCodes: Set<ChannelCode>?
-    ): Int? {
-        return pipelineInfoDao.getPipelineInfoNum(dslContext, projectIds, channelCodes)!!.value1()
     }
 
     fun isPipelineRunning(projectId: String, buildId: String, channelCode: ChannelCode): Boolean {
@@ -1495,18 +1487,6 @@ class PipelineListFacadeService @Autowired constructor(
         }
     }
 
-    // 旧接口
-    fun getPipelineIdAndProjectIdByBuildId(projectId: String, buildId: String): Pair<String, String> {
-        val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
-            ?: throw ErrorCodeException(
-                statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "构建任务${buildId}不存在",
-                params = arrayOf(buildId)
-            )
-        return Pair(buildInfo.pipelineId, buildInfo.projectId)
-    }
-
     fun listDeletePipelineIdByProject(
         userId: String,
         projectId: String,
@@ -1540,27 +1520,6 @@ class PipelineListFacadeService @Autowired constructor(
             count = count.toLong(),
             records = list
         )
-    }
-
-    fun listPermissionPipelineCount(
-        userId: String,
-        projectId: String,
-        channelCode: ChannelCode = ChannelCode.BS,
-        checkPermission: Boolean = true
-    ): Int {
-        val watcher = Watcher(id = "listPermissionPipelineCount|$projectId|$userId")
-        try {
-            watcher.start("perm_r_perm")
-            val hasPermissionList = pipelinePermissionService.getResourceByPermission(
-                userId = userId, projectId = projectId, permission = AuthPermission.LIST
-            )
-            watcher.start("s_r_c_b_id")
-            return pipelineRepositoryService.countByPipelineIds(
-                projectId = projectId, channelCode = channelCode, pipelineIds = hasPermissionList
-            )
-        } finally {
-            LogUtils.printCostTimeWE(watcher = watcher)
-        }
     }
 
     fun getPipelinePage(projectId: String, limit: Int?, offset: Int?): PipelineViewPipelinePage<PipelineInfo> {
@@ -1687,14 +1646,14 @@ class PipelineListFacadeService @Autowired constructor(
         logger.info("searchIdAndName |$projectId|$pipelineName| $page| $pageSize")
         val pageNotNull = page ?: 0
         val pageSizeNotNull = pageSize ?: 10
-        val page = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(pageNotNull, pageSizeNotNull)
         val pipelineRecords =
             pipelineInfoDao.searchByProject(
                 dslContext = dslContext,
                 pipelineName = pipelineName,
                 projectCode = projectId,
-                limit = page.limit,
-                offset = page.offset
+                limit = sqlLimit.limit,
+                offset = sqlLimit.offset
             )
         val pipelineInfos = mutableListOf<PipelineIdAndName>()
         pipelineRecords?.map {
@@ -1859,12 +1818,10 @@ class PipelineListFacadeService @Autowired constructor(
 
         val watch = StopWatch()
         watch.start("perm_r_perm")
-        val authPipelines = if (authPipelineIds.isEmpty()) {
+        val authPipelines = authPipelineIds.ifEmpty {
             pipelinePermissionService.getResourceByPermission(
-                userId, projectId, AuthPermission.LIST
+                userId = userId, projectId = projectId, permission = AuthPermission.LIST
             )
-        } else {
-            authPipelineIds
         }
         watch.stop()
 

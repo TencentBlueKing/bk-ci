@@ -27,13 +27,14 @@
 
 package com.tencent.devops.auth.refresh.dispatch
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.common.event.annotation.RabbitEvent
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.lang.Exception
 
 @Component
 class AuthRefreshDispatch @Autowired constructor(
@@ -44,21 +45,34 @@ class AuthRefreshDispatch @Autowired constructor(
         private val logger = LoggerFactory.getLogger(AuthRefreshDispatch::class.java)
     }
 
+    @SuppressWarnings("NestedBlockDepth")
     fun dispatch(vararg events: RefreshBroadCastEvent) {
-        try {
-            events.forEach { event ->
-                val eventType = event::class.java.annotations.find { s -> s is RabbitEvent } as RabbitEvent
-                val routeKey = eventType.routeKey
-                logger.info("[${eventType.exchange}|$routeKey|${event.refreshType} dispatch the refresh event")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    if (eventType.delayMills > 0) { // 事件类型固化默认值
-                        message.messageProperties.setHeader("x-delay", eventType.delayMills)
+        events.forEach { event ->
+            try {
+                send(event)
+            } catch (ignored: Exception) {
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
                     }
-                    message
+                } else {
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
                 }
             }
-        } catch (e: Exception) {
-            logger.error("Fail to dispatch the event($events)", e)
+        }
+    }
+
+    private fun send(event: RefreshBroadCastEvent) {
+        val eventType = event::class.java.annotations.find { s -> s is RabbitEvent } as RabbitEvent
+        val routeKey = eventType.routeKey
+        logger.info("[${eventType.exchange}|$routeKey|${event.refreshType} dispatch the refresh event")
+        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+            if (eventType.delayMills > 0) { // 事件类型固化默认值
+                message.messageProperties.setHeader("x-delay", eventType.delayMills)
+            }
+            message
         }
     }
 }

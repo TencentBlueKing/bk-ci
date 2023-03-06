@@ -145,9 +145,6 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.util.BuildMsgUtils
 import com.tencent.devops.process.utils.BUILD_NO
-import com.tencent.devops.process.utils.FIXVERSION
-import com.tencent.devops.process.utils.MAJORVERSION
-import com.tencent.devops.process.utils.MINORVERSION
 import com.tencent.devops.process.utils.PIPELINE_BUILD_ID
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
@@ -161,6 +158,7 @@ import com.tencent.devops.process.utils.PIPELINE_START_TYPE
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.process.utils.PIPELINE_VERSION
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.jooq.impl.DSL
@@ -1465,15 +1463,6 @@ class PipelineRuntimeService @Autowired constructor(
         pipelineBuildSummaryDao.updateBuildNo(dslContext, projectId, pipelineId, buildNo)
     }
 
-    fun updateRecommendVersion(projectId: String, buildId: String, recommendVersion: String) {
-        pipelineBuildDao.updateRecommendVersion(
-            dslContext = dslContext,
-            projectId = projectId,
-            buildId = buildId,
-            recommendVersion = recommendVersion
-        )
-    }
-
     /**
      * 开始最新一次构建
      */
@@ -1547,19 +1536,14 @@ class PipelineRuntimeService @Autowired constructor(
             val executeTime = try {
                 getExecuteTime(latestRunningBuild.projectId, buildId)
             } catch (ignored: Throwable) {
-                logger.error("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
+                logger.warn("[$pipelineId]|getExecuteTime-$buildId exception:", ignored)
                 0L
             }
             logger.info("[$pipelineId]|getExecuteTime-$buildId executeTime: $executeTime")
 
             val buildParameters = getBuildParametersFromStartup(projectId, buildId)
-
-            val recommendVersion = try {
-                getRecommendVersion(buildParameters)
-            } catch (ignored: Throwable) {
-                logger.error("[$pipelineId]|getRecommendVersion-$buildId exception:", ignored)
-                null
-            }
+            // 修正推荐版本号过长和流水号重复更新导致的问题
+            val recommendVersion = PipelineVarUtil.getRecommendVersion(buildParameters)
             logger.info("[$pipelineId]|getRecommendVersion-$buildId recommendVersion: $recommendVersion")
             val remark = buildVariableService.getVariable(projectId, pipelineId, buildId, PIPELINE_BUILD_REMARK)
             pipelineBuildDao.finishBuild(
@@ -1586,30 +1570,6 @@ class PipelineRuntimeService @Autowired constructor(
             )
             logger.info("[$pipelineId]|finishLatestRunningBuild-$buildId|status=$status")
         }
-    }
-
-    fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
-        val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
-            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
-        } else return null
-        return "$recommendVersionPrefix.$buildNo"
-    }
-
-    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
-        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
-            buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
-        } else return null
-
-        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion" }) {
-            buildParameters.filter { it.key == MINORVERSION || it.key == "MinorVersion" }[0].value.toString()
-        } else return null
-
-        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion" }) {
-            buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
-        } else return null
-
-        return "$majorVersion.$minorVersion.$fixVersion"
     }
 
     fun getBuildParametersFromStartup(projectId: String, buildId: String): List<BuildParameters> {

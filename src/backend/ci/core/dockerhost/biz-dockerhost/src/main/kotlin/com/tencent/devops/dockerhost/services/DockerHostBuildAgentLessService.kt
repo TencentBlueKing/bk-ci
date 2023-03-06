@@ -30,7 +30,6 @@ package com.tencent.devops.dockerhost.services
 import com.github.dockerjava.api.model.AccessMode
 import com.github.dockerjava.api.model.Bind
 import com.github.dockerjava.api.model.Binds
-import com.github.dockerjava.api.model.BlkioRateDevice
 import com.github.dockerjava.api.model.HostConfig
 import com.github.dockerjava.api.model.Volume
 import com.tencent.devops.common.pipeline.type.BuildType
@@ -140,12 +139,12 @@ class DockerHostBuildAgentLessService(
             Bind(hostWorkspace, volumeWs)
         )
 
-        val blkioRateDeviceWirte = BlkioRateDevice()
-            .withPath("/data")
-            .withRate(dockerHostConfig.blkioDeviceWriteBps)
-        val blkioRateDeviceRead = BlkioRateDevice()
-            .withPath("/data")
-            .withRate(dockerHostConfig.blkioDeviceReadBps)
+//        val blkioRateDeviceWirte = BlkioRateDevice()
+//            .withPath("/data")
+//            .withRate(dockerHostConfig.blkioDeviceWriteBps)
+//        val blkioRateDeviceRead = BlkioRateDevice()
+//            .withPath("/data")
+//            .withRate(dockerHostConfig.blkioDeviceReadBps)
 
         // #4518 追加无编译环境的构建矩阵上下文
         val customEnv = mutableListOf<String>()

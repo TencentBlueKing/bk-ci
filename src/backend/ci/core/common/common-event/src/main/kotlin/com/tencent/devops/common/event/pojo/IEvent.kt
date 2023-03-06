@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.event.pojo
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.stream.constants.StreamHeader.X_DELAY
 import com.tencent.devops.common.stream.utils.DefaultBindingUtils

@@ -28,7 +28,7 @@
 package com.tencent.devops.store.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -52,7 +52,7 @@ class StoreMQConfiguration {
     }
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @Bean
     fun storePipelineBuildFinishListener(

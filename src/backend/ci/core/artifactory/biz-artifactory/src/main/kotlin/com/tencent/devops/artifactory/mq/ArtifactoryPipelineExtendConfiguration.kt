@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.mq
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import org.springframework.beans.factory.annotation.Autowired
@@ -50,7 +50,7 @@ class ArtifactoryPipelineExtendConfiguration {
     }
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     /**
      * 构建广播交换机

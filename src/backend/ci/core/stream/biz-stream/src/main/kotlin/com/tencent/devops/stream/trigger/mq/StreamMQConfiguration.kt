@@ -29,7 +29,6 @@ package com.tencent.devops.stream.trigger.mq
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
@@ -87,7 +86,7 @@ class StreamMQConfiguration {
     fun sampleEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @Bean
     fun streamBuildFinishListenerService(

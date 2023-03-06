@@ -172,6 +172,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
         channelCode: ChannelCode,
         useTemplateSettings: Boolean?
     ): Result<PipelineId> {
+        modelAndSetting.setting.checkParam()
         val pipelineId = PipelineId(
             id = pipelineInfoFacadeService.uploadPipeline(
                 userId = userId,
@@ -312,6 +313,7 @@ class ServicePipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkProjectId(projectId)
         checkPipelineId(pipelineId)
+        setting.checkParam()
         pipelineSettingFacadeService.saveSetting(
             userId = userId,
             setting = setting,

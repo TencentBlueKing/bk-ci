@@ -41,7 +41,7 @@ import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
 import java.io.File
@@ -102,7 +102,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val url = "/bkrepo/api/build/generic/${buildVariables.projectId}/custom/$bkRepoPath"
         val request = buildPut(
             url,
-            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
@@ -162,7 +162,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "${buildVariables.buildId}/${file.name}"
         val request = buildPut(
             url,
-            RequestBody.create(MediaType.parse("application/octet-stream"), file),
+            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )

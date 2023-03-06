@@ -117,7 +117,11 @@ class NotifyMessageConsumer @Autowired constructor(
             val weworkNotifyTextMessage = WeworkNotifyTextMessage(
                 receivers = parseStaff,
                 receiverType = WeworkReceiverType.single,
-                textType = WeworkTextType.text,
+                textType = if (weworkNotifyMessageWithOperation.markdownContent) {
+                    WeworkTextType.markdown
+                } else {
+                    WeworkTextType.text
+                },
                 message = weworkNotifyMessageWithOperation.body
             )
             weworkService.sendTextMessage(weworkNotifyTextMessage)

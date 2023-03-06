@@ -31,12 +31,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.TransferDispatch
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
 import com.tencent.devops.websocket.event.ClearUserSessionTransferEvent
 import com.tencent.devops.websocket.event.LoginOutTransferEvent
 import com.tencent.devops.websocket.keys.WebsocketKeys
+import com.tencent.devops.websocket.pojo.ChangePageDTO
 import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -49,6 +50,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
+    private val streamBridge: StreamBridge,
     private val transferDispatch: TransferDispatch,
     private val projectProxyService: ProjectProxyService
 ) {
@@ -70,54 +72,42 @@ class WebsocketService @Autowired constructor(
     private val longSessionList = mutableSetOf<String>()
 
     // 用户切换页面，需调整sessionId-page,page-sessionIdList两个map
-    fun changePage(
-        streamBridge: StreamBridge,
-        userId: String,
-        sessionId: String,
-        newPage: String,
-        projectId: String,
-        needCheckProject: Boolean,
-        transferData: Map<String, Any>? = emptyMap()
-    ) {
-        if (needCheckProject && projectId.isNotEmpty()) {
-            if (!projectProxyService.checkProject(projectId, userId)) {
+    fun changePage(changePage: ChangePageDTO) {
+        if (changePage.showProjectList && !changePage.projectId.isNullOrBlank()) {
+            if (!projectProxyService.checkProject(changePage.projectId, changePage.userId)) {
                 return
             }
         }
-        val redisLock = lockUser(sessionId)
-        try {
+        val redisLock = lockUser(changePage.sessionId)
+
+        redisLock.use {
             redisLock.lock()
-            if (!checkParams(userId, sessionId)) {
-                logger.warn("changPage checkFail: userId:$userId,sessionId:$sessionId")
+            if (!checkParams(changePage.userId, changePage.sessionId)) {
+                logger.warn("changPage checkFail: userId:$changePage.userId,sessionId:$changePage.sessionId")
                 return
             }
 
-            val normalPage = PageUtils.buildNormalPage(newPage)
-            val existsSessionId = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
-            if (existsSessionId == null) {
-                RedisUtlis.writeSessionIdByRedis(redisOperation, userId, sessionId)
-            }
+            val normalPage = PageUtils.buildNormalPage(changePage.page)
+            WsRedisUtils.writeSessionIdByRedis(redisOperation, changePage.userId, changePage.sessionId)
 
-            val oldPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
-            RedisUtlis.refreshSessionPage(redisOperation, sessionId, normalPage)
+            val oldPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, changePage.sessionId)
+            WsRedisUtils.refreshSessionPage(redisOperation, changePage.sessionId, normalPage)
             if (oldPage != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, oldPage, sessionId)
+                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, oldPage, changePage.sessionId)
             }
-            RedisUtlis.refreshPageSession(redisOperation, sessionId, normalPage)
+            WsRedisUtils.refreshPageSession(redisOperation, changePage.sessionId, normalPage)
 
-            logger.info("sessionPage[session:$sessionId,page:$normalPage]")
-            if (needTransfer && transferData!!.isNotEmpty()) {
+            logger.info("sessionPage[session:$changePage.sessionId,page:$normalPage]")
+            if (needTransfer && !changePage.transferData.isNullOrEmpty()) {
                 transferDispatch.dispatch(
                     streamBridge,
                     ChangePageTransferEvent(
-                        userId = userId,
-                        page = newPage,
-                        transferData = transferData
+                        userId = changePage.userId,
+                        page = changePage.page,
+                        transferData = changePage.transferData
                     )
                 )
             }
-        } finally {
-            redisLock.unlock()
         }
     }
 
@@ -136,17 +126,17 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("WebsocketService loginOut:user:$userId,sessionId:$sessionId")
-            val redisPage = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+            val redisPage = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
             var clearPage = oldPage
             if (!oldPage.isNullOrEmpty() && redisPage != oldPage) {
-                clearPage = PageUtils.buildNormalPage(oldPage!!)
+                clearPage = PageUtils.buildNormalPage(oldPage)
             }
 
-            RedisUtlis.cleanSessionPageBySessionId(redisOperation, sessionId)
+            WsRedisUtils.cleanSessionPageBySessionId(redisOperation, sessionId)
             if (clearPage != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, clearPage, sessionId)
+                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, clearPage, sessionId)
             } else if (redisPage != null) {
-                RedisUtlis.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
+                WsRedisUtils.cleanPageSessionBySessionId(redisOperation, redisPage, sessionId)
             }
 //            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
@@ -174,9 +164,8 @@ class WebsocketService @Autowired constructor(
         try {
             redisLock.lock()
             logger.info("clearUserSession:user:$userId,sessionId:$sessionId")
-            RedisUtlis.deleteUserSessionBySession(redisOperation, sessionId)
-            RedisUtlis.deleteSigelSessionByUser(redisOperation, userId, sessionId)
-//            RedisUtlis.cleanSessionTimeOutBySession(redisOperation, sessionId)
+            WsRedisUtils.deleteUserSessionBySession(redisOperation, sessionId)
+            WsRedisUtils.cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             removeCacheSession(sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
@@ -199,7 +188,7 @@ class WebsocketService @Autowired constructor(
         sessionId: String
     ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
-        val page = RedisUtlis.getPageFromSessionPageBySession(redisOperation, sessionId)
+        val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
         clearUserSession(streamBridge, userId, sessionId, null)
         if (page != null) {
             logger.info("$userId| $sessionId|$page clear when disconnection")
