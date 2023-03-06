@@ -32,9 +32,9 @@ package telegrafconf
 
 const TelegrafConf = `
 [global_tags]
-  projectId = "##{projectId}##"
-  agentId = "##{agentId}##"
-  agentSecret = "##{agentSecretKey}##"
+  projectId = "###{projectId}###"
+  agentId = "###{agentId}###"
+  agentSecret = "###{agentSecret}###"
 [agent]
   interval = "1m"
   round_interval = true
@@ -50,13 +50,10 @@ const TelegrafConf = `
   hostname = ""
   omit_hostname = false
 [[outputs.influxdb]]
-  urls = ["##{gateway}##/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
+  urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
   database = "agentMetrix"
   skip_database_creation = true
-  ##{tls_ca}##
-[[inputs.mem]]
-[[inputs.disk]]
-  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+  ###{tls_ca}###
 [[inputs.win_perf_counters]]
   [[inputs.win_perf_counters.object]]
     ObjectName = "Processor"
@@ -71,19 +68,6 @@ const TelegrafConf = `
     ]
     Measurement = "cpu"
     IncludeTotal=true
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "LogicalDisk"
-    Instances = ["*"]
-    Counters = [
-      "% Idle Time",
-      "% Disk Time",
-      "% Disk Read Time",
-      "% Disk Write Time",
-      "Current Disk Queue Length",
-      "% Free Space",
-      "Free Megabytes",
-    ]
-    Measurement = "win_disk"
   [[inputs.win_perf_counters.object]]
     ObjectName = "PhysicalDisk"
     Instances = ["*"]
@@ -112,46 +96,16 @@ const TelegrafConf = `
       "Packets Outbound Errors",
     ]
     Measurement = "net"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "System"
-    Counters = [
-      "Context Switches/sec",
-      "System Calls/sec",
-      "Processor Queue Length",
-      "System Up Time",
-    ]
-    Instances = ["------"]
-    Measurement = "win_system"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Memory"
-    Counters = [
-      "Available Bytes",
-      "Cache Faults/sec",
-      "Demand Zero Faults/sec",
-      "Page Faults/sec",
-      "Pages/sec",
-      "Transition Faults/sec",
-      "Pool Nonpaged Bytes",
-      "Pool Paged Bytes",
-      "Standby Cache Reserve Bytes",
-      "Standby Cache Normal Priority Bytes",
-      "Standby Cache Core Bytes",
-    ]
-    Instances = ["------"]
-    Measurement = "win_mem"
-  [[inputs.win_perf_counters.object]]
-    ObjectName = "Paging File"
-    Counters = [
-      "% Usage",
-    ]
-    Instances = ["_Total"]
-    Measurement = "win_swap"
+[[inputs.mem]]
+[[inputs.disk]]
+  ignore_fs = ["tmpfs", "devtmpfs", "devfs", "overlay", "aufs", "squashfs"]
+[[inputs.system]]
 
 [[processors.rename]]
   # cpu
   [[processors.rename.replace]]
     measurement = "cpu"
-    dest = "system.cpu_summary"
+    dest = "system.cpu_detail"
   [[processors.rename.replace]]
     field = "Percent_User_Time"
     dest = "user"
@@ -171,6 +125,12 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "Bytes_Sent_persec"
     dest = "speed_sent"
+  [[processors.rename.replace]]
+    field = "Packets_Received_persec"
+    dest = "speed_packets_recv"
+  [[processors.rename.replace]]
+    field = "Packets_Sent_persec"
+    dest = "speed_packets_sent"  
   # mem
   [[processors.rename.replace]]
     measurement = "mem"
@@ -188,6 +148,55 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "Disk_Write_Bytes_persec"
     dest = "wkb_s"
+  # netstat
+  [[processors.rename.replace]]
+    measurement = "netstat"
+    dest = "system.netstat"
+  [[processors.rename.replace]]
+    field = "tcp_close_wait"
+    dest = "cur_tcp_closewait"
+  [[processors.rename.replace]]
+    field = "tcp_time_wait"
+    dest = "cur_tcp_timewait"
+  [[processors.rename.replace]]
+    field = "tcp_close"
+    dest = "cur_tcp_closed"
+  [[processors.rename.replace]]
+    field = "tcp_closing"
+    dest = "cur_tcp_closing"
+  [[processors.rename.replace]]
+    field = "tcp_established"
+    dest = "cur_tcp_estab"  
+  [[processors.rename.replace]]
+    field = "tcp_fin_wait1"
+    dest = "cur_tcp_finwait1"  
+  [[processors.rename.replace]]
+    field = "tcp_fin_wait2"
+    dest = "cur_tcp_finwait2"  
+  [[processors.rename.replace]]
+    field = "tcp_last_ack"
+    dest = "cur_tcp_lastack"    
+  [[processors.rename.replace]]
+    field = "tcp_listen"
+    dest = "cur_tcp_listen"      
+  [[processors.rename.replace]]
+    field = "tcp_syn_recv"
+    dest = "cur_tcp_syn_recv"
+  [[processors.rename.replace]]
+    field = "tcp_syn_sent"
+    dest = "cur_tcp_syn_sent"  
+  # swap
+  [[processors.rename.replace]]
+    measurement = "swap"
+    dest = "system.swap"
+  # load
+  [[processors.rename.replace]]
+    measurement = "system"
+    dest = "system.load"  
+        
+# disk的指标同名但改完名不同单独拿出来    
+[[processors.rename]]
+  namepass = ["disk"]
   # disk
   [[processors.rename.replace]]
     measurement = "disk"
