@@ -77,7 +77,7 @@ class AppBuildService @Autowired constructor(
         files?.records?.forEach {
             val singlePackageVersion =
                 client.get(ServiceArtifactoryResource::class).show(userId, projectId, it.artifactoryType, it.path)
-                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)
+                    .data?.meta?.get(ARCHIVE_PROPS_APP_VERSION)?.toString()
             if (!singlePackageVersion.isNullOrBlank()) packageVersion.append(singlePackageVersion).append(";")
         }
         logger.info("查文件个数、版本: ${System.currentTimeMillis() - beginTime} ms")
