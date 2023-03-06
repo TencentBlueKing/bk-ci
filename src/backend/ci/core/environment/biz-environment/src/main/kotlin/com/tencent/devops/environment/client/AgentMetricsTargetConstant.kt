@@ -30,7 +30,7 @@ package com.tencent.devops.environment.client
 // Agent 监控指标别名常量，用到的所有指标名都在这里修改方便使用
 // 开头 t 表名 f 字段名
 object AgentMetricsTargetConstant {
-    const val t_system = "system"
+    const val t_system = "system.load"
     const val f_system_n_cpus = "n_cpus"
 
     const val t_mem = "system.mem"
