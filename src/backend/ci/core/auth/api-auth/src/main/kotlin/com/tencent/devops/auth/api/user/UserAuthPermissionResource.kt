@@ -16,7 +16,7 @@ import javax.ws.rs.core.MediaType
 @Path("/user/auth/permission")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
-interface UserPermissionAuthResource {
+interface UserAuthPermissionResource {
     @GET
     @Path("/{projectCode}/validate/batch")
     @ApiOperation("批量校验用户是否拥有某个资源实例的操作")
@@ -34,6 +34,7 @@ interface UserPermissionAuthResource {
         @ApiParam("资源code", required = true)
         resourceCode: String,
         @ApiParam("action类型列表", required = true)
+        @QueryParam("resourceCode")
         action: List<String>
     ): Result<Map<String, Boolean>>
 }
