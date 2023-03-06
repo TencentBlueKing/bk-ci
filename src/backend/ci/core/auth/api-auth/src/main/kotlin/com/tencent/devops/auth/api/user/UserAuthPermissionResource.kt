@@ -19,7 +19,7 @@ import javax.ws.rs.core.MediaType
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserAuthPermissionResource {
     @POST
-    @Path("//validate/batch")
+    @Path("/validate/batch")
     @ApiOperation("批量校验用户是否拥有某个资源实例的操作")
     fun batchValidateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
