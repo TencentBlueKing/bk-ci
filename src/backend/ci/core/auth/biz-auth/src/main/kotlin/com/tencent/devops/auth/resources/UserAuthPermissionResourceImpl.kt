@@ -1,6 +1,6 @@
 package com.tencent.devops.auth.resources
 
-import UserAuthPermissionResource
+import com.tencent.devops.auth.api.user.UserAuthPermissionResource
 import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
