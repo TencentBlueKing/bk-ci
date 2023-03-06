@@ -88,7 +88,7 @@ class PipelineTemplateService @Autowired constructor(
                         if (imageCode.isNullOrBlank() || imageVersion.isNullOrBlank()) {
                             return@imageInfo
                         } else {
-                            if (images.contains(image) ) {
+                            if (images.contains(image)) {
                                 return@imageInfo
                             } else {
                                 images.add(image)
