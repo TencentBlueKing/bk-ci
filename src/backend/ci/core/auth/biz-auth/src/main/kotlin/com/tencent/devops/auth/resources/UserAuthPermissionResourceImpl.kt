@@ -1,15 +1,15 @@
 package com.tencent.devops.auth.resources
 
-import UserPermissionAuthResource
+import UserAuthPermissionResource
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
-class UserPermissionAuthResourceImpl @Autowired constructor(
+class UserAuthPermissionResourceImpl @Autowired constructor(
     val permissionService: PermissionService
-) : UserPermissionAuthResource {
+) : UserAuthPermissionResource {
     override fun batchValidateUserResourcePermission(
         userId: String,
         projectCode: String,
