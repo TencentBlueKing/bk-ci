@@ -6,7 +6,7 @@ data class EnvironmentSpec(
     val containers: List<Container>,
     val restartPolicy: String = "",
     val terminationGracePeriodSeconds: Long = 60,
-    val activeDeadlineSeconds: Long = 230400, // 默认存活8天
+    val activeDeadlineSeconds: Long = 1296000, // 默认存活15天
     val dnsPolicy: String = "",
     val securityContext: EnvironmentSecurityContext? = null,
     val imagePullCertificate: List<ImagePullCertificate>? = emptyList()

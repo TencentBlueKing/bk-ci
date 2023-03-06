@@ -48,11 +48,11 @@ class KubernetesRemoteDevService @Autowired constructor(
             workspaceId = workspaceId,
             userId = userId,
             gitRepo = GitRepo(
-                gitRepoName = "go-test",
-                gitRepoRef = "master"
+                gitRepoName = event.devFile.dotfileRepo ?: "",
+                gitRepoRef = event.branch
             ),
             gitUserName = userId,
-            gitEmail = "ruotiantang@tencent.com",
+            gitEmail = event.devFile.gitEmail ?: "",
             remotingYamlName = "",
             userFiles = emptyList()
         )
