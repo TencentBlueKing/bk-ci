@@ -1,6 +1,6 @@
 module github.com/TencentBlueKing/bk-ci/src/agent
 
-go 1.17
+go 1.19
 
 require (
 	github.com/docker/docker v23.0.0+incompatible
