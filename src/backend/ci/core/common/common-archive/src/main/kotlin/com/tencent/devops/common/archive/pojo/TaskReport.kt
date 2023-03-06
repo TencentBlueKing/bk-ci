@@ -29,6 +29,7 @@ package com.tencent.devops.common.archive.pojo
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
+import java.time.LocalDateTime
 
 @ApiModel("自定义报告-报告信息")
 data class TaskReport(
@@ -43,5 +44,7 @@ data class TaskReport(
     @ApiModelProperty("插件Id", required = true)
     val taskId: String,
     @ApiModelProperty("插件code", required = true)
-    val atomCode: String
+    val atomCode: String,
+    @ApiModelProperty("创建时间", required = true)
+    val createTime: LocalDateTime
 )

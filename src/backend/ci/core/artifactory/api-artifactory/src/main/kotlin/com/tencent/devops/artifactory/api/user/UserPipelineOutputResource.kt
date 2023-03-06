@@ -41,6 +41,6 @@ interface UserPipelineOutputResource {
         buildId: String,
         @ApiParam("搜索过滤条件", required = false)
         option: PipelineOutputSearchOption?
-    ): Result<PipelineOutput>
+    ): Result<List<PipelineOutput>>
 
 }

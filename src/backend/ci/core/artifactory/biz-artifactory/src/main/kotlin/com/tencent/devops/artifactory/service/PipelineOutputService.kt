@@ -10,5 +10,5 @@ interface PipelineOutputService {
         pipelineId: String,
         buildId: String,
         option: PipelineOutputSearchOption?
-    ): PipelineOutput
+    ): List<PipelineOutput>
 }

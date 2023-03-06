@@ -175,7 +175,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             } else {
                 TaskReport(
@@ -184,7 +185,8 @@ class ReportService @Autowired constructor(
                     type = it.type,
                     taskId = it.elementId,
                     atomCode = atomCode,
-                    atomName = atomName
+                    atomName = atomName,
+                    createTime = it.createTime
                 )
             }
         }

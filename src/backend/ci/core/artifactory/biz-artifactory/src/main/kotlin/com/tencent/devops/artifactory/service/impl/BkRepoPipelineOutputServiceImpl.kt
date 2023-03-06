@@ -16,14 +16,14 @@ import org.springframework.stereotype.Service
 class BkRepoPipelineOutputServiceImpl(
     private val client: Client,
     private val bkRepoArchiveFileServiceImpl: BkRepoArchiveFileServiceImpl
-) : PipelineOutputService{
+) : PipelineOutputService {
     override fun search(
         userId: String,
         projectId: String,
         pipelineId: String,
         buildId: String,
         option: PipelineOutputSearchOption?
-    ): PipelineOutput {
+    ): List<PipelineOutput> {
         val artifacts = mutableListOf<FileInfo>()
         val reports = mutableListOf<TaskReport>()
         if (option?.pipelineOutputType == null || option.pipelineOutputType == PipelineOutputType.ARTIFACT) {
@@ -56,6 +56,11 @@ class BkRepoPipelineOutputServiceImpl(
             reports.addAll(client.get(ServiceReportResource::class).get(reportListDTO).data!!)
         }
 
-        return PipelineOutput(artifacts, reports)
+        val pipelineOutputList = mutableListOf<PipelineOutput>()
+        pipelineOutputList.addAll(artifacts.map { PipelineOutput.convertFromFileInfo(it) })
+        pipelineOutputList.addAll(reports.map { PipelineOutput.convertFromTaskReport(it) })
+        pipelineOutputList.sortedByDescending { it.createTime }
+
+        return pipelineOutputList
     }
 }
