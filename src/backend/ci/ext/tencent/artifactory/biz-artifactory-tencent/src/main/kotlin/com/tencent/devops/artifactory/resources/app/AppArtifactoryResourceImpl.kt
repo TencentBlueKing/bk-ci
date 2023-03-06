@@ -237,7 +237,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 projectName = projectName,
                 pipelineName = pipelineInfo?.pipelineName ?: StringUtils.EMPTY,
                 creator = fileDetail.meta[ARCHIVE_PROPS_USER_ID]?.toString() ?: StringUtils.EMPTY,
-                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString() ?: StringUtils.EMPTY,
+                bundleIdentifier = fileDetail.meta[ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER]?.toString()
+                    ?: StringUtils.EMPTY,
                 logoUrl = UrlUtil.toOuterPhotoAddr(
                     fileDetail.meta[ARCHIVE_PROPS_APP_ICON]?.toString() ?: backUpIcon.value
                 ),
