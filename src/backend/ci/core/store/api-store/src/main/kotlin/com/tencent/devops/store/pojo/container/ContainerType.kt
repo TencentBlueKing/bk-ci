@@ -8,5 +8,5 @@ data class ContainerType(
     @ApiModelProperty("流水线容器类型", required = true)
     var type: String,
     @ApiModelProperty("操作系统", required = true)
-    var system: List<ContainerOsInfo>
+    var osInfos: List<ContainerOsInfo>
 )

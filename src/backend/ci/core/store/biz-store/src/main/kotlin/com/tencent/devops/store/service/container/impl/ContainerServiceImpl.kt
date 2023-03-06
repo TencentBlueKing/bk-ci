@@ -117,7 +117,7 @@ abstract class ContainerServiceImpl @Autowired constructor() : ContainerService 
             }
             ContainerType(
                 type = it.key,
-                system = list
+                osInfos = list
             )
         }
         return Result(containerTypes)
