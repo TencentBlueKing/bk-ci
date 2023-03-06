@@ -16,7 +16,6 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-
 @Api(tags = ["USER_PIPELINE_OUTPUT"], description = "流水线产出物管理")
 @Path("/user/pipeline/output")
 @Produces(MediaType.APPLICATION_JSON)
@@ -42,5 +41,4 @@ interface UserPipelineOutputResource {
         @ApiParam("搜索过滤条件", required = false)
         option: PipelineOutputSearchOption?
     ): Result<List<PipelineOutput>>
-
 }

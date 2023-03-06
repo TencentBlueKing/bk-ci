@@ -1040,7 +1040,13 @@ class BkRepoClient constructor(
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    fun listDir(userId: String, projectId: String, repoName: String, path: String?, name: String?): List<QueryNodeInfo> {
+    fun listDir(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        path: String?,
+        name: String?
+    ): List<QueryNodeInfo> {
         if (path.isNullOrBlank() && name.isNullOrBlank()) {
             throw IllegalArgumentException()
         }
@@ -1105,7 +1111,7 @@ class BkRepoClient constructor(
             val responseData = try {
                 objectMapper.readValue<Response<Void>>(responseContent)
             } catch (e: JacksonException) {
-                throw RemoteServiceException(responseContent, this.code())
+                throw RemoteServiceException(responseContent, this.code)
             }
             if (allowCode == responseData.code) {
                 logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
