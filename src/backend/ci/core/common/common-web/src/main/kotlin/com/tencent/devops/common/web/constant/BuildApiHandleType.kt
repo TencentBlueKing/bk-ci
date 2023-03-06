@@ -28,5 +28,5 @@
 package com.tencent.devops.common.web.constant
 
 enum class BuildApiHandleType {
-    UNAUTHORIZED
+    AUTH_CHECK
 }

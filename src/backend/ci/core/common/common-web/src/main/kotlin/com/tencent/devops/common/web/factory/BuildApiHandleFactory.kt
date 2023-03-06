@@ -45,7 +45,7 @@ object BuildApiHandleFactory {
     ): BuildApiHandleService {
         var buildApiHandleMapService = buildApiHandleMap[type.name]
         when (type) {
-            BuildApiHandleType.UNAUTHORIZED -> {
+            BuildApiHandleType.AUTH_CHECK -> {
                 if (buildApiHandleMapService == null) {
                     buildApiHandleMapService = BuildApiHandleAuthServiceImpl(getClient())
                     buildApiHandleMap[type.name] = buildApiHandleMapService

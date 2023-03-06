@@ -47,7 +47,7 @@ class BuildBuildResourceImpl @Autowired constructor(
     private val pipelineUrlBean: PipelineUrlBean
 ) : BuildBuildResource {
 
-    @BuildApiPermission([BuildApiHandleType.UNAUTHORIZED])
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getSingleHistoryBuild(
         projectId: String,
         pipelineId: String,
@@ -64,7 +64,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    @BuildApiPermission([BuildApiHandleType.UNAUTHORIZED])
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getLatestSuccessBuild(
         projectId: String,
         pipelineId: String,
@@ -79,7 +79,7 @@ class BuildBuildResourceImpl @Autowired constructor(
         )
     }
 
-    @BuildApiPermission([BuildApiHandleType.UNAUTHORIZED])
+    @BuildApiPermission([BuildApiHandleType.AUTH_CHECK])
     override fun getBuildDetail(
         projectId: String,
         pipelineId: String,

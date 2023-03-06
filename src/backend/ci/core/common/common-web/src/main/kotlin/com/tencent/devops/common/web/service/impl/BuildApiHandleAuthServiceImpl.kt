@@ -49,13 +49,6 @@ class BuildApiHandleAuthServiceImpl constructor(val client: Client) : BuildApiHa
         if (!parameterNames.contains("projectId") || !parameterNames.contains("pipelineId")) return
         var projectId: String? = null
         var pipelineId: String? = null
-        parameterNames.forEach {
-            logger.info("ParamName[$it]")
-        }
-
-        parameterValue.forEach {
-            logger.info("ParamValue[$it]")
-        }
         for (index in parameterValue.indices) {
             when (parameterNames[index]) {
                 "projectId" -> {
@@ -78,12 +71,9 @@ class BuildApiHandleAuthServiceImpl constructor(val client: Client) : BuildApiHa
                 projectId = projectId,
                 pipelineId = pipelineId
             ).data!!
-            if (checkPipelinePermissionResult) {
-                logger.info("verify that user [$buildStartUser] has permission to access information " +
-                        "in pipeline [$pipelineId] under project [$projectId].【verify succeed】")
-            } else {
-                logger.info("verify that user [$buildStartUser] has permission to access information " +
-                        "in pipeline [$pipelineId] under project [$projectId].【verify fail】")
+            if (!checkPipelinePermissionResult) {
+                logger.info("The user [$buildStartUser] does not have permission to access " +
+                        "the project [$projectId] pipeline [$pipelineId] build info")
             }
         }
     }
