@@ -101,7 +101,7 @@ class DevCloudMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun startMacListener(
+    fun startDevCloudListener(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildDevCloudAgentStartQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -140,7 +140,7 @@ class DevCloudMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun startMacDemoteListener(
+    fun startDevCloudDemoteListener(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildDevCloudAgentStartDemoteQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
@@ -179,7 +179,7 @@ class DevCloudMQConfiguration @Autowired constructor() {
     }
 
     @Bean
-    fun shutdownMacListener(
+    fun shutdownDevCloudListener(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired buildDevCloudAgentShutdownQueue: Queue,
         @Autowired rabbitAdmin: RabbitAdmin,
