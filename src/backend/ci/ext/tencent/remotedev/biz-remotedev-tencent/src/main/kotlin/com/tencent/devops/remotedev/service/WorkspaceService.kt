@@ -76,6 +76,14 @@ import com.tencent.devops.remotedev.pojo.event.RemoteDevUpdateEvent
 import com.tencent.devops.remotedev.pojo.event.UpdateEventType
 import com.tencent.devops.remotedev.service.redis.RedisCallLimit
 import com.tencent.devops.remotedev.service.redis.RedisHeartBeat
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_CALL_LIMIT_KEY_PREFIX
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_HAVING_COUNT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DEFAULT_MAX_RUNNING_COUNT
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_DISCOUNT_TIME_KEY
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OFFICIAL_DEVFILE_KEY
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_OP_HISTORY_KEY_PREFIX
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_GRAY_VERSION
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_REMOTEDEV_PROD_VERSION
 import com.tencent.devops.remotedev.service.transfer.RemoteDevGitTransfer
 import com.tencent.devops.remotedev.utils.DevfileUtil
 import com.tencent.devops.remotedev.websocket.page.WorkspacePageBuild
@@ -125,14 +133,6 @@ class WorkspaceService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(WorkspaceService::class.java)
-        private const val REDIS_CALL_LIMIT_KEY = "remotedev:callLimit"
-        private const val REDIS_DEFAULT_MAX_RUNNING_COUNT = "remotedev:defaultMaxRunningCount"
-        private const val REDIS_DEFAULT_MAX_HAVING_COUNT = "remotedev:defaultMaxHavingCount"
-        private const val REDIS_DISCOUNT_TIME_KEY = "remotedev:discountTime"
-        private const val REDIS_OFFICIAL_DEVFILE_KEY = "remotedev:devfile"
-        private const val REDIS_OP_HISTORY_KEY_PREFIX = "remotedev:opHistory:"
-        private const val REDIS_REMOTEDEV_GRAY_VERSION = "remotedev:gray:version"
-        private const val REDIS_REMOTEDEV_PROD_VERSION = "remotedev:prod:version"
         private const val ADMIN_NAME = "system"
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
@@ -407,7 +407,7 @@ class WorkspaceService @Autowired constructor(
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:workspace:$workspaceName",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -650,7 +650,7 @@ class WorkspaceService @Autowired constructor(
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:workspace:$workspaceName",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -767,7 +767,7 @@ class WorkspaceService @Autowired constructor(
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:workspace:$workspaceName",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:$workspaceName",
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -886,7 +886,7 @@ class WorkspaceService @Autowired constructor(
         permissionService.checkPermission(userId, workspaceName)
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:shareWorkspace:${workspaceName}_$sharedUser",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:shareWorkspace:${workspaceName}_$sharedUser",
             expiredTimeInSeconds
         ).lock().use {
             val workspace = workspaceDao.fetchAnyWorkspace(dslContext, workspaceName = workspaceName)
@@ -1175,7 +1175,7 @@ class WorkspaceService @Autowired constructor(
         }
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:workspace:${workspace.id}",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.id}",
             expiredTimeInSeconds
         ).lock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(
@@ -1256,7 +1256,7 @@ class WorkspaceService @Autowired constructor(
         }
         RedisCallLimit(
             redisOperation,
-            "$REDIS_CALL_LIMIT_KEY:workspace:${workspace.name}",
+            "$REDIS_CALL_LIMIT_KEY_PREFIX:workspace:${workspace.name}",
             expiredTimeInSeconds
         ).lock().use {
             workspaceOpHistoryDao.createWorkspaceHistory(

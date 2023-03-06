@@ -7,6 +7,7 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.filter.ApiFilter
+import com.tencent.devops.remotedev.service.redis.RedisKeys.REDIS_WHITE_LIST_KEY
 import org.slf4j.LoggerFactory
 import java.util.concurrent.TimeUnit
 import javax.ws.rs.container.ContainerRequestContext
@@ -23,7 +24,6 @@ class WhitelistApiFilter constructor(
 ) : ApiFilter {
     companion object {
         private val logger = LoggerFactory.getLogger(WhitelistApiFilter::class.java)
-        private const val REDIS_WHITE_LIST_KEY = "remotedev:whiteList"
     }
 
     private val redisCache = Caffeine.newBuilder()
