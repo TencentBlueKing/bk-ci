@@ -30,8 +30,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
@@ -78,7 +77,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        val iamGroupInfoList =  if (resourceType == AuthResourceType.PROJECT.value) {
+        val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.listGroup(resourceInfo.relationId)
         } else {
             permissionSubsetManagerService.listGroup(resourceInfo.relationId)
@@ -189,15 +188,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
         logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
-        val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-            .members(listOf(managerMember))
+        val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
+            .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)
-            .build()
-        iamV2ManagerService.renewalRoleGroupMemberV2(
-            groupId,
-            managerMemberGroupDTO
-        )
+            .reason("续期用户组")
+            .applicant(userId).build()
+        iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
         return true
     }
 
