@@ -10,6 +10,8 @@ import (
 	_ "github.com/influxdata/telegraf/plugins/inputs/processes"
 	_ "github.com/influxdata/telegraf/plugins/inputs/system"
 	_ "github.com/influxdata/telegraf/plugins/inputs/win_perf_counters"
+	_ "github.com/influxdata/telegraf/plugins/inputs/netstat"
+	_ "github.com/influxdata/telegraf/plugins/inputs/swap"
 
 	_ "github.com/influxdata/telegraf/plugins/outputs/influxdb"
 	_ "github.com/influxdata/telegraf/plugins/processors/rename"
