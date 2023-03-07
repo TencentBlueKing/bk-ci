@@ -13,14 +13,15 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
 ) : UserAuthPermissionResource {
     override fun batchValidateUserResourcePermission(
         userId: String,
+        projectCode: String,
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>> {
-        val actionCheckPermissionMap: MutableMap<String, Boolean> = HashMap()
+        val actionCheckPermissionMap = mutableMapOf<String, Boolean>()
         permissionBatchValidateDTO.actionList.forEach {
             val checkActionPermission = permissionService.validateUserResourcePermissionByRelation(
                 userId = userId,
                 action = it,
-                projectCode = permissionBatchValidateDTO.projectCode,
+                projectCode = projectCode,
                 resourceCode = permissionBatchValidateDTO.resourceCode,
                 resourceType = permissionBatchValidateDTO.resourceType,
                 relationResourceType = null
@@ -29,5 +30,4 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
         }
         return Result(actionCheckPermissionMap)
     }
-
 }
