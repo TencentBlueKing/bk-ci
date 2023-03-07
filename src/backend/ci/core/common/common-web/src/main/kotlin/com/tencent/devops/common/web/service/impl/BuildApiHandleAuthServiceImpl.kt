@@ -78,9 +78,11 @@ class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
                         "the project [$projectId] pipeline [$pipelineId] build info")
             }
         } else {
-            logger.warn("The parameter of this request is abnormal {" +
+            logger.warn(
+                "The parameter of this request is abnormal {" +
                     "Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
-                    "user pipeline param[$pipelineId]}")
+                    "user pipeline param[$pipelineId]}"
+            )
         }
     }
 }
