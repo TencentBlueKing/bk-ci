@@ -114,7 +114,7 @@ const TelegrafConf = `
     dest = "system"
   [[processors.rename.replace]]
     field = "Percent_Idle_Time"
-    dest = "idle" 
+    dest = "idle"
   # net
   [[processors.rename.replace]]
     measurement = "net"
@@ -130,7 +130,7 @@ const TelegrafConf = `
     dest = "speed_packets_recv"
   [[processors.rename.replace]]
     field = "Packets_Sent_persec"
-    dest = "speed_packets_sent"  
+    dest = "speed_packets_sent"
   # mem
   [[processors.rename.replace]]
     measurement = "mem"
@@ -166,25 +166,25 @@ const TelegrafConf = `
     dest = "cur_tcp_closing"
   [[processors.rename.replace]]
     field = "tcp_established"
-    dest = "cur_tcp_estab"  
+    dest = "cur_tcp_estab"
   [[processors.rename.replace]]
     field = "tcp_fin_wait1"
-    dest = "cur_tcp_finwait1"  
+    dest = "cur_tcp_finwait1"
   [[processors.rename.replace]]
     field = "tcp_fin_wait2"
-    dest = "cur_tcp_finwait2"  
+    dest = "cur_tcp_finwait2"
   [[processors.rename.replace]]
     field = "tcp_last_ack"
-    dest = "cur_tcp_lastack"    
+    dest = "cur_tcp_lastack"
   [[processors.rename.replace]]
     field = "tcp_listen"
-    dest = "cur_tcp_listen"      
+    dest = "cur_tcp_listen"
   [[processors.rename.replace]]
     field = "tcp_syn_recv"
     dest = "cur_tcp_syn_recv"
   [[processors.rename.replace]]
     field = "tcp_syn_sent"
-    dest = "cur_tcp_syn_sent"  
+    dest = "cur_tcp_syn_sent"
   # swap
   [[processors.rename.replace]]
     measurement = "swap"
@@ -192,8 +192,8 @@ const TelegrafConf = `
   # load
   [[processors.rename.replace]]
     measurement = "system"
-    dest = "system.load"  
-        
+    dest = "system.load"
+
 # disk的指标同名但改完名不同单独拿出来    
 [[processors.rename]]
   namepass = ["disk"]
