@@ -30,14 +30,14 @@ package com.tencent.devops.environment.client
 // Agent 监控指标别名常量，用到的所有指标名都在这里修改方便使用
 // 开头 t 表名 f 字段名
 object AgentMetricsTargetConstant {
-    const val t_system = "system.load"
+    const val t_system = "load"
     const val f_system_n_cpus = "n_cpus"
 
-    const val t_mem = "system.mem"
+    const val t_mem = "mem"
     const val f_mem_used_percent = "pct_used"
     const val f_mem_total = "total"
 
-    const val t_cpu = "system.cpu_detail"
+    const val t_cpu = "cpu_detail"
     const val f_cpu_usage_idle = "idle"
     const val f_cpu_usage_iowait = "iowait"
     const val f_cpu_usage_user = "user"
@@ -45,14 +45,14 @@ object AgentMetricsTargetConstant {
     // 目前仅有windows有
     const val f_cpu_usage_interrupt = "Percent_Interrupt_Time"
 
-    const val t_disk = "system.disk"
+    const val t_disk = "disk"
     const val f_disk_total = "total"
 
-    const val t_diskio = "system.io"
+    const val t_diskio = "io"
     const val f_diskio_read_bytes = "rkb_s"
     const val f_diskio_write_bytes = "wkb_s"
 
-    const val t_net = "system.net"
+    const val t_net = "net"
     const val f_net_bytes_recv = "speed_recv"
     const val f_net_bytes_sent = "speed_sent"
 }
