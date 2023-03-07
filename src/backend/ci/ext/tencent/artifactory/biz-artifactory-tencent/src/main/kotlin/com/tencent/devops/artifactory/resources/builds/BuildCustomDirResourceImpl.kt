@@ -48,13 +48,6 @@ class BuildCustomDirResourceImpl @Autowired constructor(
     private val client: Client
 ) : BuildCustomDirResource {
     override fun list(pipelineId: String, projectId: String, path: String): List<FileInfo> {
-        if (path.contains(".")) {
-            throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                defaultMessage = "please confirm the param is directory...",
-                params = arrayOf(path)
-            )
-        }
         val userId = getLastModifyUser(projectId, pipelineId)
         return bkRepoBuildCustomDirService.list(userId, projectId, path)
     }
