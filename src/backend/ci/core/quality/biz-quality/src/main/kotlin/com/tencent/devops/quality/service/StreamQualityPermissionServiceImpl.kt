@@ -62,7 +62,7 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
     }
 
-    private fun validateGroupPermission(
+    override fun validateGroupPermission(
         userId: String,
         projectId: String,
         authPermission: AuthPermission
@@ -202,4 +202,6 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun isRbac(): Boolean = false
 }
