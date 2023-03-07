@@ -215,4 +215,6 @@ abstract class AbstractEnvironmentPermissionService constructor(
             resourceCode = HashUtil.encodeLongId(nodeId)
         )
     }
+
+    override fun isRbac(): Boolean = false
 }
