@@ -28,17 +28,17 @@ const DEFAULT_OPTIONS = {
 /**
  * 初始化
  * @param {*} el
- * @param {*} binding
+ * @param {*} data
  * @param {*} vNode
  * @returns
  */
-function init (el, binding, vNode) {
+function init (el, data, vNode) {
     // 节点被替换过时需要还原回来
     if (el.originEl) {
         el = destroy(el, vNode)
     }
     const parent = el.parentNode
-    const options = Object.assign({}, DEFAULT_OPTIONS, binding.value)
+    const options = Object.assign({}, DEFAULT_OPTIONS, data)
     if (options.hasPermission || !parent) return
 
     if (!el.cloneEl) {
@@ -78,7 +78,7 @@ function init (el, binding, vNode) {
     cloneEl.clickHandler = async (e) => {
         e.stopPropagation()
         // 点击弹框
-        handleShowDialog(binding.value.permissionData)
+        handleShowDialog(data.permissionData)
     }
 
     cloneEl.addEventListener('mouseenter', cloneEl.mouseEnterHandler)
@@ -153,11 +153,11 @@ function validatePermission (data) {
 }
 
 // 通过接口判断有无权限
-async function updatePerms (el, binding, vNode) {
-    const hasPermission = await validatePermission(binding.value.permissionData)
-    const cloneBinding = JSON.parse(JSON.stringify(binding))
-    cloneBinding.value.hasPermission = hasPermission
-    init(el, cloneBinding, vNode)
+async function updatePerms (el, data, vNode) {
+    const hasPermission = await validatePermission(data.permissionData)
+    const cloneData = JSON.parse(JSON.stringify(data))
+    cloneData.hasPermission = hasPermission
+    init(el, cloneData, vNode)
 }
 
 // vue2 使用的权限指令
@@ -175,15 +175,15 @@ export function AuthorityDirectiveV2 (handleNoPermission, ajax) {
                 inserted (el, binding, vNode) {
                     const { disablePermissionApi } = binding.value
                     if (!disablePermissionApi) {
-                        updatePerms(el, binding, vNode)
+                        updatePerms(el, binding.value, vNode)
                     } else {
-                        init(el, binding, vNode)
+                        init(el, binding.value, vNode)
                     }
                 },
                 update (el, binding, vNode) {
                     const { value, oldValue } = binding
                     if (JSON.stringify(value) === JSON.stringify(oldValue)) return
-                    init(el, binding, vNode)
+                    init(el, binding.value, vNode)
                 },
                 unbind (el, binding, vNode) {
                     destroy(el, vNode)
@@ -208,15 +208,15 @@ export function AuthorityDirectiveV3 (handleNoPermission, ajax) {
                 beforeMount (el, binding, vNode) {
                     const { disablePermissionApi } = binding.value
                     if (!disablePermissionApi) {
-                        updatePerms(el, binding, vNode)
+                        updatePerms(el, binding.value, vNode)
                     } else {
-                        init(el, binding, vNode)
+                        init(el, binding.value, vNode)
                     }
                 },
                 updated (el, binding, vNode) {
                     const { value, oldValue } = binding
                     if (JSON.stringify(value) === JSON.stringify(oldValue)) return
-                    init(el, binding, vNode)
+                    init(el, binding.value, vNode)
                 },
                 unmounted (el, binding, vNode) {
                     destroy(el, vNode)
