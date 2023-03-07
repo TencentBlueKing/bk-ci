@@ -206,6 +206,8 @@ class RbacEnvironmentPermissionService(
         )
     }
 
+    override fun isRbac(): Boolean = true
+
     private fun buildNodeAction(authPermission: AuthPermission): String {
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENV_NODE)
     }

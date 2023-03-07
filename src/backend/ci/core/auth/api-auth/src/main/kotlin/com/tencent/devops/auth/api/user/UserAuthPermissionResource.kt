@@ -26,65 +26,38 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.auth.api.user
 
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
+import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.Api
+import io.swagger.annotations.ApiOperation
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.POST
+import javax.ws.rs.Path
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface PermissionResourceGroupService {
-    /**
-     * 资源关联的组列表
-     */
-    fun listGroup(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo>
-
-    /**
-     * 获取用户所属组
-     */
-    fun listUserBelongGroup(
+@Api(tags = ["USER_PERMISSION"], description = "用户-权限-校验")
+@Path("/user/auth/permission")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+interface UserAuthPermissionResource {
+    @POST
+    @Path("/batch/validate")
+    @ApiOperation("批量校验用户是否拥有某个资源实例的操作")
+    fun batchValidateUserResourcePermission(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupMemberInfoVo>
-
-    /**
-     * 获取组策略
-     */
-    fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo>
-
-    /**
-     * 用户续期
-     */
-    fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean
-
-    fun deleteGroupMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
-
-    fun deleteGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
+        @ApiParam(name = "项目ID", required = true)
+        @HeaderParam(AUTH_HEADER_DEVOPS_PROJECT_ID)
+        projectCode: String,
+        @ApiParam("权限批量校验实体", required = true)
+        permissionBatchValidateDTO: PermissionBatchValidateDTO
+    ): Result<Map<String, Boolean>>
 }

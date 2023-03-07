@@ -33,7 +33,24 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
 
+@Suppress("TooManyFunctions")
 interface AuthProjectApi {
+
+    /**
+     * 校验用户是否有项目的指定权限
+     * @param user 用户ID
+     * @param serviceCode 服务模块代码
+     * @param projectCode projectCode英文id
+     * @param permission 权限类型
+     * @return Boolean 有权限则true
+     */
+    fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean
+
     /**
      * 获取项目成员 (需要对接的权限中心支持该功能才可以）
      * @param serviceCode 调用者的服务编码

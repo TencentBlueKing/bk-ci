@@ -27,12 +27,14 @@
 
 package com.tencent.devops.common.auth.api
 
+import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroupAndUserList
 import com.tencent.devops.common.auth.api.pojo.BkAuthProjectInfoResources
 import com.tencent.devops.common.auth.code.AuthServiceCode
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import org.slf4j.LoggerFactory
@@ -42,6 +44,24 @@ class RbacAuthProjectApi @Autowired constructor(
     private val client: Client,
     private val tokenService: ClientTokenService
 ) : AuthProjectApi {
+
+    override fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = user,
+            action = RbacAuthUtils.buildAction(
+                authResourceType = AuthResourceType.PROJECT,
+                authPermission = permission
+            ),
+            projectCode = projectCode,
+            resourceCode = AuthResourceType.PROJECT.value
+        ).data!!
+    }
 
     override fun getProjectUsers(
         serviceCode: AuthServiceCode,

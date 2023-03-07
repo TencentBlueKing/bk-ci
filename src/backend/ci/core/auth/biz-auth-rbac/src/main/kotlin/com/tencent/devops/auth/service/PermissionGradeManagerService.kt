@@ -40,6 +40,7 @@ import com.tencent.bk.sdk.iam.dto.itsm.ItsmStyle
 import com.tencent.bk.sdk.iam.dto.itsm.ItsmValue
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.ManagerScopes
+import com.tencent.bk.sdk.iam.dto.manager.V2ManagerRoleGroupInfo
 import com.tencent.bk.sdk.iam.dto.manager.dto.CreateManagerDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerRoleGroupDTO
 import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
@@ -52,7 +53,6 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
@@ -469,7 +469,7 @@ class PermissionGradeManagerService @Autowired constructor(
 
     fun listGroup(
         gradeManagerId: String
-    ): List<IamGroupInfoVo> {
+    ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
         pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
@@ -479,16 +479,7 @@ class PermissionGradeManagerService @Autowired constructor(
             searchGroupDTO,
             pageInfoDTO
         )
-        return iamGroupInfoList.results.map {
-            IamGroupInfoVo(
-                managerId = gradeManagerId.toInt(),
-                groupId = it.id,
-                name = it.name,
-                displayName = IamGroupUtils.getGroupDisplayName(it.name),
-                userCount = it.userCount,
-                departmentCount = it.departmentCount
-            )
-        }.sortedBy { it.groupId }
+        return iamGroupInfoList.results
     }
 
     fun handleItsmCreateCallback(

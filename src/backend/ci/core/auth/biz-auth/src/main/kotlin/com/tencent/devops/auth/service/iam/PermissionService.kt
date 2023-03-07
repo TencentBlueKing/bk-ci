@@ -28,6 +28,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 
 interface PermissionService {
     fun validateUserActionPermission(
@@ -42,6 +43,7 @@ interface PermissionService {
         resourceType: String?
     ): Boolean
 
+    @Suppress("LongParameterList")
     fun validateUserResourcePermissionByRelation(
         userId: String,
         action: String,
@@ -49,6 +51,13 @@ interface PermissionService {
         resourceCode: String,
         resourceType: String,
         relationResourceType: String?
+    ): Boolean
+
+    fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
     ): Boolean
 
     fun getUserResourceByAction(
@@ -64,4 +73,11 @@ interface PermissionService {
         projectCode: String,
         resourceType: String
     ): Map<AuthPermission, List<String>>
+
+    fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String>
 }

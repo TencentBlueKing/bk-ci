@@ -35,6 +35,7 @@ import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 
 class RbacPermissionService constructor(
@@ -83,7 +84,11 @@ class RbacPermissionService constructor(
             instanceDTO.id = projectCode
             instanceDTO.type = AuthResourceType.PROJECT.value
         } else {
-            instanceDTO.id = resourceCode
+            instanceDTO.id = authResourceCodeConverter.code2IamCode(
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode
+            )
             instanceDTO.type = resourceType
 
             // 因除项目外的所有资源都需关联项目, 需要拼接策略path供sdk计算
@@ -98,6 +103,17 @@ class RbacPermissionService constructor(
         }
 
         logger.info("[rbac] validateUserResourcePermission : instanceDTO = $instanceDTO")
+        return authHelper.isAllowed(userId, action, instanceDTO)
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        val instanceDTO = resource2InstanceDTO(projectCode = projectCode, resource = resource)
+        logger.info("[rbac] validateUserResourcePermissionByInstance : instanceDTO = $instanceDTO")
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
 
@@ -120,10 +136,15 @@ class RbacPermissionService constructor(
             authHelper.getInstanceList(userId, action, resourceType, pathInfoDTO)
         }
         return if (instanceList.contains("*")) {
-            authResourceService.listByProjectAndType(
-                projectCode = projectCode,
-                resourceType = resourceType
-            )
+            // 如果有项目下所有流水线权限,由流水线自己查询所有的流水线
+            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
+                instanceList
+            } else {
+                authResourceService.listByProjectAndType(
+                    projectCode = projectCode,
+                    resourceType = resourceType
+                )
+            }
         } else {
             authResourceCodeConverter.batchIamCode2Code(
                 projectCode = projectCode,
@@ -155,5 +176,38 @@ class RbacPermissionService constructor(
             result[AuthPermission.get(authPermission)] = actionResourceList
         }
         return result
+    }
+
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        logger.info("filter user resource by permission|$userId|$action|$projectCode")
+        val instanceDTOList = resources.map { resource ->
+            resource2InstanceDTO(projectCode = projectCode, resource = resource)
+        }
+        return authHelper.isAllowed(userId, action, instanceDTOList)
+    }
+
+    private fun resource2InstanceDTO(projectCode: String, resource: AuthResourceInstance): InstanceDTO {
+        val instanceDTO = InstanceDTO()
+        instanceDTO.system = iamConfiguration.systemId
+        instanceDTO.id = authResourceCodeConverter.code2IamCode(
+            projectCode = projectCode,
+            resourceType = resource.resourceType,
+            resourceCode = resource.resourceCode
+        )
+        instanceDTO.type = resource.resourceType
+        if (!resource.parents.isNullOrEmpty()) {
+            instanceDTO.paths = resource.parents!!.map {
+                val path = PathInfoDTO()
+                path.type = it.resourceType
+                path.id = it.resourceCode
+                path
+            }.reversed()
+        }
+        return instanceDTO
     }
 }

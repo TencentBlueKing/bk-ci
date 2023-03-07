@@ -89,7 +89,6 @@ class PipelineViewService @Autowired constructor(
     private val pipelineViewTopDao: PipelineViewTopDao,
     private val pipelineViewUserSettingDao: PipelineViewUserSettingsDao,
     private val pipelineViewLastViewDao: PipelineViewUserLastViewDao,
-    private val pipelinePermissionService: PipelinePermissionService,
     private val pipelineGroupService: PipelineGroupService,
     private val client: Client,
     private val pipelineGroupPermissionService: PipelineGroupPermissionService
@@ -551,13 +550,6 @@ class PipelineViewService @Autowired constructor(
         }
 
         return allFilters
-    }
-
-    private fun isUserManager(userId: String, projectId: String): Boolean {
-        return pipelinePermissionService.checkProjectManager(
-            userId = userId,
-            projectId = projectId
-        )
     }
 
     private fun getSystemViewName(viewId: String): String {

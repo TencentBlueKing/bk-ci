@@ -1,5 +1,6 @@
 package com.tencent.devops.auth.service
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.bk.sdk.iam.dto.InstancesDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.application.ApplicationDTO
@@ -24,6 +25,7 @@ import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.client.Client
@@ -33,14 +35,11 @@ import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
 
-@Service
 @Suppress("ALL")
 class RbacPermissionApplyService @Autowired constructor(
     val dslContext: DSLContext,
     val v2ManagerService: V2ManagerService,
-    val strategyService: StrategyService,
     val authResourceService: AuthResourceService,
     val authResourceGroupConfigDao: AuthResourceGroupConfigDao,
     val authResourceGroupDao: AuthResourceGroupDao,
@@ -52,8 +51,8 @@ class RbacPermissionApplyService @Autowired constructor(
     @Value("\${auth.iamSystem:}")
     private val systemId = ""
 
-    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/%s/apply?" +
-        "resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s&groupId=%s"
+    private val authApplyRedirectUrl = "${config.devopsHostGateway}/console/permission/apply?" +
+        "project_code=%s&resourceType=%s&resourceName=%s&action=%s&iamResourceCode=%s&groupId=%s"
 
     override fun listResourceTypes(userId: String): List<ResourceTypeInfoVo> {
         return rbacCacheService.listResourceTypes()
@@ -212,7 +211,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             }
         }
-        return groupInfoList
+        return groupInfoList.sortedBy { it.resourceType }
     }
 
     override fun applyToJoinGroup(userId: String, applyJoinGroupInfo: ApplyJoinGroupInfo): Boolean {
@@ -378,24 +377,19 @@ class RbacPermissionApplyService @Autowired constructor(
             )
         } else {
             if (isEnablePermission) {
-                // 若开启权限,则得根据资源类型去查询默认组，然后查询组的策略，看是否包含对应 资源+动作
-                val actionId = action.substring(action.lastIndexOf("_") + 1)
                 authResourceGroupConfigDao.get(dslContext, resourceType).forEach {
-                    val strategy = strategyService.getStrategyByName(it.resourceType + "_" + it.groupCode)?.strategy
-                    if (strategy != null) {
-                        val isStrategyContainsAction = strategy[resourceType]?.contains(actionId)
-                        if (isStrategyContainsAction != null && isStrategyContainsAction) {
-                            buildRedirectGroupInfo(
-                                groupInfoList = groupInfoList,
-                                projectId = projectId,
-                                resourceName = resourceName,
-                                action = action,
-                                resourceType = resourceType,
-                                resourceCode = resourceCode,
-                                groupCode = it.groupCode,
-                                iamResourceCode = iamResourceCode
-                            )
-                        }
+                    val actions = JsonUtil.to(it.actions, object : TypeReference<List<String>>() {})
+                    if (actions.contains(action)) {
+                        buildRedirectGroupInfo(
+                            groupInfoList = groupInfoList,
+                            projectId = projectId,
+                            resourceName = resourceName,
+                            action = action,
+                            resourceType = resourceType,
+                            resourceCode = resourceCode,
+                            groupCode = it.groupCode,
+                            iamResourceCode = iamResourceCode
+                        )
                     }
                 }
             } else {

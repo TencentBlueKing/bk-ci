@@ -2,17 +2,12 @@ package com.tencent.devops.auth.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.bk.sdk.iam.dto.response.ResponseDTO
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.ItsmCancelApplicationInfo
 import com.tencent.devops.auth.pojo.ItsmResponseDTO
-import com.tencent.devops.auth.pojo.vo.DeptInfoVo
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
-import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -31,12 +26,12 @@ class ItsmService @Autowired constructor(
     @Value("\${auth.appSecret:}")
     private val appSecret = ""
 
-    @Value("\${itsm.application.cancel.url:#{null}}")
-    private val itsmCancelApplicationUrl: String = ""
+    @Value("\${itsm.url:#{null}}")
+    private val itsmUrlPrefix: String = ""
 
     fun cancelItsmApplication(itsmCancelApplicationInfo: ItsmCancelApplicationInfo): Boolean {
         val itsmResponseDTO = doHttpPost(
-            url = itsmCancelApplicationUrl,
+            uri = ITSM_APPLICATION_CANCEL_URL_SUFFIX,
             body = itsmCancelApplicationInfo
         )
         if (itsmResponseDTO.message != "success") {
@@ -51,13 +46,17 @@ class ItsmService @Autowired constructor(
     }
 
     fun verifyItsmToken(token: String) {
+        val param: MutableMap<String, String> = mutableMapOf()
+        param["token"] = token
+        logger.info("param:${param["token"]}")
         val itsmResponseDTO = doHttpPost(
-            url = itsmCancelApplicationUrl,
-            body = token
+            uri = ITSM_TOKEN_VERITY_URL_SUFFIX,
+            body = param
         )
-        val itsmApiResData = itsmResponseDTO.data as Map<String, String>
-        val isPassed = itsmApiResData["is_passed"].toBoolean()
-        if (!isPassed) {
+        val itsmApiResData = itsmResponseDTO.data as HashMap<String, Boolean>
+        logger.info("itsmApiResData:$itsmApiResData")
+        val isPassed = itsmApiResData["is_passed"]
+        if (!isPassed!!) {
             logger.warn("verify itsm token failed!$token")
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_ITSM_APPLICATION_CANCEL_FAIL,
@@ -66,23 +65,25 @@ class ItsmService @Autowired constructor(
         }
     }
 
-    fun doHttpPost(url: String, body: Any): ItsmResponseDTO {
+    private fun doHttpPost(uri: String, body: Any): ItsmResponseDTO {
         val header: MutableMap<String, String> = HashMap()
         header["bk_app_code"] = appCode
         header["bk_app_secret"] = appSecret
-        header["access_token"] = "access_token"
+        val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
         val jsonBody = objectMapper.writeValueAsString(body)
-        val body = RequestBody.create(MediaType.parse("application/json"), jsonBody)
-        val headerStr = objectMapper.writeValueAsString(header)
+        logger.info("jsonBody:$jsonBody")
+        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
+        logger.info("headerStr:$headerStr")
+        val url = itsmUrlPrefix + uri
         val request = Request.Builder()
             .url(url)
-            .post(body)
+            .post(requestBody)
             .addHeader("x-bkapi-authorization", headerStr)
             .build()
         return doRequest(url, request)
     }
 
-    fun doRequest(
+    private fun doRequest(
         url: String,
         request: Request
     ): ItsmResponseDTO {
@@ -105,5 +106,7 @@ class ItsmService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ItsmService::class.java)
+        private const val ITSM_APPLICATION_CANCEL_URL_SUFFIX = "/operate_ticket/"
+        private const val ITSM_TOKEN_VERITY_URL_SUFFIX = "/token/verify/"
     }
 }

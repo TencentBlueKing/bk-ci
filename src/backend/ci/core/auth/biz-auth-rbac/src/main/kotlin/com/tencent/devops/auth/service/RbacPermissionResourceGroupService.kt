@@ -30,29 +30,37 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
-import com.tencent.bk.sdk.iam.dto.manager.ManagerMember
-import com.tencent.bk.sdk.iam.dto.manager.dto.ManagerMemberGroupDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
+import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
+import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
+import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
+@Suppress("LongParameterList")
 class RbacPermissionResourceGroupService @Autowired constructor(
     private val iamV2ManagerService: V2ManagerService,
     private val authResourceService: AuthResourceService,
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,
-    private val permissionResourceService: PermissionResourceService
+    private val permissionResourceService: PermissionResourceService,
+    private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
+    private val dslContext: DSLContext,
+    private val authResourceGroupDao: AuthResourceGroupDao
 ) : PermissionResourceGroupService {
 
     companion object {
@@ -69,11 +77,28 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
-        return if (resourceType == AuthResourceType.PROJECT.value) {
+        val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
             permissionGradeManagerService.listGroup(resourceInfo.relationId)
         } else {
             permissionSubsetManagerService.listGroup(resourceInfo.relationId)
         }
+        val resourceGroupMap = authResourceGroupDao.getByResourceCode(
+            dslContext = dslContext,
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+        ).associateBy { it.relationId.toInt() }
+        return iamGroupInfoList.map {
+            IamGroupInfoVo(
+                managerId = resourceInfo.relationId.toInt(),
+                groupCode = resourceGroupMap[it.id]?.groupCode ?: "",
+                groupId = it.id,
+                name = it.name,
+                displayName = it.name,
+                userCount = it.userCount,
+                departmentCount = it.departmentCount
+            )
+        }.sortedBy { it.groupId }
     }
 
     override fun listUserBelongGroup(
@@ -88,16 +113,15 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceCode = resourceCode
         )
         val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = 1
-        pageInfoDTO.pageSize = 10
+        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
         val iamGroupInfos =
             iamV2ManagerService.getSubsetManagerRoleGroup(resourceInfo.relationId.toInt(), pageInfoDTO)
-        val iamIds = iamGroupInfos.results.map { it.id }
         val iamGroupInfoMap = iamGroupInfos.results.associateBy { it.id }
         val verifyResult =
-            iamV2ManagerService.verifyGroupValidMember(userId, iamIds.joinToString(","))
+            iamV2ManagerService.verifyGroupValidMember(userId, iamGroupInfoMap.keys.joinToString(","))
         return verifyResult.map { (iamGroupId, result) ->
-            val (status, createTime, expiredTime) = if (result.belong) {
+            if (result.belong) {
                 val createTime = DateTimeUtil.toDateTime(
                     dateTime = DateTimeUtil.stringToLocalDateTime(
                         dateTimeStr = result.createdAt.replace("Z", " UTC"),
@@ -105,30 +129,39 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     )
                 )
                 val expiredAt = result.expiredAt * 1000
-                val expiredTime = DateTimeUtil.formatMilliTime(
-                    time = expiredAt,
-                    format = DateTimeUtil.YYYY_MM_DD_HH_MM_SS
-                )
-                val status = if (System.currentTimeMillis() >= expiredAt) {
-                    GroupMemberStatus.EXPIRED.name
+                val between = expiredAt - System.currentTimeMillis()
+                val (status, expiredDisplay) = if (between <= 0) {
+                    Pair(
+                        GroupMemberStatus.EXPIRED.name,
+                        MessageCodeUtil.getCodeLanMessage(
+                            AUTH_GROUP_MEMBER_EXPIRED_DESC,
+                            "expired"
+                        )
+                    )
                 } else {
-                    GroupMemberStatus.NORMAL.name
+                    Pair(GroupMemberStatus.NORMAL.name, DateTimeUtil.formatDay(between))
                 }
-                Triple(status, createTime, expiredTime)
+                IamGroupMemberInfoVo(
+                    userId = userId,
+                    groupId = iamGroupId,
+                    groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
+                    createdTime = createTime,
+                    status = status,
+                    expiredAt = expiredAt,
+                    expiredDisplay = expiredDisplay,
+                )
             } else {
                 val status = GroupMemberStatus.NOT_JOINED.name
-                val createTime = "--"
-                val expiredTime = "--"
-                Triple(status, createTime, expiredTime)
+                IamGroupMemberInfoVo(
+                    userId = userId,
+                    groupId = iamGroupId,
+                    groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
+                    createdTime = "",
+                    status = status,
+                    expiredAt = 0L,
+                    expiredDisplay = "",
+                )
             }
-            IamGroupMemberInfoVo(
-                userId = userId,
-                groupId = iamGroupId,
-                groupName = iamGroupInfoMap[iamGroupId]?.name ?: "",
-                createdTime = createTime,
-                status = status,
-                expiredTime = expiredTime
-            )
         }
     }
 
@@ -137,8 +170,14 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         projectId: String,
         resourceType: String,
         groupId: Int
-    ): List<String> {
-        return iamV2ManagerService.getRoleGroupActionV2(groupId).map { it.id }
+    ): List<IamGroupPoliciesVo> {
+        logger.info("get group policies|$projectId|$resourceType|$groupId")
+        return permissionGroupPoliciesService.getGroupPolices(
+            userId = userId,
+            projectId = projectId,
+            resourceType = resourceType,
+            groupId = groupId
+        )
     }
 
     override fun renewal(
@@ -149,15 +188,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         memberRenewalDTO: GroupMemberRenewalDTO
     ): Boolean {
         logger.info("renewal group member|$userId|$projectId|$resourceType|$groupId")
-        val managerMember = ManagerMember(ManagerScopesEnum.getType(ManagerScopesEnum.USER), userId)
-        val managerMemberGroupDTO = ManagerMemberGroupDTO.builder()
-            .members(listOf(managerMember))
+        val managerMemberGroupDTO = GroupMemberRenewApplicationDTO.builder()
+            .groupIds(listOf(groupId))
             .expiredAt(memberRenewalDTO.expiredAt)
-            .build()
-        iamV2ManagerService.renewalRoleGroupMemberV2(
-            groupId,
-            managerMemberGroupDTO
-        )
+            .reason("续期用户组")
+            .applicant(userId).build()
+        iamV2ManagerService.renewalRoleGroupMemberApplication(managerMemberGroupDTO)
         return true
     }
 

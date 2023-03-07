@@ -6,6 +6,7 @@ import com.tencent.devops.auth.service.DefaultDeptServiceImpl
 import com.tencent.devops.auth.service.DeptService
 import com.tencent.devops.auth.service.LocalManagerService
 import com.tencent.devops.auth.service.OrganizationService
+import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionExtService
 import com.tencent.devops.auth.service.iam.PermissionGradeService
 import com.tencent.devops.auth.service.iam.PermissionGrantService
@@ -19,6 +20,7 @@ import com.tencent.devops.auth.service.sample.SampleAuthPermissionService
 import com.tencent.devops.auth.service.sample.SampleGrantPermissionServiceImpl
 import com.tencent.devops.auth.service.sample.SampleLocalManagerServiceImpl
 import com.tencent.devops.auth.service.sample.SampleOrganizationService
+import com.tencent.devops.auth.service.sample.SamplePermissionApplyService
 import com.tencent.devops.auth.service.sample.SamplePermissionExtService
 import com.tencent.devops.auth.service.sample.SamplePermissionGradeService
 import com.tencent.devops.auth.service.sample.SamplePermissionRoleMemberService
@@ -81,4 +83,8 @@ class MockAuthCoreAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(OrganizationService::class)
     fun sampleOrganizationService() = SampleOrganizationService()
+
+    @Bean
+    @ConditionalOnMissingBean(PermissionApplyService::class)
+    fun samplePermissionApplyService() = SamplePermissionApplyService()
 }

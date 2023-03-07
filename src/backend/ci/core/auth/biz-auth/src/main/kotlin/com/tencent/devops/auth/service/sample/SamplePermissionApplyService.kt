@@ -26,22 +26,8 @@
  *
  */
 
-package com.tencent.devops.auth.enums
+package com.tencent.devops.auth.service.sample
 
-enum class ResourceGroupType(val value: String, val displayName: String) {
-    // 拥有者
-    OWNER("owner", "拥有者"),
-    // 编辑执行者
-    EDIT_EXECUTOR("edit_executor", "编辑执行者"),
-    // 执行者
-    EXECUTOR("executor", "执行者"),
-    // 查看者
-    VIEWER("viewer", "查看者")
-    ;
+import com.tencent.devops.auth.service.iam.impl.AbsPermissionApplyService
 
-    fun getStrategyName(resourceType: String) = "${resourceType}_$value"
-
-    companion object {
-        fun getStrategyName(resourceType: String, groupCode: String) = "${resourceType}_$groupCode"
-    }
-}
+class SamplePermissionApplyService : AbsPermissionApplyService()

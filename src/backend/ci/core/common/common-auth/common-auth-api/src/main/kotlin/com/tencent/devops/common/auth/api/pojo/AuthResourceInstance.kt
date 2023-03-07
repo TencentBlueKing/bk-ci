@@ -26,65 +26,20 @@
  *
  */
 
-package com.tencent.devops.auth.service.iam
+package com.tencent.devops.common.auth.api.pojo
 
-import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
-import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
-import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-interface PermissionResourceGroupService {
-    /**
-     * 资源关联的组列表
-     */
-    fun listGroup(
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo>
-
-    /**
-     * 获取用户所属组
-     */
-    fun listUserBelongGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        resourceCode: String
-    ): List<IamGroupMemberInfoVo>
-
-    /**
-     * 获取组策略
-     */
-    fun getGroupPolicies(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): List<IamGroupPoliciesVo>
-
-    /**
-     * 用户续期
-     */
-    fun renewal(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int,
-        memberRenewalDTO: GroupMemberRenewalDTO
-    ): Boolean
-
-    fun deleteGroupMember(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
-
-    fun deleteGroup(
-        userId: String,
-        projectId: String,
-        resourceType: String,
-        groupId: Int
-    ): Boolean
-}
+/**
+ * 权限资源实例关系
+ */
+@ApiModel("权限资源实例关系")
+data class AuthResourceInstance(
+    @ApiModelProperty("资源类型")
+    val resourceType: String,
+    @ApiModelProperty("资源ID")
+    val resourceCode: String,
+    @ApiModelProperty("父资源, 流水线有项目和流水线组父资源,其他资源父资源都只有项目资源, 项目没有父资源")
+    val parents: List<AuthResourceInstance>? = null
+)

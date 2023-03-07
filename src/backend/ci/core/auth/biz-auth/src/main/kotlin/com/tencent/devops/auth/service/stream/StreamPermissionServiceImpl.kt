@@ -29,6 +29,7 @@ package com.tencent.devops.auth.service.stream
 
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.utils.ActionTypeUtils
 import org.slf4j.LoggerFactory
 
@@ -83,6 +84,22 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         )
     }
 
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resourceType = resource.resourceType,
+            resourceCode = resource.resourceCode,
+            relationResourceType = null
+        )
+    }
+
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -113,6 +130,15 @@ abstract class StreamPermissionServiceImpl : PermissionService {
             instanceMap[AuthPermission.get(it)] = actionList
         }
         return instanceMap
+    }
+
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
     }
 
     /**

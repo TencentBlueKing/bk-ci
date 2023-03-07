@@ -102,6 +102,8 @@ class V3EnvironmentPermissionService constructor(
         return super.checkNodePermission(userId, projectId, permission)
     }
 
+    override fun isRbac(): Boolean = false
+
     // 解密后
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = if (isProjectOwner(projectId, userId)) {

@@ -34,6 +34,7 @@ import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.auth.service.iam.PermissionService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.PageUtil
@@ -67,7 +68,7 @@ class RbacPermissionResourceService(
         resourceName: String
     ): Boolean {
         logger.info("resource create relation|$userId|$projectCode|$resourceType|$resourceCode|$resourceName")
-        val iamResourceCode = authResourceCodeConverter.code2IamCode(
+        val iamResourceCode = authResourceCodeConverter.generateIamCode(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
@@ -185,14 +186,8 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
-        if (resourceType == AuthResourceType.PROJECT.value) {
-            val projectInfo = authResourceService.get(
-                projectCode = projectCode,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectCode
-            )
-            permissionGradeManagerService.deleteGradeManager(projectInfo.relationId)
-        } else {
+        // 项目不能删除,不需要删除分级管理员
+        if (resourceType != AuthResourceType.PROJECT.value) {
             val resourceInfo = authResourceService.get(
                 projectCode = projectCode,
                 resourceType = resourceType,
@@ -326,12 +321,35 @@ class RbacPermissionResourceService(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         }
-        return authResourceService.disable(
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_PROJECT_PERMISSION_CLOSE_FAIL,
+                defaultMessage = "project permission management cannot be turned off"
+            )
+        }
+        val resourceInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        // 已禁用的项目不需要再禁用
+        if (!resourceInfo.enable) {
+            logger.info("resource has enable permission manager|$userId|$projectId|$resourceType|$resourceCode")
+            return true
+        }
+        permissionSubsetManagerService.deleteSubsetManagerDefaultGroup(
+            subsetManagerId = resourceInfo.relationId.toInt(),
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        authResourceService.disable(
             userId = userId,
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+        return true
     }
 
     override fun listResoureces(

@@ -203,7 +203,7 @@ class AuthResourceDao {
         }
     }
 
-    fun getResourceCodeByIamCode(
+    fun getResourceCodeByIamCodes(
         dslContext: DSLContext,
         projectCode: String,
         resourceType: String,
@@ -214,6 +214,21 @@ class AuthResourceDao {
                 .where(PROJECT_CODE.eq(projectCode))
                 .and(RESOURCE_TYPE.eq(resourceType))
                 .and(IAM_RESOURCE_CODE.`in`(iamResourceCodes))
+                .fetch(0, String::class.java)
+        }
+    }
+
+    fun getIamCodeByResourceCodes(
+        dslContext: DSLContext,
+        projectCode: String,
+        resourceType: String,
+        resourceCodes: List<String>
+    ): List<String> {
+        return with(TAuthResource.T_AUTH_RESOURCE) {
+            dslContext.select(RESOURCE_CODE).from(this)
+                .where(PROJECT_CODE.eq(projectCode))
+                .and(RESOURCE_TYPE.eq(resourceType))
+                .and(RESOURCE_CODE.`in`(resourceCodes))
                 .fetch(0, String::class.java)
         }
     }

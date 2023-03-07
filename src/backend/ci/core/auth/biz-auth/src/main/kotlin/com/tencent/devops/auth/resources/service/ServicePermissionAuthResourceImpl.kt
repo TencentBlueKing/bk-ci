@@ -34,6 +34,7 @@ import com.tencent.devops.auth.service.iam.PermissionGrantService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -82,6 +83,24 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 resourceCode = resourceCode,
                 resourceType = resourceType,
                 relationResourceType = relationResourceType
+            )
+        )
+    }
+
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        token: String,
+        type: String?,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Result<Boolean> {
+        return Result(
+            permissionService.validateUserResourcePermissionByInstance(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resource = resource
             )
         )
     }
@@ -146,6 +165,24 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
                 actions = actions,
                 projectCode = projectCode,
                 resourceType = resourceType
+            )
+        )
+    }
+
+    override fun filterUserResourceByPermission(
+        userId: String,
+        token: String,
+        type: String?,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): Result<List<String>> {
+        return Result(
+            permissionService.filterUserResourceByPermission(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resources = resources
             )
         )
     }

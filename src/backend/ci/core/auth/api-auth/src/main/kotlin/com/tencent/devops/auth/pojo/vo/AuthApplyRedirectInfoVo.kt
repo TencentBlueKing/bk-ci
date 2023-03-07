@@ -14,5 +14,5 @@ data class AuthApplyRedirectInfoVo(
     @ApiModelProperty("动作名称")
     val actionName: String,
     @ApiModelProperty("用户组信息列表")
-    val groupInfoList: ArrayList<AuthRedirectGroupInfoVo>
+    val groupInfoList: List<AuthRedirectGroupInfoVo>
 )

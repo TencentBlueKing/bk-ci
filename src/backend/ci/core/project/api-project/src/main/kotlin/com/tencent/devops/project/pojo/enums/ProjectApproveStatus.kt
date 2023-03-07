@@ -28,6 +28,7 @@
 package com.tencent.devops.project.pojo.enums
 
 enum class ProjectApproveStatus(val status: Int) {
+    UNKNOWN(-1),
     // 创建审批中
     CREATE_PENDING(1),
     // 审批通过
@@ -35,5 +36,20 @@ enum class ProjectApproveStatus(val status: Int) {
     // 创建中审批拒绝
     CREATE_REJECT(3),
     // 修改审批中
-    UPDATE_PENDING(4)
+    UPDATE_PENDING(4);
+
+    fun isSuccess(): Boolean = this == APPROVED || this == UPDATE_PENDING
+
+    fun isCreatePending(): Boolean = this == CREATE_PENDING || this == CREATE_REJECT
+
+    companion object {
+        fun parse(status: Int?): ProjectApproveStatus {
+            values().forEach {
+                if (it.status == status) {
+                    return it
+                }
+            }
+            return UNKNOWN
+        }
+    }
 }

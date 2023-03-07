@@ -2,6 +2,7 @@ package com.tencent.devops.auth.service.sample
 
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 
 class SampleAuthPermissionService : PermissionService {
@@ -29,6 +30,15 @@ class SampleAuthPermissionService : PermissionService {
         return true
     }
 
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return true
+    }
+
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -46,6 +56,15 @@ class SampleAuthPermissionService : PermissionService {
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
+    }
+
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
     }
 
     companion object {
