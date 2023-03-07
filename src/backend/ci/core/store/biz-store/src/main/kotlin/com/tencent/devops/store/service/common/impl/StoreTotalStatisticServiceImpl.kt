@@ -189,7 +189,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         )
         val storeStatisticMap = hashMapOf<String, StoreStatistic>()
         records?.map {
-            val storeCode = it.value6()
+            val storeCode = it.get("STORE_CODE") as? String
             if (storeCode != null) {
                 storeStatisticMap[storeCode] = generateStoreStatistic(it)
             }
