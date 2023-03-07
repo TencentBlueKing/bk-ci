@@ -35,10 +35,8 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
-import org.jooq.Record6
 import org.jooq.Record7
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 import java.math.BigDecimal
 import java.time.LocalDateTime
@@ -46,10 +44,6 @@ import java.time.LocalDateTime
 @Suppress("ALL")
 @Repository
 class StoreStatisticTotalDao {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(StoreStatisticTotalDao::class.java)
-    }
 
     fun initStatisticData(
         dslContext: DSLContext,

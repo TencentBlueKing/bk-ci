@@ -49,7 +49,6 @@ import com.tencent.devops.store.service.common.StoreDailyStatisticService
 import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
-import org.jooq.Record6
 import org.jooq.Record7
 import org.jooq.Result
 import org.jooq.impl.DSL
