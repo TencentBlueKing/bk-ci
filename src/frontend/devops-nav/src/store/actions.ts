@@ -76,13 +76,21 @@ const actions: ActionTree<RootState, any> = {
         }
     },
     ajaxUpdatePM (_, { projectCode, data }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data, { headers: { 'X-DEVOPS-PROJECT-ID': projectCode } })
+        return Request.put(
+            `${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`,
+            data,
+            { headers: { 'X-DEVOPS-PROJECT-ID': projectCode, 'Content-Type': 'application/json' } }
+        )
     },
     ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
     },
     toggleProjectEnable (_, { projectCode, enabled }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`, null, { headers: { 'X-DEVOPS-PROJECT-ID': projectCode } })
+        return Request.put(
+            `${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`,
+            null,
+            { headers: { 'X-DEVOPS-PROJECT-ID': projectCode, 'Content-Type': 'application/json' } }
+        )
     },
     selectDemoProject ({ commit }, { project }) {
         commit(SET_DEMO_PROJECT, {
