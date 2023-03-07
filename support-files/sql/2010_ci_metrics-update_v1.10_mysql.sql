@@ -48,13 +48,21 @@ BEGIN
     END IF;
 
     IF NOT EXISTS(SELECT 1
-                          FROM information_schema.COLUMNS
+                          FROM information_schema.constraint
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_ERROR_CODE_INFO'
                             AND KEY = 'UNI_TECI_TYPE_CODE') THEN
     ALTER TABLE `T_ERROR_CODE_INFO`
         DROP KEY UNI_TECI_TYPE_CODE;
-        ADD CONSTRAINT T_ERROR_CODE_INFO_UN UNIQUE KEY (ERROR_TYPE,ERROR_CODE,ATOM_CODE);
+
+    END IF;
+
+    IF NOT EXISTS(SELECT 1
+                              FROM information_schema.constraint
+                              WHERE TABLE_SCHEMA = db
+                                AND TABLE_NAME = 'T_ERROR_CODE_INFO') THEN
+    ALTER TABLE `T_ERROR_CODE_INFO`
+    ADD CONSTRAINT T_ERROR_CODE_INFO_UN UNIQUE KEY (ERROR_TYPE,ERROR_CODE,ATOM_CODE);
     END IF;
 
     COMMIT;
