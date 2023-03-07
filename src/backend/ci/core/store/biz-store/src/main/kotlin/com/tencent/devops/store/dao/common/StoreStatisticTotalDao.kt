@@ -234,8 +234,8 @@ class StoreStatisticTotalDao {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val sql = dslContext.select(RECENT_EXECUTE_NUM)
                 .from(this)
-                .where(STORE_TYPE.eq(storeType.type.toByte()))
-                .orderBy(RECENT_EXECUTE_NUM, CREATE_TIME, STORE_CODE)
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
+                .orderBy(RECENT_EXECUTE_NUM.desc(), CREATE_TIME, STORE_CODE)
                 .limit(index - 1, if (pluralFlag) 2 else 1)
             logger.info("getStorePercentileValue sql:$sql")
             return sql.fetch()
