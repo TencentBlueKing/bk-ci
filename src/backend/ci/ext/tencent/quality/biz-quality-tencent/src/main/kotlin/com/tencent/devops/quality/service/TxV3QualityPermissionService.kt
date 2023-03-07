@@ -43,6 +43,16 @@ class TxV3QualityPermissionService @Autowired constructor(
         }
     }
 
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+            resourceCode = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+        ).data ?: false
+    }
+
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
         authResourceApiStr.createResource(
             user = userId,
@@ -189,4 +199,6 @@ class TxV3QualityPermissionService @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun isRbac(): Boolean = false
 }
