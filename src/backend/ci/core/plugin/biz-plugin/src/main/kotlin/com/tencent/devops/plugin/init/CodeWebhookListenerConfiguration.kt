@@ -55,9 +55,6 @@ class CodeWebhookListenerConfiguration {
         const val STREAM_CONSUMER_GROUP = "plugin-service"
     }
 
-    @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
-
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookFinishListener(
         @Autowired listener: CodeWebhookListener

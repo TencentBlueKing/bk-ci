@@ -24,40 +24,24 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.config
 
-package com.tencent.devops.artifactory.mq
-
-import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.stream.constants.StreamBinding
-import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
-import org.springframework.messaging.Message
-import java.util.function.Consumer
 
-/**
- * 流水线构建扩展配置
- */
 @Configuration
-@Suppress("ALL")
-class ArtifactoryPipelineExtendConfiguration {
+class CommonMQConfiguration {
 
     companion object {
-        const val STREAM_CONSUMER_GROUP = "artifactory-service"
+        const val STREAM_CONSUMER_GROUP = "stream-service"
     }
 
-    /**
-     * 构建广播交换机
-     */
-    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
-    fun buildFinishListener(
-        @Autowired listener: PipelineBuildArtifactoryListener
-    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
-        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
-            listener.execute(event.payload)
-        }
-    }
+    @Bean
+    fun sampleEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
+
+    @Bean
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 }

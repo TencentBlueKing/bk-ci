@@ -83,12 +83,6 @@ class StreamMQConfiguration {
     }
 
     @Bean
-    fun sampleEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
-
-    @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
-
-    @Bean
     fun streamBuildFinishListenerService(
         @Autowired dslContext: DSLContext,
         @Autowired objectMapper: ObjectMapper,

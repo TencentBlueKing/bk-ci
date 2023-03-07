@@ -52,9 +52,6 @@ class StoreMQConfiguration {
     }
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
-
-    @Bean
     fun storePipelineBuildFinishListener(
         @Autowired storeBuildService: StoreBuildService,
         @Autowired pipelineEventDispatcher: PipelineEventDispatcher
