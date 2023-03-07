@@ -205,7 +205,7 @@ class EnvService @Autowired constructor(
 
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })
-        return validRecordList.map {
+        return envRecordList.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,
