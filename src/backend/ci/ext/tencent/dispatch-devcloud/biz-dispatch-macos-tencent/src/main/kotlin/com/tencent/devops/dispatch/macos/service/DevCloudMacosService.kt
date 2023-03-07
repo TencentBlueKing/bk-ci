@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.net.URLEncoder
 
 @Service
 class DevCloudMacosService @Autowired constructor(
@@ -41,6 +42,9 @@ class DevCloudMacosService @Autowired constructor(
 
     @Value("\${macos.devCloud.smartProxyToken:}")
     private lateinit var smartProxyToken: String
+
+    @Value("\${devopsGateway.idcProxy:}")
+    private lateinit var devopsIdcProxyGateway: String
 
     fun creatVM(
         projectId: String,
@@ -67,7 +71,7 @@ class DevCloudMacosService @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(macosVmCreate)
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
-            .url(url)
+            .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
@@ -147,7 +151,7 @@ class DevCloudMacosService @Autowired constructor(
     fun queryTaskStatus(taskId: String, creator: String): Triple<String, DevCloudMacosVmCreateInfo?, String> {
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
-            .url(url)
+            .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
             .get()
             .build()
@@ -225,7 +229,7 @@ class DevCloudMacosService @Autowired constructor(
         val body = ObjectMapper().writeValueAsString(macosVmDelete)
         logger.info("DevCloud deleteVM body:$body")
         val request = Request.Builder()
-            .url(url)
+            .url(toIdcUrl(url))
             .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
@@ -244,4 +248,7 @@ class DevCloudMacosService @Autowired constructor(
         }
         return result
     }
+
+    fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
+        "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 }

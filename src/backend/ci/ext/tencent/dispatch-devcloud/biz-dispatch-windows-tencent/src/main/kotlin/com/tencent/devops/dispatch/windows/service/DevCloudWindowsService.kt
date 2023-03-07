@@ -6,7 +6,6 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.dispatch.windows.dao.BuildHistoryDao
 import com.tencent.devops.dispatch.windows.enums.DevCloudCreateWindowsStatus
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreate
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreateEnv
@@ -20,49 +19,36 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.pojo.QueryTaskStatusResponse
 import com.tencent.devops.dispatch.windows.pojo.WindowsMachineGetResponse
 import com.tencent.devops.dispatch.windows.util.SmartProxyUtil
-import okhttp3.Headers
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
-import javax.ws.rs.core.Response
 
 @Service
-class DevCloudWindowsService @Autowired constructor(
-    private val dslContext: DSLContext,
-    private val buildHistoryDao: BuildHistoryDao
-) {
+class DevCloudWindowsService @Autowired constructor() {
     companion object {
         private val logger = LoggerFactory.getLogger(DevCloudWindowsService::class.java)
         private const val retryCount = 200
     }
 
-    @Value("\${devCloud.appId:}")
+    @Value("\${windows.devCloud.appId:}")
     private lateinit var devCloudAppId: String
 
-    @Value("\${devCloud.token:}")
+    @Value("\${windows.devCloud.token:}")
     private lateinit var devCloudToken: String
 
-    @Value("\${devCloud.url:}")
+    @Value("\${windows.devCloud.url:}")
     private lateinit var devCloudUrl: String
 
-    @Value("\${devCloud.smartProxyToken:}")
+    @Value("\${windows.devCloud.smartProxyToken:}")
     private lateinit var smartProxyToken: String
 
-    @Value("\${devCloud.rsaPrivateKey:}")
-    private lateinit var rsaPrivateKey: String
-
-    @Value("\${credential.aes-key:C/R%3{?OS}IeGT21}")
-    private lateinit var aesKey: String
-
-    @Value("\${devCloud.idcProxy:}")
+    @Value("\${devopsGateway.idcProxy:}")
     private lateinit var devopsIdcProxyGateway: String
 
     // 获取windows构建机
