@@ -62,10 +62,10 @@ class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
         }
         logger.info("Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
                 "user pipeline param[$pipelineId]")
-        if (projectId != null && pipelineId != null) {
+        if (projectId != null && pipelineId != null && authProjectId != null && authBuildId != null) {
             val client = SpringContextUtil.getBean(Client::class.java)
             val buildStartUser = client.get(ServiceBuildApiPermissionResource::class)
-                .getStartUser(authProjectId!!, authBuildId!!).data!!
+                .getStartUser(authProjectId, authBuildId).data!!
             logger.info("verify that user [$buildStartUser] has permission to access information " +
                     "in pipeline [$pipelineId] under project [$projectId].")
             val checkPipelinePermissionResult = client.get(ServiceBuildApiPermissionResource::class).verifyApi(
@@ -77,6 +77,10 @@ class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
                 logger.info("The user [$buildStartUser] does not have permission to access " +
                         "the project [$projectId] pipeline [$pipelineId] build info")
             }
+        } else {
+            logger.warn("The parameter of this request is abnormal {" +
+                    "Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
+                    "user pipeline param[$pipelineId]}")
         }
     }
 }
