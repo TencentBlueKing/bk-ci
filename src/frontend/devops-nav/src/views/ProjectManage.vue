@@ -245,9 +245,17 @@
             },
 
             handleGoExtend (row) {
-                const { origin } = window.location
-                const { englishName } = row
-                window.open(`${origin}/console/manage/${englishName}/expand`, '_blank')
+                const { englishName: projectCode, routerTag } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                    case 'v3':
+                        window.open(`/console/store/serviceManage/${projectCode}`, '_blank')
+                        break
+                    case 'rbac':
+                        window.open(`/console/manage/${projectCode}/expand`, '_blank')
+                        break
+                }
             },
 
             pageChange (page) {
@@ -264,7 +272,7 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/perm/my-project?project_code=${projectCode}&x-devops-project-id=${projectCode}`, '_blank')
                         break
                     case 'v3':
                         window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
