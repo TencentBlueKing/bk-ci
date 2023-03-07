@@ -5,14 +5,14 @@
 }
 
 .bk-permission-disable.bk-button, .bk-permission-disable.bk-button:hover, .bk-permission-disable .bk-button, .bk-permission-disable .bk-button:hover {
-    background: #C4C6CC;
-    border-color: #C4C6CC;
-    color: #fff;
+    background: #C4C6CC !important;
+    border-color: #C4C6CC !important;
+    color: #fff !important;
 }
 
 .bk-permission-disable.bk-button.bk-button-text, .bk-permission-disable.bk-button.bk-button-text:hover, .bk-permission-disable .bk-button.bk-button-text, .bk-permission-disable .bk-button.bk-button-text:hover {
-    background: transparent;
-    border-color: transparent;
+    background: transparent !important;
+    border-color: transparent !important;
     color: #C4C6CC !important;
 }
 
