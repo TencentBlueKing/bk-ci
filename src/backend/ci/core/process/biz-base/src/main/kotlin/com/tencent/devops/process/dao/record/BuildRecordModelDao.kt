@@ -28,6 +28,7 @@
 package com.tencent.devops.process.dao.record
 
 import com.fasterxml.jackson.core.type.TypeReference
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
@@ -58,6 +59,7 @@ class BuildRecordModelDao {
                 .set(START_TYPE, record.startType)
                 .set(MODEL_VAR, JsonUtil.toJson(record.modelVar, false))
                 .set(STATUS, record.status)
+                .set(ERROR_INFO, record.errorInfoList?.let { JsonUtil.toJson(it, false) })
                 .set(CANCEL_USER, record.cancelUser)
                 .set(TIMESTAMPS, JsonUtil.toJson(record.timestamps, false))
                 .execute()
@@ -74,6 +76,7 @@ class BuildRecordModelDao {
         modelVar: Map<String, Any>,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
+        errorInfoList: List<ErrorInfo>?,
         cancelUser: String?,
         timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>?
     ) {
@@ -165,6 +168,9 @@ class BuildRecordModelDao {
                     startType = startType,
                     status = status,
                     cancelUser = cancelUser,
+                    errorInfoList = errorInfo?.let {
+                        JsonUtil.to(it, object : TypeReference<List<ErrorInfo>>() {})
+                    },
                     timestamps = timestamps?.let {
                         JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
                     } ?: mapOf()

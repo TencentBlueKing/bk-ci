@@ -191,6 +191,7 @@ class BuildEndControl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId,
             buildStatus = buildStatus,
+            errorInfoList = buildInfo.errorInfoList,
             errorMsg = errorMsg,
             executeCount = buildInfo.executeCount ?: 1
         )

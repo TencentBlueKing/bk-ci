@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import io.swagger.annotations.ApiModel
@@ -63,6 +64,8 @@ data class BuildRecordModel(
     var startTime: LocalDateTime?,
     @ApiModelProperty("结束时间", required = true)
     var endTime: LocalDateTime?,
+    @ApiModelProperty("流水线任务执行错误", required = false)
+    var errorInfoList: List<ErrorInfo>?,
     @ApiModelProperty("业务时间戳集合", required = false)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )
