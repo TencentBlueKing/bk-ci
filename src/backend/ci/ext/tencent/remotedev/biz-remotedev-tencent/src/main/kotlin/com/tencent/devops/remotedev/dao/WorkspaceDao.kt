@@ -244,7 +244,7 @@ class WorkspaceDao {
         }
     }
 
-    fun mixCondition(
+    private fun mixCondition(
         userId: String? = null,
         workspaceName: String? = null,
         status: WorkspaceStatus? = null

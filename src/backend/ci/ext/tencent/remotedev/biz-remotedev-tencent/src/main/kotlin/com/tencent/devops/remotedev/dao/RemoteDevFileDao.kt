@@ -80,7 +80,8 @@ class RemoteDevFileDao {
         userId: String
     ): List<RemoteDevFile> {
         return with(TRemoteDevFile.T_REMOTE_DEV_FILE) {
-            dslContext.selectFrom(this).where(USER.eq(userId)).orderBy(CREATED_TIME.desc()).fetch().map {
+            dslContext.selectFrom(this).where(USER.eq(userId)).orderBy(CREATED_TIME.desc())
+                .limit(20).fetch().map {
                 RemoteDevFile(
                     id = it.id,
                     md5 = it.md5,

@@ -32,6 +32,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.remotedev.api.user.UserWsTemplateResource
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
@@ -40,7 +41,12 @@ class UserWsTemplateResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService
 
 ) : UserWsTemplateResource {
+    companion object {
+        val logger = LoggerFactory.getLogger(UserWsTemplateResourceImpl::class.java)!!
+    }
+
     override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
-        return Result(workspaceTemplateService.getWorkspaceTemplateList(userId) ?: emptyList())
+        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
+        return Result(workspaceTemplateService.getWorkspaceTemplateList())
     }
 }

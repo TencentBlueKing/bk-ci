@@ -78,7 +78,7 @@ class WorkspaceTemplateDao {
                 dsl.where(ID.eq(wsTemplateId))
             }
 
-            dsl.fetch()
+            dsl.limit(10).fetch()
         }
     }
 }

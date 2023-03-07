@@ -22,7 +22,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     }
 
     override fun getWorkspaceTemplateList(userId: String): Result<List<WorkspaceTemplate>> {
-        return Result(workspaceTemplateService.getWorkspaceTemplateList(userId) ?: emptyList())
+        return Result(workspaceTemplateService.getWorkspaceTemplateList())
     }
 
     override fun updateWorkspaceTemplate(
@@ -30,11 +30,11 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         workspaceTemplateId: Long,
         workspaceTemplate: WorkspaceTemplate
     ): Result<Boolean> {
-        return Result(workspaceTemplateService.updateWorkspaceTemplate(userId, workspaceTemplateId, workspaceTemplate))
+        return Result(workspaceTemplateService.updateWorkspaceTemplate(workspaceTemplateId, workspaceTemplate))
     }
 
     override fun deleteWorkspaceTemplate(userId: String, wsTemplateId: Long): Result<Boolean> {
-        return Result(workspaceTemplateService.deleteWorkspaceTemplate(userId, wsTemplateId))
+        return Result(workspaceTemplateService.deleteWorkspaceTemplate(wsTemplateId))
     }
 
     override fun initBilling(userId: String, freeTime: Int): Result<Boolean> {

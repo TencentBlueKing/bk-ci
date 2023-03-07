@@ -27,10 +27,7 @@
 
 package com.tencent.devops.remotedev.service
 
-import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.project.api.service.service.ServiceTxUserResource
-import com.tencent.devops.remotedev.common.exception.ErrorCodeEnum
 import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import org.jooq.DSLContext
@@ -55,8 +52,6 @@ class WorkspaceTemplateService @Autowired constructor(
             "WorkspaceTemplateService|addWorkspaceTemplate|userId" +
                 "|$userId|workspaceTemplate|$workspaceTemplate"
         )
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
 
         // 模板信息写入DB
         workspaceTemplateDao.createWorkspaceTemplate(
@@ -70,16 +65,13 @@ class WorkspaceTemplateService @Autowired constructor(
 
     // 修改模板
     fun updateWorkspaceTemplate(
-        userId: String,
         wsTemplateId: Long,
         workspaceTemplate: WorkspaceTemplate
     ): Boolean {
         logger.info(
-            "WorkspaceTemplateService|updateWorkspaceTemplate|userId|$userId|" +
+            "WorkspaceTemplateService|updateWorkspaceTemplate|" +
                 "workspaceTemplateId|$wsTemplateId|workspaceTemplate|$workspaceTemplate"
         )
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
 
         // 更新模板信息
         workspaceTemplateDao.updateWorkspaceTemplate(
@@ -93,12 +85,9 @@ class WorkspaceTemplateService @Autowired constructor(
 
     // 删除模板
     fun deleteWorkspaceTemplate(
-        userId: String,
         wsTemplateId: Long
     ): Boolean {
-        logger.info("WorkspaceTemplateService|deleteWorkspaceTemplate|userId|$userId|wsTemplateId|$wsTemplateId")
-        // 校验 user信息是否存在
-        checkCommonUser(userId)
+        logger.info("WorkspaceTemplateService|deleteWorkspaceTemplate|wsTemplateId|$wsTemplateId")
         // 删除模板信息
         workspaceTemplateDao.deleteWorkspaceTemplate(
             wsTemplateId = wsTemplateId,
@@ -109,11 +98,7 @@ class WorkspaceTemplateService @Autowired constructor(
     }
 
     // 获取工作空间模板
-    fun getWorkspaceTemplateList(
-        userId: String
-    ): List<WorkspaceTemplate> {
-        logger.info("WorkspaceTemplateService|getWorkspaceTemplateList|userId|$userId")
-        checkCommonUser(userId)
+    fun getWorkspaceTemplateList(): List<WorkspaceTemplate> {
         val result = mutableListOf<WorkspaceTemplate>()
         workspaceTemplateDao.queryWorkspaceTemplate(
             wsTemplateId = null,
@@ -131,17 +116,5 @@ class WorkspaceTemplateService @Autowired constructor(
             )
         }
         return result
-    }
-
-    // 校验用户是否存在
-    fun checkCommonUser(userId: String) {
-        // get接口先查本地，再查tof
-        val userResult = client.get(ServiceTxUserResource::class).get(userId)
-        if (userResult.isNotOk()) {
-            throw ErrorCodeException(
-                errorCode = ErrorCodeEnum.USER_NOT_EXISTS.errorCode,
-                defaultMessage = ErrorCodeEnum.USER_NOT_EXISTS.formatErrorMessage.format(userId)
-            )
-        }
     }
 }

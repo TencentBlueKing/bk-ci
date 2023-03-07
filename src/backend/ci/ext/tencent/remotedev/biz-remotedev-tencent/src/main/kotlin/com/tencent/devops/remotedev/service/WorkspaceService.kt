@@ -552,7 +552,6 @@ class WorkspaceService @Autowired constructor(
         val oldStatus = WorkspaceStatus.values()[workspace.status]
         if (oldStatus.checkRunning()) return
         if (status) {
-            val history = workspaceHistoryDao.fetchHistory(dslContext, workspaceName).firstOrNull()
             dslContext.transaction { configuration ->
                 val transactionContext = DSL.using(configuration)
                 workspaceDao.updateWorkspaceStatus(
@@ -567,20 +566,21 @@ class WorkspaceService @Autowired constructor(
                     dslContext = transactionContext,
                     workspaceName = workspaceName
                 )
-                if (lastHistory != null) {
-                    workspaceDao.updateWorkspaceSleepingTime(
-                        workspaceName = workspaceName,
-                        sleepTime = Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt(),
-                        dslContext = transactionContext
-                    )
-                }
+
+                val lastSleepTimeCost = if (lastHistory != null) {
+                    Duration.between(lastHistory.endTime, LocalDateTime.now()).seconds.toInt().also {
+                        workspaceDao.updateWorkspaceSleepingTime(
+                            workspaceName = workspaceName,
+                            sleepTime = it,
+                            dslContext = transactionContext
+                        )
+                    }
+                } else 0
                 workspaceHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
                     workspaceName = workspaceName,
                     startUserId = operator,
-                    lastSleepTimeCost = if (history != null) {
-                        Duration.between(history.endTime, LocalDateTime.now()).seconds.toInt()
-                    } else 0
+                    lastSleepTimeCost = lastSleepTimeCost
                 )
                 workspaceOpHistoryDao.createWorkspaceHistory(
                     dslContext = transactionContext,
@@ -1026,7 +1026,7 @@ class WorkspaceService @Autowired constructor(
         }
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it.startTime, now).seconds
+            Duration.between(it, now).seconds
         }
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
@@ -1070,7 +1070,7 @@ class WorkspaceService @Autowired constructor(
         } else 0
 
         val notEndBillingTime = remoteDevBillingDao.fetchNotEndBilling(dslContext, userId).sumOf {
-            Duration.between(it.startTime, now).seconds
+            Duration.between(it, now).seconds
         }
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)

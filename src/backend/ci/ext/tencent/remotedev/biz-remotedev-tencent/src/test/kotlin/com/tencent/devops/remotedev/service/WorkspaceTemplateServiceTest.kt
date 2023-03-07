@@ -45,6 +45,7 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         LocalDateTime.parse("2023-01-03 00:27:16", formatter),
         LocalDateTime.parse("2023-01-03 00:27:16", formatter)
     )
+
     @Nested
     inner class AddWorkspaceTemplateTest {
         @Test
@@ -56,9 +57,6 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
                     workspaceTemplate = any(),
                     dslContext = anyDslContext()
                 )
-            } returns Unit
-            every {
-                self.checkCommonUser(any())
             } returns Unit
 
             Assertions.assertEquals(
@@ -84,13 +82,9 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
                 )
             } returns Unit
 
-            every {
-                self.checkCommonUser(any())
-            } returns Unit
-
             Assertions.assertEquals(
                 self.updateWorkspaceTemplate(
-                    userId = "user00", wsTemplateId = 1, workspaceTemplate = workspaceTemplate
+                    wsTemplateId = 1, workspaceTemplate = workspaceTemplate
                 ),
                 true
             )
@@ -109,13 +103,9 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
                 )
             } returns Unit
 
-            every {
-                self.checkCommonUser(any())
-            } returns Unit
-
             Assertions.assertEquals(
                 self.deleteWorkspaceTemplate(
-                    userId = "user00", wsTemplateId = 1
+                    wsTemplateId = 1
                 ),
                 true
             )

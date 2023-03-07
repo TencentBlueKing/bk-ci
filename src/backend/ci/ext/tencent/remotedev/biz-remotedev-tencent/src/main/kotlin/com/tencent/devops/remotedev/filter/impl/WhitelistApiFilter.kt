@@ -37,7 +37,7 @@ class WhitelistApiFilter constructor(
         EXTERNAL("/api/external/", false),
         REMOTEDEV("/api/remotedev/", false),
         SERVICE("/api/service/", false),
-        OP("/api/op/", false),
+        OP("/api/op/", true),
         SWAGGER("/api/swagger.json", false);
 
         companion object {
