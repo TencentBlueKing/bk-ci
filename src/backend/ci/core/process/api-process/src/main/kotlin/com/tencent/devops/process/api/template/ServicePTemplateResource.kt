@@ -100,7 +100,7 @@ interface ServicePTemplateResource {
         @ApiParam("模板代码", required = true)
         @PathParam("templateCode")
         templateCode: String
-    ): Result<Boolean>
+    ): Result<String?>
 
     @ApiOperation("查询项目下所有源模板的ID")
     @GET

@@ -184,11 +184,11 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         val templateCode = marketTemplateUpdateRequest.templateCode
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
         val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(userId, templateCode)
-        val flag = releaseResult.data
-        if (flag != true) {
+        val imageCode = releaseResult.data
+        if (!imageCode.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
-                defaultMessage = "The template image is not published"
+                params = arrayOf(imageCode),
             )
         }
         if (templateCount > 0) {

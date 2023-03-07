@@ -72,11 +72,11 @@ class PipelineTemplateService @Autowired constructor(
         )
     }
 
-    fun checkImageReleaseStatus(userId: String, templateCode: String): Result<Boolean> {
+    fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
         logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        var flag = true
+        var code: String? =null
         val images = mutableSetOf<String>()
         run releaseStatus@{
             templateModel.stages.forEach { stage ->
@@ -93,7 +93,8 @@ class PipelineTemplateService @Autowired constructor(
                             } else {
                                 images.add(image)
                             }
-                            flag = isRelease(imageCode, imageVersion)
+                            if (!isRelease(imageCode, imageVersion))
+                                code = imageCode
                             return@releaseStatus
                         }
                     } else {
@@ -101,7 +102,7 @@ class PipelineTemplateService @Autowired constructor(
                     }
                 }
             } }
-        return Result(flag)
+        return Result(code)
     }
 
     private fun isRelease(imageCode: String, imageVersion: String): Boolean {
