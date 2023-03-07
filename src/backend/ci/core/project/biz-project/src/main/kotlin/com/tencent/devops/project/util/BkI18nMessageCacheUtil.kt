@@ -25,22 +25,55 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.project.util
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+import com.github.benmanes.caffeine.cache.Caffeine
+import java.util.concurrent.TimeUnit
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
-const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-const val BKREPO_STORE_PROJECT_ID = "bk-store"
-const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
-const val BKREPO_COMMOM_REPO = "common"
+/**
+ * 国际化信息缓存
+ *
+ * @since: 2023-02-03
+ * @version: $Revision$ $Date$ $LastChangedBy$
+ *
+ */
+object BkI18nMessageCacheUtil {
 
-const val REPO_NAME_PIPELINE = "pipeline"
-const val REPO_NAME_CUSTOM = "custom"
-const val REPO_NAME_IMAGE = "image"
-const val REPO_NAME_REPORT = "report"
-const val REPO_NAME_PLUGIN = "plugin"
-const val REPO_NAME_STATIC = "static"
+    private val i18nMessageCache = Caffeine.newBuilder()
+        .maximumSize(2000)
+        .expireAfterWrite(2, TimeUnit.MINUTES)
+        .build<String, String>()
+
+    /**
+     * 保存国际化信息缓存
+     * @param key 缓存key值
+     * @param value 缓存value值
+     */
+    fun put(key: String, value: String) {
+        i18nMessageCache.put(key, value)
+    }
+
+    /**
+     * 从缓存中获取国际化信息
+     * @param key 缓存key值
+     * @return 国际化信息
+     */
+    fun getIfPresent(key: String): String? {
+        return i18nMessageCache.getIfPresent(key)
+    }
+
+    /**
+     * 获取国际化信息缓在缓存中的key
+     * @param moduleCode 模块标识
+     * @param language 语言信息
+     * @param key 国际化变量名
+     * @return 国际化信息缓在缓存中的key
+     */
+    fun getI18nMessageCacheKey(
+        moduleCode: String,
+        language: String,
+        key: String
+    ): String {
+        return "BK_I18N_MESSAGE:$moduleCode:$language:$key"
+    }
+}

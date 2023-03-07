@@ -25,22 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.project.service
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+import com.tencent.devops.project.pojo.LocaleInfo
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
-const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-const val BKREPO_STORE_PROJECT_ID = "bk-store"
-const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
-const val BKREPO_COMMOM_REPO = "common"
+interface UserLocaleService {
 
-const val REPO_NAME_PIPELINE = "pipeline"
-const val REPO_NAME_CUSTOM = "custom"
-const val REPO_NAME_IMAGE = "image"
-const val REPO_NAME_REPORT = "report"
-const val REPO_NAME_PLUGIN = "plugin"
-const val REPO_NAME_STATIC = "static"
+    /**
+     * 添加用户国际化信息
+     * @param userId 用户ID
+     * @param language 国际化语言信息
+     * @return 布尔值
+     */
+    fun addUserLocale(userId: String, language: String): Boolean
+
+    /**
+     * 删除用户国际化信息
+     * @param userId 用户ID
+     * @return 布尔值
+     */
+    fun deleteUserLocale(userId: String): Boolean
+
+    /**
+     * 更新用户国际化信息
+     * @param userId 用户ID
+     * @param language 国际化信息
+     * @return 布尔值
+     */
+    fun updateUserLocale(userId: String, language: String): Boolean
+
+    /**
+     * 根据用户ID查找用户国际化信息
+     * @param userId 用户ID
+     * @return 用户国际化信息
+     */
+    fun getUserLocale(userId: String): LocaleInfo
+}

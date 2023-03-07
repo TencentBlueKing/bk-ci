@@ -239,4 +239,24 @@ interface ArchiveFileService {
         pageSize: Int?,
         modifiedTimeDesc: Boolean?
     ): Page<FileInfo>
+
+    /**
+     * 根据文件路径获取相关文件内容
+     */
+    fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): String
+
+    /**
+     * 获取路径下的文件名称列表
+     */
+    fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): List<String>
 }

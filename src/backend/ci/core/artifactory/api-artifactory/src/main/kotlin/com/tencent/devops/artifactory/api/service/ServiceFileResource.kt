@@ -94,4 +94,40 @@ interface ServiceFileResource {
         @Context
         response: HttpServletResponse
     )
+
+    @ApiOperation("获取文件内容")
+    @GET
+    @Path("/file/content")
+    fun getFileContent(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("仓库项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("仓库名称", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String
+    ): Result<String>
+
+    @ApiOperation("获取路径下的文件名称列表")
+    @GET
+    @Path("/fileNames/list")
+    fun listFileNamesByPath(
+        @ApiParam("用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("仓库项目", required = true)
+        @QueryParam("projectId")
+        projectId: String,
+        @ApiParam("仓库名称", required = true)
+        @QueryParam("repoName")
+        repoName: String,
+        @ApiParam("文件路径", required = true)
+        @QueryParam("filePath")
+        filePath: String
+    ): Result<List<String>>
 }

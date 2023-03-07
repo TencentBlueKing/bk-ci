@@ -24,44 +24,62 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.resources
 
-package com.tencent.devops.artifactory.resources
-
-import com.tencent.devops.artifactory.api.user.UserBkRepoStaticResource
-import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
-import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
-import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
-import com.tencent.devops.artifactory.service.ArchiveFileService
+import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.web.RestResource
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import com.tencent.devops.project.api.service.ServiceI18nMessageResource
+import com.tencent.devops.project.service.I18nMessageService
 import org.springframework.beans.factory.annotation.Autowired
-import java.io.InputStream
 
 @RestResource
-class UserBkRepoStaticResourceImpl @Autowired constructor(
-    private val archiveFileService: ArchiveFileService
-) : UserBkRepoStaticResource {
+class ServiceI18nMessageResourceImpl @Autowired constructor(
+    private val i18nMessageService: I18nMessageService
+) : ServiceI18nMessageResource {
+    override fun batchAddI18nMessage(userId: String, i18nMessages: List<I18nMessage>): Result<Boolean> {
+        i18nMessageService.batchAddI18nMessage(userId, i18nMessages)
+        return Result(true)
+    }
 
-    override fun uploadStaticFile(
+    override fun deleteI18nMessage(
         userId: String,
-        inputStream: InputStream,
-        disposition: FormDataContentDisposition
-    ): Result<String?> {
-        val fileName = disposition.fileName
-        val index = fileName.lastIndexOf(".")
-        val fileSuffix = fileName.substring(index + 1)
-        val filePath = "file/$fileSuffix/${UUIDUtil.generate()}.$fileSuffix"
-        val url = archiveFileService.uploadFile(
+        key: String,
+        moduleCode: SystemModuleEnum,
+        locale: String?
+    ): Result<Boolean> {
+        i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, language = locale)
+        return Result(true)
+    }
+
+    override fun getI18nMessage(
+        userId: String,
+        key: String,
+        moduleCode: SystemModuleEnum,
+        locale: String
+    ): Result<I18nMessage?> {
+        val i18nMessage = i18nMessageService.getI18nMessage(
             userId = userId,
-            inputStream = inputStream,
-            disposition = disposition,
-            projectId = BKREPO_STATIC_PROJECT_ID,
-            filePath = filePath,
-            fileType = FileTypeEnum.BK_STATIC,
-            fileChannelType = FileChannelTypeEnum.WEB_SHOW
+            moduleCode = moduleCode,
+            key = key,
+            language = locale
         )
-        return Result(url)
+        return Result(i18nMessage)
+    }
+
+    override fun getI18nMessages(
+        userId: String,
+        keys: List<String>,
+        moduleCode: SystemModuleEnum,
+        locale: String
+    ): Result<List<I18nMessage>?> {
+        val i18nMessages = i18nMessageService.getI18nMessages(
+            userId = userId,
+            moduleCode = moduleCode,
+            keys = keys,
+            language = locale
+        )
+        return Result(i18nMessages)
     }
 }

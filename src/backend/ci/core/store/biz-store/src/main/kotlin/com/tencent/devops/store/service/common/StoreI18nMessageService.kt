@@ -25,22 +25,27 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.artifactory.constant
+package com.tencent.devops.store.service.common
 
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
+interface StoreI18nMessageService {
 
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
-const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-const val BKREPO_STORE_PROJECT_ID = "bk-store"
-const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
-const val BKREPO_COMMOM_REPO = "common"
-
-const val REPO_NAME_PIPELINE = "pipeline"
-const val REPO_NAME_CUSTOM = "custom"
-const val REPO_NAME_IMAGE = "image"
-const val REPO_NAME_REPORT = "report"
-const val REPO_NAME_PLUGIN = "plugin"
-const val REPO_NAME_STATIC = "static"
+    /**
+     * 解析map集合，把map字段的值替换成蓝盾默认语言对应的值
+     * @param userId 用户ID
+     * @param projectCode 项目标识
+     * @param jsonMap map集合
+     * @param fileDir 资源文件目录
+     * @param keyPrefix map字段在资源文件中key的前缀
+     * @param repositoryHashId 代码库哈希ID
+     * @return 替换成蓝盾默认语言对应的值的map集合
+     */
+    @Suppress("LongParameterList")
+    fun parseJsonMap(
+        userId: String,
+        projectCode: String,
+        jsonMap: MutableMap<String, Any>,
+        fileDir: String,
+        keyPrefix: String? = null,
+        repositoryHashId: String? = null
+    ): Map<String, Any>
+}

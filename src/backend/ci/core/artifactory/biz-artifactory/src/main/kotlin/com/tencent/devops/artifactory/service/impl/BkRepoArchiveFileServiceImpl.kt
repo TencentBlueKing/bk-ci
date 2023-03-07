@@ -27,6 +27,15 @@
 
 package com.tencent.devops.artifactory.service.impl
 
+import com.tencent.devops.artifactory.constant.BKREPO_DEFAULT_USER
+import com.tencent.devops.artifactory.constant.BKREPO_DEVOPS_PROJECT_ID
+import com.tencent.devops.artifactory.constant.BKREPO_STATIC_PROJECT_ID
+import com.tencent.devops.artifactory.constant.BKREPO_STORE_PROJECT_ID
+import com.tencent.devops.artifactory.constant.REPO_NAME_CUSTOM
+import com.tencent.devops.artifactory.constant.REPO_NAME_IMAGE
+import com.tencent.devops.artifactory.constant.REPO_NAME_PIPELINE
+import com.tencent.devops.artifactory.constant.REPO_NAME_REPORT
+import com.tencent.devops.artifactory.constant.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.pojo.Count
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -37,21 +46,13 @@ import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.pojo.enums.FileChannelTypeEnum
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.artifactory.util.BkRepoUtils
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEFAULT_USER
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_DEVOPS_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STATIC_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.BKREPO_STORE_PROJECT_ID
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_CUSTOM
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_IMAGE
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_PIPELINE
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_REPORT
-import com.tencent.devops.artifactory.util.BkRepoUtils.REPO_NAME_STATIC
 import com.tencent.devops.artifactory.util.BkRepoUtils.parseArtifactoryType
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileDetail
 import com.tencent.devops.artifactory.util.BkRepoUtils.toFileInfo
 import com.tencent.devops.artifactory.util.DefaultPathUtils
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
@@ -256,12 +257,12 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
             fileNames = listOf(),
             metadata = searchProps.props,
             page = page ?: 1,
-            pageSize = pageSize ?: DEFAULT_PAGESIZE
+            pageSize = pageSize ?: DEFAULT_PAGE_SIZE
         ).records
         return Page(
             count = nodeList.size.toLong(),
             page = page ?: 1,
-            pageSize = pageSize ?: DEFAULT_PAGESIZE,
+            pageSize = pageSize ?: DEFAULT_PAGE_SIZE,
             totalPages = 1,
             records = nodeList.map { buildFileInfo(it) }
         )
@@ -508,10 +509,65 @@ class BkRepoArchiveFileServiceImpl @Autowired constructor(
         return Page(data.pageNumber, data.pageSize, data.totalRecords, fileInfoList)
     }
 
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): String {
+        val tmpFile = DefaultPathUtils.randomFile()
+        return try {
+            bkRepoClient.downloadFile(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                fullPath = filePath,
+                destFile = tmpFile
+            )
+            tmpFile.readText(Charsets.UTF_8)
+        } catch (e: NotFoundException) {
+            logger.warn("file[$filePath] not exists")
+            ""
+        } catch (e: RemoteServiceException) {
+            logger.warn("download file[$filePath] error: $e")
+            ""
+        } finally {
+            tmpFile.delete()
+        }
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): List<String> {
+        var page = 1
+        val fileNames = mutableListOf<String>()
+        do {
+            val nodeInfos = bkRepoClient.listFilePage(
+                userId = userId,
+                projectId = projectId,
+                repoName = repoName,
+                path = filePath,
+                page = page,
+                pageSize = DEFAULT_PAGE_SIZE,
+                modifiedTimeDesc = false
+            ).records
+            nodeInfos.forEach { nodeInfo ->
+                if (!nodeInfo.folder) {
+                    fileNames.add(nodeInfo.name)
+                }
+            }
+            page += 1
+        } while (nodeInfos.size == DEFAULT_PAGE_SIZE)
+        return fileNames
+    }
+
     companion object {
         private const val ACROSS_PROJECT_COPY_LIMIT = 1000
         private const val DOWNLOAD_FILE_URL_LIMIT = 1000
-        private const val DEFAULT_PAGESIZE = 1000
+        private const val DEFAULT_PAGE_SIZE = 1000
         private val logger = LoggerFactory.getLogger(BkRepoArchiveFileServiceImpl::class.java)
     }
 }

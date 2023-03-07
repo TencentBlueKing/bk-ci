@@ -24,23 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.project.pojo
+import com.tencent.devops.common.web.annotation.BkField
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-package com.tencent.devops.artifactory.constant
-
-const val BK_CI_ATOM_DIR = "bk-atom"
-const val BK_CI_PLUGIN_FE_DIR = "bk-plugin-fe"
-
-const val REALM_LOCAL = "local"
-const val REALM_BK_REPO = "bkrepo"
-const val BKREPO_DEFAULT_USER = "admin"
-const val BKREPO_DEVOPS_PROJECT_ID = "devops"
-const val BKREPO_STORE_PROJECT_ID = "bk-store"
-const val BKREPO_STATIC_PROJECT_ID = "bkcdn"
-const val BKREPO_COMMOM_REPO = "common"
-
-const val REPO_NAME_PIPELINE = "pipeline"
-const val REPO_NAME_CUSTOM = "custom"
-const val REPO_NAME_IMAGE = "image"
-const val REPO_NAME_REPORT = "report"
-const val REPO_NAME_PLUGIN = "plugin"
-const val REPO_NAME_STATIC = "static"
+@ApiModel("语言环境信息")
+data class LocaleInfo(
+    @ApiModelProperty("语言环境信息")
+    @field:BkField(minLength = 1, maxLength = 64)
+    val language: String
+)

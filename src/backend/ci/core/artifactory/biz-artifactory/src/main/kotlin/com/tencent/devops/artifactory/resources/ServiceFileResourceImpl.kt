@@ -63,4 +63,34 @@ class ServiceFileResourceImpl @Autowired constructor(private val archiveFileServ
     override fun downloadFile(userId: String, filePath: String, response: HttpServletResponse) {
         archiveFileService.downloadFileToLocal(userId, filePath, response)
     }
+
+    override fun getFileContent(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<String> {
+        val content = archiveFileService.getFileContent(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(content)
+    }
+
+    override fun listFileNamesByPath(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        filePath: String
+    ): Result<List<String>> {
+        val fileNames = archiveFileService.listFileNamesByPath(
+            userId = userId,
+            projectId = projectId,
+            repoName = repoName,
+            filePath = filePath
+        )
+        return Result(fileNames)
+    }
 }
