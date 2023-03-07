@@ -343,18 +343,22 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun getStorePercentileValue(storeType: StoreTypeEnum): Double {
+        var value = 0.0
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
         val index = (count + 1) * 0.8
         val pluralFlag = "$index".contains(".")
-        val result = storeStatisticTotalDao.getStorePercentileValue(
-            dslContext = dslContext,
-            storeType = storeType,
-            index = index.toInt(),
-            pluralFlag = pluralFlag
-        )
-        logger.info("getStorePercentileValue result:$result")
-        var value = 0.0
-        result.forEach { value += it.value1() as Int }
+        if (index >= 1) {
+            val result = storeStatisticTotalDao.getStorePercentileValue(
+                dslContext = dslContext,
+                storeType = storeType,
+                index = index.toInt(),
+                pluralFlag = pluralFlag
+            )
+            result.forEach {
+                value += it.value1() as Int
+            }
+            logger.info("getStorePercentileValue result:$result")
+        }
         return if (pluralFlag) value / 2 else value
     }
 }
