@@ -7,7 +7,7 @@ import com.tencent.devops.dispatch.windows.pojo.VMType
 import com.tencent.devops.dispatch.windows.service.WindowsTypeService
 import org.springframework.beans.factory.annotation.Autowired
 @RestResource
-class UserSystemVersionResourceImpl @Autowired constructor(
+class UserWindowsVersionResourceImpl @Autowired constructor(
     private val windowsTypeService: WindowsTypeService
 ) : UserSystemVersionResource {
 
