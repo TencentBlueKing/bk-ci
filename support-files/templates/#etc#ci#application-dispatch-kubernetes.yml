@@ -12,7 +12,7 @@ server:
 # 是否开启构建资源配额限制
 dispatch:
   jobQuota:
-    systemAlertReceiver: ""
+    systemAlertReceiver:
     enable: false
   # 默认的构建容器集群类型：VM, KUBERNETES, BCS
   defaultDockerRoutingType: __BK_CI_DOCKER_ROUTING_TYPE__
@@ -33,11 +33,11 @@ kubernetes:
       memory: __BK_CI_KUBERNETES_MEMORY__
       disk: 100
   gateway:
-    webConsoleProxy: "__BK_CI_KUBERNETES_WEBCONSOLE_PROXY__"
+    webConsoleProxy: __BK_CI_KUBERNETES_WEBCONSOLE_PROXY__
 
 bcs:
-  apiUrl: "__BK_CI_BCS_HOST__"
-  token: "__BK_CI_BCS_TOKEN__"
+  apiUrl: __BK_CI_BCS_HOST__
+  token: __BK_CI_BCS_TOKEN__
   entrypoint: /tools/bcs_init.sh
   sleepEntrypoint: /tools/sleep.sh
   resources:
@@ -51,9 +51,9 @@ bcs:
       disk: 100
 
 registry:
-  host: "__BK_CI_DOCKER_REGISTRY_URL__"
-  userName: "__BK_CI_DOCKER_REGISTRY_USER__"
-  password: "__BK_CI_DOCKER_REGISTRY_PASSWORD__"
+  host: __BK_CI_DOCKER_REGISTRY_URL__
+  userName: __BK_CI_DOCKER_REGISTRY_USER__
+  password: __BK_CI_DOCKER_REGISTRY_PASSWORD__
 
 gateway:
   url: __BK_CI_PRIVATE_URL__

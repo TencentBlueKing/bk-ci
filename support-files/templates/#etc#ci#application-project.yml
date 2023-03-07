@@ -14,8 +14,8 @@ bk_login:
   path: __BK_PAAS_PRIVATE_URL__/api/c/compapi/v2/bk_login/
   getUser: get_user/
   getAllUser: get_all_users/
-  bk_app_code: "__BK_CI_APP_CODE__"
-  bk_app_secret: "__BK_CI_APP_TOKEN__"
+  bk_app_code: __BK_CI_APP_CODE__
+  bk_app_secret: __BK_CI_APP_TOKEN__
   
 # 分布式ID配置
 leaf:
@@ -29,14 +29,14 @@ leaf:
 
 # 多集群下合法集群标识
 system:
-  router: "__BK_CI_PROJECT_ROUTER_TAG__"
+  router: __BK_CI_PROJECT_ROUTER_TAG__
 
 # 生产集群tag标识
 tag:
-  prod: "__BK_CI_CONSUL_DISCOVERY_TAG__"
+  prod: __BK_CI_CONSUL_DISCOVERY_TAG__
 
 # db分片配置
 sharding:
   database:
-    assign:
+     assign: 
       fusibleSwitch: false

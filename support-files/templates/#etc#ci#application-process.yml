@@ -22,7 +22,7 @@ queueConcurrency:
 
 # 流水线模板配置  
 template:
-  instanceListUrl: __BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance
+  instanceListUrl: "__BK_CI_PUBLIC_URL__/console/store/pipeline/{0}/template/{0}/instance"
   maxSyncInstanceNum: 10
   maxSaveVersionNum: 300
   maxSaveVersionRecordNum: 2
@@ -64,28 +64,28 @@ pipeline:
               default:
                 size: 1024
               multiple:
-                member: selector,select-input,devops-select,atom-checkbox-list,staff-input,company-staff-input,parameter,dynamic-parameter
+                member: "selector,select-input,devops-select,atom-checkbox-list,staff-input,company-staff-input,parameter,dynamic-parameter"
                 size: 4000
             outputComponent:
               default:
                 size: 4000
-  editPath: console/pipeline/{0}/{1}/edit
+  editPath: "console/pipeline/{0}/{1}/edit"
   atom:
     maxRelQueryNum: 2000  # 最大查询数量
     maxRelQueryRangeTime: 30  # 最大查询时间跨度
   version:
     max_keep_num: 50
-    spec_channels: AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE
-    spec_channel_max_keep_num: 2
+    spec_channels: "AM,CODECC,GCLOUD,GIT,GONGFENGSCAN,CODECC_EE"
+    spec_channel_max_keep_num: 2    
 scm:
   external:
     tGit:
-      hookSecret: ""
+      hookSecret: 
       enableHookSecret: false
 
 sharding:
   databaseShardingStrategy:
-    algorithmClassName: com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm
+    algorithmClassName: "com.tencent.devops.process.sharding.BkProcessDatabaseShardingAlgorithm"
     shardingField: PROJECT_ID
 
 stream:

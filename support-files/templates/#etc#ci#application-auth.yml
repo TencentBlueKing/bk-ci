@@ -12,6 +12,6 @@ server:
 login:
   third:
     # 第三方登陆重定向页面地址
-    url: "__BK_CI_LOGIN_THIRD_CALLBACK_URL__"
+    url: __BK_CI_LOGIN_THIRD_CALLBACK_URL__
     # 第三方登陆重定向cookie作用域
-    domain: "__BK_CI_LOGIN_THIRD_COOKIE_DOMAIN__"
+    domain: __BK_CI_LOGIN_THIRD_COOKIE_DOMAIN__
