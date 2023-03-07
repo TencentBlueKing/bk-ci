@@ -132,6 +132,8 @@ class NodeService @Autowired constructor(
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
+        // todo val canListNodeIds  如果rbac，canListNodeIds为空，则直接返回
+
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -152,6 +154,7 @@ class NodeService @Autowired constructor(
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
+        // todo validRecord -----
         return nodeRecordList.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {

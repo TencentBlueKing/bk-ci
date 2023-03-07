@@ -144,6 +144,8 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         return
     }
 
+    override fun isRbac(): Boolean = false
+
     private fun checkPermission(userId: String, projectId: String): Boolean {
         logger.info("StreamEnvironmentPermissionServiceImp user:$userId projectId: $projectId ")
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(

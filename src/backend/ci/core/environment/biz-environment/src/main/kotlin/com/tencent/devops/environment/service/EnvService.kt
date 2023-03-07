@@ -203,6 +203,8 @@ class EnvService @Autowired constructor(
             return listOf()
         }
 
+        // TODO 根据rbac来路由，若rbac则validRecordList，若不是则为envRecordList
+
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })
         return envRecordList.map {
