@@ -36,6 +36,7 @@ import org.jooq.DSLContext
 import org.jooq.Query
 import org.jooq.Record1
 import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
@@ -111,6 +112,20 @@ class StoreStatisticTotalDao {
         }
     }
 
+    fun updateStatisticDataHotFlag(
+        dslContext: DSLContext,
+        storeCode: String,
+        storeType: Byte,
+        hotFlag: Boolean
+    ) {
+        with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
+            dslContext.update(this)
+                .set(HOT_FLAG, hotFlag)
+                .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
+                .execute()
+        }
+    }
+
     fun batchUpdatePipelineNum(
         dslContext: DSLContext,
         pipelineNumUpdateList: List<StoreStatisticPipelineNumUpdate>,
@@ -153,7 +168,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: Byte
-    ): Record6<Int, Int, BigDecimal, Int, Int, String>? {
+    ): Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.select(
                 DOWNLOADS,
@@ -161,7 +176,8 @@ class StoreStatisticTotalDao {
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
-                STORE_CODE
+                STORE_CODE,
+                HOT_FLAG
             )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -176,7 +192,7 @@ class StoreStatisticTotalDao {
         dslContext: DSLContext,
         storeCodeList: List<String?>,
         storeType: Byte
-    ): Result<Record6<Int, Int, BigDecimal, Int, Int, String>>? {
+    ): Result<Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>>? {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             val baseStep = dslContext.select(
                 DOWNLOADS,
@@ -184,7 +200,8 @@ class StoreStatisticTotalDao {
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
-                STORE_CODE
+                STORE_CODE,
+                HOT_FLAG
             )
                 .from(this)
 
@@ -235,9 +252,8 @@ class StoreStatisticTotalDao {
             val sql = dslContext.select(RECENT_EXECUTE_NUM)
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
-                .orderBy(RECENT_EXECUTE_NUM.desc(), CREATE_TIME, STORE_CODE)
+                .orderBy(RECENT_EXECUTE_NUM.asc(), CREATE_TIME, STORE_CODE)
                 .limit(index - 1, if (pluralFlag) 2 else 1)
-            logger.info("getStorePercentileValue sql:$sql")
             return sql.fetch()
         }
     }

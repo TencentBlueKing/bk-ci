@@ -50,6 +50,7 @@ import com.tencent.devops.store.service.common.StoreTotalStatisticService
 import org.jooq.DSLContext
 import org.jooq.Record4
 import org.jooq.Record6
+import org.jooq.Record7
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -60,6 +61,7 @@ import org.springframework.stereotype.Service
 import java.math.BigDecimal
 import java.time.LocalDateTime
 import java.util.Calendar
+import java.util.concurrent.TimeUnit
 
 @Suppress("ALL")
 @Service
@@ -93,7 +95,15 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             val taskName = "StoreTotalStatisticTask"
             logger.info("$taskName:stat:start")
             StoreTypeEnum.values().forEach { storeType ->
-                logger.info("StoreTotalStatisticTask getStorePercentileValue ${getStorePercentileValue(storeType)}")
+                val percentileValue = percentileCalculation(storeType)
+                logger.info("StoreTotalStatisticTask getStorePercentileValue $percentileValue")
+                if (percentileValue > 0.0) {
+                    redisOperation.set(
+                        "STORE_${storeType.name}_PERCENTILE_VALUE",
+                        "${percentileCalculation(storeType)}",
+                        TimeUnit.DAYS.toSeconds(1L)
+                    )
+                }
                 var offset = 0
                 do {
                     val statistics = storeStatisticDao.batchGetStatisticByStoreCode(
@@ -281,7 +291,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
     }
 
     private fun generateStoreStatistic(
-        record: Record6<Int, Int, BigDecimal, Int, Int, String>?,
+        record: Record7<Int, Int, BigDecimal, Int, Int, String, Boolean>?,
         successRate: Double? = null
     ): StoreStatistic {
         return StoreStatistic(
@@ -290,7 +300,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             score = String.format("%.1f", record?.value3()?.toDouble()).toDoubleOrNull(),
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
-            successRate = successRate
+            successRate = successRate,
+            hotFlag = record?.value6() as Boolean
         )
     }
 
@@ -339,10 +350,20 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
                 scoreAverage = scoreAverage,
                 recentExecuteNum = totalExecuteNum
             )
+            val percentileValue =
+                redisOperation.get("STORE_${StoreTypeEnum.getStoreType(storeType.toInt())}_PERCENTILE_VALUE")
+            if (percentileValue != null) {
+                storeStatisticTotalDao.updateStatisticDataHotFlag(
+                    dslContext = dslContext,
+                    storeCode = code,
+                    storeType = storeType,
+                    hotFlag = totalExecuteNum >= percentileValue.toDouble()
+                )
+            }
         }
     }
 
-    private fun getStorePercentileValue(storeType: StoreTypeEnum): Double {
+    private fun percentileCalculation(storeType: StoreTypeEnum): Double {
         var value = 0.0
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
         val index = (count + 1) * 0.8
