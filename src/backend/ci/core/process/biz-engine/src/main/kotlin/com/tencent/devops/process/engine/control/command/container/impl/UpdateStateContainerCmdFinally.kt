@@ -102,15 +102,17 @@ class UpdateStateContainerCmdFinally(
      * 释放[commandContext]中指定的互斥组
      */
     private fun mutexRelease(commandContext: ContainerContext) {
+        commandContext.container.controlOption?.mutexGroup?.let { mutexGroup ->
+            mutexControl.releaseContainerMutex(
+                projectId = commandContext.event.projectId,
+                buildId = commandContext.event.buildId,
+                stageId = commandContext.event.stageId,
+                containerId = commandContext.event.containerId,
+                mutexGroup = mutexGroup,
+                executeCount = commandContext.container.executeCount
+            )
+        }
         // 返回stage的时候，需要解锁
-        mutexControl.releaseContainerMutex(
-            projectId = commandContext.event.projectId,
-            buildId = commandContext.event.buildId,
-            stageId = commandContext.event.stageId,
-            containerId = commandContext.event.containerId,
-            mutexGroup = commandContext.mutexGroup,
-            executeCount = commandContext.container.executeCount
-        )
     }
 
     /**
@@ -163,6 +165,7 @@ class UpdateStateContainerCmdFinally(
             stageId = event.stageId,
             containerId = event.containerId,
             buildStatus = buildStatus,
+            controlOption = commandContext.needUpdateControlOption,
             startTime = startTime,
             endTime = endTime
         )

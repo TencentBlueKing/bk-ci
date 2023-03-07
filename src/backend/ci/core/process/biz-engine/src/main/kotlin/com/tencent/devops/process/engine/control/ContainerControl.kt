@@ -135,21 +135,21 @@ class ContainerControl @Autowired constructor(
 
         watcher.start("init_context")
         val variables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
-        val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
-
+//        val mutexGroup = mutexControl.decorateMutexGroup(controlOption?.mutexGroup, variables)
+// 此处迁移到 CheckMutexContainerCmd 类处理更合适
         // 当build的状态是结束的时候，直接返回
-        if (status.isFinish()) {
-            LOG.info("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|status=$status|concurrent")
-            mutexControl.releaseContainerMutex(
-                projectId = projectId,
-                buildId = buildId,
-                stageId = stageId,
-                containerId = containerId,
-                mutexGroup = controlOption?.mutexGroup,
-                executeCount = executeCount
-            )
-            return
-        }
+//        if (status.isFinish()) {
+//            LOG.info("ENGINE|$buildId|${event.source}|$stageId|j($containerId)|status=$status|concurrent")
+//            mutexControl.releaseContainerMutex(
+//                projectId = projectId,
+//                buildId = buildId,
+//                stageId = stageId,
+//                containerId = containerId,
+//                mutexGroup = controlOption?.mutexGroup,
+//                executeCount = executeCount
+//            )
+//            return
+//        }
 
         if (status == BuildStatus.UNEXEC) {
             LOG.warn("ENGINE|UN_EXPECT_STATUS|$buildId|${event.source}|$stageId|j($containerId)|status=$status")
@@ -169,7 +169,6 @@ class ContainerControl @Autowired constructor(
 
         val context = ContainerContext(
             buildStatus = this.status, // 初始状态为容器状态，中间流转会切换状态，并最终赋值给该容器状态
-            mutexGroup = mutexGroup,
             stageMatrixCount = stageMatrixCount,
             event = event,
             container = this,

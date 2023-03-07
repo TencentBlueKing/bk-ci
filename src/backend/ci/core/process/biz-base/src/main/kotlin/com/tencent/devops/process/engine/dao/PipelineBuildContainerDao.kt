@@ -171,17 +171,19 @@ class PipelineBuildContainerDao {
         containerId: String,
         startTime: LocalDateTime?,
         endTime: LocalDateTime?,
+        controlOption: PipelineBuildContainerControlOption?,
         buildStatus: BuildStatus
     ): Int {
         return with(T_PIPELINE_BUILD_CONTAINER) {
-            val update = dslContext.update(this)
-                .set(STATUS, buildStatus.ordinal)
+            val update = dslContext.update(this).set(STATUS, buildStatus.ordinal)
 
-            if (startTime != null) {
-                update.set(START_TIME, startTime)
-            }
-            if (endTime != null) {
+            controlOption?.let { update.set(CONDITIONS, JsonUtil.toJson(controlOption, formatted = false)) }
+
+            startTime?.let { update.set(START_TIME, startTime) }
+
+            endTime?.let {
                 update.set(END_TIME, endTime)
+
                 if (buildStatus.isFinish()) {
                     update.set(
                         COST,
@@ -229,7 +231,7 @@ class PipelineBuildContainerDao {
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
-            if (statusSet != null && statusSet.isNotEmpty()) {
+            if (!statusSet.isNullOrEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
                 statusSet.forEach {
                     statusIntSet.add(it.ordinal)

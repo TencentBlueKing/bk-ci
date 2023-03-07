@@ -173,6 +173,7 @@ class PipelineContainerService @Autowired constructor(
         stageId: String,
         containerId: String,
         startTime: LocalDateTime? = null,
+        controlOption: PipelineBuildContainerControlOption? = null,
         endTime: LocalDateTime? = null,
         buildStatus: BuildStatus
     ) {
@@ -185,6 +186,7 @@ class PipelineContainerService @Autowired constructor(
             containerId = containerId,
             buildStatus = buildStatus,
             startTime = startTime,
+            controlOption = controlOption,
             endTime = endTime
         )
     }
