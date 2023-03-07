@@ -51,7 +51,7 @@ const TelegrafConf = `
   omit_hostname = false
 [[outputs.influxdb]]
   urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetrix"
+  database = "agentMetric"
   skip_database_creation = true
   ###{tls_ca}###
 [[inputs.cpu]]
@@ -67,12 +67,13 @@ const TelegrafConf = `
 [[inputs.system]]
 [[inputs.netstat]]
 [[inputs.swap]]
+[[inputs.kernel]]
 
 [[processors.rename]]
   # cpu
   [[processors.rename.replace]]
     measurement = "cpu"
-    dest = "system.cpu_detail"
+    dest = "cpu_detail"
   [[processors.rename.replace]]
     field = "usage_user"
     dest = "user"
@@ -87,9 +88,6 @@ const TelegrafConf = `
     dest = "iowait"
   # net
   [[processors.rename.replace]]
-    measurement = "net"
-    dest = "system.net"
-  [[processors.rename.replace]]
     field = "bytes_recv"
     dest = "speed_recv"
   [[processors.rename.replace]]
@@ -103,15 +101,12 @@ const TelegrafConf = `
     dest = "speed_packets_sent"
   # mem
   [[processors.rename.replace]]
-    measurement = "mem"
-    dest = "system.mem"
-  [[processors.rename.replace]]
     field = "used_percent"
     dest = "pct_used"
   # diskio
   [[processors.rename.replace]]
     measurement = "diskio"
-    dest = "system.io"
+    dest = "io"
   [[processors.rename.replace]]
     field = "read_bytes"
     dest = "rkb_s"
@@ -119,9 +114,6 @@ const TelegrafConf = `
     field = "write_bytes"
     dest = "wkb_s"  
   # netstat
-  [[processors.rename.replace]]
-    measurement = "netstat"
-    dest = "system.netstat"
   [[processors.rename.replace]]
     field = "tcp_close_wait"
     dest = "cur_tcp_closewait"
@@ -155,22 +147,24 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "tcp_syn_sent"
     dest = "cur_tcp_syn_sent"
-  # swap
-  [[processors.rename.replace]]
-    measurement = "swap"
-    dest = "system.swap"
   # load
   [[processors.rename.replace]]
     measurement = "system"
-    dest = "system.load"
+    dest = "load"
+  # kernel  
+  [[processors.rename.replace]]
+    measurement = "kernel"
+    dest = "env"
+  [[processors.rename.replace]]
+    field = "boot_time"
+    dest = "uptime"
+  [[processors.rename.replace]]
+    field = "processes_forked"
+    dest = "procs"
 
 # disk的指标同名但改完名不同单独拿出来    
 [[processors.rename]]
   namepass = ["disk"]
-  # disk
-  [[processors.rename.replace]]
-    measurement = "disk"
-    dest = "system.disk"
   [[processors.rename.replace]]
     field = "used_percent"
     dest = "in_use"

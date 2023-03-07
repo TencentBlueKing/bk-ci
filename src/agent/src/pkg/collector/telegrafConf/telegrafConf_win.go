@@ -51,7 +51,7 @@ const TelegrafConf = `
   omit_hostname = false
 [[outputs.influxdb]]
   urls = ["###{gateway}###/ms/environment/api/buildAgent/agent/thirdPartyAgent/agents/metrix"]
-  database = "agentMetrix"
+  database = "agentMetric"
   skip_database_creation = true
   ###{tls_ca}###
 [[inputs.win_perf_counters]]
@@ -105,7 +105,7 @@ const TelegrafConf = `
   # cpu
   [[processors.rename.replace]]
     measurement = "cpu"
-    dest = "system.cpu_detail"
+    dest = "cpu_detail"
   [[processors.rename.replace]]
     field = "Percent_User_Time"
     dest = "user"
@@ -116,9 +116,6 @@ const TelegrafConf = `
     field = "Percent_Idle_Time"
     dest = "idle"
   # net
-  [[processors.rename.replace]]
-    measurement = "net"
-    dest = "system.net"
   [[processors.rename.replace]]
     field = "Bytes_Received_persec"
     dest = "speed_recv"
@@ -133,15 +130,12 @@ const TelegrafConf = `
     dest = "speed_packets_sent"
   # mem
   [[processors.rename.replace]]
-    measurement = "mem"
-    dest = "system.mem"
-  [[processors.rename.replace]]
     field = "used_percent"
     dest = "pct_used"
   # diskio
   [[processors.rename.replace]]
     measurement = "diskio"
-    dest = "system.io"
+    dest = "io"
   [[processors.rename.replace]]
     field = "Disk_Read_Bytes_persec"
     dest = "rkb_s"
@@ -149,9 +143,6 @@ const TelegrafConf = `
     field = "Disk_Write_Bytes_persec"
     dest = "wkb_s"
   # netstat
-  [[processors.rename.replace]]
-    measurement = "netstat"
-    dest = "system.netstat"
   [[processors.rename.replace]]
     field = "tcp_close_wait"
     dest = "cur_tcp_closewait"
@@ -185,22 +176,14 @@ const TelegrafConf = `
   [[processors.rename.replace]]
     field = "tcp_syn_sent"
     dest = "cur_tcp_syn_sent"
-  # swap
-  [[processors.rename.replace]]
-    measurement = "swap"
-    dest = "system.swap"
   # load
   [[processors.rename.replace]]
     measurement = "system"
-    dest = "system.load"
+    dest = "load"
 
 # disk的指标同名但改完名不同单独拿出来    
 [[processors.rename]]
   namepass = ["disk"]
-  # disk
-  [[processors.rename.replace]]
-    measurement = "disk"
-    dest = "system.disk"
   [[processors.rename.replace]]
     field = "used_percent"
     dest = "in_use"  
