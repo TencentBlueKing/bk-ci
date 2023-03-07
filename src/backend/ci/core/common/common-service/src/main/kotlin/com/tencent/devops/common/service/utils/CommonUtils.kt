@@ -29,6 +29,7 @@ package com.tencent.devops.common.service.utils
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.LocaleUtil
@@ -258,5 +259,19 @@ object CommonUtils {
     fun getDefaultLocaleLanguage(): String {
         val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
         return commonConfig.devopsDefaultLocaleLanguage
+    }
+
+    /**
+     * 获取接口请求渠道信息
+     * @return 渠道信息
+     */
+    fun getRequestChannel(): String? {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return if (null != attributes) {
+            val request = attributes.request
+            (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
+        } else {
+            null // 不是接口请求来源则返回null
+        }
     }
 }
