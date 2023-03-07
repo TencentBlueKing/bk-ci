@@ -80,7 +80,7 @@
                         <template slot-scope="{ row }">
                             <span class="project-status">
                                 <bk-switcher
-                                    v-model="row.enabled"
+                                    :value="row.enabled"
                                     class="mr5"
                                     size="small"
                                     theme="primary"
@@ -287,7 +287,8 @@
                 this.toggleProjectEnable({
                     projectCode: projectCode,
                     enabled: enabled
-                }).then(res => {
+                }).then(() => {
+                    row.enabled = !row.enabled
                     this.$bkMessage({
                         message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'
