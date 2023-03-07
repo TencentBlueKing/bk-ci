@@ -37,7 +37,7 @@ object AgentMetricsTargetConstant {
     const val f_mem_used_percent = "pct_used"
     const val f_mem_total = "total"
 
-    const val t_cpu = "system.cpu_summary"
+    const val t_cpu = "system.cpu_detail"
     const val f_cpu_usage_idle = "idle"
     const val f_cpu_usage_iowait = "iowait"
     const val f_cpu_usage_user = "user"
