@@ -68,6 +68,7 @@
                     <bk-table-column
                         :label="$t('projectDesc')"
                         prop="description"
+                        width="500"
                     />
                     <bk-table-column
                         :label="$t('administrator')"
@@ -76,6 +77,7 @@
                     <bk-table-column
                         :label="$t('projectStatus')"
                         prop="creator"
+                        width="180"
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">

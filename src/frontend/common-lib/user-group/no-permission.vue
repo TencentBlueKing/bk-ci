@@ -5,8 +5,7 @@
                 class="exception-wrap-item exception-part"
                 type="403"
                 scene="part"
-                :description="title"
-                :class="{ 'exception-gray': isGray }"
+                :title="title"
             >
             </bk-exception>
         </div>
@@ -42,5 +41,13 @@
     }
     .btn {
         margin-top: 32px;
+    }
+    ::v-deep .bk-exception-img {
+        height: 240px;
+    }
+    ::v-deep .bk-exception-title {
+        font-size: 24px;
+        color: #313238;
+        margin-top: 18px;
     }
 </style>

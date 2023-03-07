@@ -8,7 +8,7 @@ defineProps<{
 }>();
 
 const goToManage = () => {
-  window.open('/console/pm', '_blank');
+  window.parent.location.href = `${location.origin}/console/pm`
 };
 </script>
 

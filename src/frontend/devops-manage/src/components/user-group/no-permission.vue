@@ -5,8 +5,7 @@
         class="exception-wrap-item exception-part"
         type="403"
         scene="part"
-        :description="title"
-        :class="{ 'exception-gray': isGray }"
+        :title="title"
       >
       </bk-exception>
     </div>
@@ -26,22 +25,28 @@ export default {
 
 <style lang="postcss" scoped>
 .group-manage {
-  padding: 20px;
   flex: 1;
 }
 .content-wrapper {
   display: flex;
   align-items: center;
   flex-direction: column;
-  padding-top: 10%;
   width: 100%;
   height: 100%;
   background-color: #fff;
   box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
   text-align: center;
-  font-size: 14px;
+  padding: 32px 48px;
 }
 .btn {
   margin-top: 32px;
+}
+:deep(.bk-exception-img) {
+  height: 240px;
+}
+:deep(.bk-exception-title) {
+  font-size: 24px;
+  color: #313238;
+  margin-top: 18px;
 }
 </style>

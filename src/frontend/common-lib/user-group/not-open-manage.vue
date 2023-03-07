@@ -9,6 +9,7 @@
             >
                 <div>{{ title }}</div>
                 <bk-button
+                    :class="{ 'btn': true, 'disable': !hasPermission }"
                     class="btn"
                     theme="primary"
                     @click="openManage"
@@ -32,6 +33,9 @@
             },
             isOpenManageLoading: {
                 type: Boolean
+            },
+            hasPermission: {
+                type: Boolean
             }
         },
 
@@ -49,22 +53,29 @@
 </script>
 
 <style lang="scss" scoped>
-.group-manage {
-  flex: 1;
-}
-.content-wrapper {
-  display: flex;
-  align-items: center;
-  flex-direction: column;
-  padding-top: 10%;
-  width: 100%;
-  height: 100%;
-  background-color: #fff;
-  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
-  text-align: center;
-  font-size: 14px;
-}
-.btn {
-  margin-top: 32px;
-}
+    .group-manage {
+        flex: 1;
+    }
+    .content-wrapper {
+        display: flex;
+        align-items: center;
+        flex-direction: column;
+        padding-top: 10%;
+        width: 100%;
+        height: 100%;
+        background-color: #fff;
+        box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
+        text-align: center;
+        font-size: 14px;
+    }
+    .btn {
+        margin-top: 32px;
+        &.disabled {
+            color: #C4C6CC;
+            &:hover {
+                color: #C4C6CC;
+            }
+        cursor: url('../images/cursor-lock.png'), auto !important;
+        }
+    }
 </style>

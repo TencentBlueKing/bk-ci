@@ -23,6 +23,24 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
   -moz-osx-font-smoothing: grayscale;
 }
 
+.manage-icon-sync-failed:before {
+	content: "\e111";
+}
+.manage-icon-sync-success:before {
+	content: "\e112";
+}
+.manage-icon-sync-default:before {
+	content: "\e113";
+}
+.manage-icon-abnormal:before {
+	content: "\e115";
+}
+.manage-icon-sync-waiting-01:before {
+	content: "\e114";
+}
+.manage-icon-warning-2:before {
+	content: "\e116";
+}
 .manage-icon-more-fill:before {
 	content: "\e101";
 }
@@ -41,4 +59,6 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .manage-icon-unknown:before {
 	content: "\e105";
 }
-
+.manage-icon-organization:before {
+	content: "\e117";
+}

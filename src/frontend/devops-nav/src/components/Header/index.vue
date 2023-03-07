@@ -48,7 +48,7 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <i class="devops-icon icon-apps" />
+                                <icon name="appyl" size="14" />
                                 <span class="text">{{ $t('applyProject') }}</span>
                             </span>
                             <span class="extension-line" />

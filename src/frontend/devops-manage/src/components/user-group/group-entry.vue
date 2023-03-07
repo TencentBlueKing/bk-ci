@@ -182,6 +182,7 @@ export default {
   .group-wrapper {
     display: flex;
     flex: 1;
+    width: 100%;
   }
   .group-manage {
     display: flex;

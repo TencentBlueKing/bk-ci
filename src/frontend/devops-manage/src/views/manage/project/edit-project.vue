@@ -56,7 +56,7 @@ const fetchProjectData = async () => {
  * 取消编辑项目
  */
 const handleCancel = () => {
-  const onClosed = () => {
+  const onConfirm = () => {
     isChange.value = false;
     router.push({
       path: 'show',
@@ -64,19 +64,18 @@ const handleCancel = () => {
   };
   if (isChange.value) {
     InfoBox({
-      infoType: 'warning',
-      title: t('确认离开当前页面吗?'),
-      subTitle: t('离开将会丢失未保存的信息，建议保存后离开'),
+      title: t('确认离开当前页?'),
+      subTitle: t('离开将会导致未保存信息丢失'),
       contentAlign: 'center',
       headerAlign: 'center',
       footerAlign: 'center',
-      confirmText: t('留在此页'),
-      cancelText: t('直接离开'),
-      onConfirm: () => true,
-      onClosed,
+      confirmText: t('离开'),
+      cancelText: t('取消'),
+      onConfirm,
+      onClosed: () => true,
     });
   } else {
-    onClosed();
+    onConfirm();
   };
 };
 
@@ -205,8 +204,8 @@ onMounted(() => {
       v-else
       class="edit-project-form"
       type="403"
-      :title="t('无业务权限')"
-      :description="t('你没有相应业务的访问权限，请前往申请相关业务权限')"
+      :title="t('无编辑权限')"
+      :description="t('你没有项目的编辑权限，请先申请', [projectCode])"
     >
       <bk-button theme="primary" @click="handleNoPermission">
         {{ t('去申请') }}
@@ -221,6 +220,9 @@ onMounted(() => {
     flex-direction: column;
     height: 100%;
     overflow: auto;
+    margin: 16px 24px 24px;
+    background-color: #fff;
+    box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;

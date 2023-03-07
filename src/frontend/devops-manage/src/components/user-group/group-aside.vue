@@ -14,13 +14,14 @@
             {{ group.userCount }}
           </span>
           <span class="group-num">
-            <i class="manage-icon small-size manage-icon-user-shape"></i>
+            <i class="manage-icon small-size manage-icon-organization"></i>
             {{ group.departmentCount }}
           </span>
           <bk-popover
             v-if="resourceType === 'project'"
             class="group-more-option"
             placement="bottom"
+            trigger="click"
             theme="dot-menu light"
             :arrow="false"
             offset="15"
@@ -29,7 +30,7 @@
             <template #content>
               <bk-button
                 class="btn"
-                :disabled="['manager', 'visitor'].includes(group.groupCode)"
+                :disabled="group.defaultGroup"
                 text
                 @click="handleShowDeleteGroup(group)">
                 {{ $t('删除') }}
@@ -196,7 +197,9 @@ export default {
     &:hover {
       color: #3A84FF;
       background-color: #E1ECFF;
-
+      .small-size {
+        color: #fff
+      }
     }
   }
   .group-item:hover {
@@ -215,6 +218,9 @@ export default {
     .user-num, .group-num {
       background-color: #A3C5FD;
       color: #fff;
+    }
+    .small-size {
+      color: #fff
     }
   }
   .user-num,
@@ -264,6 +270,7 @@ export default {
   }
   .add-icon {
     margin-right: 10px;
+    color: #979BA5;
   }
 
   .group-more-option .btn {
@@ -286,6 +293,7 @@ export default {
   }
   .small-size {
     scale: 0.9;
+    color: #C4C6CC;
   }
   .delete-tips {
     padding: 10px 0 25px;
