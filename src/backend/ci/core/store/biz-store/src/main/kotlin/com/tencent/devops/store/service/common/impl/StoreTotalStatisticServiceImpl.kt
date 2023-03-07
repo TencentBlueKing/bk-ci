@@ -353,7 +353,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         )
         var value = 0.0
         result.forEach {
-            value += it.value1() as Double
+            value += it.value1() as Int
         }
         return if (pluralFlag) value / 2 else value
     }
