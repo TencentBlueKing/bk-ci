@@ -95,13 +95,13 @@ const actions: ActionTree<RootState, any> = {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/organizations/types/${type}/ids/${id}`)
     },
     ajaxUpdatePM (_, { projectCode, data }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data)
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/`, data, { headers: { 'X-DEVOPS-PROJECT-ID': projectCode } })
     },
     ajaxAddPM (_, data) {
         return Request.post(`${PROJECT_API_URL_PREFIX}/user/projects/`, data)
     },
     toggleProjectEnable (_, { projectCode, enabled }) {
-        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`)
+        return Request.put(`${PROJECT_API_URL_PREFIX}/user/projects/${projectCode}/enable?enabled=${enabled}`, null, { headers: { 'X-DEVOPS-PROJECT-ID': projectCode } })
     },
     getMyDepartmentInfo () {
         return Request.get(`${PROJECT_API_URL_PREFIX}/user/users/detail/`)
