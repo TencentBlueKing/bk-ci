@@ -39,6 +39,7 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
@@ -189,7 +190,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         )
         val storeStatisticMap = hashMapOf<String, StoreStatistic>()
         records?.map {
-            val storeCode = it.get("STORE_CODE") as? String
+            val storeCode = it.get(KEY_STORE_CODE) as? String
             if (storeCode != null) {
                 storeStatisticMap[storeCode] = generateStoreStatistic(it)
             }

@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.Condition
@@ -194,7 +195,7 @@ class StoreStatisticTotalDao {
                 SCORE_AVERAGE,
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
-                STORE_CODE,
+                STORE_CODE.`as`(KEY_STORE_CODE),
                 HOT_FLAG
             )
                 .from(this)
