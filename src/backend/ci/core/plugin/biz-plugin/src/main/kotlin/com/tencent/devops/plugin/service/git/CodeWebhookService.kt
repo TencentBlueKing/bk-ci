@@ -105,9 +105,11 @@ class CodeWebhookService @Autowired constructor(
                 with(info) {
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
+                    val repoCondition = webhookType == CodeType.GIT || webhookType == CodeType.TGIT
+                    val eventCondition = webhookEventType == CodeEventType.MERGE_REQUEST || webhookEventType ==
+                        CodeEventType.PUSH_COMMIT
                     when {
-                        enableCheck && webhookEventType == CodeEventType.MERGE_REQUEST &&
-                            (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) -> {
+                        enableCheck && eventCondition && repoCondition -> {
                             logger.info(
                                 "$buildId|WebHook_ADD_GIT_COMMIT_CHECK|$pipelineId|$repositoryConfig|$commitId]"
                             )
@@ -168,10 +170,11 @@ class CodeWebhookService @Autowired constructor(
                 with(info) {
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
-
+                    val repoCondition = webhookType == CodeType.GIT || webhookType == CodeType.TGIT
+                    val eventCondition = webhookEventType == CodeEventType.MERGE_REQUEST || webhookEventType ==
+                        CodeEventType.PUSH_COMMIT
                     when {
-                        enableCheck && (webhookType == CodeType.GIT || webhookType == CodeType.TGIT) &&
-                            webhookEventType == CodeEventType.MERGE_REQUEST -> {
+                        enableCheck && repoCondition && eventCondition -> {
                             val state = if (buildStatus == BuildStatus.SUCCEED) {
                                 GIT_COMMIT_CHECK_STATE_SUCCESS
                             } else {

@@ -36,6 +36,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
@@ -52,6 +53,7 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -98,6 +100,17 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 else ->
                     throw OperationException("不是Git 代码仓库")
             }
+            // 目标分支
+            val targetBranch = mergeRequestId?.let {
+                getMrInfo(
+                    projectName = repo.projectName,
+                    url = repo.url,
+                    scmType = type,
+                    token = token,
+                    mrId = it,
+                    isOauth = isOauth
+                ).targetBranch
+            }
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
@@ -113,7 +126,13 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 description = description,
                 block = block,
                 mrRequestId = event.mergeRequestId,
-                reportData = QualityUtils.getQualityGitMrResult(client, event)
+                reportData = QualityUtils.getQualityGitMrResult(client, event),
+                targetBranch = if (event.triggerType == CodeEventType.MERGE_REQUEST.name &&
+                    !targetBranch.isNullOrEmpty()) {
+                    mutableListOf(targetBranch)
+                } else {
+                    mutableListOf("~NONE")
+                }
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
@@ -293,5 +312,34 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
+    }
+
+    private fun getMrInfo(
+        projectName: String,
+        url: String,
+        scmType: ScmType,
+        token: String?,
+        mrId: Long,
+        isOauth: Boolean
+    ): GitMrInfo {
+        val data: GitMrInfo
+        if (isOauth) {
+            data = client.get(ServiceScmOauthResource::class).getMrInfo(
+                projectName = projectName,
+                url = url,
+                type = scmType,
+                token = token,
+                mrId = mrId
+            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId) by oauth")
+        } else {
+            data = client.get(ServiceScmResource::class).getMrInfo(
+                projectName = projectName,
+                url = url,
+                type = scmType,
+                token = token,
+                mrId = mrId
+            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId)")
+        }
+        return data
     }
 }
