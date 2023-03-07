@@ -30,6 +30,7 @@ import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
 import { handleProjectNoPermission } from './utils/permission'
+import { handleNoPermission } from '../../common-lib/permission/permission'
 import { AuthorityDirectiveV2 } from '../../common-lib/permission/authority-directive'
 import ajax from './utils/request'
 
