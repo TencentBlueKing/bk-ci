@@ -79,29 +79,25 @@ func DoAgentCollect() {
 	if fileutil.Exists(logFile) {
 		_ = fileutil.TryRemoveFile(logFile)
 	}
-	tAgent, err := getTelegrafAgent(
+	tAgent := getTelegrafAgent(
 		fmt.Sprintf("%s/%s", systemutil.GetWorkDir(), telegrafConfigFile),
 		logFile,
 	)
-	if err != nil {
-		logs.Error("init telegraf agent failed: %v", err)
-		return
-	}
 
 	for {
 		logs.Info("launch telegraf agent")
-		if err = tAgent.Run(context.Background()); err != nil {
+		if err := tAgent.Run(context.Background()); err != nil {
 			logs.Error("telegraf agent exit: %v", err)
 		}
 		time.Sleep(telegrafRelaunchTime)
 	}
 }
 
-func getTelegrafAgent(configFile, logFile string) (*agent.Agent, error) {
+func getTelegrafAgent(configFile, logFile string) *agent.Agent {
 	// get a new config and parse configuration from file.
 	c := telegrafConfig.NewConfig()
 	if err := c.LoadConfig(configFile); err != nil {
-		return nil, err
+		return nil
 	}
 
 	logConfig := logger.LogConfig{
