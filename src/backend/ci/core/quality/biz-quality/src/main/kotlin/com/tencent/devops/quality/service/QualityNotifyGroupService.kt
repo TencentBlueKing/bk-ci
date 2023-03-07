@@ -68,8 +68,16 @@ class QualityNotifyGroupService @Autowired constructor(
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
-        // TODO 先校验是否有质量红线通知的列表权限，如果没有，直接返回空
-        // 如果是rbac的才做
+        // RBAC得先校验是否有质量红线通知的列表权限，如果没有，直接返回空
+        if (qualityPermissionService.isRbac()) {
+            val isListPermission = qualityPermissionService.validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = AuthPermission.LIST
+            )
+            if (!isListPermission)
+                return Pair(0, listOf())
+        }
         val groupPermissionListMap = qualityPermissionService.filterGroup(
             user = userId,
             projectId = projectId,

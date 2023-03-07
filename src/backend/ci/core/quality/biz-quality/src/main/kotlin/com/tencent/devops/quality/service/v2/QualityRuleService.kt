@@ -504,6 +504,16 @@ class QualityRuleService @Autowired constructor(
         offset: Int,
         limit: Int
     ): Pair<Long, List<QualityRuleSummaryWithPermission>> {
+        // RBAC得先校验是否有质量红线通知的列表权限，如果没有，直接返回空
+        if (qualityPermissionService.isRbac()) {
+            val isListPermission = qualityPermissionService.validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = AuthPermission.LIST
+            )
+            if (!isListPermission)
+                return Pair(0, listOf())
+        }
         val count = qualityRuleDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
         val ruleRecordList = qualityRuleDao.list(dslContext, projectId, offset, finalLimit)

@@ -53,6 +53,7 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -129,11 +130,16 @@ class NodeService @Autowired constructor(
 
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId = userId, projectId = projectId,
-            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            permissions = setOf(
+                AuthPermission.LIST, AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE
+            )
         )
 
-        // todo val canListNodeIds  如果rbac，canListNodeIds为空，则直接返回
-
+        val canListNodeIds = if (permissionMap.containsKey(AuthPermission.LIST)) {
+            permissionMap[AuthPermission.LIST]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
+        } else {
+            emptyList()
+        }
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -150,12 +156,19 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
+        val canListNode = nodeRecordList.filter { canListNodeIds.contains(it.nodeId) }
+        val isRbac = environmentPermissionService.isRbac()
+        val nodeListResult: List<TNodeRecord> = if (isRbac) {
+            canListNode.ifEmpty { return listOf() }
+        } else {
+            nodeRecordList
+        }
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        // todo validRecord -----
-        return nodeRecordList.map {
+
+        return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -427,22 +440,22 @@ class NodeService @Autowired constructor(
 
     fun searchByDisplayName(projectId: String, offset: Int?, limit: Int?, displayName: String): Page<NodeBaseInfo> {
         val nodeInfos = nodeDao.searchByDisplayName(
-                dslContext = dslContext,
-                offset = offset!!,
-                limit = limit!!,
-                projectId = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            offset = offset!!,
+            limit = limit!!,
+            projectId = projectId,
+            displayName = displayName
         )
         val count = nodeDao.countByDisplayName(
-                dslContext = dslContext,
-                project = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            project = projectId,
+            displayName = displayName
         )
         return Page(
-                count = count.toLong(),
-                page = offset!!,
-                pageSize = limit!!,
-                records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+            count = count.toLong(),
+            page = offset!!,
+            pageSize = limit!!,
+            records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
 
