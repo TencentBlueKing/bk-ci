@@ -28,6 +28,7 @@
 package com.tencent.devops.common.auth.api.v3
 
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
+import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -42,6 +43,20 @@ class TxV3AuthProjectApi @Autowired constructor(
     val client: Client,
     val tokenService: ClientTokenService
 ) : AuthProjectApi {
+    override fun validateUserProjectPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission
+    ): Boolean {
+        // v3没有project_enable权限,启用/禁用只有管理员才有权限
+        return if (permission == AuthPermission.MANAGE || permission == AuthPermission.ENABLE) {
+            checkProjectManager(userId = user, serviceCode = serviceCode, projectCode = projectCode)
+        } else {
+            checkProjectUser(user = user, serviceCode = serviceCode, projectCode = projectCode)
+        }
+    }
+
     override fun getProjectUsers(
         serviceCode: AuthServiceCode,
         projectCode: String,

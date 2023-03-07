@@ -31,6 +31,7 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -79,6 +80,24 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         )
     }
 
+    override fun validateUserResourcePermissionByInstance(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Boolean {
+        val serviceCodeService = serviceCodeService.getServiceCodeByResource(resource.resourceType)
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = serviceCodeService,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            permission = AuthPermission.get(action),
+            resourceCode = resource.resourceCode,
+            relationResourceType = null
+        )
+    }
+
     override fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -116,6 +135,15 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
             permissions = permissions,
             supplier = null
         )
+    }
+
+    override fun filterUserResourceByPermission(
+        userId: String,
+        action: String,
+        projectCode: String,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return emptyList()
     }
 
     companion object {

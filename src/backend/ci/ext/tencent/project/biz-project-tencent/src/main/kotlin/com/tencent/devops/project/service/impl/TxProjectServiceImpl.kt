@@ -94,7 +94,7 @@ class TxProjectServiceImpl @Autowired constructor(
     private val tofService: TOFService,
     private val bkRepoClient: BkRepoClient,
     private val projectPaasCCService: ProjectPaasCCService,
-    private val bsAuthProjectApi: AuthProjectApi,
+    private val authProjectApi: AuthProjectApi,
     private val bsPipelineAuthServiceCode: BSPipelineAuthServiceCode,
     projectJmxApi: ProjectJmxApi,
     redisOperation: RedisOperation,
@@ -149,10 +149,9 @@ class TxProjectServiceImpl @Autowired constructor(
     override fun getByEnglishName(
         userId: String,
         englishName: String,
-        accessToken: String?,
-        needTips: Boolean
+        accessToken: String?
     ): ProjectVO? {
-        val projectVO = getInfoByEnglishName(userId = userId, englishName = englishName, needTips = needTips)
+        val projectVO = getInfoByEnglishName(userId = userId, englishName = englishName)
         if (projectVO == null) {
             logger.warn("The projectCode $englishName is not exist")
             return null
@@ -315,11 +314,12 @@ class TxProjectServiceImpl @Autowired constructor(
     }
 
     override fun validatePermission(projectCode: String, userId: String, permission: AuthPermission): Boolean {
-        return if (permission == AuthPermission.MANAGE) {
-            bsAuthProjectApi.checkProjectManager(userId, bsPipelineAuthServiceCode, projectCode)
-        } else {
-            bsAuthProjectApi.checkProjectUser(userId, bsPipelineAuthServiceCode, projectCode)
-        }
+        return authProjectApi.validateUserProjectPermission(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            permission = permission,
+            projectCode = projectCode
+        )
     }
 
     override fun modifyProjectAuthResource(
@@ -338,14 +338,9 @@ class TxProjectServiceImpl @Autowired constructor(
         projectPermissionService.cancelUpdateAuthProject(userId = userId, projectCode = projectCode)
     }
 
-    fun getInfoByEnglishName(userId: String, englishName: String, needTips: Boolean): ProjectVO? {
+    fun getInfoByEnglishName(userId: String, englishName: String): ProjectVO? {
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
-        return if (needTips) {
-            val tipsStatus = getAndUpdateTipsStatus(userId = userId, projectId = englishName)
-            ProjectUtils.packagingBean(record).copy(tipsStatus = tipsStatus)
-        } else {
-            ProjectUtils.packagingBean(record)
-        }
+        return ProjectUtils.packagingBean(record)
     }
 
     override fun hasCreatePermission(userId: String): Boolean {

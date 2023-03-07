@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionGrantRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionVerifyRequest
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionsPolicyCodeAndResourceType
@@ -63,6 +64,24 @@ class BSAuthPermissionApi @Autowired constructor(
         permission: AuthPermission
     ): Boolean {
         return validateUserResourcePermission(user, serviceCode, resourceType, projectCode, "*", permission)
+    }
+
+    override fun validateUserResourcePermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resource: AuthResourceInstance
+    ): Boolean {
+        return validateUserResourcePermission(
+            user = user,
+            serviceCode = serviceCode,
+            resourceType = AuthResourceType.get(resource.resourceType),
+            projectCode = projectCode,
+            resourceCode = resource.resourceCode,
+            permission = permission,
+            relationResourceType = null,
+        )
     }
 
     override fun validateUserResourcePermission(
@@ -364,6 +383,17 @@ class BSAuthPermissionApi @Autowired constructor(
         }
 
         return result
+    }
+
+    override fun filterUserResourceByPermission(
+        user: String,
+        serviceCode: AuthServiceCode,
+        projectCode: String,
+        permission: AuthPermission,
+        resourceType: AuthResourceType,
+        resources: List<AuthResourceInstance>
+    ): List<String> {
+        return resources.map { it.resourceCode }
     }
 
     companion object {
