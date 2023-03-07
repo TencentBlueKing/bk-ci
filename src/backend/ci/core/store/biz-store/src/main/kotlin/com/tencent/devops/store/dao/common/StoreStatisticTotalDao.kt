@@ -220,7 +220,7 @@ class StoreStatisticTotalDao {
     fun getCountByType(dslContext: DSLContext, storeType: StoreTypeEnum): Int {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
             return dslContext.selectCount().from(this)
-                .where(STORE_TYPE.eq(storeType.type.toByte()))
+                .where(STORE_TYPE.eq(storeType.type.toByte()).and(RECENT_EXECUTE_NUM.gt(0)))
                 .fetchOne(0, Int::class.java) ?: 0
         }
     }
