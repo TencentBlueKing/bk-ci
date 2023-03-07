@@ -4,6 +4,7 @@ import re
 import humps
 import sys
 import yaml
+import tempfile
 
 config_parent = '../../../support-files/templates/'
 template_parent = './templates/configmap/tpl/'
@@ -16,9 +17,8 @@ default_value_yaml = './base/values.yaml'
 os.system("mkdir -p "+template_parent)
 
 # 设置一些默认值
-default_env = open(default_env_path, 'r')
-default_value_dict = yaml.safe_load(default_env)
-default_env.close()
+with open(default_env_path, 'r') as default_env:
+    default_value_dict = yaml.safe_load(default_env)
 
 # include 模板
 include_dict = {
@@ -49,39 +49,37 @@ include_dict = {
 
 # 大写风格转换为驼峰
 replace_dict = {}
-env_file = open(env_properties_file, 'r')
-value_re = re.compile(r'')
-for line in env_file:
-    if line.startswith('BK_'):
-        datas = line.split("=")
-        key = datas[0]
-        # 排除掉 include 相关值
-        if include_dict.__contains__(key):
-            continue
-        replace_dict[key] = humps.camelize(key.lower())
-env_file.close()
+with open(env_properties_file, 'r') as env_file:
+    value_re = re.compile(r'')
+    for line in env_file:
+        if line.startswith('BK_'):
+            datas = line.split("=")
+            key = datas[0]
+            # 排除掉 include 相关值
+            if include_dict.__contains__(key):
+                continue
+            replace_dict[key] = humps.camelize(key.lower())
 
 # 生成value.yaml
 image_registry = sys.argv[1]
 image_gateway_tag = sys.argv[2]
 image_backend_tag = sys.argv[3]
 image_frontend_tag = sys.argv[4]
-value_file = open(output_value_yaml, 'w')
-for line in open(default_value_yaml, 'r'):
-    line = line.replace("__image_registry__", image_registry)
-    line = line.replace("__image_gateway_tag__", image_gateway_tag)
-    line = line.replace("__image_backend_tag__", image_backend_tag)
-    line = line.replace("__image_frontend_tag__", image_frontend_tag)
-    value_file.write(line)
+with open(output_value_yaml, 'w') as value_file:
+    for line in open(default_value_yaml, 'r'):
+        line = line.replace("__image_registry__", image_registry)
+        line = line.replace("__image_gateway_tag__", image_gateway_tag)
+        line = line.replace("__image_backend_tag__", image_backend_tag)
+        line = line.replace("__image_frontend_tag__", image_frontend_tag)
+        value_file.write(line)
 
-value_file.write('\nconfig:\n')
-for key in sorted(replace_dict):
-    default_value = '""'
-    if key.endswith("PORT"):
-        default_value = '80'
-    value = str(default_value_dict.get(replace_dict[key], default_value))
-    value_file.write('  '+replace_dict[key]+': '+value+'\n')
-value_file.close()
+    value_file.write('\nconfig:\n')
+    for key in sorted(replace_dict):
+        default_value = '""'
+        if key.endswith("PORT"):
+            default_value = '80'
+        value = str(default_value_dict.get(replace_dict[key], default_value))
+        value_file.write('  '+replace_dict[key]+': '+value+'\n')
 
 # 匹配大写变量
 replace_pattern = re.compile(r'__BK_[A-Z_]*__')
@@ -92,35 +90,31 @@ for config_name in os.listdir(config_parent):
     if "turbo" in config_name:
         continue
     if config_name.endswith('yaml') or config_name.endswith('yml'):
-        config_file = open(config_parent + config_name, 'r')
-        the_name = config_re.findall(config_name)[0].replace('-', '', 1)
-        new_file = open(template_parent+'_'+the_name+'.tpl', 'w')
-
-        new_file.write('{{- define "bkci.'+the_name+'.yaml" -}}\n')
-        for line in config_file:
-            if line.strip().startswith('#') or not line.strip():
-                continue
-            for key in replace_pattern.findall(line):
-                upper_key = key[2:-2]
-                if include_dict.__contains__(upper_key):
-                    line = line.replace(key, include_dict[upper_key])
-                else:
-                    line = line.replace(key, '{{ .Values.config.'+replace_dict.get(upper_key, '')+' }}')
-            new_file.write(line)
-        new_file.write('{{ end }}')
-
-        new_file.close()
-        config_file.close()
+        with open(config_parent + config_name, 'r') as config_file:
+            the_name = config_re.findall(config_name)[0].replace('-', '', 1)
+            with tempfile.NamedTemporaryFile(mode="w+") as tmp:
+                common_yaml = yaml.safe_load(config_file)
+                yaml.dump(common_yaml, tmp)
+                tmp.seek(0)
+                with open(template_parent+'_'+the_name+'.tpl', 'w') as new_file:
+                    new_file.write('{{- define "bkci.'+the_name+'.yaml" -}}\n')
+                    for line in tmp:
+                        for key in replace_pattern.findall(line):
+                            upper_key = key[2:-2]
+                            if include_dict.__contains__(upper_key):
+                                line = line.replace(key, include_dict[upper_key])
+                            else:
+                                line = line.replace(key, '{{ .Values.config.'+replace_dict.get(upper_key, '')+' }}')
+                        new_file.write(line)
+                    new_file.write('{{ end }}')
 
 # 生成网关的configmap
-gateway_config_file = open(template_parent+"/_gateway.tpl", "w")
-
-gateway_config_file.write('{{- define "bkci.gateway.yaml" -}}\n')
-for env in replace_dict:
-    gateway_config_file.write(env+": {{ .Values.config."+replace_dict.get(env, '')+" | quote }}\n")
-for key in include_dict:
-    gateway_config_file.write(key+": "+include_dict[key]+"\n")
-gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
-gateway_config_file.write('CHART_NAME: {{ include "bkci.names.fullname" . }}\n')
-gateway_config_file.write('{{ end }}')
-gateway_config_file.close()
+with open(template_parent+"/_gateway.tpl", "w") as gateway_config_file:
+    gateway_config_file.write('{{- define "bkci.gateway.yaml" -}}\n')
+    for env in replace_dict:
+        gateway_config_file.write(env+": {{ .Values.config."+replace_dict.get(env, '')+" | quote }}\n")
+    for key in include_dict:
+        gateway_config_file.write(key+": "+include_dict[key]+"\n")
+    gateway_config_file.write('NAMESPACE: {{ .Release.Namespace }}\n')
+    gateway_config_file.write('CHART_NAME: {{ include "bkci.names.fullname" . }}\n')
+    gateway_config_file.write('{{ end }}')
