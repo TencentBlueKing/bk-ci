@@ -241,6 +241,8 @@ class TxV3EnvironmentPermissionService constructor(
         return
     }
 
+    override fun isRbac(): Boolean = false
+
     override fun updateNode(userId: String, projectId: String, nodeId: Long, nodeName: String) {
         return
     }
