@@ -65,13 +65,4 @@ object VMUtils {
     } catch (ignore: Throwable) {
         false
     }
-
-    fun getMatrixElementId(originId: String, caseHash: String): String {
-        val diff = originId.length - caseHash.length
-        return if (diff < 0) {
-            (originId + caseHash).takeLast(originId.length)
-        } else {
-            originId.take((diff).coerceAtLeast(0)) + caseHash
-        }
-    }
 }

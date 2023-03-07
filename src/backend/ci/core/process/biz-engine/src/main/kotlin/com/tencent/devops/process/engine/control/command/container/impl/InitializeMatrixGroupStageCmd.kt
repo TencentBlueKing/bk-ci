@@ -48,6 +48,7 @@ import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutEle
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.engine.atom.parser.DispatchTypeParser
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
+import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
 import com.tencent.devops.process.engine.control.command.CmdFlowState
@@ -552,14 +553,9 @@ class InitializeMatrixGroupStageCmd(
         contextCaseHash: Int
     ): List<MatrixStatusElement> {
         val originToNewId = mutableMapOf<String, String>()
-        return elements.mapIndexed { index, e ->
+        return elements.map { e ->
             // 每次写入TASK表都要是新获取的taskId，统一调整为不可重试
-            // 保障同变量组合生成的id相同，如果elementId出现不替换部分重复，则对hash值增加相同的偏移量
-            val newTaskId = VMUtils.getMatrixElementId(e.id!!, contextCaseHash.toString()).let {
-                if (originToNewId.containsKey(it)) {
-                    VMUtils.getMatrixElementId(e.id!!, (contextCaseHash + index).toString())
-                } else it
-            }
+            val newTaskId = "${e.id!!}-$contextCaseHash"
             // 记录所有新ID对应的原ID，并将post-action信息更新父插件的ID
             originToNewId[e.id!!] = newTaskId
             e.additionalOptions?.elementPostInfo?.parentElementId?.let { originId ->
