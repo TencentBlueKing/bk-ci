@@ -19,7 +19,8 @@ import {
 } from '@vue/runtime-core';
 import {
   handleProjectManageNoPermission,
-  RESOURCE_ACTION
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
 } from '@/utils/permission.js'
 
 const { t } = useI18n();
@@ -372,7 +373,16 @@ onMounted(async () => {
                 -->
                 <Popover
                   :content="statusDisabledTips[projectData.approvalStatus]"
-                  :disabled="projectData.approvalStatus === 2">
+                  :disabled="projectData.approvalStatus === 2"
+                  v-perm="{
+                    permissionData: {
+                      projectId: projectData.projectCode,
+                      resourceType: RESOURCE_TYPE,
+                      resourceCode: projectData.projectCode,
+                      action: RESOURCE_ACTION.EDIT
+                    }
+                  }"
+                >
                   <span>
                     <bk-button
                       class="btn mr10"

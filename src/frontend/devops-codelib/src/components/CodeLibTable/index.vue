@@ -24,8 +24,36 @@
         </bk-table-column>
         <bk-table-column :label="$t('codelib.operation')" width="150">
             <template slot-scope="props">
-                <bk-button theme="primary" :class="{ 'codelib-operation-btn': true, disabled: !props.row.canEdit }" text @click="editCodeLib(props.row)">{{ $t('codelib.edit') }}</bk-button>
-                <bk-button theme="primary" :class="{ 'codelib-operation-btn': true, disabled: !props.row.canDelete }" text @click="deleteCodeLib(props.row)">{{ $t('codelib.delete') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    v-perm="{
+                        hasPermission: props.row.canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: RESOURCE_TYPE,
+                            resourceCode: props.row.repositoryHashId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    text
+                    @click="editCodeLib(props.row)"
+                >{{ $t('codelib.edit') }}</bk-button>
+                <bk-button
+                    theme="primary"
+                    v-perm="{
+                        clickable: props.row.canDelete,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: RESOURCE_TYPE,
+                            resourceCode: props.row.repositoryHashId,
+                            action: RESOURCE_ACTION.DELETE
+                        }
+                    }"
+                    text
+                    @click="deleteCodeLib(props.row)"
+                >{{ $t('codelib.delete') }}</bk-button>
             </template>
         </bk-table-column>
     </bk-table>
@@ -56,6 +84,8 @@
 
         data () {
             return {
+                RESOURCE_ACTION,
+                RESOURCE_TYPE,
                 pagination: {
                     current: this.page,
                     count: this.count,
@@ -264,15 +294,6 @@
         .codelib-paging {
             margin-left: auto;
         }
-    }
-    .codelib-operation-btn {
-      &.disabled {
-        color: #C4C6CC;
-        &:hover {
-          color: #C4C6CC;
-        }
-        cursor: url(../../images/cursor-lock.png),auto !important;
-      }
     }
 }
 </style>

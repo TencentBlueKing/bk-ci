@@ -31,3 +31,5 @@ export const RESOURCE_ACTION = {
     EDIT: 'project_edit',
     ENABLE: 'project_enable'
 };
+
+export const RESOURCE_TYPE = 'project';
