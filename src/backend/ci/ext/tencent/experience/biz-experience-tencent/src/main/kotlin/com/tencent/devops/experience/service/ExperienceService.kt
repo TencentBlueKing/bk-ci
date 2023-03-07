@@ -174,6 +174,7 @@ class ExperienceService @Autowired constructor(
         val expireTime = DateUtil.today()
         val searchTime = if (expired == null || expired == false) expireTime else null
         val online = if (expired == null || expired == false) true else null
+        //todo 拉取 AuthPermission.EDIT，List，DELETE 的版本体验，如果是rbac的话，返回 list权限的版本体验，如果其他的则全部返回。
 
         val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)

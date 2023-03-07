@@ -87,6 +87,7 @@ class GroupService @Autowired constructor(
         limit: Int,
         returnPublic: Boolean
     ): Pair<Long, List<GroupSummaryWithPermission>> {
+        // todo 增加List类型的experience。对于rbac才返回有列表权限的版本体验，其他的直接返回。
         val groupPermissionListMap = experiencePermissionService.filterGroup(
             user = userId,
             projectId = projectId,
