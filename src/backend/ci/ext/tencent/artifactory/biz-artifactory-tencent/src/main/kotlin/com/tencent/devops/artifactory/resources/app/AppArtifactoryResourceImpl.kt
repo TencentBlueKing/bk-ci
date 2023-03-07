@@ -28,6 +28,7 @@
 package com.tencent.devops.artifactory.resources.app
 
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CHARGE_AUTHORIZATION_GRANTED
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -206,7 +207,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                defaultMessage = "请联系流水线负责人授予下载构件权限。"
+                params = arrayOf(CHARGE_AUTHORIZATION_GRANTED)
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
