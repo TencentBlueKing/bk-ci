@@ -131,6 +131,15 @@ export default {
                 throw new Error(window.pipelineVue.$i18n && (window.pipelineVue.$i18n.t('storeMap.stageLimit') + state.pipelineLimit.stageLimit))
             }
 
+            stages.forEach((stage, index) => {
+                if (index !== 0 && stage.checkIn) {
+                    const { notifyType = [], notifyGroup = [] } = stage && stage.checkIn
+                    if (notifyType.length && notifyType.includes('WEWORK_GROUP') && !notifyGroup.length) {
+                        throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
+                    }
+                }
+            })
+
             if (stages.some(stage => stage.isError)) {
                 throw new Error(window.pipelineVue.$i18n && window.pipelineVue.$i18n.t('storeMap.correctPipeline'))
             }
@@ -262,6 +271,12 @@ export default {
         }
         return container
     },
+    getRealSeqId: state => (stages, stageIndex, containerIndex) => {
+        return stages.slice(0, stageIndex).reduce((acc, stage) => {
+            acc += stage.containers.length
+            return acc
+        }, 0) + containerIndex
+    },
     isDockerBuildResource: state => container => {
         return container && ((container.dispatchType && container.dispatchType.buildType === 'DOCKER') || container.dockerBuildVersion)
     },
@@ -270,6 +285,19 @@ export default {
     },
     isPublicResource: state => container => {
         return container && container.dispatchType && container.dispatchType.buildType === 'ESXi'
+    },
+    isPublicDevCloudContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_DEVCLOUD'
+    },
+    isBcsContainer: state => container => { // 是否是第三方构建机
+        return container && container.dispatchType && typeof container.dispatchType.buildType === 'string' && container.dispatchType.buildType === 'PUBLIC_BCS'
+    },
+    checkShowDebugDockerBtn: (state, getters) => (container, routeName, execDetail) => {
+        const isDocker = getters.isDockerBuildResource(container)
+        const isPublicDevCloud = getters.isPublicDevCloudContainer(container)
+        const isBcsContainer = getters.isBcsContainer(container)
+        const isLatestExecDetail = execDetail && execDetail.buildNum === execDetail.latestBuildNum && execDetail.curVersion === execDetail.latestVersion
+        return routeName !== 'templateEdit' && container.baseOS === 'LINUX' && (isDocker || isPublicDevCloud || isBcsContainer) && (routeName === 'pipelinesEdit' || container.status === 'RUNNING' || (routeName === 'pipelinesDetail' && isLatestExecDetail))
     },
     getElements: state => container => {
         return container && Array.isArray(container.elements)

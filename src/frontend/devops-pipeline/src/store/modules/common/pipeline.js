@@ -139,7 +139,7 @@ export const mutations = {
 }
 
 export const actions = {
-    
+
     // 获取模板的所有范畴
     requestCategory: async ({ commit }) => {
         try {
@@ -222,7 +222,21 @@ export const actions = {
             rootCommit(commit, FETCH_ERROR, e)
         }
     },
-    
+    startDebugDocker: async ({ commit }, data) => {
+        return request.post('dispatch-docker/api/user/docker/debug/start/', data).then(response => {
+            return response.data
+        })
+    },
+    stopDebugDocker: async ({ commit }, { projectId, pipelineId, vmSeqId, dispatchType }) => {
+        return request.post(`dispatch-docker/api/user/docker/debug/stop/projects/${projectId}/pipelines/${pipelineId}/vmseqs/${vmSeqId}?dispatchType=${dispatchType}`).then(response => {
+            return response.data
+        })
+    },
+    resizeTerm: async ({ commit }, { resizeUrl, params }) => {
+        return request.post(`dispatch-docker/api/user/${resizeUrl}`, params).then(response => {
+            return response && response.Id
+        })
+    },
     requestPartFile: async ({ commit }, { projectId, params }) => {
         return request.post(`${ARTIFACTORY_API_URL_PREFIX}/user/artifactories/${projectId}/search`, params).then(response => {
             return response.data
@@ -289,7 +303,7 @@ export const actions = {
             return response.data
         })
     },
-    
+
     updateRefreshQualityLoading: ({ commit }, status) => {
         commit(REFRESH_QUALITY_LOADING_MUNTATION, status)
     }

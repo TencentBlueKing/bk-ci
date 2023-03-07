@@ -14,6 +14,7 @@
                         :pipeline="pipeline"
                         :remove-handler="removeHandler"
                         :exec-pipeline="execPipeline"
+                        :collect-pipeline="collectHandler"
                         :apply-permission="applyPermission"
                     >
                     </pipeline-card>
@@ -49,16 +50,16 @@
             return {
                 isLoading: false,
                 isPatchOperate: false,
-                defaultPageSize: 32,
+                defaultPageSize: 50,
                 activePipeline: null
             }
         },
         computed: {
             sortField () {
-                const { sortType = PIPELINE_SORT_FILED.createTime, collation = ORDER_ENUM.descending } = this.$route.query
+                const { sortType, collation = ORDER_ENUM.descending } = this.$route.query
                 return {
-                    sortType,
-                    collation
+                    sortType: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
+                    collation: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
             }
         },
@@ -85,7 +86,6 @@
                     viewId: this.$route.params.viewId,
                     ...this.filterParams
                 })
-                console.log(res)
                 return res
             },
             refresh () {

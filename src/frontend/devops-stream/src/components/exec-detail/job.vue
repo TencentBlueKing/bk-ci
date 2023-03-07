@@ -1,114 +1,117 @@
 <template>
-    <detail-container @close="$emit('close')"
-        :title="job.name"
-        :status="job.status"
-    >
-        <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
+  <detail-container @close="$emit('close')" :title="job.name" :status="job.status">
+    <!-- <section v-if="showDebugBtn" class="web-console" :style="{ right: executeCount > 1 ? '390px' : '280px' }">
             <span onclick="startDebug">
                 {{$t('pipeline.webConsole')}}
             </span>
         </section> -->
-        <job-log :plugin-list="pluginList"
-            :build-id="$route.params.buildId"
-            :down-load-link="downLoadJobLink"
-            :execute-count="executeCount"
-            ref="jobLog"
-        />
-    </detail-container>
+    <job-log
+      :plugin-list="pluginList"
+      :build-id="$route.params.buildId"
+      :down-load-link="downLoadJobLink"
+      :execute-count="executeCount"
+      ref="jobLog"
+    />
+  </detail-container>
 </template>
 
 <script>
-    import { mapState } from 'vuex'
-    import jobLog from './log/jobLog'
-    import detailContainer from './detailContainer'
+import { mapState } from "vuex";
+import jobLog from "./log/jobLog";
+import detailContainer from "./detailContainer";
 
-    export default {
-        components: {
-            detailContainer,
-            jobLog
-        },
+export default {
+  components: {
+    detailContainer,
+    jobLog,
+  },
 
-        props: {
-            job: Object,
-            stages: Array,
-            stageIndex: Number,
-            jobIndex: Number
-        },
+  props: {
+    job: Object,
+    stages: Array,
+    stageIndex: Number,
+    jobIndex: Number,
+  },
 
-        computed: {
-            ...mapState(['projectId', 'modelDetail']),
-            
-            pipelineId () {
-                return this.$route.params.pipelineId || ''
-            },
+  computed: {
+    ...mapState(["projectId", "modelDetail"]),
 
-            buildId () {
-                return this.$route.params.buildId || ''
-            },
+    pipelineId() {
+      return this.$route.params.pipelineId || "";
+    },
 
-            hashId () {
-                return this.$route.hash
-            },
+    buildId() {
+      return this.$route.params.buildId || "";
+    },
 
-            showDebugBtn () {
-                return this.job.dispatchType && this.job.dispatchType.buildType === 'GIT_CI' && this.modelDetail && this.modelDetail.buildNum === this.modelDetail.latestBuildNum
-            },
+    hashId() {
+      return this.$route.hash;
+    },
 
-            downLoadJobLink () {
-                const fileName = encodeURI(encodeURI(`${this.stageIndex + 1}-${this.jobIndex + 1}-${this.job.name}`))
-                const jobId = this.job.containerHashId
-                const { pipelineId, buildId } = this.$route.params
-                return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`
-            },
+    showDebugBtn() {
+      return (
+        this.job.dispatchType &&
+        this.job.dispatchType.buildType === "GIT_CI" &&
+        this.modelDetail &&
+        this.modelDetail.buildNum === this.modelDetail.latestBuildNum
+      );
+    },
 
-            pluginList () {
-                const startUp = { name: 'Set up job', status: this.job.startVMStatus, id: `startVM-${this.job.id}`, executeCount: this.job.executeCount || 1 }
-                return [startUp, ...this.job.elements]
-            },
+    downLoadJobLink() {
+      const fileName = encodeURI(
+        encodeURI(`${this.stageIndex + 1}-${this.jobIndex + 1}-${this.job.name}`)
+      );
+      const jobId = this.job.containerHashId;
+      const { pipelineId, buildId } = this.$route.params;
+      return `/log/api/user/logs/${this.projectId}/${pipelineId}/${buildId}/download?jobId=${jobId}&fileName=${fileName}`;
+    },
 
-            executeCount () {
-                const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1)
-                return Math.max(...executeCountList)
-            }
-        },
-        methods: {
-            startDebug () {
-                const vmSeqId = this.job.containerId || this.getRealSeqId()
-                let url = ''
-                const tab = window.open('about:blank')
-                const dispatchType = 'GIT_CI'
-                const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : ''
-                url = `/webConsole?pipelineId=${this.pipelineId}&dispatchType=${dispatchType}&vmSeqId=${vmSeqId}${buildIdStr}${this.hashId}`
-                tab.location = url
-            },
+    pluginList() {
+      const startUp = {
+        name: "Set up job",
+        status: this.job.startVMStatus,
+        id: `startVM-${this.job.id}`,
+        executeCount: this.job.executeCount || 1,
+      };
+      return [startUp, ...this.job.elements];
+    },
 
-            getRealSeqId () {
-                return this.stages.slice(0, this.stageIndex).reduce((acc, stage) => {
-                    acc += stage.containers.length
-                    return acc
-                }, 0) + this.jobIndex + 1
-            }
-        }
-    }
+    executeCount() {
+      const executeCountList = this.pluginList.map((plugin) => plugin.executeCount || 1);
+      return Math.max(...executeCountList);
+    },
+  },
+  methods: {
+    startDebug() {
+      const vmSeqId = this.job.containerId;
+      let url = "";
+      const tab = window.open("about:blank");
+      const dispatchType = "GIT_CI";
+      const buildIdStr = this.buildId ? `&buildId=${this.buildId}` : "";
+      url = `/webConsole?pipelineId=${this.pipelineId}&dispatchType=${dispatchType}&vmSeqId=${vmSeqId}${buildIdStr}${this.hashId}`;
+      tab.location = url;
+    },
+  },
+};
 </script>
 
 <style lang="postcss">
-    .web-console {
-        position: absolute;
-        right: 280px;
-        top: 20px;
-        span {
-            color: #3c96ff;
-            cursor: pointer;
-        }
+.web-console {
+  position: absolute;
+  right: 280px;
+  top: 20px;
+  span {
+    color: #3c96ff;
+    cursor: pointer;
+  }
+}
+.console-menu-wrapper {
+  .tippy-tooltip {
+    padding: 0px;
+    background: #2f363d;
+    .tippy-arrow {
+      border-bottom: 8px solid #2f363d;
     }
-    .console-menu-wrapper {
-        .tippy-tooltip {
-            padding: 0px;
-            background: #2f363d;
-            .tippy-arrow {
-                border-bottom: 8px solid #2f363d;
-            }
-        }
-    }
+  }
+}
 </style>

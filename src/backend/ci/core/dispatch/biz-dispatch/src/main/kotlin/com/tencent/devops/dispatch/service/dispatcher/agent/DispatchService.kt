@@ -81,11 +81,7 @@ class DispatchService @Autowired constructor(
         // job结束
         finishBuild(event.vmSeqId!!, event.buildId, event.executeCount ?: 1)
         redisOperation.hdelete(secretInfoKey, secretInfoRedisMapKey(event.vmSeqId!!, event.executeCount ?: 1))
-
-        val keysSet = redisOperation.hkeys(secretInfoKey)
-        if (keysSet.isNullOrEmpty()) {
-            redisOperation.delete(secretInfoKey)
-        }
+        // 当hash表为空时，redis会自动删除
     }
 
     private fun finishBuild(vmSeqId: String, buildId: String, executeCount: Int) {

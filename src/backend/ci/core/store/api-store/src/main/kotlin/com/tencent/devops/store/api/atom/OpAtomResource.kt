@@ -95,6 +95,9 @@ interface OpAtomResource {
         @ApiParam("插件名称", required = false)
         @QueryParam("atomName")
         atomName: String?,
+        @ApiParam("插件标识", required = false)
+        @QueryParam("atomCode")
+        atomCode: String?,
         @ApiParam("插件类型，SELF_DEVELOPED：自研 THIRD_PARTY：第三方开发", required = false)
         @QueryParam("atomType")
         atomType: AtomTypeEnum?,
@@ -207,5 +210,17 @@ interface OpAtomResource {
         inputStream: InputStream,
         @FormDataParam("file")
         disposition: FormDataContentDisposition
+    ): Result<Boolean>
+
+    @ApiOperation("设置插件为默认插件")
+    @POST
+    @Path("/default/atomCodes/{atomCode}")
+    fun setDefault(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("atomCode", required = true)
+        @PathParam("atomCode")
+        atomCode: String
     ): Result<Boolean>
 }

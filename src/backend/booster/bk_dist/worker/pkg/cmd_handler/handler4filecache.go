@@ -11,6 +11,7 @@ package pbcmd
 
 import (
 	"fmt"
+	"os"
 	"strconv"
 	"sync"
 	"time"
@@ -99,6 +100,8 @@ func (h *Handle4FileCache) Handle(client *protocol.TCPClient,
 		name := string(param.GetName())
 		md5 := string(param.GetMd5())
 		target := string(param.GetTarget())
+		filemode := param.GetFilemode()
+		modifytime := param.GetModifytime()
 
 		if name == "" || md5 == "" || target == "" {
 			blog.Warnf("file cache: try check file cache with name(%s) md5(%s) target(%s) failed: "+
@@ -108,10 +111,10 @@ func (h *Handle4FileCache) Handle(client *protocol.TCPClient,
 		}
 
 		wg.Add(1)
-		go func(i int, n, m, t string) {
+		go func(i int, n, m, t string, fm uint32, mt int64) {
 			defer wg.Done()
-			result[i] = h.searchCacheAndGetFileSaved(n, m, t)
-		}(index, name, md5, target)
+			result[i] = h.searchCacheAndGetFileSaved(n, m, t, fm, mt)
+		}(index, name, md5, target, filemode, modifytime)
 	}
 	wg.Wait()
 
@@ -133,14 +136,35 @@ func (h *Handle4FileCache) Handle(client *protocol.TCPClient,
 	return nil
 }
 
-func (h *Handle4FileCache) searchCacheAndGetFileSaved(name, md5, target string) *dcProtocol.PBCacheResult {
+func (h *Handle4FileCache) searchCacheAndGetFileSaved(name, md5, target string,
+	filemode uint32, modifytime int64) *dcProtocol.PBCacheResult {
 	// TODO (tomtian) : if target existed and md5 same, do nothing
 	// maybe should check whether file mode is changed
+	existed := false
+	defer func() {
+		if existed {
+			if filemode > 0 {
+				blog.Infof("ready set cached file[%s] with filemode[%d]", target, filemode)
+				if err := os.Chmod(target, os.FileMode(filemode)); err != nil {
+					blog.Warnf("chmod file %s to file-mode %s failed: %v", target, os.FileMode(filemode), err)
+				}
+			}
+
+			if modifytime > 0 {
+				blog.Infof("ready set cached file[%s] modify time [%d]", target, modifytime)
+				if err := os.Chtimes(target, time.Now(), time.Unix(0, modifytime)); err != nil {
+					blog.Warnf("Chtimes file %s to time %s failed: %v", target, time.Unix(0, modifytime), err)
+				}
+			}
+		}
+	}()
+
 	finfo := dcFile.Stat(target)
 	if finfo.Exist() {
 		oldmd5, _ := finfo.Md5()
 		if oldmd5 == md5 {
-			blog.Infof("file cache: target file[%s] with md5(%s) existed, do nothing", target, md5)
+			blog.Infof("file cache: target file[%s] with md5(%s) existed, set filemode and modify time now", target, md5)
+			existed = true
 			return encodeRsp(dcProtocol.PBCacheStatus_SUCCESS, "")
 		}
 	}
@@ -166,6 +190,7 @@ func (h *Handle4FileCache) searchCacheAndGetFileSaved(name, md5, target string) 
 		return encodeRsp(dcProtocol.PBCacheStatus_ERRORWHILESAVING, err.Error())
 	}
 
+	existed = true
 	blog.Infof("file cache: success to hit file cache with name(%s) md5(%s) and save to %s", name, md5, target)
 	return encodeRsp(dcProtocol.PBCacheStatus_SUCCESS, "")
 }

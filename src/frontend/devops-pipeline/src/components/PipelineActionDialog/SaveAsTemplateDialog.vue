@@ -2,14 +2,14 @@
     <bk-dialog
         ext-cls="bk-devops-center-align-dialog"
         width="600"
+        header-position="left"
+        render-directive="if"
         v-model="isSaveAsTemplateShow"
         :title="$t('newlist.saveAsTemp')"
         :close-icon="false"
         :mask-close="false"
         :auto-close="false"
-        header-position="left"
         :draggable="false"
-        render-directive="if"
         @confirm="submit"
         @cancel="cancel"
     >

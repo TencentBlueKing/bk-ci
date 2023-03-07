@@ -252,7 +252,6 @@ class PipelineViewGroupServiceTest : BkCiAbstractTest() {
             every { pipelineViewService.updateView(any(), any(), any(), any(), anyDslContext()) } returns true
             justRun { pipelineViewGroupDao.remove(anyDslContext(), any(), any()) }
             every { self["firstInitMark"](any() as String, any() as Long) } returns "test"
-            justRun { redisOperation.delete(any() as String) }
             justRun {
                 self["initViewGroup"](
                     anyDslContext(),

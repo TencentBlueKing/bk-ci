@@ -121,8 +121,12 @@ export default {
                 redirectUrlType: 'SPEC'
             }
         }).then((res) => {
-            if (res.status === 403) location.href = res.url
-            else return res
+            if (res.status === 403) {
+                location.href = res.url
+                return Promise.reject(res.message)
+            } else {
+                return res
+            }
         })
     },
 

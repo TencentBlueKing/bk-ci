@@ -62,6 +62,9 @@
                     .search-pipeline-input {
                         flex: 1;
                         background: white;
+                        ::placeholder {
+                            color: #c4c6cc;
+                        }
                     }
                 }
             }
@@ -100,6 +103,7 @@
                                 display: flex;
                                 @include ellipsis();
                                 min-width: 0;
+                                margin-left: 6px;
                             }
                         }
                     }
@@ -111,9 +115,19 @@
             .pipeline-operation-cell {
                 display: flex;
                 align-items: center;
-                .pipeline-exec-btn {
-                    min-width: 60px;
+                .pipeline-exec-btn,
+                .pipeline-collect-btn {
+                    line-height: 1;
+                    height: auto;
+                    width: 30px;
+                    font-size: 16px;
                     text-align: left;
+                    &.pipeline-exec-btn:not(.is-disabled):hover {
+                        color: $primaryColor;
+                    }
+                    .exec-btn-span {
+                        display: flex;
+                    }
                 }
                 .more-action-menu {
                     font-size: 0;

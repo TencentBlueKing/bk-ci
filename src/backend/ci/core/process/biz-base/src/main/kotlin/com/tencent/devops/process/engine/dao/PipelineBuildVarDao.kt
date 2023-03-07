@@ -165,7 +165,7 @@ class PipelineBuildVarDao @Autowired constructor() {
             variables.forEach { v ->
                 val valueString = v.value.toString()
                 if (valueString.length > maxLength) {
-                    LOG.error("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
+                    LOG.warn("$buildId|ABANDON_DATA|len[${v.key}]=${valueString.length}(max=$maxLength)")
                     return@forEach
                 }
                 if (v.valueType != null) {
