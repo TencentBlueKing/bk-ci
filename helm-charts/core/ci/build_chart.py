@@ -94,7 +94,7 @@ for config_name in os.listdir(config_parent):
             the_name = config_re.findall(config_name)[0].replace('-', '', 1)
             with tempfile.NamedTemporaryFile(mode="w+") as tmp:
                 common_yaml = yaml.safe_load(config_file)
-                yaml.dump(common_yaml, tmp)
+                yaml.dump(common_yaml, tmp)  # 格式化yaml , 使得 configmap 美观
                 tmp.seek(0)
                 with open(template_parent+'_'+the_name+'.tpl', 'w') as new_file:
                     new_file.write('{{- define "bkci.'+the_name+'.yaml" -}}\n')
@@ -104,7 +104,11 @@ for config_name in os.listdir(config_parent):
                             if include_dict.__contains__(upper_key):
                                 line = line.replace(key, include_dict[upper_key])
                             else:
-                                line = line.replace(key, '{{ .Values.config.'+replace_dict.get(upper_key, '')+' }}')
+                                if line.replace(key, "").strip().endswith(":"):
+                                    line = line.replace(
+                                        key, '{{ .Values.config.'+replace_dict.get(upper_key, '')+' | quote }}')
+                                else:
+                                    line = line.replace(key, '{{ .Values.config.'+replace_dict.get(upper_key, '')+' }}')
                         new_file.write(line)
                     new_file.write('{{ end }}')
 
