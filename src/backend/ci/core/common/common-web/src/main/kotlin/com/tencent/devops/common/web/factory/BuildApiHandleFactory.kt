@@ -38,7 +38,7 @@ object BuildApiHandleFactory {
 
     private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
 
-    private fun getClient() = SpringContextUtil.getBean(Client::class.java)
+    private val client = SpringContextUtil.getBean(Client::class.java)
 
     fun createBuildApiHandleService(
         type: BuildApiHandleType
@@ -47,7 +47,7 @@ object BuildApiHandleFactory {
         when (type) {
             BuildApiHandleType.AUTH_CHECK -> {
                 if (buildApiHandleMapService == null) {
-                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl(getClient())
+                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl(client)
                     buildApiHandleMap[type.name] = buildApiHandleMapService
                 }
             }
