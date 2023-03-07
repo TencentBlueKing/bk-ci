@@ -24,9 +24,9 @@ dockerCli:
   dockerConfig: /root/.docker
   apiVersion: 1.23
   # docker hub 配置
-  registryUrl: __BK_CI_DOCKER_REGISTRY_URL__
-  registryUsername: __BK_CI_DOCKER_REGISTRY_USER__
-  registryPassword: __BK_CI_DOCKER_REGISTRY_PASSWORD__
+  registryUrl: "__BK_CI_DOCKER_REGISTRY_URL__"
+  registryUsername: "__BK_CI_DOCKER_REGISTRY_USER__"
+  registryPassword: "__BK_CI_DOCKER_REGISTRY_PASSWORD__"
 
   # 以下一般不用修改
   volumeWorkspace: /data/devops/workspace

@@ -9,7 +9,7 @@ spring:
     consul:
       port: __BK_CI_CONSUL_HTTP_PORT__
       discovery:
-        tags: __BK_CI_CONSUL_DISCOVERY_TAG__
+        tags: "__BK_CI_CONSUL_DISCOVERY_TAG__"
         instanceId: ${spring.application.name}-${server.port}-${spring.cloud.client.hostname}
 # spring cloud stream 配置，common-stream
     stream:
@@ -39,7 +39,7 @@ spring:
     ssl: __BK_CI_REDIS_SSL__
     pool:
       max-active: 16
-      max-wait:  2000
+      max-wait: 2000
 # rabbitmq config
   rabbitmq:
     # 引擎核心业务MQ
@@ -57,7 +57,7 @@ spring:
   metrics:
     servo:
       enabled: false
-  datasource:    
+  datasource:
     # 数据库表规则配置
     tableRuleConfigs:
       - index: 0
@@ -194,38 +194,38 @@ spring:
         databaseShardingStrategy: SPECIFY
       - index: 44
         name: T_PIPELINE_ATOM_REPLACE_HISTORY
-        databaseShardingStrategy: SPECIFY          
-      
+        databaseShardingStrategy: SPECIFY
+
 
 endpoints:
   metrics:
     filter:
       enabled: false
-
-service-suffix: "-__BK_CI_CONSUL_DISCOVERY_TAG__"
+service-suffix: -__BK_CI_CONSUL_DISCOVERY_TAG__
 # http concurrency
 server:
   undertow:
     worker-threads: 100
     accesslog:
       enabled: true
-      pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b "%{i,Referer}" "%{i,User-Agent}"'
+      pattern: '%h %I "%{i,X-DEVOPS-UID}" [%{time,yyyyMMddHHmmss.S}] "%r" %s %D %b
+        "%{i,Referer}" "%{i,User-Agent}"'
       dir: ${service.log.dir}
   shutdown: graceful
 
 # gateway for system
 devopsGateway:
-  outer: __BK_CI_PUBLIC_URL__         # generic endpoint for public(internet or intranet) areas.
-  outerApi: __BK_CI_PUBLIC_URL__      # endpoint for api access in public areas.
-  host: __BK_CI_PUBLIC_URL__         # generic endpoint for private(inside bk-ci cluster) access.
-  api: __BK_CI_PUBLIC_URL__          # endpoint for api access which inside BlueKing platform.
-  build: __BK_CI_PUBLIC_URL__         # endpoint for build nodes, maybe use another dns server.
-  idc: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
-  idcProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
-  devnetProxy: __BK_CI_PRIVATE_URL__  # not used yet. keep it same as `host' property.
-  devnet: __BK_CI_PRIVATE_URL__       # not used yet. keep it same as `host' property.
-  oss: __BK_CI_PRIVATE_URL__          # not used yet. keep it same as `host' property.
-  ossProxy: __BK_CI_PRIVATE_URL__     # not used yet. keep it same as `host' property.
+  outer: __BK_CI_PUBLIC_URL__
+  outerApi: __BK_CI_PUBLIC_URL__
+  host: __BK_CI_PUBLIC_URL__
+  api: __BK_CI_PUBLIC_URL__
+  build: __BK_CI_PUBLIC_URL__
+  idc: __BK_CI_PRIVATE_URL__
+  idcProxy: __BK_CI_PRIVATE_URL__
+  devnetProxy: __BK_CI_PRIVATE_URL__
+  devnet: __BK_CI_PRIVATE_URL__
+  oss: __BK_CI_PRIVATE_URL__
+  ossProxy: __BK_CI_PRIVATE_URL__
   
 # certificate server 配置
 certificate:
@@ -242,49 +242,49 @@ s3:
 auth:
   # idProvider为权限中心对接方式，sample(开源默认实现无鉴权)/ bk_login（蓝鲸登录) / client
   # 选择sample后以下配置无效
-  idProvider: __BK_CI_AUTH_PROVIDER__
+  idProvider: "__BK_CI_AUTH_PROVIDER__"
   grantType: rization_code
   principalType: user
   envName: prod
   #  开发时需要配置Host解析到iam.service.consul
-  url: __BK_IAM_PRIVATE_URL__
-  appCode: __BK_CI_APP_CODE__
-  appSecret: __BK_CI_APP_TOKEN__
+  url: "__BK_IAM_PRIVATE_URL__"
+  appCode: "__BK_CI_APP_CODE__"
+  appSecret: "__BK_CI_APP_TOKEN__"
   bkloginUrl: __BK_PAAS_PRIVATE_URL__/login/api/v2
-  iamCallBackUser: __BK_CI_IAM_CALLBACK_USER__
+  iamCallBackUser: "__BK_CI_IAM_CALLBACK_USER__"
   # 用户组权限申请前端跳转页面HOST
-  webHost: __BK_CI_IAM_WEB_URL__
-  token: __BK_CI_APP_TOKEN__
+  webHost: "__BK_CI_IAM_WEB_URL__"
+  token: "__BK_CI_APP_TOKEN__"
   #  openapi服务需要配置accessToken鉴权时将enabled设为true，secret设为任意字符串string，expirationTime过期时间（毫秒）
   accessToken:
-    enabled: __BK_CI_API_TOKEN_ENABLED__
-    secret: __BK_CI_API_TOKEN_SECRET__
-    expirationTime: __BK_CI_API_TOKEN_EXPIRED_MILLISECOND__
+    enabled: "__BK_CI_API_TOKEN_ENABLED__"
+    secret: "__BK_CI_API_TOKEN_SECRET__"
+    expirationTime: "__BK_CI_API_TOKEN_EXPIRED_MILLISECOND__"
   gateway:
-    devopsToken: __BK_CI_DEVOPS_TOKEN__
+    devopsToken: "__BK_CI_DEVOPS_TOKEN__"
 
 #bk esb config for cd plugin in pipeline
 esb:
-  code: __BK_CI_APP_CODE__
-  secret: __BK_CI_APP_TOKEN__
+  code: "__BK_CI_APP_CODE__"
+  secret: "__BK_CI_APP_TOKEN__"
 
 # codecc config
 codecc:
-  host: __BK_CODECC_PRIVATE_URL__  # 
+  host: "__BK_CODECC_PRIVATE_URL__"
 
 codeccGateway:
-  gateway: __BK_CODECC_PRIVATE_URL__
-  gatewayWeb: __BK_CODECC_PRIVATE_URL__
+  gateway: "__BK_CODECC_PRIVATE_URL__"
+  gatewayWeb: "__BK_CODECC_PRIVATE_URL__"
 alert:
-  users: ''
+  users: ""
 codeoa:
-  api-key: __BK_CI_CODEOA_API_KEY__
-  api-url: __BK_CI_CODEOA_API_URL__
-  git-url: __BK_CI_CODEOA_GIT_URL__
+  api-key: "__BK_CI_CODEOA_API_KEY__"
+  api-url: "__BK_CI_CODEOA_API_URL__"
+  git-url: "__BK_CI_CODEOA_GIT_URL__"
 
 bk:
   paas:
-    host: __BK_PAAS_PRIVATE_URL__
+    host: "__BK_PAAS_PRIVATE_URL__"
 
 bkci:
   security:
@@ -298,13 +298,12 @@ process:
 
 net:
   proxy:
-    # 是否开启，设置为 true 才生效
     enable: false
     # 需要代理的hosts，多个使用","隔开，支持正则表达式
-    hosts: ".*google.*"
+    hosts: .*google.*
     server:
       # 代理服务器类型，可 HTTP, SOCKS
-      type: "HTTP"
+      type: HTTP
       # 代理服务器主机，host 或者 ip
       host: 127.0.0.1
       # 代理服务器端口
@@ -316,20 +315,20 @@ sharding:
     cacheSize: 100000  # 缓存分片规则最大数量
 
 cluster:
-  tag: __BK_CI_CLUSTER_TAG__
+  tag: "__BK_CI_CLUSTER_TAG__"
 
 # bkrepo仓库配置  
 bkrepo:
   bkrepoApiUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/api/generic
   staticRepoPrefixUrl: __BK_HTTP_SCHEMA__://__BK_REPO_HOST__/generic/{0}/{1}
-  staticUserName: __BK_REPO_USERNAME__
-  staticPassword: __BK_REPO_PASSWORD__  
+  staticUserName: "__BK_REPO_USERNAME__"
+  staticPassword: "__BK_REPO_PASSWORD__"
   
 # 企业微信api配置
 wechatWork:
-  corpId: __BK_CI_WECHATWORK_CORPID__
-  serviceId: __BK_CI_WECHATWORK_SERVICEID__
-  secret: __BK_CI_WECHATWORK_SECRET__
-  token: __BK_CI_WECHATWORK_TOKEN__
-  aesKey: __BK_CI_WECHATWORK_AESKEY__
-  url: __BK_CI_WECHATWORK_URL__
+  corpId: "__BK_CI_WECHATWORK_CORPID__"
+  serviceId: "__BK_CI_WECHATWORK_SERVICEID__"
+  secret: "__BK_CI_WECHATWORK_SECRET__"
+  token: "__BK_CI_WECHATWORK_TOKEN__"
+  aesKey: "__BK_CI_WECHATWORK_AESKEY__"
+  url: "__BK_CI_WECHATWORK_URL__"

@@ -11,19 +11,19 @@ server:
 
 repository:
   git: # git 管理私有Token，一般不用，用于插件库分组
-    devopsPrivateToken: __BK_CI_REPOSITORY_GIT_PRIVATE_TOKEN__
-    devopsGroupName: __BK_CI_REPOSITORY_GIT_PLUGIN_GROUP_NAME__
+    devopsPrivateToken: "__BK_CI_REPOSITORY_GIT_PRIVATE_TOKEN__"
+    devopsGroupName: "__BK_CI_REPOSITORY_GIT_PLUGIN_GROUP_NAME__"
 
 scm:
   #svn open api url，如果不需要则放着即可
   svn:
-    apiKey: __BK_CI_REPOSITORY_SVN_API_KEY__
-    apiUrl: __BK_CI_REPOSITORY_SVN_API_URL__  # 结尾一般为 /rest
-    webhookApiUrl: __BK_CI_REPOSITORY_SVN_WEBHOOK_URL__  # 一般为 SVN_API_URL/webhooks
+    apiKey: "__BK_CI_REPOSITORY_SVN_API_KEY__"
+    apiUrl: "__BK_CI_REPOSITORY_SVN_API_URL__"  # 结尾一般为 /rest
+    webhookApiUrl: "__BK_CI_REPOSITORY_SVN_WEBHOOK_URL__"  # 一般为 SVN_API_URL/webhooks
     svnHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codesvn/commit
   # git 仓库配置，如果不需要则放着即可
   git:
-    url: __BK_CI_REPOSITORY_GIT_URL__
+    url: "__BK_CI_REPOSITORY_GIT_URL__"
     apiUrl: __BK_CI_REPOSITORY_GIT_URL__/api/v3
     clientId: clientId
     clientSecret: Secret
@@ -40,29 +40,29 @@ scm:
       apiUrl: __BK_CI_REPOSITORY_GITLAB_URL__/api/v4
       gitlabHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/gitlab/commit
     github:
-      clientId: __BK_CI_REPOSITORY_GITHUB_CLIENT_ID__
-      clientSecret: __BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__
+      clientId: "__BK_CI_REPOSITORY_GITHUB_CLIENT_ID__"
+      clientSecret: "__BK_CI_REPOSITORY_GITHUB_CLIENT_SECRET__"
       callbackUrl: __BK_CI_PUBLIC_URL__/__BK_CI_REPOSITORY_GITHUB_SERVER__/api/external/github/oauth/callback
       redirectUrl: __BK_CI_PUBLIC_URL__/console/codelib
       appUrl: https://github.com/apps/__BK_CI_REPOSITORY_GITHUB_APP__
-      signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
+      signSecret: "__BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__"
       apiUrl: https://api.github.com
       serverUrl: https://github.com
-      appId: __BK_CI_REPOSITORY_GITHUB_APPID__
-      privateKey: __BK_CI_REPOSITORY_GITHUB_PRIVATEKEY__
-      appName: __BK_CI_REPOSITORY_GITHUB_APPNAME__
+      appId: "__BK_CI_REPOSITORY_GITHUB_APPID__"
+      privateKey: "__BK_CI_REPOSITORY_GITHUB_PRIVATEKEY__"
+      appName: "__BK_CI_REPOSITORY_GITHUB_APPNAME__"
     tGit:
       apiUrl: https://git.tencent.com/api/v3
       tGitHookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/codetgit/commit
     p4:
       p4HookUrl: __BK_CI_PUBLIC_URL__/ms/process/api/external/scm/p4/commit
 tapd:
-    clientId: __BK_CI_REPOSITORY_TAPD_CLIENT_ID__
-    clientSecret: __BK_CI_REPOSITORY_TAPD_CLIENT_SECRET__
+    clientId: "__BK_CI_REPOSITORY_TAPD_CLIENT_ID__"
+    clientSecret: "__BK_CI_REPOSITORY_TAPD_CLIENT_SECRET__"
     redirectUrl: __BK_CI_PUBLIC_URL__/console/
     callbackUrl: __BK_CI_PUBLIC_URL__/repository/api/external/repo/tapd/callback
-    serverUrl: __BK_CI_REPOSITORY_TAPD_SERVER_URL__
-    apiUrl: __BK_CI_REPOSITORY_TAPD_API_URL__
+    serverUrl: "__BK_CI_REPOSITORY_TAPD_SERVER_URL__"
+    apiUrl: "__BK_CI_REPOSITORY_TAPD_API_URL__"
 
 aes:
-  git: __BK_CI_REPOSITORY_AES_GIT__
+  git: "__BK_CI_REPOSITORY_AES_GIT__"

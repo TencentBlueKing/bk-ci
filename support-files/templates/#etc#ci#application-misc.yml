@@ -1,42 +1,42 @@
 # Misc Service Template 服务配置文件模板
 spring:
   datasource:
-      project:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      repository:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      dispatch:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      plugin:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      quality:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      artifactory:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      environment:
-         url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-         username: __BK_CI_MYSQL_USER__
-         password: __BK_CI_MYSQL_PASSWORD__
-      misc:
-         pkgRegex: "\\.(process|project|repository|dispatch|plugin|quality|artifactory|environment)"
-      # 数据源配置（勿随便变更配置项的顺序）
-      dataSourceConfigs:
-         - index: 0
-           url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
-           username: __BK_CI_MYSQL_USER__
-           password: __BK_CI_MYSQL_PASSWORD__
+    project:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_project?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    repository:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_repository?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    dispatch:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_dispatch?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    plugin:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_plugin?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    quality:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_quality?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    artifactory:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_artifactory?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    environment:
+      url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_environment?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+      username: __BK_CI_MYSQL_USER__
+      password: __BK_CI_MYSQL_PASSWORD__
+    misc:
+      pkgRegex: \.(process|project|repository|dispatch|plugin|quality|artifactory|environment)
+    # 数据源配置（勿随便变更配置项的顺序）
+    dataSourceConfigs:
+      - index: 0
+        url: jdbc:mysql://__BK_CI_MYSQL_ADDR__/devops_ci_process?useSSL=false&autoReconnect=true&serverTimezone=GMT%2B8&useUnicode=true&characterEncoding=utf8&allowMultiQueries=true&sessionVariables=sql_mode=%27STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,NO_ZERO_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION%27
+        username: __BK_CI_MYSQL_USER__
+        password: __BK_CI_MYSQL_PASSWORD__
 
 influxdb:
   server: __BK_CI_INFLUXDB_ADDR__
@@ -53,15 +53,15 @@ build:
       switch: false
       maxEveryProjectHandleNum: 5
       monthRange: -1
-      maxKeepNum: 10000  
+      maxKeepNum: 10000
       codeccDayRange: -14
       codeccMaxKeepNum: 14
       otherMonthRange: -1
       otherMaxKeepNum: 500
-      clearChannelCodes: "BS,PREBUILD,CI,CODECC"
+      clearChannelCodes: BS,PREBUILD,CI,CODECC
       maxThreadHandleProjectNum: 5
 
 sharding:
   databaseShardingStrategy:
-    algorithmClassName: "com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm"
+    algorithmClassName: com.tencent.devops.misc.sharding.BkProcessDatabaseShardingAlgorithm
     shardingField: PROJECT_ID

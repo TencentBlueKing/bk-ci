@@ -11,7 +11,7 @@ server:
 
 store:
   commentNotifyAdmin: admin
-  profileUrlPrefix: __BK_CI_STORE_USER_AVATARS_URL__
+  profileUrlPrefix: "__BK_CI_STORE_USER_AVATARS_URL__"
   atomDetailBaseUrl: /console/store/atomStore/detail/atom/
   templateDetailBaseUrl: /console/store/atomStore/detail/template/
   artifactoryServiceUrlPrefix: __BK_CI_PUBLIC_URL__/ms/artifactory/api
@@ -22,7 +22,7 @@ store:
   imageAdminUsers: admin
   buildResultBaseUrl: __BK_CI_PUBLIC_URL__/console/pipeline
   defaultImageSourceType: bkdevops
-  defaultImageRepoUrl: __BK_CI_DOCKER_REGISTRY_URL__
+  defaultImageRepoUrl: "__BK_CI_DOCKER_REGISTRY_URL__"
   defaultImageRepoName: paas/bkdevops/docker-builder2.2
   defaultImageTag: v1
   defaultTicketId:

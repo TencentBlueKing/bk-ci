@@ -10,8 +10,8 @@ server:
   port: __BK_CI_STREAM_API_PORT__
 
 stream:
-  url: __BK_CI_STREAM_URL__
-  scmType: __BK_CI_STREAM_SCM_TYPE__
+  url: "__BK_CI_STREAM_URL__"
+  scmType: "__BK_CI_STREAM_SCM_TYPE__"
   # 配置 run 插件运行的研发商店具体插件
   marketRun:
     enable: true
@@ -19,14 +19,14 @@ stream:
     atomVersion: 1.*
 
 git:
-  gitUrl: __BK_CI_STREAM_GIT_URL__
+  gitUrl: "__BK_CI_STREAM_GIT_URL__"
 
 # 定时清理任务相关配置
 cron:
   clear:
     maxThreadHandleProjectNum: 5
     maxEveryProjectHandleNum: 15
-    maxKeepNum: 10000  
+    maxKeepNum: 10000
 
 # stream 运行时的默认镜像
 container:
@@ -34,12 +34,12 @@ container:
  
 github:
   redirectUrl: __BK_CI_STREAM_URL__/auth/api/external/third/login?code=%s&userId=%s&type=%s
-  orgWhite: __BK_CI_GITHUB_ORGWHITE__
-  signSecret: __BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__
+  orgWhite: "__BK_CI_GITHUB_ORGWHITE__"
+  signSecret: "__BK_CI_REPOSITORY_GITHUB_SIGN_SECRET__"
 
 gateway:
-  url: __BK_CI_HOST__
-  reportPrefix: __BK_CI_STREAM_REPORT_PREFIX__
+  url: "__BK_CI_HOST__"
+  reportPrefix: "__BK_CI_STREAM_REPORT_PREFIX__"
 
 badge:
-  serverUrl: __BK_CI_BADGE_SERVER_URL__
+  serverUrl: "__BK_CI_BADGE_SERVER_URL__"

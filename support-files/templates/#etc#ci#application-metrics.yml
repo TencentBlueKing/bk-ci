@@ -44,7 +44,7 @@ spring:
         broadcastFlag: true
       - index: 11
         name: T_ERROR_CODE_INFO
-        broadcastFlag: true    
+        broadcastFlag: true
 
 # 服务器端口配置，在同一台机器上部署多个微服务，端口号要不同 21990
 server:
@@ -62,5 +62,4 @@ sharding:
     cacheSize: 100000
   databaseShardingStrategy:
     shardingField: PROJECT_ID
-    algorithmClassName: "com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm"
-
+    algorithmClassName: com.tencent.devops.metrics.sharding.BkMetricsDatabaseShardingAlgorithm
