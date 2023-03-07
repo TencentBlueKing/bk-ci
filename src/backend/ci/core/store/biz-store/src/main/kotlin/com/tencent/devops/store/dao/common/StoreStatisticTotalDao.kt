@@ -232,12 +232,13 @@ class StoreStatisticTotalDao {
         pluralFlag: Boolean
     ): Result<out Record1<out Any>> {
         with(TStoreStatisticsTotal.T_STORE_STATISTICS_TOTAL) {
-            return dslContext.select(RECENT_EXECUTE_NUM)
+            val sql = dslContext.select(RECENT_EXECUTE_NUM)
                 .from(this)
                 .where(STORE_TYPE.eq(storeType.type.toByte()))
                 .orderBy(RECENT_EXECUTE_NUM, CREATE_TIME, STORE_CODE)
                 .limit(index - 1, if (pluralFlag) 2 else 1)
-                .fetch()
+            logger.info("getStorePercentileValue sql:$sql")
+            return sql.fetch()
         }
     }
 }

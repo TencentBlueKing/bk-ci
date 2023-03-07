@@ -81,7 +81,8 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         private const val DEFAULT_PAGE_SIZE = 50
     }
 
-    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
+//    @Scheduled(cron = "0 0 * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0/10 * * * ?")
     fun stat() {
         val lock = RedisLock(redisOperation, "storeTotalStatistic", 60000L)
         try {
@@ -351,6 +352,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             index = index.toInt(),
             pluralFlag = pluralFlag
         )
+        logger.info("getStorePercentileValue result:$result")
         var value = 0.0
         result.forEach { value += it.value1() as Int }
         return if (pluralFlag) value / 2 else value
