@@ -47,7 +47,7 @@ BEGIN
         ADD COLUMN `ATOM_CODE` varchar(64) DEFAULT NULL COMMENT '关联插件代码';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
+    IF EXISTS(SELECT 1
                           FROM information_schema.statistics
                           WHERE TABLE_SCHEMA = db
                             AND TABLE_NAME = 'T_ERROR_CODE_INFO'
