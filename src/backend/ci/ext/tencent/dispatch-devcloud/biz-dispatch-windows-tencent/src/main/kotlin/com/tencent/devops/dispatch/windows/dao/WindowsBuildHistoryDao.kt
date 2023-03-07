@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
-class BuildHistoryDao {
+class WindowsBuildHistoryDao {
 
     fun saveBuildHistory(dslContext: DSLContext, rec: TBuildHistoryRecord): Int {
         with(TBuildHistory.T_BUILD_HISTORY) {

@@ -8,11 +8,10 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository
-import java.net.URLDecoder
 import java.time.LocalDateTime
 
 @Repository
-class VirtualMachineTypeDao {
+class WindowsTypeDao {
     fun getNameById(dslContext: DSLContext, vmTypeId: Int): String? {
         with(TVirtualMachineType.T_VIRTUAL_MACHINE_TYPE) {
             return dslContext.selectFrom(this).where(ID.eq(vmTypeId)).fetchOne()!!.name

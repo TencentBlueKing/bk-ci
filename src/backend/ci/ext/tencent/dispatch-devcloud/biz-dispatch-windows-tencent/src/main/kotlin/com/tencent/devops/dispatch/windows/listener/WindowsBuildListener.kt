@@ -5,7 +5,6 @@ import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
-import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Profile
@@ -17,7 +16,7 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_GATEWAY
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
-import com.tencent.devops.dispatch.windows.service.BuildHistoryService
+import com.tencent.devops.dispatch.windows.service.WindowsBuildHistoryService
 import com.tencent.devops.dispatch.windows.service.DevCloudWindowsService
 import com.tencent.devops.dispatch.windows.service.WindowsTypeService
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -34,7 +33,7 @@ class WindowsBuildListener @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val devCloudWindowsService: DevCloudWindowsService,
     private val windowsTypeService: WindowsTypeService,
-    private val buildHistoryService: BuildHistoryService,
+    private val windowsBuildHistoryService: WindowsBuildHistoryService,
     private val profile: Profile,
     private val redisOperation: RedisOperation
 ) : BuildListener {
@@ -87,7 +86,7 @@ class WindowsBuildListener @Autowired constructor(
 
         if (devCloudWindowsInfo != null) {
             startSuccess = true
-            buildHistoryService.saveBuildHistory(dispatchMessage, devCloudWindowsInfo, resourceType)
+            windowsBuildHistoryService.saveBuildHistory(dispatchMessage, devCloudWindowsInfo, resourceType)
         }
 
         if (!startSuccess) {
@@ -164,7 +163,7 @@ class WindowsBuildListener @Autowired constructor(
                     return@use
                 }
 
-                val buildHistoryRecords = buildHistoryService.getByBuildIdAndVmSeqId(
+                val buildHistoryRecords = windowsBuildHistoryService.getByBuildIdAndVmSeqId(
                     buildId = event.buildId,
                     vmSeqId = event.vmSeqId
                 )
@@ -203,13 +202,13 @@ class WindowsBuildListener @Autowired constructor(
                         )
 
                         logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
-                        buildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
+                        windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
                     } catch (e: SocketTimeoutException) {
                         logger.error(
                             "${event.projectId}|${event.pipelineId}|${event.buildId}" +
                                 "|vm is ${buildHistory.vmIp}, end build.", e
                         )
-                        buildHistoryService.endBuild(
+                        windowsBuildHistoryService.endBuild(
                             WindowsJobStatus.ShutDownError,
                             buildHistory.id
                         )
