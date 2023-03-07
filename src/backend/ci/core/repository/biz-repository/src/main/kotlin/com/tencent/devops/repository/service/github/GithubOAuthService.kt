@@ -70,18 +70,21 @@ class GithubOAuthService @Autowired constructor(
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
 
-    fun oauthUrl(redirectUrl: String): String {
-        val stateParams = mapOf(
+    fun oauthUrl(redirectUrl: String, userId: String?): String {
+        val stateParams = mutableMapOf(
             "redirectUrl" to redirectUrl,
             "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
         )
+        // 如果非空将以该userId入库，否则会以github login name 入库
+        if (userId != null) stateParams["userId"] = userId
+
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
         return "$GITHUB_URL/login/oauth/authorize" +
             "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
     }
 
     fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
-        return if (channelCode == ChannelCode.GIT.name) {
+        return if (channelCode == ChannelCode.GIT.name || state?.contains("redirectUrl") == true) {
             githubCallbackForGIT(code = code, state = state)
         } else {
             githubCallbackForBS(code = code, state = state)
@@ -110,22 +113,17 @@ class GithubOAuthService @Autowired constructor(
         logger.info("github callback for git|code:$code|state:$state")
         val githubToken = getAccessTokenImpl(code)
         val userResponse = githubUserService.getUser(githubToken.accessToken)
+        val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            userResponse.login,
+            stateMap["userId"]?.toString() ?: userResponse.login,
             githubToken.accessToken,
             githubToken.tokenType,
             githubToken.scope
         )
-        val redirectUrl = if (!state.isNullOrBlank()) {
-            val authParams = JsonUtil.toMap(state)
-            authParams["redirectUrl"]?.toString() ?: ""
-        } else {
-            ""
-        }
         return GithubOauthCallback(
             userId = userResponse.login,
             email = userResponse.email,
-            redirectUrl = redirectUrl
+            redirectUrl = stateMap["redirectUrl"]?.toString() ?: ""
         )
     }
 
