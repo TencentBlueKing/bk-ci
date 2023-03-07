@@ -28,12 +28,15 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryFileTaskResource
+import com.tencent.devops.artifactory.constant.ArtifactoryI18nConstants.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
 import com.tencent.devops.artifactory.service.FileTaskService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
@@ -81,7 +84,10 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
         val projectSet = client.get(ServiceProjectResource::class).list(userId).data!!.map { it.projectCode }.toSet()
         if (!projectSet.contains(projectId)) {
             throw PermissionForbiddenException(
-                message = "用户 $userId 无项目 $projectId 权限",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                    language = CommonUtils.getDefaultLocaleLanguage()
+                ),
                 params = arrayOf("user[$userId]->project[$projectId]")
             )
         }
