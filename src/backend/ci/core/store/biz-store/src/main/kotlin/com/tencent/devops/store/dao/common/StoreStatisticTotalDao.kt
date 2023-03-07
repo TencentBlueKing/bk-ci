@@ -29,6 +29,7 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreStatisticsTotal
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreStatisticPipelineNumUpdate
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
@@ -172,7 +173,7 @@ class StoreStatisticTotalDao {
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
                 STORE_CODE,
-                HOT_FLAG
+                HOT_FLAG.`as`(KEY_HOT_FLAG)
             )
                 .from(this)
                 .where(STORE_CODE.eq(storeCode).and(STORE_TYPE.eq(storeType)))
@@ -196,7 +197,7 @@ class StoreStatisticTotalDao {
                 PIPELINE_NUM,
                 RECENT_EXECUTE_NUM,
                 STORE_CODE.`as`(KEY_STORE_CODE),
-                HOT_FLAG
+                HOT_FLAG.`as`(KEY_HOT_FLAG)
             )
                 .from(this)
 

@@ -39,6 +39,7 @@ import com.tencent.devops.store.dao.common.StoreErrorCodeInfoDao
 import com.tencent.devops.store.dao.common.StoreMemberDao
 import com.tencent.devops.store.dao.common.StoreStatisticDao
 import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_STORE_CODE
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreStatistic
@@ -301,7 +302,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             pipelineCnt = record?.value4() ?: 0,
             recentExecuteNum = record?.value5() ?: 0,
             successRate = successRate,
-            hotFlag = record?.value6() as Boolean
+            hotFlag = record?.get(KEY_HOT_FLAG) as Boolean
         )
     }
 
