@@ -37,6 +37,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
+@Suppress("ComplexCondition")
 class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
 
     companion object {
