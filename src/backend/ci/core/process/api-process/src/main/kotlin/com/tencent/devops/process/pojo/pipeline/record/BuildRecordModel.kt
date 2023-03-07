@@ -57,15 +57,15 @@ data class BuildRecordModel(
     @ApiModelProperty("触发器", required = true)
     val startType: String,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("取消人", required = false)
-    val cancelUser: String?,
+    val cancelUser: String? = null,
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("流水线任务执行错误", required = false)
-    var errorInfoList: List<ErrorInfo>?,
+    var errorInfoList: List<ErrorInfo>? = null,
     @ApiModelProperty("业务时间戳集合", required = false)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

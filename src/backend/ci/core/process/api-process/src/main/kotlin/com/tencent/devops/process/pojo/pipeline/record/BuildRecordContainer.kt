@@ -60,7 +60,7 @@ data class BuildRecordContainer(
     @ApiModelProperty("作业容器类型", required = true)
     val containerType: String,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)
@@ -68,9 +68,9 @@ data class BuildRecordContainer(
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
@@ -110,9 +110,8 @@ data class BuildRecordContainer(
                     projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
                     buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
                     containerType = container.getClassType(), executeCount = context.executeCount,
-                    matrixGroupFlag = container.matrixGroupFlag, matrixGroupId = null,
-                    status = buildStatus?.name, containerVar = containerVar,
-                    startTime = null, endTime = null, timestamps = mapOf()
+                    matrixGroupFlag = container.matrixGroupFlag, status = buildStatus?.name,
+                    containerVar = containerVar, timestamps = mapOf()
                 )
             )
             container.elements.forEachIndexed { index, element ->
@@ -122,9 +121,8 @@ data class BuildRecordContainer(
                         stageId = stage.id!!, containerId = container.containerId!!,
                         taskId = element.id!!, classType = element.getClassType(),
                         atomCode = element.getTaskAtom(), executeCount = context.executeCount,
-                        originClassType = null, resourceVersion = version, taskSeq = index,
-                        status = buildStatus?.name, taskVar = mutableMapOf(),
-                        startTime = null, endTime = null, timestamps = mapOf()
+                        resourceVersion = version, taskSeq = index, status = buildStatus?.name,
+                        taskVar = mutableMapOf(), timestamps = mapOf()
                     )
                 )
             }

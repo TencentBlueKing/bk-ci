@@ -1230,9 +1230,8 @@ class PipelineRuntimeService @Autowired constructor(
             startType = context.startType.name, buildNum = buildNum,
             projectId = context.projectId, pipelineId = context.pipelineId,
             buildId = context.buildId, executeCount = context.executeCount,
-            cancelUser = null, modelVar = mutableMapOf(),
-            status = startBuildStatus.name, timestamps = mapOf(),
-            queueTime = LocalDateTime.now().timestampmilli(), startTime = null, endTime = null
+            modelVar = mutableMapOf(), status = startBuildStatus.name,
+            timestamps = mapOf(), queueTime = LocalDateTime.now().timestampmilli()
         )
 
         if (updateExistsTask.isNotEmpty()) {
@@ -1283,9 +1282,8 @@ class PipelineRuntimeService @Autowired constructor(
                     projectId = it.projectId, pipelineId = it.pipelineId, buildId = it.buildId,
                     stageId = it.stageId, containerId = it.containerId, taskSeq = it.taskSeq,
                     taskId = it.taskId, classType = it.taskType, atomCode = it.atomCode ?: it.taskAtom,
-                    executeCount = it.executeCount ?: 1, originClassType = null,
-                    resourceVersion = resourceVersion, status = null, taskVar = mutableMapOf(),
-                    startTime = null, endTime = null, timestamps = mapOf()
+                    executeCount = it.executeCount ?: 1, resourceVersion = resourceVersion,
+                    taskVar = mutableMapOf(), timestamps = mapOf()
                 )
             )
         }
@@ -1330,8 +1328,7 @@ class PipelineRuntimeService @Autowired constructor(
                 BuildRecordStage(
                     projectId = it.projectId, pipelineId = it.pipelineId, resourceVersion = resourceVersion,
                     buildId = it.buildId, stageId = it.stageId, stageSeq = it.seq,
-                    executeCount = it.executeCount, stageVar = mutableMapOf(),
-                    status = null, startTime = null, endTime = null, timestamps = mapOf()
+                    executeCount = it.executeCount, stageVar = mutableMapOf(), timestamps = mapOf()
                 )
             )
         }
@@ -1402,6 +1399,7 @@ class PipelineRuntimeService @Autowired constructor(
             buildId = buildId,
             executeCount = executeCount,
             buildStatus = newBuildStatus,
+            errorInfoList = null,
             errorMsg = "Rejected by $userId"
         )
         pipelineBuildDao.updateBuildStageStatus(
