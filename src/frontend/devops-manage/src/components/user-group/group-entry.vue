@@ -23,7 +23,7 @@
         <!-- 项目维度 -> 无权限 -->
         <no-permission v-else-if="!hasPermission && resourceType === 'project'" :title="$t('无该项目用户组管理权限')"></no-permission>
         <!-- 普通成员 -->
-        <group-table v-else-if="!hasPermission && resourceType !== 'project'" v-bind="$props" />
+        <!-- <group-table v-else-if="!hasPermission && resourceType !== 'project'" v-bind="$props" /> -->
       </template>
       <!-- 未开启权限管理 -->
       <not-open-manage v-else-if="!isEnablePermission && resourceType !== 'project'" v-bind="$props" />

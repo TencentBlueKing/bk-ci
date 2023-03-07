@@ -111,8 +111,8 @@
                     <template slot-scope="props">
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission': !props.row.canDelete }"
-                                v-if="!['TSTACK'].includes(props.row.nodeType)"
+                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission disabled': !props.row.canDelete }"
+                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
                                 @click.stop="confirmDelete(props.row, index)"
                             >{{ $t('environment.delete') }}</span>
                         </div>
@@ -903,7 +903,13 @@
                 }
               }
               .no-node-delete-permission {
-                cursor: url('../images/cursor-lock.png'), auto;
+                  &.disabled {
+                    color: #C4C6CC;
+                    &:hover {
+                        color: #C4C6CC;
+                    }
+                    cursor: url(../images/cursor-lock.png), auto !important;
+                }
               }
             }
 

@@ -30,6 +30,7 @@
     import { mapActions } from 'vuex'
     import { convertTime } from '@/utils/util'
     import selectEnvShareDialog from './select-env-share-dialog'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
     export default {
         name: 'setting-tab',
         components: {
@@ -126,10 +127,16 @@
                     try {
                         await action(...args)
                         this.fetchEnvProjects()
-                    } catch (error) {
-                        console.trace(error)
-                        message = error.message || error
-                        theme = 'error'
+                    } catch (e) {
+                        this.handleError(
+                            e,
+                            {
+                                projectId: this.projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: this.envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        )
                     } finally {
                         this.$bkMessage({
                             message: message,
