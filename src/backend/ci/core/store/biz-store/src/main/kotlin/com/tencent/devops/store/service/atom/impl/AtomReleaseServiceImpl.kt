@@ -307,6 +307,16 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
         if (atomCount < 1) {
             return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.PARAMETER_IS_INVALID, arrayOf(atomCode))
         }
+        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
+        val updateRequestDataMap = storeI18nMessageService.parseJsonMap(
+            userId = userId,
+            projectCode = projectCode,
+            jsonMap = JsonUtil.toMutableMap(marketAtomUpdateRequest),
+            fileDir = "$atomCode/$version",
+            keyPrefix = "${StoreTypeEnum.ATOM.name}.$atomCode.$version",
+            repositoryHashId = atomRecord.repositoryHashId
+        )
+
         // 判断更新的插件名称是否重复
         if (validateAtomNameIsExist(
                 atomCode = atomCode,
@@ -316,7 +326,6 @@ abstract class AtomReleaseServiceImpl @Autowired constructor() : AtomReleaseServ
             CommonMessageCode.PARAMETER_IS_EXIST,
             arrayOf(marketAtomUpdateRequest.name)
         )
-        val atomRecord = atomDao.getMaxVersionAtomByCode(dslContext, atomCode)!!
         val releaseType = marketAtomUpdateRequest.releaseType
         // 历史大版本下的小版本更新发布类型支持用户自定义分支，其他发布类型只支持master分支发布
         val branch = if (marketAtomUpdateRequest.branch.isNullOrBlank() || releaseType != ReleaseTypeEnum.HIS_VERSION_UPGRADE) {

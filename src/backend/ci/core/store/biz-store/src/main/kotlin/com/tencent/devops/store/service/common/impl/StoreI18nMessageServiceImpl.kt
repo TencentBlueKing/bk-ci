@@ -26,6 +26,7 @@
  */
 package com.tencent.devops.store.service.common.impl
 
+import com.tencent.devops.common.api.constant.DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.constant.KEY_DEFAULT_LOCALE_LANGUAGE
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -75,7 +76,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         logger.info("parseJsonMap params:[$userId|$projectCode|$fileDir|$keyPrefix|$repositoryHashId]")
         // 获取蓝盾默认语言信息
         val devopsDefaultLocaleLanguage = commonConfig.devopsDefaultLocaleLanguage
-        val jsonLocaleLanguage = jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE]
+        val jsonLocaleLanguage = jsonMap[KEY_DEFAULT_LOCALE_LANGUAGE] ?: DEFAULT_LOCALE_LANGUAGE
         if (jsonLocaleLanguage == devopsDefaultLocaleLanguage) {
             // 如果map集合中默认字段值对应的语言和蓝盾默认语言一致，则无需替换
             return jsonMap
