@@ -58,14 +58,13 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = envResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         ).data ?: emptyMap()
-        return buildResultMap(instancesMap)
     }
 
     override fun checkEnvPermission(
@@ -142,14 +141,13 @@ class RbacEnvironmentPermissionService(
     }
 
     override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
-        val instancesMap = client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
+        return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
             resourceType = nodeResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENV_NODE)
         ).data ?: emptyMap()
-        return buildResultMap(instancesMap)
     }
 
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
@@ -216,7 +214,7 @@ class RbacEnvironmentPermissionService(
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
     }
 
-    private fun buildResultMap(
+    /*private fun buildResultMap(
         instancesMap: Map<AuthPermission, List<String>>
     ): Map<AuthPermission, List<String>> {
         if (instancesMap.isEmpty())
@@ -230,7 +228,7 @@ class RbacEnvironmentPermissionService(
             resultMap[key] = instanceLongIds
         }
         return resultMap
-    }
+    }*/
 
     companion object {
         val logger = LoggerFactory.getLogger(RbacEnvironmentPermissionService::class.java)
