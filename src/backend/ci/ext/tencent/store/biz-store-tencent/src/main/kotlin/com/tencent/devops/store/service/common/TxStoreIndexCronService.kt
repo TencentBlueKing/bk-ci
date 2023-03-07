@@ -266,7 +266,7 @@ class TxStoreIndexCronService(
                         result
                     )
                     val indexInfo = if (elementValue.isNullOrBlank()) {
-                        elementValue = "- （近一月未运行）"
+                        elementValue = "- （近一月无执行失败数据）"
                         elementValue
                     } else {
                         "$elementValue%(${if (complianceRate > 99.9) "达标" else "不达标"}）"
