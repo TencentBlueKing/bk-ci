@@ -25,33 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.git
+package com.tencent.devops.common.web.handler
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.sdk.exception.SdkException
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-@ApiModel("git用户信息")
-data class GitUserInfo(
-    @ApiModelProperty("ID", name = "id")
-    @JsonProperty("id")
-    val id: Int,
-    @ApiModelProperty("email", name = "email")
-    @JsonProperty("email")
-    val email: String?,
-    @ApiModelProperty("用户名称", name = "username")
-    @JsonProperty("username")
-    val username: String?,
-    @ApiModelProperty("用户空间地址", name = "web_url")
-    @JsonProperty("web_url")
-    val webUrl: String?,
-    @ApiModelProperty("名称", name = "name")
-    @JsonProperty("name")
-    val name: String?,
-    @ApiModelProperty("状态", name = "state")
-    @JsonProperty("state")
-    val state: String?,
-    @ApiModelProperty("头像", name = "avatar_url")
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?
-)
+@BkExceptionMapper
+class SdkExceptionMapper : ExceptionMapper<SdkException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(SdkExceptionMapper::class.java)!!
+    }
+
+    override fun toResponse(exception: SdkException): Response {
+        logger.error("Failed with sdk exception", exception)
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "访问后台数据失败，已通知产品、开发，请稍后重试"
+        }
+        return Response.status(exception.errCode).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = exception.errCode, message = message, data = exception.message)).build()
+    }
+}
