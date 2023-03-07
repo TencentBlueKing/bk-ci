@@ -27,8 +27,6 @@
 
 package com.tencent.devops.common.web.factory
 
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.constant.BuildApiHandleType
 import com.tencent.devops.common.web.service.BuildApiHandleService
 import com.tencent.devops.common.web.service.impl.BuildApiHandleAuthServiceImpl
@@ -38,8 +36,6 @@ object BuildApiHandleFactory {
 
     private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
 
-    private val client = SpringContextUtil.getBean(Client::class.java)
-
     fun createBuildApiHandleService(
         type: BuildApiHandleType
     ): BuildApiHandleService {
@@ -47,7 +43,7 @@ object BuildApiHandleFactory {
         when (type) {
             BuildApiHandleType.AUTH_CHECK -> {
                 if (buildApiHandleMapService == null) {
-                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl(client)
+                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl()
                     buildApiHandleMap[type.name] = buildApiHandleMapService
                 }
             }

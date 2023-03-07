@@ -30,13 +30,14 @@ package com.tencent.devops.common.web.service.impl
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BUILD_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_PROJECT_ID
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.BuildApiHandleService
 import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 
-class BuildApiHandleAuthServiceImpl constructor(val client: Client) : BuildApiHandleService {
+class BuildApiHandleAuthServiceImpl : BuildApiHandleService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(BuildApiHandleAuthServiceImpl::class.java)
@@ -62,6 +63,7 @@ class BuildApiHandleAuthServiceImpl constructor(val client: Client) : BuildApiHa
         logger.info("Build ProjectId[$authProjectId], BuildID[$authBuildId],user project param[$projectId], " +
                 "user pipeline param[$pipelineId]")
         if (projectId != null && pipelineId != null) {
+            val client = SpringContextUtil.getBean(Client::class.java)
             val buildStartUser = client.get(ServiceBuildApiPermissionResource::class)
                 .getStartUser(authProjectId!!, authBuildId!!).data!!
             logger.info("verify that user [$buildStartUser] has permission to access information " +
