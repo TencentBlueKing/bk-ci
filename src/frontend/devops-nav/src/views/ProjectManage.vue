@@ -233,13 +233,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`)
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`)
                         break
                 }
             },
@@ -250,10 +250,10 @@
                 switch (projectTag) {
                     case 'v0':
                     case 'v3':
-                        window.open(`/console/store/serviceManage/${projectCode}`, '_blank')
+                        window.open(`/console/store/serviceManage/${projectCode}`)
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/expand`, '_blank')
+                        window.open(`/console/manage/${projectCode}/expand`)
                         break
                 }
             },
@@ -272,13 +272,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}&x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/perm/my-project?project_code=${projectCode}&x-devops-project-id=${projectCode}`)
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`)
                         break
                 }
             },

@@ -415,7 +415,7 @@ onBeforeUnmount(() => {
 
   <bk-dialog
     :title="t('设置项目最大可授权人员范围')"
-    width="1328"
+    width="800"
     size="large"
     dialog-type="show"
     :is-show="showDialog"
