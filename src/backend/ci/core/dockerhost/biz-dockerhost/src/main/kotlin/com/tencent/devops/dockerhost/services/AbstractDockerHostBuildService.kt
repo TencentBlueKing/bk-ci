@@ -301,7 +301,7 @@ abstract class AbstractDockerHostBuildService constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = "Pulling image, layer ${lays}，process：$currentProgress%",
+                        message = "Pulling image, layer $lays，process：$currentProgress%",
                         tag = startTaskId,
                         jobId = containerHashId
                     )
