@@ -33,6 +33,8 @@ import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
 /**
  * 权限校验接口
@@ -74,6 +76,10 @@ abstract class AbstractEnvironmentPermissionService constructor(
             permissions = permissions,
             supplier = supplierForEnvFakePermission(projectId)
         )
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
     }
 
     override fun checkEnvPermission(
@@ -157,6 +163,10 @@ abstract class AbstractEnvironmentPermissionService constructor(
             permissions = permissions,
             supplier = supplierForNodeFakePermission(projectId)
         )
+    }
+
+    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+        return nodeRecordList
     }
 
     override fun checkNodePermission(

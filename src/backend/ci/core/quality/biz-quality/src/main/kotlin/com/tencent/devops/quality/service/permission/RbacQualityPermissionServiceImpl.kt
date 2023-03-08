@@ -64,6 +64,30 @@ class RbacQualityPermissionServiceImpl(
         }
     }
 
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
+            token = tokenService.getSystemToken(null)!!,
+            userId = userId,
+            projectCode = projectId,
+            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+            resourceCode = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+        ).data ?: false
+    }
+
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            throw PermissionForbiddenException(message)
+        }
+    }
+
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
@@ -184,4 +208,6 @@ class RbacQualityPermissionServiceImpl(
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)
     }
+
+    override fun isRbac(): Boolean = true
 }

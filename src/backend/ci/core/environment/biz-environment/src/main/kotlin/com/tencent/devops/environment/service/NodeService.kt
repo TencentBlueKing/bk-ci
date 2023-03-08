@@ -53,6 +53,7 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -131,7 +132,6 @@ class NodeService @Autowired constructor(
             userId = userId, projectId = projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -148,11 +148,18 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
+        val nodeListResult = environmentPermissionService.listNodeByListPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeRecordList.map {
+
+        return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -216,9 +223,8 @@ class NodeService @Autowired constructor(
 
         val permissionMap = environmentPermissionService.listNodeByPermissions(
             userId, projectId,
-            setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
+            permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
-
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -234,12 +240,17 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-
+        val nodeListResult = environmentPermissionService.listNodeByListPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList
+        )
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
                 .associateBy { it.nodeId }
-        return nodeRecordList.map {
+        return nodeListResult.map {
             val thirdPartyAgent = thirdPartyAgentMap[it.nodeId]
             val gatewayShowName = if (thirdPartyAgent != null) {
                 slaveGatewayService.getShowName(thirdPartyAgent.gateway)
@@ -424,22 +435,22 @@ class NodeService @Autowired constructor(
 
     fun searchByDisplayName(projectId: String, offset: Int?, limit: Int?, displayName: String): Page<NodeBaseInfo> {
         val nodeInfos = nodeDao.searchByDisplayName(
-                dslContext = dslContext,
-                offset = offset!!,
-                limit = limit!!,
-                projectId = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            offset = offset!!,
+            limit = limit!!,
+            projectId = projectId,
+            displayName = displayName
         )
         val count = nodeDao.countByDisplayName(
-                dslContext = dslContext,
-                project = projectId,
-                displayName = displayName
+            dslContext = dslContext,
+            project = projectId,
+            displayName = displayName
         )
         return Page(
-                count = count.toLong(),
-                page = offset!!,
-                pageSize = limit!!,
-                records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
+            count = count.toLong(),
+            page = offset!!,
+            pageSize = limit!!,
+            records = nodeInfos.map { NodeStringIdUtils.getNodeBaseInfo(it) }
         )
     }
 

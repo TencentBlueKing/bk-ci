@@ -71,6 +71,44 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         }
     }
 
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
+        return authPermissionApi.validateUserResourcePermission(
+            user = userId,
+            serviceCode = qualityAuthServiceCode,
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW,
+            projectCode = projectId,
+            permission = authPermission
+        )
+    }
+
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                defaultMessage = authPermission.alias
+            )
+            throw PermissionForbiddenException(
+                message = message,
+                params = arrayOf(permissionMsg)
+            )
+        }
+    }
+
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
         authResourceApi.createResource(
             user = userId,
@@ -128,6 +166,8 @@ abstract class AbsQualityPermissionServiceImpl constructor(
     }
 
     override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (authPermission == AuthPermission.LIST)
+            return true
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = qualityAuthServiceCode,
@@ -174,7 +214,8 @@ abstract class AbsQualityPermissionServiceImpl constructor(
                 resourceType = AuthResourceType.QUALITY_RULE,
                 projectCode = projectId,
                 resourceCode = HashUtil.encodeLongId(ruleId),
-                permission = authPermission)) {
+                permission = authPermission
+            )) {
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
                 defaultMessage = authPermission.alias
@@ -241,6 +282,8 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         }
         return permissionRuleMap
     }
+
+    override fun isRbac(): Boolean = false
 
     abstract fun supplierForPermissionGroup(projectId: String): () -> MutableList<String>
 

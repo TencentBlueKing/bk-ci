@@ -197,15 +197,19 @@ class EnvService @Autowired constructor(
         } else {
             emptyList()
         }
-
-        val validRecordList = envRecordList.filter { canListEnvIds.contains(it.envId) }
-        if (validRecordList.isEmpty()) {
+        val canListEnv = envRecordList.filter { canListEnvIds.contains(it.envId) }
+        val envListResult: List<TEnvRecord>
+        if (canListEnv.isEmpty()) {
             return listOf()
+        } else {
+            envListResult = environmentPermissionService.getEnvListResult(
+                canListEnv = canListEnv,
+                envRecordList = envRecordList
+            )
         }
-
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })
-        return envRecordList.map {
+        return envListResult.map {
             EnvWithPermission(
                 envHashId = HashUtil.encodeLongId(it.envId),
                 name = it.envName,

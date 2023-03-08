@@ -28,6 +28,8 @@
 package com.tencent.devops.environment.permission
 
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 
 @Suppress("ALL")
 interface EnvironmentPermissionService {
@@ -39,6 +41,11 @@ interface EnvironmentPermissionService {
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
+
+    fun getEnvListResult(
+        canListEnv: List<TEnvRecord>,
+        envRecordList: List<TEnvRecord>,
+    ): List<TEnvRecord>
 
     fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean
 
@@ -57,6 +64,12 @@ interface EnvironmentPermissionService {
         projectId: String,
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
+
+    fun listNodeByListPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>
+    ): List<TNodeRecord>
 
     fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean
 

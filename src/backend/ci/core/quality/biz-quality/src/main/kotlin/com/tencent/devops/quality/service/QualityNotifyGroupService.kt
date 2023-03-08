@@ -68,6 +68,15 @@ class QualityNotifyGroupService @Autowired constructor(
     private val regex = Pattern.compile("[,;]")
 
     fun list(userId: String, projectId: String, offset: Int, limit: Int): Pair<Long, List<GroupSummaryWithPermission>> {
+        // RBAC得先校验是否有质量红线通知的列表权限，如果没有，直接返回空
+        val isListPermission = qualityPermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.LIST
+        )
+        if (!isListPermission)
+            return Pair(0, listOf())
+
         val groupPermissionListMap = qualityPermissionService.filterGroup(
             user = userId,
             projectId = projectId,
@@ -109,6 +118,12 @@ class QualityNotifyGroupService @Autowired constructor(
     }
 
     fun create(userId: String, projectId: String, group: GroupCreate) {
+        qualityPermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            authPermission = AuthPermission.CREATE,
+            message = "用户没有创建质量红线通知组权限"
+        )
         if (qualityNotifyGroupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,

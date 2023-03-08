@@ -39,6 +39,19 @@ interface QualityPermissionService {
         message: String
     )
 
+    fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): Boolean
+
+    fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    )
+
     fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String)
 
     fun modifyGroupResource(projectId: String, groupId: Long, groupName: String)
@@ -74,4 +87,6 @@ interface QualityPermissionService {
         projectId: String,
         bkAuthPermissionSet: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
+
+    fun isRbac(): Boolean
 }
