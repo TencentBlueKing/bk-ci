@@ -243,7 +243,7 @@ class StoreIndexManageInfoDao {
                 tStoreIndexLevelInfo.ICON_URL,
                 tStoreIndexBaseInfo.DESCRIPTION,
                 this.ICON_TIPS,
-                tStoreIndexLevelInfo.LEVEL_NAME,
+                tStoreIndexLevelInfo.LEVEL_NAME
             ).from(this)
                 .leftJoin(tStoreIndexBaseInfo)
                 .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))
