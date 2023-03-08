@@ -222,6 +222,4 @@ class StreamQualityPermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
-
-    override fun isRbac(): Boolean = false
 }

@@ -87,6 +87,8 @@ class TxQualityPermissionService @Autowired constructor(
     }
 
     override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
         val iamPermission = bkAuthPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = serviceCode,
@@ -102,6 +104,23 @@ class TxQualityPermissionService @Autowired constructor(
                 projectId = projectId,
                 authPermission = authPermission,
                 resourceType = AuthResourceType.QUALITY_GROUP
+            )
+        }
+    }
+
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${authPermission.value}",
+                defaultMessage = authPermission.alias
+            )
+            throw PermissionForbiddenException(
+                message = message,
+                params = arrayOf(permissionMsg)
             )
         }
     }
@@ -195,7 +214,8 @@ class TxQualityPermissionService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
-
+        if (authPermission == AuthPermission.LIST)
+            return true
         val iamPermission = bkAuthPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = serviceCode,
@@ -362,6 +382,4 @@ class TxQualityPermissionService @Autowired constructor(
         }
         return permissionRuleMap
     }
-
-    override fun isRbac(): Boolean = false
 }
