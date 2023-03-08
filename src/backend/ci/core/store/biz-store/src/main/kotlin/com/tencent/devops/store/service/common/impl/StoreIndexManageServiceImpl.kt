@@ -97,6 +97,7 @@ class StoreIndexManageServiceImpl @Autowired constructor(
         tStoreIndexBaseInfoRecord.description = storeIndexCreateRequest.description
         tStoreIndexBaseInfoRecord.operationType = storeIndexCreateRequest.operationType.name
         tStoreIndexBaseInfoRecord.executeTimeType = storeIndexCreateRequest.executeTimeType.name
+        tStoreIndexBaseInfoRecord.weight = storeIndexCreateRequest.weight
         tStoreIndexBaseInfoRecord.creator = userId
         tStoreIndexBaseInfoRecord.modifier = userId
         tStoreIndexBaseInfoRecord.createTime = LocalDateTime.now()

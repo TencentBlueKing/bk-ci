@@ -132,6 +132,7 @@ class StoreIndexManageInfoDao {
                 TOTAL_TASK_NUM,
                 EXECUTE_TIME_TYPE,
                 STORE_TYPE,
+                WEIGHT,
                 CREATOR,
                 MODIFIER,
                 UPDATE_TIME,
@@ -242,13 +243,14 @@ class StoreIndexManageInfoDao {
                 tStoreIndexLevelInfo.ICON_URL,
                 tStoreIndexBaseInfo.DESCRIPTION,
                 this.ICON_TIPS,
-                tStoreIndexLevelInfo.LEVEL_NAME
+                tStoreIndexLevelInfo.LEVEL_NAME,
             ).from(this)
                 .leftJoin(tStoreIndexBaseInfo)
                 .on(INDEX_ID.eq(tStoreIndexBaseInfo.ID))
                 .join(tStoreIndexLevelInfo).on(INDEX_ID.eq(tStoreIndexLevelInfo.INDEX_ID)
                     .and(LEVEL_ID.eq(tStoreIndexLevelInfo.ID)))
                 .where(STORE_CODE.`in`(storeCodes).and(STORE_TYPE.eq(storeType.type.toByte())))
+                .orderBy(tStoreIndexBaseInfo.WEIGHT.desc())
                 .fetch()
         }
     }
