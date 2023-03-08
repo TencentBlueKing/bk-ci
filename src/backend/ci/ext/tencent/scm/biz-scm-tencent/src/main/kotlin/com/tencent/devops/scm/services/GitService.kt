@@ -1710,7 +1710,7 @@ class GitService @Autowired constructor(
                     commitId = commitId,
                     state = state,
                     detailUrl = targetUrl,
-                    context =  context,
+                    context = context,
                     description = description,
                     block = block,
                     targetBranch = request.targetBranch
