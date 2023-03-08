@@ -27,7 +27,6 @@
 
 package com.tencent.devops.process.service.record
 
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -42,7 +41,6 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import org.jooq.DSLContext
-import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
@@ -53,10 +51,6 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordTaskDao: BuildRecordTaskDao,
     private val dslContext: DSLContext
 ) {
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(PipelineRecordModelService::class.java)
-    }
 
     /**
      * 生成构建变量模型map集合
@@ -104,10 +98,6 @@ class PipelineRecordModelService @Autowired constructor(
             executeCount = executeCount,
             matrixContainerIds = matrixContainerIds
         )
-        logger.info(
-            "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|matrixContainerIds:" +
-                "$matrixContainerIds|buildNormalRecordTasks:${JsonUtil.toJson(buildNormalRecordTasks, false)}"
-        )
         val buildRecordTasks = if (matrixContainerIds.isNotEmpty()) {
             val buildMatrixRecordTasks = buildRecordTaskDao.getLatestMatrixRecords(
                 dslContext = dslContext,
@@ -116,18 +106,10 @@ class PipelineRecordModelService @Autowired constructor(
                 executeCount = executeCount,
                 matrixContainerIds = matrixContainerIds
             )
-            logger.info(
-                "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|" +
-                    "buildMatrixRecordTasks:${JsonUtil.toJson(buildMatrixRecordTasks, false)}"
-            )
             buildNormalRecordTasks.plus(buildMatrixRecordTasks)
         } else {
             buildNormalRecordTasks
         }
-        logger.info(
-            "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|" +
-                "buildRecordTasks:${JsonUtil.toJson(buildRecordTasks, false)}"
-        )
         val stages = mutableListOf<Map<String, Any>>()
         buildRecordStages.forEach { buildRecordStage ->
             val stageVarMap = buildRecordStage.stageVar
