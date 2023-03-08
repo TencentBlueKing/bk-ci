@@ -283,8 +283,6 @@ abstract class AbsQualityPermissionServiceImpl constructor(
         return permissionRuleMap
     }
 
-    override fun isRbac(): Boolean = false
-
     abstract fun supplierForPermissionGroup(projectId: String): () -> MutableList<String>
 
     abstract fun supplierForPermissionRule(projectId: String): () -> MutableList<String>

@@ -208,6 +208,4 @@ class RbacQualityPermissionServiceImpl(
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)
     }
-
-    override fun isRbac(): Boolean = true
 }
