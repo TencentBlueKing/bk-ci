@@ -77,14 +77,29 @@ import javax.ws.rs.core.MediaType
 interface ServiceBuildResource {
     @ApiOperation("通过buildId获取流水线pipelineId")
     @GET
-    @Path("/getPipelineIdFromBuildId")
+    @Path("/{projectId}/get_pipeline_id_from_build_id")
     fun getPipelineIdFromBuildId(
         @ApiParam(value = "项目ID", required = true)
-        @HeaderParam("projectId")
+        @PathParam("projectId")
         projectId: String,
-        @ApiParam("流水线ID", required = true)
+        @ApiParam("构建ID", required = true)
         @QueryParam("buildId")
         buildId: String
+    ): Result<String>
+
+    @ApiOperation("通过buildNumber 和 pipelineId 获取流水线buildId")
+    @GET
+    @Path("/{projectId}/get_build_id_from_build_number")
+    fun getBuildIdFromBuildNumber(
+        @ApiParam(value = "项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = true)
+        @QueryParam("pipelineId")
+        pipelineId: String,
+        @ApiParam("构建号", required = true)
+        @QueryParam("buildNumber")
+        buildNumber: Int
     ): Result<String>
 
     @ApiOperation("Notify process that the vm startup for the build")
@@ -569,6 +584,26 @@ interface ServiceBuildResource {
         @QueryParam("endBeginTime")
         endBeginTime: String? = null
     ): Result<List<BuildHistory>>
+
+    @ApiOperation("获取流水线构建历史, 返回buildid")
+    @GET
+    @Path("/{projectId}/batch_get_builds")
+    fun getBuilds(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("流水线ID", required = false)
+        @QueryParam("pipelineId")
+        pipelineId: String?,
+        @ApiParam("状态id", required = false)
+        @QueryParam("buildStatus")
+        buildStatus: Set<BuildStatus>? = null,
+        @QueryParam("channelCode")
+        channelCode: ChannelCode = ChannelCode.BS
+    ): Result<List<String>>
 
     @ApiOperation("根据流水线id获取最新执行信息")
     @POST

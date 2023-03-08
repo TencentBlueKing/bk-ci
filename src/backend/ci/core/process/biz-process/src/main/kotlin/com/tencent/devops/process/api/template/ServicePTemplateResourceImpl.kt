@@ -108,6 +108,21 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         ))
     }
 
+    override fun getTemplate(
+        userId: String,
+        projectId: String,
+        templateId: String,
+        versionName: String?
+    ): Result<TemplateModelDetail> {
+        return Result(templateFacadeService.getTemplate(
+            projectId = projectId,
+            userId = userId,
+            templateId = templateId,
+            version = null,
+            versionName = versionName
+        ))
+    }
+
     override fun listAllTemplate(
         userId: String,
         projectId: String,

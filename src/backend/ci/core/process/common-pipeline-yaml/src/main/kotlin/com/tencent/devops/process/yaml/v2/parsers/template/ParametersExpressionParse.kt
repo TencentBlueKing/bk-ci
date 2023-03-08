@@ -15,7 +15,9 @@ import com.tencent.devops.common.expression.context.ExpressionContextData
 import com.tencent.devops.common.expression.context.NumberContextData
 import com.tencent.devops.common.expression.context.PipelineContextData
 import com.tencent.devops.common.expression.context.StringContextData
+import com.tencent.devops.common.expression.expression.FunctionInfo
 import com.tencent.devops.common.expression.expression.sdk.NamedValueInfo
+import com.tencent.devops.common.expression.expression.specialFuctions.hashFiles.HashFilesFunction
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.exception.YamlTemplateException
 import com.tencent.devops.process.yaml.v2.parameter.Parameters
@@ -23,7 +25,6 @@ import com.tencent.devops.process.yaml.v2.parameter.ParametersType
 import com.tencent.devops.process.yaml.v2.parsers.template.models.ExpressionBlock
 import org.apache.commons.text.StringEscapeUtils
 import org.apache.tools.ant.filters.StringInputStream
-import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.IOException
 import java.io.InputStreamReader
@@ -373,6 +374,15 @@ object ParametersExpressionParse {
         return lineChars.joinToString("")
     }
 
+    private val functionList = listOf(
+        FunctionInfo(
+            HashFilesFunction.name,
+            1,
+            Byte.MAX_VALUE.toInt(),
+            HashFilesFunction()
+        )
+    )
+
     fun expressionEvaluate(
         path: String,
         expression: String,
@@ -383,8 +393,8 @@ object ParametersExpressionParse {
         val subInfo = SubNameValueEvaluateInfo()
         val (value, isComplete, type) = try {
             ExpressionParser.createSubNameValueEvaluateTree(
-                expression, null, nameValues, null, subInfo
-            )?.subNameValueEvaluate(null, context, null, subInfo)
+                expression, null, nameValues, functionList, subInfo
+            )?.subNameValueEvaluate(null, context, null, subInfo, null)
                 ?: throw YamlTemplateException("create evaluate tree is null")
         } catch (e: Throwable) {
             throw error(Constants.EXPRESSION_EVALUATE_ERROR.format(path, expression, e.message))
@@ -538,8 +548,6 @@ object ParametersExpressionParse {
             else -> StringContextData(value.toString())
         }
     }
-
-    private val logger = LoggerFactory.getLogger(ParametersExpressionParse::class.java)
 
     private fun error(content: String) = YamlFormatException(content)
 }

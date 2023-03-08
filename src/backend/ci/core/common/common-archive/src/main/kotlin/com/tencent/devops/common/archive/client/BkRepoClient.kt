@@ -68,19 +68,21 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
-import com.tencent.devops.common.archive.pojo.QueryNodeInfo
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
+import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import okhttp3.Credentials
-import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
+import org.springframework.data.domain.Sort.Direction
 import org.springframework.stereotype.Component
 import org.springframework.util.FileCopyUtils
 import java.io.File
@@ -98,9 +100,8 @@ class BkRepoClient constructor(
     private val commonConfig: CommonConfig,
     private val bkRepoClientConfig: BkRepoClientConfig
 ) {
-
     private fun getGatewayUrl(): String {
-        return HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
+        return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
     }
 
     fun useBkRepo(): Boolean {
@@ -129,12 +130,14 @@ class BkRepoClient constructor(
             displayName = projectId,
             description = projectId
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project")
             .header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             )
@@ -158,12 +161,14 @@ class BkRepoClient constructor(
             description = "storage for devops ci $repoName",
             storageCredentialsKey = storageCredentialsKey
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/repo")
             .header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             )
@@ -174,10 +179,12 @@ class BkRepoClient constructor(
     fun getFileSize(userId: String, projectId: String, repoName: String, path: String): NodeSizeInfo {
         logger.info("getFileSize, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/size/$projectId/$repoName/$path"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<NodeSizeInfo>>()!!.data!!
@@ -186,19 +193,21 @@ class BkRepoClient constructor(
     fun setMetadata(userId: String, projectId: String, repoName: String, path: String, metadata: Map<String, String>) {
         logger.info(
             "setMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
-                " metadata: $metadata"
+                    " metadata: $metadata"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
         val requestData = UserMetadataSaveRequest(
             metadata = metadata
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -208,10 +217,12 @@ class BkRepoClient constructor(
     fun listMetadata(userId: String, projectId: String, repoName: String, path: String): Map<String, String> {
         logger.info("listMetadata, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/metadata/$projectId/$repoName/$path"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Map<String, String>>>()!!.data!!
@@ -232,10 +243,12 @@ class BkRepoClient constructor(
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/list/$projectId/$repoName/$path" +
                 "?deep=$deep&includeFolder=$includeFolders"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<List<FileInfo>>>()!!.data!!
@@ -249,18 +262,23 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         deep: Boolean = false,
         page: Int,
-        pageSize: Int
+        pageSize: Int,
+        modifiedTimeDesc: Boolean
     ): Page<NodeInfo> {
         logger.info(
             "listFilePage, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path," +
-                " includeFolders: $includeFolders, deep: $deep, page: $page, pageSize: $pageSize"
+                    " includeFolders: $includeFolders, deep: $deep, page: $page, pageSize: $pageSize"
         )
+        val direction = if (modifiedTimeDesc) Direction.DESC.name else Direction.ASC.name
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/page/$projectId/$repoName/$path" +
-            "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize"
+                "?deep=$deep&includeFolder=$includeFolders&includeMetadata=true&pageNumber=$page&pageSize=$pageSize" +
+                "&sortProperty=lastModifiedDate&direction=$direction"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<Page<NodeInfo>>>()!!.data!!
@@ -311,7 +329,7 @@ class BkRepoClient constructor(
             }
 
             override fun contentType(): MediaType? {
-                return MediaType.parse("application/octet-stream")
+                return "application/octet-stream".toMediaTypeOrNull()
             }
         }
 
@@ -320,12 +338,16 @@ class BkRepoClient constructor(
         header[BK_REPO_UID] = userId
         header[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
         header[BK_REPO_OVERRIDE] = "true"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            header["X-DEVOPS-TOKEN"] = devopsToken
+        }
         properties?.forEach {
             header["$METADATA_PREFIX${it.key}"] = it.value
         }
         val request = Request.Builder()
             .url(url)
-            .headers(Headers.of(header))
+            .headers(header.toHeaders())
             .put(requestBody).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -375,11 +397,15 @@ class BkRepoClient constructor(
         header[BK_REPO_UID] = userId
         header[AUTH_HEADER_DEVOPS_PROJECT_ID] = projectId
         header[BK_REPO_OVERRIDE] = "true"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            header["X-DEVOPS-TOKEN"] = devopsToken
+        }
         properties?.forEach {
             header["$METADATA_PREFIX${it.key}"] = tryEncode(it.value)
         }
-        requestBuilder.headers(Headers.of(header))
-            .put(RequestBody.create(MediaType.parse("application/octet-stream"), file))
+        requestBuilder.headers(header.toHeaders())
+            .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
         val request = requestBuilder.build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -395,10 +421,12 @@ class BkRepoClient constructor(
     fun delete(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("delete, userId: $userId, projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -407,11 +435,13 @@ class BkRepoClient constructor(
     fun deleteNode(userName: String, projectId: String, repoName: String, path: String, authorization: String) {
         logger.info("delete,  projectId: $projectId, repoName: $repoName, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/delete/$projectId/$repoName/$path"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header("Authorization", authorization)
             .header(BK_REPO_UID, userName)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .delete()
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -420,7 +450,7 @@ class BkRepoClient constructor(
     fun move(userId: String, projectId: String, repoName: String, fromPath: String, toPath: String) {
         logger.info(
             "move, userId: $userId, projectId: $projectId, repoName: $repoName, fromPath: $fromPath," +
-                " toPath: $toPath"
+                    " toPath: $toPath"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/move"
         val requestData = UserNodeMoveCopyRequest(
@@ -432,13 +462,15 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -456,7 +488,7 @@ class BkRepoClient constructor(
     ) {
         logger.info(
             "copy, userId: $userId, fromProject: $fromProject, fromRepo: $fromRepo, fromPath: $fromPath," +
-                " toProject: $toProject, toRepo: $toRepo, toPath: $toPath"
+                    " toProject: $toProject, toRepo: $toRepo, toPath: $toPath"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/copy"
         val requestData = UserNodeMoveCopyRequest(
@@ -468,13 +500,15 @@ class BkRepoClient constructor(
             destFullPath = toPath,
             overwrite = true
         )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -488,13 +522,15 @@ class BkRepoClient constructor(
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/rename"
         val requestData = UserNodeRenameRequest(projectId, repoName, fromPath, toPath)
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(requestData)
                 )
             ).build()
@@ -504,10 +540,12 @@ class BkRepoClient constructor(
     fun mkdir(userId: String, projectId: String, repoName: String, path: String) {
         logger.info("mkdir, path: $path")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/$projectId/$repoName/$path"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(RequestBody.create(null, ""))
             .build()
         doRequest(request).resolveResponse<Response<Void>>()
@@ -521,10 +559,12 @@ class BkRepoClient constructor(
                 "%23"
             )
         }"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         return doRequest(request).resolveResponse<Response<NodeDetail>>()!!.data
@@ -565,7 +605,7 @@ class BkRepoClient constructor(
             metadata = mapOf(),
             page = 0,
             pageSize = 10000
-        ).map {
+        ).records.map {
             BkRepoFile(
                 fullPath = it.fullPath,
                 displayPath = it.fullPath,
@@ -594,13 +634,18 @@ class BkRepoClient constructor(
 
     fun downloadFile(userId: String, projectId: String, repoName: String, fullPath: String, destFile: File) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val headers = mutableMapOf(
+            BK_REPO_UID to userId,
+            AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
+        )
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        if (devopsToken != null) {
+            headers["X-DEVOPS-TOKEN"] = devopsToken
+        }
         OkhttpUtils.downloadFile(
             url,
             destFile,
-            mapOf(
-                BK_REPO_UID to userId,
-                AUTH_HEADER_DEVOPS_PROJECT_ID to projectId
-            )
+            headers
         )
     }
 
@@ -612,22 +657,24 @@ class BkRepoClient constructor(
         outputStream: OutputStream
     ) {
         val url = "${getGatewayUrl()}/bkrepo/api/service/generic/$projectId/$repoName/${fullPath.removePrefix("/")}"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder().url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
-            if (response.code() == 404) {
+            if (response.code == 404) {
                 logger.warn("file($url) not found")
                 throw NotFoundException("File is not exist!")
             }
             if (!response.isSuccessful) {
-                val responseContent = response.body()?.string()
-                logger.warn("download file($url) failed, code ${response.code()}, content: $responseContent")
-                throw RemoteServiceException("download file failed", response.code(), responseContent)
+                val responseContent = response.body?.string()
+                logger.warn("download file($url) failed, code ${response.code}, content: $responseContent")
+                throw RemoteServiceException("download file failed", response.code, responseContent)
             }
-            FileCopyUtils.copy(response.body()!!.byteStream(), outputStream)
+            FileCopyUtils.copy(response.body!!.byteStream(), outputStream)
         }
     }
 
@@ -684,7 +731,7 @@ class BkRepoClient constructor(
     ): List<File> {
         logger.info(
             "downloadFileByPattern, userId: $userId, projectId: $projectId, pipelineId: $pipelineId," +
-                " buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern, destPath: $destPath"
+                    " buildId: $buildId, repoName: $repoName, pathPattern: $pathPattern, destPath: $destPath"
         )
         val fileList = listFileByPattern(
             userId,
@@ -717,8 +764,8 @@ class BkRepoClient constructor(
     ): String {
         logger.info(
             "createShareUri, creatorId: $creatorId, projectId: $projectId, repoName: $repoName, " +
-                "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
-                "timeoutInSeconds: $timeoutInSeconds"
+                    "fullPath: $fullPath, downloadUsers: $downloadUsers, downloadIps: $downloadIps, " +
+                    "timeoutInSeconds: $timeoutInSeconds"
         )
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/share/$projectId/$repoName/${
             fullPath.removePrefix("/").replace(
@@ -732,13 +779,15 @@ class BkRepoClient constructor(
             expireSeconds = timeoutInSeconds
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, creatorId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -762,12 +811,14 @@ class BkRepoClient constructor(
             type = type
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder().url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -801,13 +852,15 @@ class BkRepoClient constructor(
             type = TokenType.DOWNLOAD
         )
         val requestBody = objectMapper.writeValueAsString(requestData)
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
@@ -823,10 +876,10 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByRepoAndMetadata, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
-                " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize"
+                    " fileNames: $fileNames, metadata: $metadata, page: $page, pageSize: $pageSize"
         )
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val ruleList = mutableListOf<Rule>(projectRule, Rule.QueryRule("folder", false, OperationType.EQ))
@@ -860,7 +913,7 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathEqOrNameMatchOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
                     " repoNames: $repoNames, filePaths: $filePaths, fileNames: $fileNames, metadata: $metadata," +
@@ -906,11 +959,11 @@ class BkRepoClient constructor(
         metadata: Map<String, String>, // eq and
         page: Int,
         pageSize: Int
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPathNamePairOrMetadataEqAnd, userId: $userId, projectId: $projectId," +
-                " repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata," +
-                " page: $page, pageSize: $pageSize"
+                    " repoNames: $repoNames, pathNamePairs: $pathNamePairs, metadata: $metadata," +
+                    " page: $page, pageSize: $pageSize"
         )
         val projectRule = Rule.QueryRule("projectId", projectId, OperationType.EQ)
         val repoRule = Rule.QueryRule("repoName", repoNames, OperationType.IN)
@@ -943,7 +996,7 @@ class BkRepoClient constructor(
         repoNames: List<String>,
         fullPathPatterns: List<String>,
         metadata: Map<String, String>
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "queryByPattern, userId: $userId, projectId: $projectId, repoNames: $repoNames," +
                     " fullPathPatterns: $fullPathPatterns, metadata: $metadata"
@@ -976,7 +1029,7 @@ class BkRepoClient constructor(
         includeFolders: Boolean = false,
         page: Int = 1,
         pageSize: Int = 10000
-    ): List<QueryNodeInfo> {
+    ): QueryData {
         logger.info(
             "listFileByQuery, userId: $userId, projectId: $projectId, repoName: $repoName," +
                     " path: $path, includeFolders: $includeFolders"
@@ -1008,12 +1061,14 @@ class BkRepoClient constructor(
         expires: Int
     ) {
         logger.info("update , userId:$userId, projectId:$projectId , repo:$repoName , path:$path , expires:$expires")
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/node/update/$projectId/$repoName/$path")
             .header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     objectMapper.writeValueAsString(mapOf("expires" to expires))
                 )
             )
@@ -1030,12 +1085,14 @@ class BkRepoClient constructor(
         metadata: Map<String, String>? = null
     ): PackageVersionInfo {
         val url = "${getGatewayUrl()}/bkrepo/api/service/docker/ext/version/detail/$projectId/$repoName" +
-            "?packageKey=$packageKey&version=$version"
-        val request = Request.Builder().url(url).header(BK_REPO_UID, userId).get().build()
+                "?packageKey=$packageKey&version=$version"
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
+        val request = Request.Builder().url(url).header(BK_REPO_UID, userId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }.get().build()
         return doRequest(request).resolveResponse<Response<PackageVersionInfo>>()!!.data!!
     }
 
-    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, rule: Rule, page: Int, pageSize: Int): QueryData {
         logger.info("query, userId: $userId, rule: $rule, page: $page, pageSize: $pageSize")
         val queryModel = QueryModel(
             page = PageLimit(page, pageSize),
@@ -1046,35 +1103,37 @@ class BkRepoClient constructor(
         return query(userId, projectId, queryModel)
     }
 
-    private fun query(userId: String, projectId: String, queryModel: QueryModel): List<QueryNodeInfo> {
+    private fun query(userId: String, projectId: String, queryModel: QueryModel): QueryData {
         logger.info("query, userId: $userId, queryModel: $queryModel")
         val url = "${getGatewayUrl()}/bkrepo/api/service/repository/api/node/search"
         val requestBody = objectMapper.writeValueAsString(queryModel)
         logger.info("requestBody: $requestBody")
+        val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url(url)
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
+            .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"),
+                    "application/json; charset=utf-8".toMediaTypeOrNull(),
                     requestBody
                 )
             ).build()
-        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!.records
+        return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
     private fun doRequest(request: Request): okhttp3.Response {
         try {
             return OkhttpUtils.doHttp(request)
         } catch (e: IOException) {
-            throw RemoteServiceException("request api[${request.url().url()}] error: ${e.localizedMessage}")
+            throw RemoteServiceException("request api[${request.url.toUrl()}] error: ${e.localizedMessage}")
         }
     }
 
     private inline fun <reified T> okhttp3.Response.resolveResponse(allowCode: Int? = null): T? {
         this.use {
-            val responseContent = this.body()!!.string()
+            val responseContent = this.body!!.string()
             if (this.isSuccessful) {
                 return objectMapper.readValue(responseContent, jacksonTypeRef<T>())
             }
@@ -1082,13 +1141,13 @@ class BkRepoClient constructor(
             val responseData = try {
                 objectMapper.readValue<Response<Void>>(responseContent)
             } catch (e: JacksonException) {
-                throw RemoteServiceException(responseContent, this.code())
+                throw RemoteServiceException(responseContent, this.code)
             }
             if (allowCode == responseData.code) {
                 logger.info("request bkrepo api failed but it can be allowed: ${responseData.message}")
                 return null
             }
-            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code())
+            throw RemoteServiceException(responseData.message ?: responseData.code.toString(), this.code)
         }
     }
 

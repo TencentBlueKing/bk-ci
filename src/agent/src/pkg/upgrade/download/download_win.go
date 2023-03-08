@@ -4,8 +4,9 @@
 package download
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/api"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/pkg/errors"
 )
 
 func DownloadUpgradeFile(saveDir string) (string, error) {
@@ -30,4 +31,8 @@ func DownloadJdkFile(saveDir string) (string, error) {
 	return api.DownloadUpgradeFile(
 		"jre/windows/jre.zip", saveDir+"/"+config.JdkClientFile,
 	)
+}
+
+func DownloadDockerInitFile(saveDir string) (string, error) {
+	return "", errors.New("not support windows use docker agent")
 }

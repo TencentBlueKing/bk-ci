@@ -36,7 +36,6 @@ import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.GitActionCommon
 import com.tencent.devops.stream.trigger.actions.GitBaseAction
-import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.ActionMetaData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonDataCommit
@@ -44,7 +43,6 @@ import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
 import com.tencent.devops.stream.trigger.git.pojo.ApiRequestRetryInfo
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerMatcher
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.parsers.triggerParameter.GithubRequestEventHandle
@@ -56,9 +54,8 @@ import org.slf4j.LoggerFactory
 
 class GithubTagPushActionGit(
     private val apiService: GithubApiService,
-    private val gitCheckService: GitCheckService,
-    private val streamTriggerCache: StreamTriggerCache
-) : GithubActionGit(apiService, gitCheckService, streamTriggerCache), GitBaseAction {
+    private val gitCheckService: GitCheckService
+) : GithubActionGit(apiService, gitCheckService), GitBaseAction {
 
     companion object {
         val logger = LoggerFactory.getLogger(GithubTagPushActionGit::class.java)
@@ -66,7 +63,6 @@ class GithubTagPushActionGit(
 
     override val metaData: ActionMetaData = ActionMetaData(streamObjectKind = StreamObjectKind.TAG_PUSH)
 
-    override lateinit var data: ActionData
     override fun event() = data.event as GithubPushEvent
 
     override val api: GithubApiService

@@ -37,6 +37,12 @@ backendImage:
   tag: __image_backend_tag__
   pullPolicy: IfNotPresent 
   pullSecrets: []
+frontendImage:
+  registry: __image_registry__
+  repository: bkci-frontend
+  tag: __image_frontend_tag__
+  pullPolicy: IfNotPresent 
+  pullSecrets: []
 
 # 日志采集配置
 bkLogConfig:
@@ -61,9 +67,26 @@ serviceMonitor:
 init:
   sql: true
   iam: true
-  turbo: true
+  turbo: false
   bkrepo: true
   defaultImage: true
+  plugin:
+    enabled: true
+    atoms:
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.12/checkout.zip
+      code: checkout
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.2/run-v1.0.2.zip
+      code: run
+    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.4/ci-SubPipelineExec.zip
+      code: SubPipelineExec
+    - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.1/uploadArtifact_en.zip
+      code: uploadArtifact
+    - url: https://github.com/TencentBlueKing/ci-uploadReport/releases/download/v1.0.1/uploadReport_en.zip
+      code: uploadReport
+    - url: https://github.com/TencentBlueKing/ci-AcrossProjectDistribution/releases/download/v1.1.1/AcrossProjectDistribution_en.zip
+      code: AcrossProjectDistribution
+    - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.2/downloadArtifact_en.zip
+      code: downloadArtifact
 
 # 多集群开关
 multiCluster:
@@ -94,7 +117,7 @@ mysql:
       datadir=/bitnami/mysql/data
       tmpdir=/opt/bitnami/mysql/tmp
       max_allowed_packet=16M
-      bind-address=0.0.0.0
+      bind-address=*
       pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
       log-error=/opt/bitnami/mysql/logs/mysqld.log
       character-set-server=UTF8
@@ -149,6 +172,26 @@ rabbitmq:
     default_permissions.configure = .*
     default_permissions.read = .*
     default_permissions.write = .*
+  # 如果想在ipv6环境中运行, 需要开启这些选项
+  # initContainers:
+  # - name: ipv6-init
+  #   image: "docker.io/busybox:1.33.1"
+  #   imagePullPolicy: IfNotPresent
+  #   volumeMounts:
+  #   - name: ipv6-cfg
+  #     mountPath: /ipv6
+  #   command: ['sh', '-c', 'echo "{inet6, true}." > /ipv6/erl_inetrc']
+  # extraVolumes:
+  # - name: ipv6-cfg
+  #   emptyDir: {}
+  # extraVolumeMounts:
+  # - name: ipv6-cfg
+  #   mountPath: /ipv6
+  # extraEnvVars:
+  # - name: RABBITMQ_SERVER_ADDITIONAL_ERL_ARGS
+  #   value: "-kernel inetrc '/ipv6/erl_inetrc' -proto_dist inet6_tcp"
+  # - name: RABBITMQ_CTL_ERL_ARGS
+  #   value: "-proto_dist inet6_tcp"
 influxdb:
   enabled: true
   image:
@@ -162,9 +205,13 @@ influxdb:
   persistence:
     size: 10Gi
   influxdb:
+    readinessProbe:
+      enabled: false
+    livenessProbe:
+      enabled: false
     initdbScripts: 
       creata_db.sh: |
-        influx -host 127.0.0.1 -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
+        influx -host localhost -port "$INFLUXDB_HTTP_PORT_NUMBER" -username "${INFLUXDB_ADMIN_USER}" -password "${INFLUXDB_ADMIN_USER_PASSWORD}" -execute "create database agentMetrix;"
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
@@ -181,13 +228,181 @@ mongodb:
     size: 10Gi
   initdbScripts:
     create_admin_user.sh: |
-      $MONGODB_BIN_DIR/mongo admin --host 127.0.0.1 --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
+      $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
       use db_turbo
       db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
       use db_quartz
       db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
       EOF
+kubernetes-manager:
+  # 是否部署kubernetes-manager
+  enabled: true
+  # 是否安装configmap
+  configmap:
+    enabled: true
 
+  # 初始化配置
+  init:
+    # 初始化数据库
+    sql: true
+
+  # 多集群开关
+  multiCluster:
+    enabled: false
+    # 兜底策略, 为空则不用兜底
+    defaultNamespace: ""
+
+  # 镜像配置
+  backendImage:
+    pullPolicy: IfNotPresent
+
+  # 内部数据源配置
+  mysql:
+    enabled: true
+    nameOverride: kubernetes-manager-mysql
+    image:
+      tag: 5.7.35
+    auth:
+      # 修改此选项必须删除mysql的pvc , 否则会创建mysql失败
+      rootPassword: blueking
+    primary:
+      persistence:
+        size: 10Gi
+      configuration: |-
+        [mysqld]
+        default_authentication_plugin=mysql_native_password
+        skip-name-resolve
+        explicit_defaults_for_timestamp
+        basedir=/opt/bitnami/mysql
+        plugin_dir=/opt/bitnami/mysql/lib/plugin
+        port=3306
+        socket=/opt/bitnami/mysql/tmp/mysql.sock
+        datadir=/bitnami/mysql/data
+        tmpdir=/opt/bitnami/mysql/tmp
+        max_allowed_packet=16M
+        bind-address=*
+        pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+        log-error=/opt/bitnami/mysql/logs/mysqld.log
+        character-set-server=UTF8
+        collation-server=utf8_general_ci
+        max_connections=2000
+        default-time-zone='+08:00'
+        [client]
+        port=3306
+        socket=/opt/bitnami/mysql/tmp/mysql.sock
+        default-character-set=UTF8
+        plugin_dir=/opt/bitnami/mysql/lib/plugin
+        [manager]
+        port=3306
+        socket=/opt/bitnami/mysql/tmp/mysql.sock
+        pid-file=/opt/bitnami/mysql/tmp/mysqld.pid
+
+  redis:
+    enabled: true
+    nameOverride: kubernetes-manager-redis
+    auth:
+      password: bluking
+    replica:
+      replicaCount: 1
+      persistence:
+        size: 10Gi
+    master:
+      persistence:
+        size: 10Gi
+
+  #外部数据库
+  externalMysql:
+    host: localhost
+    port: 3306
+    username: bkci
+    password: bkci
+  externalRedis:
+    host: localhost
+    port: 6379
+    password: bkci
+
+  # kubernetesManager service
+  service:
+    # 部署的service的类型: ClusterIP|NodePort|LoadBalancer
+    serviceType: NodePort
+    # 部署的service的annotations:
+    serviceAnnotations:
+    # 部署的service对外暴露的端口
+    port: 80
+    # nodeport模式下nodeport的端口
+    nodePort: 30004
+
+  # kubernetesManager Deployment
+  kubernetesManager:
+    enabled: true
+    replicas: 1
+    resources:
+      requests:
+        cpu: 100m
+        memory: 1000Mi
+      limits:
+        cpu: 500m
+        memory: 1500Mi
+    hostAliases: [ ]
+    containerSecurityContext:
+      enabled: false
+      runAsUser: 1001
+      runAsNonRoot: true
+    podSecurityContext:
+      enabled: false
+      fsGroup: 1001
+    nodeSelector: { }
+    tolerations: [ ]
+    priorityClassName: ""
+    autoscaling:
+      enabled: false
+      minReplicas: 1
+      maxReplicas: 3
+      targetCPU: 80
+      targetMemory: 80
+    # 使用的镜像
+    image: bkci/kubernetes-manager:0.0.31
+    # 决定每次helm部署时的构建机所在的命名空间，同时dockerInitSh也在那里，为空时默认为 {{ .Release.Namespace }}
+    builderNamespace:
+    redis:
+      db: 0
+    gateway:
+      # manager api服务的访问地址，给客户端返回登录调试地址需要使用
+      url: 127.0.0.1:30004
+    # 真实调度资源相关，依赖 scheduler-plugin
+    realResource:
+      # 监控构建机容器资源使用的 prometheus api地址， 字段为空则不开启realResource优化
+      # 注：集群内为 <service>.<namespace>.svc.cluster.local:<port>
+      prometheusUrl:
+    # 构建并推送镜像相关
+    buildAndPushImage:
+      image: bkci/gcr-kaniko-executor:v1.9.0
+      # 拉取kaniko需要的凭据，如果不填视为没有
+      pullImageRegistry:
+        server:
+        username:
+        password:
+    apiserver:
+      auth:
+        # 针对蓝盾流水线访问的超级权限token
+        apiToken:
+          key: Devops-Token
+          value: landun
+        rsaPrivateKey: |
+    volumeMount:
+      # 流水线构建工作空间和agent日志在容器内的挂载点
+      dataPath: /data/devops/workspace
+      logPath: /data/devops/logs
+  dockerInit:
+    # 是否使用当前chart的 dockerinit.sh
+    useDockerInit: true
+
+  kubeConfig:
+    # 是否使用配置的kubeConfig文件而不使用当前默认集群的client
+    useKubeConfig: false
+    # 配置的kubeConfig文件内容
+    content: |
+      # useKubeConfig开启时，这里需要填写kubeconfig
 
 #外部数据库
 externalMysql:
@@ -464,7 +679,7 @@ dispatch:
 
 # dispatchDocker Deployment
 dispatchDocker:
-  enabled: false
+  enabled: true
   replicas: 1
   podLabels: {}
   resources:
@@ -768,7 +983,10 @@ notify:
 
 # openapi Deployment
 openapi:
-  enabled: true
+  enabled: false
+  secret:
+    enabled: false
+    content: ""
   replicas: 1
   podLabels: {}
   resources:

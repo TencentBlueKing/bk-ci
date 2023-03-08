@@ -55,11 +55,10 @@ import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
+import com.tencent.devops.stream.service.StreamGitService
 import com.tencent.devops.stream.trigger.actions.BaseAction
-import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.trigger.actions.data.isStreamMr
-import com.tencent.devops.stream.trigger.actions.streamActions.StreamMrAction
 import com.tencent.devops.stream.trigger.exception.CommitCheck
 import com.tencent.devops.stream.trigger.exception.StreamTriggerBaseException
 import com.tencent.devops.stream.trigger.exception.StreamTriggerException
@@ -89,6 +88,7 @@ class StreamYamlBuild @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val streamTimerService: StreamTimerService,
     private val deleteEventService: DeleteEventService,
+    private val streamGitService: StreamGitService,
     private val streamTriggerCache: StreamTriggerCache,
     private val repoTriggerEventService: RepoTriggerEventService,
     private val pipelineResourceDao: GitPipelineResourceDao,
@@ -349,10 +349,7 @@ class StreamYamlBuild @Autowired constructor(
             asCodeSettings = action.data.context.pipelineAsCodeSettings
         )
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
-
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
         // 兼容定时触发，取流水线最近修改人
         if (updateLastModifyUser && action.getStartType() == StartType.TIME_TRIGGER) {
             modelParams.webHookParams[PIPELINE_START_TIME_TRIGGER_USER_ID] = action.data.getUserId()
@@ -399,9 +396,7 @@ class StreamYamlBuild @Autowired constructor(
         )
 
         // 判断是否更新最后修改人
-        val changeSet = if (action is GitBaseAction) action.getChangeSet() else emptySet()
-        val updateLastModifyUser = !changeSet.isNullOrEmpty() && changeSet.contains(pipeline.filePath) &&
-            !(action is StreamMrAction && action.checkMrForkAction())
+        val updateLastModifyUser = action.needUpdateLastModifyUser(pipeline.filePath)
         StreamBuildLock(
             redisOperation = redisOperation,
             gitProjectId = action.data.getGitProjectId().toLong(),
@@ -506,6 +501,10 @@ class StreamYamlBuild @Autowired constructor(
                 job.runsOn.poolName = getEnvName(action, job.runsOn.poolName, yaml.resource?.pools)
             }
         }
+        // 替换finally中的构建机
+        yaml.finally?.forEach { fina ->
+            fina.runsOn.poolName = getEnvName(action, fina.runsOn.poolName, yaml.resource?.pools)
+        }
         return yaml
     }
 
@@ -516,29 +515,25 @@ class StreamYamlBuild @Autowired constructor(
 
         pools.filter { !it.from.isNullOrBlank() && !it.name.isNullOrBlank() }.forEach label@{
             if (it.name == poolName) {
-                try {
-                    val repoNameAndPool = it.from!!.split("@")
-                    if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
-                        return@label
-                    }
+                val repoNameAndPool = it.from!!.split("@")
+                if (repoNameAndPool.size != 2 || repoNameAndPool[0].isBlank() || repoNameAndPool[1].isBlank()) {
+                    return@label
+                }
 
-                    val gitProjectInfo = streamTriggerCache.getAndSaveRequestGitProjectInfo(
-                        gitProjectKey = repoNameAndPool[0],
-                        action = action,
-                        getProjectInfo = action.api::getGitProjectInfo
-                    )!!
-
-                    val result = GitCommonUtils.getCiProjectId(
-                        "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
-                        streamGitConfig.getScmType()
+                val gitProjectInfo = streamGitService.getProjectInfo(repoNameAndPool[0])
+                    ?: throw StreamTriggerException(
+                        action,
+                        TriggerReason.PIPELINE_PREPARE_ERROR,
+                        listOf("跨项目引用第三方构建资源池错误: 获取远程仓库(${repoNameAndPool[0]})信息失败, 请检查填写是否正确")
                     )
 
-                    logger.info("StreamYamlBuild|getEnvName|envName|$result")
-                    return result
-                } catch (e: Exception) {
-                    logger.warn("StreamYamlBuild|getEnvName|$poolName|error", e)
-                    return poolName
-                }
+                val result = GitCommonUtils.getCiProjectId(
+                    "${gitProjectInfo.gitProjectId}@${repoNameAndPool[1]}",
+                    streamGitConfig.getScmType()
+                )
+
+                logger.info("StreamYamlBuild|getEnvName|envName|$result")
+                return result
             }
         }
         logger.info("StreamYamlBuild|getEnvName|no match. envName|$poolName")

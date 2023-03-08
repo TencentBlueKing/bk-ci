@@ -46,7 +46,7 @@ import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
-import com.tencent.devops.process.utils.PIPELINE_START_WEBHOOK_USER_ID
+import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
@@ -688,7 +688,11 @@ class QualityRuleCheckService @Autowired constructor(
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
+                val detailUrl = if (!record.logPrompt.isNullOrBlank()) {
+                    record.logPrompt!!
+                } else {
+                    codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
+                }
                 val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
                     .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)
@@ -768,7 +772,7 @@ class QualityRuleCheckService @Autowired constructor(
 
         // 获取通知用户集合
         val notifyUserSet = auditNotifyUserList.toMutableSet()
-        val triggerUserId = runtimeVariable?.get(PIPELINE_START_WEBHOOK_USER_ID)
+        val triggerUserId = runtimeVariable?.get(PIPELINE_START_USER_NAME)
             ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
         notifyUserSet.add(triggerUserId)
 
@@ -838,8 +842,8 @@ class QualityRuleCheckService @Autowired constructor(
 
         val groupUsers = qualityNotifyGroupService.serviceGetUsers(endNotifyGroupList)
         // 获取构建触发人
-        val triggerUserId = runtimeVariable?.get("BK_CI_START_WEBHOOK_USER_ID")
-            ?: runtimeVariable?.get("BK_CI_START_USER_ID") ?: ""
+        val triggerUserId = runtimeVariable?.get(PIPELINE_START_USER_NAME)
+            ?: runtimeVariable?.get(PIPELINE_START_USER_ID) ?: ""
         notifyUserSet.addAll(groupUsers.innerUsers)
         notifyUserSet.addAll(endNotifyUserList)
 

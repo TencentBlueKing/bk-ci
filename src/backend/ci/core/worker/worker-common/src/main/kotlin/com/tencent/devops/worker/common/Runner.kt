@@ -36,15 +36,14 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.BuildTaskStatus
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
-import com.tencent.devops.process.utils.PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
 import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.worker.common.env.BuildEnv
 import com.tencent.devops.worker.common.env.BuildType
+import com.tencent.devops.worker.common.env.DockerEnv
 import com.tencent.devops.worker.common.heartbeat.Heartbeat
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.service.EngineService
@@ -71,8 +70,7 @@ object Runner {
         logger.info("Start the worker ...")
         ErrorMsgLogUtil.init()
         var workspacePathFile: File? = null
-        // 启动成功, 报告process我已经启动了, #1613 如果这都失败了，则也无法向后台上报信息了。将由devopsAgent监控传递
-        val buildVariables = EngineService.setStarted()
+        val buildVariables = getBuildVariables()
         var failed = false
         try {
             BuildEnv.setBuildId(buildVariables.buildId)
@@ -91,7 +89,7 @@ object Runner {
             } finally {
                 LoggerService.stop()
                 LoggerService.archiveLogFiles()
-                EngineService.endBuild(buildVariables)
+                EngineService.endBuild(buildVariables.variables)
                 QuotaService.removeRunningAgent(buildVariables)
                 Heartbeat.stop()
             }
@@ -120,7 +118,7 @@ object Runner {
                     errorCode = ErrorCode.SYSTEM_WORKER_INITIALIZATION_ERROR
                 )
             )
-            EngineService.endBuild(buildVariables)
+            EngineService.endBuild(buildVariables.variables)
             throw ignore
         } finally {
             finally(workspacePathFile, failed)
@@ -128,6 +126,22 @@ object Runner {
             if (systemExit) {
                 exitProcess(0)
             }
+        }
+    }
+
+    private fun getBuildVariables(): BuildVariables {
+        try {
+            // 启动成功, 报告process我已经启动了
+            return EngineService.setStarted()
+        } catch (e: Exception) {
+            logger.warn("Set started catch unknown exceptions", e)
+            // 启动失败，尝试结束构建
+            try {
+                EngineService.endBuild(emptyMap(), DockerEnv.getBuildId())
+            } catch (e: Exception) {
+                logger.warn("End build catch unknown exceptions", e)
+            }
+            throw e
         }
     }
 
@@ -301,10 +315,7 @@ object Runner {
 
         val buildResult = taskDaemon.getBuildResult(
             isSuccess = false,
-            errorMessage = CommonUtils.interceptStringInLength(
-                string = message,
-                length = PIPELINE_TASK_MESSAGE_STRING_LENGTH_MAX
-            ),
+            errorMessage = message,
             errorType = errorType,
             errorCode = errorCode
         )

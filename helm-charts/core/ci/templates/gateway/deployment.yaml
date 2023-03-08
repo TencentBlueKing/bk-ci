@@ -49,7 +49,18 @@ spec:
       {{- end }}
       {{- if .Values.gateway.podSecurityContext.enabled }}
       securityContext: {{- omit .Values.gateway.podSecurityContext "enabled" | toYaml | nindent 8 }}
-      {{- end }}        
+      {{- end }}
+      initContainers:
+        - name: frontend
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.frontendImage "global" $) }}
+          volumeMounts:
+          - mountPath: /tmp/frontend
+            name: frontend
+          command:
+            - "/bin/sh"
+            - "-c"
+            - |
+              cp -r /data/workspace/frontend/* /tmp/frontend/
       containers:
         - name: gateway
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.gatewayImage "global" $) }}
@@ -81,8 +92,50 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
+          workingDir: /usr/local/openresty/nginx
+          command:
+            - "/bin/bash"
+            - "-c"
+            - |
+              mkdir -p ${BK_CI_LOGS_DIR}/nginx/ ${BK_CI_HOME};
+              chown nobody:nobody ${BK_CI_LOGS_DIR}/nginx/;
+              ln -s /data/workspace/frontend ${BK_CI_HOME}/frontend;
+              ./render_tpl -m . /data/workspace/templates/gateway*;
+              ./render_tpl -m . /data/workspace/templates/frontend*;
+              sbin/nginx -g 'daemon off;';
+          lifecycle:
+            preStop:
+              exec:
+                command:
+                  - sh
+                  - '-c'
+                  - sleep 10s && /usr/local/openresty/nginx/sbin/nginx -s quit
+          livenessProbe:
+            exec:
+              command:
+              - /bin/sh
+              - -c
+              - "[ -f /usr/local/openresty/nginx/run/nginx.pid ] && ps -A | grep nginx"
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /nginx_status
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+            failureThreshold: 3
+            successThreshold: 1
           envFrom:
             - configMapRef:
                 name: {{ include "bkci.names.fullname" . }}-gateway
-          workingDir: /usr/local/openresty/nginx/
+          volumeMounts:
+          - mountPath: /data/workspace/frontend
+            name: frontend
+      terminationGracePeriodSeconds: 40
+      volumes:
+      - name: frontend
+        emptyDir: {}
 {{- end -}}

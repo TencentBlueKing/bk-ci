@@ -27,6 +27,7 @@
 
 package com.tencent.devops.repository.resources
 
+import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.repository.api.OPRepositoryResource
 import com.tencent.devops.repository.service.OPRepositoryService
@@ -38,5 +39,27 @@ class OPRepositoryResourceImpl @Autowired constructor(
 ) : OPRepositoryResource {
     override fun addHashId() {
         opRepositoryService.addHashId()
+    }
+
+    override fun updateGitDomain(
+        oldGitDomain: String,
+        newGitDomain: String,
+        grayProject: String?,
+        grayWeight: Int?,
+        grayWhiteProject: String?
+    ): Result<Boolean> {
+        return Result(
+            opRepositoryService.updateGitDomain(
+                oldGitDomain = oldGitDomain,
+                newGitDomain = newGitDomain,
+                grayProject = grayProject,
+                grayWeight = grayWeight,
+                grayWhiteProject = grayWhiteProject
+            )
+        )
+    }
+
+    override fun updateGitProjectId() {
+        opRepositoryService.updateGitProjectId()
     }
 }

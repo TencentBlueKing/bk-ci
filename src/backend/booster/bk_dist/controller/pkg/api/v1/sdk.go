@@ -721,7 +721,7 @@ func (wj *workJob) ExecuteRemoteTask(req *dcSDK.BKDistCommand) (*dcSDK.BKDistRes
 }
 
 // ExecuteLocalTask do the task in local controller
-func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (*dcSDK.LocalTaskResult, error) {
+func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (int, string, *dcSDK.LocalTaskResult, error) {
 	var data []byte
 
 	dir := ""
@@ -752,17 +752,20 @@ func (wj *workJob) ExecuteLocalTask(commands []string, workdir string) (*dcSDK.L
 		User:         *u,
 	}, &data)
 
+	servercode := int(api.ServerErrOK)
+	servermessage := ""
 	resp, err := wj.sdk.sdk.requestRaw("POST", fmt.Sprintf(localExecURI, wj.sdk.id), data, true)
 	if err != nil {
-		return nil, err
+		return servercode, servermessage, nil, err
 	}
 
 	r := &LocalTaskExecuteResp{}
-	if err = r.Read(resp.Reply); err != nil {
-		return nil, err
+	httpcode, httpmessage, err := r.Read(resp.Reply)
+	if err != nil {
+		return httpcode, httpmessage, nil, err
 	}
 
-	return &dcSDK.LocalTaskResult{
+	return httpcode, httpmessage, &dcSDK.LocalTaskResult{
 		ExitCode: r.Result.ExitCode,
 		Stdout:   r.Result.Stdout,
 		Stderr:   r.Result.Stderr,

@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.webhook.pojo.code.CodeWebhookEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitIssueEvent
@@ -45,6 +46,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
+import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamPipelineBranchService
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.actions.data.EventCommonData
@@ -98,6 +100,8 @@ class EventActionFactory @Autowired constructor(
     private val mrConflictCheck: MergeConflictCheck,
     private val streamGitConfig: StreamGitConfig,
     private val streamTriggerTokenService: StreamTriggerTokenService,
+    private val streamBasicSettingService: StreamBasicSettingService,
+    private val redisOperation: RedisOperation,
     private val streamTriggerCache: StreamTriggerCache
 ) {
 
@@ -158,7 +162,14 @@ class EventActionFactory @Autowired constructor(
             action.data.setting = actionSetting
         }
         return if (actionContext.repoTrigger != null) {
-            StreamRepoTriggerAction(action, client, streamGitConfig, streamTriggerCache)
+            StreamRepoTriggerAction(
+                baseAction = action,
+                client = client,
+                streamGitConfig = streamGitConfig,
+                streamBasicSettingService = streamBasicSettingService,
+                redisOperation = redisOperation,
+                streamTriggerCache = streamTriggerCache
+            )
         } else action
     }
 
@@ -253,13 +264,11 @@ class EventActionFactory @Autowired constructor(
                         streamDeleteEventService = streamDeleteEventService,
                         gitPipelineResourceDao = gitPipelineResourceDao,
                         pipelineDelete = pipelineDelete,
-                        gitCheckService = gitCheckService,
-                        streamTriggerCache = streamTriggerCache
+                        gitCheckService = gitCheckService
                     )
                     event.ref.startsWith("refs/tags/") -> GithubTagPushActionGit(
                         apiService = githubApiService,
-                        gitCheckService = gitCheckService,
-                        streamTriggerCache = streamTriggerCache
+                        gitCheckService = gitCheckService
                     )
                     else -> return null
                 }
@@ -271,8 +280,8 @@ class EventActionFactory @Autowired constructor(
                     pipelineDelete = pipelineDelete,
                     gitCheckService = gitCheckService,
                     streamTriggerTokenService = streamTriggerTokenService,
-                    streamTriggerCache = streamTriggerCache,
-                    basicSettingDao = basicSettingDao, dslContext = dslContext
+                    basicSettingDao = basicSettingDao,
+                    dslContext = dslContext
                 )
             }
             else -> {

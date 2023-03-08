@@ -97,6 +97,3 @@ include (":core:schedule:api-schedule")
 include (":core:schedule:model-schedule")
 include (":core:schedule:biz-schedule")
 include (":core:schedule:boot-schedule")
-
-include (":core:coverity")
-include (":core:coverity:api-coverity")

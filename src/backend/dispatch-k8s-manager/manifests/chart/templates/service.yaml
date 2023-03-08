@@ -1,0 +1,53 @@
+{{ if .Values.kubernetesManager.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: kubernetes-manager
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+  {{- if .Values.service.serviceAnnotations }}
+  annotations:
+    {{- range $key, $val := .Values.service.serviceAnnotations }}
+    {{ $key }}: {{ $val  }}
+    {{- end }}
+  {{- end }}
+spec:
+  {{- if eq .Values.service.serviceType "ClusterIP" }}
+  type: ClusterIP
+  selector:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 80
+      protocol: TCP
+  {{- else if eq .Values.service.serviceType "LoadBalancer" }}
+  type: LoadBalancer
+  selector:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 80
+      protocol: TCP
+  {{- else }}
+  type: NodePort
+  selector:
+    app.kubernetes.io/instance: kubernetes-manager
+    app.kubernetes.io/component: kubernetes-manager
+    app.kubernetes.io/name: kubernetes-manager
+  ports:
+    - name: http
+      port: {{ .Values.service.port }}
+      targetPort: 80
+      nodePort: {{ .Values.service.nodePort }}
+      protocol: TCP
+  {{- end }}
+{{- end -}}

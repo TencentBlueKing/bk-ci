@@ -37,10 +37,9 @@ import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
 import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
-import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.repository.pojo.git.GitProjectInfo
+import com.tencent.devops.repository.pojo.git.GitOperationFile
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.oauth.GitToken
@@ -55,6 +54,7 @@ import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
+import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
 import com.tencent.devops.scm.pojo.GitRepositoryResp
@@ -745,6 +745,21 @@ interface ServiceGitResource {
         tokenType: TokenTypeEnum
     ): Result<List<Commit>>
 
+    @ApiOperation("开启git仓库ci")
+    @GET
+    @Path("/stream/gitEnableCi")
+    fun enableCi(
+        @ApiParam(value = "仓库id或编码过的仓库path")
+        @QueryParam("projectName")
+        projectName: String,
+        @QueryParam("token")
+        token: String,
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum,
+        @QueryParam("enable")
+        enable: Boolean? = true
+    ): Result<Boolean>
+
     @ApiOperation("工蜂创建文件")
     @POST
     @Path("/gitcode/create/file")
@@ -756,7 +771,7 @@ interface ServiceGitResource {
         @QueryParam("token")
         token: String,
         @ApiParam(value = "创建文件内容")
-        gitCreateFile: GitCreateFile,
+        gitOperationFile: GitOperationFile,
         @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
         @QueryParam("tokenType")
         tokenType: TokenTypeEnum

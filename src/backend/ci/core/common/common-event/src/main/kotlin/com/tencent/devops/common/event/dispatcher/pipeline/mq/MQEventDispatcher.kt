@@ -27,6 +27,8 @@
 
 package com.tencent.devops.common.event.dispatcher.pipeline.mq
 
+import com.rabbitmq.client.ChannelContinuationTimeoutException
+import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.IPipelineEvent
@@ -43,32 +45,43 @@ class MQEventDispatcher constructor(
     private val rabbitTemplate: RabbitTemplate
 ) : PipelineEventDispatcher {
 
+    @SuppressWarnings("NestedBlockDepth")
     override fun dispatch(vararg events: IPipelineEvent) {
         events.forEach { event ->
             try {
-                val eventType = event::class.java.annotations.find { s -> s is Event } as Event
-                val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
-                    if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
-                        eventType.routeKey + event.routeKeySuffix
-                    } else {
-                        eventType.routeKey
-                    }
-//                logger.info("dispatch the event|Route=$routeKey|exchange=${eventType.exchange}" +
-//                    "|source=(${event.javaClass.name}:${event.source}-${event.actionType}-${event.pipelineId})")
-                rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
-                    // 事件中的变量指定
-                    when {
-                        event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
-                        eventType.delayMills > 0 -> // 事件类型固化默认值
-                            message.messageProperties.setHeader("x-delay", eventType.delayMills)
-                        else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
-                            message.messageProperties.expiration = "28800000"
-                    }
-                    message
-                }
+                send(event)
             } catch (ignored: Exception) {
-                logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                if (ignored.cause is ChannelContinuationTimeoutException) {
+                    logger.warn("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                    val cause = ignored.cause as ChannelContinuationTimeoutException
+                    if (cause.method is AMQImpl.Channel.Open) {
+                        send(event)
+                    }
+                } else {
+                    logger.error("[ENGINE_MQ_SEVERE]Fail to dispatch the event($event)", ignored)
+                }
             }
+        }
+    }
+
+    private fun send(event: IPipelineEvent) {
+        val eventType = event::class.java.annotations.find { s -> s is Event } as Event
+        val routeKey = // 根据 routeKey+后缀 实现动态变换路由Key
+            if (event is IPipelineRoutableEvent && !event.routeKeySuffix.isNullOrBlank()) {
+                eventType.routeKey + event.routeKeySuffix
+            } else {
+                eventType.routeKey
+            }
+        rabbitTemplate.convertAndSend(eventType.exchange, routeKey, event) { message ->
+            // 事件中的变量指定
+            when {
+                event.delayMills > 0 -> message.messageProperties.setHeader("x-delay", event.delayMills)
+                eventType.delayMills > 0 -> // 事件类型固化默认值
+                    message.messageProperties.setHeader("x-delay", eventType.delayMills)
+                else -> // 非延时消息的则8小时后过期，防止意外发送的消息无消费端ACK处理从而堆积过多消息导致MQ故障
+                    message.messageProperties.expiration = "28800000"
+            }
+            message
         }
     }
 

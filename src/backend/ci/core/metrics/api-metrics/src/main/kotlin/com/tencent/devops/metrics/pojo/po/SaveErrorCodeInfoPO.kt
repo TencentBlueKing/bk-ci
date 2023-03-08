@@ -37,7 +37,7 @@ data class SaveErrorCodeInfoPO(
     val id: Long,
     @ApiModelProperty("错误类型")
     val errorType: Int,
-    @ApiModelProperty("错误次数")
+    @ApiModelProperty("错误码")
     val errorCode: Int,
     @ApiModelProperty("错误描述")
     val errorMsg: String? = null,

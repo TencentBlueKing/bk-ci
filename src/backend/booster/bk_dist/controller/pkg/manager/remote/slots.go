@@ -22,9 +22,10 @@ import (
 )
 
 type lockWorkerMessage struct {
-	jobUsage dcSDK.JobUsage
-	toward   *dcProtocol.Host
-	result   chan *dcProtocol.Host
+	jobUsage  dcSDK.JobUsage
+	toward    *dcProtocol.Host
+	result    chan *dcProtocol.Host
+	largeFile string
 }
 type lockWorkerChan chan lockWorkerMessage
 
@@ -33,7 +34,8 @@ type usageWorkerSet struct {
 	occupied int
 }
 
-func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *resource {
+// func newResource(hl []*dcProtocol.Host, usageLimit map[dcSDK.JobUsage]int) *resource {
+func newResource(hl []*dcProtocol.Host) *resource {
 	wl := make([]*worker, 0, len(hl))
 	total := 0
 	for _, h := range hl {
@@ -156,15 +158,16 @@ func (wr *resource) Handle(ctx context.Context) {
 }
 
 // Lock get an usage lock, success with true, failed with false
-func (wr *resource) Lock(usage dcSDK.JobUsage) *dcProtocol.Host {
+func (wr *resource) Lock(usage dcSDK.JobUsage, f string) *dcProtocol.Host {
 	if !wr.handling {
 		return nil
 	}
 
 	msg := lockWorkerMessage{
-		jobUsage: usage,
-		toward:   nil,
-		result:   make(chan *dcProtocol.Host, 1),
+		jobUsage:  usage,
+		toward:    nil,
+		result:    make(chan *dcProtocol.Host, 1),
+		largeFile: f,
 	}
 
 	// send a new lock request
@@ -310,14 +313,63 @@ func (wr *resource) getWorkerWithMostFreeSlots() *worker {
 	return w
 }
 
-func (wr *resource) occupyWorkerSlots() *dcProtocol.Host {
+// 大文件优先
+func (wr *resource) getWorkerLargeFileFirst(f string) *worker {
+	var w *worker
+	max := 0
+	inlargequeue := false
+	for _, worker := range wr.worker {
+		if worker.disabled {
+			continue
+		}
+
+		free := worker.totalSlots - worker.occupiedSlots
+
+		// 在资源空闲时，大文件优先
+		if free > worker.totalSlots/2 && worker.hasFile(f) {
+			// if free > 0 && worker.hasFile(f) {
+			if !inlargequeue { // first in large queue
+				inlargequeue = true
+				max = free
+				w = worker
+			} else {
+				if free >= max {
+					max = free
+					w = worker
+				}
+			}
+			continue
+		}
+
+		if free >= max && !inlargequeue {
+			max = free
+			w = worker
+		}
+	}
+	if w == nil {
+		w = wr.worker[0]
+	}
+
+	if f != "" && !w.hasFile(f) {
+		w.largefiles = append(w.largefiles, f)
+	}
+
+	return w
+}
+
+func (wr *resource) occupyWorkerSlots(f string) *dcProtocol.Host {
 	wr.workerLock.Lock()
 	defer wr.workerLock.Unlock()
 
-	worker := wr.getWorkerWithMostFreeSlots()
-	_ = worker.occupySlot()
+	var w *worker
+	if f == "" {
+		w = wr.getWorkerWithMostFreeSlots()
+	} else {
+		w = wr.getWorkerLargeFileFirst(f)
+	}
+	_ = w.occupySlot()
 
-	return worker.host
+	return w.host
 }
 
 func (wr *resource) freeWorkerSlots(host *dcProtocol.Host) {
@@ -381,7 +433,7 @@ func (wr *resource) getSlot(msg lockWorkerMessage) {
 			wr.occupiedSlots++
 			blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot available",
 				wr.totalSlots, wr.occupiedSlots)
-			msg.result <- wr.occupyWorkerSlots()
+			msg.result <- wr.occupyWorkerSlots(msg.largeFile)
 			satisfied = true
 		}
 	}
@@ -389,8 +441,9 @@ func (wr *resource) getSlot(msg lockWorkerMessage) {
 	if !satisfied {
 		blog.Infof("remote slot: total slots:%d occupied slots:%d, remote slot not available",
 			wr.totalSlots, wr.occupiedSlots)
-		wr.waitingList.PushBack(usage)
-		wr.waitingList.PushBack(msg.result)
+		// wr.waitingList.PushBack(usage)
+		// wr.waitingList.PushBack(msg.result)
+		wr.waitingList.PushBack(&msg)
 	}
 }
 
@@ -403,26 +456,30 @@ func (wr *resource) putSlot(msg lockWorkerMessage) {
 
 	// check whether other waiting is satisfied now
 	if wr.waitingList.Len() > 0 {
-		index := 0
+		// index := 0
 		for e := wr.waitingList.Front(); e != nil; e = e.Next() {
-			if index%2 == 0 {
-				usage := e.Value.(dcSDK.JobUsage)
-				set := wr.getUsageSet(usage)
-				if wr.isIdle(set) {
-					set.occupied++
-					wr.occupiedSlots++
+			// if index%2 == 0 {
+			msg := e.Value.(*lockWorkerMessage)
+			// usage := e.Value.(dcSDK.JobUsage)
+			// set := wr.getUsageSet(usage)
+			set := wr.getUsageSet(msg.jobUsage)
+			if wr.isIdle(set) {
+				set.occupied++
+				wr.occupiedSlots++
 
-					chanElement := e.Next()
-					chanElement.Value.(chan *dcProtocol.Host) <- wr.occupyWorkerSlots()
+				msg.result <- wr.occupyWorkerSlots(msg.largeFile)
 
-					// delete this element
-					wr.waitingList.Remove(e)
-					wr.waitingList.Remove(chanElement)
+				// chanElement := e.Next()
+				// chanElement.Value.(chan *dcProtocol.Host) <- wr.occupyWorkerSlots()
 
-					break
-				}
+				// delete this element
+				wr.waitingList.Remove(e)
+				// wr.waitingList.Remove(chanElement)
+
+				break
 			}
-			index++
+			// }
+			// index++
 		}
 	}
 }
@@ -434,6 +491,9 @@ type worker struct {
 	host          *dcProtocol.Host
 	totalSlots    int
 	occupiedSlots int
+	// > 100MB
+	largefiles         []string
+	largefiletotalsize uint64
 }
 
 func (wr *worker) occupySlot() error {
@@ -446,6 +506,18 @@ func (wr *worker) freeSlot() error {
 	return nil
 }
 
+func (wr *worker) hasFile(f string) bool {
+	if len(wr.largefiles) > 0 {
+		for _, v := range wr.largefiles {
+			if v == f {
+				return true
+			}
+		}
+	}
+
+	return false
+}
+
 // by tming to limit local memory usage
 func newMemorySlot(maxSlots int64) *memorySlot {
 	minmemroy := int64(2 * 1024 * 1024 * 1024) // 2GB
@@ -453,9 +525,11 @@ func newMemorySlot(maxSlots int64) *memorySlot {
 	if maxSlots <= 0 {
 		v, err := mem.VirtualMemory()
 		if err != nil {
+			blog.Infof("memory slot: failed to get virtaul memory with err:%v", err)
 			maxSlots = int64((runtime.NumCPU() - 2)) * 1024 * 1024 * 1024
 		} else {
-			maxSlots = int64(v.Total) - minmemroy
+			// maxSlots = int64(v.Total) - minmemroy
+			maxSlots = int64(v.Total) / 2
 		}
 	}
 

@@ -89,7 +89,7 @@
                     </span>
                 </p>
 
-                <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-if="buildDetail.status === 'RUNNING'">
+                <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-if="['RUNNING', 'PREPARE_ENV', 'QUEUE', 'LOOP_WAITING', 'CALL_WAITING', 'REVIEWING', 'TRIGGER_REVIEWING'].includes(buildDetail.status)">
                     <bk-button class="detail-button" @click="cancleBuild" :loading="isOperating" :disabled="!curPipeline.enabled || !permission">{{$t('pipeline.cancelBuild')}}</bk-button>
                 </div>
                 <div v-bk-tooltips="computedOptToolTip" class="nav-button" v-else>
@@ -362,7 +362,7 @@
             &.executing {
                 font-size: 14px;
             }
-            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock {
+            &.icon-exclamation, &.icon-exclamation-triangle, &.icon-clock, &.stream-reviewing-2 {
                 font-size: 24px;
             }
             &.running {

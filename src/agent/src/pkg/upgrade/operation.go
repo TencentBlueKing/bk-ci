@@ -28,19 +28,21 @@
 package upgrade
 
 import (
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
-	"github.com/pkg/errors"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/command"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/fileutil"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+
+	"github.com/pkg/errors"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/command"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/fileutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 // UninstallAgent 卸载
@@ -63,7 +65,7 @@ func runUpgrader(action string) error {
 	scripPath := systemutil.GetUpgradeDir() + "/" + config.GetClientUpgraderFile()
 
 	if !systemutil.IsWindows() {
-		err := os.Chmod(scripPath, 0777)
+		err := systemutil.Chmod(scripPath, 0777)
 		if err != nil {
 			logs.Error("[agentUpgrade]|chmod failed: ", err.Error())
 			return errors.New("chmod failed: ")
@@ -88,24 +90,30 @@ func runUpgrader(action string) error {
 }
 
 // DoUpgradeOperation 调用升级程序
-func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged bool) error {
-	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", agentChanged, ", work agent changed: ", workAgentChanged, ", jdk agent changed: ", jdkChanged)
+func DoUpgradeOperation(changeItems upgradeChangeItem) error {
+	logs.Info("[agentUpgrade]|start upgrade, agent changed: ", changeItems.AgentChanged,
+		", work agent changed: ", changeItems.WorkAgentChanged,
+		", jdk agent changed: ", changeItems.JdkChanged,
+		", docker init file changed: ", changeItems.DockerInitFile,
+	)
 
-	if !agentChanged && !workAgentChanged && !jdkChanged {
+	if changeItems.checkNoChange() {
 		logs.Info("[agentUpgrade]|no change to upgrade, skip")
 		return nil
 	}
 
 	// 进入升级逻辑时防止agent接构建任务，同时确保无任何构建任务在进行
-	job.GBuildManager.Lock.Lock()
+	job.BuildTotalManager.Lock.Lock()
 	defer func() {
-		job.GBuildManager.Lock.Unlock()
+		job.BuildTotalManager.Lock.Unlock()
 	}()
-	if job.GBuildManager.GetPreInstancesCount() > 0 && job.GBuildManager.GetInstanceCount() > 0 {
+	if job.GBuildManager.GetPreInstancesCount() > 0 || job.GBuildManager.GetInstanceCount() > 0 ||
+		job.GBuildDockerManager.GetInstanceCount() > 0 {
+		logs.Info("agent has upgrade item, but has job running, so skip.")
 		return nil
 	}
 
-	if jdkChanged {
+	if changeItems.JdkChanged {
 		logs.Info("[agentUpgrade]|jdk changed, replace jdk file")
 
 		workDir := systemutil.GetWorkDir()
@@ -119,38 +127,40 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged boo
 			return errors.Wrap(err, "upgrade jdk copy new jdk file error")
 		}
 
-		// 解压缩为一个临时文件
+		// 解压缩为一个新文件取代旧文件路径
 		jdkTmpName := "jdk" + strconv.FormatInt(time.Now().Unix(), 10)
 		err = fileutil.Unzip(workDir+"/"+config.JdkClientFile, workDir+"/"+jdkTmpName)
 		if err != nil {
 			return errors.Wrap(err, "upgrade jdk unzip error")
 		}
 
-		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的
-		files, err := ioutil.ReadDir(workDir)
-		if err != nil {
-			return errors.Wrap(err, "upgrade jdk remove old jdk file error")
-		}
-		for _, file := range files {
-			if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
-				file.Name() != jdkTmpName {
-				err = os.RemoveAll(workDir + "/" + file.Name())
-				if err != nil {
-					return errors.Wrap(err, "upgrade jdk remove old jdk file error")
+		// 删除老的jdk文件，以及之前解压缩或者改名失败残留的，异步删除，删除失败也不影响主进程
+		go func() {
+			files, err := ioutil.ReadDir(workDir)
+			if err != nil {
+				logs.Error("upgrade jdk remove old jdk file error", err)
+				return
+			}
+			for _, file := range files {
+				if (strings.HasPrefix(file.Name(), "jdk") || strings.HasPrefix(file.Name(), "jre")) &&
+					file.Name() != jdkTmpName {
+					err = os.RemoveAll(workDir + "/" + file.Name())
+					if err != nil {
+						logs.Error("upgrade jdk remove old jdk file error", err)
+					}
 				}
 			}
-		}
+		}()
 
-		// 改名临时目录为jdk
-		err = os.Rename(workDir+"/"+jdkTmpName, workDir+"/jdk")
-		if err != nil {
-			return errors.Wrap(err, "upgrade jdk remove old jdk file error")
-		}
+		// 修改启动worker的jdk路径
+		config.SaveJdkDir(workDir + "/" + jdkTmpName)
 
 		logs.Info("[agentUpgrade]|replace jdk file done")
+	} else {
+		logs.Info("[agentUpgrade]|jdk not changed, skip agent upgrade")
 	}
 
-	if workAgentChanged {
+	if changeItems.WorkAgentChanged {
 		logs.Info("[agentUpgrade]|work agent changed, replace work agent file")
 		_, err := fileutil.CopyFile(
 			systemutil.GetUpgradeDir()+"/"+config.WorkAgentFile,
@@ -163,9 +173,11 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged boo
 		logs.Info("[agentUpgrade]|replace agent file done")
 
 		config.GAgentEnv.SlaveVersion = config.DetectWorkerVersion()
+	} else {
+		logs.Info("[agentUpgrade]|worker not changed, skip agent upgrade")
 	}
 
-	if agentChanged {
+	if changeItems.AgentChanged {
 		logs.Info("[agentUpgrade]|agent changed, start upgrader")
 		err := runUpgrader(config.ActionUpgrade)
 		if err != nil {
@@ -173,6 +185,27 @@ func DoUpgradeOperation(agentChanged bool, workAgentChanged bool, jdkChanged boo
 		}
 	} else {
 		logs.Info("[agentUpgrade]|agent not changed, skip agent upgrade")
+	}
+
+	if changeItems.DockerInitFile {
+		logs.Info("[agentUpgrade]|docker init file changed, replace docker init file")
+		_, err := fileutil.CopyFile(
+			systemutil.GetUpgradeDir()+"/"+config.DockerInitFile,
+			config.GetDockerInitFilePath(),
+			true)
+		if err != nil {
+			logs.Error("[agentUpgrade]|replace work docker init file failed: ", err.Error())
+			return errors.New("replace work docker init file failed")
+		}
+		// 授予文件可执行权限，每次升级后赋予权限可以减少直接在启动时赋予的并发赋予的情况
+		if err = systemutil.Chmod(config.GetDockerInitFilePath(), os.ModePerm); err != nil {
+			logs.Error("[agentUpgrade]|chmod work docker init file failed: ", err.Error())
+			return errors.New("chmod work docker init file failed")
+		}
+
+		logs.Info("[agentUpgrade]|replace docker init file done")
+	} else {
+		logs.Info("[agentUpgrade]|docker init file not changed, skip agent upgrade")
 	}
 
 	return nil

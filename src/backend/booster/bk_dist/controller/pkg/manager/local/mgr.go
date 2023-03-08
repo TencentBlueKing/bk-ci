@@ -58,6 +58,13 @@ type Mgr struct {
 
 // Init do the initialization for local manager
 func (m *Mgr) Init() {
+	blog.Infof("local: init for work:%s", m.work.ID())
+}
+
+// Start start resource slots for local manager
+func (m *Mgr) Start() {
+	blog.Infof("local: start for work:%s", m.work.ID())
+
 	settings := m.work.Basic().Settings()
 	m.resource = newResource(settings.LocalTotalLimit, settings.UsageLimit)
 
@@ -128,8 +135,10 @@ func (m *Mgr) ExecuteTask(
 	}
 
 	// 没有申请到资源(或资源已释放) || 申请到资源但都失效了
-	if !m.work.Resource().HasAvailableWorkers() ||
-		m.work.Remote().TotalSlots() <= 0 {
+	// if !m.work.Resource().HasAvailableWorkers() ||
+	// 	m.work.Remote().TotalSlots() <= 0 {
+	// !! 去掉申请到资源但失效的情况，因为该情况很可能是网络原因，再加资源也没有意义
+	if !m.work.Resource().HasAvailableWorkers() {
 		// check whether this task need remote worker,
 		// apply resource when need, if not in appling, apply then
 		if e.needRemoteResource() {

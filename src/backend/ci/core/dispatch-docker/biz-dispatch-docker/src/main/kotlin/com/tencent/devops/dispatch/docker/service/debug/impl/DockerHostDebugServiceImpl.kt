@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
@@ -52,7 +53,7 @@ import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.model.dispatch.tables.records.TDispatchPipelineDockerBuildRecord
 import com.tencent.devops.store.api.container.ServiceContainerAppResource
 import com.tencent.devops.store.pojo.app.BuildEnv
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -164,12 +165,15 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val request = dockerHostProxyService.getDockerHostProxyRequest(
                 dockerHostUri = "/api/docker/debug/end",
                 dockerHostIp = dockerIp
-            ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+            ).post(RequestBody.create(
+                "application/json; charset=utf-8".toMediaTypeOrNull(),
+                JsonUtil.toJson(requestBody)
+            ))
                 .build()
 
-            LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url()}")
+            LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp url: ${request.url}")
             OkhttpUtils.doLongHttp(request).use { resp ->
-                val responseBody = resp.body()!!.string()
+                val responseBody = resp.body!!.string()
                 LOG.info("[$projectId|$pipelineId] Stop debug Docker VM $dockerIp responseBody: $responseBody")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
                 when {
@@ -202,7 +206,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         ).get().build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 return response["data"] as Boolean
@@ -229,7 +233,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         ).get().build()
 
         OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             if (response["status"] == 0) {
                 return response["data"] as String
@@ -331,7 +335,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String?,
-        vmSeqId: String
+        vmSeqId: String,
+        dockerRoutingType: DockerRoutingType
     ): String {
         LOG.info("[$userId]| start debug, pipelineId: $pipelineId, vmSeqId: $vmSeqId")
         // 查询是否已经有启动调试容器了，如果有，直接返回成功
@@ -416,7 +421,8 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         vmSeqId: String,
-        containerName: String
+        containerName: String,
+        dockerRoutingType: DockerRoutingType
     ): Boolean {
         return deleteDebug(pipelineId, vmSeqId).data ?: false
     }
@@ -434,12 +440,12 @@ class DockerHostDebugServiceImpl @Autowired constructor(
         val request = dockerHostProxyService.getDockerHostProxyRequest(
             dockerHostUri = "/api/docker/debug/start",
             dockerHostIp = dockerIp
-        ).post(RequestBody.create(MediaType.parse("application/json; charset=utf-8"), JsonUtil.toJson(requestBody)))
+        ).post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), JsonUtil.toJson(requestBody)))
             .build()
 
-        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url()}")
+        LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp url: ${request.url}")
         OkhttpUtils.doLongHttp(request).use { resp ->
-            val responseBody = resp.body()!!.string()
+            val responseBody = resp.body!!.string()
             LOG.info("[$projectId|$pipelineId] Start debug Docker VM $dockerIp responseBody: $responseBody")
             val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
             when {

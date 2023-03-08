@@ -23,11 +23,11 @@ object KubernetesUtils {
     /**
      * 获取服务发现的名称
      */
-    fun getSvrName(serviceName: String): String {
+    fun getSvrName(serviceName: String, namespace: String): String {
         return if (multiCluster) {
-            "$serviceName-$chartName-$serviceName"
+            "$serviceName-$chartName-$serviceName.$namespace"
         } else {
-            "$releaseName-$chartName-$serviceName"
+            "$releaseName-$chartName-$serviceName.$namespace"
         }
     }
 

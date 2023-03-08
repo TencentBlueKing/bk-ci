@@ -71,5 +71,7 @@ data class IndicatorData(
     @ApiModelProperty("指标标签，用于前端区分控制")
     val tag: String?,
     @ApiModelProperty("是否启用")
-    val enable: Boolean?
+    val enable: Boolean?,
+    @ApiModelProperty("指标附加信息")
+    val logPrompt: String?
 )

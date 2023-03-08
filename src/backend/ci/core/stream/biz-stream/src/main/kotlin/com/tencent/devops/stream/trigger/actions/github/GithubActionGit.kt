@@ -35,7 +35,6 @@ import com.tencent.devops.stream.trigger.actions.GitBaseAction
 import com.tencent.devops.stream.trigger.actions.data.ActionData
 import com.tencent.devops.stream.trigger.git.pojo.github.GithubCred
 import com.tencent.devops.stream.trigger.git.service.GithubApiService
-import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
 import com.tencent.devops.stream.trigger.pojo.enums.StreamCommitCheckState
 import com.tencent.devops.stream.trigger.pojo.enums.toGitState
 import com.tencent.devops.stream.trigger.service.GitCheckService
@@ -46,8 +45,7 @@ import com.tencent.devops.stream.trigger.service.GitCheckService
  */
 abstract class GithubActionGit(
     override val api: GithubApiService,
-    private val gitCheckService: GitCheckService,
-    private val streamTriggerCache: StreamTriggerCache
+    private val gitCheckService: GitCheckService
 ) : GitBaseAction {
     override lateinit var data: ActionData
 

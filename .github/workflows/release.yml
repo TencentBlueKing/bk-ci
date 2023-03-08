@@ -7,7 +7,7 @@ on:
 jobs:
   frontend:
     name: Build frontend
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up Node.js
@@ -34,7 +34,7 @@ jobs:
 
   agent:
     name: Build agent on ${{ matrix.os }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/setup-go@v2
         with:
@@ -50,7 +50,7 @@ jobs:
   backend:
     needs: [frontend, agent]
     name: Build backend and release
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
@@ -114,7 +114,7 @@ jobs:
   cloudNative:
     needs: [frontend, agent]
     name: Build image and helm chart
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     services:
       mysql:
         image: mysql:8.0
@@ -141,7 +141,7 @@ jobs:
       - name: Gradle Build Backend Service -- CLOUD NATIVE
         working-directory: src/backend/ci
         run: |
-          ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=K8S \
+          ./gradlew clean test build -x test :core:worker:worker-agent:shadowJar -Ddevops.assemblyMode=KUBERNETES \
           -DmysqlURL=127.0.0.1:${{ job.services.mysql.ports['3306'] }} -DmysqlUser=root -DmysqlPasswd=root --no-daemon
       - name: Get Agent - CLOUD NATIVE
         uses: actions/download-artifact@v1
@@ -157,7 +157,7 @@ jobs:
         run: |
           version="$(basename $GITHUB_REF)"
           echo "::set-output name=version::$version"
-          ci_ms_wip="sign,monitoring" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
+          ci_ms_wip="sign" ci_pkg_dir=/dev/shm/ci-docker ./scripts/packager-ci.sh "$version" bkci-docker.tar.gz
       - name: Setup Docker -- CLOUD NATIVE
         uses: docker-practice/actions-setup-docker@master
       - name: Create Docker Image -- CLOUD NATIVE
@@ -168,17 +168,18 @@ jobs:
           ./0.get_release.sh
           ./1.build_gateway_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
           ./2.build_backend_bkci_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
+          ./3.build_frontend_image.sh ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version
       - name: Setup Python -- CLOUD NATIVE
         uses: actions/setup-python@v4
         with:
-          python-version: "3.6.8"
+          python-version: "3.7.15"
       - name: Generate Helm Chart -- CLOUD NATIVE
         working-directory: helm-charts/core/ci
         run: |
           version="$(basename $GITHUB_REF)"
           echo 'python build'
           pip install pyhumps
-          python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version
+          python build_chart.py ${{ secrets.DOCKER_IMAGE_REGISTRY }} $version $version $version
       - name: Install Helm -- CLOUD NATIVE
         uses: azure/setup-helm@v1
         with:
@@ -196,7 +197,7 @@ jobs:
 
   codecc:
     name: Build CodeCC
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -236,7 +237,7 @@ jobs:
 
   bkrepo:
     name: Build BkRepo
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
       - name: Set up JDK 1.8
@@ -257,7 +258,7 @@ jobs:
 
   releaseAll:
     name: Release All
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     if: ${{ always() }}
     needs: [backend, cloudNative, codecc, bkrepo]
     steps:
