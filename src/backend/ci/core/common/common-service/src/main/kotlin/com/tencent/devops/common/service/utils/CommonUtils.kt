@@ -242,36 +242,4 @@ object CommonUtils {
         }
     }
 
-    /**
-     * 从redis缓存获取用户的国际化语言信息
-     * @param userId 用户ID
-     * @return 语言信息
-     */
-    fun getUserLocaleLanguageFromCache(userId: String): String? {
-        val redisOperation: RedisOperation = SpringContextUtil.getBean(RedisOperation::class.java)
-        return redisOperation.get(LocaleUtil.getUserLocaleLanguageKey(userId))
-    }
-
-    /**
-     * 获取蓝盾默认支持的语言
-     * @return 系统默认语言
-     */
-    fun getDefaultLocaleLanguage(): String {
-        val commonConfig: CommonConfig = SpringContextUtil.getBean(CommonConfig::class.java)
-        return commonConfig.devopsDefaultLocaleLanguage
-    }
-
-    /**
-     * 获取接口请求渠道信息
-     * @return 渠道信息
-     */
-    fun getRequestChannel(): String? {
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        return if (null != attributes) {
-            val request = attributes.request
-            (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
-        } else {
-            null // 不是接口请求来源则返回null
-        }
-    }
 }
