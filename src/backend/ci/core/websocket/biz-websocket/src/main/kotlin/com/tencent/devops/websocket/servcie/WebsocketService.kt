@@ -28,9 +28,9 @@
 package com.tencent.devops.websocket.servcie
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.event.ChangePageTransferEvent
 import com.tencent.devops.websocket.event.ClearSessionEvent
@@ -50,7 +50,7 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val transferDispatch: TransferDispatch,
+    private val transferDispatch: SampleEventDispatcher,
     private val projectProxyService: ProjectProxyService
 ) {
     companion object {

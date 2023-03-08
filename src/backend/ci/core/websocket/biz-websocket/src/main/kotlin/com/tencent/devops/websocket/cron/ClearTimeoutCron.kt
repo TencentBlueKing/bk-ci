@@ -27,9 +27,9 @@
 
 package com.tencent.devops.websocket.cron
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.common.websocket.utils.WsRedisUtils.cleanPageSessionByPage
 import com.tencent.devops.websocket.event.ClearSessionEvent
@@ -44,7 +44,7 @@ import org.springframework.stereotype.Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
     private val websocketService: WebsocketService,
-    private val transferDispatch: TransferDispatch
+    private val transferDispatch: SampleEventDispatcher
 ) {
 
     companion object {

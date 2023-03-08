@@ -28,8 +28,8 @@
 package com.tencent.devops.websocket.configuration
 
 import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.common.websocket.dispatch.TransferDispatch
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.websocket.event.ClearSessionEvent
@@ -38,11 +38,11 @@ import com.tencent.devops.websocket.listener.WebSocketListener
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
+import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
-import org.springframework.stereotype.Component
 import java.util.function.Consumer
 
-@Component
+@Configuration
 class WebsocketConfiguration {
 
     companion object {
@@ -51,6 +51,9 @@ class WebsocketConfiguration {
 
     @Bean
     fun websocketDispatcher(streamBridge: StreamBridge) = WebSocketDispatcher(streamBridge)
+
+    @Bean
+    fun transferDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @EventConsumer(StreamBinding.EXCHANGE_WEBSOCKET_TMP_FANOUT, STREAM_CONSUMER_GROUP, true)
     fun pipelineWebSocketListener(
@@ -68,10 +71,5 @@ class WebsocketConfiguration {
         return Consumer { event: Message<ClearSessionEvent> ->
             cacheSessionListener.handleClearSessionEvent(event.payload)
         }
-    }
-
-    @Bean
-    fun transferDispatch(streamBridge: StreamBridge): TransferDispatch {
-        return TransferDispatch(streamBridge)
     }
 }
