@@ -1,7 +1,20 @@
 <template>
     <div class="node-content-wrapper">
         <div class="node-content-header">
-            <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
+            <span
+                v-perm="{
+                    hasPermission: canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+            >
+                <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
+            </span>
         </div>
 
         <div class="node-table" v-if="showContent && nodeList.length">
@@ -49,6 +62,8 @@
                     <template slot-scope="props">
                         <span
                             v-perm="{
+                                hasPermission: canEdit,
+                                disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: ENV_RESOURCE_TYPE,
@@ -149,6 +164,9 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
+            },
+            canEdit () {
+                return this.$route.query.canEdit || false
             }
         },
         watch: {

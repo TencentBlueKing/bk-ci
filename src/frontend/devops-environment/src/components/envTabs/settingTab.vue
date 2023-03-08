@@ -1,6 +1,19 @@
 <template>
     <div class="env-setting-tab-wrapper">
-        <bk-button class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
+        <span
+            v-perm="{
+                hasPermission: canEdit,
+                disablePermissionApi: true,
+                permissionData: {
+                    projectId: projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: envHashId,
+                    action: ENV_RESOURCE_ACTION.EDIT
+                }
+            }"
+        >
+            <bk-button class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
+        </span>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"
@@ -22,7 +35,7 @@
                             }
                         }"
                     >
-                        <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
+                        <bk-button class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
                     </span>
                 </template>
             </bk-table-column>
@@ -76,6 +89,12 @@
                     count: 0,
                     limit: 20
                 }
+            }
+        },
+
+        computed: {
+            canEdit () {
+                return this.$route.query.canEdit || false
             }
         },
 

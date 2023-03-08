@@ -1,9 +1,20 @@
 <template>
     <div class="config-content-wrapper">
         <div class="config-content-header">
-            <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
-                @click="createConfigItem">{{ $t('environment.addConfItem') }}
-            </bk-button>
+            <span
+                v-perm="{
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+            >
+                <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
+                    @click="createConfigItem">{{ $t('environment.addConfItem') }}
+                </bk-button>
+            </span>
         </div>
         <div class="config-table" v-if="configList.length">
             <div class="table-head config-head">
@@ -64,6 +75,8 @@
                         <div class="preview-handler" v-else>
                             <span
                                 v-perm="{
+                                    hasPermission: canEdit,
+                                    disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: ENV_RESOURCE_TYPE,
@@ -76,6 +89,8 @@
                             </span>
                             <span
                                 v-perm="{
+                                    hasPermission: canEdit,
+                                    disablePermissionApi: true,
                                     permissionData: {
                                         projectId: projectId,
                                         resourceType: ENV_RESOURCE_TYPE,
@@ -143,6 +158,9 @@
                     { label: 'plaintext', name: this.$t('environment.envInfo.clearText') },
                     { label: 'ciphertext', name: this.$t('environment.envInfo.cipherText') }
                 ]
+            },
+            canEdit () {
+                return this.$route.query.canEdit || false
             }
         },
 

@@ -26,7 +26,7 @@
             <bk-table v-if="showContent && envList.length"
                 size="small"
                 :data="envList"
-                :row-class-name="getRowClsName"
+                row-class-name="env-item-row"
                 @row-click="toEnvDetail">
                 <bk-table-column :label="$t('environment.envInfo.name')" prop="name"></bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.type')" prop="envType">
@@ -38,7 +38,7 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.nodeCount')" prop="nodeCount">
                     <template slot-scope="props">
-                        <span class="node-count-item">{{ props.row.nodeCount }}</span>
+                        {{ props.row.nodeCount }}
                     </template>
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.envInfo.creationTime')" prop="createdTime">
@@ -118,9 +118,6 @@
             await this.init()
         },
         methods: {
-            getRowClsName ({ row }) {
-                return `env-item-row ${row.canUse ? '' : 'env-row-useless'}`
-            },
             async init () {
                 const {
                     loading
@@ -215,21 +212,15 @@
              * 跳转环境详情
              */
             toEnvDetail (row) {
-                if (row.canUse) {
-                    this.$router.push({
-                        name: 'envDetail',
-                        params: {
-                            envId: row.envHashId
-                        }
-                    })
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: ENV_RESOURCE_TYPE,
-                        resourceCode: row.envHashId,
-                        action: ENV_RESOURCE_ACTION.USE
-                    })
-                }
+                this.$router.push({
+                    name: 'envDetail',
+                    params: {
+                        envId: row.envHashId
+                    },
+                    query: {
+                        canEdit: row.canEdit
+                    }
+                })
             },
             /**
              * 处理时间格式
@@ -259,16 +250,8 @@
         }
         .env-item-row {
             cursor: pointer;
-            &.env-row-useless {
-              cursor: url('../images/cursor-lock.png'), auto;
-              color: $fontLigtherColor;
-              .node-count-item {
-                color: $fontLigtherColor;
-              }
-            }
         }
 
-        .node-count-item,
         .handler-text {
             color: $primaryColor;
             cursor: pointer;

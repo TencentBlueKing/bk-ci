@@ -12,10 +12,23 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <button class="bk-button bk-primary" @click="toCreateRule">
-                            <i class="devops-icon icon-plus"></i>
-                            <span style="margin-left: 0;">创建规则</span>
-                        </button>
+                        <span
+                            v-perm="{
+                                hasPermission: canEdit,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RULE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: RULE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                        >
+                            <button class="bk-button bk-primary" @click="toCreateRule">
+                                <i class="devops-icon icon-plus"></i>
+                                <span style="margin-left: 0;">创建规则</span>
+                            </button>
+                        </span>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table
@@ -774,7 +787,6 @@
             overflow: hidden;
         }
         .rule-main-wrapper {
-            padding: 20px;
             height: 100%;
             overflow: auto;
         }

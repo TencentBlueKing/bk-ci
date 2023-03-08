@@ -81,13 +81,13 @@
                     >
                         <template slot-scope="{ row }">
                             <span class="project-status">
+                                <div class="enable-switcher" @click="handleChangeEnabled(row)"></div>
                                 <bk-switcher
                                     :value="row.enabled"
                                     class="mr5"
                                     size="small"
                                     theme="primary"
                                     :disabled="[1, 3].includes(row.approvalStatus)"
-                                    @change="handleChangeEnabled(row)"
                                 />
                                 <span class="mr5">
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
@@ -111,7 +111,6 @@
                     </bk-table-column>
                     <bk-table-column
                         :label="$t('projectOperation')"
-                        width="200"
                     >
                         <template slot-scope="{ row }">
                             <bk-button
@@ -288,7 +287,7 @@
                 const { englishName: projectCode, enabled, projectName, routerTag } = row
                 this.toggleProjectEnable({
                     projectCode: projectCode,
-                    enabled: enabled
+                    enabled: !enabled
                 }).then(() => {
                     row.enabled = !row.enabled
                     this.$bkMessage({
@@ -504,6 +503,14 @@
     }
     .project-status {
         display: flex;
+    }
+    .enable-switcher {
+        width: 26px;
+        height: 16px;
+        position: absolute;
+        z-index: 200;
+        opacity: 0;
+        cursor: pointer;
     }
     .status-icon {
         margin-right: 5px;

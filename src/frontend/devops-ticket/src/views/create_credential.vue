@@ -117,7 +117,18 @@
                     <!-- 凭据描述 end -->
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <span
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: CRED_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                        >
+                            <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        </span>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -134,7 +145,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
-    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '../utils/permission'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -146,6 +157,8 @@
         },
         data () {
             return {
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
                 ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
                 showContent: false,
                 hasPermission: true,

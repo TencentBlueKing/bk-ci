@@ -50,6 +50,7 @@
       </div>
     </section>
     <bk-dialog
+      dialogType="show"
       header-align="center"
       theme="danger"
       quick-close

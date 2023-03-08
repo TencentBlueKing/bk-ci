@@ -12,6 +12,27 @@
             }">
 
             <div class="group-content">
+                <span
+                    v-perm="{
+                        hasPermission: canEdit,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                >
+                    <bk-button
+                        theme="primary"
+                        class="create-group-btn"
+                        v-if="showContent && noticeGroupList.length"
+                        @click="toCreateGroup"
+                    >
+                        新增
+                    </bk-button>
+                </span>
                 <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
                     @click="toCreateGroup">新增</bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
