@@ -36,6 +36,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.service.ExperiencePermissionService
+import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -55,10 +56,32 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         logger.info("StreamExperiencePermissionServiceImpl user:$user projectId: $projectId ")
+        if (authPermission == AuthPermission.VIEW)
+            return
         val permissionCheck = checkTaskPermission(user, projectId, authPermission)
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
+    }
+
+    override fun validateCreateTaskPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
+
+    override fun validateDeleteExperience(
+        experienceId: Long,
+        userId: String,
+        projectId: String,
+        message: String
+    ) {
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = message
+        )
     }
 
     override fun createTaskResource(
@@ -86,6 +109,16 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         }
         return experienceMap
     }
+
+    override fun filterCanListExperience(
+        user: String,
+        projectId: String,
+        experienceRecordList: List<TExperienceRecord>
+    ): List<TExperienceRecord> {
+        return experienceRecordList
+    }
+
+    override fun validateCreateGroupPermission(user: String, projectId: String): Boolean = true
 
     override fun validateGroupPermission(
         userId: String,
@@ -127,7 +160,11 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         projectId: String,
         authPermissions: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>> {
-        val groupIds = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
+        val groupIds = groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            offset = 0,
+            limit = 1000).map { it.id }
         val experienceMap = mutableMapOf<AuthPermission, List<Long>>()
         authPermissions.forEach {
             if (checkGroupPermission(user, projectId, it)) {
@@ -138,6 +175,12 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         }
         return experienceMap
     }
+
+    override fun filterCanListGroup(
+        user: String,
+        projectId: String,
+        groupRecordIds: List<Long>
+    ): List<Long> = groupRecordIds
 
     private fun checkGroupPermission(
         userId: String,

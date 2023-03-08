@@ -87,7 +87,6 @@ class GroupService @Autowired constructor(
         limit: Int,
         returnPublic: Boolean
     ): Pair<Long, List<GroupSummaryWithPermission>> {
-        // todo 增加List类型的experience。对于rbac才返回有列表权限的版本体验，其他的直接返回。
         val groupPermissionListMap = experiencePermissionService.filterGroup(
             user = userId,
             projectId = projectId,
@@ -97,18 +96,27 @@ class GroupService @Autowired constructor(
         val addPublicElement = offset == 0 && returnPublic
         val count = groupDao.count(dslContext, projectId)
         val finalLimit = if (limit == -1) count.toInt() else limit
-        val groups = groupDao.list(
-            dslContext,
-            projectId,
-            offset,
-            finalLimit
+
+        val allGroupIds = groupDao.list(dslContext, projectId).map { it.value1() }
+        val canListGroupIds = experiencePermissionService.filterCanListGroup(
+            user = userId,
+            projectId = projectId,
+            groupRecordIds = allGroupIds
         )
-        val groupIds = groups.map { it.id }.toSet()
+
+        val groupListResult = groupDao.list(
+            dslContext = dslContext,
+            projectId = projectId,
+            groupIds = canListGroupIds.toSet(),
+            offset = offset,
+            limit = finalLimit
+        )
+        val groupIds = groupListResult.map { it.id }.toSet()
 
         val groupIdToInnerUserIds = experienceBaseService.getGroupIdToInnerUserIds(groupIds)
         val groupIdToOuters = experienceBaseService.getGroupIdToOuters(groupIds)
 
-        val list = groups.map {
+        val list = groupListResult.map {
             val canEdit = groupPermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
             val canDelete = groupPermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
             GroupSummaryWithPermission(
@@ -122,7 +130,7 @@ class GroupService @Autowired constructor(
                 remark = it.remark ?: "",
                 permissions = GroupPermission(canEdit, canDelete)
             )
-        }
+        }.toMutableList()
 
         if (addPublicElement) {
             list.add(
@@ -140,8 +148,7 @@ class GroupService @Autowired constructor(
                 )
             )
         }
-
-        return Pair(count, list)
+        return Pair(count + 1, list)
     }
 
     fun getProjectUsers(userId: String, projectId: String, projectGroup: ProjectGroup?): List<String> {
@@ -165,6 +172,20 @@ class GroupService @Autowired constructor(
     }
 
     fun create(projectId: String, userId: String, group: GroupCreate): String {
+        if (experiencePermissionService.validateCreateGroupPermission(
+                user = userId,
+                projectId = projectId
+            )) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.CREATE.value}",
+                defaultMessage = AuthPermission.CREATE.alias
+            )
+            throw ErrorCodeException(
+                defaultMessage = "用户没有创建版本体验用户组的权限！",
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_GROUP_PERMISSION,
+                params = arrayOf(permissionMsg)
+            )
+        }
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
                 defaultMessage = "体验组(${group.name})已存在",
