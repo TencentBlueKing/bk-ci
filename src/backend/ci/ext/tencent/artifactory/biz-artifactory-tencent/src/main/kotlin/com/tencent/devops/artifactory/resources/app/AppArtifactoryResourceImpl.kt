@@ -28,7 +28,8 @@
 package com.tencent.devops.artifactory.resources.app
 
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CHARGE_AUTHORIZATION_GRANTED
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_GRANT_DOWNLOAD_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_GRANT_PIPELINE_PERMISSION
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -45,9 +46,11 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
+import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -56,13 +59,16 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
+import com.tencent.devops.project.api.service.ServiceLocaleResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import javax.ws.rs.BadRequestException
 
 @RestResource
@@ -207,7 +213,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                params = arrayOf(CHARGE_AUTHORIZATION_GRANTED)
+                params = arrayOf(MessageUtil.getMessageByLocale(
+                    messageCode = BK_GRANT_DOWNLOAD_PERMISSION,
+                    language = getLanguage(userId)
+                ))
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
@@ -223,8 +232,14 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                defaultMessage = "访问构件请联系流水线负责人：\n${pipelineInfo?.creator ?: ""} 授予流水线权限。"
+                params = arrayOf(MessageUtil.getMessageByLocale(
+                    messageCode = MessageFormat.format(BK_GRANT_PIPELINE_PERMISSION, pipelineInfo?.creator ?: ""),
+                    language = getLanguage(userId)
+                ))
+
+
             )
+
         }
 
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
@@ -250,6 +265,17 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 nodeMetadata = fileDetail.nodeMetadata
             )
         )
+    }
+
+    fun getLanguage (userId: String): String{
+        if (CommonUtils.getRequestChannel() == RequestChannelTypeEnum.USER.name) {
+            if (CommonUtils.getUserLocaleLanguageFromCache(userId).isNullOrBlank()){
+                return client.get(ServiceLocaleResource::class).getUserLocale(userId).data!!.language
+            }
+            return CommonUtils.getUserLocaleLanguageFromCache(userId).toString()
+        }else{
+            return CommonUtils.getDefaultLocaleLanguage()
+        }
     }
 
     override fun properties(

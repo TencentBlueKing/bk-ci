@@ -54,6 +54,4 @@ object ArtifactoryMessageCode {
     const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
     const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
     const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
-    const val CHARGE_AUTHORIZATION_GRANTED = "2102011" //请联系流水线负责人授予下载构件权限
-
 }
