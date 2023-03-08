@@ -30,7 +30,6 @@ package com.tencent.devops.websocket.configuration
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.websocket.handler.BKHandshakeInterceptor
 import com.tencent.devops.websocket.handler.SessionWebSocketHandlerDecoratorFactory
-import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -48,7 +47,6 @@ import org.springframework.web.socket.config.annotation.WebSocketTransportRegist
 @EnableWebSocketMessageBroker
 class WebSocketConfig @Autowired constructor(
     private val bkHandshake: BKHandshakeInterceptor,
-    private val websocketService: WebsocketService,
     private val redisOperation: RedisOperation
 ) : AbstractWebSocketMessageBrokerConfigurer() {
 
@@ -99,6 +97,6 @@ class WebSocketConfig @Autowired constructor(
 
     @Bean
     fun wsHandlerDecoratorFactory(): SessionWebSocketHandlerDecoratorFactory {
-        return SessionWebSocketHandlerDecoratorFactory(websocketService, redisOperation)
+        return SessionWebSocketHandlerDecoratorFactory(redisOperation)
     }
 }

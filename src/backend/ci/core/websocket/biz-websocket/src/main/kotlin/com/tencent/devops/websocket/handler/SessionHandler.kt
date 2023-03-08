@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.handler
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.servcie.WebsocketService
 import com.tencent.devops.websocket.utils.HostUtils
@@ -41,7 +42,6 @@ import org.springframework.web.socket.handler.WebSocketHandlerDecorator
 
 class SessionHandler @Autowired constructor(
     delegate: WebSocketHandler,
-    private val websocketService: WebsocketService,
     private val redisOperation: RedisOperation
 ) : WebSocketHandlerDecorator(delegate) {
 
@@ -63,7 +63,8 @@ class SessionHandler @Autowired constructor(
             super.afterConnectionClosed(session, closeStatus)
         } else {
             logger.info("connection closed closeStatus[$closeStatus] user[$userId] page[$page], session[$sessionId]")
-            websocketService.removeCacheSession(sessionId)
+            SpringContextUtil.getBean(WebsocketService::class.java)
+                .removeCacheSession(sessionId)
         }
 
         super.afterConnectionClosed(session, closeStatus)
@@ -74,7 +75,8 @@ class SessionHandler @Autowired constructor(
         val remoteId = session.remoteAddress
         val sessionId = uri?.query?.substringAfter("sessionId=")
         val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
-        websocketService.addCacheSession(sessionId!!)
+        SpringContextUtil.getBean(WebsocketService::class.java)
+            .addCacheSession(sessionId!!)
         logger.info("connection success: |$sessionId| $uri | $remoteId | $webUser ")
         super.afterConnectionEstablished(session)
     }
