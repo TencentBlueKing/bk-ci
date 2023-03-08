@@ -174,21 +174,26 @@ class ExperienceService @Autowired constructor(
         val expireTime = DateUtil.today()
         val searchTime = if (expired == null || expired == false) expireTime else null
         val online = if (expired == null || expired == false) true else null
-        //todo 拉取 AuthPermission.EDIT，List，DELETE 的版本体验，如果是rbac的话，返回 list权限的版本体验，如果其他的则全部返回。
-
-        val experienceList = experienceDao.list(dslContext, projectId, searchTime, online)
+        val experienceRecordList = experienceDao.list(dslContext, projectId, searchTime, online)
+        // Rbac得校验体验是否列表权限，有才返回。
+        val experienceListResult = experiencePermissionService.filterCanListExperience(
+            user = userId,
+            projectId = projectId,
+            experienceRecordList = experienceRecordList
+        )
         val recordIds = experienceBaseService.getRecordIdsByUserId(userId, GroupIdTypeEnum.JUST_PRIVATE)
         val experiencePermissionListMap = experiencePermissionService.filterExperience(
             user = userId,
             projectId = projectId,
-            authPermissions = setOf(AuthPermission.EDIT)
+            authPermissions = setOf(AuthPermission.EDIT, AuthPermission.DELETE)
         )
 
-        return experienceList.map {
+        return experienceListResult.map {
             val isExpired = DateUtil.isExpired(it.endDate, expireTime)
             val canExperience = recordIds.contains(it.id) || userId == it.creator
-
             val canEdit = experiencePermissionListMap[AuthPermission.EDIT]?.contains(it.id) ?: false
+            val canDelete = experiencePermissionListMap[AuthPermission.DELETE]?.contains(it.id) ?: false
+
             ExperienceSummaryWithPermission(
                 experienceHashId = HashUtil.encodeLongId(it.id),
                 name = it.name,
@@ -200,15 +205,22 @@ class ExperienceService @Autowired constructor(
                 creator = it.creator,
                 expired = isExpired,
                 online = it.online,
-                permissions = ExperiencePermission(canExperience, canEdit)
+                permissions = ExperiencePermission(canExperience, canEdit, canDelete)
             )
         }
     }
 
     fun get(userId: String, experienceHashId: String, checkPermission: Boolean = true): Experience {
+
         val experienceRecord = experienceDao.get(dslContext, HashUtil.decodeIdToLong(experienceHashId))
         val experienceId = experienceRecord.id
-
+        experiencePermissionService.validateTaskPermission(
+            user = userId,
+            projectId = experienceRecord.projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.VIEW,
+            message = "用户没有查看版本体验的权限！"
+        )
         val online = experienceRecord.online
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         val canExperience = if (checkPermission) experienceBaseService.userCanExperience(userId, experienceId) else true
@@ -363,7 +375,7 @@ class ExperienceService @Autowired constructor(
         if (null == fileDetail) {
             logger.warn(
                 "null file detail , projectId:$projectId , " +
-                        "artifactoryType:$artifactoryType , path:${experience.path}"
+                    "artifactoryType:$artifactoryType , path:${experience.path}"
             )
             return -1L
         }
@@ -614,7 +626,20 @@ class ExperienceService @Autowired constructor(
     }
 
     fun updateOnline(userId: String, projectId: String, experienceHashId: String, online: Boolean) {
-        val experienceId = getExperienceId4Update(experienceHashId, userId, projectId).id
+        val experienceId = HashUtil.decodeIdToLong(experienceHashId)
+        experiencePermissionService.validateDeleteExperience(
+            experienceId = experienceId,
+            userId = userId,
+            projectId = projectId,
+            message = "用户在项目($projectId)下没有下架体验($experienceHashId)的权限"
+        )
+        experienceDao.getOrNull(dslContext, experienceId)
+            ?: throw ErrorCodeException(
+                statusCode = Response.Status.NOT_FOUND.statusCode,
+                defaultMessage = "体验($experienceHashId)不存在",
+                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                params = arrayOf(experienceHashId)
+            )
         experienceDao.updateOnline(dslContext, experienceId, online)
 
         if (!online) {
@@ -739,13 +764,25 @@ class ExperienceService @Autowired constructor(
         artifactoryPath: String,
         artifactoryType: ArtifactoryType
     ) {
+        // Rbac 得校验是否有创建体验的权限。
+        if (experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
+            val permissionMsg = MessageCodeUtil.getCodeLanMessage(
+                messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.CREATE.value}",
+                defaultMessage = AuthPermission.CREATE.alias
+            )
+            throw ErrorCodeException(
+                defaultMessage = "用户没有创建版本体验的权限！",
+                errorCode = ExperienceMessageCode.USER_NEED_CREATE_EXP_PERMISSION,
+                params = arrayOf(permissionMsg)
+            )
+        }
         if (!hasArtifactoryPermission(userId, projectId, artifactoryPath, artifactoryType)) {
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.EXECUTE.value}",
                 defaultMessage = AuthPermission.EXECUTE.alias
             )
             throw ErrorCodeException(
-                defaultMessage = "用户没有流水线执行权限",
+                defaultMessage = "用户没有流水线执行权限！",
                 errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
                 params = arrayOf(permissionMsg)
             )
@@ -786,7 +823,7 @@ class ExperienceService @Autowired constructor(
 
             logger.info(
                 "innerReceivers: $innerReceivers , outerReceivers:" +
-                        " $outerReceivers , subscribeUsers: $subscribeUsers "
+                    " $outerReceivers , subscribeUsers: $subscribeUsers "
             )
             if (innerReceivers.isEmpty() && outerReceivers.isEmpty() && subscribeUsers.isEmpty()) {
                 logger.info("empty Receivers , experienceId:$experienceId")
@@ -933,14 +970,14 @@ class ExperienceService @Autowired constructor(
     fun getPcUrl(projectId: String, experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         return HomeHostUtil.innerServerHost() +
-                "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
+            "/console/experience/$projectId/experienceDetail/$experienceHashId/detail"
     }
 
     fun getShortExternalUrl(experienceId: Long): String {
         val experienceHashId = HashUtil.encodeLongId(experienceId)
         val url =
             HomeHostUtil.outerServerHost() +
-                    "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
+                "/app/download/devops_app_forward.html?flag=experienceDetail&experienceId=$experienceHashId"
         return client.get(ServiceShortUrlResource::class)
             .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
     }

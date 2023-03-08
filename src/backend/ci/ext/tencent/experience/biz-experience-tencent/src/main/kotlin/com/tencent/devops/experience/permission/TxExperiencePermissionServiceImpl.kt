@@ -11,6 +11,7 @@ import com.tencent.devops.common.auth.code.BSExperienceAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.service.ExperiencePermissionService
+import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.springframework.beans.factory.annotation.Autowired
 import javax.ws.rs.core.Response
 
@@ -30,6 +31,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         if (!bsAuthPermissionApi.validateUserResourcePermission(
                 user = user,
                 serviceCode = experienceServiceCode,
@@ -50,6 +53,26 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
                 params = arrayOf(permissionMsg)
             )
         }
+    }
+
+    override fun validateCreateTaskPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
+
+    override fun validateDeleteExperience(
+        experienceId: Long,
+        userId: String,
+        projectId: String,
+        message: String
+    ) {
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = message
+        )
     }
 
     override fun createTaskResource(
@@ -87,6 +110,19 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         }
         return map
     }
+
+    override fun filterCanListExperience(
+        user: String,
+        projectId: String,
+        experienceRecordList: List<TExperienceRecord>
+    ): List<TExperienceRecord> {
+        return experienceRecordList
+    }
+
+    override fun validateCreateGroupPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
 
     override fun validateGroupPermission(
         userId: String,
@@ -166,4 +202,10 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         }
         return map
     }
+
+    override fun filterCanListGroup(
+        user: String,
+        projectId: String,
+        groupRecordIds: List<Long>
+    ): List<Long> = groupRecordIds
 }

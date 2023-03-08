@@ -12,6 +12,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.service.ExperiencePermissionService
+import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -31,6 +32,8 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
@@ -43,6 +46,26 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         if (!checkPermission) {
             throw PermissionForbiddenException(message)
         }
+    }
+
+    override fun validateCreateTaskPermission(
+        user: String,
+        projectId: String
+    ): Boolean = true
+
+    override fun validateDeleteExperience(
+        experienceId: Long,
+        userId: String,
+        projectId: String,
+        message: String
+    ) {
+        validateTaskPermission(
+            user = userId,
+            projectId = projectId,
+            experienceId = experienceId,
+            authPermission = AuthPermission.EDIT,
+            message = message
+        )
     }
 
     override fun createTaskResource(user: String, projectId: String, experienceId: Long, experienceName: String) {
@@ -81,6 +104,14 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun filterCanListExperience(
+        user: String,
+        projectId: String,
+        experienceRecordList: List<TExperienceRecord>
+    ): List<TExperienceRecord> = experienceRecordList
+
+    override fun validateCreateGroupPermission(user: String, projectId: String): Boolean = true
 
     override fun validateGroupPermission(
         userId: String,
@@ -138,7 +169,12 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         val resultMap = mutableMapOf<AuthPermission, List<Long>>()
         instanceMap.forEach { key, value ->
             if (value.contains("*")) {
-                val ids = groupDao.list(dslContext, projectId, 0, 1000).map { it.id }
+                val ids = groupDao.list(
+                    dslContext = dslContext,
+                    projectId = projectId,
+                    offset = 0,
+                    limit = 1000
+                ).map { it.id }
                 resultMap[key] = ids
             } else {
                 val instanceList = value.map { HashUtil.decodeIdToLong(it) }
@@ -147,4 +183,10 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         }
         return resultMap
     }
+
+    override fun filterCanListGroup(
+        user: String,
+        projectId: String,
+        groupRecordIds: List<Long>
+    ): List<Long> = groupRecordIds
 }
