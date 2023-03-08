@@ -358,8 +358,6 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun isRbac(): Boolean = false
-
     companion object {
         private val logger = LoggerFactory.getLogger(EnvironmentPermissionServiceImpl::class.java)
     }
