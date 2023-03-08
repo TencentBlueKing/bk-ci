@@ -29,7 +29,7 @@ package com.tencent.devops.project.resources
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceLocaleResource
+import com.tencent.devops.common.web.service.ServiceLocaleResource
 import com.tencent.devops.project.pojo.LocaleInfo
 import com.tencent.devops.project.service.UserLocaleService
 import org.springframework.beans.factory.annotation.Autowired
