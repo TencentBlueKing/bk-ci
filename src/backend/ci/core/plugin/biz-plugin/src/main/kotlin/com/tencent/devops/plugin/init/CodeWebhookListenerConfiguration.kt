@@ -28,7 +28,6 @@
 package com.tencent.devops.plugin.init
 
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
@@ -38,8 +37,6 @@ import com.tencent.devops.plugin.listener.CodeWebhookListener
 import com.tencent.devops.plugin.listener.GitHubPullRequestListener
 import com.tencent.devops.plugin.listener.TGitCommitListener
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.cloud.stream.function.StreamBridge
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
