@@ -329,7 +329,15 @@ class ScmService @Autowired constructor(
                     event = CodeGitWebhookEvent.MERGE_REQUESTS_EVENTS.value
                 )
                 requestTime = System.currentTimeMillis()
-                scm.addCommitCheck(commitId, state, targetUrl, context, description, block)
+                scm.addCommitCheck(
+                    commitId = commitId,
+                    state = state,
+                    targetUrl = targetUrl,
+                    context = context,
+                    description = description,
+                    block = block,
+                    targetBranch = targetBranch
+                )
                 responseTime = System.currentTimeMillis()
                 if (mrRequestId != null) {
                     if (reportData.second.isEmpty()) return
