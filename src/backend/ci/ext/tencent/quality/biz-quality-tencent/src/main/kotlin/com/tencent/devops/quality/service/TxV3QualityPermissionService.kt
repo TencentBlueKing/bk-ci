@@ -44,6 +44,8 @@ class TxV3QualityPermissionService @Autowired constructor(
     }
 
     override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission): Boolean {
+        if (authPermission == AuthPermission.LIST || authPermission == AuthPermission.CREATE)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -51,6 +53,16 @@ class TxV3QualityPermissionService @Autowired constructor(
             action = TActionUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
             resourceCode = TActionUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
         ).data ?: false
+    }
+
+    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+        if (!validateGroupPermission(
+                userId = userId,
+                projectId = projectId,
+                authPermission = authPermission
+            )) {
+            throw PermissionForbiddenException(message)
+        }
     }
 
     override fun createGroupResource(userId: String, projectId: String, groupId: Long, groupName: String) {
@@ -109,6 +121,8 @@ class TxV3QualityPermissionService @Autowired constructor(
         projectId: String,
         authPermission: AuthPermission
     ): Boolean {
+        if (authPermission == AuthPermission.LIST)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -199,6 +213,4 @@ class TxV3QualityPermissionService @Autowired constructor(
         }
         return resultMap
     }
-
-    override fun isRbac(): Boolean = false
 }

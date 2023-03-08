@@ -87,6 +87,4 @@ interface QualityPermissionService {
         projectId: String,
         bkAuthPermissionSet: Set<AuthPermission>
     ): Map<AuthPermission, List<Long>>
-
-    fun isRbac(): Boolean
 }
