@@ -25,8 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.project.api.service
+package com.tencent.devops.common.web.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.project.pojo.LocaleInfo
 import io.swagger.annotations.Api
@@ -43,6 +44,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/locales")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@ServiceInterface("project")
 interface ServiceLocaleResource {
 
     @GET
