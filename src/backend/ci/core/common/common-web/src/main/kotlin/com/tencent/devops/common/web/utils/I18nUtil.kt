@@ -74,15 +74,18 @@ object I18nUtil {
         }
     }
 
-    fun getLanguage (userId: String): String{
-        if (getRequestChannel() == RequestChannelTypeEnum.USER.name) {
-            if (getUserLocaleLanguageFromCache(userId).isNullOrBlank()){
+    fun getLanguage (userId: String? = null): String{
+        userId ?: return  getDefaultLocaleLanguage()
+        val requestChannel = getRequestChannel()
+        return if (requestChannel == RequestChannelTypeEnum.USER.name || requestChannel == RequestChannelTypeEnum.OPEN.name) {
+            var language = getUserLocaleLanguageFromCache(userId)
+            if (language.isNullOrBlank()){
                 val client = SpringContextUtil.getBean(Client::class.java)
-                return client.get(ServiceLocaleResource::class).getUserLocale(userId).data!!.language
+                language = client.get(ServiceLocaleResource::class).getUserLocale(userId).data!!.language
             }
-            return getUserLocaleLanguageFromCache(userId).toString()
+            language
         }else{
-            return getDefaultLocaleLanguage()
+            getDefaultLocaleLanguage()
         }
     }
 }
