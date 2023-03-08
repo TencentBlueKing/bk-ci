@@ -49,7 +49,9 @@ function init (el, data, vNode) {
     cloneEl.originEl = el
     // 替换当前节点（为了移除节点的所有事件）
     parent?.replaceChild(cloneEl, el)
-    vNode.elm = cloneEl
+    Reflect.has(vNode, 'elm')
+        ? vNode.elm = cloneEl
+        : vNode.el = cloneEl
 
     cloneEl.classList.add('bk-permission-disable')
     cloneEl.mouseEnterHandler = function () {
@@ -99,8 +101,9 @@ function destroy (cloneEl, vNode) {
     // 还原原始节点
     const parent = cloneEl.parentNode
     parent?.replaceChild(el, el.cloneEl)
-    vNode.elm = el
-
+    Reflect.has(vNode, 'elm')
+        ? vNode.elm = el
+        : vNode.el = el
     cloneEl.removeEventListener('mouseenter', cloneEl.mouseEnterHandler)
     cloneEl.removeEventListener('mousemove', cloneEl.mouseMoveHandler)
     cloneEl.removeEventListener('mouseleave', cloneEl.mouseLeaveHandler)
@@ -205,7 +208,7 @@ export function AuthorityDirectiveV3 (handleNoPermission, ajax) {
                         vNode.key = new Date().getTime()
                     }
                 },
-                beforeMount (el, binding, vNode) {
+                mounted (el, binding, vNode) {
                     const { disablePermissionApi } = binding.value
                     if (!disablePermissionApi) {
                         updatePerms(el, binding.value, vNode)
@@ -218,7 +221,7 @@ export function AuthorityDirectiveV3 (handleNoPermission, ajax) {
                     if (JSON.stringify(value) === JSON.stringify(oldValue)) return
                     init(el, binding.value, vNode)
                 },
-                unmounted (el, binding, vNode) {
+                beforeUnmount (el, binding, vNode) {
                     destroy(el, vNode)
                 }
             })

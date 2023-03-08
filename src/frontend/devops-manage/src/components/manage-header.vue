@@ -58,8 +58,12 @@ const goToManage = () => {
 .manage-icon {
   font-size: 18px;
   margin-right: 1px;
+  display: flex;
+  align-items: center;
 }
 .bk-breadcrumb-item {
+  display: flex;
+  align-items: center;
   :deep(.bk-breadcrumb-item-inner) {
     color: #313238;
   }
