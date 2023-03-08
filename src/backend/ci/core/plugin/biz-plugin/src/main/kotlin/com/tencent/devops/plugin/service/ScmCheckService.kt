@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
