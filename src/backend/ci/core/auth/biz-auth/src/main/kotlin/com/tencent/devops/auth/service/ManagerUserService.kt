@@ -27,6 +27,8 @@
 
 package com.tencent.devops.auth.service
 
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_AUTHORIZATION_SUCCEEDED
+import com.tencent.devops.auth.common.AuthI18nConstants.BK_CANCELLED_AUTHORIZATION_SUCCEEDED
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.ManagerUserDao
 import com.tencent.devops.auth.dao.ManagerUserHistoryDao
@@ -41,10 +43,12 @@ import com.tencent.devops.auth.refresh.event.ManagerUserChangeEvent
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -278,7 +282,7 @@ class ManagerUserService @Autowired constructor(
             timeout = 120
         )
         createManagerUser("system", managerUser)
-        return "授权成功, 获取管理员权限120分钟"
+        return MessageUtil.getMessageByLocale(BK_AUTHORIZATION_SUCCEEDED, I18nUtil.getLanguage(userId))
     }
 
     fun grantCancelManagerUserByUrl(managerId: Int, userId: String): String {
@@ -293,7 +297,7 @@ class ManagerUserService @Autowired constructor(
             )
         }
         deleteManagerUser("system", managerId, userId)
-        return "取消授权成功, 缓存在5分钟后完全失效"
+        return MessageUtil.getMessageByLocale(BK_CANCELLED_AUTHORIZATION_SUCCEEDED, I18nUtil.getLanguage(userId))
     }
 
     fun createWhiteUser(managerId: Int, userIds: String): Boolean {

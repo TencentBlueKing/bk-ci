@@ -28,7 +28,7 @@
 package com.tencent.devops.artifactory.resources
 
 import com.tencent.devops.artifactory.api.builds.BuildArtifactoryFileTaskResource
-import com.tencent.devops.artifactory.constant.ArtifactoryI18nConstants.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
+import com.tencent.devops.artifactory.constant.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
 import com.tencent.devops.artifactory.service.FileTaskService
@@ -36,10 +36,11 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 
 @RestResource
 class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
@@ -84,9 +85,13 @@ class BuildArtifactoryFileTaskResourceImpl @Autowired constructor(
         val projectSet = client.get(ServiceProjectResource::class).list(userId).data!!.map { it.projectCode }.toSet()
         if (!projectSet.contains(projectId)) {
             throw PermissionForbiddenException(
-                message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_HAVE_PROJECT_PERMISSIONS,
-                    language = CommonUtils.getDefaultLocaleLanguage()
+                message = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_USER_NOT_HAVE_PROJECT_PERMISSIONS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),
+                    userId,
+                    projectId
                 ),
                 params = arrayOf("user[$userId]->project[$projectId]")
             )

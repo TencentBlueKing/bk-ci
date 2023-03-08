@@ -35,9 +35,11 @@ import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.service.prometheus.BkTimedAspect
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.code.git.CodeGitWebhookEvent
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.exception.GitApiException
@@ -49,11 +51,11 @@ import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrChangeInfo
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
+import com.tencent.devops.scm.pojo.TapdWorkItem
 import io.micrometer.core.instrument.MeterRegistry
 import io.micrometer.core.instrument.Tag
 import io.micrometer.core.instrument.Tags
 import io.micrometer.core.instrument.Timer
-import com.tencent.devops.scm.pojo.TapdWorkItem
 import okhttp3.MediaType
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -69,25 +71,25 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
-        private const val OPERATION_BRANCH = "拉分支"
-        private const val OPERATION_TAG = "拉标签"
-        private const val OPERATION_ADD_WEBHOOK = "添加WEBHOOK"
-        private const val OPERATION_UPDATE_WEBHOOK = "修改WEBHOOK"
-        private const val OPERATION_LIST_WEBHOOK = "查询WEBHOOK"
-        private const val OPERATION_ADD_COMMIT_CHECK = "添加COMMIT CHECK"
-        private const val OPERATION_ADD_MR_COMMENT = "添加MR COMMENT"
-        private const val CREATE_BRANCH = "创建分支"
-        private const val DELETE_BRANCH = "删除分支"
-        private const val OPERATION_COMMIT = "拉提交记录"
-        private const val OPERATION_COMMIT_DIFF = "查询commit变化"
-        private const val OPERATION_UNLOCK_HOOK_LOCK = "解锁hook锁"
-        private const val OPERATION_MR_CHANGE = "查询合并请求的代码变更"
-        private const val OPERATION_MR_INFO = "查询项目合并请求"
-        private const val OPERATION_MR_REVIEW = "查询项目合并请求"
-        private const val OPERATION_GET_CHANGE_FILE_LIST = "查询变更文件列表"
-        private const val OPERATION_GET_MR_COMMIT_LIST = "获取合并请求中的提交"
-        private const val OPERATION_PROJECT_USER_INFO = "获取项目中成员信息"
-        private const val OPERATION_TAPD_WORKITEMS = "查看绑定的TAPD单"
+        private const val OPERATION_BRANCH = "OPERATION_BRANCH"
+        private const val OPERATION_TAG = "OPERATION_TAG"
+        private const val OPERATION_ADD_WEBHOOK = "OPERATION_ADD_WEBHOOK"
+        private const val OPERATION_UPDATE_WEBHOOK = "OPERATION_UPDATE_WEBHOOK"
+        private const val OPERATION_LIST_WEBHOOK = "OPERATION_LIST_WEBHOOK"
+        private const val OPERATION_ADD_COMMIT_CHECK = "OPERATION_ADD_COMMIT_CHECK"
+        private const val OPERATION_ADD_MR_COMMENT = "OPERATION_ADD_MR_COMMENT"
+        private const val CREATE_BRANCH = "CREATE_BRANCH"
+        private const val DELETE_BRANCH = "DELETE_BRANCH"
+        private const val OPERATION_COMMIT = "OPERATION_COMMIT"
+        private const val OPERATION_COMMIT_DIFF = "OPERATION_COMMIT_DIFF"
+        private const val OPERATION_UNLOCK_HOOK_LOCK = "OPERATION_UNLOCK_HOOK_LOCK"
+        private const val OPERATION_MR_CHANGE = "OPERATION_MR_CHANGE"
+        private const val OPERATION_MR_INFO = "OPERATION_MR_INFO"
+        private const val OPERATION_MR_REVIEW = "OPERATION_MR_REVIEW"
+        private const val OPERATION_GET_CHANGE_FILE_LIST = "OPERATION_GET_CHANGE_FILE_LIST"
+        private const val OPERATION_GET_MR_COMMIT_LIST = "OPERATION_GET_MR_COMMIT_LIST"
+        private const val OPERATION_PROJECT_USER_INFO = "OPERATION_PROJECT_USER_INFO"
+        private const val OPERATION_TAPD_WORKITEMS = "OPERATION_TAPD_WORKITEMS"
     }
 
     fun listBranches(
@@ -105,7 +107,9 @@ open class GitApi {
         }
         val request =
             get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
-        val result = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(getBody(OPERATION_BRANCH, request))
+        val result = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(
+                getBody(MessageUtil.getMessageByLocale(OPERATION_BRANCH, I18nUtil.getDefaultLocaleLanguage()), request)
+            )
         return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
 
@@ -121,7 +125,9 @@ open class GitApi {
         }
         val request =
             get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
-        val result: List<GitTag> = JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAG, request))
+        val result: List<GitTag> = JsonUtil.getObjectMapper().readValue(
+            getBody(MessageUtil.getMessageByLocale(OPERATION_TAG, I18nUtil.getDefaultLocaleLanguage()), request)
+        )
         return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
 
@@ -132,7 +138,11 @@ open class GitApi {
             url = "projects/${urlEncode(projectName)}/repository/branches/${urlEncode(branchName)}",
             page = ""
         )
-        return callMethod(OPERATION_BRANCH, request, GitBranch::class.java)
+        return callMethod(
+            MessageUtil.getMessageByLocale(OPERATION_BRANCH, I18nUtil.getDefaultLocaleLanguage()),
+            request,
+            GitBranch::class.java
+        )
     }
 
     fun addWebhook(
@@ -218,7 +228,11 @@ open class GitApi {
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)
         try {
-            callMethod(OPERATION_ADD_COMMIT_CHECK, request, GitCommitCheck::class.java)
+            callMethod(
+                MessageUtil.getMessageByLocale(OPERATION_ADD_COMMIT_CHECK, I18nUtil.getDefaultLocaleLanguage()),
+                request,
+                GitCommitCheck::class.java
+            )
         } catch (t: GitApiException) {
             if (t.code == 403) {
                 throw GitApiException(t.code, "Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")

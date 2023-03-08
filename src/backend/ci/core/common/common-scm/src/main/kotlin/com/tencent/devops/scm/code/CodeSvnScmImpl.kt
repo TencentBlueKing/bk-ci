@@ -229,7 +229,7 @@ class CodeSvnScmImpl constructor(
                     scmType = ScmType.CODE_SVN.name
                 )
             } else {
-                logger.error("工程($projectName)获取分支失败", e)
+                logger.error("engineering($projectName)failed to get branch", e)
                 throw ScmException(
                     message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                     scmType = ScmType.CODE_SVN.name
@@ -243,7 +243,7 @@ class CodeSvnScmImpl constructor(
         try {
             return SvnUtils.getRepository(url, username, privateKey, passphrase)
         } catch (e: SVNException) {
-            logger.error("工程($projectName)本地仓库创建失败", e)
+            logger.error("engineering($projectName)local repository creation failed", e)
             throw ScmException(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name
@@ -267,7 +267,7 @@ class CodeSvnScmImpl constructor(
             }
             return sb.toString()
         } catch (e: SVNException) {
-            logger.warn("获取工程($projectName})版本更新日志失败", e)
+            logger.warn("Get the project($projectName})version changelog failed", e)
             throw ScmException(
                 message = MessageCodeUtil.getCodeLanMessage(RepositoryMessageCode.CALL_REPO_ERROR),
                 scmType = ScmType.CODE_SVN.name

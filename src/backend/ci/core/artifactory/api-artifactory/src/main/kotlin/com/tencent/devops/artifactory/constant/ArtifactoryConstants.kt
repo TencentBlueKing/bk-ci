@@ -44,3 +44,5 @@ const val REPO_NAME_IMAGE = "image"
 const val REPO_NAME_REPORT = "report"
 const val REPO_NAME_PLUGIN = "plugin"
 const val REPO_NAME_STATIC = "static"
+
+const val BK_USER_NOT_HAVE_PROJECT_PERMISSIONS = "BkUserNotHaveProjectPermissions"

@@ -164,7 +164,7 @@ class StrategyService @Autowired constructor(
                 val actions = strategyMap[it]
                     ?: throw ErrorCodeException(
                         errorCode = AuthMessageCode.STRATEGT_CHECKOUT_FAIL,
-                        defaultMessage = "actions 为空"
+                        defaultMessage = "actions is null"
                     )
                 actions!!.forEach { action ->
                     AuthPermission.get(action)

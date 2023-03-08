@@ -27,9 +27,14 @@
 
 package com.tencent.devops.common.dispatch.sdk.service
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.api.ServiceJobQuotaBusinessResource
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.engine.common.VMUtils
@@ -37,6 +42,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
+import java.text.MessageFormat
 
 class JobQuotaService constructor(
     private val client: Client,
@@ -85,8 +91,15 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                        "将延迟 ${RETRY_DELTA / 1000}s 后重试，当前重试次数：${startupEvent.retryTime}",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY,
+                            I18nUtil.getDefaultLocaleLanguage()
+                        ),
+                        vmType.displayName,
+                        "${RETRY_DELTA / 1000}",
+                        "${startupEvent.retryTime}"
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -105,8 +118,14 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值, " +
-                        "并已延迟等待${retryTime}次，将放入降级队列执行.",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED,
+                            I18nUtil.getDefaultLocaleLanguage()
+                        ),
+                        vmType.displayName,
+                        "$retryTime"
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
@@ -124,8 +143,15 @@ class JobQuotaService constructor(
 
                 buildLogPrinter.addYellowLine(
                     buildId = buildId,
-                    message = "当前项目下正在执行的【${vmType.displayName}】JOB数量已经达到配额最大值，" +
-                        "将延迟 ${RETRY_DELTA / 1000}s 后在降级队列重试，当前重试次数：${startupEvent.retryTime}",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED,
+                            I18nUtil.getDefaultLocaleLanguage()
+                        ),
+                        vmType.displayName,
+                        "${RETRY_DELTA / 1000}",
+                        "${startupEvent.retryTime}"
+                    ),
                     tag = VMUtils.genStartVMTaskId(containerId),
                     jobId = containerHashId,
                     executeCount = executeCount ?: 1
