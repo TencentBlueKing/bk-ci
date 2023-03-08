@@ -28,7 +28,9 @@
 package com.tencent.devops.common.event.config
 
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
+import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.boot.autoconfigure.condition.ConditionalOnWebApplication
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
@@ -43,9 +45,10 @@ import org.springframework.core.Ordered
 
 @Configuration
 @ConditionalOnWebApplication
-@AutoConfigureOrder(Ordered.LOWEST_PRECEDENCE)
+@AutoConfigureOrder(Ordered.HIGHEST_PRECEDENCE)
 class EventDispatcherConfiguration {
 
     @Bean
+    @ConditionalOnMissingBean(PipelineEventDispatcher::class)
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 }
