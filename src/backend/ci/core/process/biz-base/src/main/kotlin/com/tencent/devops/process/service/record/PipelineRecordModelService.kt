@@ -106,7 +106,7 @@ class PipelineRecordModelService @Autowired constructor(
         )
         logger.info(
             "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|matrixContainerIds:" +
-                "$matrixContainerIds|buildNormalRecordTasks:${JsonUtil.toJson(buildNormalRecordTasks)}"
+                "$matrixContainerIds|buildNormalRecordTasks:${JsonUtil.toJson(buildNormalRecordTasks, false)}"
         )
         val buildRecordTasks = if (matrixContainerIds.isNotEmpty()) {
             val buildMatrixRecordTasks = buildRecordTaskDao.getLatestMatrixRecords(
@@ -116,13 +116,17 @@ class PipelineRecordModelService @Autowired constructor(
                 executeCount = executeCount,
                 matrixContainerIds = matrixContainerIds
             )
+            logger.info(
+                "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|" +
+                    "buildMatrixRecordTasks:${JsonUtil.toJson(buildMatrixRecordTasks, false)}"
+            )
             buildNormalRecordTasks.plus(buildMatrixRecordTasks)
         } else {
             buildNormalRecordTasks
         }
         logger.info(
             "generateFieldRecordModelMap buildId:$buildId|executeCount:$executeCount|" +
-                "buildRecordTasks:${JsonUtil.toJson(buildRecordTasks)}"
+                "buildRecordTasks:${JsonUtil.toJson(buildRecordTasks, false)}"
         )
         val stages = mutableListOf<Map<String, Any>>()
         buildRecordStages.forEach { buildRecordStage ->

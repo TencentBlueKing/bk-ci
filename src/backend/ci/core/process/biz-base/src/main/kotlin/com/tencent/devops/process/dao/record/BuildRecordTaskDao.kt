@@ -138,11 +138,12 @@ class BuildRecordTaskDao {
         matrixContainerIds: List<String>
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            val conditions = BUILD_ID.eq(buildId)
-                .and(PROJECT_ID.eq(projectId))
-                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(EXECUTE_COUNT.lessOrEqual(executeCount))
             if (matrixContainerIds.isNotEmpty()) {
-                conditions.and(CONTAINER_ID.notIn(matrixContainerIds))
+                conditions.add(CONTAINER_ID.notIn(matrixContainerIds))
             }
             // 获取每个最大执行次数
             val max = DSL.select(
@@ -175,7 +176,7 @@ class BuildRecordTaskDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(EXECUTE_COUNT.eq(executeCount))
-            conditions.and(CONTAINER_ID.`in`(matrixContainerIds))
+                .and(CONTAINER_ID.`in`(matrixContainerIds))
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
