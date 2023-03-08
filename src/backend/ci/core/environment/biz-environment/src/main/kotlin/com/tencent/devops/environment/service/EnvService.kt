@@ -202,7 +202,10 @@ class EnvService @Autowired constructor(
         if (canListEnv.isEmpty()) {
             return listOf()
         } else {
-            envListResult = if (environmentPermissionService.isRbac()) canListEnv else envRecordList
+            envListResult = environmentPermissionService.getEnvListResult(
+                canListEnv = canListEnv,
+                envRecordList = envRecordList
+            )
         }
         val nodeCountMap = envNodeDao.batchCount(dslContext, projectId, envRecordList.map { it.envId })
             .associateBy({ it.value1() }, { it.value2() })

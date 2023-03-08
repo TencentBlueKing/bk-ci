@@ -34,6 +34,8 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.slf4j.LoggerFactory
 
 class RbacEnvironmentPermissionService(
@@ -65,6 +67,10 @@ class RbacEnvironmentPermissionService(
             resourceType = envResourceType,
             action = RbacAuthUtils.buildActionList(permissions, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
         ).data ?: emptyMap()
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return canListEnv
     }
 
     override fun checkEnvPermission(
@@ -150,6 +156,12 @@ class RbacEnvironmentPermissionService(
         ).data ?: emptyMap()
     }
 
+    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+        val canListNodeIds = listNodeByPermission(userId, projectId, AuthPermission.LIST)
+        val canListNode = nodeRecordList.filter { canListNodeIds.contains(it.nodeId) }
+        return canListNode.ifEmpty { emptyList() }
+    }
+
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
@@ -204,8 +216,6 @@ class RbacEnvironmentPermissionService(
         )
     }
 
-    override fun isRbac(): Boolean = true
-
     private fun buildNodeAction(authPermission: AuthPermission): String {
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENV_NODE)
     }
@@ -213,22 +223,6 @@ class RbacEnvironmentPermissionService(
     private fun buildEnvAction(authPermission: AuthPermission): String {
         return RbacAuthUtils.buildAction(authPermission, AuthResourceType.ENVIRONMENT_ENVIRONMENT)
     }
-
-    /*private fun buildResultMap(
-        instancesMap: Map<AuthPermission, List<String>>
-    ): Map<AuthPermission, List<String>> {
-        if (instancesMap.isEmpty())
-            return emptyMap()
-        val resultMap = mutableMapOf<AuthPermission, List<String>>()
-        instancesMap.forEach { (key, value) ->
-            val instanceLongIds = mutableListOf<String>()
-            value.forEach {
-                instanceLongIds.add(HashUtil.decodeIdToLong(it).toString())
-            }
-            resultMap[key] = instanceLongIds
-        }
-        return resultMap
-    }*/
 
     companion object {
         val logger = LoggerFactory.getLogger(RbacEnvironmentPermissionService::class.java)
