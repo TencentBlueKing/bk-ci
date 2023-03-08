@@ -195,7 +195,7 @@ class BuildRecordContainerDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.eq(executeCount))
-                .and(MATRIX_GROUP_FLAG.isNotNull)
+                .and(MATRIX_GROUP_ID.isNotNull)
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
                 CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
