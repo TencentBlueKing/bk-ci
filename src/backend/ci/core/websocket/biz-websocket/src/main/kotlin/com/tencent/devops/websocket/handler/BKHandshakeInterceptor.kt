@@ -29,6 +29,7 @@ package com.tencent.devops.websocket.handler
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
@@ -42,9 +43,9 @@ import org.springframework.web.socket.server.HandshakeInterceptor
 
 @Component
 class BKHandshakeInterceptor @Autowired constructor(
-    val redisOperation: RedisOperation,
-    val websocketService: WebsocketService
+    val redisOperation: RedisOperation
 ) : HandshakeInterceptor {
+
     companion object {
         private val logger = LoggerFactory.getLogger(BKHandshakeInterceptor::class.java)
     }
@@ -61,7 +62,8 @@ class BKHandshakeInterceptor @Autowired constructor(
             if (userId != null && sessionId != null) {
                 WsRedisUtils.writeSessionIdByRedis(redisOperation, userId, sessionId)
                 logger.info("[WebSocket]-[$userId]-[$sessionId]-连接成功")
-                websocketService.createTimeoutSession(sessionId, userId)
+                SpringContextUtil.getBean(WebsocketService::class.java)
+                    .createTimeoutSession(sessionId, userId)
             }
         }
     }
