@@ -121,7 +121,7 @@
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
-                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceType: 'project',
                                     resourceCode: projectId,
                                     action: CRED_RESOURCE_ACTION.CREATE
                                 }

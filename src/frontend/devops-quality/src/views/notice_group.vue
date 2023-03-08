@@ -18,7 +18,7 @@
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,
-                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                            resourceType: 'project',
                             resourceCode: projectId,
                             action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
                         }

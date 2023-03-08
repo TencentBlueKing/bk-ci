@@ -7,7 +7,7 @@
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: projectId,
-                        resourceType: RESOURCE_TYPE,
+                        resourceType: 'project',
                         resourceCode: projectId,
                         action: RESOURCE_ACTION.CREATE
                     }

@@ -7,7 +7,7 @@
                     v-perm="{
                         permissionData: {
                             projectId: projectId,
-                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceType: 'project',
                             resourceCode: projectId,
                             action: NODE_RESOURCE_ACTION.CREATE
                         }
@@ -44,25 +44,12 @@
                         </div>
                         <div class="table-node-item node-item-id" v-else>
                             <span
-                                v-perm="{
-                                    hasPermission: props.row.canUse,
-                                    disablePermissionApi: true,
-                                    permissionData: {
-                                        projectId: projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.USE
-                                    }
-                                }"
+                                class="node-name"
+                                :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
+                                :title="props.row.displayName"
+                                @click="toNodeDetail(props.row)"
                             >
-                                <span
-                                    class="node-name"
-                                    :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
-                                    :title="props.row.displayName"
-                                    @click="toNodeDetail(props.row)"
-                                >
-                                    {{ props.row.displayName || '-' }}
-                                </span>
+                                {{ props.row.displayName || '-' }}
                             </span>
                             <span
                                 v-perm="{
@@ -72,7 +59,7 @@
                                         projectId: projectId,
                                         resourceType: NODE_RESOURCE_TYPE,
                                         resourceCode: props.row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.CREATE
+                                        action: NODE_RESOURCE_ACTION.EDIT
                                     }
                                 }"
                             >
