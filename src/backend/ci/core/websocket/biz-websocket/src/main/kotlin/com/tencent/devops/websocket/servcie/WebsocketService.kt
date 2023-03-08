@@ -42,7 +42,6 @@ import com.tencent.devops.websocket.utils.PageUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
@@ -110,7 +109,6 @@ class WebsocketService @Autowired constructor(
     }
 
     fun loginOut(
-        streamBridge: StreamBridge,
         userId: String,
         sessionId: String,
         oldPage: String?,
@@ -152,7 +150,6 @@ class WebsocketService @Autowired constructor(
     }
 
     fun clearUserSession(
-        streamBridge: StreamBridge,
         userId: String,
         sessionId: String,
         transferData: Map<String, Any>?
@@ -179,16 +176,15 @@ class WebsocketService @Autowired constructor(
     }
 
     fun clearAllBySession(
-        streamBridge: StreamBridge,
         userId: String,
         sessionId: String
     ): Result<Boolean> {
         logger.info("clearSession| $userId| $sessionId")
         val page = WsRedisUtils.getPageFromSessionPageBySession(redisOperation, sessionId)
-        clearUserSession(streamBridge, userId, sessionId, null)
+        clearUserSession(userId, sessionId, null)
         if (page != null) {
             logger.info("$userId| $sessionId|$page clear when disconnection")
-            loginOut(streamBridge, userId, sessionId, page)
+            loginOut(userId, sessionId, page)
         }
         if (!isCacheSession(sessionId)) {
             transferDispatch.dispatch(
