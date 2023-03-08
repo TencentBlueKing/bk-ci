@@ -111,10 +111,26 @@
                     <template slot-scope="props">
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission disabled': !props.row.canDelete }"
-                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
-                                @click.stop="confirmDelete(props.row, index)"
-                            >{{ $t('environment.delete') }}</span>
+                            <span
+                                v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                v-perm="{
+                                    hasPermission: props.row.canDelete,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
+                            >
+                                <span
+                                    class="node-handle delete-node-text"
+                                    @click.stop="confirmDelete(props.row, index)"
+                                >
+                                    {{ $t('environment.delete') }}
+                                </span>
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -155,6 +171,8 @@
         },
         data () {
             return {
+                NODE_RESOURCE_TYPE,
+                NODE_RESOURCE_ACTION,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 nodeIp: '',
@@ -359,50 +377,42 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-                if (!row.canDelete) {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: NODE_RESOURCE_TYPE,
-                        resourceCode: row.nodeHashId,
-                        action: NODE_RESOURCE_ACTION.DELETE
-                    })
-                } else {
-                    this.$bkInfo({
-                        theme: 'warning',
-                        type: 'warning',
-                        title: this.$t('environment.delete'),
-                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
-                        confirmFn: async () => {
-                            let message, theme
-                            try {
-                                await this.$store.dispatch('environment/toDeleteNode', {
-                                    projectId: this.projectId,
-                                    params: params
-                                })
+                
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    title: this.$t('environment.delete'),
+                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
+                    confirmFn: async () => {
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
 
-                                message = this.$t('environment.successfullyDeleted')
-                                theme = 'success'
-                                
-                                message && this.$bkMessage({
-                                    message,
-                                    theme
-                                })
-                            } catch (e) {
-                                this.handleError(
-                                    e,
-                                    {
-                                        projectId: this.projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.DELETE
-                                    }
-                                )
-                            } finally {
-                                this.requestList()
-                            }
+                            message = this.$t('environment.successfullyDeleted')
+                            theme = 'success'
+                            
+                            message && this.$bkMessage({
+                                message,
+                                theme
+                            })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: row.nodeHashId,
+                                    action: NODE_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        } finally {
+                            this.requestList()
                         }
-                    })
-                }
+                    }
+                })
             },
             /**
              * 构建机信息
@@ -900,15 +910,6 @@
                 color: $fontLigtherColor;
                 .node-count-item {
                   color: $fontLigtherColor;
-                }
-              }
-              .no-node-delete-permission {
-                  &.disabled {
-                    color: #C4C6CC;
-                    &:hover {
-                        color: #C4C6CC;
-                    }
-                    cursor: url(../images/cursor-lock.png), auto !important;
                 }
               }
             }

@@ -36,7 +36,21 @@
                         <span @click="saveHandle('parallelTaskCount')">{{ $t('environment.save') }}</span>
                         <span @click="editHandle('parallelTaskCount', false)">{{ $t('environment.cancel') }}</span>
                     </div>
-                    <div :class="{ 'is-disabled': !nodeDetails.canEdit }" v-else><span @click="editHandle('parallelTaskCount', true)">{{ $t('environment.edit') }}</span></div>
+                    <div
+                        v-else
+                        v-perm="{
+                            hasPermission: nodeDetails.canEdit,
+                            disablePermissionApi: true,
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: NODE_RESOURCE_TYPE,
+                                resourceCode: nodeHashId,
+                                action: NODE_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        <span @click="editHandle('parallelTaskCount', true)">{{ $t('environment.edit') }}</span>
+                    </div>
                 </div>
             </div>
             <div class="item-content">
@@ -84,7 +98,9 @@
                     { name: 'work-wechat', value: 'RTX', isChecked: true },
                     { name: 'wechat', value: 'WECHAT', isChecked: false },
                     { name: 'email', value: 'EMAIL', isChecked: false }
-                ]
+                ],
+                NODE_RESOURCE_ACTION,
+                NODE_RESOURCE_TYPE
             }
         },
         computed: {

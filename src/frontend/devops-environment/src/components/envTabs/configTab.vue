@@ -62,8 +62,30 @@
                             <span class="text-type" @click="cancelEdit(row, index)">{{ $t('environment.cancel') }}</span>
                         </div>
                         <div class="preview-handler" v-else>
-                            <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
-                            <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
+                            <span
+                                v-perm="{
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span class="config-edit" @click="changeConfig(row, index)">{{ $t('environment.edit') }}</span>
+                            </span>
+                            <span
+                                v-perm="{
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: ENV_RESOURCE_TYPE,
+                                        resourceCode: envHashId,
+                                        action: ENV_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <span class="config-edit" @click="deleteConfig(row, index)">{{ $t('environment.delete') }}</span>
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -102,6 +124,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 curIsPlaintext: false, // 明文/密文
                 lastselectConfIndex: -1, // 最后选中的配置项索引
                 lastSelectConfig: {},
@@ -236,16 +260,6 @@
                         message,
                         theme
                     })
-                } catch (e) {
-                    this.handleError(
-                        e,
-                        {
-                            projectId: this.projectId,
-                            resourceType: ENV_RESOURCE_TYPE,
-                            resourceCode: this.envHashId,
-                            action: ENV_RESOURCE_ACTION.EDIT
-                        }
-                    )
                 } finally {
                     this.lastselectConfIndex = -1
                     this.requestEnvDetail()
@@ -293,16 +307,6 @@
                                     message,
                                     theme
                                 })
-                            } catch (e) {
-                                this.handleError(
-                                    e,
-                                    {
-                                        projectId: this.projectId,
-                                        resourceType: ENV_RESOURCE_TYPE,
-                                        resourceCode: this.envHashId,
-                                        action: ENV_RESOURCE_ACTION.EDIT
-                                    }
-                                )
                             } finally {
                                 this.lastselectConfIndex = -1
                                 this.requestEnvDetail()

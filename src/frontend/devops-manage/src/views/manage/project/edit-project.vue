@@ -13,7 +13,8 @@ import { InfoBox, Message, Popover } from 'bkui-vue';
 import ProjectForm from '@/components/project-form.vue';
 import {
   handleProjectManageNoPermission,
-  RESOURCE_ACTION
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
 } from '@/utils/permission.js'
 
 const { t } = useI18n();
@@ -177,7 +178,16 @@ onMounted(() => {
         <bk-form-item>
           <Popover
             :content="statusDisabledTips[projectData.approvalStatus]"
-            :disabled="![1, 4].includes(projectData.approvalStatus)">
+            :disabled="![1, 4].includes(projectData.approvalStatus)"
+            v-perm="{
+              permissionData: {
+                projectId: projectCode,
+                resourceType: RESOURCE_TYPE,
+                resourceCode: projectCode,
+                action: RESOURCE_ACTION.EDIT
+              }
+            }"
+          >
             <span>
               <bk-button
                 class="btn mr10"

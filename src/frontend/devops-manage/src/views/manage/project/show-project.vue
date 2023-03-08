@@ -413,14 +413,25 @@ onMounted(async () => {
                     {{ t('取消创建') }}
                   </bk-button>
                   
-                  <bk-button
-                    v-if="projectData.approvalStatus === 2"
-                    class="btn"
-                    theme="default"
-                    @click="handleEnabledProject"
+                  <span
+                    v-perm="{
+                      permissionData: {
+                        projectId: projectData.projectCode,
+                        resourceType: RESOURCE_TYPE,
+                        resourceCode: projectData.projectCode,
+                        action: RESOURCE_ACTION.ENABLE
+                      }
+                    }"
                   >
-                    {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
-                  </bk-button>
+                    <bk-button
+                      v-if="projectData.approvalStatus === 2"
+                      class="btn"
+                      theme="default"
+                      @click="handleEnabledProject"
+                    >
+                      {{ projectData.enabled ? t('停用项目') : t('启用项目') }}
+                    </bk-button>
+                  </span>
                 </bk-form-item>
               </bk-form>
             </section>

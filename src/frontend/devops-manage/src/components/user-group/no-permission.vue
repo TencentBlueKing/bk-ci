@@ -7,19 +7,51 @@
         scene="part"
         :title="title"
       >
+        <bk-button
+          class="apply-btn"
+          theme="primary"
+          @click="handleApply"
+        >
+          {{ $t('去申请') }}
+        </bk-button>
       </bk-exception>
     </div>
   </article>
 </template>
 
 <script>
+import {
+  handleProjectManageNoPermission,
+} from '@/utils/permission.js'
 export default {
   props: {
     title: {
       type: String,
       default: '',
+    },
+    projectCode: {
+      type: String,
+      default: '',
+    },
+    resourceType: {
+      type: String,
+      default: '',
+    },
+    resourceAction: {
+      type: String,
+      default: '',
     }
   },
+  methods: {
+    handleApply () {
+      const { resourceAction, projectCode } = this;
+      handleProjectManageNoPermission({
+        action: resourceAction,
+        projectId: projectCode,
+        resourceCode: projectCode,
+      });
+    }
+  }
 };
 </script>
 
@@ -38,7 +70,7 @@ export default {
   text-align: center;
   padding: 32px 48px;
 }
-.btn {
+.apply-btn {
   margin-top: 32px;
 }
 :deep(.bk-exception-img) {

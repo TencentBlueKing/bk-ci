@@ -12,7 +12,18 @@
             <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
             <bk-table-column :label="$t('environment.operation')" width="150">
                 <template slot-scope="props">
-                    <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
+                    <span
+                        v-perm="{
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                    >
+                        <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
+                    </span>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -58,7 +69,8 @@
             return {
                 shareEnvProjectList: [],
                 showProjectDialog: false,
-                
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -123,7 +135,7 @@
             },
             actionWrapper (action, message) {
                 return async (...args) => {
-                    let theme = 'success'
+                    const theme = 'success'
                     try {
                         await action(...args)
                         this.fetchEnvProjects()

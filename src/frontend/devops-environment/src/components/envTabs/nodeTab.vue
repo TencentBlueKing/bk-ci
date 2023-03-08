@@ -47,7 +47,18 @@
                 </bk-table-column>
                 <bk-table-column :width="80" :label="$t('environment.operation')">
                     <template slot-scope="props">
-                        <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                        <span
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                        </span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -99,6 +110,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
                 timer: null,
                 loading: {
                     isLoading: false,

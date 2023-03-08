@@ -3,7 +3,18 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.environment') }}</div>
             <div slot="right" v-if="showContent && envList.length">
-                <bk-button theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
+                <span
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: ENV_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: ENV_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                >
+                    <bk-button theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
+                </span>
             </div>
         </content-header>
 
@@ -37,7 +48,25 @@
                 </bk-table-column>
                 <bk-table-column :label="$t('environment.operation')" width="160">
                     <template slot-scope="props">
-                        <span :class="{ 'handler-text': props.row.canDelete, 'no-env-delete-permission disabled': !props.row.canDelete }" @click.stop="confirmDelete(props.row)">{{ $t('environment.delete') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: props.row.canDelete,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: props.row.envHashId,
+                                    action: ENV_RESOURCE_ACTION.DELETE
+                                }
+                            }"
+                        >
+                            <span
+                                :class="{ 'handler-text': props.row.canDelete }"
+                                @click.stop="confirmDelete(props.row)"
+                            >
+                                {{ $t('environment.delete') }}
+                            </span>
+                        </span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -53,7 +82,7 @@
 <script>
     import emptyNode from './empty_node'
     import { convertTime } from '@/utils/util'
-    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '../utils/permission'
+    import { ENV_RESOURCE_ACTION, ENV_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -61,6 +90,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
                 showContent: false, // 显示内容
                 envList: [], // 换环境列表
                 loading: {
@@ -144,15 +175,6 @@
              */
             async confirmDelete (row) {
                 const id = row.envHashId
-                if (!row.canDelete) {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: ENV_RESOURCE_TYPE,
-                        resourceCode: row.envHashId,
-                        action: ENV_RESOURCE_ACTION.DELETE
-                    })
-                    return
-                }
                 
                 this.$bkInfo({
                     type: 'warning',
@@ -243,15 +265,6 @@
               .node-count-item {
                 color: $fontLigtherColor;
               }
-            }
-            .no-env-delete-permission {
-                &.disabled {
-                    color: #C4C6CC;
-                    &:hover {
-                        color: #C4C6CC;
-                    }
-                    cursor: url(../images/cursor-lock.png), auto !important;
-                }
             }
         }
 
