@@ -105,16 +105,14 @@
                 action: actionAliasMap[item.actionId] ? actionAliasMap[item.actionId].alias : '--'
               }
           })
-          // actionAliasMap
         }
 
         async toApplyPermission () {
           try {
-              const body = this.noPermissionList.map(perm => this.getPermissionBody(perm))
-              console.log('permBody', body)
-              const redirectUrl = await this.getPermRedirectUrl(body)
-              console.log('redirectUrl', redirectUrl)
-              window.open(redirectUrl, '_blank')
+              // const body = this.noPermissionList.map(perm => this.getPermissionBody(perm))
+              // console.log('permBody', body)
+              // const redirectUrl = await this.getPermRedirectUrl(body)
+              window.open(this.applyPermissionUrl, '_blank')
               this.showDialog = false
               this.$bkInfo({
                   title: this.$t('permissionRefreshtitle'),

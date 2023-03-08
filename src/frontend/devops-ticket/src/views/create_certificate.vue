@@ -107,21 +107,21 @@
                 certType: '',
                 certData: {},
                 certTypeList: [
-                    // {
-                    //     label: this.$t('ticket.cert.iosCert'),
-                    //     value: 'ios',
-                    //     icon: 'icon-macos'
-                    // },
-                    // {
-                    //     label: this.$t('ticket.cert.androidCert'),
-                    //     value: 'android',
-                    //     icon: 'icon-android-shape'
-                    // },
-                    // {
-                    //     label: this.$t('ticket.cert.sslOrTlsCert'),
-                    //     value: 'tls',
-                    //     icon: 'icon-personal-cert'
-                    // },
+                    {
+                        label: this.$t('ticket.cert.iosCert'),
+                        value: 'ios',
+                        icon: 'icon-macos'
+                    },
+                    {
+                        label: this.$t('ticket.cert.androidCert'),
+                        value: 'android',
+                        icon: 'icon-android-shape'
+                    },
+                    {
+                        label: this.$t('ticket.cert.sslOrTlsCert'),
+                        value: 'tls',
+                        icon: 'icon-personal-cert'
+                    },
                     {
                         label: this.$t('ticket.cert.iosCorporatesignCert'),
                         value: 'enterprise',
@@ -164,6 +164,10 @@
 
             applyCreUrl () {
                 return `/console/ticket/${this.projectId}/createCredential/PASSWORD/true`
+            },
+
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
             }
         },
 
@@ -180,7 +184,7 @@
         methods: {
             init () {
                 const params = this.$route.params || {}
-                this.certType = params.certType ? params.certType.toLowerCase() : 'enterprise'
+                this.certType = params.certType ? params.certType.toLowerCase() : 'ios'
                 this.isEdit = this.$route.name === 'editCert'
 
                 if (this.isEdit) {
@@ -199,12 +203,11 @@
             },
 
             goToApplyPerm () {
-                // const url = `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=cert`
-                // window.open(url, '_blank')
-                this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
-                    id: this.projectId,
-                    type: this.$permissionResourceTypeMap.PROJECT
-                }])
+                // this.applyPermission(this.$permissionActionMap.create, this.$permissionResourceMap.cert, [{
+                //     id: this.projectId,
+                //     type: this.$permissionResourceTypeMap.PROJECT
+                // }])
+                this.tencentPermission(`/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&role_creator=certificate`)
             },
 
             async requestCertDetail (callBack) {
@@ -259,10 +262,19 @@
                                 type: this.$permissionResourceTypeMap.TICKET_CERT
                             }]
                             : []
-                        this.applyPermission(actionId, this.$permissionResourceMap.cert, [{
-                            id: this.projectId,
-                            type: this.$permissionResourceTypeMap.PROJECT
-                        }, ...instanceId])
+                        
+                        this.$showAskPermissionDialog({
+                            noPermissionList: [{
+                                actionId,
+                                resourceId: this.$permissionResourceMap.envNode,
+                                instanceId: [{
+                                    id: this.projectId,
+                                    type: this.$permissionResourceTypeMap.PROJECT
+                                }, ...instanceId],
+                                projectId: this.projectId
+                            }],
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=ticket&project_code=${this.projectId}&service_code=ticket&${this.isEdit ? 'role_manager' : 'role_creator'}=certificate${this.isEdit ? `:${formData.certId}` : ''}`
+                        })
                     }
                     message = err.message ? err.message : err
                     theme = 'error'

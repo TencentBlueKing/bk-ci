@@ -601,6 +601,10 @@ export function getQueryParamList (arr = [], key) {
     }
 }
 
+export function isAbsoluteURL (url = '') {
+    return /^https?:\/\//i.test(url)
+}
+
 export function getParamsValuesMap (params = []) {
     if (!Array.isArray(params)) return {}
     return params.reduce((values, param) => {

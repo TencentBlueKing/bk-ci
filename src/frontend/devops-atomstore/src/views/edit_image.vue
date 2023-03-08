@@ -107,16 +107,43 @@
                     class="h32"
                     :rules="[requireRule]"
                     ref="imageSourceType"
+                    v-if="VERSION_TYPE !== 'ee'"
                     error-display-type="normal"
                 >
                     <bk-radio-group v-model="form.imageSourceType" @change="clearRepo">
+                        <bk-radio value="BKDEVOPS" class="mr12"> {{ $t('store.蓝盾源') }} </bk-radio>
                         <bk-radio value="THIRD"> {{ $t('store.第三方源') }} </bk-radio>
                     </bk-radio-group>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
+                <bk-form-item v-show="form.imageSourceType === 'BKDEVOPS'" :label="$t('store.源镜像')" :required="true" property="imageRepoName" :rules="[requireRule]" ref="imageRepoName">
+                    <bk-select v-model="form.imageRepoName" @toggle="getImageList" searchable>
+                        <bk-option v-for="(option, index) in imageList"
+                            :key="index"
+                            :id="option.repo"
+                            :name="option.repo"
+                            :placeholder="$t('store.请选择源镜像')"
+                            @click.native="getImageTagList(option)"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </bk-form-item>
+                <bk-form-item v-show="form.imageSourceType === 'BKDEVOPS'" :label="$t('store.源镜像Tag')" :desc="$t('store.请选择源镜像Tag，注意已发布过的Tag不能重复发布，请不要使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')" :required="true" property="imageTag" :rules="[requireRule]" ref="imageTag">
+                    <bk-select v-model="form.imageTag" searchable :loading="isLoadingTag">
+                        <bk-option v-for="(option, index) in imageVersionList"
+                            :key="index"
+                            :id="option.tag"
+                            :name="option.tag"
+                            :disabled="option.storeFlag"
+                            :placeholder="$t('store.请选择源镜像Tag')"
+                        >
+                        </bk-option>
+                    </bk-select>
+                </bk-form-item>
+                <bk-form-item v-show="form.imageSourceType === 'THIRD'" :label="$t('store.源镜像库地址')" property="imageRepoUrl" :desc="$t('store.请输入源镜像库地址。若源为 docker hub，可留空不填')">
                     <bk-input v-model="form.imageRepoUrl" :placeholder="$t('store.imageRepoUrl')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像名称')"
+                <bk-form-item v-show="form.imageSourceType === 'THIRD'"
+                    :label="$t('store.源镜像名称')"
                     property="imageRepoName"
                     :required="true"
                     :rules="[requireRule]"
@@ -125,7 +152,8 @@
                 >
                     <bk-input v-model="form.imageRepoName" :placeholder="$t('store.请输入源镜像名称，如 XXX/XXXX')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.源镜像Tag')"
+                <bk-form-item v-show="form.imageSourceType === 'THIRD'"
+                    :label="$t('store.源镜像Tag')"
                     property="imageTag"
                     :desc="$t('store.不建议使用可变功能的Tag（如latest），避免镜像变更导致关联流水线不能正常执行')"
                     :required="true"
@@ -135,7 +163,7 @@
                 >
                     <bk-input v-model="form.imageTag" :placeholder="$t('store.imageTag')"></bk-input>
                 </bk-form-item>
-                <bk-form-item :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
+                <bk-form-item v-show="form.imageSourceType === 'THIRD'" :label="$t('store.凭证')" property="ticketId" :desc="$t('store.若为私有镜像，请提供凭证，用于流水线执行时拉取镜像')">
                     <bk-select v-model="form.ticketId" searchable :placeholder="$t('store.请选择凭证')">
                         <bk-option v-for="option in ticketList"
                             :key="option.credentialId"
@@ -250,7 +278,7 @@
                     description: '',
                     logoUrl: '',
                     iconData: '',
-                    imageSourceType: 'THIRD',
+                    imageSourceType: 'BKDEVOPS',
                     dockerFileType: 'INPUT',
                     dockerFileContent: '',
                     imageRepoUrl: '',
@@ -265,7 +293,7 @@
                     category: '',
                     agentTypeScope: []
                 },
-                docsLink: `${DOCS_URL_PREFIX}/Services/Store/docker-build.md`,
+                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=22118721`,
                 ticketList: [],
                 classifys: [],
                 labelList: [],
@@ -436,6 +464,7 @@
                         })
                 }).catch((err) => this.$bkMessage({ message: err.message || err, theme: 'error' })).finally(() => {
                     this.isLoading = false
+                    if (VERSION_TYPE === 'ee') this.form.imageSourceType = 'THIRD'
                 })
             },
 

@@ -1,0 +1,11 @@
+spring:
+  main:
+    allow-bean-definition-overriding: true
+  application:
+    name: dispatch-kubernetes
+    desc: DevOps Dispatch Kubernetes Service
+    version: 4.0.0
+    packageName: com.tencent.devops.dispatch.kubernetes
+
+server:
+  port: 21951

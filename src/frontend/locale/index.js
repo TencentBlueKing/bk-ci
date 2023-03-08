@@ -1,6 +1,6 @@
 import VueI18n from 'vue-i18n'
 import Vue from 'vue'
-import { lang, locale } from 'bk-magic-vue'
+import { lang, locale } from '@tencent/bk-magic-vue'
 import axios from 'axios'
 import cookies from 'js-cookie'
 const DEFAULT_LOCALE = window.INIT_LOCALE ?? 'zh-CN'
@@ -9,20 +9,20 @@ const loadedModule = {}
 const localeLabelMap = {
     'zh-CN': '中文',
     'zh-cn': '中文',
-    'cn': '中文',
+    cn: '中文',
     'en-US': 'English',
     'en-us': 'English',
-    'en': 'English',
-    'us': 'English'
+    en: 'English',
+    us: 'English'
 }
 const localeAliasMap = {
     'zh-CN': 'zh-CN',
     'zh-cn': 'zh-CN',
-    'cn': 'zh-CN',
+    cn: 'zh-CN',
     'en-US': 'en-US',
     'en-us': 'en-US',
-    'en': 'en-US',
-    'us': 'en-US'
+    en: 'en-US',
+    us: 'en-US'
 }
 
 function getSubDoamin () {
@@ -66,6 +66,7 @@ function setLsLocale (locale) {
 export default (r, initSetLocale = false) => {
     Vue.use(VueI18n)
     const { messages, localeList } = importAll(r)
+    
     const initLocale = getLsLocale()
     // export localeList
     const i18n = new VueI18n({
@@ -91,7 +92,7 @@ export default (r, initSetLocale = false) => {
             
             i18n.setLocaleMessage(locale, {
                 ...i18n.messages[locale],
-                [ module ]: messages
+                [module]: messages
             })
             loadedModule[localeModuleId] = true
         })

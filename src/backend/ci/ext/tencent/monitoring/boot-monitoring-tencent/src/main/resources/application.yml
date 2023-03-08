@@ -1,0 +1,7 @@
+# 该配置只能定义应用名， 其他配置信息请再devops-config修改
+spring:
+  application:
+    name: monitoring
+    desc: DevOps Monitoring Service
+    version: 4.0
+    packageName: com.tencent.devops.monitoring

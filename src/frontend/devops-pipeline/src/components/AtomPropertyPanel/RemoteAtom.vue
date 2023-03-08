@@ -85,7 +85,6 @@
                 }, '*')
             },
             receiveMsgFromIframe (e) {
-                // if (location.href.indexOf(e.origin) === 0) return
                 if (!e.data) return
                 if (e.data.atomValue) {
                     console.log(e.data, this.element?.id, 'dataFromIframeAtom')

@@ -1,0 +1,112 @@
+#artifactory Deployment (文件名主要是为了覆盖core)
+{{ if .Values.artifactory.enabled -}}
+apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-artifactory
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: artifactory
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: artifactory
+  {{- if not .Values.artifactory.autoscaling.enabled }}
+  replicas: {{ .Values.artifactory.replicas }}
+  {{- end }} 
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.artifactory.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.artifactory.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: artifactory
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.artifactory.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.artifactory.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.artifactory.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.artifactory.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.artifactory.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.artifactory.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.artifactory.nodeAffinityPreset.type "key" .Values.artifactory.nodeAffinityPreset.key "values" .Values.artifactory.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.artifactory.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.artifactory.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.artifactory.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.artifactory.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.artifactory.priorityClassName }}
+      priorityClassName: {{ .Values.artifactory.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.artifactory.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.artifactory.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: artifactory
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.artifactory.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.artifactory.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.artifactory.resources }}
+          resources: {{- toYaml .Values.artifactory.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: artifactory
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/artifactory
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/artifactory/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}

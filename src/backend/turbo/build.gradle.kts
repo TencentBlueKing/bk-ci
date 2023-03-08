@@ -11,13 +11,12 @@ allprojects {
 
     apply(plugin = "com.tencent.devops.boot")
 
-
-    configurations.all {
-        exclude(group = "org.slf4j", module = "log4j-over-slf4j")
-        exclude(group = "org.slf4j", module = "slf4j-log4j12")
-        exclude(group = "org.slf4j", module = "slf4j-nop")
-        resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.MINUTES)
-    }
+	configurations.all {
+		exclude(group = "org.slf4j", module = "log4j-over-slf4j")
+		exclude(group = "org.slf4j", module = "slf4j-log4j12")
+		exclude(group = "org.slf4j", module = "slf4j-nop")
+		resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.MINUTES)
+	}
 
 	dependencyManagement {
 		dependencies {

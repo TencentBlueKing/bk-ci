@@ -452,7 +452,8 @@ export default {
                     id: pipelineId,
                     name: pipelineName
                 }],
-                this.$route.params.projectId
+                this.$route.params.projectId,
+                this.getPermUrlByRole(this.$route.params.projectId, pipelineId)
             )
         }
     }

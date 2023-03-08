@@ -1,0 +1,24 @@
+#store debug
+{{ if .Values.store.enabled -}}
+{{ if .Values.remoteDebug.enabled -}}
+apiVersion: v1
+kind: Service
+metadata:
+  name: debug-store
+  labels: 
+    app.kubernetes.io/name: store
+    app.kubernetes.io/component: microservice
+  annotations:
+    service.kubernetes.io/qcloud-loadbalancer-internal-subnetid: subnet-2mgq2ka8
+spec:
+  type: LoadBalancer
+  selector: 
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: store
+  ports:
+    - name: debug
+      port: 8080
+      targetPort: 8080
+      protocol: TCP
+{{- end -}}
+{{- end -}}

@@ -3,6 +3,7 @@ import Router, { RouteMeta } from 'vue-router'
 import { updateRecentVisitServiceList, urlJoin, getServiceAliasByPath, importScript, importStyle, ifShowNotice } from '../utils/util'
 
 import compilePath from '../utils/pathExp'
+import request from '../utils/request'
 import cookie from 'js-cookie'
 
 // 首页 - index
@@ -12,7 +13,11 @@ const Home = () => import('../views/Home.vue')
 
 const IFrame = () => import('../views/IFrame.vue')
 
+const QuickStart = () => import('../views/QuickStart.vue')
+
 const ProjectManage = () => import('../views/ProjectManage.vue')
+
+// const Docs = () => import('../views/Docs.vue')
 
 const Maintaining = () => import('../views/503.vue')
 
@@ -49,6 +54,15 @@ const routes = [
                 }
             },
             {
+                path: 'quickstart',
+                name: 'quickstart',
+                component: QuickStart,
+                meta: {
+                    showProjectList: false,
+                    showNav: true
+                }
+            },
+            {
                 path: 'pm',
                 name: 'pm',
                 component: ProjectManage,
@@ -73,6 +87,8 @@ function isAmdModule (currentPage: subService): boolean {
 }
 
 const createRouter = (store: any, dynamicLoadModule: any, i18n: any) => {
+    counterUser() // 统计用户信息
+    // uploadBKCounter(1) // 统计蓝鲸访问信息
     const router = new Router({
         mode: 'history',
         routes: routes
@@ -149,7 +165,53 @@ function updateHeaderConfig (routeMeta: RouteMeta) {
     }
 }
 
-function getProjectId (params): string {
+/**
+ * 上报用户信息
+ */
+function counterUser (): void {
+    const userId = window.userInfo.username
+    const os = parseOS()
+    
+    request.post('/project/api/user/count/login', {
+        os,
+        userId
+    })
+}
+
+// function uploadBKCounter (count: number = 1): void {
+//     try {
+//         const date: Date = new Date()
+//         const appMsg = {
+//             bkdevops: {
+//                 [`${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`]: count
+//             }
+//         }
+//         window.JSONP('http://open.oa.com/app_statistics/liveness/save_jsonp?app_msg=' + JSON.stringify(appMsg), function () {
+//             // jsonp callback with data
+//         })
+//     } catch (e) {
+//         console.warn('upload bk error', e)
+//     }
+// }
+
+function parseOS (): string {
+    const { userAgent } = window.navigator
+    switch (true) {
+        case userAgent.indexOf('Linux') > -1:
+            return /android/i.test(userAgent) ? 'ANDROID' : 'LINUX'
+        case userAgent.indexOf('iPhone') > -1:
+            return 'IOS'
+        case userAgent.indexOf('iPad') > -1:
+            return 'iPad'
+        case userAgent.indexOf('Mac') > -1:
+            return 'MACOS'
+        case userAgent.indexOf('Win') > -1:
+            return 'WINDOWS'
+    }
+    return 'WINDOWS'
+}
+
+export function getProjectId (params): string {
     try {
         const cookiePid = cookie.get(X_DEVOPS_PROJECT_ID)
         const projectId = window.GLOBAL_PID || cookiePid

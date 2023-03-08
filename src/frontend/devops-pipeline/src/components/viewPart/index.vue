@@ -26,23 +26,31 @@
                         <span>{{ convertInfoItem('size', row.size) }}</span>
                     </div>
                     <div class="table-part-item part-item-type">
-                        {{ repoTypeNameMap[row.artifactoryType] }}
+                        {{ repoTypeNameMap[row.artifactoryType].i18n }}
                     </div>
                     <div class="table-part-item part-item-handler">
-                        <!-- <i @click.stop="gotoArtifactory" class="devops-icon icon-position-shape handler-btn" :title="$t('editPage.atomForm.toArtifactory')"></i> -->
-                        <i class="devops-icon icon-new-download handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" :title="$t('download')"
-                            @click="requestUrl(row, 'download')"></i>
-                        <!-- <i class="devops-icon icon-tree-module-shape handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" :title="$t('details.mofDownload')"
-                            @click="requestUrl(row, 'download', null, 'MoF')"></i> -->
-                        <!-- <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" :title="$t('details.saveToCustom')" @click="copyToCustom(row)">
-                            <Logo class="icon-copy" name="copy" size="15"></Logo>
-                        </span> -->
+                        <span @click.stop="gotoArtifactory(row)" class="handler-btn" v-bk-tooltips="$t('editPage.atomForm.toArtifactory')">
+                            {{ $t('locate') }}
+                        </span>
+                        <span class="handler-btn" v-if="hasPermission && row.artifactoryType !== 'IMAGE'" v-bk-tooltips="$t('download')"
+                            @click="requestUrl(row, 'download')">
+                            {{$t('download')}}
+                        </span>
+                        <span class="handler-btn" v-if="hasPermission && isMof && isWindows && isApkOrIpa(row)" v-bk-tooltips="$t('details.mofDownload')"
+                            @click="requestUrl(row, 'download', null, 'MoF')">
+                            {{ $t('details.mofDownload') }}
+                        </span>
+                        <span class="handler-btn-tool copy" v-if="row.artifactoryType === 'PIPELINE'" v-bk-tooltips="$t('details.saveToCustom')" @click="copyToCustom(row)">
+                            {{ $t('saveAs') }}
+                        </span>
                         <span class="handler-btn-tool qrcode"
                             v-if="(extForFile(row.name) === 'ipafile' || extForFile(row.name) === 'apkfile') && hasPermission">
-                            <i class="devops-icon icon-qrcode handler-btn"
+                            <span class="handler-btn"
                                 id="partviewqrcode"
-                                :title="$t('details.qrcode')"
-                                @click="requestUrl(row, 'url', index)"></i>
+                                v-bk-tooltips="$t('details.qrcode')"
+                                @click="requestUrl(row, 'url', index)">
+                                {{ $t('details.qrcode') }}
+                            </span>
                             <p class="qrcode-box" v-if="row.display"
                                 v-bkloading="{
                                     isLoading: !curIndexItemUrl,
@@ -57,6 +65,7 @@
                                 <p>{{ $t('details.noDownloadPermTips') }}</p>
                             </template>
                         </bk-popover>
+                        <artifactory-operation :artifact="row" />
                     </div>
                 </div>
             </div>
@@ -135,11 +144,13 @@
     import qrcode from '@/components/devops/qrcode'
     import Logo from '@/components/Logo'
     import { convertFileSize, convertTime } from '@/utils/util'
+    import { ArtifactoryOperation } from '@/components/Hooks'
 
     export default {
         components: {
             qrcode,
-            Logo
+            Logo,
+            ArtifactoryOperation
         },
         data () {
             return {
@@ -176,9 +187,18 @@
                     isLoading: false
                 },
                 repoTypeNameMap: {
-                    CUSTOM_DIR: this.$t('details.customRepo'),
-                    PIPELINE: this.$t('details.pipelineRepo'),
-                    IMAGE: this.$t('details.imageRepo')
+                    CUSTOM_DIR: {
+                        i18n: this.$t('details.customRepo'),
+                        name: 'custom'
+                    },
+                    PIPELINE: {
+                        i18n: this.$t('details.pipelineRepo'),
+                        name: 'pipeline'
+                    },
+                    IMAGE: {
+                        i18n: this.$t('details.imageRepo'),
+                        name: 'image'
+                    }
                 }
             }
         },
@@ -191,6 +211,9 @@
             },
             buildNo () {
                 return this.$route.params.buildNo
+            },
+            isMof () {
+                return this.$store.state.curProject.deptName === '魔方工作室群'
             },
             isWindows () {
                 return /WINDOWS/.test(window.navigator.userAgent.toUpperCase())
@@ -266,12 +289,15 @@
 
                         this.curIndexItemUrl = res.url
                     } else {
-                        const res = await this.$store.dispatch('common/requestDownloadUrl', {
-                            projectId: this.projectId,
-                            artifactoryType: row.artifactoryType,
-                            path: row.path
-                        })
-                        const url = res.url2
+                        const [isDevnet, res] = await Promise.all([
+                            this.$store.dispatch('common/requestDevnetGateway'),
+                            this.$store.dispatch('common/requestDownloadUrl', {
+                                projectId: this.projectId,
+                                artifactoryType: row.artifactoryType,
+                                path: row.path
+                            })
+                        ])
+                        const url = isDevnet ? res.url : res.url2
                         window.location.href = type ? `${API_URL_PREFIX}/pc/download/devops_pc_forward.html?downloadUrl=${url}` : url
                     }
                 } catch (err) {
@@ -283,7 +309,7 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }])
+                    }], this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.manager))
                 }
             },
 
@@ -297,7 +323,8 @@
                             name: this.pipelineId
                         }],
                         projectId: this.projectId
-                    }]
+                    }],
+                    applyPermissionUrl: this.getPermUrlByRole(this.projectId, this.pipelineId, this.roleMap.executor)
                 })
             },
             clickHandler (event) {
@@ -307,7 +334,16 @@
                     })
                 }
             },
-
+            gotoArtifactory (row) {
+                const repoName = this.repoTypeNameMap[row.artifactoryType].name
+                let url = `${WEB_URL_PREFIX}/repo/${this.projectId}/`
+                if (repoName === 'image') {
+                    url += `docker/package?repoName=${repoName}&packageKey=docker://${row.name}&version=${row.fullName.split(':')[1]}`
+                } else {
+                    url += `generic?repoName=${repoName}&path=${row.path}`
+                }
+                window.open(url, '_blank')
+            },
             addClickListenr () {
                 document.addEventListener('mouseup', this.clickHandler)
             },
@@ -508,18 +544,19 @@
         }
         .part-item-handler {
             flex: 2;
-            max-width: 180px;
-            font-size: 16px;
+            max-width: 222px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
             cursor: pointer;
-            i {
-                margin-right: 16px;
-            }
-            i:last-child {
-                margin-right: 0px;
-            }
-            .handler-btn:hover {
+            > span {
+                margin-right: 12px;
                 color: $primaryColor;
             }
+            span:last-child {
+                margin-right: 0px;
+            }
+
         }
         .qrcode {
             position: relative;

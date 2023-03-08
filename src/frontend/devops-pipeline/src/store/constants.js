@@ -18,6 +18,7 @@
  */
 
 export const FETCH_ERROR = 'FETCH_ERROR'
+export const SET_SERVICE_HOOKS = 'SET_SERVICE_HOOKS'
 
 export const PROJECT_API_URL_PREFIX = 'project/api'
 export const BACKEND_API_URL_PREFIX = 'backend'

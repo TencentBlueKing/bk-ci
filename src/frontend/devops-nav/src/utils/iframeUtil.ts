@@ -1,4 +1,5 @@
 import eventBus from './eventBus'
+import { toggleAsidePanel, toggleDialog, goToPage } from './util'
 
 interface UrlParam {
     url: string
@@ -25,6 +26,45 @@ function iframeUtil (router: any) {
             params
         }, '*')
     }
+
+    utilMap.hookTrigger = function (hook) {
+        switch (hook.target.type) {
+            case 'ASIDEPANEL':
+                toggleAsidePanel({
+                    src: hook.url,
+                    header: hook.name,
+                    options: hook.target.options,
+                    customData: hook.target.data,
+                    show: true
+                })
+                break
+            case 'DIALOG':
+                toggleDialog({
+                    src: hook.url,
+                    title: hook.name,
+                    options: hook.target.options,
+                    customData: hook.target.data,
+                    show: true
+                })
+                break
+        }
+    }
+
+    utilMap.closeAsidePanel = function (params) {
+        toggleAsidePanel({
+            ...params,
+            show: false
+        })
+    }
+
+    utilMap.closeExtDialog = function (params) {
+        toggleDialog({
+            ...params,
+            show: false
+        })
+    }
+
+    utilMap.goToPage = goToPage
 
     utilMap.syncUrl = function ({ url, refresh = false }: UrlParam): void {
         const pathname = `${location.pathname.replace(/^\/(\w+)\/(\w+)\/(\S+)$/, '/$1/$2')}${url}`
@@ -66,7 +106,11 @@ function iframeUtil (router: any) {
             ...tips
         })
     }
- 
+    
+    utilMap.syncServiceHooks = function (target: object, hooks: any[]) {
+        send(target, 'syncServiceHooks', hooks)
+    }
+
     utilMap.syncLocale = function (target: object, locale: string) {
         send(target, 'syncLocale', locale)
     }

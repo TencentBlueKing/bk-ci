@@ -11,11 +11,11 @@
                     <bk-radio value="HTTPS" v-if="isTGit">HTTPS</bk-radio>
                 </bk-radio-group>
             </div>
-            <div class="bk-form-item" v-if="(isGit || isGithub) && codelib.authType === 'OAUTH' || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
+            <div class="bk-form-item" v-if="((isGit || isGithub) && codelib.authType === 'OAUTH') || (isTGit && codelib.authType === 'T_GIT_OAUTH')">
                 <div class="bk-form-item is-required" v-if="hasPower">
                     <!-- 源代码地址 start -->
                     <div class="bk-form-item is-required">
-                        <label class="bk-label">{{ $t('codelib.codelibUrl') }}:</label>
+                        <label class="bk-label">{{ `${codelibConfig.label} ${$t('codelib.codelibUrl')}` }}:</label>
                         <div class="bk-form-content">
                             <bk-select
                                 v-model="codelibUrl"
@@ -64,7 +64,7 @@
                     <label class="bk-label">{{ $t('codelib.codelibPullType') }}:</label>
                     <bk-radio-group v-model="codelib.svnType" @change="svnTypeChange(codelib)" class="bk-form-content form-radio">
                         <bk-radio value="ssh">SSH</bk-radio>
-                        <bk-radio value="http">HTTP</bk-radio>
+                        <bk-radio value="http">HTTP/HTTPS</bk-radio>
                     </bk-radio-group>
                 </div>
                 <!-- 源代码地址 start -->
@@ -75,6 +75,7 @@
                         <span class="error-tips" v-if="(urlErrMsg || errors.has('codelibUrl') && !isP4)">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
+                        <div class="example-tips">{{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}</div>
                     </div>
                 </div>
                 <!-- 源代码地址 end -->
@@ -121,7 +122,7 @@
                             @toggle="refreshTicket"
                         >
                             <bk-option v-for="(option, index) in credentialList"
-                                :key="index"
+                                :key="option.credentialId"
                                 :id="option.credentialId"
                                 :name="option.credentialId">
                                 <span>{{option.credentialId}}</span>
@@ -129,6 +130,7 @@
                             </bk-option>
                         </bk-select>
                         <span class="text-link" @click="addCredential">{{ $t('codelib.new') }}</span>
+                        <span class="error-tips" v-if="errors.has(&quot;credentialId&quot;)">{{ $t('codelib.credentialRequired') }}</span>
                     </div>
                     <span class="error-tips" v-if="errors.has('credentialId')">{{ $t('codelib.credentialRequired') }}</span>
                 </div>
@@ -141,7 +143,7 @@
 <script>
     import { mapActions, mapState } from 'vuex'
     import { getCodelibConfig, isSvn, isGit, isGithub, isTGit, isP4, isGitLab } from '../../config/'
-    import { parsePathAlias, parsePathRegion } from '../../utils'
+    import { parsePathAlias, extendParsePathAlias, parsePathRegion } from '../../utils'
     export default {
         name: 'codelib-dialog',
         props: {
@@ -245,7 +247,7 @@
                 )
             },
             title () {
-                return `${this.$t('codelib.link')}${this.$t(`codelib.${this.codelibConfig.label}`) || ''}${this.$t('codelib.codelib')}`
+                return `${this.codelibConfig.label} ${this.$t('codelib.repo')}`
             },
             isGit () {
                 return isGit(this.codelibTypeName)
@@ -274,6 +276,9 @@
             credentialTypes () {
                 return this.codelibConfig.credentialTypes
             },
+            isExtendTx () {
+                return VERSION_TYPE === 'tencent'
+            },
             credentialId: {
                 get () {
                     return this.codelib.credentialId
@@ -291,12 +296,9 @@
                 },
                 set (url) {
                     const { codelib, codelibTypeName } = this
-                    const { alias, msg } = parsePathAlias(
-                        codelibTypeName,
-                        url,
-                        codelib.authType,
-                        codelib.svnType
-                    )
+                    const { alias, msg } = this.isExtendTx
+                        ? extendParsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
+                        : parsePathAlias(codelibTypeName, url, codelib.authType, codelib.svnType)
                     if (msg) {
                         this.urlErrMsg = msg
                     }
@@ -467,7 +469,14 @@
                                     }]
                                     : null,
                                 projectId
-                            }]
+                            }],
+                            applyPermissionUrl: `/backend/api/perm/apply/subsystem/?client_id=code&project_code=${
+                                projectId
+                            }&service_code=code&${
+                                repositoryHashId
+                                    ? 'role_manager=repertory'
+                                    : 'role_creator=repertory'
+                            }`
                         })
                     } else {
                         this.$bkMessage({
@@ -559,7 +568,7 @@
     }
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
     .code-lib-credential {
         display: flex;
         align-items: center;
@@ -596,5 +605,10 @@
         .tip-icon {
             margin-left: 5px;
         }
+    }
+
+    .example-tips {
+        color: #c4c6cd;
+        font-size: 12px;
     }
 </style>

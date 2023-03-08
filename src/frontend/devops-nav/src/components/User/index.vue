@@ -1,24 +1,25 @@
 <template>
     <div
         v-clickoutside="hideUserInfo"
-        :class="{ &quot;devops-user-info&quot;: true, &quot;active&quot;: show }"
+        :class="{ 'devops-user-info': true, 'active': show }"
     >
         <div
             class="user-entry"
             @click.stop="toggleUserInfo"
         >
             {{ username }}
-            <i class="devops-icon icon-down-shape" />
+            <span v-if="!isHideHint" class="user-header-hint" />
+            <i v-if="!disabled" class="devops-icon icon-down-shape" />
         </div>
         <div
-            v-if="show"
+            v-if="show && !disabled"
             class="user-info-dropmenu"
         >
             <p class="user-avatar">
-                <!-- <img
+                <img
                     :src="avatarUrl"
                     alt="userAvatar"
-                > -->
+                >
                 <span>{{ chineseName }}</span>
             </p>
             <slot name="menu">
@@ -31,7 +32,7 @@
                             v-if="item.to"
                             class="user-menu-item"
                             :to="item.to"
-                            @click.native="hideUserInfo"
+                            @click.native="hideUserInfo(item.to)"
                         >
                             {{ item.label }}
                         </router-link>
@@ -40,18 +41,21 @@
                             class="user-menu-item"
                             @click.stop="item.cb"
                         >{{ item.label }}</span>
+                        <span v-if="!isHideHint && item.isShowHint" class="user-hint" />
                     </li>
                 </ul>
             </slot>
         </div>
     </div>
 </template>
-
 <script lang="ts">
     import Vue from 'vue'
     import { Component, Prop, Watch } from 'vue-property-decorator'
     import { Action } from 'vuex-class'
+    import bkLogout from '../../utils/bklogout.js'
     import { clickoutside } from '../../directives/index'
+
+    const IS_HIDE_HINT = 'IS_HIDE_HINT'
 
     @Component({
         directives: {
@@ -70,17 +74,26 @@
 
         @Prop()
         bkpaasUserId: string
+        
+        @Prop()
+        disabled: boolean
 
         show: boolean = false
 
         @Action togglePopupShow
 
-        toggleUserInfo (show: boolean): void {
-            this.show = !this.show
+        toggleUserInfo () :void {
+            if (!this.disabled) {
+                this.show = !this.show
+            }
         }
 
-        hideUserInfo (): void {
+        hideUserInfo (to): void {
             this.show = false
+            if (to === '/console/preci/') {
+                localStorage.setItem(IS_HIDE_HINT, '1')
+                this.isHideHint = Number(localStorage.getItem(IS_HIDE_HINT)) || 1
+            }
         }
 
         @Watch('show')
@@ -90,12 +103,26 @@
             }
         }
 
+        created () {
+            this.isHideHint = Number(localStorage.getItem(IS_HIDE_HINT)) || 0
+        }
+
         get menu (): object[] {
             try {
+                const { projectId } = this.$route.params
                 return [
                     {
                         to: '/console/pm',
                         label: this.$t('projectManage')
+                    },
+                    {
+                        to: `/console/perm/my-perm?project_code=${projectId || ''}`,
+                        label: this.$t('accessCenter')
+                    },
+                    {
+                        to: '/console/preci/',
+                        label: this.$t('PreCI'),
+                        isShowHint: true
                     },
                     {
                         cb: this.logout,
@@ -109,14 +136,8 @@
         }
 
         logout (): void {
-            try {
-                const url = new URL(window.getLoginUrl())
-                url.searchParams.append('is_from_logout', '1')
-                console.log(url.href)
-                window.location.href = url.href
-            } catch (error) {
-                console.error(error)
-            }
+          bkLogout.logout()
+          window.location.href = window.getLoginUrl()
         }
     }
 </script>
@@ -129,7 +150,7 @@
         position: relative;
         display: flex;
         align-items: center;
-        color: $fontLigtherColor;
+        color: $fontLighterColor;
         height: 100%;
         cursor: pointer;
 
@@ -138,6 +159,14 @@
             height: 100%;
             padding:0 12px;
             align-items: center;
+            .user-header-hint {
+                display: inline-block;
+                width: 7px;
+                height: 7px;
+                border-radius: 50%;
+                background-color: red;
+                margin: 0 5px;
+            }
         }
 
         .devops-icon.icon-down-shape {
@@ -197,6 +226,15 @@
                         &:hover {
                             color: $aHoverColor;
                         }
+                    }
+                    .user-hint {
+                        display: inline-block;
+                        width: 6px;
+                        height: 6px;
+                        border-radius: 50%;
+                        background-color: red;
+                        position: relative;
+                        top: -2px;
                     }
                 }
             }

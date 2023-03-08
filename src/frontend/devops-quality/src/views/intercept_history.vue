@@ -77,15 +77,25 @@
                                 </a>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="规则名称" prop="ruleName">
+                        <bk-table-column label="规则名称" prop="ruleName" width="150">
                             <template slot-scope="props">
                                 <span>{{ props.row.ruleName }}</span>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="状态" prop="interceptResult" width="100">
+                        <bk-table-column label="状态" prop="interceptResult" width="150">
                             <template slot-scope="props">
                                 <span v-if="props.row.interceptResult === 'PASS'" style="color: #30D878;">已通过</span>
-                                <span v-if="props.row.interceptResult === 'FAIL'" style="color: #FFB400;">已拦截</span>
+                                <span v-if="props.row.interceptResult === 'FAIL'">拦截后直接终止</span>
+                                <span v-if="props.row.interceptResult === 'WAIT'">拦截后审核中</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT'">拦截后审核终止</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT_PASS'">拦截后审核继续</span>
+                                <span v-if="props.row.interceptResult === 'INTERCEPT_TIMEOUT'">拦截后超时终止</span>
+                            </template>
+                        </bk-table-column>
+                        <bk-table-column label="实际审核人" prop="qualityRuleBuildHisOpt" width="100">
+                            <template slot-scope="props">
+                                <span v-if="props.row.qualityRuleBuildHisOpt">{{ props.row.qualityRuleBuildHisOpt.gateOptUser }}</span>
+                                <span v-else>--</span>
                             </template>
                         </bk-table-column>
                         <bk-table-column label="内容" prop="remark" min-width="200">
@@ -98,7 +108,7 @@
                                 </bk-popover>
                             </template>
                         </bk-table-column>
-                        <bk-table-column label="拦截时间" prop="timestamp">
+                        <bk-table-column label="拦截时间" prop="timestamp" width="250">
                             <template slot-scope="props">
                                 {{ localConvertTime(props.row.timestamp) }}
                             </template>
@@ -119,8 +129,12 @@
                 showContent: false,
                 statusList: [
                     { label: '全部', value: 'ALL' },
-                    { label: '已拦截', value: 'FAIL' },
-                    { label: '已通过', value: 'PASS' }
+                    { label: '已通过', value: 'PASS' },
+                    { label: '拦截后直接终止', value: 'FAIL' },
+                    { label: '拦截后审核中', value: 'WAIT' },
+                    { label: '拦截后审核终止', value: 'INTERCEPT' },
+                    { label: '拦截后审核继续', value: 'INTERCEPT_PASS' },
+                    { label: '拦截后超时终止', value: 'INTERCEPT_TIMEOUT' }
                 ],
                 pipelineList: [],
                 ruleList: [],

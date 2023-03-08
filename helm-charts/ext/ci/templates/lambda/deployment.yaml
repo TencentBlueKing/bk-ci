@@ -1,0 +1,117 @@
+#lambda Deployment
+{{ if .Values.lambda.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-lambda
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: lambda
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: lambda
+  {{- if not .Values.lambda.autoscaling.enabled }}
+  replicas: {{ .Values.lambda.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.lambda.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.lambda.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: lambda
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.lambda.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.lambda.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.lambda.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.lambda.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.lambda.podAffinityPreset  "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.lambda.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.lambda.nodeAffinityPreset.type "key" .Values.lambda.nodeAffinityPreset.key "values" .Values.lambda.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.lambda.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.lambda.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.lambda.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.lambda.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.lambda.priorityClassName }}
+      priorityClassName: {{ .Values.lambda.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.lambda.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.lambda.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}
+      containers:
+        - name: lambda
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.lambda.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.lambda.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.lambda.resources }}
+          resources: {{- toYaml .Values.lambda.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: lambda
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/lambda
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/lambda/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+          - mountPath: /data1/certificate/
+            name: secret-volume
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+      - name: secret-volume
+        secret:
+          secretName: {{ include "bkci.names.fullname" . }}-lambda
+{{- end -}}

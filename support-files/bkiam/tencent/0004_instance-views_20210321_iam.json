@@ -1,0 +1,136 @@
+{
+  "system_id": "bk_ci",
+  "operations": [
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "project_instance",
+        "name": "项目视图",
+        "name_en": "project instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "pipeline_instance",
+        "name": "流水线视图",
+        "name_en": "pipeline instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "pipeline"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "repertory_instance",
+        "name": "代码库视图",
+        "name_en": "repository instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "repertory"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "environment_instance",
+        "name": "环境视图",
+        "name_en": "environment instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "environment"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "node_instance",
+        "name": "环境节点视图",
+        "name_en": "node instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "env_node"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "cert_instance",
+        "name": "证书视图",
+        "name_en": "cert instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "cert"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "credential_instance",
+        "name": "凭证视图",
+        "name_en": "credential instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "credential"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "quality_rule_instance",
+        "name": "质量红线规则视图",
+        "name_en": "quality rule instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "rule"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "quality_group_rule",
+        "name": "质量红线用户组视图",
+        "name_en": "quality group instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "quality_group"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "experience_task_instance",
+        "name": "版本体验任务",
+        "name_en": "experience_task instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "experience_task"}
+        ]
+      }
+    },
+    {
+      "operation": "upsert_instance_selection",
+      "data": {
+        "id": "experience_group_instance",
+        "name": "版本体验用户组",
+        "name_en": "experience_group instance selection",
+        "resource_type_chain": [
+          {"system_id": "bk_ci","id": "project"},
+          {"system_id": "bk_ci","id": "experience_group"}
+        ]
+      }
+    }
+  ]
+}

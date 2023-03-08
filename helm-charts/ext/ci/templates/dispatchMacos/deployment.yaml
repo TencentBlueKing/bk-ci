@@ -1,0 +1,112 @@
+#dispatchMacos Deployment
+{{ if .Values.dispatchMacos.enabled -}}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
+kind: Deployment
+metadata:
+  name: {{ include "bkci.names.fullname" . }}-dispatch-macos
+  labels: {{- include "bkci.labels.standard" . | nindent 4 }}
+    {{- if .Values.commonLabels }}
+      {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
+    {{- end }}
+    app.kubernetes.io/component: microservice
+    app.kubernetes.io/name: dispatch-macos
+spec:
+  selector:
+    matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
+      app.kubernetes.io/component: microservice
+      app.kubernetes.io/name: dispatch-macos
+  {{- if not .Values.dispatchMacos.autoscaling.enabled }}
+  replicas: {{ .Values.dispatchMacos.replicas }}
+  {{- end }}
+  template:
+    metadata:
+      labels: {{- include "bkci.labels.standard" . | nindent 8 }}
+        {{- if .Values.dispatchMacos.podLabels }}
+        {{- include "common.tplvalues.render" (dict "value" .Values.dispatchMacos.podLabels "context" $) | nindent 8 }}
+        {{- end }}
+        app.kubernetes.io/component: microservice
+        app.kubernetes.io/name: dispatch-macos
+    spec:
+      serviceAccountName: {{ .Values.rbac.serviceAccount }}
+      {{- if .Values.dispatchMacos.hostAliases }}
+      hostAliases: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchMacos.hostAliases "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchMacos.affinity }}
+      affinity: {{- include "common.tplvalues.render" ( dict "value" .Values.dispatchMacos.affinity "context" $) | nindent 8 }}
+      {{- else }}
+      affinity:
+        podAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dispatchMacos.podAffinityPreset "context" $) | nindent 10 }}
+        podAntiAffinity: {{- include "common.affinities.pods" (dict "type" .Values.dispatchMacos.podAntiAffinityPreset  "context" $) | nindent 10 }}
+        nodeAffinity: {{- include "common.affinities.nodes" (dict "type" .Values.dispatchMacos.nodeAffinityPreset.type "key" .Values.dispatchMacos.nodeAffinityPreset.key "values" .Values.dispatchMacos.nodeAffinityPreset.values) | nindent 10 }}
+      {{- end }}
+      {{- if .Values.dispatchMacos.nodeSelector }}
+      nodeSelector: {{- include "common.tplvalues.render" ( dict "value" .Values.dispatchMacos.nodeSelector "context" $) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchMacos.tolerations }}
+      tolerations: {{- include "common.tplvalues.render" (dict "value" .Values.dispatchMacos.tolerations "context" .) | nindent 8 }}
+      {{- end }}
+      {{- if .Values.dispatchMacos.priorityClassName }}
+      priorityClassName: {{ .Values.dispatchMacos.priorityClassName | quote }}
+      {{- end }}
+      {{- if .Values.dispatchMacos.podSecurityContext.enabled }}
+      securityContext: {{- omit .Values.dispatchMacos.podSecurityContext "enabled" | toYaml | nindent 8 }}
+      {{- end }}        
+      containers:
+        - name: dispatch-macos
+          image: {{ include "common.images.image" ( dict "imageRoot" .Values.backendImage "global" $) }}
+          imagePullPolicy: {{ .Values.backendImage.pullPolicy }}
+          {{- if .Values.dispatchMacos.containerSecurityContext.enabled }}
+          securityContext: {{- omit .Values.dispatchMacos.containerSecurityContext "enabled" | toYaml | nindent 12 }}
+          {{- end }}
+          {{- if .Values.dispatchMacos.resources }}
+          resources: {{- toYaml .Values.dispatchMacos.resources | nindent 12 }}
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 80
+          env:
+            - name: MS_NAME
+              value: dispatch-macos
+            - name: NAMESPACE
+              value: {{ .Release.Namespace }}
+            - name: RELEASE_NAME
+              value: {{ .Release.Name }}
+            - name: CHART_NAME
+              value: {{ .Chart.Name }}
+            - name: MULTI_CLUSTER
+              value: {{ .Values.multiCluster.enabled | quote }}
+            - name: DEFAULT_NAMESPACE
+              value: {{ .Values.multiCluster.defaultNamespace }}
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.name
+          workingDir: /data/workspace/dispatch-macos
+          livenessProbe:
+            httpGet:
+              path: /management/health/livenessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          readinessProbe:
+            httpGet:
+              path: /management/health/readinessState
+              port: http
+            initialDelaySeconds: 60
+            periodSeconds: 15
+            timeoutSeconds: 10
+            failureThreshold: 20
+            successThreshold: 1
+          volumeMounts:
+          - mountPath: /data/workspace/dispatch-macos/jvm
+            name: log-volume
+            subPathExpr: bkci/jvm/$(POD_NAME)
+      volumes:
+      - hostPath:
+          path: /data
+        name: log-volume
+{{- end -}}
