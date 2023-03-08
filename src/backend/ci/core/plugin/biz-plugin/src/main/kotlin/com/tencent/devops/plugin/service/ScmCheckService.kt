@@ -111,6 +111,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     isOauth = isOauth
                 ).targetBranch
             }
+            logger.info("Project($projectId) add git commit($commitId) commit check for targetBranch($targetBranch)")
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
