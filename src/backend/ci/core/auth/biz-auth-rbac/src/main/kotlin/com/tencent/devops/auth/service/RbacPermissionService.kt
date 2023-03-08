@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.AttributesValue
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
@@ -95,6 +94,7 @@ class RbacPermissionService constructor(
         actionDTO.id = action
 
         val resourcePath = PathInfoDTO()
+        resourcePath.system = iamConfiguration.systemId
         resourcePath.type = resourceType
         resourcePath.id = authResourceCodeConverter.code2IamCode(
             projectCode = projectCode,
@@ -102,18 +102,19 @@ class RbacPermissionService constructor(
             resourceCode = resourceCode
         )
         val projectPath = PathInfoDTO()
+        projectPath.system = iamConfiguration.systemId
         projectPath.type = AuthResourceType.PROJECT.value
         projectPath.id = projectCode
         projectPath.child = resourcePath
 
-        val attribute = AttributesValue()
-        attribute.id = projectPath.toString()
-        attribute.name = PATH_ATTRIBUTE
+        val attribute = mapOf(
+            PATH_ATTRIBUTE to listOf(projectPath.toString())
+        )
 
         val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
             .type(resourceType)
             .id(resourceCode)
-            .attribute(listOf(attribute))
+            .attribute(attribute)
             .build()
 
         val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
@@ -140,13 +141,17 @@ class RbacPermissionService constructor(
         val actionDTO = ActionDTO()
         actionDTO.id = action
         val paths = mutableListOf<PathInfoDTO>()
-        resourcesPaths(projectCode = projectCode, resource = resource, child = null, paths = paths)
-        val attributes = paths.map { path ->
-            val attribute = AttributesValue()
-            attribute.id = path.toString()
-            attribute.name = PATH_ATTRIBUTE
-            attribute
-        }
+        resourcesPaths(
+            projectCode = projectCode,
+            resource = resource,
+            child = null,
+            paths = paths,
+            needSystem = true
+        )
+        val attribute = mapOf(
+            PATH_ATTRIBUTE to paths.map { it.toString() }
+        )
+
         val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
             .type(resource.resourceType)
             .id(
@@ -156,7 +161,7 @@ class RbacPermissionService constructor(
                     resourceCode = resource.resourceCode
                 )
             )
-            .attribute(attributes)
+            .attribute(attribute)
             .build()
 
         val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
@@ -246,7 +251,7 @@ class RbacPermissionService constructor(
 
     private fun resource2InstanceDTO(projectCode: String, resource: AuthResourceInstance): InstanceDTO {
         val paths = mutableListOf<PathInfoDTO>()
-        resourcesPaths(projectCode = projectCode, resource = resource, child = null, paths = paths)
+        resourcesPaths(projectCode = projectCode, resource = resource, child = null, paths = paths, needSystem = false)
         val instanceDTO = InstanceDTO()
         instanceDTO.id = authResourceCodeConverter.code2IamCode(
             projectCode = projectCode,
@@ -262,7 +267,8 @@ class RbacPermissionService constructor(
         projectCode: String,
         resource: AuthResourceInstance,
         child: PathInfoDTO?,
-        paths: MutableList<PathInfoDTO>
+        paths: MutableList<PathInfoDTO>,
+        needSystem: Boolean
     ) {
         if (resource.parents.isNullOrEmpty()) {
             // 如果没有父资源,说明已经是最顶层
@@ -272,6 +278,9 @@ class RbacPermissionService constructor(
         } else {
             resource.parents!!.forEach { parent ->
                 val path = PathInfoDTO()
+                if (needSystem) {
+                    path.system = iamConfiguration.systemId
+                }
                 path.id = authResourceCodeConverter.code2IamCode(
                     projectCode = projectCode,
                     resourceType = parent.resourceType,
@@ -283,7 +292,8 @@ class RbacPermissionService constructor(
                     projectCode = projectCode,
                     resource = parent,
                     child = path,
-                    paths = paths
+                    paths = paths,
+                    needSystem = needSystem
                 )
             }
         }
