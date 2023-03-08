@@ -87,7 +87,12 @@ class BuildRecordModelDao {
             cancelUser?.let { update.set(CANCEL_USER, cancelUser) }
             startTime?.let { update.set(START_TIME, startTime) }
             endTime?.let { update.set(END_TIME, endTime) }
-            timestamps?.let { update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false)) }
+            timestamps?.let {
+                update.set(TIMESTAMPS, JsonUtil.toJson(timestamps, false))
+            }
+            errorInfoList?.let {
+                update.set(ERROR_INFO, JsonUtil.toJson(errorInfoList, false))
+            }
             update.where(
                 BUILD_ID.eq(buildId)
                     .and(PROJECT_ID.eq(projectId))
