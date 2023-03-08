@@ -64,6 +64,7 @@
 }
 
 .permission-list .bk-dropdown-list>li {
+    font-weight: normal;
     padding: 0 14px;
     line-height: 32px;
     cursor: pointer;

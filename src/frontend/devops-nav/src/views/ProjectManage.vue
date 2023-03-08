@@ -82,7 +82,7 @@
                         <template slot-scope="{ row }">
                             <span class="project-status">
                                 <bk-switcher
-                                    v-model="row.enabled"
+                                    :value="row.enabled"
                                     class="mr5"
                                     size="small"
                                     theme="primary"
@@ -235,21 +235,29 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`)
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`)
                         break
                 }
             },
 
             handleGoExtend (row) {
-                const { origin } = window.location
-                const { englishName } = row
-                window.open(`${origin}/console/manage/${englishName}/expand`, '_blank')
+                const { englishName: projectCode, routerTag } = row
+                const projectTag = this.getProjectTag(routerTag)
+                switch (projectTag) {
+                    case 'v0':
+                    case 'v3':
+                        window.open(`/console/store/serviceManage/${projectCode}`)
+                        break
+                    case 'rbac':
+                        window.open(`/console/manage/${projectCode}/expand`)
+                        break
+                }
             },
 
             pageChange (page) {
@@ -266,13 +274,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/perm/my-project?project_code=${projectCode}&x-devops-project-id=${projectCode}`)
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`, '_blank')
+                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`)
                         break
                 }
             },
@@ -281,7 +289,8 @@
                 this.toggleProjectEnable({
                     projectCode: projectCode,
                     enabled: enabled
-                }).then(res => {
+                }).then(() => {
+                    row.enabled = !row.enabled
                     this.$bkMessage({
                         message: row.enabled ? this.$t('启用项目成功') : this.$t('停用项目成功'),
                         theme: 'success'

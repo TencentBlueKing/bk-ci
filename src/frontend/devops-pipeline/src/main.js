@@ -45,6 +45,9 @@ import {
     handlePipelineNoPermission,
     RESOURCE_ACTION
 } from '@/utils/permission'
+// 权限指令
+import { AuthorityDirectiveV2 } from '../../common-lib/permission/authority-directive'
+import ajax from './utils/request'
 
 // 全量引入 bk-magic-vue 样式
 require('bk-magic-vue/dist/bk-magic-vue.min.css')
@@ -55,6 +58,7 @@ Vue.use(focus)
 Vue.use(bkMagic)
 Vue.use(PortalVue)
 Vue.use(mavonEditor)
+Vue.use(AuthorityDirectiveV2(handlePipelineNoPermission, ajax))
 
 Vue.use(VeeValidate, {
     i18nRootKey: 'validations', // customize the root path for validation messages.

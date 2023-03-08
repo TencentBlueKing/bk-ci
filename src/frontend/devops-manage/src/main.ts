@@ -10,6 +10,11 @@ import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
 
+// 引入权限指令相关资源
+import { handleProjectManageNoPermission } from './utils/permission'
+import ajax from './http/fetch/index'
+import { AuthorityDirectiveV3 } from '../../common-lib/permission/authority-directive'
+
 // i18n
 import { getCookies } from './common/util';
 import { createI18n } from 'vue-i18n';
@@ -32,4 +37,5 @@ createApp(App)
   .use(createPinia())
   .use(bkui)
   .use(i18n)
+  .use(AuthorityDirectiveV3(handleProjectManageNoPermission, ajax))
   .mount('.app');

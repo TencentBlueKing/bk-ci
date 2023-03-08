@@ -35,8 +35,9 @@ const logoFiles = computed(() => {
   }
   return files;
 });
-const vm = getCurrentInstance();
 const projectForm = ref(null);
+const iframeRef = ref(null);
+const vm = getCurrentInstance();
 const rules = {
   bgId: [
     {
@@ -192,13 +193,15 @@ const handleMessage = (event: any) => {
         showDialog.value = false;
         break;
       case 'load':
-        // 回显数据
-        vm.refs.iframeRef.iframeRef.value.contentWindow.postMessage(
-          JSON.parse(JSON.stringify({
-            subject_scopes: projectData.value.subjectScopes
-          })),
-          window.BK_IAM_URL_PREFIX
-        )
+        setTimeout(() => {
+          // 回显数据
+          vm?.refs.iframeRef.$el.firstElementChild.contentWindow.postMessage(
+            JSON.parse(JSON.stringify({
+              subject_scopes: projectData.value.subjectScopes
+            })),
+            window.BK_IAM_URL_PREFIX
+          )
+        }, 0);
         break;
     }
   }
@@ -415,7 +418,7 @@ onBeforeUnmount(() => {
 
   <bk-dialog
     :title="t('设置项目最大可授权人员范围')"
-    width="1328"
+    width="900"
     size="large"
     dialog-type="show"
     :is-show="showDialog"

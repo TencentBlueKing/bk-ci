@@ -1,0 +1,21 @@
+.bk-permission-cursor-element {
+    background: url("./lock.svg");
+    height: 16px;
+    width: 12px;
+}
+
+.bk-permission-disable.bk-button, .bk-permission-disable.bk-button:hover, .bk-permission-disable .bk-button, .bk-permission-disable .bk-button:hover {
+    background: #C4C6CC !important;
+    border-color: #C4C6CC !important;
+    color: #fff !important;
+}
+
+.bk-permission-disable.bk-button.bk-button-text, .bk-permission-disable.bk-button.bk-button-text:hover, .bk-permission-disable .bk-button.bk-button-text, .bk-permission-disable .bk-button.bk-button-text:hover {
+    background: transparent !important;
+    border-color: transparent !important;
+    color: #C4C6CC !important;
+}
+
+.bk-permission-disable, .bk-permission-disable:hover {
+    color: #C4C6CC !important;
+}

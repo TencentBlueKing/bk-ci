@@ -32,3 +32,5 @@ export const RESOURCE_ACTION = {
     ENABLE: 'project_enable',
     MANAGE: 'project_manage'
 };
+
+export const RESOURCE_TYPE = 'project';

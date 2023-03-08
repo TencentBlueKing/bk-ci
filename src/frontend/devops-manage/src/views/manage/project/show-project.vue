@@ -19,7 +19,8 @@ import {
 } from '@vue/runtime-core';
 import {
   handleProjectManageNoPermission,
-  RESOURCE_ACTION
+  RESOURCE_ACTION,
+  RESOURCE_TYPE,
 } from '@/utils/permission.js'
 
 const { t } = useI18n();
@@ -271,7 +272,6 @@ onMounted(async () => {
 
 <template>
   <section class="project-info">
-
     <bk-alert
       v-if="projectData.projectCode && projectData.tipsStatus !== 0"
       :theme="tipsStatusMap[projectData.tipsStatus].type"

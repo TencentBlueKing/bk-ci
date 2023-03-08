@@ -412,7 +412,7 @@ export const handleNoPermissionV3 = (ui, params, ajax, h, data) => {
             dialogType: 'show'
         })
     }
-    const showDialog = () => {
+    const showDialog = (data) => {
         infoBoxRef = ui.InfoBox({
             title: '',
             subTitle: h(
