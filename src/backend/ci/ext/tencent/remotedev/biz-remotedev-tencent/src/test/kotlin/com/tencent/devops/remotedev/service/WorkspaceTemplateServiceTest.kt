@@ -34,17 +34,17 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         logo = "111",
         description = "test desc"
     )
-    private val tWorkspaceTemplateRecord = TWorkspaceTemplateRecord(
-        1,
-        "Blank",
-        "test",
-        "tencent_ci",
-        "",
-        "test desc",
-        "user00",
-        LocalDateTime.parse("2023-01-03 00:27:16", formatter),
-        LocalDateTime.parse("2023-01-03 00:27:16", formatter)
-    )
+    // private val tWorkspaceTemplateRecord = TWorkspaceTemplateRecord(
+    //     1,
+    //     "Blank",
+    //     "test",
+    //     "tencent_ci",
+    //     "",
+    //     "test desc",
+    //     "user00",
+    //     LocalDateTime.parse("2023-01-03 00:27:16", formatter),
+    //     LocalDateTime.parse("2023-01-03 00:27:16", formatter)
+    // )
 
     @Nested
     inner class AddWorkspaceTemplateTest {
