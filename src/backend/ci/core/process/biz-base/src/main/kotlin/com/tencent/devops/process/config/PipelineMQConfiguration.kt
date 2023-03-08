@@ -24,23 +24,19 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.common.config
 
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+package com.tencent.devops.process.config
+
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
+/**
+ * 流水线扩展通知配置
+ */
 @Configuration
-class CommonMQConfiguration {
-
-    companion object {
-        const val STREAM_CONSUMER_GROUP = "stream-service"
-    }
-
-    @Bean
-    fun sampleEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
+class PipelineMQConfiguration {
 
     @Bean
     fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
