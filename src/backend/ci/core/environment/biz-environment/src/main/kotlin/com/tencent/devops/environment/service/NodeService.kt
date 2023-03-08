@@ -148,12 +148,12 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
-        val nodeListResult = getNodeListResult(
+        val nodeListResult = environmentPermissionService.listNodeByListPermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList
         )
-        if (nodeListResult.isEmpty()) return listOf()
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -240,12 +240,12 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-        val nodeListResult = getNodeListResult(
+        val nodeListResult = environmentPermissionService.listNodeByListPermission(
             userId = userId,
             projectId = projectId,
             nodeRecordList = nodeRecordList
         )
-        if (nodeListResult.isEmpty()) return listOf()
+        if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
         val thirdPartyAgentMap =
             thirdPartyAgentDao.getAgentsByNodeIds(dslContext, thirdPartyAgentNodeIds, projectId)
@@ -288,21 +288,6 @@ class NodeService @Autowired constructor(
                 lastModifyUser = it.lastModifyUser ?: "",
                 agentHashId = HashUtil.encodeLongId(thirdPartyAgent?.id ?: 0L)
             )
-        }
-    }
-
-    private fun getNodeListResult(
-        userId: String,
-        projectId: String,
-        nodeRecordList: List<TNodeRecord>
-    ): List<TNodeRecord> {
-        val isRbac = environmentPermissionService.isRbac()
-        return if (isRbac) {
-            val canListNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.LIST)
-            val canListNode = nodeRecordList.filter { canListNodeIds.contains(it.nodeId) }
-            canListNode.ifEmpty { listOf() }
-        } else {
-            nodeRecordList
         }
     }
 

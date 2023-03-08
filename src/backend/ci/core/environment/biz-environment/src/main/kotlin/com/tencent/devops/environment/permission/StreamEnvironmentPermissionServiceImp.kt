@@ -34,6 +34,8 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -68,6 +70,10 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
             resultMap[it] = instances
         }
         return resultMap
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
     }
 
     override fun checkEnvPermission(
@@ -119,6 +125,10 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         return resultMap
     }
 
+    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+        return nodeRecordList
+    }
+
     override fun checkNodePermission(
         userId: String,
         projectId: String,
@@ -143,8 +153,6 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
     override fun deleteNode(projectId: String, nodeId: Long) {
         return
     }
-
-    override fun isRbac(): Boolean = false
 
     private fun checkPermission(userId: String, projectId: String): Boolean {
         logger.info("StreamEnvironmentPermissionServiceImp user:$userId projectId: $projectId ")
