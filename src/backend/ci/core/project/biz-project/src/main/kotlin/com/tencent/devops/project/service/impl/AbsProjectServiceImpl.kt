@@ -315,10 +315,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun show(userId: String, englishName: String, accessToken: String?): ProjectVO? {
-        val projectInfo =
-            getByEnglishName(userId = userId, englishName = englishName, accessToken = accessToken) ?: return null
+        val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
+        val projectInfo = ProjectUtils.packagingBean(record)
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
-        if (approvalStatus.isSuccess()) {
+        // 项目没有创建成功或者不是创建人,必须校验权限
+        if (approvalStatus.isSuccess() || record.creator != userId) {
             val verify = validatePermission(
                 userId = userId,
                 projectCode = englishName,

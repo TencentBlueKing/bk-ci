@@ -182,11 +182,13 @@ class RbacAuthConfiguration {
         authHelper: AuthHelper,
         authResourceService: AuthResourceService,
         iamConfiguration: IamConfiguration,
+        iamV2PolicyService: PolicyService,
         authResourceCodeConverter: AuthResourceCodeConverter
     ) = RbacPermissionService(
         authHelper = authHelper,
         authResourceService = authResourceService,
         iamConfiguration = iamConfiguration,
+        policyService = iamV2PolicyService,
         authResourceCodeConverter = authResourceCodeConverter
     )
 

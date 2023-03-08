@@ -29,9 +29,16 @@
 package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
+import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.AttributesValue
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
+import com.tencent.bk.sdk.iam.dto.SubjectDTO
+import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
+import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
+import com.tencent.bk.sdk.iam.service.PolicyService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -42,10 +49,12 @@ class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
     private val iamConfiguration: IamConfiguration,
+    private val policyService: PolicyService,
     private val authResourceCodeConverter: AuthResourceCodeConverter
 ) : PermissionService {
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionService::class.java)
+        private const val PATH_ATTRIBUTE = "_bk_iam_path_"
     }
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -77,33 +86,46 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        val instanceDTO = InstanceDTO()
-        instanceDTO.system = iamConfiguration.systemId
-        // 若不关注操作资源实例，则必须关注是否在项目下
-        if (resourceCode == "*") {
-            instanceDTO.id = projectCode
-            instanceDTO.type = AuthResourceType.PROJECT.value
-        } else {
-            instanceDTO.id = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-            instanceDTO.type = resourceType
+        val subject = SubjectDTO.builder()
+            .id(userId)
+            .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+            .build()
 
-            // 因除项目外的所有资源都需关联项目, 需要拼接策略path供sdk计算
-            val path = PathInfoDTO()
-            path.type = AuthResourceType.PROJECT.value
-            path.id = projectCode
-            instanceDTO.path = path
-        }
-        // 有可能出现提供的resourceCode是关联项目资源的code,需将type类型调整为对应的关联资源。
-        if (relationResourceType != null) {
-            instanceDTO.type = relationResourceType
-        }
+        val actionDTO = ActionDTO()
+        actionDTO.id = action
 
-        logger.info("[rbac] validateUserResourcePermission : instanceDTO = $instanceDTO")
-        return authHelper.isAllowed(userId, action, instanceDTO)
+        val resourcePath = PathInfoDTO()
+        resourcePath.system = iamConfiguration.systemId
+        resourcePath.type = resourceType
+        resourcePath.id = authResourceCodeConverter.code2IamCode(
+            projectCode = projectCode,
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
+        val projectPath = PathInfoDTO()
+        projectPath.system = iamConfiguration.systemId
+        projectPath.type = AuthResourceType.PROJECT.value
+        projectPath.id = projectCode
+        projectPath.child = resourcePath
+
+        val attribute = mapOf(
+            PATH_ATTRIBUTE to listOf(projectPath.toString())
+        )
+
+        val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
+            .type(resourceType)
+            .id(resourceCode)
+            .attribute(attribute)
+            .build()
+
+        val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
+            .subject(subject)
+            .action(actionDTO)
+            .resources(listOf(resourceNode))
+            .build()
+
+        logger.info("[rbac] validateUserResourcePermission : queryPolicyDTO = $queryPolicyDTO")
+        return policyService.verifyPermissions(queryPolicyDTO)
     }
 
     override fun validateUserResourcePermissionByInstance(
@@ -112,9 +134,45 @@ class RbacPermissionService constructor(
         projectCode: String,
         resource: AuthResourceInstance
     ): Boolean {
-        val instanceDTO = resource2InstanceDTO(projectCode = projectCode, resource = resource)
-        logger.info("[rbac] validateUserResourcePermissionByInstance : instanceDTO = $instanceDTO")
-        return authHelper.isAllowed(userId, action, instanceDTO)
+        val subject = SubjectDTO.builder()
+            .id(userId)
+            .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
+            .build()
+
+        val actionDTO = ActionDTO()
+        actionDTO.id = action
+        val paths = mutableListOf<PathInfoDTO>()
+        resourcesPaths(
+            projectCode = projectCode,
+            resource = resource,
+            child = null,
+            paths = paths,
+            needSystem = true
+        )
+        val attribute = mapOf(
+            PATH_ATTRIBUTE to paths.map { it.toString() }
+        )
+
+        val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
+            .type(resource.resourceType)
+            .id(
+                authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
+            )
+            .attribute(attribute)
+            .build()
+
+        val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
+            .subject(subject)
+            .action(actionDTO)
+            .resources(listOf(resourceNode))
+            .build()
+
+        logger.info("[rbac] validateUserResourcePermission : queryPolicyDTO = $queryPolicyDTO")
+        return policyService.verifyPermissions(queryPolicyDTO)
     }
 
     override fun getUserResourceByAction(
@@ -191,23 +249,54 @@ class RbacPermissionService constructor(
         return authHelper.isAllowed(userId, action, instanceDTOList)
     }
 
+
     private fun resource2InstanceDTO(projectCode: String, resource: AuthResourceInstance): InstanceDTO {
+        val paths = mutableListOf<PathInfoDTO>()
+        resourcesPaths(projectCode = projectCode, resource = resource, child = null, paths = paths, needSystem = false)
         val instanceDTO = InstanceDTO()
-        instanceDTO.system = iamConfiguration.systemId
         instanceDTO.id = authResourceCodeConverter.code2IamCode(
             projectCode = projectCode,
             resourceType = resource.resourceType,
             resourceCode = resource.resourceCode
         )
         instanceDTO.type = resource.resourceType
-        if (!resource.parents.isNullOrEmpty()) {
-            instanceDTO.paths = resource.parents!!.map {
-                val path = PathInfoDTO()
-                path.type = it.resourceType
-                path.id = it.resourceCode
-                path
-            }.reversed()
-        }
+        instanceDTO.paths = paths
         return instanceDTO
+    }
+
+    private fun resourcesPaths(
+        projectCode: String,
+        resource: AuthResourceInstance,
+        child: PathInfoDTO?,
+        paths: MutableList<PathInfoDTO>,
+        needSystem: Boolean
+    ) {
+        if (resource.parents.isNullOrEmpty()) {
+            // 如果没有父资源,说明已经是最顶层
+            if (child != null) {
+                paths.add(child)
+            }
+        } else {
+            resource.parents!!.forEach { parent ->
+                val path = PathInfoDTO()
+                if (needSystem) {
+                    path.system = iamConfiguration.systemId
+                }
+                path.id = authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = parent.resourceType,
+                    resourceCode = parent.resourceCode
+                )
+                path.type = parent.resourceType
+                path.child = child
+                resourcesPaths(
+                    projectCode = projectCode,
+                    resource = parent,
+                    child = path,
+                    paths = paths,
+                    needSystem = needSystem
+                )
+            }
+        }
     }
 }
