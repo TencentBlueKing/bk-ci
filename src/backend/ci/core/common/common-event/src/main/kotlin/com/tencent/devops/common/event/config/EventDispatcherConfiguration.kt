@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine
+package com.tencent.devops.common.event.config
 
 import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import org.springframework.boot.autoconfigure.AutoConfigureOrder
