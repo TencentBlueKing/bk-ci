@@ -37,7 +37,6 @@ import com.tencent.devops.websocket.keys.WebsocketKeys
 import com.tencent.devops.websocket.lock.WebsocketCronLock
 import com.tencent.devops.websocket.servcie.WebsocketService
 import org.slf4j.LoggerFactory
-import org.springframework.cloud.stream.function.StreamBridge
 import org.springframework.scheduling.annotation.Scheduled
 import org.springframework.stereotype.Component
 
@@ -45,8 +44,7 @@ import org.springframework.stereotype.Component
 class ClearTimeoutCron(
     private val redisOperation: RedisOperation,
     private val websocketService: WebsocketService,
-    private val transferDispatch: TransferDispatch,
-    private val streamBridge: StreamBridge
+    private val transferDispatch: TransferDispatch
 ) {
 
     companion object {
@@ -147,7 +145,6 @@ class ClearTimeoutCron(
 
     fun clearSessionByMq(userId: String, sessionId: String) {
         transferDispatch.dispatch(
-            streamBridge,
             ClearSessionEvent(
                 userId = userId,
                 sessionId = sessionId,

@@ -50,7 +50,6 @@ import java.util.concurrent.TimeUnit
 @Suppress("ALL")
 class WebsocketService @Autowired constructor(
     private val redisOperation: RedisOperation,
-    private val streamBridge: StreamBridge,
     private val transferDispatch: TransferDispatch,
     private val projectProxyService: ProjectProxyService
 ) {
@@ -100,7 +99,6 @@ class WebsocketService @Autowired constructor(
             logger.info("sessionPage[session:$changePage.sessionId,page:$normalPage]")
             if (needTransfer && !changePage.transferData.isNullOrEmpty()) {
                 transferDispatch.dispatch(
-                    streamBridge,
                     ChangePageTransferEvent(
                         userId = changePage.userId,
                         page = changePage.page,
@@ -141,7 +139,6 @@ class WebsocketService @Autowired constructor(
 //            cleanUserSessionBySessionId(redisOperation, userId, sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
-                    streamBridge,
                     LoginOutTransferEvent(
                         userId = userId,
                         page = oldPage,
@@ -169,7 +166,6 @@ class WebsocketService @Autowired constructor(
             removeCacheSession(sessionId)
             if (needTransfer && transferData!!.isNotEmpty()) {
                 transferDispatch.dispatch(
-                    streamBridge,
                     ClearUserSessionTransferEvent(
                         userId = userId,
                         page = "",
@@ -196,7 +192,6 @@ class WebsocketService @Autowired constructor(
         }
         if (!isCacheSession(sessionId)) {
             transferDispatch.dispatch(
-                streamBridge,
                 ClearSessionEvent(
                     userId = userId,
                     sessionId = sessionId,
