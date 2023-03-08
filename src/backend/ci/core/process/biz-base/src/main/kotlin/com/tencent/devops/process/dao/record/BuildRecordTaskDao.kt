@@ -175,9 +175,7 @@ class BuildRecordTaskDao {
             val conditions = BUILD_ID.eq(buildId)
                 .and(PROJECT_ID.eq(projectId))
                 .and(EXECUTE_COUNT.eq(executeCount))
-            if (matrixContainerIds.isNotEmpty()) {
-                conditions.and(CONTAINER_ID.`in`(matrixContainerIds))
-            }
+            conditions.and(CONTAINER_ID.`in`(matrixContainerIds))
             val result = dslContext.select(
                 BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
                 TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
