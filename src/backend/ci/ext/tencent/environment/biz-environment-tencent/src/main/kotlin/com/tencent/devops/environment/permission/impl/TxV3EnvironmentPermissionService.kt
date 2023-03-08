@@ -38,6 +38,8 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 
@@ -157,6 +159,10 @@ class TxV3EnvironmentPermissionService constructor(
         return instanceMap
     }
 
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
+    }
+
     // 解密后
     override fun listNodeByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
@@ -205,6 +211,10 @@ class TxV3EnvironmentPermissionService constructor(
         }
         logger.info("listNodeByPermissions v3Impl [$userId] [$projectId] [$instanceMap]")
         return instanceMap
+    }
+
+    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+        return nodeRecordList
     }
 
     override fun createEnv(userId: String, projectId: String, envId: Long, envName: String) {

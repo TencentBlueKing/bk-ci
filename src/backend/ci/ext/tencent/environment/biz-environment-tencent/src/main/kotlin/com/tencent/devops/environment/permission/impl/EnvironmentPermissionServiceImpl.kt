@@ -37,6 +37,8 @@ import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
 import com.tencent.devops.environment.permission.EnvironmentPermissionService
+import com.tencent.devops.model.environment.tables.records.TEnvRecord
+import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -127,6 +129,10 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
             return managerPermissionMap
         }
         return iamInstancesMap
+    }
+
+    override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
+        return envRecordList
     }
 
     override fun checkEnvPermission(
@@ -271,6 +277,10 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         }
         logger.info("listNodeByPermissions $userId $projectId not manager, map: $iamPermissionMap")
         return iamPermissionMap
+    }
+
+    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+        return nodeRecordList
     }
 
     override fun checkNodePermission(
