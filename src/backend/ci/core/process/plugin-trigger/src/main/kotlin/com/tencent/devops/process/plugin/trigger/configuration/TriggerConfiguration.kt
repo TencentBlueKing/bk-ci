@@ -30,7 +30,7 @@ package com.tencent.devops.process.plugin.trigger.configuration
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.event.annotation.EventConsumer
-import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.process.plugin.trigger.pojo.event.PipelineTimerBuildEvent
@@ -85,7 +85,7 @@ class TriggerConfiguration {
     fun schedulerManager(quartzProperties: QuartzProperties) = QuartzSchedulerManager(quartzProperties)
 
     @Bean
-    fun pipelineEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
 
     /**
      * 定时构建队列--- 并发一般
