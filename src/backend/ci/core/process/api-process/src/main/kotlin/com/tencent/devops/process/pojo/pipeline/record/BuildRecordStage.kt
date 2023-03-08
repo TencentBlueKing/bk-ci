@@ -56,11 +56,11 @@ data class BuildRecordStage(
     @ApiModelProperty("执行变量", required = true)
     val stageVar: MutableMap<String, Any>,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 ) {
@@ -82,7 +82,7 @@ data class BuildRecordStage(
                     projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
                     buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
                     stageSeq = stageIndex, stageVar = mutableMapOf(), status = buildStatus?.name,
-                    startTime = null, endTime = null, timestamps = mapOf()
+                    timestamps = mapOf()
                 )
             )
             stage.containers.forEach { container ->

@@ -60,13 +60,13 @@ data class BuildRecordTask(
     @ApiModelProperty("市场插件标识", required = true)
     val atomCode: String,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("分裂前原类型标识", required = false)
-    var originClassType: String?, // 如果为空则不再矩阵内，一个字段多个用处
+    var originClassType: String? = null, // 如果为空则不再矩阵内，一个字段多个用处
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
 )

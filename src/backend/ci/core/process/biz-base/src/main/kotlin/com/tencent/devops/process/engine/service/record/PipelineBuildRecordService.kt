@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -161,12 +162,12 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
-        val buildRecordPipeline = recordModelDao.getRecord(
+        val buildRecordModel = recordModelDao.getRecord(
             dslContext, projectId, pipelineId, buildId, fixedExecuteCount
         )
 
         val version = buildInfo.version
-        val model = if (buildRecordPipeline != null && buildInfo.executeCount != null) {
+        val model = if (buildRecordModel != null && buildInfo.executeCount != null) {
             val resourceStr = pipelineResVersionDao.getVersionModelString(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
             ) ?: pipelineResDao.getVersionModelString(
@@ -189,7 +190,7 @@ class PipelineBuildRecordService @Autowired constructor(
                     pipelineId = pipelineId,
                     buildId = buildId,
                     executeCount = fixedExecuteCount,
-                    recordModelMap = buildRecordPipeline.modelVar,
+                    recordModelMap = buildRecordModel.modelVar,
                     pipelineBaseModelMap = baseModelMap
                 )
                 recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
@@ -292,21 +293,21 @@ class PipelineBuildRecordService @Autowired constructor(
             userId = buildInfo.startUser,
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
-            queueTime = buildRecordPipeline?.queueTime ?: buildInfo.queueTime,
-            startTime = buildRecordPipeline?.startTime?.timestampmilli()
+            queueTime = buildRecordModel?.queueTime ?: buildInfo.queueTime,
+            startTime = buildRecordModel?.startTime?.timestampmilli()
                 ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
-            endTime = buildRecordPipeline?.endTime?.timestampmilli() ?: buildInfo.endTime,
+            endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime,
             status = buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline?.cancelUser,
+            cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            errorInfoList = buildInfo.errorInfoList,
+            errorInfoList = buildRecordModel?.errorInfoList,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
@@ -423,7 +424,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
-                null, null
+                null, null, null
             )
         }
     }
@@ -434,6 +435,7 @@ class PipelineBuildRecordService @Autowired constructor(
         buildId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
+        errorInfoList: List<ErrorInfo>?,
         errorMsg: String?
     ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
@@ -495,7 +497,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
-                null, null
+                errorInfoList, null, null
             )
         }
 
@@ -548,7 +550,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount, cancelUser = null,
                 modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
-                startTime = startTime, endTime = endTime,
+                startTime = startTime, endTime = endTime, errorInfoList = null,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }
