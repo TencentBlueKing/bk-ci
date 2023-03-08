@@ -64,6 +64,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -110,21 +111,6 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
-    }
-
-    fun batchGet(
-        transactionContext: DSLContext?,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int
-    ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
-        val context = transactionContext ?: dslContext
-        return Triple(
-            recordStageDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordContainerDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordTaskDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount)
-        )
     }
 
     fun batchSave(
@@ -194,14 +180,21 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             var recordMap: Map<String, Any>? = null
             try {
-                recordMap = recordModelService.generateFieldRecordModelMap(
-                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
-                )
                 val fullModel = JsonUtil.to(resourceStr, Model::class.java)
                 // 为model填充element
                 pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+                val baseModelMap = JsonUtil.toMutableMap(fullModel)
+                val mergeBuildRecordParam = MergeBuildRecordParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = fixedExecuteCount,
+                    recordModelMap = buildRecordPipeline.modelVar,
+                    pipelineBaseModelMap = baseModelMap
+                )
+                recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
                 ModelUtils.generatePipelineBuildModel(
-                    baseModelMap = JsonUtil.toMutableMap(fullModel),
+                    baseModelMap = baseModelMap,
                     modelFieldRecordMap = recordMap
                 )
             } catch (t: Throwable) {

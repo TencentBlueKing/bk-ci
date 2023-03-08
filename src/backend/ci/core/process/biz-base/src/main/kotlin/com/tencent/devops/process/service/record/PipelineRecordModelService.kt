@@ -27,10 +27,6 @@
 
 package com.tencent.devops.process.service.record
 
-import com.tencent.devops.common.api.constant.CommonMessageCode
-import com.tencent.devops.common.api.constant.KEY_VERSION
-import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.JsonUtil.deepCopy
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
@@ -41,14 +37,9 @@ import com.tencent.devops.common.pipeline.utils.ModelUtils
 import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
-import com.tencent.devops.process.engine.dao.PipelineResDao
-import com.tencent.devops.process.engine.dao.PipelineResVersionDao
-import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
-import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
-import com.tencent.devops.process.utils.KEY_PIPELINE_ID
-import com.tencent.devops.process.utils.KEY_PROJECT_ID
+import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -58,28 +49,22 @@ class PipelineRecordModelService @Autowired constructor(
     private val buildRecordStageDao: BuildRecordStageDao,
     private val buildRecordContainerDao: BuildRecordContainerDao,
     private val buildRecordTaskDao: BuildRecordTaskDao,
-    private val pipelineResDao: PipelineResDao,
-    private val pipelineResVersionDao: PipelineResVersionDao,
-    private val pipelineElementService: PipelineElementService,
     private val dslContext: DSLContext
 ) {
 
     /**
      * 生成构建变量模型map集合
-     * @param projectId 项目标识
-     * @param pipelineId 流水线ID
-     * @param buildId 构建ID
-     * @param executeCount 执行次数
+     * @param mergeBuildRecordParam 合并流水线变量模型参数
      * @return 构建变量模型map集合
      */
     fun generateFieldRecordModelMap(
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int,
-        buildRecordModel: BuildRecordModel
+        mergeBuildRecordParam: MergeBuildRecordParam
     ): Map<String, Any> {
-        val recordModelMap = buildRecordModel.modelVar
+        val projectId = mergeBuildRecordParam.projectId
+        val pipelineId = mergeBuildRecordParam.pipelineId
+        val buildId = mergeBuildRecordParam.buildId
+        val executeCount = mergeBuildRecordParam.executeCount
+        val recordModelMap = mergeBuildRecordParam.recordModelMap
         // 获取stage级别变量数据
         val buildRecordStages = buildRecordStageDao.getLatestRecords(
             dslContext = dslContext,
@@ -89,47 +74,39 @@ class PipelineRecordModelService @Autowired constructor(
             executeCount = executeCount
         )
         // 获取job级别变量数据
-        val buildRecordContainers = buildRecordContainerDao.getLatestRecords(
+        val buildNormalRecordContainers = buildRecordContainerDao.getLatestNormalRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount
         )
-        // 获取所有task级别变量数据
-        val buildRecordTasks = buildRecordTaskDao.getLatestRecords(
+        val buildMatrixRecordContainers = buildRecordContainerDao.getLatestMatrixRecords(
             dslContext = dslContext,
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
             executeCount = executeCount
         )
+        val buildRecordContainers = buildNormalRecordContainers.plus(buildMatrixRecordContainers)
+        // 获取task级别变量数据
+        val matrixContainerIds = buildMatrixRecordContainers.map { it.containerId }
+        val buildNormalRecordTasks = buildRecordTaskDao.getLatestNormalRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            matrixContainerIds = matrixContainerIds
+        )
+        val buildMatrixRecordTasks = buildRecordTaskDao.getLatestMatrixRecords(
+            dslContext = dslContext,
+            projectId = projectId,
+            buildId = buildId,
+            executeCount = executeCount,
+            matrixContainerIds = matrixContainerIds
+        )
+        val buildRecordTasks = buildNormalRecordTasks.plus(buildMatrixRecordTasks)
         val stages = mutableListOf<Map<String, Any>>()
-        var pipelineBaseMap: Map<String, Any>? = null
-        // 判断流水线是否具有矩阵特性
-        val matrixContainerFlag = buildRecordContainers.indexOfFirst { it.matrixGroupFlag == true } >= 0
-        if (matrixContainerFlag) {
-            // 查出该次构建对应的流水线基本模型
-            val version = buildRecordModel.resourceVersion
-            val modelStr = pipelineResVersionDao.getVersionModelString(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: pipelineResDao.getVersionModelString(
-                dslContext = dslContext,
-                projectId = projectId,
-                pipelineId = pipelineId,
-                version = version
-            ) ?: throw ErrorCodeException(
-                errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
-                params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
-            )
-            val fullModel = JsonUtil.to(modelStr, Model::class.java)
-            // 为model填充element
-            pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
-            pipelineBaseMap = JsonUtil.toMap(fullModel)
-        }
         buildRecordStages.forEach { buildRecordStage ->
             val stageVarMap = buildRecordStage.stageVar
             val stageId = buildRecordStage.stageId
@@ -141,7 +118,7 @@ class PipelineRecordModelService @Autowired constructor(
                 stageId = stageId,
                 buildRecordTasks = buildRecordTasks,
                 stageVarMap = stageVarMap,
-                pipelineBaseMap = pipelineBaseMap
+                pipelineBaseModelMap = mergeBuildRecordParam.pipelineBaseModelMap
             )
             stages.add(stageVarMap)
         }
@@ -155,7 +132,7 @@ class PipelineRecordModelService @Autowired constructor(
         stageId: String,
         buildRecordTasks: List<BuildRecordTask>,
         stageVarMap: MutableMap<String, Any>,
-        pipelineBaseMap: Map<String, Any>? = null
+        pipelineBaseModelMap: Map<String, Any>
     ) {
         val stageRecordContainers = buildRecordContainers.filter { it.stageId == stageId }
         val stageRecordTasks = buildRecordTasks.filter { it.stageId == stageId }
@@ -170,7 +147,7 @@ class PipelineRecordModelService @Autowired constructor(
             handleContainerRecordTask(stageRecordTasks, containerId, containerVarMap)
             val matrixGroupFlag = stageRecordContainer.matrixGroupFlag
             if (matrixGroupFlag == true) {
-                val stageBaseMap = (pipelineBaseMap!![Model::stages.name] as List<Map<String, Any>>).first {
+                val stageBaseMap = (pipelineBaseModelMap[Model::stages.name] as List<Map<String, Any>>).first {
                     it[Stage::id.name] == stageId
                 }
                 val containerBaseMap = (stageBaseMap[Stage::containers.name] as List<Map<String, Any>>).first {
