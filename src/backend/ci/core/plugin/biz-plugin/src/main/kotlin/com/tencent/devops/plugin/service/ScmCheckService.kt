@@ -128,8 +128,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 block = block,
                 mrRequestId = event.mergeRequestId,
                 reportData = QualityUtils.getQualityGitMrResult(client, event),
-                targetBranch = if (event.triggerType == CodeEventType.MERGE_REQUEST.name &&
-                    !targetBranch.isNullOrEmpty()) {
+                targetBranch = if (!targetBranch.isNullOrEmpty()) {
                     mutableListOf(targetBranch)
                 } else {
                     mutableListOf("~NONE")
