@@ -34,7 +34,6 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         description = "test desc"
     )
 
-
     @Nested
     inner class AddWorkspaceTemplateTest {
         @Test
