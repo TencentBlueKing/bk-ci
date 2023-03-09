@@ -238,6 +238,7 @@ class MetricsDataReportDao {
                     .set(TOTAL_EXECUTE_COUNT, saveAtomOverviewDataPO.totalExecuteCount)
                     .set(SUCCESS_EXECUTE_COUNT, saveAtomOverviewDataPO.successExecuteCount)
                     .set(FAIL_EXECUTE_COUNT, saveAtomOverviewDataPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, saveAtomOverviewDataPO.failComplianceCount)
                     .set(STATISTICS_TIME, saveAtomOverviewDataPO.statisticsTime)
                     .set(CREATOR, saveAtomOverviewDataPO.creator)
                     .set(MODIFIER, saveAtomOverviewDataPO.modifier)
@@ -260,6 +261,7 @@ class MetricsDataReportDao {
                     .set(TOTAL_EXECUTE_COUNT, updateAtomOverviewDataPO.totalExecuteCount)
                     .set(SUCCESS_EXECUTE_COUNT, updateAtomOverviewDataPO.successExecuteCount)
                     .set(FAIL_EXECUTE_COUNT, updateAtomOverviewDataPO.failExecuteCount)
+                    .set(FAIL_COMPLIANCE_COUNT, updateAtomOverviewDataPO.failComplianceCount)
                     .set(MODIFIER, updateAtomOverviewDataPO.modifier)
                     .set(UPDATE_TIME, updateAtomOverviewDataPO.updateTime)
                     .where(
