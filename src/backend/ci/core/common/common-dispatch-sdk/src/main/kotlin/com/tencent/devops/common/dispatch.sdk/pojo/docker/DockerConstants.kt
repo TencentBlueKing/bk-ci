@@ -42,9 +42,7 @@ object DockerConstants {
     const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
 
     const val BK_FAILED_START_BUILD_MACHINE = "BkFailedStartBuildMachine"
-    const val BK_UNABLE_GET_PIPELINE_JOB_STATUS = "BkUnableGetPipelineJobStatus"
-    const val BK_JOB_BUILD_STOPS = "BkJobBuildStops"
     const val BK_JOB_REACHED_MAX_QUOTA_SOON_RETRY = "BkJobReachedMaxQuotaSoonRetry"
     const val BK_JOB_REACHED_MAX_QUOTA_AND_ALREADY_DELAYED = "BkJobReachedMaxQuotaAndAlreadyDelayed"
-    const val BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED = "BkJobReachedMaxQuotaAndAlreadyDelayed"
+    const val BK_JOB_REACHED_MAX_QUOTA_AND_SOON_DELAYED = "BkJobReachedMaxQuotaAndSoonDelayed"
 }

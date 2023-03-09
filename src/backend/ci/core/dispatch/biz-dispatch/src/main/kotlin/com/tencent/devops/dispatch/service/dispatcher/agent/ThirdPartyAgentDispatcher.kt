@@ -27,9 +27,11 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.agent
 
+import com.tencent.devops.common.api.constant.BK_GET_THIRD_PARTY_AGENT_FAIL
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
@@ -43,6 +45,7 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyDevCloudDispatchT
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -154,7 +157,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败(System Error) - ${agentResult.message}"
+                errorMsg = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                        + "(System Error) - ${agentResult.message}"
             )
             return
         }
@@ -177,7 +181,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = "获取第三方构建机信息失败(System Error) - $dispatchType agent is null"
+                errorMsg = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                        + "(System Error) - $dispatchType agent is null"
             )
             return
         }
@@ -382,7 +387,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
+                errorMessage = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                        + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
         }
@@ -397,7 +403,8 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = "获取第三方构建机信息失败(System Error) - ${dispatchType.envName}: agent is null"
+                errorMessage = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                        + "System Error) - ${dispatchType.envName}: agent is null"
             )
             return
         }

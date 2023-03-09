@@ -158,4 +158,11 @@ const val BK_ACCOUNT_NOT_PERMISSIONS = "BkAccountNotPermissions"
 const val BK_GIT_REPO_NOT_EXIST = "BkGitRepoNotExist"
 const val BK_GIT_INTERFACE_NOT_EXIST = "BkGitInterfaceNotExist"
 const val BK_GIT_OPERATION_CANNOT = "BkGitOperationCannot"
-const val BK_engineering_REPO
+const val BK_ENGINEERING_REPO_UNAUTHORIZED = "BkEngineeringRepoUnauthorized"
+const val BK_ENGINEERING_REPO_NOT_EXIST = "BkEngineeringRepoNotExist"
+const val BK_ENGINEERING_REPO_CALL_ERROR = "BkEngineeringRepoCallError"
+const val BK_NOT_MEMBER_AND_NOT_OPEN_SOURCE = "BkNotMemberAndNotOpenSource"
+const val BK_UNABLE_GET_PIPELINE_JOB_STATUS = "BkUnableGetPipelineJobStatus"
+const val BK_JOB_BUILD_STOPS = "BkJobBuildStops"
+const val BK_GET_THIRD_PARTY_AGENT_FAIL = "BkGetThirdPartyAgentFail"
+
