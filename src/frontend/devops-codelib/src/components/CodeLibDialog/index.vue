@@ -75,7 +75,7 @@
                         <span class="error-tips" v-if="(urlErrMsg || errors.has('codelibUrl') && !isP4)">
                             {{ urlErrMsg || errors.first("codelibUrl") }}
                         </span>
-                        <div class="example-tips">{{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}</div>
+                        <div v-if="isSvn" class="example-tips">{{ codelib.svnType === 'ssh' ? $t('codelib.sshExampleTips') : $t('codelib.httpExampleTips') }}</div>
                     </div>
                 </div>
                 <!-- 源代码地址 end -->
@@ -260,6 +260,9 @@
             },
             isP4 () {
                 return isP4(this.codelibTypeName)
+            },
+            isSvn () {
+                return isSvn(this.codelibTypeName)
             },
             isGithub () {
                 return isGithub(this.codelibTypeName)
