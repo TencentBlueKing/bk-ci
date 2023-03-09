@@ -80,6 +80,8 @@ class V3CertPermissionService @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if(authPermission==AuthPermission.VIEW)
+            return
         if (isProjectOwner(projectId, userId)) {
             return
         }
