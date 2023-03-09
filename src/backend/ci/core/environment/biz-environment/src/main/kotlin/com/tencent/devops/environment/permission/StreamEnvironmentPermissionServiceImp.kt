@@ -55,6 +55,13 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         return getAllEnvInstance(projectId).map { HashUtil.decodeIdToLong(it) }.toSet()
     }
 
+    override fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
     override fun listEnvByPermissions(
         userId: String,
         projectId: String,

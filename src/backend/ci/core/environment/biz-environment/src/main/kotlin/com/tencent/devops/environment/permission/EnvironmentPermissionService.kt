@@ -36,6 +36,11 @@ interface EnvironmentPermissionService {
 
     fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long>
 
+    fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long>
+
     fun listEnvByPermissions(
         userId: String,
         projectId: String,

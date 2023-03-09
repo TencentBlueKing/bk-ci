@@ -102,19 +102,23 @@ class V3EnvironmentPermissionService constructor(
         return super.checkNodePermission(userId, projectId, permission)
     }
 
+    override fun listEnvByViewPermission(userId: String, projectId: String): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
     // 解密后
     override fun listEnvByPermission(userId: String, projectId: String, permission: AuthPermission): Set<Long> {
         val resourceInstances = if (isProjectOwner(projectId, userId)) {
             arrayListOf("*")
         } else {
             authPermissionApi.getUserResourceByPermission(
-            user = userId,
-            serviceCode = environmentAuthServiceCode,
-            resourceType = envResourceType,
-            projectCode = projectId,
-            permission = permission,
-            supplier = supplierForEnvFakePermission(projectId)
-        )
+                user = userId,
+                serviceCode = environmentAuthServiceCode,
+                resourceType = envResourceType,
+                projectCode = projectId,
+                permission = permission,
+                supplier = supplierForEnvFakePermission(projectId)
+            )
         }
 
         return getAllEnvInstance(resourceInstances, projectId, userId).map { HashUtil.decodeIdToLong(it) }.toSet()
@@ -153,12 +157,12 @@ class V3EnvironmentPermissionService constructor(
             arrayListOf("*")
         } else {
             authPermissionApi.getUserResourceByPermission(
-                    user = userId,
-                    serviceCode = environmentAuthServiceCode,
-                    resourceType = nodeResourceType,
-                    projectCode = projectId,
-                    permission = permission,
-                    supplier = supplierForEnvFakePermission(projectId)
+                user = userId,
+                serviceCode = environmentAuthServiceCode,
+                resourceType = nodeResourceType,
+                projectCode = projectId,
+                permission = permission,
+                supplier = supplierForEnvFakePermission(projectId)
             )
         }
 
