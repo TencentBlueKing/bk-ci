@@ -448,11 +448,13 @@ class PipelineListFacadeService @Autowired constructor(
     ): PipelineViewPipelinePage<Pipeline> {
         val watcher = Watcher(id = "listViewPipelines|$projectId|$userId")
         watcher.start("perm_r_perm")
+        val authPipelines = pipelinePermissionService.getResourceByPermission(
+            userId = userId, projectId = projectId, permission = AuthPermission.LIST
+        )
         val permissionToListMap = pipelinePermissionService.filterPipelines(
             userId = userId,
             projectId = projectId,
             authPermissions = setOf(
-                AuthPermission.LIST,
                 AuthPermission.VIEW,
                 AuthPermission.DELETE,
                 AuthPermission.SHARE,
@@ -460,7 +462,6 @@ class PipelineListFacadeService @Autowired constructor(
                 AuthPermission.DOWNLOAD,
             )
         )
-        val authPipelines = permissionToListMap[AuthPermission.LIST] ?: emptyList()
         watcher.stop()
 
         watcher.start("s_r_summary")

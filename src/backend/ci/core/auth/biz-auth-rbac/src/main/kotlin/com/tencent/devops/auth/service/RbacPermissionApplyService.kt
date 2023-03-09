@@ -176,7 +176,7 @@ class RbacPermissionApplyService @Autowired constructor(
         projectName: String,
         managerRoleGroupInfoList: List<V2ManagerRoleGroupInfo>
     ): List<ManagerRoleGroupInfo> {
-        val groupInfoList: MutableList<ManagerRoleGroupInfo> = ArrayList()
+        val groupInfoList: MutableList<ManagerRoleGroupInfo> = mutableListOf()
         if (managerRoleGroupInfoList.isNotEmpty()) {
             // 校验用户是否属于用户组
             val groupIds = managerRoleGroupInfoList.map { it.id }.joinToString(",")
@@ -191,8 +191,7 @@ class RbacPermissionApplyService @Autowired constructor(
                     params = arrayOf(it.id.toString()),
                     defaultMessage = "group ${it.name} not exist"
                 )*/
-                // todo 待完善后，要进行异常处理
-                // todo 暂时这么处理，如果在用户组表找不到，那么用户组默认挂在项目下
+                // todo 待完善后，要进行异常处理,暂时这么处理，如果在用户组表找不到，那么用户组默认挂在项目下
                 groupInfoList.add(
                     ManagerRoleGroupInfo(
                         id = it.id,
