@@ -56,8 +56,11 @@ class WindowsBuildHistoryService @Autowired constructor(
             val context = DSL.using(configuration)
             val resultBuildHistory = windowsBuildHistoryDao.saveBuildHistory(context, rec)
             if (resultBuildHistory > 0) {
-                val buildHistoryRecord =
-                    windowsBuildHistoryDao.getByBuildIdAndVmSeqId(context, dispatchMessage.buildId, dispatchMessage.vmSeqId)
+                val buildHistoryRecord = windowsBuildHistoryDao.getByBuildIdAndVmSeqId(
+                    dslContext = context,
+                    buildId = dispatchMessage.buildId,
+                    vmSeqId = dispatchMessage.vmSeqId
+                )
                 logger.info(
                     "[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] save " +
                         "buildHistoryId: ${buildHistoryRecord.id}, vmIp: $createInfo.ip"
