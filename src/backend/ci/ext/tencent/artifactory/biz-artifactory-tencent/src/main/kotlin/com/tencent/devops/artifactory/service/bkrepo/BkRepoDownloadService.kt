@@ -27,6 +27,9 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryCode
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_BUILD_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
@@ -43,6 +46,7 @@ import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
@@ -52,12 +56,14 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -171,10 +177,28 @@ open class BkRepoDownloadService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException("文件($argPath)不存在")
+                ?: throw NotFoundException(
+                    MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId)
+                        ),argPath)
+                )
         val properties = fileInfo.metadata
-        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException("元数据(pipelineId)不存在")
-        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException("元数据(buildId)不存在")
+        properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
+            MessageFormat.format(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_METADATA_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            ),"pipelineId"
+        ))
+        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
+            MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                ),"buildId"
+            ))
         val shortUrl = shortUrlService.createShortUrl(
             url = PathUtils.buildDetailLink(
                 projectId = projectId,
@@ -236,7 +260,13 @@ open class BkRepoDownloadService @Autowired constructor(
             projectId,
             RepoUtils.getRepoByType(artifactoryType),
             path
-        ) ?: throw BadRequestException("文件（$path) 不存在")
+        ) ?: throw BadRequestException(
+            MessageFormat.format(
+            MessageUtil.getMessageByLocale(
+                messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            ),path)
+        )
         val fileName = fileDetail.name
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
 
@@ -290,7 +320,14 @@ open class BkRepoDownloadService @Autowired constructor(
                     crossBuildNo ?: throw BadRequestException("Invalid Parameter buildNo"),
                     ChannelCode.BS
                 ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+                targetBuildId = (targetBuild ?: throw BadRequestException(
+                    MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_BUILD_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId)
+                        ),crossBuildNo
+                    )
+                )).id
             }
         }
 

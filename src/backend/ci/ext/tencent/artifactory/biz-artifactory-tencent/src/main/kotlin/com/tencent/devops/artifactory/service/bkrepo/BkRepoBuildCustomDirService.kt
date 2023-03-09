@@ -27,6 +27,11 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryCode
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_CANNOT_COPY_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_CANNOT_MOVE_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_DESTINATION_PATH_SHOULD_BE_FOLDER
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -36,10 +41,13 @@ import com.tencent.devops.artifactory.service.BuildCustomDirService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
@@ -65,7 +73,12 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
-            ?: throw NotFoundException("文件不存在")
+            ?: throw NotFoundException(
+                MessageFormat.format(MessageUtil.getMessageByLocale(
+                    messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                ),"")
+                )
         return RepoUtils.toFileDetail(fileDetail)
     }
 
@@ -88,14 +101,20 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         if (combinationPath.srcPaths.size > 1) {
             val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
-                throw OperationException("目标路径应为文件夹")
+                throw OperationException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_DESTINATION_PATH_SHOULD_BE_FOLDER,
+                    language = I18nUtil.getLanguage(userId)
+                ))
             }
         }
 
         combinationPath.srcPaths.map { srcPath ->
             val normalizedSrcPath = PathUtils.normalize(srcPath)
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
-                throw BadRequestException("不能在拷贝到当前目录")
+                throw BadRequestException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_CANNOT_COPY_TO_CURRENT_DIRECTORY,
+                    language = I18nUtil.getLanguage(userId)
+                ))
             }
 
             bkRepoClient.copy(
@@ -119,11 +138,18 @@ class BkRepoBuildCustomDirService @Autowired constructor(
 
             if (normalizedSrcPath == normalizedDestPath ||
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
-                throw BadRequestException("不能移动到当前目录")
+                throw BadRequestException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_CANNOT_MOVE_TO_CURRENT_DIRECTORY,
+                    language = I18nUtil.getLanguage(userId)
+                ))
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
-                throw BadRequestException("不能将父目录移动到子目录")
+                throw BadRequestException(
+                    MessageUtil.getMessageByLocale(
+                    messageCode = BK_CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
+                    language = I18nUtil.getLanguage(userId)
+                ))
             }
 
             bkRepoClient.move(

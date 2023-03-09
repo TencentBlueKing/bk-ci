@@ -46,7 +46,6 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
-import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -59,10 +58,9 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_BUILD_NO
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
-import com.tencent.devops.project.api.service.ServiceLocaleResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
@@ -215,7 +213,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
                 params = arrayOf(MessageUtil.getMessageByLocale(
                     messageCode = BK_GRANT_DOWNLOAD_PERMISSION,
-                    language = getLanguage(userId)
+                    language = I18nUtil.getLanguage(userId)
                 ))
             )
         }
@@ -232,14 +230,13 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                params = arrayOf(MessageUtil.getMessageByLocale(
-                    messageCode = MessageFormat.format(BK_GRANT_PIPELINE_PERMISSION, pipelineInfo?.creator ?: ""),
-                    language = getLanguage(userId)
+                params = arrayOf(MessageFormat.format(MessageUtil.getMessageByLocale(
+                    messageCode = BK_GRANT_PIPELINE_PERMISSION,
+                    language = I18nUtil.getLanguage(userId)
+                ),
+                    pipelineInfo?.creator ?: "")
+
                 ))
-
-
-            )
-
         }
 
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }
@@ -265,17 +262,6 @@ class AppArtifactoryResourceImpl @Autowired constructor(
                 nodeMetadata = fileDetail.nodeMetadata
             )
         )
-    }
-
-    fun getLanguage (userId: String): String{
-        if (CommonUtils.getRequestChannel() == RequestChannelTypeEnum.USER.name) {
-            if (CommonUtils.getUserLocaleLanguageFromCache(userId).isNullOrBlank()){
-                return client.get(ServiceLocaleResource::class).getUserLocale(userId).data!!.language
-            }
-            return CommonUtils.getUserLocaleLanguageFromCache(userId).toString()
-        }else{
-            return CommonUtils.getDefaultLocaleLanguage()
-        }
     }
 
     override fun properties(

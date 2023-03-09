@@ -27,6 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
@@ -50,6 +51,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -65,6 +67,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
@@ -73,6 +76,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
@@ -134,7 +138,13 @@ class BkRepoService @Autowired constructor(
         } else {
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                    ?: throw NotFoundException("文件不存在")
+                    ?: throw NotFoundException(
+                        MessageFormat.format(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
+                                language = I18nUtil.getLanguage(userId)
+                            ), "path")
+                    )
             RepoUtils.toFileDetail(fileDetail)
         }
     }
@@ -235,7 +245,14 @@ class BkRepoService @Autowired constructor(
                     buildNum = crossBuildNo ?: throw BadRequestException("invalid buildNo"),
                     channelCode = ChannelCode.BS
                 ).data
-                targetBuildId = (targetBuild ?: throw BadRequestException("构建不存在($crossBuildNo)")).id
+                targetBuildId = (targetBuild ?: throw BadRequestException(
+                    MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = ArtifactoryCode.BK_BUILD_NOT_EXIST,
+                            language = I18nUtil.getLanguage()
+                        ),crossBuildNo
+                    )
+                )).id
             }
         }
         logger.info("targetProjectId: $targetProjectId, targetPipelineId: $targetPipelineId, targetBuildId: $targetBuildId")
@@ -440,7 +457,14 @@ class BkRepoService @Autowired constructor(
         val metadataMap =
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-            throw BadRequestException("元数据(pipelineId)不存在")
+            throw BadRequestException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryCode.BK_METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId)
+                    ),"pipelineId"
+                )
+            )
         }
         val pipelineId = metadataMap[ARCHIVE_PROPS_PIPELINE_ID]
         val pipelineName = pipelineService.getPipelineName(projectId, metadataMap[ARCHIVE_PROPS_PIPELINE_ID]!!)
@@ -453,7 +477,13 @@ class BkRepoService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail =
             bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
-                ?: throw NotFoundException("文件不存在")
+                ?: throw NotFoundException(
+                    MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage()
+                        ), "")
+                )
 
         return RepoUtils.toFileDetail(fileDetail)
     }

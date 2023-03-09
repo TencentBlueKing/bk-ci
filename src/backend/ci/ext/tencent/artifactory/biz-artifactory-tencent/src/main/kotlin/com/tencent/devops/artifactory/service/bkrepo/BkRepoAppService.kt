@@ -27,6 +27,9 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_NO_EXPERIENCE_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
@@ -38,6 +41,7 @@ import com.tencent.devops.artifactory.util.UrlUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -48,10 +52,12 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_PIPELINE_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Service
@@ -126,7 +132,14 @@ class BkRepoAppService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(userId, projectId, message = "用户（$userId) 没有项目（$projectId）下载权限)")
+                pipelineService.validatePermission(userId, projectId, message = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId)
+                    ),
+                    userId,
+                    projectId
+                ))
             }
             ArtifactoryType.PIPELINE -> {
                 val properties = bkRepoClient.listMetadata(
@@ -136,7 +149,14 @@ class BkRepoAppService @Autowired constructor(
                     normalizedPath
                 )
                 if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
-                    throw CustomException(Response.Status.BAD_REQUEST, "元数据(pipelineId)不存在，请通过共享下载文件")
+                    throw CustomException(Response.Status.BAD_REQUEST,
+                        MessageFormat.format(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                                language = I18nUtil.getLanguage(userId)
+                            ),"pipelineId"
+                        )
+                        )
                 }
                 val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
                 pipelineService.validatePermission(
@@ -144,7 +164,15 @@ class BkRepoAppService @Autowired constructor(
                     projectId,
                     pipelineId!!,
                     AuthPermission.DOWNLOAD,
-                    "用户($userId)在项目($projectId)下没有流水线${pipelineId}下载构建权限"
+                    MessageFormat.format(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                            language = I18nUtil.getLanguage(userId)
+                        ),
+                        userId,
+                        projectId,
+                        pipelineId
+                    )
                 )
             }
             // 镜像不支持下载
@@ -174,7 +202,10 @@ class BkRepoAppService @Autowired constructor(
         if (experienceHashId != null) {
             val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
             if (!check.isOk() || !check.data!!) {
-                throw CustomException(Response.Status.BAD_REQUEST, "您没有该体验的权限")
+                throw CustomException(Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
+                    messageCode = BK_NO_EXPERIENCE_PERMISSION,
+                    language = I18nUtil.getLanguage(userId)
+                ))
             }
         }
 
