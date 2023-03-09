@@ -67,6 +67,8 @@ class CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if(authPermission==AuthPermission.VIEW)
+            return
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw PermissionForbiddenException(message)
         }

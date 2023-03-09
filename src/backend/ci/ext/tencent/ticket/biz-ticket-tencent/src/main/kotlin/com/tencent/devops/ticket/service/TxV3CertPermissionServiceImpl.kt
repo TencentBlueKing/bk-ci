@@ -38,6 +38,8 @@ class TxV3CertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if(authPermission==AuthPermission.VIEW)
+            return
         val checkResult = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
