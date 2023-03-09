@@ -57,4 +57,7 @@ class BkRepoClientConfig {
     // 蓝盾新仓库静态资源仓库密码
     @Value("\${bkrepo.staticPassword:}")
     val bkRepoStaticPassword: String = ""
+
+    @Value("\${bkrepo.bkrepoUrl}")
+    val bkRepoIdcHost: String? = null
 }
