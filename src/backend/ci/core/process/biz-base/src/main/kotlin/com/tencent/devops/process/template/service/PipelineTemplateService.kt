@@ -76,7 +76,7 @@ class PipelineTemplateService @Autowired constructor(
         logger.info("start checkImageReleaseStatus templateCode is:$templateCode")
         val templateModel = getTemplateDetailInfo(templateCode).data?.templateModel
             ?: return MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
-        var code: String? =null
+        var code: String? = null
         val images = mutableSetOf<String>()
         run releaseStatus@{
             templateModel.stages.forEach { stage ->

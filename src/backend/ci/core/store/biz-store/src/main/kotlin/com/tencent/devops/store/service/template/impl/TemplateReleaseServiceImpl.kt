@@ -188,7 +188,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         if (!imageCode.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
-                params = arrayOf(imageCode),
+                params = arrayOf(imageCode)
             )
         }
         if (templateCount > 0) {
