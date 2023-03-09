@@ -47,6 +47,7 @@ import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import jdk.internal.platform.Container.metrics
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -89,7 +90,8 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-    @Scheduled(cron = "0 0 1 * * ?")
+//    @Scheduled(cron = "0 0 1 * * ?")
+    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
