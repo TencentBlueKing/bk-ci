@@ -843,8 +843,8 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         }
         return client.get(ServiceAtomResource::class).isComplianceErrorCode(
             storeCode = atomCode,
-            StoreTypeEnum.ATOM,
-            errorCode.toInt(),
+            storeType = StoreTypeEnum.ATOM,
+            errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).data!!
     }
