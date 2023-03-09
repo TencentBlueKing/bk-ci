@@ -28,8 +28,17 @@
 package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.BK_ACCOUNT_NOT_PERMISSIONS
 import com.tencent.devops.common.api.constant.BK_ADD_MR_COMMENTS_FAIL
+import com.tencent.devops.common.api.constant.BK_AUTH_FAIL
 import com.tencent.devops.common.api.constant.BK_COMMIT_CHECK_ADD_FAIL
+import com.tencent.devops.common.api.constant.BK_GIT_INTERFACE_NOT_EXIST
+import com.tencent.devops.common.api.constant.BK_GIT_OPERATION_CANNOT
+import com.tencent.devops.common.api.constant.BK_GIT_REPO_NOT_EXIST
+import com.tencent.devops.common.api.constant.BK_PARAME_ERROR
+import com.tencent.devops.common.api.constant.BK_WEBHOOK_ADD_FAIL
+import com.tencent.devops.common.api.constant.BK_WEBHOOK_LOCK_UNLOCK_FAIL
+import com.tencent.devops.common.api.constant.BK_WEBHOOK_UPDATE_FAIL
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
@@ -64,6 +73,7 @@ import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.BeansException
 import java.net.URLEncoder
+import java.text.MessageFormat
 
 @Suppress("ALL")
 open class GitApi {
@@ -290,7 +300,10 @@ open class GitApi {
             return callMethod(getMessageByLocale(OPERATION_ADD_WEBHOOK), request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(
+                    t.code,
+                    MessageFormat.format(getMessageByLocale(BK_WEBHOOK_ADD_FAIL), "Developer")
+                )
             }
             throw t
         }
@@ -332,7 +345,7 @@ open class GitApi {
             return callMethod(getMessageByLocale(OPERATION_UPDATE_WEBHOOK), request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(t.code, getMessageByLocale(BK_WEBHOOK_UPDATE_FAIL))
             }
             throw t
         }
@@ -347,7 +360,10 @@ open class GitApi {
             return result.sortedBy { it.createdAt }.reversed()
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, "Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有master权限")
+                throw GitApiException(
+                    t.code,
+                    MessageFormat.format(getMessageByLocale(BK_WEBHOOK_ADD_FAIL), "master")
+                )
             }
             throw t
         }
@@ -447,13 +463,13 @@ open class GitApi {
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
         val msg = when (code) {
-            HTTP_400 -> "参数错误"
-            HTTP_401 -> "Git token 认证失败"
-            HTTP_403 -> "账户没有${operation}的权限"
-            HTTP_404 -> "Git仓库不存在或者是账户没有该项目${operation}的权限"
-            HTTP_405 -> "Git平台没有${operation}的接口"
-            HTTP_422 -> "Git平台${operation}操作不能进行"
-            else -> "Git平台${operation}失败"
+            HTTP_400 -> getMessageByLocale(BK_PARAME_ERROR)
+            HTTP_401 -> "Git token ${getMessageByLocale(BK_AUTH_FAIL)}"
+            HTTP_403 -> MessageFormat.format(getMessageByLocale(BK_ACCOUNT_NOT_PERMISSIONS), operation)
+            HTTP_404 -> MessageFormat.format(getMessageByLocale(BK_GIT_REPO_NOT_EXIST), operation)
+            HTTP_405 -> MessageFormat.format(getMessageByLocale(BK_GIT_INTERFACE_NOT_EXIST), operation)
+            HTTP_422 -> MessageFormat.format(getMessageByLocale(BK_GIT_OPERATION_CANNOT), operation)
+            else -> "Git platform $operation fail"
         }
         throw GitApiException(code, msg)
     }
@@ -505,7 +521,7 @@ open class GitApi {
             }
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, "unlock webhooklock失败,请确认token是否已经配置")
+                throw GitApiException(t.code, getMessageByLocale(BK_WEBHOOK_LOCK_UNLOCK_FAIL))
             }
             throw t
         }

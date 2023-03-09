@@ -82,7 +82,7 @@ object SVNApi {
         val hookResponse: HookResponse = JsonUtil.getObjectMapper().readValue(body)
         if (hookResponse.status != "200") {
             logger.info("Fail to add the hook. ${hookResponse.message}")
-            throw ScmException("添加Svn Webhook失败，原因：${hookResponse.message}", ScmType.CODE_SVN.name)
+            throw ScmException("add Svn Webhook fail，cause：${hookResponse.message}", ScmType.CODE_SVN.name)
         }
     }
 
