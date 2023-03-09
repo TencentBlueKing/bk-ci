@@ -367,7 +367,8 @@ abstract class ImageService @Autowired constructor() {
                     updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli(),
                     installedFlag = null,
                     honorInfos = honorInfos,
-                    indexInfos = indexInfos
+                    indexInfos = indexInfos,
+                    hotFlag = statistic?.hotFlag
                 )
             )
         }
@@ -460,7 +461,8 @@ abstract class ImageService @Autowired constructor() {
                     docsLink = storeCommonService.getStoreDetailUrl(StoreTypeEnum.IMAGE, it.code),
                     modifier = it.modifier,
                     updateTime = DateTimeUtil.formatDate(Date(it.updateTime)),
-                    recommendFlag = it.recommendFlag
+                    recommendFlag = it.recommendFlag,
+                    hotFlag = it.hotFlag
                 )
             }
         )

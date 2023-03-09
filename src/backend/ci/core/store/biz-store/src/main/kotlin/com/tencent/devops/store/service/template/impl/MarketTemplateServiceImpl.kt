@@ -310,7 +310,8 @@ abstract class MarketTemplateServiceImpl @Autowired constructor() : MarketTempla
                     updateTime = DateTimeUtil.toDateTime(it["UPDATE_TIME"] as LocalDateTime),
                     installed = installed,
                     honorInfos = honorInfos,
-                    indexInfos = indexInfos
+                    indexInfos = indexInfos,
+                    hotFlag = statistic?.hotFlag
                 )
                 when {
                     installed == true -> installedTemplates.add(marketItem)
