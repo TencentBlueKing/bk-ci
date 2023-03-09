@@ -20,6 +20,11 @@
     color: #C4C6CC !important;
 }
 
+.bk-permission-tooltips {
+    position: relative;
+    white-space: nowrap;
+}
+
 .bk-permission-tooltips[tooltips]::before {
     content: "";
     position: absolute;
@@ -44,7 +49,7 @@
     font-size: 12px;
     line-height: 18px;
     pointer-events: none;
-    z-index: 99;
+    z-index: 9999;
     opacity: 0;
     left: 50%;
     top: -5px;
