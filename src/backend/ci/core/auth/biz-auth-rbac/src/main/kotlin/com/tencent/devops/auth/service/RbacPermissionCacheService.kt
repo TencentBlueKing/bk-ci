@@ -6,6 +6,7 @@ import com.tencent.devops.auth.dao.AuthActionDao
 import com.tencent.devops.auth.dao.AuthResourceTypeDao
 import com.tencent.devops.auth.pojo.vo.ActionInfoVo
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
+import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -13,11 +14,11 @@ import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Service
-class RbacCacheService @Autowired constructor(
+class RbacPermissionCacheService @Autowired constructor(
     val dslContext: DSLContext,
     val authResourceTypeDao: AuthResourceTypeDao,
     val authActionDao: AuthActionDao,
-) {
+) : PermissionCacheService {
     /*获取资源类型下的动作*/
     private val resourceType2ActionCache = CacheBuilder.newBuilder()
         .maximumSize(100)
@@ -33,7 +34,7 @@ class RbacCacheService @Autowired constructor(
         .build<String/*action*/, ActionInfoVo>()
 
 
-    fun listResourceTypes(): List<ResourceTypeInfoVo> {
+    override fun listResourceTypes(): List<ResourceTypeInfoVo> {
         if (resourceTypeCache.asMap().values.isEmpty()) {
             authResourceTypeDao.list(dslContext).forEach {
                 val resourceTypeInfo = ResourceTypeInfoVo(
@@ -48,7 +49,7 @@ class RbacCacheService @Autowired constructor(
         return resourceTypeCache.asMap().values.toList()
     }
 
-    fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
+    override fun listResourceType2Action(resourceType: String): List<ActionInfoVo> {
         if (resourceType2ActionCache.getIfPresent(resourceType) == null) {
             val actionList = authActionDao.list(dslContext, resourceType)
             if (actionList.isEmpty()) {
@@ -71,7 +72,7 @@ class RbacCacheService @Autowired constructor(
         return resourceType2ActionCache.getIfPresent(resourceType)!!
     }
 
-    fun getActionInfo(action: String): ActionInfoVo {
+    override fun getActionInfo(action: String): ActionInfoVo {
         if (actionCache.getIfPresent(action) == null) {
             val actionRecord = authActionDao.get(dslContext, action)
                 ?: throw ErrorCodeException(
@@ -90,7 +91,7 @@ class RbacCacheService @Autowired constructor(
         return actionCache.getIfPresent(action)!!
     }
 
-    fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
+    override fun getResourceTypeInfo(resourceType: String): ResourceTypeInfoVo {
         if (resourceTypeCache.getIfPresent(resourceType) == null) {
             listResourceTypes()
         }
