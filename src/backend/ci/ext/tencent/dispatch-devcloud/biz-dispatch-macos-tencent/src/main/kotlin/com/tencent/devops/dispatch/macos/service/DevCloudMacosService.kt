@@ -4,7 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+import com.tencent.devops.common.environment.agent.utils.ShaUtils
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
@@ -14,6 +14,8 @@ import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import org.apache.commons.codec.digest.DigestUtils
+import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -72,7 +74,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -152,7 +154,7 @@ class DevCloudMacosService @Autowired constructor(
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -230,7 +232,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("DevCloud deleteVM body:$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
@@ -251,4 +253,23 @@ class DevCloudMacosService @Autowired constructor(
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
+
+    fun makeHeaders(appId: String, token: String, staffname: String, proxyToken: String): Map<String, String> {
+        val headerBuilder = mutableMapOf<String, String>()
+        headerBuilder["APPID"] = appId
+        val random = RandomStringUtils.randomAlphabetic(8)
+        headerBuilder["RANDOM"] = random
+        val timestamp = (System.currentTimeMillis() / 1000).toString()
+        headerBuilder["TIMESTP"] = timestamp
+        val encKey = DigestUtils.md5Hex("$token$timestamp$random")
+        headerBuilder["ENCKEY"] = encKey
+        headerBuilder["TIMESTAMP"] = timestamp
+        // 发给devcloud的header里加入创建者,有STAFFNAME会被智能网关拦截
+//        headerBuilder["STAFFNAME"] = staffname
+        headerBuilder["X-STAFFNAME"] = staffname
+        val signature = ShaUtils.sha256("$timestamp$proxyToken$timestamp")
+        headerBuilder["SIGNATURE"] = signature.toUpperCase()
+
+        return headerBuilder
+    }
 }
