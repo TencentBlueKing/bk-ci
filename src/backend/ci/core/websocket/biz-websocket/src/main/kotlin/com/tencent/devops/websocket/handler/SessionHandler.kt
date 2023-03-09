@@ -73,7 +73,8 @@ class SessionHandler @Autowired constructor(
     override fun afterConnectionEstablished(session: WebSocketSession) {
         val uri = session.uri
         val remoteId = session.remoteAddress
-        val sessionId = uri?.query?.substringAfter("sessionId=")
+        val sessionId = uri?.query?.split("&")
+            ?.firstOrNull { it.contains("sessionId") }?.substringAfter("sessionId=")
         val webUser = session.handshakeHeaders[AUTH_HEADER_DEVOPS_USER_ID]
         SpringContextUtil.getBean(WebsocketService::class.java)
             .addCacheSession(sessionId!!)

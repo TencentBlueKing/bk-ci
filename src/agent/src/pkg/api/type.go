@@ -47,6 +47,14 @@ type ThirdPartyBuildInfo struct {
 	ContainerHashId string                     `json:"containerHashId"`
 }
 
+type BuildJobType string
+
+const (
+	AllBuildType    BuildJobType = "ALL"
+	DockerBuildType BuildJobType = "DOCKER"
+	BinaryBuildType BuildJobType = "BINARY"
+)
+
 type ThirdPartyDockerBuildInfo struct {
 	AgentId        string      `json:"agentId"`
 	SecretKey      string      `json:"secretKey"`

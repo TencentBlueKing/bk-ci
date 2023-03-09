@@ -39,6 +39,9 @@ interface ServiceGithubOauthResource {
     fun oauthUrl(
         @ApiParam(value = "redirectUrl")
         @QueryParam("redirectUrl")
-        redirectUrl: String
+        redirectUrl: String,
+        @ApiParam(value = "userId, 如果指定将以该userId入库，否则会以github login name 入库")
+        @QueryParam("userId")
+        userId: String?
     ): Result<String>
 }
