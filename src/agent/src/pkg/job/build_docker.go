@@ -130,7 +130,7 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
-	imageName := dockerBuildInfo.Image
+	imageName := strings.TrimSpace(dockerBuildInfo.Image)
 
 	// 判断本地是否已经有镜像了
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
@@ -149,8 +149,22 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		}
 	}
 
-	// 本地没有镜像的需要拉取新的镜像
-	if !localExist {
+	imageStrSub := strings.Split(imageStr, ":")
+	isLatest := false
+	// mirrors.tencent.com/ruotiantang/image-test:latest
+	// 长度为2说明第二个就是tag
+	if len(imageStrSub) == 2 && imageStrSub[1] == "latest" {
+		isLatest = true
+	} else if len(imageStr) == 1 {
+		// 等于1说明没填tag按照docker的规则默认会去拉取最新的为 latest
+		isLatest = true
+	}
+
+	// 本地没有镜像的获取版本号为最新的，需要拉取新的镜像
+	if !localExist || isLatest {
+		if isLatest {
+			postLog(false, "镜像版本为latest默认拉取最新版本", buildInfo, api.LogtypeLog)
+		}
 		postLog(false, "开始拉取镜像，镜像名称："+imageName, buildInfo, api.LogtypeLog)
 		postLog(false, "[提示]镜像比较大时，首次拉取时间会比较长。可以在构建机本地预先拉取镜像来提高流水线启动速度。", buildInfo, api.LogtypeLog)
 		reader, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{
