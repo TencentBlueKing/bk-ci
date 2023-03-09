@@ -56,10 +56,7 @@ interface GitTransferService {
 
     fun getProjectBranches(
         userId: String,
-        pathWithNamespace: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
+        pathWithNamespace: String
     ): List<String>?
 
     /**

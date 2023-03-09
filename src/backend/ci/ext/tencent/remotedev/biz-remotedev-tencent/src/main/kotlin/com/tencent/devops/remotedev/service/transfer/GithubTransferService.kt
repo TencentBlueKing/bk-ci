@@ -104,19 +104,29 @@ class GithubTransferService @Autowired constructor(
 
     override fun getProjectBranches(
         userId: String,
-        pathWithNamespace: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
+        pathWithNamespace: String
     ): List<String>? {
-        return client.get(ServiceGithubBranchResource::class).listBranch(
-            token = getAndCheckOauthToken(userId),
-            request = ListBranchesRequest(
-                repoName = pathWithNamespace,
-                page = page ?: DEFAULT_PAGE,
-                perPage = pageSize ?: DEFAULT_PAGE_SIZE
-            )
-        ).data?.map { it.name }
+        var githubPage = DEFAULT_PAGE
+        val branches = mutableListOf<String>()
+        run outside@{
+            while (true) {
+                val request = ListBranchesRequest(
+                    repoName = pathWithNamespace,
+                    page = githubPage,
+                    perPage = DEFAULT_GITHUB_PER_PAGE
+                )
+                val githubBranches = client.get(ServiceGithubBranchResource::class).listBranch(
+                    request = request,
+                    token = getAndCheckOauthToken(userId)
+                ).data!!
+                branches.addAll(githubBranches.map { it.name })
+                if (githubBranches.size < DEFAULT_GITHUB_PER_PAGE) {
+                    return@outside
+                }
+                githubPage++
+            }
+        }
+        return branches
     }
 
     override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {

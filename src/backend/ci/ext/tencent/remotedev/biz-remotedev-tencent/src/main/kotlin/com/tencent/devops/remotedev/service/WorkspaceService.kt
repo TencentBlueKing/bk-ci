@@ -164,21 +164,13 @@ class WorkspaceService @Autowired constructor(
     fun getRepositoryBranch(
         userId: String,
         pathWithNamespace: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
         gitType: RemoteDevGitType
     ): List<String> {
-        logger.info("$userId get git repository branch list|$pathWithNamespace|$search|$page|$pageSize")
-        val pageNotNull = page ?: 1
-        val pageSizeNotNull = pageSize ?: defaultPageSize
+        logger.info("$userId get git repository branch list|$pathWithNamespace")
         return checkOauthIllegal(userId) {
             remoteDevGitTransfer.load(gitType).getProjectBranches(
                 userId = userId,
-                pathWithNamespace = pathWithNamespace,
-                page = pageNotNull,
-                pageSize = pageSizeNotNull,
-                search = search
+                pathWithNamespace = pathWithNamespace
             ) ?: emptyList()
         }
     }

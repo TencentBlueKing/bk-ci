@@ -110,18 +110,12 @@ class UserWorkspaceResourceImpl @Autowired constructor(
     override fun getRepositoryBranch(
         userId: String,
         pathWithNamespace: String,
-        search: String?,
-        page: Int?,
-        pageSize: Int?,
         gitType: RemoteDevGitType
     ): Result<List<String>> {
         return Result(
             workspaceService.getRepositoryBranch(
                 userId = userId,
                 pathWithNamespace = pathWithNamespace,
-                search = search,
-                page = page,
-                pageSize = pageSize,
                 gitType = gitType
             )
         )

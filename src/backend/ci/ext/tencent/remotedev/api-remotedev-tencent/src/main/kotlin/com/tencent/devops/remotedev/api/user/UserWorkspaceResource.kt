@@ -210,15 +210,6 @@ interface UserWorkspaceResource {
         @ApiParam("代码库项目全路径", required = true)
         @QueryParam("pathWithNamespace")
         pathWithNamespace: String,
-        @ApiParam("模糊搜索分支", required = false)
-        @QueryParam("search")
-        search: String?,
-        @ApiParam("第几页", required = false, defaultValue = "1")
-        @QueryParam("page")
-        page: Int?,
-        @ApiParam("每页多少条", required = false, defaultValue = "20")
-        @QueryParam("pageSize")
-        pageSize: Int?,
         @ApiParam(value = "git 类型", required = true)
         @QueryParam("gitType")
         @DefaultValue("GIT")
