@@ -598,7 +598,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        permissionToListMap = permissionToListMap
                     )
                 } else if (page == totalAvailablePipelinePage && totalAvailablePipelineSize > 0) {
                     //  查询可用流水线最后一页不满页的数量
@@ -618,7 +619,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        permissionToListMap = permissionToListMap
                     )
                     // 可用流水线最后一页不满页的数量需用不可用的流水线填充
                     if (lastPageRemainNum > 0 && totalInvalidPipelineSize > 0) {
@@ -637,7 +639,8 @@ class PipelineListFacadeService @Autowired constructor(
                             pageSize = lastPageRemainNum.toInt(),
                             includeDelete = includeDelete,
                             collation = collation,
-                            userId = userId
+                            userId = userId,
+                            permissionToListMap = permissionToListMap
                         )
                     }
                 } else if (totalInvalidPipelineSize > 0) {
@@ -660,7 +663,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageOffsetNum = lastPageRemainNum.toInt(),
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        permissionToListMap = permissionToListMap
                     )
                 }
             } else {
