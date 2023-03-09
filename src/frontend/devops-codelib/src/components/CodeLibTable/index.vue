@@ -42,7 +42,7 @@
                 <bk-button
                     theme="primary"
                     v-perm="{
-                        clickable: props.row.canDelete,
+                        hasPermission: props.row.canDelete,
                         disablePermissionApi: true,
                         permissionData: {
                             projectId: projectId,

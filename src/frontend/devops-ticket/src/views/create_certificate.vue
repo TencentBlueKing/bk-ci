@@ -171,7 +171,7 @@
             },
 
             certId () {
-                return this.$route.parmas.certId
+                return this.$route.params.certId
             },
 
             applyCreUrl () {
