@@ -85,7 +85,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("getWindowsMachine|url=$url|body=$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -151,7 +151,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.debug("queryTaskStatus|url=$url")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->

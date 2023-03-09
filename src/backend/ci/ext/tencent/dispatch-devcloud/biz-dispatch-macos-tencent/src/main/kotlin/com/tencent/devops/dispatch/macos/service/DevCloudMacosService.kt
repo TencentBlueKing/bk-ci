@@ -72,7 +72,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -152,7 +152,7 @@ class DevCloudMacosService @Autowired constructor(
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -230,7 +230,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("DevCloud deleteVM body:$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(SmartProxyUtil.makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
