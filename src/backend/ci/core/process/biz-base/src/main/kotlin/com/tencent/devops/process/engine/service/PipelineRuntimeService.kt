@@ -1453,7 +1453,7 @@ class PipelineRuntimeService @Autowired constructor(
                     containerHashId = buildTask.containerHashId,
                     containerType = buildTask.containerType,
                     actionType = if (endBuild) ActionType.END else ActionType.REFRESH,
-                    errorCode =  completeTask.errorCode ?: 0,
+                    errorCode = completeTask.errorCode ?: 0,
                     errorTypeName = completeTask.errorType?.typeName,
                     reason = completeTask.errorMsg
                 )
