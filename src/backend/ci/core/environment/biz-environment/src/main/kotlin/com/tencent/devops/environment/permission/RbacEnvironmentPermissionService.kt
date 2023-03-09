@@ -156,10 +156,15 @@ class RbacEnvironmentPermissionService(
         ).data ?: emptyMap()
     }
 
-    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
-        val canListNodeIds = listNodeByPermission(userId, projectId, AuthPermission.LIST)
-        val canListNode = nodeRecordList.filter { canListNodeIds.contains(it.nodeId) }
-        return canListNode.ifEmpty { emptyList() }
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
+        val hasRbacPermissionNodeIds = listNodeByPermission(userId, projectId, authPermission)
+        val hasRbacPermissionNode = nodeRecordList.filter { hasRbacPermissionNodeIds.contains(it.nodeId) }
+        return hasRbacPermissionNode.ifEmpty { emptyList() }
     }
 
     override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {

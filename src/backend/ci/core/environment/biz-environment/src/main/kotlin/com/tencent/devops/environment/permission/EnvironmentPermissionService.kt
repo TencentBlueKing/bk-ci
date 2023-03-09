@@ -65,10 +65,11 @@ interface EnvironmentPermissionService {
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
 
-    fun listNodeByListPermission(
+    fun listNodeByRbacPermission(
         userId: String,
         projectId: String,
-        nodeRecordList: List<TNodeRecord>
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
     ): List<TNodeRecord>
 
     fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean
