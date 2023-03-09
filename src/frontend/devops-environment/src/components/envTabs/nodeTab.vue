@@ -1,7 +1,7 @@
 <template>
     <div class="node-content-wrapper">
         <div class="node-content-header">
-            <span
+            <bk-button
                 v-perm="{
                     hasPermission: canEdit,
                     disablePermissionApi: true,
@@ -12,9 +12,10 @@
                         action: ENV_RESOURCE_ACTION.EDIT
                     }
                 }"
+                theme="primary" @click="importNewNode"
             >
-                <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
-            </span>
+                {{ $t('environment.import') }}
+            </bk-button>
         </div>
 
         <div class="node-table" v-if="showContent && nodeList.length">

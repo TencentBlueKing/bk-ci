@@ -3,7 +3,7 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.environment') }}</div>
             <div slot="right" v-if="showContent && envList.length">
-                <span
+                <bk-button 
                     v-perm="{
                         permissionData: {
                             projectId: projectId,
@@ -12,9 +12,7 @@
                             action: ENV_RESOURCE_ACTION.CREATE
                         }
                     }"
-                >
-                    <bk-button theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
-                </span>
+                    theme="primary" @click="toCreateEnv">{{ $t('environment.new') }}</bk-button>
             </div>
         </content-header>
 

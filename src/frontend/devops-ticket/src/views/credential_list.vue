@@ -21,7 +21,7 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <span
+                            <bk-button
                                 v-perm="{
                                     hasPermission: props.row.permissions.edit,
                                     disablePermissionApi: true,
@@ -32,10 +32,9 @@
                                         action: CRED_RESOURCE_ACTION.EDIT
                                     }
                                 }"
-                            >
-                                <bk-button theme="primary" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            </span>
-                            <span
+                                theme="primary" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
+  
+                            <bk-button
                                 v-perm="{
                                     hasPermission: props.row.permissions.delete,
                                     disablePermissionApi: true,
@@ -46,9 +45,7 @@
                                         action: CRED_RESOURCE_ACTION.DELETE
                                     }
                                 }"
-                            >
-                                <bk-button theme="primary" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
-                            </span>
+                                theme="primary" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>

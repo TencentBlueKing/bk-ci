@@ -21,6 +21,11 @@
                 v-bk-tooltips="getTooltips(item)"
                 :key="index"
                 @click.stop="clickMenuItem(item)">
+                <span
+                    
+                >
+
+                </span>
                 {{ item.text }}
             </li>
         </ul>

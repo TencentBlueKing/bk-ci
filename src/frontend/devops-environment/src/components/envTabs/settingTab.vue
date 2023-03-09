@@ -1,6 +1,6 @@
 <template>
     <div class="env-setting-tab-wrapper">
-        <span
+        <bk-button
             v-perm="{
                 hasPermission: canEdit,
                 disablePermissionApi: true,
@@ -11,9 +11,7 @@
                     action: ENV_RESOURCE_ACTION.EDIT
                 }
             }"
-        >
-            <bk-button class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
-        </span>
+            class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"
@@ -25,7 +23,7 @@
             <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
             <bk-table-column :label="$t('environment.operation')" width="150">
                 <template slot-scope="props">
-                    <span
+                    <bk-button
                         v-perm="{
                             permissionData: {
                                 projectId: projectId,
@@ -34,9 +32,7 @@
                                 action: ENV_RESOURCE_ACTION.EDIT
                             }
                         }"
-                    >
-                        <bk-button class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
-                    </span>
+                        class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>

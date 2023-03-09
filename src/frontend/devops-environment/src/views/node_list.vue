@@ -3,7 +3,7 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <span
+                <bk-button
                     v-perm="{
                         permissionData: {
                             projectId: projectId,
@@ -12,9 +12,7 @@
                             action: NODE_RESOURCE_ACTION.CREATE
                         }
                     }"
-                >
-                    <bk-button theme="primary" @click="toImportNode('construct')">{{ $t('environment.thirdPartyBuildMachine') }}</bk-button>
-                </span>
+                    theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{

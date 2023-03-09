@@ -14,8 +14,6 @@
                     <div class="rule-main-header">
                         <span
                             v-perm="{
-                                hasPermission: canEdit,
-                                disablePermissionApi: true,
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: RULE_RESOURCE_TYPE,
@@ -82,7 +80,7 @@
                             </bk-table-column>
                             <bk-table-column label="操作" min-width="120">
                                 <template slot-scope="props">
-                                    <span
+                                    <bk-button
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
@@ -93,10 +91,13 @@
                                                 action: RULE_RESOURCE_ACTION.EDIT
                                             }
                                         }"
+                                        class="mr5 "
+                                        text
+                                        @click="editRule(props.row)"
                                     >
-                                        <bk-button class="mr5 " text @click="editRule(props.row)">编辑</bk-button>
-                                    </span>
-                                    <span
+                                        编辑
+                                    </bk-button>
+                                    <bk-button
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
@@ -107,10 +108,13 @@
                                                 action: RULE_RESOURCE_ACTION.ENABLE
                                             }
                                         }"
+                                        class="mr5"
+                                        text
+                                        @click="switchRule(props.row)"
                                     >
-                                        <bk-button class="mr5" text @click="switchRule(props.row)">{{ props.row.enable ? '停用' : '启用' }}</bk-button>
-                                    </span>
-                                    <span
+                                        {{ props.row.enable ? '停用' : '启用' }}
+                                    </bk-button>
+                                    <bk-button
                                         v-perm="{
                                             hasPermission: props.row.permissions.canEdit,
                                             disablePermissionApi: true,
@@ -121,9 +125,11 @@
                                                 action: RULE_RESOURCE_ACTION.DELETE
                                             }
                                         }"
+                                        text
+                                        @click="toDeleteRule(props.row)"
                                     >
-                                        <bk-button text @click="toDeleteRule(props.row)">删除</bk-button>
-                                    </span>
+                                        删除
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -787,6 +793,7 @@
             overflow: hidden;
         }
         .rule-main-wrapper {
+            padding: 20px;
             height: 100%;
             overflow: auto;
         }

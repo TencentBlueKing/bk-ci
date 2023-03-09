@@ -1,7 +1,7 @@
 <template>
     <div class="config-content-wrapper">
         <div class="config-content-header">
-            <span
+            <bk-button
                 v-perm="{
                     permissionData: {
                         projectId: projectId,
@@ -10,11 +10,9 @@
                         action: ENV_RESOURCE_ACTION.EDIT
                     }
                 }"
-            >
-                <bk-button theme="primary" :disabled="lastselectConfIndex > -1"
-                    @click="createConfigItem">{{ $t('environment.addConfItem') }}
-                </bk-button>
-            </span>
+                theme="primary" :disabled="lastselectConfIndex > -1"
+                @click="createConfigItem">{{ $t('environment.addConfItem') }}
+            </bk-button>
         </div>
         <div class="config-table" v-if="configList.length">
             <div class="table-head config-head">

@@ -72,7 +72,7 @@
                     </transition>
 
                     <div class="operate-btn">
-                        <span
+                        <bk-button
                             v-perm="{
                                 permissionData: {
                                     projectId: projectId,
@@ -81,9 +81,7 @@
                                     action: CERT_RESOURCE_ACTION.CREATE
                                 }
                             }"
-                        >
-                            <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
-                        </span>
+                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>

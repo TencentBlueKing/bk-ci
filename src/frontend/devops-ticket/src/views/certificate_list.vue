@@ -22,7 +22,7 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="certRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <span
+                            <bk-button
                                 v-perm="{
                                     permissionData: {
                                         projectId: projectId,
@@ -31,10 +31,9 @@
                                         action: CERT_RESOURCE_ACTION.EDIT
                                     }
                                 }"
-                            >
-                                <bk-button theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            </span>
-                            <span
+                                theme="primary" text @click="handleEditCert(props.row)">{{ $t('ticket.edit') }}</bk-button>
+                            
+                            <bk-button
                                 v-perm="{
                                     permissionData: {
                                         projectId: projectId,
@@ -43,9 +42,7 @@
                                         action: CERT_RESOURCE_ACTION.DELETE
                                     }
                                 }"
-                            >
-                                <bk-button theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
-                            </span>
+                                theme="primary" text @click="handleDeleteCert(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
