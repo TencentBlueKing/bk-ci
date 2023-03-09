@@ -47,6 +47,7 @@ interface EnvironmentPermissionService {
         permissions: Set<AuthPermission>
     ): Map<AuthPermission, List<String>>
 
+
     fun getEnvListResult(
         canListEnv: List<TEnvRecord>,
         envRecordList: List<TEnvRecord>,

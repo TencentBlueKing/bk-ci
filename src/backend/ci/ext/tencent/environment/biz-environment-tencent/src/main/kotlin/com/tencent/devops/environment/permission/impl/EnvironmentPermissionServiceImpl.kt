@@ -131,6 +131,13 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return iamInstancesMap
     }
 
+    override fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
     override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
         return envRecordList
     }

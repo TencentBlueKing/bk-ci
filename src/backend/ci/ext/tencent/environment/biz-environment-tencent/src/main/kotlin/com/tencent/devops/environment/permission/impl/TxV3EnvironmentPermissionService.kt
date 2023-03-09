@@ -159,6 +159,10 @@ class TxV3EnvironmentPermissionService constructor(
         return instanceMap
     }
 
+    override fun listEnvByViewPermission(userId: String, projectId: String): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.USE)
+    }
+
     override fun getEnvListResult(canListEnv: List<TEnvRecord>, envRecordList: List<TEnvRecord>): List<TEnvRecord> {
         return envRecordList
     }
