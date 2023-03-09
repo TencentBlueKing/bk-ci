@@ -25,33 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.pojo.git
+package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
-import com.fasterxml.jackson.annotation.JsonProperty
-import io.swagger.annotations.ApiModel
-import io.swagger.annotations.ApiModelProperty
+enum class BuildJobType {
+    ALL,
+    DOCKER,
+    BINARY;
 
-@ApiModel("git用户信息")
-data class GitUserInfo(
-    @ApiModelProperty("ID", name = "id")
-    @JsonProperty("id")
-    val id: Int,
-    @ApiModelProperty("email", name = "email")
-    @JsonProperty("email")
-    val email: String?,
-    @ApiModelProperty("用户名称", name = "username")
-    @JsonProperty("username")
-    val username: String?,
-    @ApiModelProperty("用户空间地址", name = "web_url")
-    @JsonProperty("web_url")
-    val webUrl: String?,
-    @ApiModelProperty("名称", name = "name")
-    @JsonProperty("name")
-    val name: String?,
-    @ApiModelProperty("状态", name = "state")
-    @JsonProperty("state")
-    val state: String?,
-    @ApiModelProperty("头像", name = "avatar_url")
-    @JsonProperty("avatar_url")
-    val avatarUrl: String?
-)
+    companion object {
+        fun toEnum(type: String?): BuildJobType {
+            return when (type) {
+                ALL.name -> ALL
+                DOCKER.name -> DOCKER
+                BINARY.name -> BINARY
+                // 兼容旧数据和其他非标准参数情况
+                else -> ALL
+            }
+        }
+    }
+}

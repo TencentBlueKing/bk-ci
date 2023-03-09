@@ -46,6 +46,7 @@ import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
 import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
@@ -137,7 +138,12 @@ class ThirdPartyAgentService @Autowired constructor(
         return thirdPartyAgentBuildDao.getDockerRunningAndQueueBuilds(dslContext, agentId).size
     }
 
-    fun startBuild(projectId: String, agentId: String, secretKey: String): AgentResult<ThirdPartyBuildInfo?> {
+    fun startBuild(
+        projectId: String,
+        agentId: String,
+        secretKey: String,
+        buildType: BuildJobType
+    ): AgentResult<ThirdPartyBuildInfo?> {
         // Get the queue status build by buildId and agentId
         logger.debug("Start the third party agent($agentId) of project($projectId)")
         try {
@@ -180,7 +186,7 @@ class ThirdPartyAgentService @Autowired constructor(
             val redisLock = ThirdPartyAgentLock(redisOperation, projectId, agentId)
             try {
                 redisLock.lock()
-                val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId) ?: run {
+                val build = thirdPartyAgentBuildDao.fetchOneQueueBuild(dslContext, agentId, buildType) ?: run {
                     logger.debug("There is not build by agent($agentId) in queue")
                     return AgentResult(AgentStatus.IMPORT_OK, null)
                 }
