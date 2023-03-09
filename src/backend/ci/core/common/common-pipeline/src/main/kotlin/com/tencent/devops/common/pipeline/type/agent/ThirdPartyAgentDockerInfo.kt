@@ -22,8 +22,11 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
 }
 
 data class Credential(
-    var user: String,
-    var password: String
+    var user: String?,
+    var password: String?,
+    var credentialId: String?,
+    // 跨项目使用凭据相关信息
+    val acrossTemplateId: String?
 )
 
 // 第三方构建机docker类型，调度使用，会带有调度相关信息

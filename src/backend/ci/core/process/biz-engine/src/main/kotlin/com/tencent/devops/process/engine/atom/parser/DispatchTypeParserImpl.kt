@@ -157,12 +157,8 @@ class DispatchTypeParserImpl @Autowired constructor(
         return SampleDispatchInfo(
             name = customInfo.name,
             dispatchType = StreamDispatchUtils.getDispatchType(
-                client = client,
-                objectMapper = objectMapper,
                 job = customInfo.job,
-                projectCode = customInfo.projectCode,
                 defaultImage = customInfo.defaultImage,
-                resources = customInfo.resources,
                 context = context,
                 containsMatrix = true,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
