@@ -806,7 +806,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         // 从本地缓存获取错误码信息
         val cacheKey = "$atomCode:$errorType:$errorCode"
         val errorCodeInfo = ErrorCodeInfoCacheUtil.getIfPresent(cacheKey)
-        if (errorCodeInfo != null) {
+        if (errorCodeInfo == null) {
             // 缓存中不存在则需要入库
             saveErrorCodeInfoPOs.add(
                 SaveErrorCodeInfoPO(
