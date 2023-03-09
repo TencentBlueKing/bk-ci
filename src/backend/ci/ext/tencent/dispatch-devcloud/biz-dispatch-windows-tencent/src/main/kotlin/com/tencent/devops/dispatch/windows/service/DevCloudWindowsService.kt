@@ -18,7 +18,8 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.pojo.QueryTaskStatusResponse
 import com.tencent.devops.dispatch.windows.pojo.WindowsMachineGetResponse
-import com.tencent.devops.dispatch.windows.util.SmartProxyUtil
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
+
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request

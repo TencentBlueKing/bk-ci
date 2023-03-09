@@ -4,12 +4,12 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
-import com.tencent.devops.dispatch.macos.util.SmartProxyUtil
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
