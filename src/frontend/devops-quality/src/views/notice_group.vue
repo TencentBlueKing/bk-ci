@@ -14,9 +14,6 @@
             <div class="group-content">
                 <bk-button
                     v-perm="{
-                        hasPermission: canEdit,
-                        disablePermissionApi: true,
-                        tooltips: '没有权限',
                         permissionData: {
                             projectId: projectId,
                             resourceType: QUALITY_GROUP_RESOURCE_TYPE,
