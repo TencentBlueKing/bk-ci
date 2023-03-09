@@ -30,7 +30,6 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.AttributesValue
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
@@ -246,6 +245,7 @@ class RbacPermissionService constructor(
         val instanceDTOList = resources.map { resource ->
             resource2InstanceDTO(projectCode = projectCode, resource = resource)
         }
+        logger.info("filter user resource by permission|$instanceDTOList")
         return authHelper.isAllowed(userId, action, instanceDTOList)
     }
 
@@ -261,6 +261,7 @@ class RbacPermissionService constructor(
         )
         instanceDTO.type = resource.resourceType
         instanceDTO.paths = paths
+        instanceDTO.system = iamConfiguration.systemId
         return instanceDTO
     }
 
