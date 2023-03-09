@@ -25,4 +25,4 @@ BEGIN
 END <CI_UBF>
 DELIMITER ;
 COMMIT;
-CALL ci_quality_schema_update();
+CALL ci_plugin_schema_update();
