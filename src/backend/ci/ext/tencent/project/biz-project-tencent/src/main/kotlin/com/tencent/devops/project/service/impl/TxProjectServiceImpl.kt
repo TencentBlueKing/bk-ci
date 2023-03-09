@@ -194,9 +194,16 @@ class TxProjectServiceImpl @Autowired constructor(
     ): List<ProjectVO> {
         val startEpoch = System.currentTimeMillis()
         try {
-            val englishNames = getProjectFromAuth(userId, accessToken).toSet()
+            val englishNames = getProjectFromAuth(userId, accessToken).toMutableSet()
             if (englishNames.isEmpty() && !unApproved) {
                 return emptyList()
+            }
+            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
+            if (unApproved) {
+                projectDao.listUnapprovedByUserId(
+                    dslContext = dslContext,
+                    userId = userId
+                )?.map { englishNames.add(it.englishName) }
             }
             val list = ArrayList<ProjectVO>()
             if (englishNames.isNotEmpty()) {
@@ -204,13 +211,6 @@ class TxProjectServiceImpl @Autowired constructor(
                     .map {
                         list.add(ProjectUtils.packagingBean(it))
                     }
-            }
-            // 将用户创建的项目，但还未审核通过的，一并拉出来，用户项目管理界面
-            if (unApproved) {
-                projectDao.listUnapprovedByUserId(
-                    dslContext = dslContext,
-                    userId = userId
-                )?.map { list.add(ProjectUtils.packagingBean(it)) }
             }
             return list
         } finally {

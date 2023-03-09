@@ -103,4 +103,6 @@ object AuthMessageCode {
     const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "21211515" // 检验ITSM的token失败
     const val AUTH_GROUP_MEMBER_EXPIRED_DESC = "21211516" // 已过期
     const val ERROR_PROJECT_PERMISSION_CLOSE_FAIL = "21211517" // 项目权限管理不能被关闭
+    const val ERROR_DEFAULT_GROUP_DELETE_FAIL = "21211518" // 默认组不能被删除
+    const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "21211519" // 默认组不能重命名
 }

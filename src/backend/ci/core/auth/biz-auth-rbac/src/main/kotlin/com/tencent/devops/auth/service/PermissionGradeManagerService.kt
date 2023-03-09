@@ -358,6 +358,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 iamResourceCode = projectCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
+                defaultGroup = true,
                 relationId = iamGroupId.toString()
             )
             permissionGroupPoliciesService.grantGroupPermission(
@@ -430,6 +431,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 iamResourceCode = projectCode,
                 groupCode = DefaultGroupType.MANAGER.value,
                 groupName = iamGroupInfo.name,
+                defaultGroup = true,
                 relationId = iamGroupInfo.id.toString()
             )
         }
@@ -472,7 +474,7 @@ class PermissionGradeManagerService @Autowired constructor(
     ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = PageUtil.DEFAULT_PAGE
-        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        pageInfoDTO.pageSize = PageUtil.MAX_PAGE_SIZE
         val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
