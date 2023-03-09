@@ -41,6 +41,7 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         "test",
         "tencent_ci",
         "",
+        "",
         "test desc",
         "user00",
         LocalDateTime.parse("2023-01-03 00:27:16", formatter),
