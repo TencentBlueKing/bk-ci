@@ -226,11 +226,22 @@ class GroupService @Autowired constructor(
     }
 
     fun get(userId: String, projectId: String, groupHashId: String): Group {
-        return serviceGet(groupHashId)
+        return serviceGet(
+            userId = userId,
+            projectId = projectId,
+            groupHashId = groupHashId
+        )
     }
 
-    fun serviceGet(groupHashId: String): Group {
+    fun serviceGet(userId: String, projectId: String, groupHashId: String): Group {
         val groupId = HashUtil.decodeIdToLong(groupHashId)
+        experiencePermissionService.validateGroupPermission(
+            userId = userId,
+            projectId = projectId,
+            groupId = groupId,
+            authPermission = AuthPermission.VIEW,
+            message = "用户在项目($projectId)没有体验组($groupHashId)的查看权限"
+        )
         val groupRecord = groupDao.get(dslContext, groupId)
         val userIds = experienceGroupInnerDao.listByGroupIds(dslContext, setOf(groupId)).map { it.userId }.toSet()
         val outers = experienceGroupOuterDao.listByGroupIds(dslContext, setOf(groupId)).map { it.outer }.toSet()

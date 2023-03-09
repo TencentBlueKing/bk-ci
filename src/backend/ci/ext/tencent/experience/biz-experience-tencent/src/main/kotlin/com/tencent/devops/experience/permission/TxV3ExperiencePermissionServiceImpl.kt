@@ -120,6 +120,8 @@ class TxV3ExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,

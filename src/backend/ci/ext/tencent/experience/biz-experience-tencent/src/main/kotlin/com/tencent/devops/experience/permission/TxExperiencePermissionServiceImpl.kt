@@ -131,6 +131,8 @@ class TxExperiencePermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
+        if (authPermission == AuthPermission.VIEW)
+            return
         if (!bsAuthPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = experienceServiceCode,

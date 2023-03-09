@@ -128,6 +128,8 @@ class StreamExperiencePermissionServiceImpl @Autowired constructor(
         message: String
     ) {
         logger.info("validateGroupPermission user:$userId projectId: $projectId $authPermission ")
+        if (authPermission == AuthPermission.VIEW)
+            return
         val permissionCheck = checkGroupPermission(userId, projectId, authPermission)
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
