@@ -93,8 +93,9 @@ class PipelineTemplateService @Autowired constructor(
                             } else {
                                 images.add(image)
                             }
-                            if (!isRelease(imageCode, imageVersion))
+                            if (!isRelease(imageCode, imageVersion)) {
                                 code = imageCode
+                            }
                             return@releaseStatus
                         }
                     } else {

@@ -45,9 +45,9 @@ import com.tencent.devops.store.dao.common.StoreStatisticTotalDao
 import com.tencent.devops.store.dao.template.MarketTemplateDao
 import com.tencent.devops.store.dao.template.TemplateCategoryRelDao
 import com.tencent.devops.store.dao.template.TemplateLabelRelDao
+import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.KEY_CATEGORY_CODE
 import com.tencent.devops.store.pojo.common.OPEN
-import com.tencent.devops.store.pojo.common.CLOSE
 import com.tencent.devops.store.pojo.common.PASS
 import com.tencent.devops.store.pojo.common.ReleaseProcessItem
 import com.tencent.devops.store.pojo.common.StoreProcessInfo
@@ -185,6 +185,7 @@ abstract class TemplateReleaseServiceImpl @Autowired constructor() : TemplateRel
         val templateCount = marketTemplateDao.countByCode(dslContext, templateCode)
         val releaseResult = client.get(ServicePTemplateResource::class).checkImageReleaseStatus(userId, templateCode)
         val imageCode = releaseResult.data
+        logger.info("updateMarketTemplate params $imageCode")
         if (!imageCode.isNullOrBlank()) {
             throw ErrorCodeException(
                 errorCode = USER_TEMPLATE_IMAGE_IS_INVALID,
