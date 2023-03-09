@@ -233,6 +233,7 @@ class PermissionSubsetManagerService @Autowired constructor(
                 iamResourceCode = iamResourceCode,
                 groupCode = groupConfig.groupCode,
                 groupName = name,
+                defaultGroup = true,
                 relationId = iamGroupId.toString()
             )
             permissionGroupPoliciesService.grantGroupPermission(
@@ -283,6 +284,7 @@ class PermissionSubsetManagerService @Autowired constructor(
                 iamResourceCode = iamResourceCode,
                 groupCode = DefaultGroupType.MANAGER.value,
                 groupName = iamGroupInfo.name,
+                defaultGroup = true,
                 relationId = iamGroupInfo.id.toString()
             )
         }

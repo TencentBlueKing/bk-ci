@@ -30,18 +30,23 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.enum.GroupMemberStatus
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
@@ -91,7 +96,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         return iamGroupInfoList.map {
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
-                groupCode = resourceGroupMap[it.id]?.groupCode ?: "",
+                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
                 groupId = it.id,
                 name = it.name,
                 displayName = it.name,
@@ -229,7 +234,54 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
             )
         }
+        val authResourceGroup = authResourceGroupDao.getByRelationId(
+            dslContext = dslContext,
+            projectCode = projectId,
+            iamGroupId = groupId.toString()
+        )
+        if (authResourceGroup != null && authResourceGroup.defaultGroup) {
+            throw ErrorCodeException(
+                errorCode = ERROR_DEFAULT_GROUP_DELETE_FAIL,
+                defaultMessage = "default group cannot be deleted"
+            )
+        }
         iamV2ManagerService.deleteRoleGroupV2(groupId)
+        return true
+    }
+
+    override fun rename(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int,
+        renameGroupDTO: RenameGroupDTO
+    ): Boolean {
+        logger.info("rename group name|$userId|$projectId|$resourceType|$groupId|${renameGroupDTO.groupName}")
+        if (!permissionResourceService.hasManagerPermission(
+                userId = userId,
+                projectId = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId
+            )
+        ) {
+            throw PermissionForbiddenException(
+                message = MessageCodeUtil.getCodeLanMessage(AuthMessageCode.ERROR_AUTH_NO_MANAGE_PERMISSION)
+            )
+        }
+        val authResourceGroup = authResourceGroupDao.getByRelationId(
+            dslContext = dslContext,
+            projectCode = projectId,
+            iamGroupId = groupId.toString()
+        )
+        if (authResourceGroup != null && authResourceGroup.defaultGroup) {
+            throw ErrorCodeException(
+                errorCode = ERROR_DEFAULT_GROUP_RENAME_FAIL,
+                defaultMessage = "default group cannot be rename"
+            )
+        }
+        val managerRoleGroup = ManagerRoleGroup()
+        managerRoleGroup.name = renameGroupDTO.groupName
+        iamV2ManagerService.updateRoleGroupV2(groupId, managerRoleGroup)
         return true
     }
 }

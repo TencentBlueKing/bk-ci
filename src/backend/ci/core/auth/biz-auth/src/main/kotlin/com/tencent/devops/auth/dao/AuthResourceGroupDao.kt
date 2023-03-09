@@ -47,6 +47,7 @@ class AuthResourceGroupDao {
         iamResourceCode: String,
         groupCode: String,
         groupName: String,
+        defaultGroup: Boolean,
         relationId: String
     ): Int {
         val now = LocalDateTime.now()
@@ -60,6 +61,7 @@ class AuthResourceGroupDao {
                 IAM_RESOURCE_CODE,
                 GROUP_CODE,
                 GROUP_NAME,
+                DEFAULT_GROUP,
                 RELATION_ID,
                 CREATE_TIME,
                 UPDATE_TIME
@@ -71,6 +73,7 @@ class AuthResourceGroupDao {
                 iamResourceCode,
                 groupCode,
                 groupName,
+                defaultGroup,
                 relationId,
                 now,
                 now,

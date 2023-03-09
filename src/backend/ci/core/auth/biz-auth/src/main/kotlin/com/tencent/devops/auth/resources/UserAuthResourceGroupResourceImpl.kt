@@ -30,6 +30,7 @@ package com.tencent.devops.auth.resources
 
 import com.tencent.devops.auth.api.user.UserAuthResourceGroupResource
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.common.api.pojo.Result
@@ -102,6 +103,24 @@ class UserAuthResourceGroupResourceImpl @Autowired constructor(
                 projectId = projectId,
                 resourceType = resourceType,
                 groupId = groupId
+            )
+        )
+    }
+
+    override fun rename(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int,
+        renameGroupDTO: RenameGroupDTO
+    ): Result<Boolean> {
+        return Result(
+            permissionResourceGroupService.rename(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType,
+                groupId = groupId,
+                renameGroupDTO = renameGroupDTO
             )
         )
     }

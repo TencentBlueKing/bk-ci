@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.api.user
 
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
@@ -122,5 +123,24 @@ interface UserAuthResourceGroupResource {
         @ApiParam("用户组Id")
         @PathParam("groupId")
         groupId: Int
+    ): Result<Boolean>
+
+    @PUT
+    @Path("{groupId}/rename")
+    @ApiOperation("删除组")
+    fun rename(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("用户组Id")
+        @PathParam("groupId")
+        groupId: Int,
+        renameGroupDTO: RenameGroupDTO
     ): Result<Boolean>
 }
