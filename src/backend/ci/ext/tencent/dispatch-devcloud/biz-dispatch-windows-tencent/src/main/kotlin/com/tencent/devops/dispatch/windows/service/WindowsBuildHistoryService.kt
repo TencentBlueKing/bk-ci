@@ -83,5 +83,4 @@ class WindowsBuildHistoryService @Autowired constructor(
             logger.info("success end build history,buildHistoryId=$buildHistoryId.")
         }
     }
-
 }

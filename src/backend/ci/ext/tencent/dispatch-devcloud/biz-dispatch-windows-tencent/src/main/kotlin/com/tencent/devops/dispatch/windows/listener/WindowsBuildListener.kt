@@ -163,8 +163,7 @@ class WindowsBuildListener @Autowired constructor(
                 )
                 logger.info(
                     "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
-                        "|buildHistoryRecords|${buildHistoryRecords}"
-                )
+                        "|buildHistoryRecords|${buildHistoryRecords}")
 
                 val projectId = event.projectId
                 val creator = event.userId
