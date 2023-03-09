@@ -24,7 +24,6 @@ interface Window {
     Pages: any
     eventBus: object
     devops: object
-    isMooc: boolean
     iframeUtil: ObjectMap
     allServices: ObjectMap[]
     projectList: ObjectMap[]

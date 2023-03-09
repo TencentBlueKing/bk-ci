@@ -28,5 +28,3 @@
 dependencies {
     api(project(":ext:tencent:openapi:biz-openapi-tencent"))
 }
-
-
