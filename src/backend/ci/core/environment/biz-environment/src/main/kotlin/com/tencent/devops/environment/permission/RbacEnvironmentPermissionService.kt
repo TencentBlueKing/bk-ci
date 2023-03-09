@@ -59,6 +59,13 @@ class RbacEnvironmentPermissionService(
         ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
     }
 
+    override fun listEnvByViewPermission(
+        userId: String,
+        projectId: String
+    ): Set<Long> {
+        return listEnvByPermission(userId, projectId, AuthPermission.VIEW)
+    }
+
     override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
