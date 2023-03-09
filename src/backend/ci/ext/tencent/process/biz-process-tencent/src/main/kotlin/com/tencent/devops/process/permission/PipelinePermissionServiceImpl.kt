@@ -194,6 +194,51 @@ class PipelinePermissionServiceImpl @Autowired constructor(
         return instanceSet.toList()
     }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            permissions = authPermissions
+        ) { emptyList() }
+
+        val allPipelineIds = pipelineDao.listPipelineIdByProject(dslContext, projectId)
+        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
+        var isManager = false
+        permissionResourcesMap.keys.forEach {
+            if (managerService.isManagerPermission(
+                    userId = userId,
+                    projectId = projectId,
+                    resourceType = resourceType,
+                    authPermission = it
+                )
+            ) {
+                if (permissionResourcesMap[it] == null) {
+                    managerPermissionMap[it] = allPipelineIds
+                } else {
+                    val collectionSet = mutableSetOf<String>()
+                    collectionSet.addAll(allPipelineIds)
+                    collectionSet.addAll(permissionResourcesMap[it]!!.toSet())
+                    managerPermissionMap[it] = collectionSet.toList()
+                }
+
+                isManager = true
+            } else {
+                managerPermissionMap[it] = permissionResourcesMap[it] ?: emptyList()
+            }
+        }
+
+        if (isManager) {
+            return managerPermissionMap
+        }
+        return permissionResourcesMap
+    }
+
     /**
      * 注册流水线到权限中心与权限关联
      * @param userId userId

@@ -150,6 +150,31 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         return pipelineIds
     }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = bsPipelineAuthServiceCode,
+            resourceType = AuthResourceType.PIPELINE_DEFAULT,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = null
+        )
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        permissionResourcesMap.forEach { (permission, authPipelineIds) ->
+            instanceMap[permission] = if (authPipelineIds.contains("*")) {
+                pipelineInfoDao.searchByProject(dslContext, projectId)?.map { it.pipelineId } ?: emptyList()
+            } else {
+                val ids = authPipelineIds.map { it.toLong() }
+                pipelineInfoDao.getPipelineByAutoId(dslContext, ids, projectId).map { it.pipelineId }
+            }
+        }
+        return instanceMap
+    }
+
     override fun createResource(
         userId: String,
         projectId: String,
