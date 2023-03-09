@@ -130,8 +130,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             e.printStackTrace()
             return false
         }
-        logger.info("isComplianceErrorCode storeCode:$storeCode|storeType:$storeType|" +
-                "errorCode：$errorCode|errorCodeType:$errorCodeType")
         return storeErrorCodeInfoDao.getAtomErrorCode(
             dslContext = dslContext,
             storeCode = storeCode,
@@ -139,9 +137,5 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).isNotEmpty
-    }
-
-    companion object {
-        private val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }
