@@ -60,7 +60,6 @@ import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.RequestBody
 import okhttp3.RequestBody.Companion.asRequestBody
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
@@ -150,7 +149,6 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         parseAppMetadata: Boolean = true,
         parsePipelineMetadata: Boolean = true
     ) {
-
         val url = "/generic/temporary/upload/$projectId/$repoName/${urlEncode(destFullPath)}?token=$token"
         val request = buildPut(
             url,
@@ -446,10 +444,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         // logger.info("requestBody: $requestBody")
         val request = buildPost(
             url,
-            RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                requestBody
-            ),
+            requestBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
             mutableMapOf("X-BKREPO-UID" to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
