@@ -41,21 +41,23 @@
               :distance="0">
               <i class="more-icon manage-icon manage-icon-more-fill"></i>
               <template #content>
-                <li
-                  v-if="!group.defaultGroup"
-                  class="btn"
-                  text
-                  @click="handleShowRename(group, index)"
-                >
-                  {{ $t('重命名') }}
-                </li>
-                <li
-                  class="btn"
-                  :disabled="group.defaultGroup"
-                  text
-                  @click="handleShowDeleteGroup(group)">
-                  {{ $t('删除') }}
-                </li>
+                <div class="menu-content">
+                  <bk-button
+                    v-if="!group.defaultGroup"
+                    class="btn"
+                    text
+                    @click="handleShowRename(group, index)"
+                  >
+                    {{ $t('重命名') }}
+                  </bk-button>
+                  <bk-button
+                    class="btn"
+                    :disabled="group.defaultGroup"
+                    text
+                    @click="handleShowDeleteGroup(group)">
+                    {{ $t('删除') }}
+                  </bk-button>
+                </div>
               </template>
             </bk-popover>
           </div>
@@ -411,6 +413,10 @@ export default {
   }
   .group-more-option .btn:hover {
     background-color: #F5F7FA;
+  }
+  .menu-content {
+    display: flex;
+    flex-direction: column;
   }
   :deep(.bk-popover-content) {
     padding: 0;
