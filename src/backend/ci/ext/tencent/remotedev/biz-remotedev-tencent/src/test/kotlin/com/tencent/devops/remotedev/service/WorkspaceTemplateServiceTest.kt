@@ -33,6 +33,8 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         url = "22",
         description = "test desc"
     )
+
+
     @Nested
     inner class AddWorkspaceTemplateTest {
         @Test
