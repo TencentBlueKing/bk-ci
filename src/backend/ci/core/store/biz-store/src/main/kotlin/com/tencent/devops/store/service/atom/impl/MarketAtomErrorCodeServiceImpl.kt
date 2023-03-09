@@ -89,8 +89,7 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
     @Suppress("ComplexMethod")
     private fun checkErrorCode(errorCodeType: ErrorCodeTypeEnum, errorCodeInfos: List<String>) {
         val invalidErrorCodes = mutableListOf<String>()
-        errorCodeInfos.forEach {
-            val errorCode = it
+        errorCodeInfos.forEach { errorCode ->
             if (errorCode.length != 6) invalidErrorCodes.add(errorCode)
             val errorCodePrefix = errorCode.substring(0, 3)
             when (errorCodeType) {
@@ -125,13 +124,14 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         errorCode: String,
         errorCodeType: ErrorCodeTypeEnum
     ): Boolean {
-        logger.info("isComplianceErrorCode storeCode:$storeCode|storeType:$storeType|" +
-                "errorCode：$errorCode|errorCodeType:$errorCodeType")
         try {
             checkErrorCode(errorCodeType, listOf(errorCode))
         } catch (e: ErrorCodeException) {
+            e.printStackTrace()
             return false
         }
+        logger.info("isComplianceErrorCode storeCode:$storeCode|storeType:$storeType|" +
+                "errorCode：$errorCode|errorCodeType:$errorCodeType")
         return storeErrorCodeInfoDao.getAtomErrorCode(
             dslContext = dslContext,
             storeCode = storeCode,

@@ -359,6 +359,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
         val atomCode = taskMetricsData.atomCode
         val errorCode = taskMetricsData.errorCode
         val isComplianceErrorCode = isComplianceErrorCode(atomCode, "$errorCode")
+        logger.info("isComplianceErrorCode: $isComplianceErrorCode")
         val atomOverviewDataRecord = atomOverviewDataRecords?.firstOrNull { it.atomCode == atomCode }
         // 获取该插件在更新集合中的记录
         var existUpdateAtomOverviewDataPO = updateAtomOverviewDataPOs.firstOrNull {
