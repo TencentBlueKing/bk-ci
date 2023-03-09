@@ -14,11 +14,21 @@ class UserDispatchDcResourceImpl constructor(
 ) : UserDispatchDcResource {
 
     @Timed
-    override fun startDebug(userId: String, pipelineId: String, vmSeqId: String, buildId: String?): Result<DevCloudDebugResponse> {
+    override fun startDebug(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        buildId: String?
+    ): Result<DevCloudDebugResponse> {
         return Result(dispatchDevcloudService.startDebug(userId, "", pipelineId, buildId, vmSeqId))
     }
 
-    override fun stopDebug(userId: String, pipelineId: String, vmSeqId: String, containerName: String): Result<Boolean> {
+    override fun stopDebug(
+        userId: String,
+        pipelineId: String,
+        vmSeqId: String,
+        containerName: String
+    ): Result<Boolean> {
         return Result(dispatchDevcloudService.stopDebug(userId, pipelineId, containerName, vmSeqId))
     }
 

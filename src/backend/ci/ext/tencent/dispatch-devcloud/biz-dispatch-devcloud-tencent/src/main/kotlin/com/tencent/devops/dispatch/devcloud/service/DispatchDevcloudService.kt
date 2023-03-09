@@ -161,7 +161,8 @@ class DispatchDevcloudService @Autowired constructor(
             containerName
         }
 
-        logger.info("$userId stop debug devcloud pipelineId: $pipelineId containName: $debugContainerName vmSeqId: $vmSeqId")
+        logger.info("$userId stop debug devcloud pipelineId: $pipelineId " +
+                        "containName: $debugContainerName vmSeqId: $vmSeqId")
 
         // 检验权限
         if (needCheckPermission) {
@@ -203,7 +204,8 @@ class DispatchDevcloudService @Autowired constructor(
                     } else {
                         // 停不掉，尝试删除
                         logger.info("stopDebug stop dev cloud vm failed, msg: ${opResult.second}")
-                        logger.info("stopDebug stop dev cloud vm failed, try to delete it, containerName:${devcloudBuild.containerName}")
+                        logger.info("stopDebug stop dev cloud vm failed, try to delete it, " +
+                                        "containerName:${devcloudBuild.containerName}")
                         dispatchDevCloudClient.operateContainer(
                             projectId = devcloudBuild.projectId,
                             pipelineId = devcloudBuild.pipelineId,
@@ -216,10 +218,12 @@ class DispatchDevcloudService @Autowired constructor(
                         devCloudBuildDao.delete(dslContext, pipelineId, vmSeqId, devcloudBuild.poolNo)
                     }
                 } else {
-                    logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId containerName:$debugContainerName 容器没有处于debug或正在占用中")
+                    logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                                    "containerName:$debugContainerName 容器没有处于debug或正在占用中")
                 }
             } else {
-                logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId containerName:$debugContainerName 容器已不存在")
+                logger.info("stopDebug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
+                                "containerName:$debugContainerName 容器已不存在")
             }
         }
 

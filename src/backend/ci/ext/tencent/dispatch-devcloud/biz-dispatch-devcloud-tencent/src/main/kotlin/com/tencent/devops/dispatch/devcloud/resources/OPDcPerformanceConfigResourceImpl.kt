@@ -20,7 +20,10 @@ class OPDcPerformanceConfigResourceImpl constructor(
         return Result(dcPerformanceConfigService.listDcPerformanceConfig(userId, page, pageSize))
     }
 
-    override fun createDcPerformanceConfig(userId: String, opPerformanceConfigVO: OPPerformanceConfigVO): Result<Boolean> {
+    override fun createDcPerformanceConfig(
+        userId: String,
+        opPerformanceConfigVO: OPPerformanceConfigVO
+    ): Result<Boolean> {
         return Result(dcPerformanceConfigService.createDcPerformanceConfig(userId, opPerformanceConfigVO))
     }
 

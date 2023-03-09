@@ -232,7 +232,8 @@ class DevCloudBuildDao {
     fun getTimeOutBusyContainer(dslContext: DSLContext): Result<TDevcloudBuildRecord> {
         with(TDevcloudBuild.T_DEVCLOUD_BUILD) {
             return dslContext.selectFrom(this)
-                .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(7))
+                .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                           .greaterOrEqual(7))
                 .and(STATUS.eq(1))
                 .limit(1000)
                 .fetch()
@@ -242,7 +243,8 @@ class DevCloudBuildDao {
     fun getNoUseIdleContainer(dslContext: DSLContext): Result<TDevcloudBuildRecord> {
         with(TDevcloudBuild.T_DEVCLOUD_BUILD) {
             return dslContext.selectFrom(this)
-                    .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(7))
+                    .where(timestampDiff(DatePart.DAY, UPDATE_TIME.cast(java.sql.Timestamp::class.java))
+                               .greaterOrEqual(7))
                     .and(STATUS.eq(0))
                     .fetch()
         }
@@ -253,7 +255,8 @@ class DevCloudBuildDao {
             return dslContext.selectFrom(this)
                 .where(STATUS.eq(0))
                 .and(DEBUG_STATUS.eq(true))
-                .and(timestampDiff(DatePart.HOUR, DEBUG_TIME.cast(java.sql.Timestamp::class.java)).greaterOrEqual(1))
+                .and(timestampDiff(DatePart.HOUR, DEBUG_TIME.cast(java.sql.Timestamp::class.java))
+                         .greaterOrEqual(1))
                 .fetch()
         }
     }

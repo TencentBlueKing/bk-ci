@@ -19,7 +19,8 @@ data class Result<out T>(
 ) {
     constructor(data: T) : this(0, null, data)
     constructor(message: String, data: T) : this(0, message, data)
-    constructor(status: Int, message: String?, request_id: String?, result: Boolean) : this(status, message, null, request_id, result)
+    constructor(status: Int, message: String?, request_id: String?, result: Boolean) :
+        this(status, message, null, request_id, result)
     @JsonIgnore
     fun isOk(): Boolean {
         return code == 0

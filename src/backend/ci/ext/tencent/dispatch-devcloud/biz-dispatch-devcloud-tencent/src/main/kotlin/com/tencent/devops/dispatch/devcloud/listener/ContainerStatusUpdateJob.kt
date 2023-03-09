@@ -73,11 +73,15 @@ class ContainerStatusUpdateJob @Autowired constructor(
         logger.info("Start clearTimeOutBusyContainer: ${System.currentTimeMillis()}")
         if (timeOutBusyContainerList.isNotEmpty) {
             timeOutBusyContainerList.forEach {
-                logger.info("clearTimeOutBusyContainer PipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}")
+                logger.info("clearTimeOutBusyContainer PipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|" +
+                                "poolNo:${it.poolNo}|ContainerName: ${it.containerName}")
                 try {
                     // 重新check一下DB状态
                     val devcloudBuild = devCloudBuildDao.get(dslContext, it.pipelineId, it.vmSeqId, it.poolNo)
-                    if (devcloudBuild == null || devcloudBuild.status == 0 || (devcloudBuild.updateTime.plusDays(7) > LocalDateTime.now())) {
+                    if (devcloudBuild == null ||
+                        devcloudBuild.status == 0 ||
+                        (devcloudBuild.updateTime.plusDays(7) > LocalDateTime.now())
+                    ) {
                         return@forEach
                     }
 
@@ -95,7 +99,13 @@ class ContainerStatusUpdateJob @Autowired constructor(
                         when (status) {
                             "stopped", "stop" -> {
                                 logger.info("Update status to idle, containerName: ${it.containerName}")
-                                devCloudBuildDao.updateStatus(dslContext, it.pipelineId, it.vmSeqId, it.poolNo, ContainerStatus.IDLE.status)
+                                devCloudBuildDao.updateStatus(
+                                    dslContext = dslContext,
+                                    pipelineId = it.pipelineId,
+                                    vmSeqId = it.vmSeqId,
+                                    poolNo = it.poolNo,
+                                    status = ContainerStatus.IDLE.status
+                                )
                             }
                             "running" -> {
                                 logger.info("Container is running, stop it, containerName:${it.containerName}")
@@ -116,11 +126,18 @@ class ContainerStatusUpdateJob @Autowired constructor(
                                 )
                                 if (opResult.first == TaskStatus.SUCCEEDED) {
                                     logger.info("stop dev cloud vm success. then update status to idle")
-                                    devCloudBuildDao.updateStatus(dslContext, it.pipelineId, it.vmSeqId, it.poolNo, ContainerStatus.IDLE.status)
+                                    devCloudBuildDao.updateStatus(
+                                        dslContext = dslContext,
+                                        pipelineId = it.pipelineId,
+                                        vmSeqId = it.vmSeqId,
+                                        poolNo = it.poolNo,
+                                        status = ContainerStatus.IDLE.status
+                                    )
                                 } else {
                                     // 停不掉？尝试删除
                                     logger.info("stop dev cloud vm failed, msg: ${opResult.second}")
-                                    logger.info("stop dev cloud vm failed, try to delete it, containerName:${it.containerName}")
+                                    logger.info("stop dev cloud vm failed, try to delete it, " +
+                                                    "containerName:${it.containerName}")
                                     devCloudBuildDao.delete(dslContext, it.pipelineId, it.vmSeqId, it.poolNo)
                                     dispatchDevCloudClient.operateContainer(
                                         projectId = it.projectId,
@@ -150,8 +167,15 @@ class ContainerStatusUpdateJob @Autowired constructor(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e)
-                    devCloudBuildDao.updateStatus(dslContext, it.pipelineId, it.vmSeqId, it.poolNo, ContainerStatus.IDLE.status)
+                    logger.error("clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|" +
+                                     "vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e)
+                    devCloudBuildDao.updateStatus(
+                        dslContext = dslContext,
+                        pipelineId = it.pipelineId,
+                        vmSeqId = it.vmSeqId,
+                        poolNo = it.poolNo,
+                        status = ContainerStatus.IDLE.status
+                    )
                 }
             }
         }
@@ -187,7 +211,8 @@ class ContainerStatusUpdateJob @Autowired constructor(
             val transContext = DSL.using(configuration)
             val timeoutBusyDebugContainerList = devCloudBuildDao.getTimeoutBusyDebugContainer(transContext)
             timeoutBusyDebugContainerList.forEach {
-                logger.info("Start clearDebugContainer pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}")
+                logger.info("Start clearDebugContainer pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|" +
+                                "poolNo:${it.poolNo}|ContainerName: ${it.containerName}")
                 try {
                     val statusResponse = dispatchDevCloudClient.getContainerStatus(
                         projectId = it.projectId,
@@ -241,7 +266,8 @@ class ContainerStatusUpdateJob @Autowired constructor(
                                 } else {
                                     // 停不掉？尝试删除
                                     logger.info("stop dev cloud vm failed, msg: ${opResult.second}")
-                                    logger.info("stop dev cloud vm failed, try to delete it, containerName:${it.containerName}")
+                                    logger.info("stop dev cloud vm failed, try to delete it, " +
+                                                    "containerName:${it.containerName}")
                                     devCloudBuildDao.delete(transContext, it.pipelineId, it.vmSeqId, it.poolNo)
                                     dispatchDevCloudClient.operateContainer(projectId = it.projectId,
                                         pipelineId = it.pipelineId,
@@ -267,7 +293,8 @@ class ContainerStatusUpdateJob @Autowired constructor(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("clearDebugContainer exception pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}.", e)
+                    logger.error("clearDebugContainer exception pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|" +
+                                     "poolNo:${it.poolNo}|ContainerName: ${it.containerName}.", e)
                     devCloudBuildDao.updateDebugStatus(
                         transContext,
                         it.pipelineId,

@@ -4,13 +4,10 @@ import com.tencent.devops.model.dispatch.devcloud.tables.TDevcloudBuildHis
 import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildHisRecord
 import org.jooq.DSLContext
 import org.jooq.Result
-import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Repository
 
 @Repository
 class DevCloudBuildHisDao {
-
-    private val logger = LoggerFactory.getLogger(DevCloudBuildHisDao::class.java)
 
     fun create(
         dslContext: DSLContext,

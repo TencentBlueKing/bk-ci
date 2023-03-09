@@ -40,7 +40,8 @@ class DevCloudApplicationRunner constructor(
 
     private fun clearUntrackedContainer(userId: String, containerName: String, action: Action) {
         try {
-            logger.info("Delete or stop container, userId: $userId, containerName: $containerName, action: ${action.getValue()}")
+            logger.info("Delete or stop container, userId: $userId, containerName: $containerName, " +
+                            "action: ${action.getValue()}")
             // dispatchDevCloudClient.operateContainer("", "", userId, containerName, action)
         } catch (e: Exception) {
             logger.error("delete or stop container failed", e)

@@ -28,7 +28,8 @@ object CommonUtils {
                 } else {
                     if (str.last().contains(":")) {
                         val nameTag = str.last().split(":")
-                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/").substringBefore(":" + nameTag[1]), nameTag[1])
+                        Triple(str[0], imageNameStr.substringAfter(str[0] + "/")
+                            .substringBefore(":" + nameTag[1]), nameTag[1])
                     } else {
                         Triple(str[0], str.last(), "latest")
                     }

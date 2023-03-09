@@ -720,10 +720,13 @@ class DevCloudBuildListener @Autowired constructor(
             if (it.containerName != null && it.containerName!!.isNotEmpty()) {
                 if (it.poolNo != null && it.poolNo!!.isNotEmpty()) {
                     try {
-                        logger.info("Update status in db, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
-                        devCloudBuildDao.updateStatus(dslContext, event.pipelineId, it.vmSeqId, it.poolNo!!.toInt(), ContainerStatus.IDLE.status)
+                        logger.info("Update status in db, buildId: ${event.buildId}
+                        vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
+                        devCloudBuildDao.updateStatus(dslContext, event.pipelineId, it.vmSeqId, it.poolNo!!.toInt(),
+                        ContainerStatus.IDLE.status)
                     } catch (e: Exception) {
-                        logger.error("Update status failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}", e)
+                        logger.error("Update status failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
+                        poolNo:${it.poolNo}", e)
                     }
                 }
 
@@ -732,23 +735,27 @@ class DevCloudBuildListener @Autowired constructor(
                     val actionCode = statusResponse.optInt("actionCode")
                     if (actionCode == 200) {
                         if ("stopped" == statusResponse.optString("data")) {
-                            logger.info("buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}, containerName:${it.containerName} " +
+                            logger.info("buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
+                            containerName:${it.containerName} " +
                                     "status in ('stopped'), skip stop.")
                             return@forEach
                         }
                     }
 
-                    logger.info("stop devcloud container, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}, containerName:${it.containerName}")
+                    logger.info("stop devcloud container, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
+                    containerName:${it.containerName}")
                     val taskId = dispatchDevCloudClient.operateContainer(event.userId, it.containerName!!, Action.STOP)
                     val opResult = dispatchDevCloudClient.waitTaskFinish(event.buildId, taskId)
                     if (opResult.first == TaskStatus.SUCCEEDED) {
                         logger.info("buildId: ${event.buildId} vmSeqId: ${it.vmSeqId} stop devcloud container success.")
                     } else {
                         // TODO 告警通知
-                        logger.warn("stop devcloud container failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId} msg: ${opResult.second}")
+                        logger.warn("stop devcloud container failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}
+                        msg: ${opResult.second}")
                     }
                 } catch (e: Exception) {
-                    logger.error("stop devcloud container error. buildId: ${event.buildId} vmSeqId: ${it.vmSeqId} containerName: ${it.containerName}", e)
+                    logger.error("stop devcloud container error. buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}
+                    containerName: ${it.containerName}", e)
                 }
             }
 

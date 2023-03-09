@@ -639,7 +639,7 @@ class DispatchDevCloudClient {
         projectId: String,
         pipelineId: String,
         taskId: String
-    ): com.tencent.devops.dispatch.devcloud.client.TaskResult {
+    ): TaskResult {
         try {
             val taskResponse = getTasks(projectId, pipelineId, userId, taskId)
             val actionCode = taskResponse.optString("actionCode")
@@ -653,10 +653,10 @@ class DispatchDevCloudClient {
                 when {
                     // 5000200表示agent执行完关机导致的启动异常，这里忽略异常
                     errorInfo.optInt("code") == 5000200 -> {
-                        com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = true, success = true, msg = msg)
+                        TaskResult(isFinish = true, success = true, msg = msg)
                     }
                     errorInfo.optInt("type") == 0 -> {
-                        com.tencent.devops.dispatch.devcloud.client.TaskResult(
+                        TaskResult(
                             isFinish = true,
                             success = false,
                             msg = msg,
@@ -664,7 +664,7 @@ class DispatchDevCloudClient {
                         )
                     }
                     else -> {
-                        com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = true, success = false, msg = msg)
+                        TaskResult(isFinish = true, success = false, msg = msg)
                     }
                 }
             } else {
@@ -672,21 +672,21 @@ class DispatchDevCloudClient {
                     "succeeded" -> {
                         val containerName = taskResponse.optJSONObject("data").optString("name")
                         logger.info("Task: $taskId success, containerName: $containerName, taskResponse: $taskResponse")
-                        com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = true, success = true, msg = containerName)
+                        TaskResult(isFinish = true, success = true, msg = containerName)
                     }
                     "failed" -> {
                         val resultDisplay = taskResponse.optJSONObject("data")
                             .optJSONObject("result")
                             .optJSONArray("logs")
                         logger.error("Task: $taskId failed, taskResponse: $taskResponse")
-                        com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = true, success = false, msg = formatDevcloudLogList(resultDisplay))
+                        TaskResult(isFinish = true, success = false, msg = formatDevcloudLogList(resultDisplay))
                     }
-                    else -> com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = false, success = false, msg = "")
+                    else -> TaskResult(isFinish = false, success = false, msg = "")
                 }
             }
         } catch (e: Exception) {
             logger.error("Get dev cloud task error, taskId: $taskId", e)
-            return com.tencent.devops.dispatch.devcloud.client.TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
+            return TaskResult(isFinish = true, success = false, msg = "创建失败，异常信息:${e.message}")
         }
     }
 
