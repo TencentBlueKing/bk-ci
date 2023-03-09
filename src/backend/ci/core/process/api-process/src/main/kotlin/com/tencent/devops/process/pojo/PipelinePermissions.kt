@@ -33,6 +33,8 @@ import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("流水线-流水线权限")
 data class PipelinePermissions(
+    @ApiModelProperty("管理员权限", required = true)
+    val canManage: Boolean,
     @ApiModelProperty("删除权限", required = true)
     val canDelete: Boolean,
     @ApiModelProperty("查看权限", required = true)

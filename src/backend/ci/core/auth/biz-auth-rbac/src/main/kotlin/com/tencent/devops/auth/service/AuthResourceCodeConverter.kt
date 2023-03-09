@@ -81,7 +81,7 @@ class AuthResourceCodeConverter @Autowired constructor(
             )?.iamResourceCode ?: throw ErrorCodeException(
                 errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
                 params = arrayOf(resourceCode),
-                defaultMessage = "the resource not exists, resourceCode:$resourceCode"
+                defaultMessage = "the resource not exists, resourceCode:$resourceCode,resourceType:$resourceType"
             )
         } else {
             resourceCode
