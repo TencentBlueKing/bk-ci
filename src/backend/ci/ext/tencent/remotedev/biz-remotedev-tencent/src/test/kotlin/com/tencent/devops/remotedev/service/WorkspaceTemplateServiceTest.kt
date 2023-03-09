@@ -1,7 +1,6 @@
 package com.tencent.devops.remotedev.service
 
 import com.tencent.devops.common.test.BkCiAbstractTest
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceTemplateRecord
 import com.tencent.devops.remotedev.dao.WorkspaceTemplateDao
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import io.mockk.every
@@ -11,7 +10,6 @@ import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.DisplayName
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
@@ -33,17 +31,6 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         source = "test",
         logo = "111",
         description = "test desc"
-    )
-    private val tWorkspaceTemplateRecord = TWorkspaceTemplateRecord(
-        1,
-        "Blank",
-        "test",
-        "tencent_ci",
-        "",
-        "test desc",
-        "user00",
-        LocalDateTime.parse("2023-01-03 00:27:16", formatter),
-        LocalDateTime.parse("2023-01-03 00:27:16", formatter)
     )
 
     @Nested
