@@ -16,7 +16,7 @@ import java.time.LocalDateTime
 @Service
 class WindowsBuildHistoryService @Autowired constructor(
     private val dslContext: DSLContext,
-    private val windowsBuildHistoryDao: WindowsBuildHistoryDao,
+    private val windowsBuildHistoryDao: WindowsBuildHistoryDao
 ) {
 
     private val logger = LoggerFactory.getLogger(WindowsBuildHistoryService::class.java)

@@ -3,8 +3,6 @@ package com.tencent.devops.dispatch.devcloud.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
-import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
@@ -19,9 +17,9 @@ import com.tencent.devops.dispatch.devcloud.pojo.DevCloudImageVersion
 import com.tencent.devops.dispatch.devcloud.pojo.Params
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
 import com.tencent.devops.dispatch.devcloud.pojo.devcloud.DevCloudJobReq
-import okhttp3.Headers
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobRequest
+import com.tencent.devops.dispatch.devcloud.pojo.devcloud.JobResponse
 import okhttp3.Headers.Companion.toHeaders
-import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody

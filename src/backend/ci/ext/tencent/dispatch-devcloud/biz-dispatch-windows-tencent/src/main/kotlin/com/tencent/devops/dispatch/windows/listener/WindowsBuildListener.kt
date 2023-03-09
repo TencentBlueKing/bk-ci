@@ -133,7 +133,6 @@ class WindowsBuildListener @Autowired constructor(
             "[${dispatchMessage.projectId}|${dispatchMessage.pipelineId}" +
                 "|${dispatchMessage.buildId}] Success to start vm(${devCloudWindowsInfo?.ip})"
         )
-
     }
 
     override fun onStartupDemote(dispatchMessage: DispatchMessage) {

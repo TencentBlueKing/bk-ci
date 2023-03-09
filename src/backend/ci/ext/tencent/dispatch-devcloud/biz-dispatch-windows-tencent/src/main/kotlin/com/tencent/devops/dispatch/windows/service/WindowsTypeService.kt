@@ -8,7 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
-open class WindowsTypeService  @Autowired constructor(
+class WindowsTypeService @Autowired constructor(
     private val dslContext: DSLContext,
     private val windowsTypeDao: WindowsTypeDao
 ) {

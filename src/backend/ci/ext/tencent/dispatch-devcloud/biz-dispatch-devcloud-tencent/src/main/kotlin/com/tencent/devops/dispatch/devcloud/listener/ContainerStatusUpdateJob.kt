@@ -167,8 +167,10 @@ class ContainerStatusUpdateJob @Autowired constructor(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|" +
-                                     "vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e)
+                    logger.error(
+                        "clearTimeOutBusyContainer exception, PipelineId: ${it.pipelineId}|" +
+                            "vmSeqId:${it.vmSeqId}|poolNo:${it.poolNo}|ContainerName: ${it.containerName}", e
+                    )
                     devCloudBuildDao.updateStatus(
                         dslContext = dslContext,
                         pipelineId = it.pipelineId,
@@ -293,8 +295,10 @@ class ContainerStatusUpdateJob @Autowired constructor(
                         }
                     }
                 } catch (e: Throwable) {
-                    logger.error("clearDebugContainer exception pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|" +
-                                     "poolNo:${it.poolNo}|ContainerName: ${it.containerName}.", e)
+                    logger.error(
+                        "clearDebugContainer exception pipelineId: ${it.pipelineId}|vmSeqId:${it.vmSeqId}|" +
+                            "poolNo:${it.poolNo}|ContainerName: ${it.containerName}.", e
+                    )
                     devCloudBuildDao.updateDebugStatus(
                         transContext,
                         it.pipelineId,

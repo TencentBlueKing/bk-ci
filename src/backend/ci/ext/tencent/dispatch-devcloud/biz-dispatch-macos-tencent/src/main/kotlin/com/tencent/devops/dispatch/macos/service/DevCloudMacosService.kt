@@ -81,8 +81,10 @@ class DevCloudMacosService @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("$buildId DevCloud creatVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
-                                 "msg: $responseContent")
+                logger.error(
+                    "$buildId Fail to request to DevCloud creatVM, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
                 return null
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
@@ -240,8 +242,9 @@ class DevCloudMacosService @Autowired constructor(
             val responseContent = response.body!!.string()
             logger.info("DevCloud deleteVM http code is ${response.code}, $responseContent")
             if (!response.isSuccessful) {
-                logger.error("Fail to request to DevCloud deleteVM, http response code: ${response.code}," +
-                                 " msg: $responseContent")
+                logger.error(
+                    "Fail to request to DevCloud deleteVM, http response code: ${response.code}, msg: $responseContent"
+                )
                 result = false
             }
             val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)

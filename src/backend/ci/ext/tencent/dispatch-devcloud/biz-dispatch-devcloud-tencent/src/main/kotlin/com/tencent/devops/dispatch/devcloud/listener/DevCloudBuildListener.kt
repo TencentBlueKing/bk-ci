@@ -233,8 +233,10 @@ class DevCloudBuildListener @Autowired constructor(
                 startContainer(lastIdleContainer, dispatchMessage, poolNo)
             }
         } catch (e: BuildFailureException) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                             "create devCloud failed. msg:${e.message}. \n$devCloudHelpUrl")
+            logger.error(
+                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                    "create devCloud failed. msg:${e.message}. \n$devCloudHelpUrl"
+            )
             onFailure(
                 e.errorType,
                 e.errorCode,
@@ -243,8 +245,10 @@ class DevCloudBuildListener @Autowired constructor(
                     "\n容器构建异常请参考：$devCloudHelpUrl"
             )
         } catch (e: Exception) {
-            logger.error("buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
-                             "create devCloud failed, msg:${e.message}")
+            logger.error(
+                "buildId: ${dispatchMessage.buildId} vmSeqId: ${dispatchMessage.vmSeqId} " +
+                    "create devCloud failed, msg:${e.message}"
+            )
             if (e.message.equals("timeout")) {
                 onFailure(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorType,

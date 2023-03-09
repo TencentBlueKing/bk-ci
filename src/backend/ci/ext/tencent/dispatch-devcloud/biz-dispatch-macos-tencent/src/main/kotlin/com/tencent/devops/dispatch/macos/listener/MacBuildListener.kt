@@ -211,8 +211,10 @@ class MacBuildListener @Autowired constructor(
                             )
 
                             if (e is SocketTimeoutException) {
-                                logger.error("[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                                                 "vm is $vmIp, end build.")
+                                logger.error(
+                                    "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
+                                        "vm is $vmIp, end build."
+                                )
                                 buildHistoryService.endBuild(
                                     MacJobStatus.ShutDownError,
                                     buildTask.buildHistoryId,

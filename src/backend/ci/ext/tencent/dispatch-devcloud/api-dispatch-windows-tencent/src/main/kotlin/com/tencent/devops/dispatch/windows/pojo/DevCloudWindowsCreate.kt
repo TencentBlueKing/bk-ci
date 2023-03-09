@@ -9,5 +9,5 @@ data class DevCloudWindowsCreate(
     var cpu: String = "8",
     var memory: String = "16",
     var disk: String = "100",
-    var env: DevCloudWindowsCreateEnv,
-    )
+    var env: DevCloudWindowsCreateEnv
+)

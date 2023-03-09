@@ -1,7 +1,6 @@
 package com.tencent.devops.dispatch.windows.pojo
 import com.fasterxml.jackson.annotation.JsonProperty
 
-
 data class WindowsMachineGetResponse(
     @JsonProperty("code")
     val code: Int, // 0

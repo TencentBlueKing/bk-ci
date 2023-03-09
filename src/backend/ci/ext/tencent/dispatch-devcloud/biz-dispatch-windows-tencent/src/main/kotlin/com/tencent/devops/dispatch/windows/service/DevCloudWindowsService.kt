@@ -165,7 +165,7 @@ class DevCloudWindowsService @Autowired constructor() {
             val responseData: QueryTaskStatusResponse = jacksonObjectMapper().readValue(responseContent)
             logger.info("DevCloudWindowsService|queryTaskStatus|responseData|$responseData")
             // 如果actionCode不是200,就是devcloud出问题了,返回错误状态
-            if (responseData.code != 0 ) {
+            if (responseData.code != 0) {
                 return Triple(DevCloudCreateWindowsStatus.Failed.title, null, responseData.message)
             }
 
@@ -176,10 +176,10 @@ class DevCloudWindowsService @Autowired constructor() {
                 DevCloudCreateWindowsStatus.Canceled.title -> {
                     return Triple(DevCloudCreateWindowsStatus.Canceled.title, null, responseData.message)
                 }
-                DevCloudCreateWindowsStatus.Waiting.title ->{
+                DevCloudCreateWindowsStatus.Waiting.title -> {
                     return Triple(DevCloudCreateWindowsStatus.Waiting.title, null, responseData.message)
                 }
-                DevCloudCreateWindowsStatus.Running.title ->{
+                DevCloudCreateWindowsStatus.Running.title -> {
                     return Triple(DevCloudCreateWindowsStatus.Running.title, null, responseData.message)
                 }
                 else -> {

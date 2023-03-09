@@ -314,7 +314,7 @@ class DispatchDevcloudService @Autowired constructor(
         }
         devCloudJobRedisUtils.setJobCount(buildId, containerName)
 
-        return dispatchDevCloudClient.createJob(userId, projectId, pipelineId,  buildId, jobReq)
+        return dispatchDevCloudClient.createJob(userId, projectId, pipelineId, buildId, jobReq)
     }
 
     fun getJobStatus(
