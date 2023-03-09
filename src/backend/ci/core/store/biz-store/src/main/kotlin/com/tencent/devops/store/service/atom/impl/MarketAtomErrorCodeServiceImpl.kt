@@ -125,8 +125,6 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         errorCode: String,
         errorCodeType: ErrorCodeTypeEnum
     ): Boolean {
-        logger.info("isComplianceErrorCode storeCode:$storeCode|storeType:$storeType|" +
-                "errorCode：$errorCode|errorCodeType:$errorCodeType")
         try {
             checkErrorCode(errorCodeType, listOf(errorCode))
         } catch (e: ErrorCodeException) {

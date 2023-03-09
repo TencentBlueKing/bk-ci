@@ -122,7 +122,6 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         atomCodes = container.atomCodes
                     )
                     container.tasks.forEach { task ->
-                        logger.info("atomOverviewDataReport task $task")
                         atomOverviewDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                             taskMetricsData = task,
@@ -828,11 +827,10 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     }
 
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
-        logger.info("isComplianceErrorCode atomCode:$atomCode|errorCode：$errorCode")
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
         var errorCodeType: ErrorCodeTypeEnum = when {
-            errorCodePrefix == "8" -> {
+            errorCodePrefix.startsWith("8") -> {
                 ErrorCodeTypeEnum.ATOM
             }
             errorCodePrefix.startsWith("100") -> {
