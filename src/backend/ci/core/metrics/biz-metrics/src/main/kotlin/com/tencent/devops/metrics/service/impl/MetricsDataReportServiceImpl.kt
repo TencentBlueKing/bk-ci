@@ -122,6 +122,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
                         atomCodes = container.atomCodes
                     )
                     container.tasks.forEach { task ->
+                        logger.info("atomOverviewDataReport task $task")
                         atomOverviewDataReport(
                             buildEndPipelineMetricsData = buildEndPipelineMetricsData,
                             taskMetricsData = task,
