@@ -765,7 +765,7 @@ class ExperienceService @Autowired constructor(
         artifactoryType: ArtifactoryType
     ) {
         // Rbac 得校验是否有创建体验的权限。
-        if (experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
+        if (!experiencePermissionService.validateCreateTaskPermission(userId, projectId)) {
             val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                 messageCode = "${CommonMessageCode.MSG_CODE_PERMISSION_PREFIX}${AuthPermission.CREATE.value}",
                 defaultMessage = AuthPermission.CREATE.alias

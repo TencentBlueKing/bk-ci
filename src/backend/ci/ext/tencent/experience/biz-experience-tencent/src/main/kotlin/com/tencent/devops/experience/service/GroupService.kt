@@ -172,7 +172,7 @@ class GroupService @Autowired constructor(
     }
 
     fun create(projectId: String, userId: String, group: GroupCreate): String {
-        if (experiencePermissionService.validateCreateGroupPermission(
+        if (!experiencePermissionService.validateCreateGroupPermission(
                 user = userId,
                 projectId = projectId
             )) {
