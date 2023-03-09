@@ -47,6 +47,7 @@ import com.tencent.devops.store.dao.common.StoreIndexManageInfoDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreStatisticDailyDao
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
+import jdk.internal.platform.Container.metrics
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.slf4j.LoggerFactory
@@ -121,6 +122,9 @@ class TxStoreIndexCronService(
                 val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
                 val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
                 atomCodes.forEach { atomCode ->
+                    if (atomCode == "errorjava1") {
+                        logger.info("computeAtomSlaIndexData 成功")
+                    }
                     val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
                         dslContext = dslContext,
                         storeCode = atomCode,

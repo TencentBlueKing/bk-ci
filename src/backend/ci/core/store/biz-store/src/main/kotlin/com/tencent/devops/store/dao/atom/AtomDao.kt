@@ -1278,9 +1278,9 @@ class AtomDao : AtomBaseDao() {
                 .from(this)
                 .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
             if (timeDescFlag) {
-                baseStep.orderBy(CREATE_TIME.desc(), ID)
+                baseStep.orderBy(ATOM_CODE, CREATE_TIME.desc(), ID)
             } else {
-                baseStep.orderBy(CREATE_TIME.asc(), ID)
+                baseStep.orderBy(ATOM_CODE, CREATE_TIME.asc(), ID)
             }
             return baseStep.groupBy(ATOM_CODE)
                 .limit((page - 1) * pageSize, pageSize).fetchInto(String::class.java)
