@@ -29,6 +29,7 @@
                     v-perm="{
                         hasPermission: props.row.canEdit,
                         disablePermissionApi: true,
+                        tooltips: $t('codelib.noPermission'),
                         permissionData: {
                             projectId: projectId,
                             resourceType: RESOURCE_TYPE,
@@ -44,6 +45,7 @@
                     v-perm="{
                         hasPermission: props.row.canDelete,
                         disablePermissionApi: true,
+                        tooltips: $t('codelib.noPermission'),
                         permissionData: {
                             projectId: projectId,
                             resourceType: RESOURCE_TYPE,

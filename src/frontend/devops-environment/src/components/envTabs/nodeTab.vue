@@ -65,6 +65,7 @@
                             v-perm="{
                                 hasPermission: canEdit,
                                 disablePermissionApi: true,
+                                tooltips: $t('environment.noPermission'),
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: ENV_RESOURCE_TYPE,

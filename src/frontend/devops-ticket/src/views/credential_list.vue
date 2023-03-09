@@ -23,6 +23,7 @@
                         <template slot-scope="props">
                             <bk-button
                                 v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
                                     hasPermission: props.row.permissions.edit,
                                     disablePermissionApi: true,
                                     permissionData: {
@@ -36,6 +37,7 @@
   
                             <bk-button
                                 v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
                                     hasPermission: props.row.permissions.delete,
                                     disablePermissionApi: true,
                                     permissionData: {

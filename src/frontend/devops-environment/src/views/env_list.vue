@@ -3,8 +3,9 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.environment') }}</div>
             <div slot="right" v-if="showContent && envList.length">
-                <bk-button 
+                <bk-button
                     v-perm="{
+                        tooltips: $t('environment.noPermission'),
                         permissionData: {
                             projectId: projectId,
                             resourceType: ENV_RESOURCE_TYPE,
@@ -50,6 +51,7 @@
                             v-perm="{
                                 hasPermission: props.row.canDelete,
                                 disablePermissionApi: true,
+                                tooltips: $t('environment.noPermission'),
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: ENV_RESOURCE_TYPE,

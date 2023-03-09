@@ -16,6 +16,7 @@
                     v-perm="{
                         hasPermission: canEdit,
                         disablePermissionApi: true,
+                        tooltips: '没有权限',
                         permissionData: {
                             projectId: projectId,
                             resourceType: QUALITY_GROUP_RESOURCE_TYPE,
@@ -69,6 +70,7 @@
                                     v-perm="{
                                         hasPermission: props.row.permissions.canEdit,
                                         disablePermissionApi: true,
+                                        tooltips: '没有权限',
                                         permissionData: {
                                             projectId: projectId,
                                             resourceType: QUALITY_GROUP_RESOURCE_TYPE,
@@ -86,6 +88,7 @@
                                     v-perm="{
                                         hasPermission: props.row.permissions.canEdit,
                                         disablePermissionApi: true,
+                                        tooltips: '没有权限',
                                         permissionData: {
                                             projectId: projectId,
                                             resourceType: QUALITY_GROUP_RESOURCE_TYPE,

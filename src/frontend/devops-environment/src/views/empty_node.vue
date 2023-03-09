@@ -5,6 +5,7 @@
         <div class="create-node-row" v-if="isEnv">
             <bk-button
                 v-perm="{
+                    tooltips: $t('environment.noPermission'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: ENV_RESOURCE_TYPE,
@@ -17,6 +18,7 @@
         <div class="create-node-row" v-else>
             <bk-button
                 v-perm="{
+                    tooltips: $t('environment.noPermission'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: NODE_RESOURCE_TYPE,

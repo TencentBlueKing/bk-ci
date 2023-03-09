@@ -377,7 +377,17 @@ onMounted(async () => {
                   -->
                   <Popover
                     :content="statusDisabledTips[projectData.approvalStatus]"
-                    :disabled="projectData.approvalStatus === 2">
+                    :disabled="projectData.approvalStatus === 2"
+                    v-perm="{
+                      tooltips: t('没有权限'),
+                      permissionData: {
+                        projectId: projectData.projectCode,
+                        resourceType: RESOURCE_TYPE,
+                        resourceCode: projectData.projectCode,
+                        action: RESOURCE_ACTION.EDIT
+                      }
+                    }"
+                  >
                     <span>
                       <bk-button
                         class="btn mr10"
@@ -415,6 +425,7 @@ onMounted(async () => {
                   
                   <span
                     v-perm="{
+                      tooltips: t('没有权限'),
                       permissionData: {
                         projectId: projectData.projectCode,
                         resourceType: RESOURCE_TYPE,

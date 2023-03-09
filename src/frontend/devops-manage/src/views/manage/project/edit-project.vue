@@ -180,6 +180,7 @@ onMounted(() => {
             :content="statusDisabledTips[projectData.approvalStatus]"
             :disabled="![1, 4].includes(projectData.approvalStatus)"
             v-perm="{
+              tooltips: t('没有权限'),
               permissionData: {
                 projectId: projectCode,
                 resourceType: RESOURCE_TYPE,
