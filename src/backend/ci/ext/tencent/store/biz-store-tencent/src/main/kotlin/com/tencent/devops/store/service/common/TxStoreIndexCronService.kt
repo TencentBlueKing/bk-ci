@@ -120,9 +120,7 @@ class TxStoreIndexCronService(
                 )
                 val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
                 val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
-                if (page in 10..14) {
-                    logger.info("computeAtomSlaIndexDataAtomCodes: $atomCodes")
-                }
+                logger.info("computeAtomSlaIndexDataAtomCodes: $atomCodes page$page")
                 atomCodes.forEach { atomCode ->
                     val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
                         dslContext = dslContext,
