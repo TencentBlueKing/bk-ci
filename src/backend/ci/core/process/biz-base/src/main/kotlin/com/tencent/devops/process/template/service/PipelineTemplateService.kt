@@ -103,6 +103,7 @@ class PipelineTemplateService @Autowired constructor(
                     }
                 }
             } }
+        logger.info("imageCode is $code")
         return Result(code)
     }
 
