@@ -132,6 +132,14 @@ class NodeService @Autowired constructor(
             userId = userId, projectId = projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
+
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -148,10 +156,11 @@ class NodeService @Autowired constructor(
             emptyList()
         }
 
-        val nodeListResult = environmentPermissionService.listNodeByListPermission(
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
-            nodeRecordList = nodeRecordList
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
         )
         if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
@@ -196,6 +205,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = canEditNodeIds.contains(it.nodeId),
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
@@ -225,6 +235,14 @@ class NodeService @Autowired constructor(
             userId, projectId,
             permissions = setOf(AuthPermission.USE, AuthPermission.EDIT, AuthPermission.DELETE)
         )
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
+
         val canUseNodeIds = if (permissionMap.containsKey(AuthPermission.USE)) {
             permissionMap[AuthPermission.USE]?.map { HashUtil.decodeIdToLong(it) } ?: emptyList()
         } else {
@@ -240,10 +258,11 @@ class NodeService @Autowired constructor(
         } else {
             emptyList()
         }
-        val nodeListResult = environmentPermissionService.listNodeByListPermission(
+        val nodeListResult = environmentPermissionService.listNodeByRbacPermission(
             userId = userId,
             projectId = projectId,
-            nodeRecordList = nodeRecordList
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.LIST
         )
         if (nodeListResult.isEmpty()) return emptyList()
         val thirdPartyAgentNodeIds = nodeRecordList.filter { it.nodeType == NodeType.THIRDPARTY.name }.map { it.nodeId }
@@ -273,6 +292,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = canEditNodeIds.contains(it.nodeId),
                 canDelete = canDeleteNodeIds.contains(it.nodeId),
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = gatewayShowName,
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {

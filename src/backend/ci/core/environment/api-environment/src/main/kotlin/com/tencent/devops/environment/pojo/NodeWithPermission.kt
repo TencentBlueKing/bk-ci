@@ -60,6 +60,8 @@ data class NodeWithPermission(
     val canEdit: Boolean?,
     @ApiModelProperty("是否可以删除", required = false)
     val canDelete: Boolean?,
+    @ApiModelProperty("是否可以查看", required = false)
+    val canView: Boolean? = true,
     @ApiModelProperty("网关地域", required = false)
     val gateway: String?,
     @ApiModelProperty("显示名称", required = false)
