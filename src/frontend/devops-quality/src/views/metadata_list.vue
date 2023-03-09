@@ -95,7 +95,7 @@
                                                     disablePermissionApi: true,
                                                     permissionData: {
                                                         projectId: projectId,
-                                                        resourceType: 'project',
+                                                        resourceType: RULE_RESOURCE_TYPE,
                                                         resourceCode: projectId,
                                                         action: RULE_RESOURCE_ACTION.CREATE
                                                     }

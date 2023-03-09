@@ -1,8 +1,11 @@
 <template>
   <article class="group-aside">
     <section class="group-list">
-      <bk-loading :style="{ 'min-height': '100px' }" :loading="!groupList.length">
-        <span class="group-title">{{ $t('权限角色') }}</span>
+      <span class="group-title">{{ $t('权限角色') }}</span>
+      <bk-loading
+        class="loading-content"
+        :loading="!groupList.length"
+      >
         <div
           :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
           v-for="(group, index) in groupList"
@@ -41,7 +44,7 @@
       </bk-loading>
       <div class="line-split" />
       <div
-        :class="{ 'group-item': true, 'group-active': activeTab === '' }"
+        :class="{ 'group-item create-group-btn': true, 'group-active': activeTab === '' }"
         @click="handleCreateGroup">
         <span class="add-group-btn">
           <i class="manage-icon manage-icon-add-fill add-icon"></i>
@@ -53,24 +56,62 @@
       dialogType="show"
       header-align="center"
       theme="danger"
-      quick-close
+      :quick-close="false"
+      extCls="delete-group-dialog"
       :is-show="deleteObj.isShow"
-      :title="$t('确认删除用户组？')"
       :is-loading="deleteObj.isLoading"
-      @closed="handleHiddenDeleteGroup"
-      @confirm="handleDeleteGroup"
     >
-      <div>{{ $t('删除【】，将产生以下影响：', [deleteObj.group.name]) }}</div>
+      <template #header>
+        <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
+        <p>{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+      </template>
       <div class="delete-tips">
-        <p>{{ $t('组内用户和组织将被全部移除') }}</p>
-        <p>{{ $t('组权限将全部移除') }}</p>
-        <p>{{ $t('组内用户继承该组的权限将失效') }}</p>
+        <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
+        <p>
+          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+          {{ $t('将用户和组织从组中移除') }}
+        </p>
+        <p>
+          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+          {{ $t('删除组内用户继承改组的权限') }}
+        </p>
+        <p>
+          <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
+          {{ $t('删除组信息和组权限') }}
+        </p>
+      </div>
+      <div class="confirm-delete">
+        <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认您的操作：" style="color: #737987;font-size: 14px;" tag="div">
+          <span style="color: red;">{{$t('不能恢复')}}</span>
+        </i18n-t>
+        <bk-input
+          v-model="keyWords"
+          :placeholder="$t('请输入待删除的用户组名')"
+          class="confirm-input"
+        ></bk-input>
+      </div>
+      <div class="option-btns">
+        <bk-button
+          class="btn"
+          theme="danger"
+          :disabled="disableDeleteBtn"
+          @click="handleDeleteGroup"
+        >
+          {{ $t('删除') }}
+        </bk-button>
+        <bk-button
+          class="btn"
+          @click="handleHiddenDeleteGroup"
+        >
+          {{ $t('取消') }}
+        </bk-button>
       </div>
     </bk-dialog>
   </article>
 </template>
 
 <script>
+import { InfoBox } from 'bkui-vue'
 export default {
   name: 'GroupAside',
   props: {
@@ -115,7 +156,13 @@ export default {
         isShow: false,
         isLoading: false,
       },
+      keyWords: ''
     };
+  },
+  computed: {
+    disableDeleteBtn() {
+      return !(this.keyWords === this.deleteObj.group.name);
+    },
   },
   watch: {
     groupList: {
@@ -138,6 +185,7 @@ export default {
     handleHiddenDeleteGroup() {
       this.deleteObj.isShow = false;
       this.deleteObj.group = {};
+      this.keyWords = '';
     },
     handleDeleteGroup() {
       this.deleteObj.isLoading = true;
@@ -164,6 +212,25 @@ export default {
 </script>
 
 <style lang="postcss" scoped>
+  .group-list {
+    height: 100%;
+  }
+  .loading-content {
+    min-height: 100px;
+    max-height: calc(100% - 160px);
+    overflow: auto;
+    &::-webkit-scrollbar-thumb {
+      background-color: #c4c6cc !important;
+      border-radius: 5px !important;
+      &:hover {
+        background-color: #979ba5 !important;
+      }
+    }
+    &::-webkit-scrollbar {
+      width: 8px !important;
+      height: 8px !important;
+    }
+  }
   .group-title {
     display: inline-block;
     line-height: 50px;
@@ -181,10 +248,6 @@ export default {
     flex-direction: column;
     justify-content: space-between;
     border-right: 1px solid #dde0e6;
-  }
-  .group-list {
-    max-height: calc(100% - 62px);
-    overflow-y: auto;
   }
   .group-item {
     display: flex;
@@ -298,6 +361,46 @@ export default {
     color: #C4C6CC;
   }
   .delete-tips {
-    padding: 10px 0 25px;
+    padding: 10px 25px;
+    background-color: #F5F6FA;
+    p {
+      display: flex;
+      align-items: center;
+    }
+  }
+  .warning-icon {
+    margin-right: 5px;
+    color: #FF9C01;
+  }
+</style>
+
+<style lang="postcss">
+  .delete-group-dialog {
+    .title-icon {
+      font-size: 42px;
+      color: #ff9c01;
+      margin-bottom: 15px;
+    }
+    .bk-dialog-header {
+      padding: 15px 0;
+    }
+    .bk-dialog-title {
+      height: 26px !important;
+      overflow: initial !important; 
+    }
+    .confirm-delete {
+      margin: 15px 0;
+    }
+    .confirm-input {
+      margin-top: 15px;
+    }
+    .option-btns {
+      text-align: center;
+      margin-top: 20px;
+      .btn {
+        width: 88px;
+        margin-right: 10px;
+      }
+    }
   }
 </style>
