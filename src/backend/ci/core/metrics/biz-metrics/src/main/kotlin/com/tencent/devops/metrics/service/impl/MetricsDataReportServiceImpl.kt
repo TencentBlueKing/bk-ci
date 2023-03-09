@@ -827,6 +827,7 @@ class MetricsDataReportServiceImpl @Autowired constructor(
     }
 
     private fun isComplianceErrorCode(atomCode: String, errorCode: String): Boolean {
+        logger.info("isComplianceErrorCode atomCode:$atomCode|errorCode：$errorCode")
         if (errorCode.length != 6) return false
         val errorCodePrefix = errorCode.substring(0, 3)
         var errorCodeType: ErrorCodeTypeEnum = when {
