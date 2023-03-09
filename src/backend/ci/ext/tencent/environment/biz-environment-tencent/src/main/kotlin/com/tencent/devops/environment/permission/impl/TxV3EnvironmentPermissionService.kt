@@ -213,7 +213,12 @@ class TxV3EnvironmentPermissionService constructor(
         return instanceMap
     }
 
-    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
         return nodeRecordList
     }
 

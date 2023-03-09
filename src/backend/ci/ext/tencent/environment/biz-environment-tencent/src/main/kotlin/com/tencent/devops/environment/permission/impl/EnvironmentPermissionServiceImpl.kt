@@ -279,7 +279,12 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         return iamPermissionMap
     }
 
-    override fun listNodeByListPermission(userId: String, projectId: String, nodeRecordList: List<TNodeRecord>): List<TNodeRecord> {
+    override fun listNodeByRbacPermission(
+        userId: String,
+        projectId: String,
+        nodeRecordList: List<TNodeRecord>,
+        authPermission: AuthPermission
+    ): List<TNodeRecord> {
         return nodeRecordList
     }
 
