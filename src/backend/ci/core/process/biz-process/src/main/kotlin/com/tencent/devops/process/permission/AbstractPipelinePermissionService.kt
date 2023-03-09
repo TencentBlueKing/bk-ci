@@ -38,7 +38,6 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
-import com.tencent.devops.process.permission.PipelinePermissionService
 import javax.ws.rs.core.Response
 
 /**
@@ -143,6 +142,21 @@ abstract class AbstractPipelinePermissionService constructor(
             permission = permission,
             supplier = supplierForFakePermission(projectId)
         )
+
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        return authPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = supplierForFakePermission(projectId)
+        )
+    }
 
     /**
      * 当权限为空时提供数据的接口

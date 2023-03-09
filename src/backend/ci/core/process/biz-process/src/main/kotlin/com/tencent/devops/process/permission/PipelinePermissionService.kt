@@ -85,6 +85,12 @@ interface PipelinePermissionService {
         permission: AuthPermission
     ): List<String>
 
+    fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>>
+
     /**
      * 注册流水线到权限中心与权限关联
      * @param userId userId

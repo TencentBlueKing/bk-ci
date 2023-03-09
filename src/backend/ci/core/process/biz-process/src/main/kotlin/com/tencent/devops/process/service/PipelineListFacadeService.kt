@@ -75,6 +75,7 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineDetailInfo
 import com.tencent.devops.process.pojo.PipelineIdAndName
 import com.tencent.devops.process.pojo.PipelineIdInfo
+import com.tencent.devops.process.pojo.PipelinePermissions
 import com.tencent.devops.process.pojo.PipelineSortType
 import com.tencent.devops.process.pojo.app.PipelinePage
 import com.tencent.devops.process.pojo.classify.PipelineGroupLabels
@@ -447,9 +448,19 @@ class PipelineListFacadeService @Autowired constructor(
     ): PipelineViewPipelinePage<Pipeline> {
         val watcher = Watcher(id = "listViewPipelines|$projectId|$userId")
         watcher.start("perm_r_perm")
-        val authPipelines = pipelinePermissionService.getResourceByPermission(
-            userId = userId, projectId = projectId, permission = AuthPermission.LIST
+        val permissionToListMap = pipelinePermissionService.filterPipelines(
+            userId = userId,
+            projectId = projectId,
+            authPermissions = setOf(
+                AuthPermission.LIST,
+                AuthPermission.VIEW,
+                AuthPermission.DELETE,
+                AuthPermission.SHARE,
+                AuthPermission.EDIT,
+                AuthPermission.DOWNLOAD,
+            )
         )
+        val authPipelines = permissionToListMap[AuthPermission.LIST] ?: emptyList()
         watcher.stop()
 
         watcher.start("s_r_summary")
@@ -563,7 +574,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pageSize = pageSize,
                     includeDelete = true,
                     collation = collation,
-                    userId = userId
+                    userId = userId,
+                    permissionToListMap = permissionToListMap
                 )
             } else if ((null != page && null != pageSize) && !(page == 1 && pageSize == -1)) {
                 // 判断可用的流水线是否已到最后一页
@@ -667,7 +679,8 @@ class PipelineListFacadeService @Autowired constructor(
                     pageSize = pageSize,
                     includeDelete = includeDelete,
                     collation = collation,
-                    userId = userId
+                    userId = userId,
+                    permissionToListMap = permissionToListMap
                 )
 
                 if (filterInvalid) {
@@ -686,7 +699,8 @@ class PipelineListFacadeService @Autowired constructor(
                         pageSize = pageSize,
                         includeDelete = includeDelete,
                         collation = collation,
-                        userId = userId
+                        userId = userId,
+                        permissionToListMap = permissionToListMap
                     )
                 }
             }
@@ -771,7 +785,8 @@ class PipelineListFacadeService @Autowired constructor(
         pageOffsetNum: Int? = 0,
         includeDelete: Boolean? = false,
         collation: PipelineCollation = PipelineCollation.DEFAULT,
-        userId: String
+        userId: String,
+        permissionToListMap: Map<AuthPermission, List<String>> = emptyMap()
     ) {
         val pipelineRecords = pipelineBuildSummaryDao.listPipelineInfoBuildSummary(
             dslContext = dslContext,
@@ -796,7 +811,8 @@ class PipelineListFacadeService @Autowired constructor(
                 pipelineInfoRecords = pipelineRecords,
                 favorPipelines = favorPipelines,
                 authPipelines = authPipelines,
-                projectId = projectId
+                projectId = projectId,
+                permissionToListMap = permissionToListMap
             )
         )
     }
@@ -1214,7 +1230,8 @@ class PipelineListFacadeService @Autowired constructor(
         authPipelines: List<String> = emptyList(),
         excludePipelineId: String? = null,
         projectId: String,
-        queryModelFlag: Boolean? = false
+        queryModelFlag: Boolean? = false,
+        permissionToListMap: Map<AuthPermission, List<String>> = emptyMap()
     ): MutableList<Pipeline> {
         // 初始化信息
         val pipelines = mutableListOf<Pipeline>()
@@ -1225,7 +1242,8 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineIds = pipelineIds,
             pipelines = pipelines,
             authPipelines = authPipelines,
-            favorPipelines = favorPipelines
+            favorPipelines = favorPipelines,
+            permissionToListMap = permissionToListMap
         )
 
         // 获取setting信息
@@ -1412,7 +1430,8 @@ class PipelineListFacadeService @Autowired constructor(
         pipelineIds: MutableSet<String>,
         pipelines: MutableList<Pipeline>,
         authPipelines: List<String>,
-        favorPipelines: List<String>
+        favorPipelines: List<String>,
+        permissionToListMap: Map<AuthPermission, List<String>>
     ) {
         val currentTimestamp = System.currentTimeMillis()
         val latestBuildEstimatedExecutionSeconds = 1L
@@ -1439,11 +1458,21 @@ class PipelineListFacadeService @Autowired constructor(
                     hasCollect = favorPipelines.contains(pipelineId),
                     updater = it.lastModifyUser,
                     creator = it.creator,
-                    delete = it.delete
+                    delete = it.delete,
+                    permissions = PipelinePermissions(
+                        canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(it.pipelineId) ?: false,
+                        canView = permissionToListMap[AuthPermission.VIEW]?.contains(it.pipelineId) ?: false,
+                        canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(it.pipelineId) ?: false,
+                        canExecute = permissionToListMap[AuthPermission.EXECUTE]?.contains(it.pipelineId) ?: false,
+                        canDownload = permissionToListMap[AuthPermission.DOWNLOAD]?.contains(it.pipelineId) ?: false,
+                        canShare = permissionToListMap[AuthPermission.SHARE]?.contains(it.pipelineId) ?: false,
+                    )
                 )
             )
         }
     }
+
+
 
     fun listPermissionPipelineName(projectId: String, userId: String): List<Map<String, String>> {
         val pipelines = pipelinePermissionService.getResourceByPermission(
