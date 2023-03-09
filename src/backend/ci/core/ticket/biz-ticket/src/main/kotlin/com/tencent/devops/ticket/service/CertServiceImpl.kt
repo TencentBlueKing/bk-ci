@@ -963,7 +963,7 @@ class CertServiceImpl @Autowired constructor(
             projectId = projectId,
             resourceCode = certId,
             authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有凭据($certId)的查看权限"
+            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
         )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertIOSInfo(
@@ -990,7 +990,7 @@ class CertServiceImpl @Autowired constructor(
             projectId = projectId,
             resourceCode = certId,
             authPermission = AuthPermission.VIEW,
-            message = "用户($userId)在工程($projectId)下没有凭据($certId)的查看权限"
+            message = "用户($userId)在工程($projectId)下没有证书($certId)的查看权限"
         )
         val certRecord = certDao.get(dslContext, projectId, certId)
         return CertAndroidInfo(
