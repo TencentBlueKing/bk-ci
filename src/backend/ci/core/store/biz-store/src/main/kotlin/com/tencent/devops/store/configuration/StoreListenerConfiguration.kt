@@ -25,24 +25,39 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.listener
+package com.tencent.devops.store.configuration
 
+import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
-import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
-import com.tencent.devops.plugin.service.git.CodeWebhookService
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.store.service.common.StoreBuildService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
+import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
-@Component
-class CodeWebhookListener @Autowired constructor(
-    private val codeWebhookService: CodeWebhookService
-) {
+/**
+ * 流水线构建扩展配置
+ */
+@Configuration
+class StoreListenerConfiguration {
 
-    fun onBuildQueue(event: PipelineBuildQueueBroadCastEvent) {
-        codeWebhookService.onBuildQueue(event = event)
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "store-service"
     }
 
-    fun onBuildFinished(event: PipelineBuildFinishBroadCastEvent) {
-        codeWebhookService.onBuildFinished(event = event)
+    @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
+    fun buildFinishListener(
+        @Autowired storeBuildService: StoreBuildService
+    ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
+        return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
+            storeBuildService.handleStoreBuildStatus(
+                userId = event.payload.userId,
+                buildId = event.payload.buildId,
+                pipelineId = event.payload.pipelineId,
+                status = BuildStatus.valueOf(event.payload.status)
+            )
+        }
     }
 }

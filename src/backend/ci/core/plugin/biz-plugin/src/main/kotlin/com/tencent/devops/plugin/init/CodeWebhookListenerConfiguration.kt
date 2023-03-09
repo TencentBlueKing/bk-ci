@@ -33,9 +33,7 @@ import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCast
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GithubPrEvent
-import com.tencent.devops.plugin.listener.CodeWebhookListener
-import com.tencent.devops.plugin.listener.GitHubPullRequestListener
-import com.tencent.devops.plugin.listener.TGitCommitListener
+import com.tencent.devops.plugin.service.git.CodeWebhookService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
@@ -54,19 +52,19 @@ class CodeWebhookListenerConfiguration {
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_FINISH_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookFinishListener(
-        @Autowired listener: CodeWebhookListener
+        @Autowired codeWebhookService: CodeWebhookService
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
         return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
-            listener.onBuildFinished(event.payload)
+            codeWebhookService.onBuildFinished(event.payload)
         }
     }
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_QUEUE_FANOUT, STREAM_CONSUMER_GROUP)
     fun codeWebhookQueueListener(
-        @Autowired listener: CodeWebhookListener
+        @Autowired codeWebhookService: CodeWebhookService
     ): Consumer<Message<PipelineBuildQueueBroadCastEvent>> {
         return Consumer { event: Message<PipelineBuildQueueBroadCastEvent> ->
-            listener.onBuildQueue(event.payload)
+            codeWebhookService.onBuildQueue(event.payload)
         }
     }
 
@@ -75,10 +73,10 @@ class CodeWebhookListenerConfiguration {
      */
     @EventConsumer(StreamBinding.QUEUE_GIT_COMMIT_CHECK, STREAM_CONSUMER_GROUP)
     fun gitCommitCheckListener(
-        @Autowired listener: TGitCommitListener
+        @Autowired codeWebhookService: CodeWebhookService
     ): Consumer<Message<GitCommitCheckEvent>> {
         return Consumer { event: Message<GitCommitCheckEvent> ->
-            listener.execute(event.payload)
+            codeWebhookService.consumeGitCommitCheckEvent(event.payload)
         }
     }
 
@@ -87,10 +85,10 @@ class CodeWebhookListenerConfiguration {
      */
     @EventConsumer(StreamBinding.QUEUE_GITHUB_PR, STREAM_CONSUMER_GROUP)
     fun githubPrQueueListener(
-        @Autowired listener: GitHubPullRequestListener
+        @Autowired codeWebhookService: CodeWebhookService
     ): Consumer<Message<GithubPrEvent>> {
         return Consumer { event: Message<GithubPrEvent> ->
-            listener.execute(event.payload)
+            codeWebhookService.consumeGitHubPrEvent(event.payload)
         }
     }
 }
