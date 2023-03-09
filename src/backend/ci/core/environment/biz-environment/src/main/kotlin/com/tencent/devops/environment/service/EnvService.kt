@@ -513,8 +513,8 @@ class EnvService @Autowired constructor(
 
     override fun listAllEnvNodes(userId: String, projectId: String, envHashIds: List<String>): List<NodeBaseInfo> {
         val envIds = envHashIds.map { HashUtil.decodeIdToLong(it) }
-        val canUseEnvIdList = environmentPermissionService.listEnvByPermission(userId, projectId, AuthPermission.USE)
-        val invalidEnvIds = envIds.filterNot { canUseEnvIdList.contains(it) }
+        val canViewEnvIdList = environmentPermissionService.listEnvByViewPermission(userId, projectId)
+        val invalidEnvIds = envIds.filterNot { canViewEnvIdList.contains(it) }
         if (invalidEnvIds.isNotEmpty()) {
             throw ErrorCodeException(
                 errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
