@@ -54,7 +54,7 @@ class ArtifactoryPipelineExtendConfiguration {
         @Autowired listener: PipelineBuildArtifactoryListener
     ): Consumer<Message<PipelineBuildFinishBroadCastEvent>> {
         return Consumer { event: Message<PipelineBuildFinishBroadCastEvent> ->
-            listener.execute(event.payload)
+            listener.onBuildFinished(event.payload)
         }
     }
 }
