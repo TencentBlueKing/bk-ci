@@ -114,7 +114,11 @@ export default {
     fetchGroupList: {
       type: Function,
       default: () => {},
-    }
+    },
+    renameGroupName: {
+      type: Function,
+      default: () => {},
+    },
   },
 
   emits: ['delete-group'],

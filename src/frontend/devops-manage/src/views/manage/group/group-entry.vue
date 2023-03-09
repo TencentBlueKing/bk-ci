@@ -13,6 +13,7 @@
     :close-manage="handleCloseManage"
     :delete-group="handleDeleteGroup"
     :fetch-group-list="fetchGroupList"
+    :rename-group-name="handelRenameGroupName"
   />
 </template>
 
@@ -218,9 +219,34 @@ export default {
             theme: 'success',
             message: this.$t('删除成功'),
           })
-          this.fetchGroupList()
+          this.fetchGroupList();
         });
     },
+
+    handelRenameGroupName(params: any) {
+      const {
+        resourceType,
+        projectCode,
+      } = this;
+
+      const {
+        groupName,
+        groupId,
+      } = params; 
+      return http
+        .renameGroupName({
+          resourceType,
+          projectCode,
+          groupName,
+          groupId,
+        })
+        .then(() => {
+          Message({
+            theme: 'success',
+            message: this.$t('修改成功'),
+          })
+        })
+    }
   },
 };
 </script>

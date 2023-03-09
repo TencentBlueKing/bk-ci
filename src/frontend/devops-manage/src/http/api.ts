@@ -206,4 +206,11 @@ export default {
     const { projectCode, resourceType, groupId } = params;
     return http.delete(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}`);
   },
+
+  async renameGroupName(params: any) {
+    const { groupName, groupId, projectCode, resourceType } = params;
+    return http.put(`${IAM_PERFIX}/group/${projectCode}/${resourceType}/${groupId}/rename`, {
+      groupName 
+    });
+  },
 };

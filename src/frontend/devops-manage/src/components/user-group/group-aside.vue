@@ -11,43 +11,54 @@
           v-for="(group, index) in groupList"
           :key="index"
           @click="handleChangeTab(group)">
-          <span class="group-name" :title="group.name">{{ group.name }}</span>
-          <span class="user-num">
-            <i class="manage-icon small-size manage-icon-user-shape"></i>
-            {{ group.userCount }}
-          </span>
-          <span class="group-num">
-            <i class="manage-icon small-size manage-icon-organization"></i>
-            {{ group.departmentCount }}
-          </span>
-          <bk-popover
-            v-if="resourceType === 'project'"
-            class="group-more-option"
-            placement="bottom"
-            trigger="click"
-            theme="dot-menu light"
-            :arrow="false"
-            offset="15"
-            :distance="0">
-            <i class="more-icon manage-icon manage-icon-more-fill"></i>
-            <template #content>
-              <li
-                v-if="!group.defaultGroup"
-                class="btn"
-                text
-                @click="handleGroupRename(group)"
-              >
-                {{ $t('重命名') }}
-              </li>
-              <li
-                class="btn"
-                :disabled="group.defaultGroup"
-                text
-                @click="handleShowDeleteGroup(group)">
-                {{ $t('删除') }}
-              </li>
-            </template>
-          </bk-popover>
+          <bk-input
+            ref="renameInput"
+            v-show="group.groupId === activeGroupId && isRename"
+            v-model="displayGroupName"
+            class="rename-input"
+            @enter="handleRename"
+            @blur="handleRename"
+          >
+          </bk-input>
+          <div class="item-content" v-show="group.groupId !== activeGroupId">
+            <span class="group-name" :title="group.name">{{ group.name }}</span>
+            <span class="user-num">
+              <i class="manage-icon small-size manage-icon-user-shape"></i>
+              {{ group.userCount }}
+            </span>
+            <span class="group-num">
+              <i class="manage-icon small-size manage-icon-organization"></i>
+              {{ group.departmentCount }}
+            </span>
+            <bk-popover
+              v-if="resourceType === 'project'"
+              class="group-more-option"
+              placement="bottom"
+              trigger="click"
+              theme="dot-menu light"
+              :arrow="false"
+              offset="15"
+              :distance="0">
+              <i class="more-icon manage-icon manage-icon-more-fill"></i>
+              <template #content>
+                <li
+                  v-if="!group.defaultGroup"
+                  class="btn"
+                  text
+                  @click="handleShowRename(group, index)"
+                >
+                  {{ $t('重命名') }}
+                </li>
+                <li
+                  class="btn"
+                  :disabled="group.defaultGroup"
+                  text
+                  @click="handleShowDeleteGroup(group)">
+                  {{ $t('删除') }}
+                </li>
+              </template>
+            </bk-popover>
+          </div>
         </div>
       </bk-loading>
       <div class="line-split" />
@@ -153,6 +164,10 @@ export default {
     activeIndex: {
       type: Boolean,
       default: 0,
+    },
+    renameGroupName: {
+      type: Function,
+      default: () => {},
     }
   },
   emits: ['create-group', 'choose-group', 'delete-group'],
@@ -164,7 +179,10 @@ export default {
         isShow: false,
         isLoading: false,
       },
-      keyWords: ''
+      keyWords: '',
+      isRename: false,
+      activeGroupId: 0,
+      displayGroupName: ''
     };
   },
   computed: {
@@ -186,6 +204,36 @@ export default {
     },
   },
   methods: {
+    handleShowRename (group, index) {
+      this.isRename = true;
+      this.activeGroupId = group.groupId;
+      this.displayGroupName = group.name;
+      setTimeout(() => {
+        this.$refs.renameInput[index].focus();
+      });
+    },
+    handleRename () {
+      const group = this.groupList.find(i => i.groupId === this.activeGroupId);
+      if (this.displayGroupName === group.name) {
+        this.isRename = false;
+        this.activeGroupId = 0;
+        this.displayGroupName = '';
+        return
+      }
+      return this
+        .renameGroupName({
+          groupId: this.activeGroupId,
+          groupName: this.displayGroupName,
+        })
+        .then(() => {
+          group.name = this.displayGroupName;
+        })
+        .finally(() => {
+          this.isRename = false;
+          this.activeGroupId = 0;
+          this.displayGroupName = '';
+        })
+    },
     handleShowDeleteGroup(group) {
       this.deleteObj.group = group;
       this.deleteObj.isShow = true;
@@ -284,7 +332,13 @@ export default {
     background-color: #A3C5FD;
     color: #fff;
   }
-
+  .item-content {
+    display: flex;
+    align-items: center;
+  }
+  .rename-input {
+    width: 90%;
+  }
   .group-active {
     color: #3A84FF;
     background-color: #E1ECFF;
