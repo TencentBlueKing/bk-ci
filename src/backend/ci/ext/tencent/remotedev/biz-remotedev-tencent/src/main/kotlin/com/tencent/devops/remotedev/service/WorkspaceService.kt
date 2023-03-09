@@ -940,30 +940,41 @@ class WorkspaceService @Autowired constructor(
             page = pageNotNull, pageSize = pageSizeNotNull, count = count,
             records = result.map {
                 var status = WorkspaceStatus.values()[it.status]
-                if (status.notOk2doNextAction() && Duration.between(
-                        it.lastStatusUpdateTime,
-                        LocalDateTime.now()
-                    ).seconds > DEFAULT_WAIT_TIME
-                ) {
-                    val workspaceInfo = client.get(ServiceRemoteDevResource::class)
-                        .getWorkspaceInfo(userId, it.name).data!!
-                    when (workspaceInfo.status) {
-                        EnvStatusEnum.stopped -> {
-                            doStopWS(true, userId, it.name)
-                            status = WorkspaceStatus.SLEEP
+                run {
+                    if (status.notOk2doNextAction() && Duration.between(
+                            it.lastStatusUpdateTime,
+                            LocalDateTime.now()
+                        ).seconds > DEFAULT_WAIT_TIME
+                    ) {
+                        val workspaceInfo = kotlin.runCatching {
+                            client.get(ServiceRemoteDevResource::class)
+                                .getWorkspaceInfo(userId, it.name).data!!
+                        }.getOrElse { ignore ->
+                            logger.warn(
+                                "get workspace info error ${it.name}|${ignore.message}"
+                            )
+                            status = WorkspaceStatus.EXCEPTION
+                            workspaceDao.updateWorkspaceStatus(dslContext, it.name, WorkspaceStatus.EXCEPTION)
+                            return@run
                         }
-                        EnvStatusEnum.deleted -> {
-                            doDeleteWS(true, userId, it.name)
-                            status = WorkspaceStatus.DELETED
+                        when (workspaceInfo.status) {
+                            EnvStatusEnum.stopped -> {
+                                doStopWS(true, userId, it.name)
+                                status = WorkspaceStatus.SLEEP
+                            }
+                            EnvStatusEnum.deleted -> {
+                                doDeleteWS(true, userId, it.name)
+                                status = WorkspaceStatus.DELETED
+                            }
+                            EnvStatusEnum.running -> {
+                                doStartWS(true, userId, it.name, workspaceInfo.environmentHost)
+                                status = WorkspaceStatus.RUNNING
+                            }
+                            else -> logger.warn(
+                                "wait workspace change over $DEFAULT_WAIT_TIME second |" +
+                                    "${it.name}|${workspaceInfo.status}"
+                            )
                         }
-                        EnvStatusEnum.running -> {
-                            doStartWS(true, userId, it.name, workspaceInfo.environmentHost)
-                            status = WorkspaceStatus.RUNNING
-                        }
-                        else -> logger.warn(
-                            "wait workspace change over $DEFAULT_WAIT_TIME second |" +
-                                "${it.name}|${workspaceInfo.status}"
-                        )
                     }
                 }
                 Workspace(
