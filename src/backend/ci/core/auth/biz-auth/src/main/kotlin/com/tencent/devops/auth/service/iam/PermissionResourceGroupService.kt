@@ -29,6 +29,7 @@
 package com.tencent.devops.auth.service.iam
 
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
+import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
@@ -86,5 +87,13 @@ interface PermissionResourceGroupService {
         projectId: String,
         resourceType: String,
         groupId: Int
+    ): Boolean
+
+    fun rename(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        groupId: Int,
+        renameGroupDTO: RenameGroupDTO
     ): Boolean
 }
