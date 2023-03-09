@@ -28,6 +28,8 @@
 package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.BK_ADD_MR_COMMENTS_FAIL
+import com.tencent.devops.common.api.constant.BK_COMMIT_CHECK_ADD_FAIL
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
@@ -230,7 +232,7 @@ open class GitApi {
             callMethod(getMessageByLocale(OPERATION_ADD_COMMIT_CHECK), request, GitCommitCheck::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, "Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(t.code, getMessageByLocale(BK_COMMIT_CHECK_ADD_FAIL))
             }
             throw t
         }
@@ -249,7 +251,7 @@ open class GitApi {
             callMethod(getMessageByLocale(OPERATION_ADD_MR_COMMENT), request, GitMRComment::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, "添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限")
+                throw GitApiException(t.code, getMessageByLocale(BK_ADD_MR_COMMENTS_FAIL))
             }
             throw t
         }
@@ -526,14 +528,14 @@ open class GitApi {
         val searchReq = "page=$page&per_page=$size"
         val request = get(host, token, url, searchReq)
         val result: List<GitCommit> =
-            JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_MR_COMMIT_LIST, request))
+            JsonUtil.getObjectMapper().readValue(getBody(getMessageByLocale(OPERATION_GET_MR_COMMIT_LIST), request))
         return result
     }
 
     fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
         logger.info("get mr review url: $url")
         val request = get(host, token, url, "")
-        return callMethod(OPERATION_MR_INFO, request, GitMrReviewInfo::class.java)
+        return callMethod(getMessageByLocale(OPERATION_MR_INFO), request, GitMrReviewInfo::class.java)
     }
 
     fun getChangeFileList(
@@ -549,7 +551,7 @@ open class GitApi {
         val url = "projects/${urlEncode(gitProjectId)}/repository/compare/changed_files/list"
         val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
         val request = get(host, token, url, queryParam)
-        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_GET_CHANGE_FILE_LIST, request))
+        return JsonUtil.getObjectMapper().readValue(getBody(getMessageByLocale(OPERATION_GET_CHANGE_FILE_LIST), request))
     }
 
     fun getRepoMemberInfo(
@@ -560,7 +562,7 @@ open class GitApi {
     ): GitMember {
         val url = "projects/${urlEncode(gitProjectId)}/members/all/$userId"
         val request = get(host, token, url, "")
-        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+        return JsonUtil.getObjectMapper().readValue(getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO), request))
     }
 //    private val OPERATION_BRANCH = "拉分支"
 //    private val OPERATION_TAG = "拉标签"
@@ -588,7 +590,7 @@ open class GitApi {
                 )
             )
         val request = get(host, token, url, queryParam)
-        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_PROJECT_USER_INFO, request))
+        return JsonUtil.getObjectMapper().readValue(getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO), request))
     }
 
     fun getTapdWorkitems(
@@ -601,7 +603,7 @@ open class GitApi {
         val url = "projects/$id/tapd_workitems"
         val queryParam = "type=$type&iid=$iid"
         val request = get(host, token, url, queryParam)
-        return JsonUtil.getObjectMapper().readValue(getBody(OPERATION_TAPD_WORKITEMS, request))
+        return JsonUtil.getObjectMapper().readValue(getBody(getMessageByLocale(OPERATION_TAPD_WORKITEMS), request))
     }
 
     private fun String.addParams(args: Map<String, Any?>): String {

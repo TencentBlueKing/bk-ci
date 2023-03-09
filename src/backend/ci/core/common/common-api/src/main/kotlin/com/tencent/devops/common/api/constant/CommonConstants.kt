@@ -146,3 +146,7 @@ const val KEY_VERSION = "version"
 const val KEY_VERSION_NAME = "versionName"
 const val KEY_UPDATED_TIME = "updatedTime"
 const val KEY_DEFAULT_LOCALE_LANGUAGE = "defaultLocaleLanguage"
+
+const val BK_COMMIT_CHECK_ADD_FAIL = "BkCommitCheckAddFail"
+const val BK_ADD_MR_COMMENTS_FAIL = "BkAddMRCommentsFail"
+const val BK_WEBHOOK_ADD_FAIL = "BkWebhookAddFail"
