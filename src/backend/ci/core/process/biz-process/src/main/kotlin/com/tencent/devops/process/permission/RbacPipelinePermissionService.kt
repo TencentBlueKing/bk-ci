@@ -40,6 +40,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.service.view.PipelineViewGroupService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 
 @Suppress("LongParameterList")
 class RbacPipelinePermissionService constructor(
@@ -175,6 +176,7 @@ class RbacPipelinePermissionService constructor(
                 pipelineIds.toList()
             }
         }
+        logger.info("filter pipeline|$userId|$projectId|$instanceMap")
         return instanceMap
     }
 
@@ -264,5 +266,6 @@ class RbacPipelinePermissionService constructor(
 
     companion object {
         private val resourceType = AuthResourceType.PIPELINE_DEFAULT
+        private val logger = LoggerFactory.getLogger(RbacPipelinePermissionService::class.java)
     }
 }
