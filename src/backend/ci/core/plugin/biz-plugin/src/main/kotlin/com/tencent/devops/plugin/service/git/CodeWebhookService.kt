@@ -42,6 +42,16 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
+import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubCheckRun
@@ -52,13 +62,7 @@ import com.tencent.devops.plugin.dao.PluginGithubCheckDao
 import com.tencent.devops.plugin.service.ScmCheckService
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_BLOCK
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_MR_ID
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
-import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_CONCLUSION_SUCCESS
 import com.tencent.devops.scm.code.git.api.GITHUB_CHECK_RUNS_STATUS_COMPLETED
@@ -67,9 +71,6 @@ import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_ERROR
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_FAILURE
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_PENDING
 import com.tencent.devops.scm.code.git.api.GIT_COMMIT_CHECK_STATE_SUCCESS
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_ENABLE_CHECK
-import com.tencent.devops.common.webhook.pojo.code.BK_REPO_GIT_WEBHOOK_EVENT_TYPE
-import com.tencent.devops.process.utils.PIPELINE_START_CHANNEL
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -376,6 +377,7 @@ class CodeWebhookService @Autowired constructor(
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
+            val webhookTargetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH]
             logger.info("get build history variables ($variables) for userId($userId),projectId($projectId),pipelineId" +
                             "($pipelineId),buildId=($buildId)")
             val context = "$pipelineName@$webhookEventType"
@@ -411,7 +413,8 @@ class CodeWebhookService @Autowired constructor(
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
                         commitId = commitId,
-                        context = context
+                        context = context,
+                        targetBranch = webhookTargetBranch ?: "~NONE"
                     )
 
                     if (record == null) {
@@ -429,7 +432,8 @@ class CodeWebhookService @Autowired constructor(
                                 repositoryHashId = repositoryConfig.repositoryHashId,
                                 repositoryName = repositoryConfig.repositoryName,
                                 commitId = commitId,
-                                context = context
+                                context = context,
+                                targetBranch = webhookTargetBranch ?: "~NONE"
                             )
                         )
                     } else {
