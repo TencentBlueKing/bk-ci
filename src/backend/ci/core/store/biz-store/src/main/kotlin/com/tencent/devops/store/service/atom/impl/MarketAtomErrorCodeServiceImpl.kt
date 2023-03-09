@@ -36,6 +36,7 @@ import com.tencent.devops.store.pojo.common.enums.ErrorCodeTypeEnum
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import com.tencent.devops.store.service.atom.MarketAtomErrorCodeService
 import org.jooq.DSLContext
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
@@ -124,6 +125,8 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
         errorCode: String,
         errorCodeType: ErrorCodeTypeEnum
     ): Boolean {
+        logger.info("isComplianceErrorCode storeCode:$storeCode|storeType:$storeType|" +
+                "errorCode：$errorCode|errorCodeType:$errorCodeType")
         try {
             checkErrorCode(errorCodeType, listOf(errorCode))
         } catch (e: ErrorCodeException) {
@@ -136,5 +139,9 @@ class MarketAtomErrorCodeServiceImpl @Autowired constructor(
             errorCode = errorCode.toInt(),
             errorCodeType = errorCodeType
         ).isNotEmpty
+    }
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(MarketAtomErrorCodeServiceImpl::class.java)
     }
 }
