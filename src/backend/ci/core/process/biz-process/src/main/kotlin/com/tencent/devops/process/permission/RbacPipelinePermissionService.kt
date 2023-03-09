@@ -139,12 +139,50 @@ class RbacPipelinePermissionService constructor(
         )
 
         // 如果由所有流水线权限,则不再查流水线组的权限
-        if (authPipelineIds.contains("*")) {
-            return pipelineInfoDao.searchByProject(
-                dslContext = dslContext, projectId = projectId
-            )?.map { it.pipelineId }?.toList() ?: emptyList()
+        return if (authPipelineIds.contains("*")) {
+            getAllAuthPipelineIds(projectId = projectId)
+        } else {
+            val viewPipelineIds = getAuthPipelineIdByViewId(projectId, userId, permission)
+            val pipelineIds = mutableSetOf<String>()
+            pipelineIds.addAll(authPipelineIds)
+            pipelineIds.addAll(viewPipelineIds)
+            viewPipelineIds.toList()
         }
+    }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
+            user = userId,
+            serviceCode = pipelineAuthServiceCode,
+            resourceType = resourceType,
+            projectCode = projectId,
+            permissions = authPermissions,
+            supplier = null
+        )
+        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
+        permissionResourcesMap.forEach { (permission, authPipelineIds) ->
+            instanceMap[permission] = if (authPipelineIds.contains("*")) {
+                getAllAuthPipelineIds(projectId = projectId)
+            } else {
+                val viewPipelineIds = getAuthPipelineIdByViewId(projectId, userId, permission)
+                val pipelineIds = mutableSetOf<String>()
+                pipelineIds.addAll(authPipelineIds)
+                pipelineIds.addAll(viewPipelineIds)
+                pipelineIds.toList()
+            }
+        }
+        return instanceMap
+    }
+
+    private fun getAuthPipelineIdByViewId(
+        projectId: String,
+        userId: String,
+        permission: AuthPermission
+    ): List<String> {
         // 再获取有权限的流水线组Id列表,通过流水线组ID获取流水线ID列表
         val resources = mutableListOf<AuthResourceInstance>()
         val projectResource = AuthResourceInstance(
@@ -172,12 +210,13 @@ class RbacPipelinePermissionService constructor(
             resourceType = resourceType,
             resources = resources
         )
-        val viewPipelineIds = pipelineViewGroupService.listPipelineIdsByViewIds(projectId, authViewIds)
+        return pipelineViewGroupService.listPipelineIdsByViewIds(projectId, authViewIds)
+    }
 
-        val pipelineIds = mutableSetOf<String>()
-        pipelineIds.addAll(authPipelineIds)
-        pipelineIds.addAll(viewPipelineIds)
-        return pipelineIds.toList()
+    private fun getAllAuthPipelineIds(projectId: String): List<String> {
+        return pipelineInfoDao.searchByProject(
+            dslContext = dslContext, projectId = projectId
+        )?.map { it.pipelineId }?.toList() ?: emptyList()
     }
 
     override fun createResource(userId: String, projectId: String, pipelineId: String, pipelineName: String) {

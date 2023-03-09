@@ -101,6 +101,22 @@ class StreamPipelinePermissionServiceImpl @Autowired constructor(
         return getProjectAllInstance(projectId)
     }
 
+    override fun filterPipelines(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
+        if (!checkPipelinePermission(userId, projectId, authPermissions.first())) {
+            return emptyMap()
+        }
+        val allPipelineInstances = getProjectAllInstance(projectId)
+        val resultMap = mutableMapOf<AuthPermission, List<String>>()
+        authPermissions.forEach {
+            resultMap[it] = allPipelineInstances
+        }
+        return resultMap
+    }
+
     override fun createResource(
         userId: String,
         projectId: String,

@@ -127,7 +127,7 @@ interface UserAuthResourceGroupResource {
 
     @PUT
     @Path("{groupId}/rename")
-    @ApiOperation("删除组")
+    @ApiOperation("重命名组")
     fun rename(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
