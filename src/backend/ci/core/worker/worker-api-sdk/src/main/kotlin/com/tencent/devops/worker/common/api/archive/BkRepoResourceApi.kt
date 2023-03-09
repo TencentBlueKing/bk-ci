@@ -61,6 +61,8 @@ import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -118,10 +120,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         )
         val request = buildPost(
             path = url,
-            requestBody = RequestBody.create(
-                "application/json; charset=utf-8".toMediaTypeOrNull(),
-                objectMapper.writeValueAsString(requestData)
-            ),
+            requestBody = objectMapper.writeValueAsString(requestData)
+                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
             headers = mapOf(BKREPO_UID to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
@@ -147,14 +147,15 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         destFullPath: String,
         token: String,
         buildVariables: BuildVariables,
-        parseAppMetadata: Boolean = true
+        parseAppMetadata: Boolean = true,
+        parsePipelineMetadata: Boolean = true
     ) {
 
         val url = "/generic/temporary/upload/$projectId/$repoName/${urlEncode(destFullPath)}?token=$token"
         val request = buildPut(
             url,
-            RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            getUploadHeader(file, buildVariables, parseAppMetadata),
+            file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
+            getUploadHeader(file, buildVariables, parseAppMetadata, parsePipelineMetadata),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
         val response = request(request, "上传文件失败")
@@ -261,7 +262,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(destFullPath)}"
         val request = buildPut(
             path = url,
-            requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
+            requestBody = file.asRequestBody("application/octet-stream".toMediaTypeOrNull()),
             headers = getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileDevnetGateway = true
         )
@@ -277,24 +278,29 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     fun getUploadHeader(
         file: File,
         buildVariables: BuildVariables,
-        parseAppMetadata: Boolean = true
+        parseAppMetadata: Boolean = true,
+        parsePipelineMetadata: Boolean = true
     ): Map<String, String> {
         val header = mutableMapOf<String, String>()
         header[BKREPO_UID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         header[BKREPO_OVERRIDE] = "true"
 
         val metadata = mutableMapOf<String, String>()
-        metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
-        metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
-        metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
-        metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
-        metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
-        metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
-        metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+        if (parsePipelineMetadata) {
+            metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
+            metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
+            metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
+            metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
+            metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
+            metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
+            metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+        }
         if (parseAppMetadata) {
             metadata.putAll(getAppMetadata(file))
         }
-        header[BKREPO_METADATA] = Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray())
+        if (metadata.isNotEmpty()) {
+            header[BKREPO_METADATA] = Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray())
+        }
         return header
     }
 
@@ -365,10 +371,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             if (!pipelineName.isNullOrBlank()) {
                 val pipelineNameRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
-                    RequestBody.create(
-                        "application/json; charset=utf-8".toMediaTypeOrNull(),
-                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
-                    ),
+                    JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
                     headers
                 )
                 request(pipelineNameRequest, "set pipeline displayName failed")
@@ -376,10 +380,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             if (!buildNum.isNullOrBlank()) {
                 val buildNumRequest = buildPost(
                     "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId/$buildId",
-                    RequestBody.create(
-                        "application/json; charset=utf-8".toMediaTypeOrNull(),
-                        JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
-                    ),
+                    JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
+                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
                     headers
                 )
                 request(buildNumRequest, "set build displayName failed")
