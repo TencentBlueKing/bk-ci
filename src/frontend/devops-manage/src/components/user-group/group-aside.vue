@@ -31,13 +31,21 @@
             :distance="0">
             <i class="more-icon manage-icon manage-icon-more-fill"></i>
             <template #content>
-              <bk-button
+              <li
+                v-if="!group.defaultGroup"
+                class="btn"
+                text
+                @click="handleGroupRename(group)"
+              >
+                {{ $t('重命名') }}
+              </li>
+              <li
                 class="btn"
                 :disabled="group.defaultGroup"
                 text
                 @click="handleShowDeleteGroup(group)">
                 {{ $t('删除') }}
-              </bk-button>
+              </li>
             </template>
           </bk-popover>
         </div>
@@ -345,6 +353,7 @@ export default {
     text-align: center;
     font-size: 12px;
     margin-top: 0;
+    color: #63656E;
   }
   .group-more-option .btn:hover {
     background-color: #F5F7FA;

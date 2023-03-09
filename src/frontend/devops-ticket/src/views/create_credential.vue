@@ -3,7 +3,9 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCredential') }}</span>
+                <span class="inner-header-title">
+                    {{ pageType === 'create' ? $t('ticket.createCredential') : $t('ticket.editCredential') }}
+                </span>
             </template>
         </content-header>
 
@@ -123,8 +125,8 @@
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: CRED_RESOURCE_TYPE,
-                                    resourceCode: projectId,
-                                    action: CRED_RESOURCE_ACTION.CREATE
+                                    resourceCode: pageType === 'create' ? projectId : creId,
+                                    action: pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
                                 }
                             }"
                             theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>

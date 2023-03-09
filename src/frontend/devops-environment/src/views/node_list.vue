@@ -148,13 +148,10 @@
                                         action: NODE_RESOURCE_ACTION.DELETE
                                     }
                                 }"
+                                class="node-handle delete-node-text"
+                                @click.stop="confirmDelete(props.row, index)"
                             >
-                                <span
-                                    class="node-handle delete-node-text"
-                                    @click.stop="confirmDelete(props.row, index)"
-                                >
-                                    {{ $t('environment.delete') }}
-                                </span>
+                                {{ $t('environment.delete') }}
                             </span>
                         </div>
                     </template>
@@ -379,14 +376,12 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
-                    if (node.canUse) {
-                        this.$router.push({
-                            name: 'nodeDetail',
-                            params: {
-                                nodeHashId: node.nodeHashId
-                            }
-                        })
-                    }
+                    this.$router.push({
+                        name: 'nodeDetail',
+                        params: {
+                            nodeHashId: node.nodeHashId
+                        }
+                    })
                 }
             },
             /**

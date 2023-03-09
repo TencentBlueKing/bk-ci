@@ -2,7 +2,7 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCert') }}</span>
+                <span class="inner-header-title">{{ isEdit ? $t('ticket.editCert') : $t('ticket.createCert') }}</span>
             </template>
         </content-header>
 
@@ -77,8 +77,8 @@
                                 permissionData: {
                                     projectId: projectId,
                                     resourceType: CERT_RESOURCE_TYPE,
-                                    resourceCode: projectId,
-                                    action: CERT_RESOURCE_ACTION.CREATE
+                                    resourceCode: isEdit ? certId : projectId,
+                                    action: isEdit ? CERT_RESOURCE_ACTION.EDIT : CERT_RESOURCE_ACTION.CREATE
                                 }
                             }"
                             theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
