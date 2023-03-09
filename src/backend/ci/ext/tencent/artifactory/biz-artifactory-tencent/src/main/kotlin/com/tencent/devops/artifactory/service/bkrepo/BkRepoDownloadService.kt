@@ -383,7 +383,9 @@ open class BkRepoDownloadService @Autowired constructor(
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
             if (region == "EXTERNAL") {
-                resultList.add("${commonConfig.devopsOuterHostGateWay}/bkrepo/api/external/repository$shareUri&download=true")
+                resultList.add(
+                    "${commonConfig.devopsOuterHostGateWay}/bkrepo/api/external/repository$shareUri&download=true"
+                )
             } else {
                 resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
             }
