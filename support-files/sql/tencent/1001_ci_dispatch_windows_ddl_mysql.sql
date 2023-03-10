@@ -1,4 +1,4 @@
-USE devops_ci_dispatch_macos;
+USE devops_ci_dispatch_windows;
 
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
