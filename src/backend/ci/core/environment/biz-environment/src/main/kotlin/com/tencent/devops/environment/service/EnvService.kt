@@ -52,6 +52,7 @@ import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_DUPLICATE
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NAME_INVALID_CHARACTER
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_USE_PERMISSSION
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_SHARE_PROJECT_TYPE_ERROR
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_QUOTA_LIMIT
 import com.tencent.devops.environment.dao.EnvDao
@@ -570,7 +571,7 @@ class EnvService @Autowired constructor(
         val unauthorizedNodeIds = nodeLongIds.filterNot { canUseNodeIds.contains(it) }
         if (unauthorizedNodeIds.isNotEmpty()) {
             throw ErrorCodeException(
-                errorCode = ERROR_NODE_INSUFFICIENT_PERMISSIONS,
+                errorCode = ERROR_NODE_NO_USE_PERMISSSION,
                 params = arrayOf(unauthorizedNodeIds.joinToString(",") { HashUtil.encodeLongId(it) })
             )
         }
