@@ -17,7 +17,9 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.service.DevCloudWindowsService
 import com.tencent.devops.dispatch.windows.service.WindowsBuildHistoryService
+import com.tencent.devops.model.dispatch.windows.tables.records.TBuildHistoryRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
+import org.jooq.Result
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -177,45 +179,53 @@ class WindowsBuildListener @Autowired constructor(
                 return
             }
 
-            buildHistoryRecords.forEach { buildHistory ->
-                // 关闭的时候对container进行锁操作，防止重复操作
-                try {
-                    if (buildHistory.status == WindowsJobStatus.Done.name) {
-                        return@forEach
-                    }
-                    val vmIp = buildHistory.vmIp
-                    logger.info(
-                        "${event.projectId}|${event.pipelineId}|${event.buildId}" +
-                            "|${event.vmSeqId}|Get the vm ip($vmIp))"
-                    )
-                    devCloudWindowsService.deleteWindowsMachine(
-                        creator = creator,
-                        taskGuid = buildHistory.taskGuid
-                    )
-
-                    logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
-                    windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
-                } catch (e: SocketTimeoutException) {
-                    logger.error(
-                        "${event.projectId}|${event.pipelineId}|${event.buildId}" +
-                            "|vm is ${buildHistory.vmIp}, end build.", e
-                    )
-                    windowsBuildHistoryService.endBuild(
-                        WindowsJobStatus.ShutDownError,
-                        buildHistory.id
-                    )
-                } catch (e: Throwable) {
-                    logger.error(
-                        "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                            "shutdown error,vm is ${buildHistory.vmIp}",
-                        e
-                    )
-                }
-            }
+            doShutdown(buildHistoryRecords, event, creator)
         } catch (e: Exception) {
             logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] :$e")
         } finally {
             redisLock.unlock()
+        }
+    }
+
+    private fun doShutdown(
+        buildHistoryRecords: Result<TBuildHistoryRecord>,
+        event: PipelineAgentShutdownEvent,
+        creator: String
+    ) {
+        buildHistoryRecords.forEach { buildHistory ->
+            // 关闭的时候对container进行锁操作，防止重复操作
+            try {
+                if (buildHistory.status == WindowsJobStatus.Done.name) {
+                    return@forEach
+                }
+                val vmIp = buildHistory.vmIp
+                logger.info(
+                    "${event.projectId}|${event.pipelineId}|${event.buildId}" +
+                        "|${event.vmSeqId}|Get the vm ip($vmIp))"
+                )
+                devCloudWindowsService.deleteWindowsMachine(
+                    creator = creator,
+                    taskGuid = buildHistory.taskGuid
+                )
+
+                logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
+                windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
+            } catch (e: SocketTimeoutException) {
+                logger.error(
+                    "${event.projectId}|${event.pipelineId}|${event.buildId}" +
+                        "|vm is ${buildHistory.vmIp}, end build.", e
+                )
+                windowsBuildHistoryService.endBuild(
+                    WindowsJobStatus.ShutDownError,
+                    buildHistory.id
+                )
+            } catch (e: Throwable) {
+                logger.error(
+                    "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
+                        "shutdown error,vm is ${buildHistory.vmIp}",
+                    e
+                )
+            }
         }
     }
 
