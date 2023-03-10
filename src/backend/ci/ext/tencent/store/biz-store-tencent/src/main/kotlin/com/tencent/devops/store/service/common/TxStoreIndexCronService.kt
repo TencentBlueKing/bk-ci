@@ -90,8 +90,7 @@ class TxStoreIndexCronService(
     /**
      * 计算插件SLA指标数据
      */
-//    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+    @Scheduled(cron = "0 0 1 * * ?")
     fun computeAtomSlaIndexData() {
         logger.info("computeAtomSlaIndexData cron starts")
         val indexCode = "atomSlaIndex"
@@ -122,7 +121,6 @@ class TxStoreIndexCronService(
                 )
                 val tStoreIndexResultRecords = mutableListOf<TStoreIndexResultRecord>()
                 val tStoreIndexElementDetailRecords = mutableListOf<TStoreIndexElementDetailRecord>()
-                logger.info("computeAtomSlaIndexDataAtomCodes: $atomCodes page$page")
                 atomCodes.forEach { atomCode ->
                     val dailyStatisticRecordList = storeStatisticDailyDao.getDailyStatisticListByCode(
                         dslContext = dslContext,
@@ -199,8 +197,7 @@ class TxStoreIndexCronService(
     /**
      * 计算插件质量指标数据
      */
-    //    @Scheduled(cron = "0 0 1 * * ?")
-    @Scheduled(cron = "0 * * * * ?") // 每小时执行一次
+        @Scheduled(cron = "0 0 1 * * ?")
     fun computeAtomQualityIndexInfo() {
         logger.info("computeAtomQualityIndexInfo cron starts")
         val indexCode = "atomQualityIndex"
