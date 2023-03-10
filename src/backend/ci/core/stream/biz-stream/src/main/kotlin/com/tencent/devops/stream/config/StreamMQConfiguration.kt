@@ -24,17 +24,17 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.stream.trigger.mq
+package com.tencent.devops.stream.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
+import com.tencent.devops.common.event.dispatcher.mq.MQEventDispatcher
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityCheckBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
-import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamMQ
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -72,6 +72,7 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
+import org.springframework.cloud.stream.function.StreamBridge
 
 @Configuration
 @Suppress("LongParameterList")
@@ -80,6 +81,12 @@ class StreamMQConfiguration {
     companion object {
         const val STREAM_CONSUMER_GROUP = "stream-service"
     }
+
+    @Bean
+    fun pipelineEventDispatcher(streamBridge: StreamBridge) = MQEventDispatcher(streamBridge)
+
+    @Bean
+    fun sampleEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
 
     @Bean
     fun streamBuildFinishListenerService(
