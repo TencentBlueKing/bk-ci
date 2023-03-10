@@ -22,7 +22,8 @@ const DEFAULT_OPTIONS = {
     hasPermission: false,
     offset: [12, 0],
     cls: 'bk-permission-cursor-element',
-    disablePermissionApi: false
+    disablePermissionApi: false,
+    tooltips: ''
 }
 
 /**
@@ -54,6 +55,11 @@ function init (el, data, vNode) {
         : vNode.el = cloneEl
 
     cloneEl.classList.add('bk-permission-disable')
+    // 添加提示
+    if (options.tooltips) {
+        cloneEl.classList.add('bk-permission-tooltips')
+        cloneEl.setAttribute('tooltips', options.tooltips)
+    }
     cloneEl.mouseEnterHandler = function () {
         const element = document.createElement('div')
         element.id = 'directive-ele'
