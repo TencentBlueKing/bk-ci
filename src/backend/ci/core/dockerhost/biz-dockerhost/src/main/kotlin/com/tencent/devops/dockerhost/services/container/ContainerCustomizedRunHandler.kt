@@ -109,14 +109,14 @@ class ContainerCustomizedRunHandler(
                 log(
                     buildId = buildId,
                     red = true,
-                    message = "启动构建环境失败，错误信息:${er.message}",
+                    message = "Failed to start build environment: ${er.message}",
                     tag = taskId(),
                     containerHashId = containerHashId
                 )
                 if (er is NotFoundException) {
                     throw ContainerException(
                         errorCodeEnum = ErrorCodeEnum.IMAGE_NOT_EXIST_ERROR,
-                        message = "构建镜像不存在"
+                        message = "Image does not exist."
                     )
                 } else {
                     throw ContainerException(
