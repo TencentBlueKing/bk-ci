@@ -34,17 +34,9 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.process.pojo.report.enums.ReportTypeEnum
-import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PIPELINE_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_PROJECT_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_SOURCE
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_TASK_ID
-import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.worker.common.api.archive.BkRepoResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.logger.LoggerService.elementId
@@ -115,13 +107,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val pipelineId = buildVariables.pipelineId
         val buildId = buildVariables.buildId
         val metadata = mutableMapOf<String, String>()
-        metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
-        metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
-        metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
-        metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
-        metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
-        metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
-        metadata[ARCHIVE_PROPS_TASK_ID] = taskId
+        metadata.putAll(bkrepoResourceApi.getPipelineMetadata(buildVariables))
         metadata["reportName"] = reportName
         metadata["reportType"] = reportType ?: ReportTypeEnum.INTERNAL.name
 
