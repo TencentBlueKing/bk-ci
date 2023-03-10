@@ -75,6 +75,14 @@ class ReportArchiveTask : ITask() {
         val reportType = taskParams["reportType"] ?: ReportTypeEnum.INTERNAL.name
         val indexFileParam: String
         var indexFileContent: String
+        val token = RepoServiceFactory.getInstance().getRepoToken(
+            userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
+            projectId = buildVariables.projectId,
+            repoName = "report",
+            path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
+            type = TokenType.UPLOAD,
+            expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
+        )
         if (reportType == ReportTypeEnum.INTERNAL.name) {
             val fileDirParam = taskParams["fileDir"] ?: throw ParamBlankException("param [fileDir] is empty")
             indexFileParam = taskParams["indexFile"] ?: throw ParamBlankException("param [indexFile] is empty")
@@ -106,14 +114,6 @@ class ReportArchiveTask : ITask() {
 
             val fileDirPath = Paths.get(fileDir.canonicalPath)
             val allFileList = recursiveGetFiles(fileDir)
-            val token = RepoServiceFactory.getInstance().getRepoToken(
-                userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: "",
-                projectId = buildVariables.projectId,
-                repoName = "report",
-                path = "/${buildVariables.pipelineId}/${buildVariables.buildId}",
-                type = TokenType.UPLOAD,
-                expireSeconds = TaskUtil.getTimeOut(buildTask).times(60)
-            )
             if (allFileList.size > 10) {
                 val executors = Executors.newFixedThreadPool(10)
                 allFileList.forEach {
@@ -152,7 +152,7 @@ class ReportArchiveTask : ITask() {
         }
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
-        api.createReportRecord(elementId, indexFileParam, reportNameParam, reportType, reportEmail)
+        api.createReportRecord(buildVariables, elementId, indexFileParam, reportNameParam, reportType, reportEmail, token)
     }
 
     private fun uploadReportFile(
