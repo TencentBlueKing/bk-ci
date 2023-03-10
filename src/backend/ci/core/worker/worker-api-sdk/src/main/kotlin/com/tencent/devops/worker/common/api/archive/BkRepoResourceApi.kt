@@ -34,6 +34,8 @@ import com.tencent.bkrepo.common.query.model.PageLimit
 import com.tencent.bkrepo.common.query.model.QueryModel
 import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
+import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
+import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -365,28 +367,45 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             val pipelineName = buildVariables.variables[BK_CI_PIPELINE_NAME]
             val buildId = buildVariables.buildId
             val buildNum = buildVariables.variables[BK_CI_BUILD_NUM]
-            val headers = mapOf(BKREPO_UID to userId)
             if (!pipelineName.isNullOrBlank()) {
-                val pipelineNameRequest = buildPost(
-                    "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId",
-                    JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to pipelineName)))
-                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
-                    headers
+                saveMetadata(
+                    userId = userId,
+                    projectId = projectId,
+                    repoName = repoName,
+                    fullPath = "/$pipelineId",
+                    metadata = mapOf(METADATA_DISPLAY_NAME to pipelineName)
                 )
-                request(pipelineNameRequest, "set pipeline displayName failed")
             }
             if (!buildNum.isNullOrBlank()) {
-                val buildNumRequest = buildPost(
-                    "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName/$pipelineId/$buildId",
-                    JsonUtil.toJson(mapOf("metadata" to mapOf(METADATA_DISPLAY_NAME to buildNum)))
-                        .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
-                    headers
+                saveMetadata(
+                    userId = userId,
+                    projectId = projectId,
+                    repoName = repoName,
+                    fullPath = "/$pipelineId/$buildId",
+                    metadata = mapOf(METADATA_DISPLAY_NAME to buildNum)
                 )
-                request(buildNumRequest, "set build displayName failed")
             }
         } catch (e: Exception) {
             logger.warn("set pipeline metadata error: ${e.message}")
         }
+    }
+
+    fun saveMetadata(
+        userId: String,
+        projectId: String,
+        repoName: String,
+        fullPath: String,
+        metadata: Map<String, String>
+    ) {
+        val metadataRequest = UserMetadataSaveRequest(
+            nodeMetadata = metadata.map { MetadataModel(it.key, it.value) }
+        )
+        val request = buildPost(
+            "/bkrepo/api/build/repository/api/metadata/$projectId/$repoName$fullPath",
+            JsonUtil.toJson(metadataRequest).toRequestBody(JsonMediaType),
+            mapOf(BKREPO_UID to userId)
+        )
+        request(request, "set node[/$projectId/$repoName$fullPath] metadata failed")
     }
 
     fun queryByPathEqOrNameMatchOrMetadataEqAnd(
