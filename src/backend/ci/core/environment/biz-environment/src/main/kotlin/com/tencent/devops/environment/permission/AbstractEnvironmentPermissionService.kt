@@ -187,6 +187,8 @@ abstract class AbstractEnvironmentPermissionService constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         return authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,

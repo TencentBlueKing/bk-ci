@@ -195,12 +195,7 @@ class RbacPipelinePermissionService constructor(
                 resourceCode = HashUtil.encodeLongId(viewId),
                 parents = listOf(projectResource)
             )
-            val pipelineResource = AuthResourceInstance(
-                resourceType = AuthResourceType.PIPELINE_DEFAULT.value,
-                resourceCode = HashUtil.encodeLongId(viewId),
-                parents = listOf(pipelineGroupResource)
-            )
-            resources.add(pipelineResource)
+            resources.add(pipelineGroupResource)
         }
         val authViewIds = authPermissionApi.filterUserResourceByPermission(
             user = userId,

@@ -455,11 +455,13 @@ class PipelineListFacadeService @Autowired constructor(
             userId = userId,
             projectId = projectId,
             authPermissions = setOf(
+                AuthPermission.MANAGE,
                 AuthPermission.VIEW,
                 AuthPermission.DELETE,
                 AuthPermission.SHARE,
                 AuthPermission.EDIT,
                 AuthPermission.DOWNLOAD,
+                AuthPermission.EXECUTE
             )
         )
         watcher.stop()
@@ -1465,6 +1467,7 @@ class PipelineListFacadeService @Autowired constructor(
                     creator = it.creator,
                     delete = it.delete,
                     permissions = PipelinePermissions(
+                        canManage = permissionToListMap[AuthPermission.MANAGE]?.contains(it.pipelineId) ?: false,
                         canDelete = permissionToListMap[AuthPermission.DELETE]?.contains(it.pipelineId) ?: false,
                         canView = permissionToListMap[AuthPermission.VIEW]?.contains(it.pipelineId) ?: false,
                         canEdit = permissionToListMap[AuthPermission.EDIT]?.contains(it.pipelineId) ?: false,

@@ -36,4 +36,5 @@ object AuthConstants {
     const val KEYWORD_MIN_SIZE = 2
     const val ALL_MEMBERS = "*"
     const val ALL_MEMBERS_NAME = "全体成员"
+    const val ALL_RESOURCE = "*"
 }
