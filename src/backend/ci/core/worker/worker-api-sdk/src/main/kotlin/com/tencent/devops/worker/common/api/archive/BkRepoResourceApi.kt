@@ -296,7 +296,8 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
     }
 
     fun getPipelineMetadata(
-        buildVariables: BuildVariables
+        buildVariables: BuildVariables,
+        taskId: String? = null
     ): MutableMap<String, String> {
         val metadata = mutableMapOf<String, String>()
         metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
@@ -305,7 +306,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
         metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
         metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
-        metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+        metadata[ARCHIVE_PROPS_TASK_ID] = taskId ?: TaskUtil.getTaskId()
         return metadata
     }
 

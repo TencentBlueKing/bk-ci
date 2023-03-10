@@ -107,7 +107,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val pipelineId = buildVariables.pipelineId
         val buildId = buildVariables.buildId
         val metadata = mutableMapOf<String, String>()
-        metadata.putAll(bkrepoResourceApi.getPipelineMetadata(buildVariables))
+        metadata.putAll(bkrepoResourceApi.getPipelineMetadata(buildVariables, taskId))
         metadata["reportName"] = reportName
         metadata["reportType"] = reportType ?: ReportTypeEnum.INTERNAL.name
 
