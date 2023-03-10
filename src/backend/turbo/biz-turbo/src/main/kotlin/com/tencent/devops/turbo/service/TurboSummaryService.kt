@@ -73,7 +73,7 @@ class TurboSummaryService @Autowired constructor(
         )
 
         if (createFlag) {
-            val engineSceneList = tTurboDaySummaryEntity!!.engineSceneList
+            val engineSceneList = tTurboDaySummaryEntity!!.engineSceneList ?: mutableListOf()
             val engineSceneEntityMap = engineSceneList.associateBy { it.sceneCode }.toMutableMap()
 
             val engineSceneEntity = engineSceneEntityMap.computeIfAbsent(engineCode) {
