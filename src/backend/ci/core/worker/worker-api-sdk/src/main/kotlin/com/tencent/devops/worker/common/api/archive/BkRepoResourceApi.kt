@@ -36,6 +36,8 @@ import com.tencent.bkrepo.common.query.model.Rule
 import com.tencent.bkrepo.common.query.model.Sort
 import com.tencent.bkrepo.repository.pojo.metadata.MetadataModel
 import com.tencent.bkrepo.repository.pojo.metadata.UserMetadataSaveRequest
+import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
+import com.tencent.bkrepo.repository.pojo.token.TokenType
 import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
@@ -57,7 +59,6 @@ import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoResponse
 import com.tencent.devops.worker.common.api.archive.pojo.QueryData
 import com.tencent.devops.worker.common.api.archive.pojo.QueryNodeInfo
-import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.utils.IosUtils
 import com.tencent.devops.worker.common.utils.TaskUtil
 import net.dongliu.apk.parser.ApkFile
@@ -109,20 +110,16 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         expireSeconds: Long
     ): String {
         val url = "/bkrepo/api/build/generic/temporary/token/create"
-        val requestData = mapOf(
-            "projectId" to projectId,
-            "repoName" to repoName,
-            "fullPathSet" to listOf(path),
-            "authorizedUserSet" to listOf<String>(),
-            "authorizedIpSet" to listOf<String>(),
-            "expireSeconds" to expireSeconds,
-            "permits" to null,
-            "type" to type.name
+        val tokenCreateRequest = TemporaryTokenCreateRequest(
+            projectId = projectId,
+            repoName = repoName,
+            fullPathSet = setOf(path),
+            expireSeconds = expireSeconds,
+            type = type
         )
         val request = buildPost(
             path = url,
-            requestBody = objectMapper.writeValueAsString(requestData)
-                .toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull()),
+            requestBody = objectMapper.writeValueAsString(tokenCreateRequest).toRequestBody(JsonMediaType),
             headers = mapOf(BKREPO_UID to userId)
         )
         OkhttpUtils.doHttp(request).use { response ->
@@ -287,13 +284,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
 
         val metadata = mutableMapOf<String, String>()
         if (parsePipelineMetadata) {
-            metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
-            metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
-            metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
-            metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
-            metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
-            metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
-            metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+            metadata.putAll(getPipelineMetadata(buildVariables))
         }
         if (parseAppMetadata) {
             metadata.putAll(getAppMetadata(file))
@@ -302,6 +293,20 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             header[BKREPO_METADATA] = Base64.getEncoder().encodeToString(buildMetadataHeader(metadata).toByteArray())
         }
         return header
+    }
+
+    fun getPipelineMetadata(
+        buildVariables: BuildVariables
+    ): MutableMap<String, String> {
+        val metadata = mutableMapOf<String, String>()
+        metadata[ARCHIVE_PROPS_PROJECT_ID] = buildVariables.projectId
+        metadata[ARCHIVE_PROPS_PIPELINE_ID] = buildVariables.pipelineId
+        metadata[ARCHIVE_PROPS_BUILD_ID] = buildVariables.buildId
+        metadata[ARCHIVE_PROPS_USER_ID] = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
+        metadata[ARCHIVE_PROPS_BUILD_NO] = buildVariables.variables[PIPELINE_BUILD_NUM] ?: ""
+        metadata[ARCHIVE_PROPS_SOURCE] = "pipeline"
+        metadata[ARCHIVE_PROPS_TASK_ID] = TaskUtil.getTaskId()
+        return metadata
     }
 
     private fun buildMetadataHeader(metadata: Map<String, String>): String {
