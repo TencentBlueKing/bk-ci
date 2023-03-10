@@ -51,7 +51,7 @@ module.exports = (env = {}, argv) => {
     const config = webpackBaseConfig({
         env,
         argv,
-        entry: './src/index',
+        entry: './src/entry',
         publicPath: '/console/',
         dist: '/console',
         port: 8080
@@ -122,6 +122,5 @@ module.exports = (env = {}, argv) => {
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]
     }
-    config.output.publicPath = '/console/'
     return config
 }

@@ -23,7 +23,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            turbo: './src/index'
+            turbo: './src/entry'
         },
         publicPath: '/turbo/',
         dist: '/turbo',

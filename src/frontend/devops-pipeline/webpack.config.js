@@ -32,7 +32,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            pipeline: './src/main.js'
+            pipeline: './src/entry.js'
         },
         publicPath: '/pipeline/',
         dist: '/pipeline',
@@ -41,13 +41,12 @@ module.exports = (env, argv) => {
     config.plugins.pop()
     config.plugins = [
         ...config.plugins,
-        new MonacoWebpackPlugin({
-            publicPath: '/pipeline/'
-        }),
+        new MonacoWebpackPlugin(),
         new HtmlWebpackPlugin({
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
+            publicPath: '__BK_CI_PUBLIC_URL__/pipeline/',
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
             extUrlPrefix
         }),
