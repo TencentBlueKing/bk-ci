@@ -378,8 +378,10 @@ class CodeWebhookService @Autowired constructor(
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
             val webhookTargetBranch = variables[BK_REPO_GIT_WEBHOOK_MR_TARGET_BRANCH] ?: "~NONE"
-            logger.info("get build history variables ($variables) for userId($userId),projectId($projectId),pipelineId" +
-                            "($pipelineId),buildId=($buildId)")
+            logger.info("get build history variables ($variables) for userId($userId)," +
+                            "projectId($projectId)," +
+                            "pipelineId($pipelineId)," +
+                            "buildId($buildId)")
             val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {
