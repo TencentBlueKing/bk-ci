@@ -51,7 +51,7 @@ module.exports = (env = {}, argv) => {
     const config = webpackBaseConfig({
         env,
         argv,
-        entry: './src/index',
+        entry: './src/entry',
         publicPath: '/console/',
         dist: '/console',
         port: 8080
@@ -89,6 +89,7 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
+            publicPath: '__BK_CI_PUBLIC_PATH__/console/',
             minify: {
                 removeComments: false
             },
@@ -101,7 +102,7 @@ module.exports = (env = {}, argv) => {
         new AddAssetHtmlPlugin([
             {
                 filepath: require.resolve('./src/assets/static/main.dll.js'),
-                publicPath: path.posix.join('/console/', 'static/'),
+                publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/console/', 'static/'),
                 hash: true,
                 includeSourcemap: false
             }
@@ -122,6 +123,5 @@ module.exports = (env = {}, argv) => {
     config.devServer.historyApiFallback = {
         rewrites: [{ from: /^\/console/, to: '/console/index.html' }]
     }
-    config.output.publicPath = '/console/'
     return config
 }

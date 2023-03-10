@@ -35,10 +35,15 @@
                                 :item-selected="changeTicketType"
                             >
                             </selector>
-                            <bk-popover placement="right">
+                            <bk-popover placement="right" :max-width="250">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div>
+                                        {{ getTypeDesc(localConfig.credentialType) }}
+                                        <a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">
+                                            {{ $t('ticket.learnMore') }}
+                                        </a>
+                                    </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -84,7 +89,7 @@
                     <!-- 凭据别名 end -->
 
                     <!-- 凭据内容 start -->
-                    <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
+                    <div v-for="(obj, key) in newModel" :key="key" :class="{ 'bk-form-item': true, 'is-required': obj.rules }">
                         <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
                             <a v-if="obj.type === 'password' && localConfig.credential[obj.modelName] !== '******'" href="javascript:;" @click="toggleShowPwdCon(obj.modelName)"><i :class="showPwdCon[obj.modelName] ? 'devops-icon icon-hide' : 'devops-icon icon-eye'"></i></a>
@@ -145,7 +150,7 @@
         },
         data () {
             return {
-                ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
+                ticketDocsUrl: this.BKCI_DOCS.TICKET_DOC,
                 showContent: false,
                 hasPermission: true,
                 newModel: {},

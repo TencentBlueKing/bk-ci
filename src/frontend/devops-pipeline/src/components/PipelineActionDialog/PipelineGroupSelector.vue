@@ -21,7 +21,7 @@
             />
         </bk-form-item>
 
-        <bk-form-item :label="$t('dynamicPipelineGroup')">
+        <bk-form-item label-width="auto" :label="$t('dynamicPipelineGroup')">
             <bk-select
                 disabled
                 multiple
@@ -38,7 +38,7 @@
                 </bk-option>
             </bk-select>
         </bk-form-item>
-        <bk-form-item :label="$t('staticPipelineGroup')">
+        <bk-form-item label-width="auto" :label="$t('staticPipelineGroup')">
             <bk-select
                 multiple
                 v-model="staticViews"
