@@ -27,7 +27,8 @@
 
 package com.tencent.devops.dispatch.service
 
-import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.constant.CommonMessageCode.PARAMETER_IS_NULL
+import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.FileUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Value
@@ -46,12 +47,15 @@ class DownloadScriptService {
     fun downloadScript(scriptName: String, eTag: String?): Response {
         logger.info("downloadScript, scriptName: $scriptName, eTag: $eTag")
         if (scriptPath.isNullOrBlank()) {
-            throw ParamBlankException("脚本路径未配置")
+            throw ErrorCodeException(
+                errorCode = PARAMETER_IS_NULL,
+                params = arrayOf("scriptPath")
+            )
         }
 
         val scriptFile = File("$scriptPath/$scriptName")
         if (!scriptFile.exists() || !scriptFile.isFile) {
-            throw NotFoundException("脚本($scriptName)不存在")
+            throw NotFoundException("script($scriptName)not exist")
         }
 
         if (!eTag.isNullOrBlank()) {

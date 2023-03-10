@@ -29,16 +29,19 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildOperateBuilderParams
@@ -268,13 +271,17 @@ class DispatchBaseDebugService @Autowired constructor(
                 } else {
                     logger.info(
                         "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                            "debugBuilderName:$debugBuilderName 容器没有处于debug或正在占用中"
+                            "debugBuilderName:$debugBuilderName " +
+                                MessageUtil.getMessageByLocale(
+                                    BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE,
+                                    I18nUtil.getLanguage(userId)
+                                )
                     )
                 }
             } else {
                 logger.info(
                     "stop ${dockerRoutingType.name} debug pipelineId: $pipelineId, vmSeqId: $vmSeqId " +
-                        "debugBuilderName:$debugBuilderName 容器已不存在"
+                        "debugBuilderName:$debugBuilderName container no exists"
                 )
             }
         }
@@ -315,7 +322,7 @@ class DispatchBaseDebugService @Autowired constructor(
             logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
                 errorCode = "2103503",
-                defaultMessage = "构建机启动失败，错误信息:${startResult.errMsg}"
+                params = arrayOf(startResult.errMsg ?: "")
             )
         }
     }

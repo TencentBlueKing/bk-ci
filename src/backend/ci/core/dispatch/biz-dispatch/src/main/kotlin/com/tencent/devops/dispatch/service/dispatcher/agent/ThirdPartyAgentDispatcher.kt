@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.service.dispatcher.agent
 
-import com.tencent.devops.common.api.constant.BK_GET_THIRD_PARTY_AGENT_FAIL
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -47,6 +46,12 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
+import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_BUSY
+import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS
+import com.tencent.devops.dispatch.pojo.BK_BUILD_NODE_EMPTY_ERROR
+import com.tencent.devops.dispatch.pojo.BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
+import com.tencent.devops.dispatch.pojo.BK_GET_THIRD_PARTY_AGENT_FAIL
+import com.tencent.devops.dispatch.pojo.BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
@@ -63,6 +68,7 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
+import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Component
@@ -169,7 +175,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = "第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline) " +
+                errorMsg = MessageUtil.getMessageByLocale(BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR, I18nUtil.getLanguage()) +
                         "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
@@ -194,7 +200,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = "第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（${dispatchType.displayName}）并发任务数设置并稍后重试."
+                errorMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
+                        I18nUtil.getLanguage()
+                    ),
+                    dispatchType.displayName
+                )
             )
         } else {
             // 上报monitor数据
@@ -231,7 +243,11 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             if (redisLock.tryLock()) {
                 if (thirdPartyAgentBuildRedisUtils.isThirdPartyAgentUpgrading(event.projectId, agent.agentId)) {
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
-                    log(event, "构建机升级中，重新调度(Agent is upgrading) - ${agent.hostname}/${agent.ip}")
+                    log(
+                        event,
+                        MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS, I18nUtil.getLanguage())
+                                + " - ${agent.hostname}/${agent.ip}"
+                    )
                     return false
                 }
 
@@ -266,7 +282,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 log(event, "调度构建机(Scheduling selected Agent): ${agent.hostname}/${agent.ip}")
                 return true
             } else {
-                log(event, "构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}")
+                log(
+                    event,
+                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_BUSY, I18nUtil.getLanguage())
+                            + "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
         } finally {
@@ -419,8 +438,13 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = "构建机环境（${dispatchType.envName}）的节点为空，请检查环境管理配置，" +
-                        "构建集群： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
+                errorMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        BK_BUILD_NODE_EMPTY_ERROR,
+                        I18nUtil.getLanguage()
+                    ),
+                    dispatchType.envName
+                ) + "build cluster： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return
         }

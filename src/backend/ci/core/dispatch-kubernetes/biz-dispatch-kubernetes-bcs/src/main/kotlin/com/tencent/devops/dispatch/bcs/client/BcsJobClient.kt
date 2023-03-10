@@ -30,9 +30,11 @@ package com.tencent.devops.dispatch.bcs.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.dispatch.bcs.common.ConstantsMessage.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsJob
 import com.tencent.devops.dispatch.bcs.pojo.BcsJobStatus
@@ -84,7 +86,8 @@ class BcsJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}查询Job status接口异常（Fail to getJobStatus, " +
+                    MessageUtil.getMessageByLocale(TROUBLE_SHOOTING, I18nUtil.getLanguage(userId)) +
+                    "Query job status Interface exception（Fail to getJobStatus, " +
                         "http response code: ${response.code()}"
                 )
             }
@@ -108,7 +111,8 @@ class BcsJobClient @Autowired constructor(
                     ErrorCodeEnum.SYSTEM_ERROR.errorType,
                     ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                     ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}获取Job logs接口异常" +
+                    MessageUtil.getMessageByLocale(TROUBLE_SHOOTING, I18nUtil.getLanguage(userId)) +
+                    "Get job logs Interface exception" +
                         "（Fail to getJobLogs, http response code: ${response.code()}"
                 )
             }

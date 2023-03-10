@@ -30,10 +30,13 @@ package com.tencent.devops.dispatch.kubernetes.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ConstantsMessage
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION
 import com.tencent.devops.dispatch.kubernetes.pojo.BuildAndPushImage
 import com.tencent.devops.dispatch.kubernetes.pojo.Job
 import com.tencent.devops.dispatch.kubernetes.pojo.JobStatus
@@ -142,7 +145,8 @@ class KubernetesJobClient @Autowired constructor(
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.CREATE_IMAGE_INTERFACE_ERROR.formatErrorMessage,
-                        "构建并推送接口异常（Fail to build image, http response code: ${response.code()}"
+                        MessageUtil.getMessageByLocale(BK_BUILD_AND_PUSH_INTERFACE_EXCEPTION, I18nUtil.getLanguage()) +
+                        "（Fail to build image, http response code: ${response.code()}"
                     )
                 }
                 val responseData: KubernetesResult<TaskResp> = objectMapper.readValue(responseContent)

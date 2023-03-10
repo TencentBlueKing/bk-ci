@@ -30,13 +30,17 @@ package com.tencent.devops.dispatch.docker.service.debug.impl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN
+import com.tencent.devops.common.api.constant.BK_PLEASE_CHECK_OR_RETRY
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
@@ -251,8 +255,9 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
-                message = "登录调试失败,请检查镜像是否合法或重试。" + if (!msg.isNullOrBlank()) {
-                    "错误信息: $msg"
+                message = MessageUtil.getMessageByLocale(BK_PLEASE_CHECK_OR_RETRY, I18nUtil.getLanguage())
+                        + if (!msg.isNullOrBlank()) {
+                    "errormessage: $msg"
                 } else {
                     ""
                 }
@@ -272,7 +277,10 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 pipelineDockerDebugDao.deleteDebug(dslContext, debugTask.id)
                 return Result(
                     status = 1,
-                    message = "登录调试失败，调试容器异常关闭，请重试。"
+                    message =  MessageUtil.getMessageByLocale(
+                        BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN,
+                        I18nUtil.getLanguage()
+                    )
                 )
             }
         } catch (e: Exception) {

@@ -29,12 +29,15 @@ package com.tencent.devops.dispatch.bcs.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.bcs.client.BcsBuilderClient
 import com.tencent.devops.dispatch.bcs.client.BcsTaskClient
 import com.tencent.devops.dispatch.bcs.common.ConstantsMessage
+import com.tencent.devops.dispatch.bcs.common.ConstantsMessage.TROUBLE_SHOOTING
 import com.tencent.devops.dispatch.bcs.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilder
 import com.tencent.devops.dispatch.bcs.pojo.BcsBuilderStatusEnum
@@ -60,6 +63,12 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.interfaces.ContainerService
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BCS_BUILD_ERROR
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_READY_CREATE_BCS_BUILD_MACHINE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_START_BCS_BUILD_CONTAINER_FAIL
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuildLog
 import com.tencent.devops.dispatch.kubernetes.pojo.DockerRegistry
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
@@ -93,9 +102,18 @@ class BcsContainerService @Autowired constructor(
     override val shutdownLockBaseKey = "dispatch_bcs_shutdown_lock_"
 
     override val log = DispatchBuildLog(
-        readyStartLog = "准备创建BCS(蓝鲸容器平台)构建机...",
-        startContainerError = "启动BCS构建容器失败，请联系BCS(蓝鲸容器助手)反馈处理.\n容器构建异常请参考：",
-        troubleShooting = "第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 - "
+        readyStartLog = MessageUtil.getMessageByLocale(
+            BK_READY_CREATE_BCS_BUILD_MACHINE,
+            I18nUtil.getLanguage()
+        ),
+        startContainerError = MessageUtil.getMessageByLocale(
+            BK_START_BCS_BUILD_CONTAINER_FAIL,
+            I18nUtil.getLanguage()
+        ),
+        troubleShooting = MessageUtil.getMessageByLocale(
+            BK_BCS_BUILD_ERROR,
+            I18nUtil.getLanguage()
+        )
     )
 
     @Value("\${bcs.resources.builder.cpu}")
@@ -212,8 +230,11 @@ class BcsContainerService @Autowired constructor(
             )
             logsPrinter.printLogs(
                 this,
-                "下发创建构建机请求成功，" +
-                    "builderName: $builderName 等待机器创建..."
+                MessageUtil.getMessageByLocale(
+                    BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS,
+                    I18nUtil.getLanguage(userId)
+                ) +
+                " builderName: $builderName "
             )
 
             val (taskStatus, failedMsg) = bcsTaskClient.waitTaskFinish(userId, bcsTaskId)
@@ -224,7 +245,12 @@ class BcsContainerService @Autowired constructor(
                     "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo create bcs " +
                         "vm success, wait vm start..."
                 )
-                logsPrinter.printLogs(this, "构建机创建成功，等待机器启动...")
+                logsPrinter.printLogs(
+                    this,
+                    MessageUtil.getMessageByLocale(
+                        BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
+                    I18nUtil.getLanguage(userId)
+                ))
             } else {
                 // 清除构建异常容器，并重新置构建池为空闲
                 clearExceptionBuilder(builderName)
@@ -232,7 +258,8 @@ class BcsContainerService @Autowired constructor(
                     ErrorCodeEnum.CREATE_VM_ERROR.errorType,
                     ErrorCodeEnum.CREATE_VM_ERROR.errorCode,
                     ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "${ConstantsMessage.TROUBLE_SHOOTING}构建机创建失败:${failedMsg ?: taskStatus.message}"
+                    ConstantsMessage.getI18nMessage(TROUBLE_SHOOTING, BK_BUILD_MACHINE_CREATION_FAILED) +
+                    ":${failedMsg ?: taskStatus.message}"
                 )
             }
             return Pair(startBuilder(dispatchMessages, builderName, poolNo, cpu, mem, disk), builderName)

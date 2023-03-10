@@ -25,17 +25,12 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.bcs.common
+package com.tencent.devops.dispatch.pojo
 
-import com.tencent.devops.common.api.util.MessageUtil
-import com.tencent.devops.common.web.utils.I18nUtil
-
-object ConstantsMessage {
-    const val TROUBLE_SHOOTING = "BkTroubleShooting"// 第三方服务-BCS 异常，请联系BCS(蓝鲸容器助手)排查，异常信息 -
-    const val NO_EMPTY_BUILDER = "BkNoEmptyBuilder"// BCS构建机启动失败，没有空闲的构建机
-
-    fun getI18nMessage(message: String, errorMessage: String): String {
-        return MessageUtil.getMessageByLocale(message, I18nUtil.getLanguage()) +
-        MessageUtil.getMessageByLocale(errorMessage, I18nUtil.getLanguage())
-    }
-}
+const val BK_GET_THIRD_PARTY_AGENT_FAIL = "BkGetThirdPartyAgentFail"
+const val BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "BkConstantAgentsUpgradingOrTimedOut"
+const val BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "BkThirdPartyBuildMachineStatusError"
+const val BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "BkBuildMachineUpgradeInProgress"
+const val BK_BUILD_MACHINE_BUSY = "BkBuildMachineBusy"
+const val BK_BUILD_NODE_EMPTY_ERROR = "BkBuildNodeEmptyError"
+const val BK_BUILD_ENV_PREPARATION = "BkBuildEnvPreparation"

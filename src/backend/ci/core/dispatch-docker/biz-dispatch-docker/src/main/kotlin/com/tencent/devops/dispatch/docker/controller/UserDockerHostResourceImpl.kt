@@ -27,10 +27,12 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
+import com.tencent.devops.common.api.constant.BK_USER_NO_PERMISSIONS_EDIT_PIPELINE
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -38,6 +40,7 @@ import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.api.user.UserDockerHostResource
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerBuildDao
 import com.tencent.devops.dispatch.docker.dao.PipelineDockerDebugDao
@@ -53,6 +56,7 @@ import com.tencent.devops.process.constant.ProcessMessageCode
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @RestResource
@@ -226,7 +230,12 @@ class UserDockerHostResourceImpl @Autowired constructor(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EDIT,
-                message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+                message = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_USER_NO_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
+                    userId,
+                    projectId,
+                    pipelineId
+                )
             )
         }
     }

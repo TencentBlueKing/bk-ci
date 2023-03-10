@@ -164,5 +164,6 @@ const val BK_ENGINEERING_REPO_CALL_ERROR = "BkEngineeringRepoCallError"
 const val BK_NOT_MEMBER_AND_NOT_OPEN_SOURCE = "BkNotMemberAndNotOpenSource"
 const val BK_UNABLE_GET_PIPELINE_JOB_STATUS = "BkUnableGetPipelineJobStatus"
 const val BK_JOB_BUILD_STOPS = "BkJobBuildStops"
-const val BK_GET_THIRD_PARTY_AGENT_FAIL = "BkGetThirdPartyAgentFail"
-
+const val BK_USER_NO_PERMISSIONS_EDIT_PIPELINE = "BkUserNoPermissionsEditPipeline"
+const val BK_PLEASE_CHECK_OR_RETRY = "BkPleaseCheckOrRetry"
+const val BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN = "BkDebugContainerErrorShutDown"
