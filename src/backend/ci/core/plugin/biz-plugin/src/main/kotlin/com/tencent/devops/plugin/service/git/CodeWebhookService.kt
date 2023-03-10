@@ -103,7 +103,6 @@ class CodeWebhookService @Autowired constructor(
                 userId = userId,
                 triggerType = triggerType
             ) { info ->
-                logger.info("Code web hook on start for event($event) and info($info)")
                 with(info) {
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
@@ -182,7 +181,6 @@ class CodeWebhookService @Autowired constructor(
                             } else {
                                 GIT_COMMIT_CHECK_STATE_FAILURE
                             }
-
                             addGitCommitCheckEvent(
                                 GitCommitCheckEvent(
                                     source = "codeWebhook",
@@ -209,7 +207,6 @@ class CodeWebhookService @Autowired constructor(
                             } else {
                                 GITHUB_CHECK_RUNS_CONCLUSION_FAILURE
                             }
-
                             addGithubPrEvent(
                                 GithubPrEvent(
                                     source = "codeWebhook",
@@ -389,13 +386,6 @@ class CodeWebhookService @Autowired constructor(
                 )
                 event.mergeRequestId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
             }
-
-            logger.info(
-                "get build history variables ($variables) for userId($userId)," +
-                    "projectId($projectId)," +
-                    "pipelineId($pipelineId)," +
-                    "buildId($buildId)"
-            )
             val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {
