@@ -48,7 +48,7 @@ var moduleNames = when (val moduleName = name.split("-")[1]) {
     }
 
     "lambda" -> {
-        listOf("process", "project", "lambda")
+        listOf("process", "project", "lambda", "store")
     }
 
     else -> listOf(moduleName)
