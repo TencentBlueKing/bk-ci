@@ -103,6 +103,7 @@ class CodeWebhookService @Autowired constructor(
                 userId = userId,
                 triggerType = triggerType
             ) { info ->
+                logger.info("Code web hook on start for event($event) and info($info)")
                 with(info) {
                     val webhookType = CodeType.valueOf(webhookType)
                     val webhookEventType = CodeEventType.valueOf(webhookEventType)
