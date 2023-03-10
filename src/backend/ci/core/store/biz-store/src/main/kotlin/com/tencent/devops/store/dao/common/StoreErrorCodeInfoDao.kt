@@ -29,7 +29,6 @@ package com.tencent.devops.store.dao.common
 
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreErrorCodeInfo
-import com.tencent.devops.store.pojo.common.ErrorCodeInfo
 import com.tencent.devops.store.pojo.common.StoreErrorCodeInfo
 import com.tencent.devops.store.pojo.common.enums.StoreTypeEnum
 import org.jooq.DSLContext
@@ -40,45 +39,36 @@ import java.time.LocalDateTime
 class StoreErrorCodeInfoDao {
 
     fun batchUpdateErrorCodeInfo(dslContext: DSLContext, userId: String, storeErrorCodeInfo: StoreErrorCodeInfo) {
-        dslContext.batch(storeErrorCodeInfo.errorCodeInfos.map {
+        dslContext.batch(storeErrorCodeInfo.errorCodes.map { errorCode ->
             with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
                 dslContext.insertInto(this)
                     .set(ID, UUIDUtil.generate())
                     .set(STORE_CODE, storeErrorCodeInfo.storeCode)
                     .set(STORE_TYPE, storeErrorCodeInfo.storeType.type.toByte())
-                    .set(ERROR_CODE, it.errorCode)
-                    .set(ERROR_MSG_ZH_CN, it.errorMsgZhCn)
-                    .set(ERROR_MSG_ZH_TW, it.errorMsgZhTw)
-                    .set(ERROR_MSG_EN, it.errorMsgEn)
+                    .set(ERROR_CODE, errorCode)
                     .set(CREATOR, userId)
                     .set(MODIFIER, userId)
                     .set(CREATE_TIME, LocalDateTime.now())
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .onDuplicateKeyUpdate()
-                    .set(ERROR_MSG_ZH_CN, it.errorMsgZhCn)
-                    .set(ERROR_MSG_ZH_TW, it.errorMsgZhTw)
-                    .set(ERROR_MSG_EN, it.errorMsgEn)
                     .set(MODIFIER, userId)
                     .set(UPDATE_TIME, LocalDateTime.now())
             }
         }).execute()
     }
 
-    fun getStoreErrorCodeInfo(
+    fun getStoreErrorCodes(
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum
-    ): List<ErrorCodeInfo> {
+    ): Set<Int> {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             return dslContext.select(
-                ERROR_CODE,
-                ERROR_MSG_ZH_CN,
-                ERROR_MSG_ZH_TW,
-                ERROR_MSG_EN
+                ERROR_CODE
             ).from(this)
                 .where(STORE_CODE.eq(storeCode))
                 .and(STORE_TYPE.eq(storeType.type.toByte()))
-                .fetchInto(ErrorCodeInfo::class.java)
+                .fetchSet(ERROR_CODE)
         }
     }
 
@@ -86,7 +76,7 @@ class StoreErrorCodeInfoDao {
         dslContext: DSLContext,
         storeCode: String,
         storeType: StoreTypeEnum,
-        errorCodes: List<Int>
+        errorCodes: Set<Int>
     ) {
         with(TStoreErrorCodeInfo.T_STORE_ERROR_CODE_INFO) {
             dslContext.deleteFrom(this)
