@@ -33,7 +33,6 @@
                 v-perm="{
                     hasPermission: nodeDetails.canEdit,
                     disablePermissionApi: true,
-                    tooltips: $t('environment.noPermission'),
                     permissionData: {
                         projectId: projectId,
                         resourceType: NODE_RESOURCE_TYPE,
@@ -66,7 +65,9 @@
             return {
                 editable: false,
                 paramList: [],
-                editableList: []
+                editableList: [],
+                NODE_RESOURCE_ACTION,
+                NODE_RESOURCE_TYPE
             }
         },
         computed: {
