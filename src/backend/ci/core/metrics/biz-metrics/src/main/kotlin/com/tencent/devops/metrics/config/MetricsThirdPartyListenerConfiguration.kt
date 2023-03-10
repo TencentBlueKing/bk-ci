@@ -29,57 +29,23 @@ package com.tencent.devops.metrics.config
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
 import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
 import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
-import org.slf4j.MDC
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.MessagePostProcessor
 import org.springframework.amqp.core.Queue
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
 import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 
 @Configuration
-@Suppress("TooManyFunctions")
 class MetricsThirdPartyListenerConfiguration {
-
-    // TODO #7443 后续利用SCS改造，因涉及多个模块无法直接修改
-
-    @Bean
-    @ConditionalOnMissingBean(RabbitAdmin::class)
-    fun rabbitAdmin(
-        connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        objectMapper: ObjectMapper
-    ): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter(objectMapper)
-        rabbitTemplate.addBeforePublishPostProcessors(MessagePostProcessor { message ->
-            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
-            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
-            message
-        })
-        return rabbitTemplate
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @Bean
     fun receiveCodeCheckDailyMessageQueue() = Queue(QUEUE_METRICS_STATISTIC_CODECC_DAILY)
@@ -122,6 +88,16 @@ class MetricsThirdPartyListenerConfiguration {
             concurrency = 5,
             maxConcurrency = 20
         )
+    }
+
+    @Bean
+    fun metricsQualityDailyReportQueue() = Queue(QUEUE_QUALITY_DAILY_EVENT)
+
+    @Bean
+    fun metricsQualityDailyReportExchange(): FanoutExchange {
+        val fanoutExchange = FanoutExchange(EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
+        fanoutExchange.isDelayed = true
+        return fanoutExchange
     }
 
     @Bean
@@ -193,6 +169,8 @@ class MetricsThirdPartyListenerConfiguration {
     }
 
     companion object {
+        private const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
+        private const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
         private const val QUEUE_METRICS_STATISTIC_CODECC_DAILY = "q.metrics.statistic.codecc.daily"
         private const val EXCHANGE_METRICS_STATISTIC_CODECC_DAILY = "e.metrics.statistic.codecc.daily"
         private const val QUEUE_METRICS_STATISTIC_TURBO_DAILY = "q.metrics.statistic.turbo.daily"
