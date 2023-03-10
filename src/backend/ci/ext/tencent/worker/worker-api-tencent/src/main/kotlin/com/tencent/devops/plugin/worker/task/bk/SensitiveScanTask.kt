@@ -147,9 +147,11 @@ class SensitiveScanTask : ITask() {
             )
         }
         reportArchiveResourceApi.createReportRecord(
+            buildVariables = buildVariables,
             taskId = elementId,
             indexFile = indexFileParam,
-            name = reportNameParam
+            name = reportNameParam,
+            token = token
         )
     }
 
