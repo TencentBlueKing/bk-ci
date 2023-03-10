@@ -2,7 +2,7 @@
     <div class="env-setting-tab-wrapper">
         <bk-button
             v-perm="{
-                hasPermission: canEdit,
+                hasPermission: curEnvDetail.canEdit,
                 disablePermissionApi: true,
                 tooltips: $t('environment.noPermission'),
                 permissionData: {
@@ -90,14 +90,7 @@
             }
         },
 
-        computed: {
-            canEdit () {
-                return this.$route.query.canEdit || false
-            }
-        },
-
         created () {
-            console.log(this.curEnvDetail)
             this.fetchEnvProjects()
         },
         

@@ -74,7 +74,7 @@
                         <div class="preview-handler" v-else>
                             <span
                                 v-perm="{
-                                    hasPermission: canEdit,
+                                    hasPermission: curEnvDetail.canEdit,
                                     disablePermissionApi: true,
                                     tooltips: $t('environment.noPermission'),
                                     permissionData: {
@@ -89,7 +89,7 @@
                             </span>
                             <span
                                 v-perm="{
-                                    hasPermission: canEdit,
+                                    hasPermission: curEnvDetail.canEdit,
                                     disablePermissionApi: true,
                                     tooltips: $t('environment.noPermission'),
                                     permissionData: {
@@ -159,9 +159,6 @@
                     { label: 'plaintext', name: this.$t('environment.envInfo.clearText') },
                     { label: 'ciphertext', name: this.$t('environment.envInfo.cipherText') }
                 ]
-            },
-            canEdit () {
-                return this.$route.query.canEdit || false
             }
         },
 

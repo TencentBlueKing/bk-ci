@@ -216,9 +216,6 @@
                     name: 'envDetail',
                     params: {
                         envId: row.envHashId
-                    },
-                    query: {
-                        canEdit: row.canEdit
                     }
                 })
             },

@@ -3,7 +3,7 @@
         <div class="node-content-header">
             <bk-button
                 v-perm="{
-                    hasPermission: canEdit,
+                    hasPermission: curEnvDetail.canEdit,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: projectId,
@@ -63,7 +63,7 @@
                     <template slot-scope="props">
                         <span
                             v-perm="{
-                                hasPermission: canEdit,
+                                hasPermission: curEnvDetail.canEdit,
                                 disablePermissionApi: true,
                                 tooltips: $t('environment.noPermission'),
                                 permissionData: {
@@ -166,9 +166,6 @@
         computed: {
             curUserInfo () {
                 return window.userInfo
-            },
-            canEdit () {
-                return this.$route.query.canEdit || false
             }
         },
         watch: {

@@ -16,7 +16,7 @@
                     <div class="handler-btn">
                         <span
                             v-perm="{
-                                hasPermission: canEdit,
+                                hasPermission: curEnvDetail.canEdit,
                                 disablePermissionApi: true,
                                 tooltips: $t('environment.noPermission'),
                                 permissionData: {
@@ -50,7 +50,7 @@
                     <div class="handler-btn">
                         <span
                             v-perm="{
-                                hasPermission: canEdit,
+                                hasPermission: curEnvDetail.canEdit,
                                 disablePermissionApi: true,
                                 tooltips: $t('environment.noPermission'),
                                 permissionData: {
@@ -158,9 +158,6 @@
                     BUILD: 'buildEnvType'
                 }
                 return `environment.envInfo.${descMap[envType]}`
-            },
-            canEdit () {
-                return this.$route.query.canEdit || false
             }
         },
         methods: {

@@ -131,6 +131,7 @@
     } from '@/utils/chart-option'
     import imageEmpty from '@/components/common/imageEmpty'
     import { convertTime } from '@/utils/util'
+    import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
 
     use([
         CanvasRenderer,
@@ -149,6 +150,7 @@
             'image-empty': imageEmpty
         },
         data () {
+            const { projectId } = this.$route.params
             return {
                 showContent: false,
                 isEmptyRule: false,
@@ -185,7 +187,13 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toRouteLink('createRule'),
-                            text: '创建规则'
+                            text: '创建规则',
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RULE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: RULE_RESOURCE_ACTION.CREATE
+                            }
                         }
                     ]
                 }

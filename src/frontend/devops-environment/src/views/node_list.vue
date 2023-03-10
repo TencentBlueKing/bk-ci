@@ -43,7 +43,7 @@
                         </div>
                         <div class="table-node-item node-item-id" v-else>
                             <span
-                                v-perm="{
+                                v-perm="canShowDetail(props.row) ? {
                                     hasPermission: props.row.canView,
                                     disablePermissionApi: true,
                                     tooltips: $t('environment.noPermission'),
@@ -53,7 +53,7 @@
                                         resourceCode: props.row.nodeHashId,
                                         action: NODE_RESOURCE_ACTION.VIEW
                                     }
-                                }"
+                                } : {}"
                                 class="node-name"
                                 :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
                                 :title="props.row.displayName"
