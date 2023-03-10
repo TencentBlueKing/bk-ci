@@ -36,7 +36,6 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.utils.QualityUtils
 import com.tencent.devops.process.utils.Credential
@@ -111,6 +110,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                     isOauth = isOauth
                 ).targetBranch
             }
+            logger.info("Project($projectId) add git commit($commitId) commit check for targetBranch($targetBranch)")
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
                 url = repo.url,
@@ -127,8 +127,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 block = block,
                 mrRequestId = event.mergeRequestId,
                 reportData = QualityUtils.getQualityGitMrResult(client, event),
-                targetBranch = if (event.triggerType == CodeEventType.MERGE_REQUEST.name &&
-                    !targetBranch.isNullOrEmpty()) {
+                targetBranch = if (!targetBranch.isNullOrEmpty()) {
                     mutableListOf(targetBranch)
                 } else {
                     mutableListOf("~NONE")
