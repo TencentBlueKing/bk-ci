@@ -201,7 +201,12 @@ class MacBuildListener @Autowired constructor(
         }
     }
 
-    private fun doShutdown(buildTaskRecords: Result<TBuildTaskRecord>, event: PipelineAgentShutdownEvent, creator: String, projectId: String) {
+    private fun doShutdown(
+        buildTaskRecords: Result<TBuildTaskRecord>,
+        event: PipelineAgentShutdownEvent,
+        creator: String,
+        projectId: String
+    ) {
         buildTaskRecords.forEach { buildTask ->
             // 关闭的时候对container进行锁操作，防止重复操作
             try {
