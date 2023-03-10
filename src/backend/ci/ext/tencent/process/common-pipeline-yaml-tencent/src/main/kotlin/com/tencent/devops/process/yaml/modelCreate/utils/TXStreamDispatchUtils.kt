@@ -137,24 +137,20 @@ object TXStreamDispatchUtils {
                 )
             }
 
-            val (image, userName, password) = StreamDispatchUtils.parseRunsOnContainer(
-                client = client,
+            val info = StreamDispatchUtils.parseRunsOnContainer(
                 job = job,
-                projectCode = projectCode,
-                context = context,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             )
 
             val dockerInfo = ThirdPartyAgentDockerInfo(
-                image = image,
-                credential = if (userName.isBlank() || password.isBlank()) {
-                    null
-                } else {
-                    thirdPartDockerCredential(
-                        user = userName,
-                        password = password
-                    )
-                }
+                image = info.image,
+                credential = thirdPartDockerCredential(
+                    user = info.userName,
+                    password = info.password,
+                    credentialId = info.credId,
+                    acrossTemplateId = info.acrossTemplateId
+                )
+
             )
 
             return ThirdPartyAgentEnvDispatchType(
