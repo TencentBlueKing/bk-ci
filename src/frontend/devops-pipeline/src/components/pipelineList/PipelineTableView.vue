@@ -165,7 +165,7 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.hasPermission && !props.row.delete"
+                    v-else-if="!props.row.permissions.canView"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
@@ -181,7 +181,18 @@
                         :disabled="props.row.disabled"
                         @click="execPipeline(props.row)"
                     >
-                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
+                        <span
+                            v-perm="{
+                                hasPermission: props.row.permissions.canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: props.row.pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
                             <logo v-if="props.row.lock" name="minus-circle"></logo>
                             <logo
                                 v-else
@@ -251,7 +262,8 @@
                     limit: parseInt(this.$route.query.pageSize ?? 50),
                     count: 0
                 },
-                visibleTagCountList: {}
+                visibleTagCountList: {},
+                RESOURCE_ACTION
             }
         },
         computed: {
@@ -300,6 +312,9 @@
                     prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
                     order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
 
@@ -451,7 +466,7 @@
                 handlePipelineNoPermission({
                     projectId: this.$route.params.projectId,
                     resourceCode: row.pipelineId,
-                    action: RESOURCE_ACTION.LIST
+                    action: RESOURCE_ACTION.VIEW
                 })
             }
         }

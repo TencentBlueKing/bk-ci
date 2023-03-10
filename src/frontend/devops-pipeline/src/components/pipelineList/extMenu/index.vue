@@ -16,16 +16,16 @@
         </div>
         <ul v-if="config.length > 0" class="dot-menu-list" slot="content">
             <li
+                v-perm="item.permissionData ? {
+                    hasPermission: item.hasPermission,
+                    disablePermissionApi: item.disablePermissionApi,
+                    permissionData: item.permissionData
+                } : {}"
                 :class="[{ 'is-disable': item.disable }, 'dot-menu-item']"
                 v-for="(item, index) of config"
                 v-bk-tooltips="getTooltips(item)"
                 :key="index"
                 @click.stop="clickMenuItem(item)">
-                <span
-                    
-                >
-
-                </span>
                 {{ item.text }}
             </li>
         </ul>

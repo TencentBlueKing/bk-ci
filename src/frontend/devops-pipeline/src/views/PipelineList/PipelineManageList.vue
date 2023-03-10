@@ -13,7 +13,21 @@
             <header class="pipeline-list-main-header">
                 <div>
                     <bk-dropdown-menu trigger="click">
-                        <bk-button theme="primary" icon="plus" slot="dropdown-trigger">
+                        <bk-button
+                            v-perm="{
+                                hasPermission: hasCreatePermission,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: projectId,
+                                    action: RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary"
+                            icon="plus"
+                            slot="dropdown-trigger"
+                        >
                             {{$t('newlist.addPipeline')}}
                         </bk-button>
                         <ul class="bk-dropdown-list" slot="dropdown-content">
@@ -195,7 +209,8 @@
                 }, {
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
-                }]
+                }],
+                RESOURCE_ACTION
             }
         },
         computed: {
@@ -204,6 +219,9 @@
                 'pipelineActionState',
                 'isManage'
             ]),
+            projectId () {
+                return this.$route.params.projectId
+            },
             isAllPipelineView () {
                 return this.$route.params.viewId === ALL_PIPELINE_VIEW_ID
             },

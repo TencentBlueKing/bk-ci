@@ -196,14 +196,16 @@
                     })
                     this.$store.commit('environment/updateNodeDetail', { res })
                     this.isEditCount = false
-                } catch (err) {
-                    const message = err.message ? err.message : err
-                    const theme = 'error'
-
-                    this.$bkMessage({
-                        message,
-                        theme
-                    })
+                } catch (e) {
+                    this.handleError(
+                        e,
+                        {
+                            projectId: this.projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: this.nodeHashId,
+                            action: NODE_RESOURCE_ACTION.DELETE
+                        }
+                    )
                 }
             },
             downloadHandle () {

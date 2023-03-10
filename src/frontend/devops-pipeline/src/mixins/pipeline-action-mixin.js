@@ -21,7 +21,10 @@ import { mapActions, mapMutations, mapGetters } from 'vuex'
 import { statusAlias } from '@/utils/pipelineStatus'
 import triggerType from '@/utils/triggerType'
 import { navConfirm, convertMStoStringByRule, convertTime } from '@/utils/util'
-
+import {
+    RESOURCE_ACTION,
+    PROJECT_RESOURCE_ACTION
+} from '@/utils/permission'
 import {
     ALL_PIPELINE_VIEW_ID,
     COLLECT_VIEW_ID,
@@ -184,12 +187,27 @@ export default {
                 },
                 {
                     text: this.$t('newlist.copyAs'),
-                    handler: this.copyAs
+                    handler: this.copyAs,
+                    hasPermission: pipeline.permissions.canView,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.VIEW
+                    }
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
                     disable: !this.hasTemplatePermission,
-                    handler: this.saveAsTempHandler
+                    handler: this.saveAsTempHandler,
+                    disablePermissionApi: false,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
                 },
                 ...(pipeline.isInstanceTemplate
                     ? [{
@@ -208,7 +226,15 @@ export default {
                     : []),
                 {
                     text: this.$t('delete'),
-                    handler: this.deleteHandler
+                    handler: this.deleteHandler,
+                    hasPermission: pipeline.permissions.canDelete,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'pipeline',
+                        resourceCode: pipeline.pipelineId,
+                        action: RESOURCE_ACTION.DELETE
+                    }
                 }
             ]
         },
