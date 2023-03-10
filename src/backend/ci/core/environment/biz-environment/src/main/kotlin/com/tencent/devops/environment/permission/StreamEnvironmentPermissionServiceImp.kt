@@ -147,6 +147,8 @@ class StreamEnvironmentPermissionServiceImp @Autowired constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         return checkPermission(userId, projectId)
     }
 
