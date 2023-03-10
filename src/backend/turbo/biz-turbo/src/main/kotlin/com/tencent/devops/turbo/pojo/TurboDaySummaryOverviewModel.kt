@@ -27,6 +27,5 @@ data class TurboDaySummaryOverviewModel(
      * 按加速场景的加速次数
      */
     @Field("engine_scene_list")
-    val engineSceneList: List<EngineSceneEntity>
-
+    val engineSceneList: List<EngineSceneEntity>?
 )

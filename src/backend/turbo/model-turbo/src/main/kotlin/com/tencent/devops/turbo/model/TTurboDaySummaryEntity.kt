@@ -37,7 +37,7 @@ data class TTurboDaySummaryEntity(
     var summaryDay: LocalDate,
     // 加速场景分别加速次数 enum EnumEngineScene
     @Field("engine_scene_list")
-    var engineSceneList: List<EngineSceneEntity>,
+    var engineSceneList: List<EngineSceneEntity>?,
 
     @Field("updated_by")
     var updatedBy: String,
