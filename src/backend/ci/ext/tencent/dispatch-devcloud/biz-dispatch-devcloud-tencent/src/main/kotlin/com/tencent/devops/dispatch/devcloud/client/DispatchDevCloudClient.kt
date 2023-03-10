@@ -203,14 +203,16 @@ class DispatchDevCloudClient {
         logger.info("[$buildId]|[$vmSeqId] request url: $url")
         val request = Request.Builder()
             .url(url)
-            .headers(SmartProxyUtil.makeHeaders(
-                devCloudAppId,
-                devCloudToken,
-                userId,
-                smartProxyToken,
-                projectId,
-                pipelineId
-            ).toHeaders())
+            .headers(
+                SmartProxyUtil.makeHeaders(
+                    devCloudAppId,
+                    devCloudToken,
+                    userId,
+                    smartProxyToken,
+                    projectId,
+                    pipelineId
+                ).toHeaders()
+            )
             .get()
             .build()
         try {
@@ -219,16 +221,23 @@ class DispatchDevCloudClient {
                 logger.info("[$buildId]|[$vmSeqId] containerName: $name response: $responseContent")
                 if (!response.isSuccessful) {
                     if (retryTime > 0) {
-                        val retryTimeLocal = retryTime - 1
-                        return getContainerStatus(projectId, pipelineId, buildId, vmSeqId, userId, name, retryTimeLocal)
+                        return getContainerStatus(
+                            projectId = projectId,
+                            pipelineId = pipelineId,
+                            buildId = buildId,
+                            vmSeqId = vmSeqId,
+                            userId = userId,
+                            name = name,
+                            retryTime = retryTime - 1
+                        )
                     }
-                    // throw RuntimeException("Fail to get container status")
+
                     throw BuildFailureException(
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorType,
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.errorCode,
                         ErrorCodeEnum.VM_STATUS_INTERFACE_ERROR.formatErrorMessage,
                         "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 获取容器状态接口异常（Fail to get container" +
-                                " status, http response code: ${response.code}"
+                            " status, http response code: ${response.code}"
                     )
                 }
                 return JSONObject(responseContent)
@@ -236,8 +245,10 @@ class DispatchDevCloudClient {
         } catch (e: SocketTimeoutException) {
             // 接口超时失败，重试三次
             if (retryTime > 0) {
-                logger.info("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus SocketTimeoutException. " +
-                        "retry: $retryTime")
+                logger.info(
+                    "[$buildId]|[$vmSeqId] containerName: $name getContainerStatus SocketTimeoutException. " +
+                        "retry: $retryTime"
+                )
                 return getContainerStatus(projectId, pipelineId, buildId, vmSeqId, userId, name, retryTime - 1)
             } else {
                 logger.error("[$buildId]|[$vmSeqId] containerName: $name getContainerStatus failed.", e)
@@ -417,21 +428,18 @@ class DispatchDevCloudClient {
 
                     // 接口请求失败时，sleep 5s，再查一次
                     Thread.sleep(5 * 1000)
-                    OkhttpUtils.doHttp(request).use {
-                        val retryResponseContent = it.body!!.string()
-                        if (!it.isSuccessful) {
-                            // 没机会了，只能失败
-                            logger.error("$taskId retry get task status failed, retry responseCode: ${it.code}")
-                            throw BuildFailureException(
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
-                                ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
-                                "获取TASK状态接口异常：http response code: ${response.code}"
-                            )
-                        }
-
-                        logger.info("retry response: $retryResponseContent")
-                        return JSONObject(retryResponseContent)
+                    if (retryFlag > 0) {
+                        logger.info("$taskId get taskStatus failed. retry: $retryFlag")
+                        return getTasks(projectId, pipelineId, staffName, taskId, retryFlag - 1)
+                    } else {
+                        // 没机会了，只能失败
+                        logger.error("$taskId retry get task status failed, retry responseCode: ${response.code}")
+                        throw BuildFailureException(
+                            ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorType,
+                            ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.errorCode,
+                            ErrorCodeEnum.TASK_STATUS_INTERFACE_ERROR.formatErrorMessage,
+                            "获取TASK状态接口异常：http response code: ${response.code}"
+                        )
                     }
                 }
 

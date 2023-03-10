@@ -13,7 +13,7 @@ data class Result<out T>(
     @ApiModelProperty("数据", required = false)
     val data: T? = null,
     @ApiModelProperty("请求ID", required = false)
-    val request_id: String? = null,
+    val requestId: String? = null,
     @ApiModelProperty("请求结果", required = false)
     val result: Boolean? = null
 ) {

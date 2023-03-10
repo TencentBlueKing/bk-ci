@@ -168,63 +168,65 @@ class MacBuildListener @Autowired constructor(
             20
         )
         try {
-            if (redisLock.tryLock()) {
-                val buildTaskRecords = buildTaskService.getByBuildIdAndVmSeqId(
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId,
-                    executeCount = event.executeCount
-                )
-                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                                "buildTaskRecords: ${buildTaskRecords.size}")
+            if (!redisLock.tryLock()) {
+                return
+            }
 
-                val projectId = event.projectId
-                val creator = event.userId
-                val isGitProject = projectId.startsWith("git_")
-                logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                                "Project is or not git project:$isGitProject")
+            val buildTaskRecords = buildTaskService.getByBuildIdAndVmSeqId(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId,
+                executeCount = event.executeCount
+            )
+            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
+                            "buildTaskRecords: ${buildTaskRecords.size}")
 
-                if (buildTaskRecords.isNotEmpty) {
-                    buildTaskRecords.forEach { buildTask ->
-                        // 关闭的时候对container进行锁操作，防止重复操作
-                        try {
-                            val vmIp = buildTask.vmIp
-                            val vmId = buildTask.vmId
-                            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
-                                            "Get the vm ip($vmIp),vm id($vmId)")
-                            macosVMRedisService.deleteRedisBuild(vmIp)
-                            devCloudMacosService.deleteVM(
-                                creator = creator,
-                                projectId = projectId,
-                                pipelineId = buildTask.pipelineId,
-                                buildId = buildTask.buildId,
-                                vmSeqId = buildTask.vmSeqId,
-                                vmId = vmId
+            val projectId = event.projectId
+            val creator = event.userId
+            val isGitProject = projectId.startsWith("git_")
+            logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
+                            "Project is or not git project:$isGitProject")
 
-                            )
-                            logger.info("[${event.buildId}]|[${event.vmSeqId}] end build. buildId: ${buildTask.id}")
-                            buildHistoryService.endBuild(MacJobStatus.Done, buildTask.buildHistoryId, buildTask.id)
-                        } catch (e: Exception) {
-                            val vmIp = buildTask.vmIp
-                            logger.error(
-                                "[${event.projectId}|${event.pipelineId}|${event.buildId}] shutdown error,vm is $vmIp",
-                                e
-                            )
+            if (buildTaskRecords.isEmpty()) {
+                logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the vm ip")
+                return
+            }
 
-                            if (e is SocketTimeoutException) {
-                                logger.error(
-                                    "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                                        "vm is $vmIp, end build."
-                                )
-                                buildHistoryService.endBuild(
-                                    MacJobStatus.ShutDownError,
-                                    buildTask.buildHistoryId,
-                                    buildTask.id
-                                )
-                            }
-                        }
+            buildTaskRecords.forEach { buildTask ->
+                // 关闭的时候对container进行锁操作，防止重复操作
+                try {
+                    val vmIp = buildTask.vmIp
+                    val vmId = buildTask.vmId
+                    logger.info("[${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}] " +
+                                    "Get the vm ip($vmIp),vm id($vmId)")
+                    macosVMRedisService.deleteRedisBuild(vmIp)
+                    devCloudMacosService.deleteVM(
+                        creator = creator,
+                        projectId = projectId,
+                        pipelineId = buildTask.pipelineId,
+                        buildId = buildTask.buildId,
+                        vmSeqId = buildTask.vmSeqId,
+                        vmId = vmId
+                    )
+                    logger.info("[${event.buildId}]|[${event.vmSeqId}] end build. buildId: ${buildTask.id}")
+                    buildHistoryService.endBuild(MacJobStatus.Done, buildTask.buildHistoryId, buildTask.id)
+                } catch (e: Exception) {
+                    val vmIp = buildTask.vmIp
+                    logger.error(
+                        "[${event.projectId}|${event.pipelineId}|${event.buildId}] shutdown error,vm is $vmIp",
+                        e
+                    )
+
+                    if (e is SocketTimeoutException) {
+                        logger.error(
+                            "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
+                                "vm is $vmIp, end build."
+                        )
+                        buildHistoryService.endBuild(
+                            MacJobStatus.ShutDownError,
+                            buildTask.buildHistoryId,
+                            buildTask.id
+                        )
                     }
-                } else {
-                    logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the vm ip")
                 }
             }
         } catch (e: Exception) {

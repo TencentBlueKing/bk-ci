@@ -150,68 +150,66 @@ class WindowsBuildListener @Autowired constructor(
         )
 
         try {
-            redisLock.use {
-                if (!redisLock.tryLock()) {
-                    logger.info("shut down lock($lockKey) fail")
-                    Thread.sleep(100)
-                    return@use
-                }
+            if (!redisLock.tryLock()) {
+                logger.info("shut down lock($lockKey) fail")
+                Thread.sleep(100)
+                return
+            }
 
-                val buildHistoryRecords = windowsBuildHistoryService.getByBuildIdAndVmSeqId(
-                    buildId = event.buildId,
-                    vmSeqId = event.vmSeqId
-                )
-                logger.info(
-                    "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
-                        "|buildHistoryRecords|$buildHistoryRecords")
+            val buildHistoryRecords = windowsBuildHistoryService.getByBuildIdAndVmSeqId(
+                buildId = event.buildId,
+                vmSeqId = event.vmSeqId
+            )
+            logger.info(
+                "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
+                    "|buildHistoryRecords|$buildHistoryRecords")
 
-                val projectId = event.projectId
-                val creator = event.userId
-                val isGitProject = projectId.startsWith("git_")
-                logger.info(
-                    "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
-                        "|Project is or not git project:$isGitProject"
-                )
+            val projectId = event.projectId
+            val creator = event.userId
+            val isGitProject = projectId.startsWith("git_")
+            logger.info(
+                "${event.projectId}|${event.pipelineId}|${event.buildId}|${event.vmSeqId}" +
+                    "|Project is or not git project:$isGitProject"
+            )
 
-                if (buildHistoryRecords.isNullOrEmpty()) {
-                    logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the vm ip")
-                    return
-                }
+            if (buildHistoryRecords.isNullOrEmpty()) {
+                logger.warn("[${event.projectId}|${event.pipelineId}|${event.buildId}] Fail to get the vm ip")
+                return
+            }
 
-                buildHistoryRecords.forEach { buildHistory ->
-                    // 关闭的时候对container进行锁操作，防止重复操作
-                    try {
-                        if (buildHistory.status == WindowsJobStatus.Done.name) {
-                            return@forEach
-                        }
-                        val vmIp = buildHistory.vmIp
-                        logger.info(
-                            "${event.projectId}|${event.pipelineId}|${event.buildId}" +
-                                "|${event.vmSeqId}|Get the vm ip($vmIp))"
-                        )
-                        devCloudWindowsService.deleteWindowsMachine(
-                            creator = creator,
-                            taskGuid = buildHistory.taskGuid
-                        )
-
-                        logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
-                        windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
-                    } catch (e: SocketTimeoutException) {
-                        logger.error(
-                            "${event.projectId}|${event.pipelineId}|${event.buildId}" +
-                                "|vm is ${buildHistory.vmIp}, end build.", e
-                        )
-                        windowsBuildHistoryService.endBuild(
-                            WindowsJobStatus.ShutDownError,
-                            buildHistory.id
-                        )
-                    } catch (e: Throwable) {
-                        logger.error(
-                            "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
-                                "shutdown error,vm is ${buildHistory.vmIp}",
-                            e
-                        )
+            buildHistoryRecords.forEach { buildHistory ->
+                // 关闭的时候对container进行锁操作，防止重复操作
+                try {
+                    if (buildHistory.status == WindowsJobStatus.Done.name) {
+                        return@forEach
                     }
+                    val vmIp = buildHistory.vmIp
+                    logger.info(
+                        "${event.projectId}|${event.pipelineId}|${event.buildId}" +
+                            "|${event.vmSeqId}|Get the vm ip($vmIp))"
+                    )
+                    devCloudWindowsService.deleteWindowsMachine(
+                        creator = creator,
+                        taskGuid = buildHistory.taskGuid
+                    )
+
+                    logger.info("${event.buildId}|${event.vmSeqId}|end build|buildId|${buildHistory.id}")
+                    windowsBuildHistoryService.endBuild(WindowsJobStatus.Done, buildHistory.id)
+                } catch (e: SocketTimeoutException) {
+                    logger.error(
+                        "${event.projectId}|${event.pipelineId}|${event.buildId}" +
+                            "|vm is ${buildHistory.vmIp}, end build.", e
+                    )
+                    windowsBuildHistoryService.endBuild(
+                        WindowsJobStatus.ShutDownError,
+                        buildHistory.id
+                    )
+                } catch (e: Throwable) {
+                    logger.error(
+                        "[${event.projectId}|${event.pipelineId}|${event.buildId}] " +
+                            "shutdown error,vm is ${buildHistory.vmIp}",
+                        e
+                    )
                 }
             }
         } catch (e: Exception) {

@@ -2,7 +2,7 @@ package com.tencent.devops.dispatch.devcloud.listener
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
@@ -33,11 +33,10 @@ import com.tencent.devops.dispatch.devcloud.pojo.Pool
 import com.tencent.devops.dispatch.devcloud.pojo.Registry
 import com.tencent.devops.dispatch.devcloud.pojo.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.devcloud.pojo.TaskStatus
-import com.tencent.devops.dispatch.devcloud.utils.CommonUtils
 import com.tencent.devops.dispatch.devcloud.utils.DevCloudJobRedisUtils
 import com.tencent.devops.dispatch.devcloud.utils.PipelineContainerLock
-import com.tencent.devops.dispatch.devcloud.utils.QueueSequenceLock
 import com.tencent.devops.dispatch.devcloud.utils.RedisUtils
+import com.tencent.devops.model.dispatch.devcloud.tables.records.TDevcloudBuildRecord
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -92,12 +91,6 @@ class DevCloudBuildListener @Autowired constructor(
 
     @Value("\${atom.fuse.atom-code}")
     val fuseAtomCode: String? = null
-
-/*    @Value("\${devCloud.regionId}")
-    val regionId: String? = "ap-guangzhou"
-
-    @Value("\${devCloud.clusterType}")
-    val clusterType: String? = "normal"*/
 
     private val threadLocalCpu = ThreadLocal<Int>()
     private val threadLocalMemory = ThreadLocal<String>()
@@ -156,26 +149,6 @@ class DevCloudBuildListener @Autowired constructor(
                 shutdownLock.unlock()
             }
         } else {
-/*            val vmSeqId = event.vmSeqId!!
-            val redisLock = QueueSequenceLock(redisOperation, event.buildId, vmSeqId)
-            try {
-                if (redisLock.tryLock()) {
-                    val startMessageExist = redisUtils.existStartQueue(event.buildId, vmSeqId)
-                    // 若startup消息存在缓存中，删除缓存并消费消息，不存在则记录shutdown消息
-                    if (!startMessageExist) {
-                        // 记录消费信息
-                        redisUtils.setShutdownQueue(event.buildId, vmSeqId, event)
-                        return
-                    } else {
-                        redisUtils.deleteStartQueue(event.buildId, vmSeqId)
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error("${event.buildId}|$vmSeqId set startMessage failed.", e)
-            } finally {
-                redisLock.unlock()
-            }*/
-
             doShutdown(event)
         }
     }
@@ -254,7 +227,7 @@ class DevCloudBuildListener @Autowired constructor(
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.errorCode,
                     ErrorCodeEnum.DEVCLOUD_INTERFACE_TIMEOUT.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 接口请求超时"
+                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 接口请求超时"
                 )
             }
             onFailure(
@@ -263,10 +236,7 @@ class DevCloudBuildListener @Autowired constructor(
                 ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
                 "创建构建机失败，错误信息:${e.message}. \n容器构建异常请参考：$devCloudHelpUrl"
             )
-        } /*finally {
-            // 检查是否正常shutdown(取消构建以及队列消费顺序等可能导致非正常shutdown)
-            checkShutdown(dispatchMessage)
-        }*/
+        }
     }
 
     private fun recordBuildHisAndGatewayCheck(
@@ -295,7 +265,7 @@ class DevCloudBuildListener @Autowired constructor(
         containerPool: Pool,
         poolNo: Int
     ) {
-        val (host, name, tag) = CommonUtils.parseImage(containerPool.container!!)
+        val (host, name, tag) = CiYamlUtils.parseImage(containerPool.container!!)
         val userName = containerPool.credential!!.user
         val password = containerPool.credential!!.password
 
@@ -405,7 +375,7 @@ class DevCloudBuildListener @Autowired constructor(
                     createResult.third.errorType,
                     createResult.third.errorCode,
                     ErrorCodeEnum.CREATE_VM_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 构建机创建失败:${createResult.second}"
+                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 构建机创建失败:${createResult.second}"
                 )
             }
         }
@@ -518,7 +488,7 @@ class DevCloudBuildListener @Autowired constructor(
                     startResult.third.errorType,
                     startResult.third.errorCode,
                     ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                    "第三方服务-DEVCLOUD 异常，请联系8006排查，异常信息 - 构建机启动失败，错误信息:${startResult.second}"
+                    "第三方服务-DEVCLOUD 异常，请联系O2000排查，异常信息 - 构建机启动失败，错误信息:${startResult.second}"
                 )
             }
         }
@@ -581,53 +551,6 @@ class DevCloudBuildListener @Autowired constructor(
         }
 
         return containerPool
-    }
-
-    private fun checkShutdown(dispatchMessage: DispatchMessage) {
-        var event: PipelineAgentShutdownEvent? = null
-        val shutdownEvent = redisUtils.getShutdownCancelMessage(dispatchMessage.buildId)
-        if (shutdownEvent != null) {
-            event = PipelineAgentShutdownEvent(
-                actionType = shutdownEvent.actionType,
-                buildId = shutdownEvent.buildId,
-                buildResult = shutdownEvent.buildResult,
-                delayMills = shutdownEvent.delayMills,
-                pipelineId = shutdownEvent.pipelineId,
-                projectId = shutdownEvent.projectId,
-                routeKeySuffix = shutdownEvent.routeKeySuffix,
-                source = shutdownEvent.source,
-                userId = shutdownEvent.userId,
-                vmSeqId = dispatchMessage.vmSeqId,
-                executeCount = dispatchMessage.executeCount
-            )
-        }
-
-        if (event == null) {
-            val redisLock = QueueSequenceLock(redisOperation, dispatchMessage.buildId, dispatchMessage.vmSeqId)
-            try {
-                if (redisLock.tryLock()) {
-                    // 将启动消息放入缓存中
-                    redisUtils.setStartQueue(dispatchMessage.buildId, dispatchMessage.vmSeqId)
-                    val shutdownMessage = redisUtils.getShutdownQueue(dispatchMessage.buildId, dispatchMessage.vmSeqId)
-                    // 若shutdown消息存在缓存中，消费消息
-                    if (shutdownMessage != null && shutdownMessage.isNotEmpty()) {
-                        redisUtils.deleteShutdownQueue(dispatchMessage.buildId, dispatchMessage.vmSeqId)
-                        event = JsonUtil.to(shutdownMessage, PipelineAgentShutdownEvent::class.java)
-                    }
-                }
-            } catch (e: Exception) {
-                logger.error(
-                    "${dispatchMessage.buildId}|${dispatchMessage.vmSeqId} consumer shutdownMessage failed.",
-                    e
-                )
-            } finally {
-                redisLock.unlock()
-            }
-        }
-
-        if (event != null) {
-            doShutdown(event)
-        }
     }
 
     fun doShutdown(event: PipelineAgentShutdownEvent) {
@@ -718,55 +641,6 @@ class DevCloudBuildListener @Autowired constructor(
             event.vmSeqId,
             event.executeCount ?: 1
         )
-
-/*        val buildHistoryList = devCloudBuildHisDao.get(dslContext, event.buildId, event.vmSeqId)
-        buildHistoryList.forEach {
-            if (it.containerName != null && it.containerName!!.isNotEmpty()) {
-                if (it.poolNo != null && it.poolNo!!.isNotEmpty()) {
-                    try {
-                        logger.info("Update status in db, buildId: ${event.buildId}
-                        vmSeqId: ${it.vmSeqId}, poolNo:${it.poolNo}")
-                        devCloudBuildDao.updateStatus(dslContext, event.pipelineId, it.vmSeqId, it.poolNo!!.toInt(),
-                        ContainerStatus.IDLE.status)
-                    } catch (e: Exception) {
-                        logger.error("Update status failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
-                        poolNo:${it.poolNo}", e)
-                    }
-                }
-
-                try {
-                    val statusResponse = dispatchDevCloudClient.getContainerStatus(event.userId, it.containerName)
-                    val actionCode = statusResponse.optInt("actionCode")
-                    if (actionCode == 200) {
-                        if ("stopped" == statusResponse.optString("data")) {
-                            logger.info("buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
-                            containerName:${it.containerName} " +
-                                    "status in ('stopped'), skip stop.")
-                            return@forEach
-                        }
-                    }
-
-                    logger.info("stop devcloud container, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId},
-                    containerName:${it.containerName}")
-                    val taskId = dispatchDevCloudClient.operateContainer(event.userId, it.containerName!!, Action.STOP)
-                    val opResult = dispatchDevCloudClient.waitTaskFinish(event.buildId, taskId)
-                    if (opResult.first == TaskStatus.SUCCEEDED) {
-                        logger.info("buildId: ${event.buildId} vmSeqId: ${it.vmSeqId} stop devcloud container success.")
-                    } else {
-                        // TODO 告警通知
-                        logger.warn("stop devcloud container failed, buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}
-                        msg: ${opResult.second}")
-                    }
-                } catch (e: Exception) {
-                    logger.error("stop devcloud container error. buildId: ${event.buildId} vmSeqId: ${it.vmSeqId}
-                    containerName: ${it.containerName}", e)
-                }
-            }
-
-            redisUtils.deleteDockerBuild(it.id, it.secretKey)
-            // 刪除缓存启动消息
-            // redisUtils.deleteStartQueue(event.buildId, it.vmSeqId)
-        }*/
     }
 
     private fun getIdleContainer(dispatchMessage: DispatchMessage): Triple<String?, Int, Boolean> {
@@ -777,6 +651,8 @@ class DevCloudBuildListener @Autowired constructor(
                 logger.info("poolNo is $i")
                 val containerInfo =
                     devCloudBuildDao.get(dslContext, dispatchMessage.pipelineId, dispatchMessage.vmSeqId, i)
+
+                // 当前流水线构建没有构建池记录，新增构建池记录
                 if (null == containerInfo) {
                     devCloudBuildDao.createOrUpdate(
                         dslContext = dslContext,
@@ -793,88 +669,84 @@ class DevCloudBuildListener @Autowired constructor(
                         disk = threadLocalDisk.get()
                     )
                     return Triple(null, i, true)
-                } else {
-                    if (containerInfo.status == ContainerStatus.BUSY.status) {
-                        continue
-                    }
-
-                    if (containerInfo.containerName.isEmpty()) {
-                        devCloudBuildDao.createOrUpdate(
-                            dslContext = dslContext,
-                            pipelineId = dispatchMessage.pipelineId,
-                            vmSeqId = dispatchMessage.vmSeqId,
-                            poolNo = i,
-                            projectId = dispatchMessage.projectId,
-                            containerName = "",
-                            image = dispatchMessage.dispatchMessage,
-                            status = ContainerStatus.BUSY.status,
-                            userId = dispatchMessage.userId,
-                            cpu = threadLocalCpu.get(),
-                            memory = threadLocalMemory.get(),
-                            disk = threadLocalDisk.get()
-                        )
-                        return Triple(null, i, true)
-                    }
-
-                    val statusResponse = dispatchDevCloudClient.getContainerStatus(
-                        dispatchMessage.projectId,
-                        dispatchMessage.pipelineId,
-                        dispatchMessage.buildId,
-                        dispatchMessage.vmSeqId,
-                        dispatchMessage.userId,
-                        containerInfo.containerName
-                    )
-                    val actionCode = statusResponse.optInt("actionCode")
-                    if (actionCode == 200) {
-                        if ("stopped" == statusResponse.optString("data") ||
-                            "stop" == statusResponse.optString("data")) {
-                            var containerChanged = false
-                            // 查看构建性能配置是否变更
-                            if (threadLocalCpu.get() != containerInfo.cpu ||
-                                threadLocalDisk.get() != containerInfo.disk ||
-                                threadLocalMemory.get() != containerInfo.memory) {
-                                containerChanged = true
-                                logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId}" +
-                                                " performanceConfig changed.")
-                            }
-
-                            // 镜像是否变更
-                            if (checkImageChanged(containerInfo.images, dispatchMessage)) {
-                                containerChanged = true
-                            }
-
-                            devCloudBuildDao.updateStatus(
-                                dslContext,
-                                dispatchMessage.pipelineId,
-                                dispatchMessage.vmSeqId,
-                                i,
-                                ContainerStatus.BUSY.status
-                            )
-                            return Triple(containerInfo.containerName, i, containerChanged)
-                        }
-                        if ("exception" == statusResponse.optString("data")) {
-                            clearExceptionContainer(dispatchMessage, containerInfo.containerName)
-                            devCloudBuildDao.delete(dslContext, dispatchMessage.pipelineId, dispatchMessage.vmSeqId, i)
-                            devCloudBuildDao.createOrUpdate(
-                                dslContext = dslContext,
-                                pipelineId = dispatchMessage.pipelineId,
-                                vmSeqId = dispatchMessage.vmSeqId,
-                                poolNo = i,
-                                projectId = dispatchMessage.projectId,
-                                containerName = "",
-                                image = dispatchMessage.dispatchMessage,
-                                status = ContainerStatus.BUSY.status,
-                                userId = dispatchMessage.userId,
-                                cpu = threadLocalCpu.get(),
-                                memory = threadLocalMemory.get(),
-                                disk = threadLocalDisk.get()
-                            )
-                            return Triple(null, i, true)
-                        }
-                    }
-                    // continue to find idle container
                 }
+
+                // 构件序号被占用，接着在构建池内寻找
+                if (containerInfo.status == ContainerStatus.BUSY.status) {
+                    continue
+                }
+
+                // 分配空闲池
+                if (containerInfo.containerName.isEmpty()) {
+                    devCloudBuildDao.createOrUpdate(
+                        dslContext = dslContext,
+                        pipelineId = dispatchMessage.pipelineId,
+                        vmSeqId = dispatchMessage.vmSeqId,
+                        poolNo = i,
+                        projectId = dispatchMessage.projectId,
+                        containerName = "",
+                        image = dispatchMessage.dispatchMessage,
+                        status = ContainerStatus.BUSY.status,
+                        userId = dispatchMessage.userId,
+                        cpu = threadLocalCpu.get(),
+                        memory = threadLocalMemory.get(),
+                        disk = threadLocalDisk.get()
+                    )
+                    return Triple(null, i, true)
+                }
+
+                val statusResponse = dispatchDevCloudClient.getContainerStatus(
+                    dispatchMessage.projectId,
+                    dispatchMessage.pipelineId,
+                    dispatchMessage.buildId,
+                    dispatchMessage.vmSeqId,
+                    dispatchMessage.userId,
+                    containerInfo.containerName
+                )
+                val actionCode = statusResponse.optInt("actionCode")
+                val containerStatus = statusResponse.optString("data")
+
+                // 接口异常，接着在构建池内寻找
+                if (actionCode != 200) {
+                    continue
+                }
+
+                // 启用stopped容器
+                if ("stopped" == containerStatus || "stop" == containerStatus) {
+                    devCloudBuildDao.updateStatus(
+                        dslContext,
+                        dispatchMessage.pipelineId,
+                        dispatchMessage.vmSeqId,
+                        i,
+                        ContainerStatus.BUSY.status
+                    )
+                    return Triple(containerInfo.containerName, i, checkContainerChanged(containerInfo, dispatchMessage))
+                }
+
+                // 删除池内的异常容器，同时重置池子
+                if ("exception" == containerStatus) {
+                    clearExceptionContainer(dispatchMessage, containerInfo.containerName)
+                    devCloudBuildDao.delete(dslContext, dispatchMessage.pipelineId, dispatchMessage.vmSeqId, i)
+                    devCloudBuildDao.createOrUpdate(
+                        dslContext = dslContext,
+                        pipelineId = dispatchMessage.pipelineId,
+                        vmSeqId = dispatchMessage.vmSeqId,
+                        poolNo = i,
+                        projectId = dispatchMessage.projectId,
+                        containerName = "",
+                        image = dispatchMessage.dispatchMessage,
+                        status = ContainerStatus.BUSY.status,
+                        userId = dispatchMessage.userId,
+                        cpu = threadLocalCpu.get(),
+                        memory = threadLocalMemory.get(),
+                        disk = threadLocalDisk.get()
+                    )
+                    return Triple(null, i, true)
+                }
+                // continue to find idle container
             }
+
+            // 构建池遍历结束也没有可用构建机，报错
             throw BuildFailureException(
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorType,
                 ErrorCodeEnum.NO_IDLE_VM_ERROR.errorCode,
@@ -884,6 +756,28 @@ class DevCloudBuildListener @Autowired constructor(
         } finally {
             lock.unlock()
         }
+    }
+
+    private fun checkContainerChanged(
+        containerInfo: TDevcloudBuildRecord,
+        dispatchMessage: DispatchMessage
+    ): Boolean {
+        var containerChanged = false
+        // 查看构建性能配置是否变更
+        if (threadLocalCpu.get() != containerInfo.cpu ||
+            threadLocalDisk.get() != containerInfo.disk ||
+            threadLocalMemory.get() != containerInfo.memory) {
+            containerChanged = true
+            logger.info("buildId: ${dispatchMessage.buildId}, vmSeqId: ${dispatchMessage.vmSeqId}" +
+                            " performanceConfig changed.")
+        }
+
+        // 镜像是否变更
+        if (checkImageChanged(containerInfo.images, dispatchMessage)) {
+            containerChanged = true
+        }
+
+        return containerChanged
     }
 
     private fun checkImageChanged(images: String, dispatchMessage: DispatchMessage): Boolean {

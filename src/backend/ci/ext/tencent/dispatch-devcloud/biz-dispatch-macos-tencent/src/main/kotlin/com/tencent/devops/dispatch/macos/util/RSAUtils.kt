@@ -7,9 +7,9 @@ import java.security.PublicKey
 import javax.crypto.Cipher
 
 object RSAUtils {
-    val transformation = "RSA"
-    val ENCRYPT_MAX_SIZE = 117
-    val DECRYPT_MAX_SIZE = 256
+    private const val transformation = "RSA"
+    private const val ENCRYPT_MAX_SIZE = 117
+    private const val DECRYPT_MAX_SIZE = 256
     /**
      * 私钥加密
      */

@@ -238,7 +238,6 @@ class DispatchDevcloudService @Autowired constructor(
         var needShow = false
         val performanceMaps = mutableListOf<PerformanceMap>()
         if (projectPerformance != null) {
-            needShow = true
             val cpuInt = projectPerformance["CPU"] as Int
             val memoryInt = projectPerformance["MEMORY"] as Int
             val diskInt = projectPerformance["DISK"] as Int
@@ -246,51 +245,59 @@ class DispatchDevcloudService @Autowired constructor(
             val optionList = dcPerformanceOptionsDao.getOptionsList(dslContext, cpuInt, memoryInt, diskInt)
             if (optionList.size == 0) {
                 performanceMaps.add(
-                    PerformanceMap("0", PerformanceConfigVO(
-                    projectId = projectId,
-                    cpu = cpu,
-                    memory = memoryG,
-                    disk = disk,
-                    description = "Basic"
-                )
-                    )
-                )
-            } else {
-                optionList.forEach {
-                    if (it.memory == memory.dropLast(1).toInt()) {
-                        default = it.id.toString()
-                    }
-                    performanceMaps.add(
-                        PerformanceMap(it.id.toString(), PerformanceConfigVO(
-                        projectId = projectId,
-                        cpu = it.cpu,
-                        memory = "${it.memory / 1024}G",
-                        disk = "${it.disk}G",
-                        description = it.description
-                    )
+                    PerformanceMap(
+                        id = "0",
+                        performanceConfigVO = PerformanceConfigVO(
+                            projectId = projectId,
+                            cpu = cpu,
+                            memory = memoryG,
+                            disk = disk,
+                            description = "Basic"
                         )
                     )
-                }
+                )
 
-                // 若没有application默认的配置，默认第一个
-                if (default == "0") {
-                    default = optionList[0].id.toString()
+                return UserPerformanceOptionsVO(default, true, performanceMaps)
+            }
+
+            optionList.forEach {
+                if (it.memory == memory.dropLast(1).toInt()) {
+                    default = it.id.toString()
                 }
+                performanceMaps.add(
+                    PerformanceMap(
+                        id = it.id.toString(),
+                        performanceConfigVO = PerformanceConfigVO(
+                            projectId = projectId,
+                            cpu = it.cpu,
+                            memory = "${it.memory / 1024}G",
+                            disk = "${it.disk}G",
+                            description = it.description
+                        )
+                    )
+                )
+            }
+
+            // 若没有application默认的配置，默认第一个
+            if (default == "0") {
+                default = optionList[0].id.toString()
             }
         } else {
             performanceMaps.add(
-                PerformanceMap("0", PerformanceConfigVO(
-                projectId = projectId,
-                cpu = cpu,
-                memory = memoryG,
-                disk = disk,
-                description = "Basic"
-            )
+                PerformanceMap(
+                    id = "0",
+                    performanceConfigVO = PerformanceConfigVO(
+                        projectId = projectId,
+                        cpu = cpu,
+                        memory = memoryG,
+                        disk = disk,
+                        description = "Basic"
+                    )
                 )
             )
         }
 
-        return UserPerformanceOptionsVO(default, needShow, performanceMaps)
+        return UserPerformanceOptionsVO(default, true, performanceMaps)
     }
 
     fun createJob(
