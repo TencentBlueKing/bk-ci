@@ -42,6 +42,7 @@ import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.service.ProjectApprovalService
 import com.tencent.devops.project.service.ProjectPermissionService
 import org.jooq.DSLContext
+import org.springframework.beans.factory.annotation.Value
 
 class RbacProjectPermissionService(
     private val authResourceApi: AuthResourceApi,
@@ -50,6 +51,11 @@ class RbacProjectPermissionService(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao
 ) : ProjectPermissionService {
+
+    // 项目是否需要开启审批
+    @Value("\${auth.project.approval:#{false}}")
+    private val authProjectApproval: Boolean = false
+
     override fun verifyUserProjectPermission(accessToken: String?, projectCode: String, userId: String): Boolean {
         return true
     }
@@ -177,5 +183,5 @@ class RbacProjectPermissionService(
         )
     }
 
-    override fun needApproval(needApproval: Boolean?) = needApproval == true
+    override fun needApproval(needApproval: Boolean?) = needApproval == true && authProjectApproval
 }
