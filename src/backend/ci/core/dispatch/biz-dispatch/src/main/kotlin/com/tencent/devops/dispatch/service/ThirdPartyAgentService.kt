@@ -40,6 +40,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.type.agent.Credential
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.dispatch.dao.ThirdPartyAgentBuildDao
@@ -47,9 +48,11 @@ import com.tencent.devops.dispatch.pojo.ThirdPartyAgentPreBuildAgents
 import com.tencent.devops.dispatch.pojo.enums.PipelineTaskStatus
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.AgentBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.BuildJobType
+import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildDockerInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildInfo
 import com.tencent.devops.dispatch.pojo.thirdPartyAgent.ThirdPartyBuildWithStatus
 import com.tencent.devops.dispatch.service.dispatcher.agent.DispatchService
+import com.tencent.devops.dispatch.utils.CommonUtils
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentLock
 import com.tencent.devops.dispatch.utils.redis.ThirdPartyAgentBuildRedisUtils
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
@@ -57,8 +60,11 @@ import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgent
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentUpgradeByVersionInfo
 import com.tencent.devops.model.dispatch.tables.records.TDispatchThirdpartyAgentBuildRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
+import com.tencent.devops.process.pojo.TemplateAcrossInfoType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
 import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
+import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -214,6 +220,35 @@ class ThirdPartyAgentService @Autowired constructor(
                     )
                 }
 
+                // 第三方构建机docker启动获取镜像凭据
+                val dockerInfo = if (build.dockerInfo == null) {
+                    null
+                } else {
+                    JsonUtil.getObjectMapper().readValue(
+                        build.dockerInfo.data(),
+                        object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
+                    )
+                }
+                var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
+                // 只有凭据ID的参与计算
+                if (dockerInfo != null) {
+                    if ((dockerInfo.credential?.user.isNullOrBlank() &&
+                                dockerInfo.credential?.password.isNullOrBlank()) &&
+                        !(dockerInfo.credential?.credentialId.isNullOrBlank())
+                    ) {
+                        val (userName, password) = try {
+                            getTicket(projectId, dockerInfo.credential!!)
+                        } catch (e: Exception) {
+                            logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error")
+                            Pair(null, null)
+                        }
+                        dockerInfo.credential?.user = userName
+                        dockerInfo.credential?.password = password
+                    }
+                    buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                }
+
+
                 return AgentResult(
                     AgentStatus.IMPORT_OK,
                     ThirdPartyBuildInfo(
@@ -222,14 +257,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         vmSeqId = build.vmSeqId,
                         workspace = build.workspace,
                         pipelineId = build.pipelineId,
-                        dockerBuildInfo = if (build.dockerInfo == null) {
-                            null
-                        } else {
-                            JsonUtil.getObjectMapper().readValue(
-                                build.dockerInfo.data(),
-                                object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
-                            )
-                        },
+                        dockerBuildInfo = buildDockerInfo,
                         executeCount = build.executeCount,
                         containerHashId = build.containerHashId
                     )
@@ -241,6 +269,46 @@ class ThirdPartyAgentService @Autowired constructor(
             logger.warn("Fail to start build for agent($agentId)", ignored)
             throw ignored
         }
+    }
+
+    // 获取凭据，同时存在stream中跨项目引用凭据的情况
+    // 先获取当前项目凭据，如果当前项目没有凭据则判断跨项目引用来获取跨项目凭据
+    private fun getTicket(projectId: String, credInfo: Credential): Pair<String?, String?> {
+        if (credInfo.credentialId.isNullOrBlank()) {
+            return Pair(null, null)
+        }
+        val tickets = CommonUtils.getCredential(
+            client = client,
+            projectId = projectId,
+            credentialId = credInfo.credentialId!!,
+            type = CredentialType.USERNAME_PASSWORD
+        )
+        if (!tickets["v1"].isNullOrBlank() && !tickets["v2"].isNullOrBlank()) {
+            return Pair(tickets["v1"], tickets["v2"])
+        }
+
+        // 校验跨项目信息可能
+        if (credInfo.acrossTemplateId.isNullOrBlank() || credInfo.jobId.isNullOrBlank()) {
+            return Pair(null, null)
+        }
+        val result = client.get(ServiceTemplateAcrossResource::class).getBuildAcrossTemplateInfo(
+            projectId = projectId,
+            templateId = credInfo.acrossTemplateId!!
+        ).data ?: return Pair(tickets["v1"], tickets["v2"])
+
+        val across = result.firstOrNull {
+            it.templateType == TemplateAcrossInfoType.JOB &&
+                    it.templateInstancesIds.contains(credInfo.jobId)
+        } ?: return Pair(tickets["v1"], tickets["v2"])
+
+        // 校验成功后获取跨项目的凭据
+        val acrossTickets = CommonUtils.getCredential(
+            client = client,
+            projectId = across.targetProjectId,
+            credentialId = credInfo.credentialId!!,
+            type = CredentialType.USERNAME_PASSWORD
+        )
+        return Pair(tickets["v1"], tickets["v2"])
     }
 
     fun checkIfCanUpgradeByVersion(

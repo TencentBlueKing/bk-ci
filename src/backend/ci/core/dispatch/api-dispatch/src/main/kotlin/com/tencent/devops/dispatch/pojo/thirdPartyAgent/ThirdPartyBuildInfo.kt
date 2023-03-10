@@ -44,7 +44,7 @@ data class ThirdPartyBuildInfo(
     @ApiModelProperty("流水线ID")
     val pipelineId: String?,
     @ApiModelProperty("docker构建相关信息")
-    val dockerBuildInfo: ThirdPartyAgentDockerInfoDispatch?,
+    val dockerBuildInfo: ThirdPartyBuildDockerInfo?,
     @ApiModelProperty("流水线执行次数")
     val executeCount: Int?,
     @ApiModelProperty("容器hashId日志使用")
