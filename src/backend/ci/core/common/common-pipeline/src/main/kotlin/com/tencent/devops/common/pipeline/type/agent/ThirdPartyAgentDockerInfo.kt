@@ -24,6 +24,8 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
     }
 }
 
+@JsonInclude(JsonInclude.Include.NON_NULL)
+@JsonIgnoreProperties(ignoreUnknown = true)
 data class Credential(
     var user: String?,
     var password: String?,
