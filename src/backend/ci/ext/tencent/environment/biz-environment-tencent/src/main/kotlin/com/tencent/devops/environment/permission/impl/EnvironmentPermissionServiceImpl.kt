@@ -301,6 +301,8 @@ class EnvironmentPermissionServiceImpl @Autowired constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         val iamPermission = authPermissionApi.validateUserResourcePermission(
             user = userId,
             serviceCode = environmentAuthServiceCode,

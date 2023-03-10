@@ -87,6 +87,8 @@ class TxV3EnvironmentPermissionService constructor(
         nodeId: Long,
         permission: AuthPermission
     ): Boolean {
+        if (permission == AuthPermission.VIEW)
+            return true
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
