@@ -129,7 +129,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER = "2101072" // Stage[{0}]的审核组[{1}]没有未配置可执行人
     const val ERROR_PIPELINE_STAGE_REVIEW_GROUP_NOT_FOUND = "2101073" // Stage[{0}]的审核组ID[{1}]不存在
     const val ERROR_PIPELINE_STAGE_POSITION_NOT_FOUND = "2101074" // Stage[{0}]的准入准出标识[{1}]不正确
-    const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败
+    const val ERROR_PIPELINE_START_WITH_ERROR = "2101075" // 流水线启动准备失败{0}
     const val ERROR_TEMPLATE_NOT_UPDATE = "2101076" // 该模板无法更新
     const val ERROR_PIPELINE_MODEL_MATRIX_YAML_CHECK_ERROR = "2101077" // matrix yaml 格式错误
     const val ERROR_TEMPLATE_VERSION_COUNT_EXCEEDS_LIMIT = "2101078" // 模板的版本数量不能超过{0}个

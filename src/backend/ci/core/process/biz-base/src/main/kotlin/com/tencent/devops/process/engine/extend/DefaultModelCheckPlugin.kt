@@ -101,13 +101,11 @@ open class DefaultModelCheckPlugin constructor(
         }
         val stage = stages.getOrNull(0)
             ?: throw ErrorCodeException(
-                defaultMessage = "流水线Stage为空",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
             )
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
-                defaultMessage = "流水线只能有一个触发Stage",
                 errorCode = ProcessMessageCode.ONLY_ONE_TRIGGER_JOB_IN_PIPELINE
             )
         }
@@ -133,7 +131,6 @@ open class DefaultModelCheckPlugin constructor(
             }
             if (containers.isEmpty()) {
                 throw ErrorCodeException(
-                    defaultMessage = "流水线Stage为空",
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
                 )
             }
@@ -141,7 +138,6 @@ open class DefaultModelCheckPlugin constructor(
             if (s.finally) { // finallyStage只能存在于最后一个
                 if (nowPosition < lastPosition) {
                     throw ErrorCodeException(
-                        defaultMessage = "流水线: 每个Model只能包含一个FinallyStage，并且处于最后位置",
                         errorCode = ProcessMessageCode.ERROR_FINALLY_STAGE
                     )
                 }
@@ -180,14 +176,12 @@ open class DefaultModelCheckPlugin constructor(
         stage.resetBuildOption()
         if (stage.checkIn?.reviewGroups.isNullOrEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "Stage(${stage.name})准入配置不正确",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_NO_REVIEW_GROUP,
                 params = arrayOf(stage.name ?: stage.id ?: "")
             )
         }
         stage.checkIn?.reviewGroups?.forEach { group ->
             if (group.reviewers.isEmpty()) throw ErrorCodeException(
-                defaultMessage = "Stage(${stage.name})中审核组(${group.name})未配置审核人",
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_GROUP_NO_USER,
                 params = arrayOf(stage.name!!, group.name)
             )
@@ -224,7 +218,6 @@ open class DefaultModelCheckPlugin constructor(
             Preconditions.checkTrue(
                 condition = c.elements.isNotEmpty(),
                 exception = ErrorCodeException(
-                    defaultMessage = "流水线: Model信息不完整，Stage[{0}] Job[{1}]下没有插件",
                     errorCode = ProcessMessageCode.ERROR_EMPTY_JOB, params = arrayOf(stage.name!!, c.name)
                 )
             )

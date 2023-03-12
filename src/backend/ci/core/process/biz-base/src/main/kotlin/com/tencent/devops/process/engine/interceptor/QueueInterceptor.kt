@@ -27,10 +27,12 @@
 
 package com.tencent.devops.process.engine.interceptor
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.bean.PipelineUrlBean
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_QUEUE_FULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_SUMMARY_NOT_FOUND
@@ -85,8 +87,7 @@ class QueueInterceptor @Autowired constructor(
             buildSummaryRecord == null ->
                 // Summary为空是不正常的，抛错
                 Response(
-                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt(),
-                    message = "异常：流水线的基础构建数据Summary不存在，请联系管理员"
+                    status = ERROR_PIPELINE_SUMMARY_NOT_FOUND.toInt()
                 )
             runLockType == PipelineRunLockType.SINGLE || runLockType == PipelineRunLockType.SINGLE_LOCK ->
                 checkRunLockWithSingleType(
@@ -137,7 +138,7 @@ class QueueInterceptor @Autowired constructor(
             setting.maxQueueSize == 0 && (runningCount > 0 || queueCount > 0) ->
                 Response(
                     status = ERROR_PIPELINE_QUEUE_FULL.toInt(),
-                    message = "流水线串行，排队数设置为0"
+                    message = MessageUtil.getMessageByLocale(ERROR_PIPELINE_QUEUE_FULL, I18nUtil.getLanguage())
                 )
             queueCount >= setting.maxQueueSize -> {
                 if (groupName == null) {
