@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.pojo.pipeline.PipelineModelAnalysisEvent
@@ -51,6 +52,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_FIRST_STAGE_ENV_NOT_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.PipelineSettingVersionDao
@@ -267,15 +270,15 @@ class PipelineRepositoryService constructor(
         if (stage.containers.size != 1) {
             logger.warn("The trigger stage contain more than one container (${stage.containers.size})")
             throw ErrorCodeException(
-                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON,
-                defaultMessage = "非法的流水线编排"
+                errorCode = ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
             )
         }
         val c = (
                 stage.containers.getOrNull(0)
                     ?: throw ErrorCodeException(
                         errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                        defaultMessage = "第一阶段的环境不能为空"
+                        params = arrayOf(
+                            MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId)))
                     )
                 ) as TriggerContainer
 
@@ -339,7 +342,9 @@ class PipelineRepositoryService constructor(
         if (stage.containers.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
-                defaultMessage = "阶段的环境不能为空"
+                params = arrayOf(
+                    MessageUtil.getMessageByLocale(BK_FIRST_STAGE_ENV_NOT_EMPTY, I18nUtil.getLanguage(userId)))
+            )
             )
         }
         stage.containers.forEach { c ->

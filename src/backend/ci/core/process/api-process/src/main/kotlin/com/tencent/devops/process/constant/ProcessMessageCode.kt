@@ -72,7 +72,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_TEMPLATE_CAN_NOT_EDIT = "2101014" // 流水线: 模板流水线不支持编辑
     const val ERROR_PIPELINE_NAME_TOO_LONG = "2101015" // 流水线名称过长
     const val ERROR_PIPELINE_IS_EXISTS = "2101016" // 流水线: 流水线已存在
-    const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[${elementId}]不存在
+    const val ERROR_QUALITY_TASK_NOT_FOUND = "2101017" // 流水线: 质量红线拦截的任务[{0}]不存在
     const val ERROR_QUALITY_REVIEWER_NOT_MATCH = "2101018" // 流水线: 用户({0})不在审核人员名单中
     const val CANCEL_BUILD_BY_OTHER_USER = "2101019" // 流水线: 流水线已经被{0}取消构建，请过{0}秒后再试
     const val ERROR_START_BUILD_FREQUENT_LIMIT = "2101020" // 流水线: 不能太频繁启动构建
@@ -80,7 +80,7 @@ object ProcessMessageCode {
     const val DENY_START_BY_REMOTE = "2101022" // 流水线: 该流水线不能远程触发
     const val ERROR_PARAM_WEBHOOK_ID_NAME_ALL_NULL = "2101023" // Webhook 的ID和名称同时为空
     const val ERROR_RESTORE_PIPELINE_NOT_FOUND = "2101024" // 要还原的流水线不存在，可能已经被删除或还原了
-    const val ERROR_PIPELINE_MODEL_NEED_JOB = "2101025" // Stage缺少Job
+    const val ERROR_PIPELINE_MODEL_NEED_JOB = "2101025" // Stage缺少Job{0}
     const val ONLY_MANAGE_CAN_OPERATE_TEMPLATE = "2101026" // 只有管理员才能操作模板
     const val PIPELINE_SETTING_NOT_EXISTS = "2101027" // 流水线设置不存在
     const val TEMPLATE_NAME_CAN_NOT_NULL = "2101028" // 模板名不能为空字符串

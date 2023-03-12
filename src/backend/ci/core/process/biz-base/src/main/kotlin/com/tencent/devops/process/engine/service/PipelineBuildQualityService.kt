@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -45,8 +46,18 @@ import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.matrix.MatrixStatusElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.common.quality.pojo.RuleCheckResult
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
+import com.tencent.devops.process.constant.BK_AUDIT_RESULT
+import com.tencent.devops.process.constant.BK_AUDIT_TIMEOUT
+import com.tencent.devops.process.constant.BK_POLLING_WAIT_FOR_QUALITY_RESULT
+import com.tencent.devops.process.constant.BK_QUALITY_CHECK_FAIL
+import com.tencent.devops.process.constant.BK_QUALITY_CHECK_INTERCEPTED
+import com.tencent.devops.process.constant.BK_QUALITY_CHECK_RESULT
+import com.tencent.devops.process.constant.BK_QUALITY_CHECK_SUCCEED
+import com.tencent.devops.process.constant.BK_QUALITY_TO_BE_REVIEW
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
@@ -54,16 +65,16 @@ import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION_USERID
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
+import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.quality.api.v2.ServiceQualityRuleResource
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
-import com.tencent.devops.common.quality.pojo.RuleCheckResult
-import com.tencent.devops.process.pojo.ReviewParam
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
@@ -110,15 +121,13 @@ class PipelineBuildQualityService(
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
 
         if (pipelineInfo.channelCode != channelCode) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在"
+                errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
             )
         }
 
@@ -126,7 +135,6 @@ class PipelineBuildQualityService(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_NO_BUILD_EXISTS_BY_ID,
-                defaultMessage = "流水线构建不存在",
                 params = arrayOf(buildId)
             )
 
@@ -172,7 +180,6 @@ class PipelineBuildQualityService(
             throw ErrorCodeException(
                 statusCode = Response.Status.FORBIDDEN.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_TASK_NOT_FOUND,
-                defaultMessage = "质量红线拦截的任务[$elementId]不存在",
                 params = arrayOf(elementId)
             )
         }
@@ -183,7 +190,6 @@ class PipelineBuildQualityService(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_QUALITY_REVIEWER_NOT_MATCH,
-                defaultMessage = "用户($userId)不在审核人员名单中",
                 params = arrayOf(userId)
             )
         }
@@ -312,7 +318,10 @@ class PipelineBuildQualityService(
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorType = ErrorType.USER,
-                errorMsg = "质量红线($atomDesc)检测失败"
+                errorMsg = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_FAIL, I18nUtil.getLanguage()),
+                    atomDesc
+                )
             )
         }
     }
@@ -356,7 +365,10 @@ class PipelineBuildQualityService(
             if (checkResult.success) {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = "质量红线($atomDesc)检测已通过",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_SUCCEED, I18nUtil.getLanguage()),
+                        atomDesc
+                    ),
                     tag = elementId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -365,7 +377,7 @@ class PipelineBuildQualityService(
                 checkResult.resultList.forEach {
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "规则：${it.ruleName}",
+                        message = "rules：${it.ruleName}",
                         tag = elementId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -387,7 +399,10 @@ class PipelineBuildQualityService(
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = "质量红线($atomDesc)检测被拦截",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_INTERCEPTED, I18nUtil.getLanguage()),
+                        atomDesc
+                    ),
                     tag = elementId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -396,7 +411,7 @@ class PipelineBuildQualityService(
                 checkResult.resultList.forEach {
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "规则：${it.ruleName}",
+                        message = "rules：${it.ruleName}",
                         tag = elementId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -442,7 +457,11 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = "质量红线($atomDesc)待审核!审核人：$auditUsers",
+                    message = MessageFormat.format(
+                        MessageUtil.getMessageByLocale(BK_QUALITY_TO_BE_REVIEW, I18nUtil.getLanguage()),
+                        atomDesc,
+                        auditUsers
+                    ),
                     tag = elementId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -512,7 +531,10 @@ class PipelineBuildQualityService(
                     if (hasMetadata) return@loop
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = "第 $index 次轮询等待红线结果",
+                        message = MessageFormat.format(
+                            MessageUtil.getMessageByLocale(BK_POLLING_WAIT_FOR_QUALITY_RESULT, I18nUtil.getLanguage()),
+                            index
+                        ),
                         tag = elementId,
                         jobId = task.containerHashId,
                         executeCount = task.executeCount ?: 1
@@ -524,7 +546,7 @@ class PipelineBuildQualityService(
         } else {
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = "检测红线结果",
+                message = MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_RESULT, I18nUtil.getLanguage()),
                 tag = elementId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -563,7 +585,7 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "${taskName}审核超时",
+                    message = taskName + MessageUtil.getMessageByLocale(BK_AUDIT_TIMEOUT, I18nUtil.getLanguage()),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -583,7 +605,11 @@ class PipelineBuildQualityService(
                     ManualReviewAction.PROCESS -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = "步骤审核结束，审核结果：[继续]，审核人：$actionUser",
+                            message = MessageFormat.format(
+                                MessageUtil.getMessageByLocale(BK_AUDIT_RESULT, I18nUtil.getLanguage()),
+                                "Continue",
+                                actionUser,
+                            ),
                             tag = taskId,
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
@@ -593,7 +619,11 @@ class PipelineBuildQualityService(
                     ManualReviewAction.ABORT -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = "步骤审核结束，审核结果：[驳回]，审核人：$actionUser",
+                            message = MessageFormat.format(
+                                MessageUtil.getMessageByLocale(BK_AUDIT_RESULT, I18nUtil.getLanguage()),
+                                "Overrule",
+                                actionUser
+                            ),
                             tag = taskId,
                             jobId = task.containerHashId,
                             executeCount = task.executeCount ?: 1
