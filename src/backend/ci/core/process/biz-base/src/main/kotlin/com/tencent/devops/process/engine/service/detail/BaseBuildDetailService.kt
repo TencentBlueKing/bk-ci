@@ -68,12 +68,16 @@ open class BaseBuildDetailService constructor(
 
     companion object {
         private const val ExpiredTimeInSeconds: Long = 10
-        const val STATUS_STAGE = "stage-1"
+        const val TRIGGER_STAGE = "stage-1"
     }
 
     fun getBuildModel(projectId: String, buildId: String): Model? {
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
+    }
+
+    fun getBuildCancelUser(projectId: String, buildId: String): String? {
+        return buildDetailDao.getBuildCancelUser(dslContext, projectId, buildId)
     }
 
     @Suppress("LongParameterList", "ComplexMethod")
@@ -179,7 +183,7 @@ open class BaseBuildDetailService constructor(
                     stageTagMap.getOrDefault(tag, "null")
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (stage.id == STATUS_STAGE) {
+                showMsg = if (stage.id == TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )
