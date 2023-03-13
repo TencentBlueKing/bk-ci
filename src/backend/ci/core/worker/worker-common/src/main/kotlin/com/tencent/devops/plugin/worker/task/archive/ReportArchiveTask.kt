@@ -152,7 +152,15 @@ class ReportArchiveTask : ITask() {
         }
 
         logger.info("indexFileParam is:$indexFileParam,reportNameParam is:$reportNameParam,reportType is:$reportType")
-        api.createReportRecord(buildVariables, elementId, indexFileParam, reportNameParam, reportType, reportEmail, token)
+        api.createReportRecord(
+            buildVariables = buildVariables,
+            taskId = elementId,
+            indexFile = indexFileParam,
+            name = reportNameParam,
+            reportType = reportType,
+            reportEmail = reportEmail,
+            token = token
+        )
     }
 
     private fun uploadReportFile(
