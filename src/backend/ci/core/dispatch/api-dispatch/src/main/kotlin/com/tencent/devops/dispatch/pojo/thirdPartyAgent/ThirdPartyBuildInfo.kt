@@ -27,7 +27,6 @@
 
 package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
-import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentDockerInfoDispatch
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 

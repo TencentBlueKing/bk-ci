@@ -248,7 +248,6 @@ class ThirdPartyAgentService @Autowired constructor(
                     buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
                 }
 
-
                 return AgentResult(
                     AgentStatus.IMPORT_OK,
                     ThirdPartyBuildInfo(
@@ -294,7 +293,7 @@ class ThirdPartyAgentService @Autowired constructor(
         val result = client.get(ServiceTemplateAcrossResource::class).getBuildAcrossTemplateInfo(
             projectId = projectId,
             templateId = credInfo.acrossTemplateId!!
-        ).data ?: Pair(null, null)
+        ).data ?: return Pair(null, null)
 
         val across = result.firstOrNull {
             it.templateType == TemplateAcrossInfoType.JOB &&
