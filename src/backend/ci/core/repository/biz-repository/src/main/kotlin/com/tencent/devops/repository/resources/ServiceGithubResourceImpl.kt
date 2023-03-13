@@ -36,6 +36,7 @@ import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubBranch
 import com.tencent.devops.repository.pojo.github.GithubTag
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.repository.service.github.GithubOAuthService
 import com.tencent.devops.repository.service.github.GithubTokenService
 import com.tencent.devops.repository.service.github.IGithubService
@@ -57,7 +58,7 @@ class ServiceGithubResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getAccessToken(userId: String): Result<GithubToken?> {
+    override fun getAccessToken(userId: String, tokenType: GithubTokenType): Result<GithubToken?> {
         return Result(githubTokenService.getAccessToken(userId))
     }
 
