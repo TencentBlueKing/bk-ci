@@ -167,3 +167,7 @@ const val BK_JOB_BUILD_STOPS = "BkJobBuildStops"
 const val BK_USER_NO_PERMISSIONS_EDIT_PIPELINE = "BkUserNoPermissionsEditPipeline"
 const val BK_PLEASE_CHECK_OR_RETRY = "BkPleaseCheckOrRetry"
 const val BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN = "BkDebugContainerErrorShutDown"
+const val BK_BUILD_ENV_START_FAILED = "BkBuildEnvStartFailed" // 构建环境启动失败
+const val BK_START_PULL_IMAGE = "BkStartPullImage"// 开始拉取镜像，镜像名称：
+const val BK_PULLING_IMAGE = "BkPullingImage"// 正在拉取镜像,第{0}层，进度：{1}
+

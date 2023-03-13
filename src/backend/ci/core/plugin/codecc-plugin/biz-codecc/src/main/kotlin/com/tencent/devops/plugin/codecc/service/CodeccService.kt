@@ -213,7 +213,7 @@ class CodeccService @Autowired constructor(
         val taskId = redisOperation.get("code_cc_${projectId}_${pipelineId}_${buildId}_done")
         return if (taskId != null && taskId != "" && taskId != "null") {
             "<a target='_blank' href='${HomeHostUtil.innerServerHost()}/console/codecc/$projectId/procontrol/prodesc/" +
-                "?proj_id=$taskId'>查看详情</a>"
+                "?proj_id=$taskId'>See details</a>"
         } else ""
     }
 

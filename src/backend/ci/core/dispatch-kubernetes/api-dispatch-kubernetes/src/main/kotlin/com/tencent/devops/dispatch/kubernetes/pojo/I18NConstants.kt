@@ -46,7 +46,10 @@ const val BK_GET_BCS_TASK_STATUS_TIMEOUT = "BkGetBcsTaskStatusTimeout"// 获取B
 const val BK_GET_BCS_TASK_EXECUTION_TIMEOUT = "BkGetBcsTaskExecutionTimeout"// 获取BCS任务执行超时
 const val BK_GET_BCS_TASK_STATUS_ERROR = "BkGetBcsTaskStatusError"// 获取BCS TASK状态接口异常
 const val BK_DISTRIBUTE_BUILD_MACHINE_REQUEST_SUCCESS = "BkDistributeBuildMachineRequestSuccess"// 下发创建构建机请求成功，等待机器创建
-const val BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP = "BkMachineBuildCompletedWaitingForStartup"
-const val BK_BUILD_MACHINE_CREATION_FAILED = "BkBuildMachineCreationFailed"
-const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "BkContainerIsNotInDebugOrInUse"
-
+const val BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP = "BkMachineBuildCompletedWaitingForStartup" // 构建机创建成功，等待机器启动...
+const val BK_BUILD_MACHINE_CREATION_FAILED = "BkBuildMachineCreationFailed"// 构建机创建失败
+const val BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE = "BkContainerIsNotInDebugOrInUse"// 容器没有处于debug或正在占用中\
+const val BK_BUILD_MACHINE_STARTUP_FAILED = "BkBuildMachineStartupFailed"// 构建机启动失败，错误信息:{0}
+const val BK_INTERFACE_REQUEST_TIMEOUT = "BkInterfaceRequestTimeout"
+const val BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE = "BkBuildMachineCreationFailedReference"//  "创建构建机失败，错误信息:{0}. \n容器构建异常请参考：{1}"
+const val BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START  = "BkBuildMachineStartSuccessWaitAgentStart"// 构建机启动成功，等待Agent启动...

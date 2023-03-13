@@ -29,6 +29,7 @@ package com.tencent.devops.dispatch.kubernetes.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerRoutingType
@@ -36,12 +37,18 @@ import com.tencent.devops.common.dispatch.sdk.service.DockerRoutingSdkService
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.kubernetes.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.kubernetes.components.LogsPrinter
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildPoolDao
 import com.tencent.devops.dispatch.kubernetes.dao.PerformanceOptionsDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_STARTUP_FAILED
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_INTERFACE_REQUEST_TIMEOUT
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP
 import com.tencent.devops.dispatch.kubernetes.pojo.Credential
 import com.tencent.devops.dispatch.kubernetes.pojo.DispatchBuilderStatus
 import com.tencent.devops.dispatch.kubernetes.pojo.Pool
@@ -59,6 +66,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class DispatchBuildService @Autowired constructor(
@@ -122,7 +130,7 @@ class DispatchBuildService @Autowired constructor(
 
         try {
             val containerPool = dispatchMessage.getContainerPool()
-            logsPrinter.printLogs(dispatchMessage, "启动镜像：${containerPool.container}")
+            logsPrinter.printLogs(dispatchMessage, "start image：${containerPool.container}")
             // 读取并选择配置
             if (!containerPool.performanceConfigId.isNullOrBlank() && containerPool.performanceConfigId != "0") {
                 val performanceOption =
@@ -179,14 +187,19 @@ class DispatchBuildService @Autowired constructor(
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorType,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.errorCode,
                     ErrorCodeEnum.INTERFACE_TIMEOUT.formatErrorMessage,
-                    "${dispatchBuild.log.troubleShooting}接口请求超时"
+                    dispatchBuild.log.troubleShooting +
+                            MessageUtil.getMessageByLocale(BK_INTERFACE_REQUEST_TIMEOUT, I18nUtil.getLanguage())
                 )
             }
             throw BuildFailureException(
                 ErrorCodeEnum.SYSTEM_ERROR.errorType,
                 ErrorCodeEnum.SYSTEM_ERROR.errorCode,
                 ErrorCodeEnum.SYSTEM_ERROR.formatErrorMessage,
-                "创建构建机失败，错误信息:${e.message}. \n容器构建异常请参考：${dispatchBuild.helpUrl}"
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_CREATION_FAILED_REFERENCE, I18nUtil.getLanguage()),
+                    e.message,
+                    dispatchBuild.helpUrl
+                )
             )
         }
     }
@@ -392,8 +405,12 @@ class DispatchBuildService @Autowired constructor(
             "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo start builder, " +
                 "taskId:($taskId)"
         )
-        logsPrinter.printLogs(this, "下发启动构建机请求成功，" +
-            "builderName: $builderName 等待机器启动...")
+        logsPrinter.printLogs(
+            this,
+            "builderName: $builderName " + MessageUtil.getMessageByLocale(
+            BK_MACHINE_BUILD_COMPLETED_WAITING_FOR_STARTUP,
+            I18nUtil.getLanguage(userId)
+        ))
         builderPoolNoDao.setBaseBuildLastBuilder(
             dslContext = dslContext,
             dispatchType = dockerRoutingType.name,
@@ -412,7 +429,12 @@ class DispatchBuildService @Autowired constructor(
                 "buildId: $buildId,vmSeqId: $vmSeqId,executeCount: $executeCount,poolNo: $poolNo " +
                     "start ${dockerRoutingType.name} vm success, wait for agent startup..."
             )
-            logsPrinter.printLogs(this, "构建机启动成功，等待Agent启动...")
+            logsPrinter.printLogs(
+                this,
+                MessageUtil.getMessageByLocale(
+                    BK_BUILD_MACHINE_START_SUCCESS_WAIT_AGENT_START,
+                    I18nUtil.getLanguage(userId)
+            ))
 
             dispatchKubernetesBuildDao.createOrUpdate(
                 dslContext = dslContext,
@@ -462,7 +484,14 @@ class DispatchBuildService @Autowired constructor(
                 ErrorCodeEnum.START_VM_ERROR.errorType,
                 ErrorCodeEnum.START_VM_ERROR.errorCode,
                 ErrorCodeEnum.START_VM_ERROR.formatErrorMessage,
-                "${dispatchBuild.log.troubleShooting}构建机启动失败，错误信息:$failedMsg"
+                dispatchBuild.log.troubleShooting +
+                        MessageFormat.format(
+                            MessageUtil.getMessageByLocale(
+                                BK_BUILD_MACHINE_STARTUP_FAILED,
+                                I18nUtil.getLanguage(userId)
+                            ),
+                            failedMsg ?: ""
+                        )
             )
         }
     }

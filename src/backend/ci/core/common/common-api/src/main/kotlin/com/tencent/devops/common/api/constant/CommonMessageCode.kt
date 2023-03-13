@@ -76,4 +76,5 @@ object CommonMessageCode {
     const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
+    const val USER_NOT_PERMISSIONS_EDIT_PIPELINE = "2100029" // 用户({0})无权限在工程({1})下编辑流水线({2})
 }

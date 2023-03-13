@@ -29,3 +29,8 @@ package com.tencent.devops.environment
 
 const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
 const val DEFAULT_SYTEM_USER = "devops"
+const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment"// 项目下无环境
+const val BK_PROJECT_NO_NODE = "BkProjectNoNode"// 项目下无节点
+const val BK_THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST = "bkThirdPartyBuildEnvironmentNotExist"// 第三方构建机环境不存在
+const val BK_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV = "bkNoPermissionToUseThirdPartyBuildEnv"// 无权限使用第三方构建机环境
+const val BK_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST = "bkThirdPartyBuildEnvNodeNotExist"// 第三方构建机环境节点不存在

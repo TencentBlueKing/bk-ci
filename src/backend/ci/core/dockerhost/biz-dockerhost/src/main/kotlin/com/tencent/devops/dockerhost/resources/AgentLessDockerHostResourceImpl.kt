@@ -27,8 +27,11 @@
 
 package com.tencent.devops.dockerhost.resources
 
+import com.tencent.devops.common.api.constant.BK_BUILD_ENV_START_FAILED
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
 import com.tencent.devops.dockerhost.api.AgentLessDockerHostResource
 import com.tencent.devops.dockerhost.exception.ContainerException
@@ -48,7 +51,10 @@ class AgentLessDockerHostResourceImpl @Autowired constructor(
         } catch (e: ContainerException) {
             logger.error("Create container failed, rollback build. buildId: ${dockerHostBuildInfo.buildId}," +
                     " vmSeqId: ${dockerHostBuildInfo.vmSeqId}")
-            Result(e.errorCodeEnum.errorCode, "构建环境启动失败: ${e.message}", "")
+            Result(
+                e.errorCodeEnum.errorCode,
+                MessageUtil.getMessageByLocale(BK_BUILD_ENV_START_FAILED, I18nUtil.getLanguage()) +
+                        ": ${e.message}", "")
         }
     }
 

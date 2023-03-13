@@ -32,6 +32,9 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.image.constants.BK_PARSE_MIRROR_FILE_FAILED
 import com.tencent.devops.image.pojo.DockerImage
 import org.apache.commons.compress.archivers.ArchiveEntry
 import org.apache.commons.compress.archivers.tar.TarArchiveEntry
@@ -55,7 +58,7 @@ object ImageFileUtils {
         throw TaskExecuteException(
             errorCode = ErrorCode.USER_INPUT_INVAILD,
             errorType = ErrorType.USER,
-            errorMsg = "解析镜像文件失败"
+            errorMsg = MessageUtil.getMessageByLocale(BK_PARSE_MIRROR_FILE_FAILED, I18nUtil.getLanguage())
         )
     }
 

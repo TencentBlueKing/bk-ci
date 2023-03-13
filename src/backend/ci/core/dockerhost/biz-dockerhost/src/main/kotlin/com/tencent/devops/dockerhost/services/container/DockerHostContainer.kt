@@ -24,27 +24,14 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify
 
-const val EXCHANGE_EVENT = "exchange_event"
+package com.tencent.devops.dockerhost.services.container
 
-const val QUEUE_NOTIFY_RTX = "queue_notify_rtx"
-const val QUEUE_NOTIFY_WECHAT = "queue_notify_wechat"
-const val QUEUE_NOTIFY_EMAIL = "queue_notify_email"
-const val QUEUE_NOTIFY_SMS = "queue_notify_sms"
-const val QUEUE_NOTIFY_WEWORK = "queue_notify_wework"
-const val QUEUE_NOTIFY_PUSH = "queue_notify_push"
-const val EXCHANGE_NOTIFY = "exchange_notify"
-const val ROUTE_RTX = "rtx"
-const val ROUTE_WECHAT = "wechat"
-const val ROUTE_EMAIL = "email"
-const val ROUTE_SMS = "sms"
-const val ROUTE_WEWORK = "wework"
-const val ROUTE_PUSH = "push"
-
-const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE = "QUALITY_AUDIT_NOTIFY_TEMPLATE"
-const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE = "QUALITY_END_NOTIFY_TEMPLATE"
-const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2 = "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
-const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2 = "QUALITY_END_NOTIFY_TEMPLATE_V2"
-
-const val BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO = "BkDeleteMessageTemplateSubtableInfo"// 删除消息模板子表信息：
+const val BK_SELF_DEVELOPED_PUBLIC_IMAGE_LOCAL_START = "bkSelfDevelopedPublicImageLocalStart"// 自研公共镜像，不从仓库拉取，直接从本地启动...
+const val BK_NO_PERMISSION_PULL_IMAGE_CHECK_PATH_OR_CREDENTIAL = "bkNoPermissionPullImageCheckPathOrCredential"// 无权限拉取镜像:{0}，请检查镜像路径或凭证是否正确
+const val BK_IMAGE_NOT_EXIST_CHECK_PATH_OR_CREDENTIAL = "bkImageNotExistCheckPathOrCredential"// 镜像不存在：{0}，请检查镜像路径或凭证是否正确；
+const val BK_PULL_IMAGE_FAILED_ERROR_MESSAGE = "bkPullImageFailedErrorMessage"// 拉取镜像失败，错误信息：
+const val BK_TRY_LOCAL_IMAGE_START = "bkTryLocalImageStart"// 尝试使用本地镜像启动...
+const val BK_PULL_IMAGE_SUCCESS_READY_START_BUILD_ENV = "bkPullImageSuccessReadyStartBuildEnv"// 拉取镜像成功，准备启动构建环境...
+const val BK_PUSH_IMAGE = "BkPushImage"// 正在推送镜像,第{0}层，进度：{1}
+const val BK_BUILD_IMAGE_NOT_EXIST = "bkBuildImageNotExist"// 构建镜像不存在

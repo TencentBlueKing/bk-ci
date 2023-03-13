@@ -27,6 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_EDIT_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -41,6 +42,7 @@ import com.tencent.devops.dispatch.kubernetes.common.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.kubernetes.common.SLAVE_ENVIRONMENT
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildDao
 import com.tencent.devops.dispatch.kubernetes.dao.DispatchKubernetesBuildHisDao
+import com.tencent.devops.dispatch.kubernetes.pojo.BK_BUILD_MACHINE_STARTUP_FAILED
 import com.tencent.devops.dispatch.kubernetes.pojo.BK_CONTAINER_IS_NOT_IN_DEBUG_OR_IN_USE
 import com.tencent.devops.dispatch.kubernetes.pojo.base.DebugResponse
 import com.tencent.devops.dispatch.kubernetes.pojo.builds.DispatchBuildBuilderStatus
@@ -56,6 +58,7 @@ import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class DispatchBaseDebugService @Autowired constructor(
@@ -322,7 +325,11 @@ class DispatchBaseDebugService @Autowired constructor(
             logger.error("$userId start ${dockerRoutingType.name} builder failed, msg: ${startResult.errMsg}")
             throw ErrorCodeException(
                 errorCode = "2103503",
-                params = arrayOf(startResult.errMsg ?: "")
+                defaultMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_STARTUP_FAILED, I18nUtil.getLanguage(userId)
+                    ),
+                    startResult.errMsg ?: ""
+                )
             )
         }
     }
@@ -338,8 +345,22 @@ class DispatchBaseDebugService @Autowired constructor(
                 projectId, pipelineId, AuthPermission.EDIT
             )
         ) {
-            logger.info("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
-            throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(USER_NOT_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
+                    userId,
+                    projectId,
+                    pipelineId
+                )
+            )
+            throw PermissionForbiddenException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(USER_NOT_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
+                    userId,
+                    projectId,
+                    pipelineId
+                )
+            )
         }
     }
 }

@@ -30,6 +30,7 @@ import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -40,9 +41,11 @@ import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.notify.utils.NotifyUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.model.notify.tables.records.TCommonNotifyMessageTemplateRecord
+import com.tencent.devops.notify.BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
@@ -543,10 +546,13 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
         dslContext.transaction { t ->
             val context = DSL.using(t)
             val record = notifyMessageTemplateDao.getCommonNotifyMessageTemplatesNotifyType(context, templateId)
-            logger.info("获取消息类型：$record")
+            logger.info("get message type：$record")
             val existsNotifyType =
                 JsonUtil.getObjectMapper().readValue(record, List::class.java) as ArrayList<String>
-            logger.info("删除消息模板子表信息：$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}")
+            logger.info(
+                MessageUtil.getMessageByLocale(BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO, I18nUtil.getLanguage()) +
+                "$notifyType ${NotifyType.EMAIL} ${notifyType == NotifyType.EMAIL.name}"
+            )
             when (notifyType) {
                 NotifyType.EMAIL.name -> {
                     notifyMessageTemplateDao.deleteEmailsNotifyMessageTemplate(context, templateId)
@@ -563,11 +569,11 @@ class NotifyMessageTemplateServiceImpl @Autowired constructor(
             }
 
             if (existsNotifyType.size == 1 && existsNotifyType[0] == notifyType) {
-                logger.info("删除Common表信息")
+                logger.info("Delete common table info")
                 notifyMessageTemplateDao.deleteCommonNotifyMessageTemplate(context, templateId)
                 return@transaction
             }
-            logger.info("修改Common表信息")
+            logger.info("Update common table info")
             existsNotifyType.remove(notifyType)
             notifyMessageTemplateDao.modifyNotifyTypeScope(context, existsNotifyType, templateId)
         }

@@ -24,27 +24,13 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.notify
 
-const val EXCHANGE_EVENT = "exchange_event"
+package com.tencent.devops.image.constants
 
-const val QUEUE_NOTIFY_RTX = "queue_notify_rtx"
-const val QUEUE_NOTIFY_WECHAT = "queue_notify_wechat"
-const val QUEUE_NOTIFY_EMAIL = "queue_notify_email"
-const val QUEUE_NOTIFY_SMS = "queue_notify_sms"
-const val QUEUE_NOTIFY_WEWORK = "queue_notify_wework"
-const val QUEUE_NOTIFY_PUSH = "queue_notify_push"
-const val EXCHANGE_NOTIFY = "exchange_notify"
-const val ROUTE_RTX = "rtx"
-const val ROUTE_WECHAT = "wechat"
-const val ROUTE_EMAIL = "email"
-const val ROUTE_SMS = "sms"
-const val ROUTE_WEWORK = "wework"
-const val ROUTE_PUSH = "push"
-
-const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE = "QUALITY_AUDIT_NOTIFY_TEMPLATE"
-const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE = "QUALITY_END_NOTIFY_TEMPLATE"
-const val PIPELINE_QUALITY_AUDIT_NOTIFY_TEMPLATE_V2 = "QUALITY_AUDIT_NOTIFY_TEMPLATE_V2"
-const val PIPELINE_QUALITY_END_NOTIFY_TEMPLATE_V2 = "QUALITY_END_NOTIFY_TEMPLATE_V2"
-
-const val BK_DELETE_MESSAGE_TEMPLATE_SUBTABLE_INFO = "BkDeleteMessageTemplateSubtableInfo"// 删除消息模板子表信息：
+const val BK_USER_NOT_UPLOAD_IMAGE_PERMISSION = "BkUserNotUploadImagePermission"// 用户({0})没有上传镜像权限
+const val BK_IMAGE_FILE_VALID_IMAGE_COUNT_ZERO = "BkImageFileValidImageCountZero"// 镜像文件有效镜像个数为零
+const val BK_IMAGE_COPYING_IN_PROGRESS = "BkImageCopyingInProgress"// 镜像正在拷贝中
+const val BK_PULL_IMAGE_SUCCESS = "BkPullImageSuccess"// 拉取镜像成功，镜像名称：
+const val BK_MIRROR_FILE_SAVE_FAILED = "BkMirrorFileSaveFailed"// 镜像文件保存失败
+const val BK_PARSE_MIRROR_FILE_FAILED = "BkParseMirrorFileFailed"// 解析镜像文件失败
+const val BK_FILE_NOT_FOUND_CHECK_PATH = "BkFileNotFoundCheckPath"// 未找到 {0} 文件，请检查路径是否正确:

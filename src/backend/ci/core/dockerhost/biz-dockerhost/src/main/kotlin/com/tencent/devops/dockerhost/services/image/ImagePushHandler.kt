@@ -5,11 +5,15 @@ import com.github.dockerjava.api.exception.DockerClientException
 import com.github.dockerjava.api.model.AuthConfig
 import com.github.dockerjava.api.model.PushResponseItem
 import com.github.dockerjava.api.model.ResponseItem
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.config.DockerHostConfig
 import com.tencent.devops.dockerhost.dispatch.DockerHostBuildResourceApi
 import com.tencent.devops.dockerhost.services.Handler
+import com.tencent.devops.dockerhost.services.container.BK_PUSH_IMAGE
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -62,7 +66,11 @@ class ImagePushHandler(
                     dockerHostBuildApi.postLog(
                         buildId,
                         false,
-                        "正在推送镜像,第${lays}层，进度：$currentProgress%",
+                        MessageFormat.format(
+                            MessageUtil.getMessageByLocale(BK_PUSH_IMAGE, I18nUtil.getLanguage()),
+                            lays,
+                            currentProgress
+                        ),
                         elementId
                     )
                     step[lays] = currentProgress
