@@ -1047,8 +1047,8 @@ class WorkspaceService @Autowired constructor(
             cpu = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.cpu } else { 0 } },
             memory = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.memory } else { 0 } },
             disk = workspaces.sumOf {
-                if (it.status == WorkspaceStatus.RUNNING.ordinal ||
-                    it.status == WorkspaceStatus.SLEEP.ordinal) { it.disk } else { 0 }
+                if (it.status in
+                    setOf(WorkspaceStatus.RUNNING.ordinal, WorkspaceStatus.SLEEP.ordinal)) { it.disk } else { 0 }
             }
         )
     }
