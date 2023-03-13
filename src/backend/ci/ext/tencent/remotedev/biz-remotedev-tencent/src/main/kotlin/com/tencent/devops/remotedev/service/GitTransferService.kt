@@ -93,4 +93,9 @@ interface GitTransferService {
      * 获取用户git信息
      */
     fun getUserInfo(userId: String): GitUserInfo
+
+    /**
+     * 获取用户email信息
+     */
+    fun getUserEmail(userId: String): String
 }

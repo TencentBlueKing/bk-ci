@@ -140,4 +140,8 @@ class TGitTransferService @Autowired constructor(
             tokenType = TokenTypeEnum.OAUTH
         ).data!!
     }
+
+    override fun getUserEmail(userId: String): String {
+        return getUserInfo(userId).email ?: "$userId@tencent.com"
+    }
 }

@@ -242,7 +242,7 @@ class WorkspaceService @Autowired constructor(
 
         val devfile = DevfileUtil.parseDevfile(yaml).apply {
             gitEmail = kotlin.runCatching {
-                gitTransferService.getUserInfo(
+                gitTransferService.getUserEmail(
                     userId = userId
                 )
             }.getOrElse {
@@ -253,7 +253,7 @@ class WorkspaceService @Autowired constructor(
                         .format("get user($userId) info from git failed"),
                     params = arrayOf("get user($userId) info from git failed")
                 )
-            }.email
+            }
 
             dotfileRepo = remoteDevSettingDao.fetchAnySetting(dslContext, userId).dotfileRepo
         }
