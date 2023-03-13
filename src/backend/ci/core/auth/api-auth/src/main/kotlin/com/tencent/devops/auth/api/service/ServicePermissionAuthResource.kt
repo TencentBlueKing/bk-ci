@@ -58,7 +58,7 @@ interface ServicePermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/action/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有具体操作的权限")
     fun validateUserActionPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -76,7 +76,7 @@ interface ServicePermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/resource/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有具体资源的操作权限")
     fun validateUserResourcePermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -93,14 +93,15 @@ interface ServicePermissionAuthResource {
         @QueryParam("projectCode")
         @ApiParam("项目编码", required = true)
         projectCode: String,
+        // 此处resourceCode实际为resourceType
         @QueryParam("resourceCode")
-        @ApiParam("资源编码", required = false)
+        @ApiParam("资源类型", required = false)
         resourceCode: String?
     ): Result<Boolean>
 
     @GET
     @Path("/projects/{projectCode}/relation/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有具体资源实例的操作权限")
     fun validateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -130,7 +131,7 @@ interface ServicePermissionAuthResource {
 
     @POST
     @Path("/projects/{projectCode}/instance/validate")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("校验用户是否有具体资源实例的操作权限")
     fun validateUserResourcePermissionByInstance(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -152,7 +153,7 @@ interface ServicePermissionAuthResource {
 
     @POST
     @Path("/projects/{projectCode}/relation/validate/batch")
-    @ApiOperation("校验用户是否有action的权限")
+    @ApiOperation("批量校验用户是否有具体资源实例的操作权限")
     fun batchValidateUserResourcePermissionByRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -181,7 +182,7 @@ interface ServicePermissionAuthResource {
 
     @POST
     @Path("/projects/{projectCode}/action/instance/filter")
-    @ApiOperation("过滤用户某项目下指定资源action的实例列表")
+    @ApiOperation("过滤用户某项目下指定操作的资源实例列表")
     fun filterUserResourceByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -203,7 +204,7 @@ interface ServicePermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/actions/instance/map")
-    @ApiOperation("获取用户某项目下多资源action的实例列表")
+    @ApiOperation("过滤用户某项目下多操作的资源实例列表")
     fun getUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -227,7 +228,7 @@ interface ServicePermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/action/instance")
-    @ApiOperation("获取用户某项目下指定资源action的实例列表")
+    @ApiOperation("获取用户某项目下指定操作的资源实例列表")
     fun getUserResourceByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
