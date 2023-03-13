@@ -3,7 +3,7 @@ USE devops_ci_dispatch_windows;
 SET NAMES utf8mb4;
 SET FOREIGN_KEY_CHECKS = 0;
 
-create table devops_dispatch_windows.T_BUILD_HISTORY
+create table T_BUILD_HISTORY
 (
     ID            bigint auto_increment
         primary key,
@@ -20,7 +20,7 @@ create table devops_dispatch_windows.T_BUILD_HISTORY
     TASK_GUID     char(128)    not null
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
-create table devops_dispatch_windows.T_VIRTUAL_MACHINE_TYPE
+create table T_VIRTUAL_MACHINE_TYPE
 (
     ID             int auto_increment
         primary key,
