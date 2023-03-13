@@ -84,8 +84,13 @@ class GithubOAuthService @Autowired constructor(
         if (userId != null) stateParams["userId"] = userId
 
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
-        return "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+
+        return when (tokenType) {
+            GithubTokenType.GITHUB_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            GithubTokenType.OAUTH_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&state=$state&scope=user,repo"
+        }
     }
 
     fun githubCallback(
@@ -114,7 +119,7 @@ class GithubOAuthService @Autowired constructor(
         val userId = arrays[0]
         val projectId = arrays[1]
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""
-        val githubToken = getAccessTokenImpl(code)
+        val githubToken = getAccessTokenImpl(code, githubTokenType)
 
         githubTokenService.createAccessToken(
             userId = userId,
@@ -135,7 +140,7 @@ class GithubOAuthService @Autowired constructor(
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): GithubOauthCallback {
         logger.info("github callback for git|code:$code|state:$state")
-        val githubToken = getAccessTokenImpl(code)
+        val githubToken = getAccessTokenImpl(code, githubTokenType)
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
