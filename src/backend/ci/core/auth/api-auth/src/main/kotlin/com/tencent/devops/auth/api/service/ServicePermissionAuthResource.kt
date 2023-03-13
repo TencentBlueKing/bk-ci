@@ -252,6 +252,7 @@ interface ServicePermissionAuthResource {
 
     @Path("/projects/{projectCode}/create/relation")
     @POST
+    @ApiOperation("创建权限中心资源")
     fun resourceCreateRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -278,6 +279,7 @@ interface ServicePermissionAuthResource {
 
     @Path("/projects/{projectCode}/modify/relation")
     @PUT
+    @ApiOperation("修改权限中心资源")
     fun resourceModifyRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
@@ -301,6 +303,7 @@ interface ServicePermissionAuthResource {
 
     @Path("/projects/{projectCode}/delete/relation")
     @DELETE
+    @ApiOperation("删除权限中心资源")
     fun resourceDeleteRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
         @ApiParam("认证token", required = true)
@@ -321,6 +324,7 @@ interface ServicePermissionAuthResource {
 
     @Path("/projects/{projectCode}/cancel/relation")
     @PUT
+    @ApiOperation("取消权限中心资源")
     fun resourceCancelRelation(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("操作用户ID", required = true)
