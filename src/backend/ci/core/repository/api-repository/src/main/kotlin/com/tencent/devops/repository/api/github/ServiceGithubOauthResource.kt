@@ -48,6 +48,6 @@ interface ServiceGithubOauthResource {
         @ApiParam("token 类型", required = false)
         @QueryParam("tokenType")
         @DefaultValue("GITHUB_APP")
-        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+        tokenType: GithubTokenType? = GithubTokenType.GITHUB_APP
     ): Result<String>
 }
