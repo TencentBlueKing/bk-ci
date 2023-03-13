@@ -160,7 +160,7 @@ class GithubOAuthService @Autowired constructor(
             GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
             GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
         }
-        
+
         val secret = when (githubTokenType) {
             GithubTokenType.GITHUB_APP -> gitConfig.githubClientSecret
             GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientSecret
