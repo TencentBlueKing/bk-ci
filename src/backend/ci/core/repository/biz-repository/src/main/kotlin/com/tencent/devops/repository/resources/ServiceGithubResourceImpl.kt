@@ -58,8 +58,8 @@ class ServiceGithubResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun getAccessToken(userId: String, tokenType: GithubTokenType): Result<GithubToken?> {
-        return Result(githubTokenService.getAccessToken(userId))
+    override fun getAccessToken(userId: String, tokenType: GithubTokenType?): Result<GithubToken?> {
+        return Result(githubTokenService.getAccessToken(userId, tokenType ?: GithubTokenType.GITHUB_APP))
     }
 
     override fun getFileContent(projectName: String, ref: String, filePath: String): Result<String> {
