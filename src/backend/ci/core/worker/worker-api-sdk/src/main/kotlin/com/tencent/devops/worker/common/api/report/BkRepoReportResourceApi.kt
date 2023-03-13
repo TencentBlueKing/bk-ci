@@ -113,9 +113,10 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
 
         val fullPath = if (reportType == ReportTypeEnum.THIRDPARTY.name) {
             metadata["reportUrl"] = indexFile
-            val emptyFile = Files.createTempFile("prefix", "suffix").toFile()
+            val emptyFile = Files.createTempFile("report", ".tmp").toFile()
             val filePath = "/$pipelineId/$buildId/$taskId/index.html"
             bkrepoResourceApi.uploadBkRepoFile(emptyFile, "report", filePath, buildVariables, false, token)
+            emptyFile.delete()
             filePath
         } else {
             "/$pipelineId/$buildId/$taskId/$indexFile"
