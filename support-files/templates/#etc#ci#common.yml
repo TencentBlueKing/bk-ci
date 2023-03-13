@@ -14,7 +14,7 @@ spring:
 # spring cloud stream 配置，common-stream
     stream:
       binders:
-        extend-rabbit:
+        rabbit:
           type: rabbit
           environment:
             spring:
@@ -23,7 +23,16 @@ spring:
                 username: __BK_CI_RABBITMQ_USER__
                 password: __BK_CI_RABBITMQ_PASSWORD__
                 addresses: __BK_CI_RABBITMQ_ADDR__
-      default-binder: extend-rabbit
+        pulsar:
+          type: pulsar
+          environment:
+            spring:
+              pulsar:
+                serviceUrl: __BK_CI_PULSAR_URL__
+                tokenAuthValue: __BK_CI_PULSAR_AUTH_TOKEN__
+                tenant: __BK_CI_PULSAR_TENANT__
+                namespace: __BK_CI_PULSAR_NAMESPACE__
+      default-binder: __BK_CI_MQ_DEFAULT_BINDER__
 # redis config
   redis:
 #   # Redis sentinel 集群方式配置
