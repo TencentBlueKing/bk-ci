@@ -45,7 +45,8 @@ export default {
     },
     computed: {
         ...mapGetters('pipelines', [
-            'groupMap'
+            'groupMap',
+            'isManage'
         ]),
         currentGroup () {
             return this.groupMap?.[this.$route.params.viewId]
@@ -179,6 +180,18 @@ export default {
                 UNCLASSIFIED_PIPELINE_VIEW_ID,
                 RECENT_USED_VIEW_ID
             ].includes(this.$route.params.viewId)
+            const removedActionAuthMap = this.currentGroup?.projected
+                ? {
+                    hasPermission: this.isManage,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: pipeline.projectId,
+                        resourceType: 'project',
+                        resourceCode: pipeline.projectId,
+                        action: PROJECT_RESOURCE_ACTION.MANAGE
+                    }
+                }
+                : {}
             const isDynamicGroup = this.currentGroup?.viewType === 1
             return [
                 {
@@ -188,19 +201,19 @@ export default {
                 {
                     text: this.$t('newlist.copyAs'),
                     handler: this.copyAs,
-                    hasPermission: pipeline.permissions.canView,
+                    hasPermission: pipeline.permissions.canEdit,
                     disablePermissionApi: true,
                     permissionData: {
                         projectId: pipeline.projectId,
                         resourceType: 'pipeline',
                         resourceCode: pipeline.pipelineId,
-                        action: RESOURCE_ACTION.VIEW
+                        action: RESOURCE_ACTION.EDIT
                     }
                 },
                 {
                     text: this.$t('newlist.saveAsTemp'),
-                    disable: !this.hasTemplatePermission,
                     handler: this.saveAsTempHandler,
+                    hasPermission: this.hasTemplatePermission,
                     disablePermissionApi: false,
                     permissionData: {
                         projectId: pipeline.projectId,
@@ -221,7 +234,8 @@ export default {
                         text: this.$t('removeFrom'),
                         disable: isDynamicGroup,
                         tooltips: isDynamicGroup ? this.$t('dynamicGroupRemoveDisableTips') : false,
-                        handler: this.removeHandler
+                        handler: this.removeHandler,
+                        ...removedActionAuthMap
                     }]
                     : []),
                 {
@@ -413,8 +427,8 @@ export default {
                     err,
                     {
                         projectId: projectId,
-                        resourceCode: pipelineId,
-                        action: this.$permissionResourceAction.EDIT
+                        resourceCode: projectId,
+                        action: this.$permissionResourceAction.CREATE
                     }
                 )
             }

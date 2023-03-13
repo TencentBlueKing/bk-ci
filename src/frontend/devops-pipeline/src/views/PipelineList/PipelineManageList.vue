@@ -37,10 +37,20 @@
                         </ul>
                     </bk-dropdown-menu>
                     <span v-bk-tooltips="noManagePermissionTips">
+                        
                         <bk-button
+                            v-perm="{
+                                hasPermission: !canNotMangeProjectedGroup,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: projectId,
+                                    action: PROJECT_RESOURCE_ACTION.MANAGE
+                                }
+                            }"
                             v-if="pipelineGroupType"
                             @click="handleAddToGroup"
-                            :disabled="canNotMangeProjectedGroup"
                         >
                             {{$t('pipelineCountEdit')}}
                         </bk-button>
@@ -174,7 +184,8 @@
     } from '@/store/constants'
     import {
         handlePipelineNoPermission,
-        RESOURCE_ACTION
+        RESOURCE_ACTION,
+        PROJECT_RESOURCE_ACTION
     } from '@/utils/permission'
 
     const TABLE_LAYOUT = 'table'
@@ -210,7 +221,8 @@
                     text: this.$t('newPipelineFromJSONLabel'),
                     action: this.toggleImportPipelinePopup
                 }],
-                RESOURCE_ACTION
+                RESOURCE_ACTION,
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {

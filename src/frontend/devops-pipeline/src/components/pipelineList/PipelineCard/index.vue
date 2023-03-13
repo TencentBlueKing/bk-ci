@@ -25,6 +25,16 @@
             </aside>
             <aside class="bk-pipeline-card-header-right-aside">
                 <span
+                    v-perm="{
+                        hasPermission: pipeline.permissions.canExecute,
+                        disablePermissionApi: true,
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipeline.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
                     :class="{
                         'bk-pipeline-card-trigger-btn': true,
                         'disabled': pipeline.disabled
@@ -101,7 +111,7 @@
                 {{$t('removeFromGroup')}}
             </bk-button>
         </div>
-        <div v-else-if="!pipeline.hasPermission && !pipeline.delete" class="pipeline-card-apply-mask">
+        <div v-else-if="!pipeline.permissions.canView && !pipeline.delete" class="pipeline-card-apply-mask">
             <bk-button outline theme="primary" @click="applyPermission(pipeline)">
                 {{$t('applyPermission')}}
             </bk-button>
@@ -144,6 +154,11 @@
                 default: () => () => ({})
             }
         },
+        data () {
+            return {
+                RESOURCE_ACTION
+            }
+        },
         computed: {
             latestBuildNum () {
                 return this.pipeline.latestBuildNum ? `#${this.pipeline.latestBuildNum}` : '--'
@@ -159,6 +174,9 @@
             },
             isRecentView () {
                 return this.$route.params.viewId === RECENT_USED_VIEW_ID
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
         methods: {
@@ -168,9 +186,9 @@
             },
             applyPermission (pipeline) {
                 handlePipelineNoPermission({
-                    projectId: this.$route.params.projectId,
+                    projectId: this.projectId,
                     resourceCode: pipeline.pipelineId,
-                    action: RESOURCE_ACTION.DOWNLOAD
+                    action: RESOURCE_ACTION.VIEW
                 })
             }
         }

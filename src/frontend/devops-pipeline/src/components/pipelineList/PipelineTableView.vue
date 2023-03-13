@@ -14,6 +14,7 @@
         @selection-change="handleSelectChange"
         :row-style="{ height: '56px' }"
         v-on="$listeners"
+        :key="viewId"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <div v-if="selectionLength > 0" slot="prepend" class="selected-all-indicator">
@@ -106,8 +107,8 @@
                         <template v-if="props.row.latestBuildNum">
                             <router-link
                                 class="pipeline-cell-link pipeline-exec-msg-title"
-                                :disabled="!props.row.hasPermission"
-                                :event="props.row.hasPermission ? 'click' : ''"
+                                :disabled="!props.row.permissions.canView"
+                                :event="props.row.permissions.canView ? 'click' : ''"
                                 :to="props.row.latestBuildRoute"
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
@@ -399,6 +400,7 @@
                 this.isLoading = true
 
                 try {
+                    this.pipelineList = []
                     const { count, page, records } = await this.getPipelines({
                         page: this.pagination.current,
                         pageSize: this.pagination.limit,

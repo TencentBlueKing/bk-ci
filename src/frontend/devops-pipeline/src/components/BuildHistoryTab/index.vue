@@ -140,12 +140,19 @@
                     : [{
                         theme: 'primary',
                         size: 'normal',
-                        disabled: this.executeStatus,
+                        // disabled: this.executeStatus,
                         loading: this.executeStatus,
                         handler: () => {
                             !this.executeStatus && bus.$emit('trigger-excute')
                         },
-                        text: this.$t('history.startBuildTips')
+                        text: this.$t('history.startBuildTips'),
+                        isCheckPermission: true,
+                        permissionData: {
+                            projectId: this.projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: this.pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
                     }]
                 return {
                     title,
