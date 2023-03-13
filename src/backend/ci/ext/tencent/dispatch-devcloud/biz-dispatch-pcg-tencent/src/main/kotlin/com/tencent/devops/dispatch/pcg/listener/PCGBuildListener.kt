@@ -38,7 +38,7 @@ class PCGBuildListener @Autowired constructor(
 ) : BuildListener {
 
 
-    @Value("\${pcg.docker.start.url:#{null}}")
+    @Value("\${pcg.docker.url:#{null}}")
     private val pcgDockerStartURL: String = "http://ciserver.wsd.com/interface"
 
     @Value("\${pcg.docker.init:#{null}}")
