@@ -27,8 +27,14 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.common.pipeline.container.Container
+import com.tencent.devops.common.pipeline.container.Stage
+import com.tencent.devops.common.pipeline.container.TriggerContainer
+import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -54,7 +60,7 @@ data class BuildRecordContainer(
     @ApiModelProperty("作业容器类型", required = true)
     val containerType: String,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)
     val containPostTaskFlag: Boolean? = null,
     @ApiModelProperty("是否为构建矩阵组", required = false)
@@ -62,9 +68,64 @@ data class BuildRecordContainer(
     @ApiModelProperty("所在矩阵组ID", required = false)
     val matrixGroupId: String? = null,
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
-)
+) {
+    companion object {
+
+        fun MutableList<BuildRecordContainer>.addRecords(
+            projectId: String,
+            pipelineId: String,
+            version: Int,
+            buildId: String,
+            stage: Stage,
+            container: Container,
+            context: StartBuildContext,
+            buildStatus: BuildStatus?,
+            taskBuildRecords: MutableList<BuildRecordTask>
+        ) {
+            val containerVar = mutableMapOf<String, Any>()
+            containerVar[Container::name.name] = container.name
+            container.containerHashId?.let {
+                containerVar[Container::containerHashId.name] = it
+            }
+            if (container is TriggerContainer) {
+                containerVar[container::params.name] = container.params
+                container.buildNo?.let {
+                    containerVar[container::buildNo.name] = it
+                }
+                container.templateParams?.let {
+                    containerVar[container::templateParams.name] = it
+                }
+            } else if (container is VMBuildContainer) {
+                container.showBuildResource?.let {
+                    containerVar[VMBuildContainer::showBuildResource.name] = it
+                }
+            }
+            this.add(
+                BuildRecordContainer(
+                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                    buildId = buildId, stageId = stage.id!!, containerId = container.containerId!!,
+                    containerType = container.getClassType(), executeCount = context.executeCount,
+                    matrixGroupFlag = container.matrixGroupFlag, status = buildStatus?.name,
+                    containerVar = containerVar, timestamps = mapOf()
+                )
+            )
+            container.elements.forEachIndexed { index, element ->
+                taskBuildRecords.add(
+                    BuildRecordTask(
+                        projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                        stageId = stage.id!!, containerId = container.containerId!!,
+                        taskId = element.id!!, classType = element.getClassType(),
+                        atomCode = element.getTaskAtom(), executeCount = context.executeCount,
+                        resourceVersion = version, taskSeq = index, status = buildStatus?.name,
+                        taskVar = mutableMapOf(), timestamps = mapOf()
+                    )
+                )
+            }
+        }
+    }
+}

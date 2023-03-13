@@ -66,9 +66,9 @@ data class Stage(
     @ApiModelProperty("stage准出配置", required = false)
     var checkOut: StagePauseCheck? = null, // stage准出配置
     @ApiModelProperty("步骤运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    var executeCount: Int? = 1,
+    var executeCount: Int? = null,
     @ApiModelProperty("各项耗时", required = true)
-    var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
+    var timeCost: BuildRecordTimeCost? = null
 ) {
     /**
      * 刷新stage的所有配置，如果是初始化则重置所有历史数据

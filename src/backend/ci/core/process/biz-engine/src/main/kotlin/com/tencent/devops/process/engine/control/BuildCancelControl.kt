@@ -55,7 +55,6 @@ import com.tencent.devops.process.engine.service.record.PipelineBuildRecordServi
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineStageService
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
@@ -79,7 +78,6 @@ class BuildCancelControl @Autowired constructor(
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
     private val pipelineBuildRecordService: PipelineBuildRecordService,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val buildLogPrinter: BuildLogPrinter,

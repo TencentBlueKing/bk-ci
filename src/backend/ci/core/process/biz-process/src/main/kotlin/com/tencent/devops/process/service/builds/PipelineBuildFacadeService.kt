@@ -58,7 +58,6 @@ import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamTyp
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElement
 import com.tencent.devops.common.pipeline.utils.BuildStatusSwitcher
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
@@ -69,13 +68,14 @@ import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibil
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildRunLock
+import com.tencent.devops.process.engine.control.lock.PipelineBuildShutdownLock
+import com.tencent.devops.process.engine.control.lock.PipelineRefreshBuildLock
 import com.tencent.devops.process.engine.interceptor.InterceptData
 import com.tencent.devops.process.engine.interceptor.PipelineInterceptorChain
 import com.tencent.devops.process.engine.pojo.BuildInfo
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
 import com.tencent.devops.process.engine.service.PipelineBuildQualityService
-import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -84,6 +84,7 @@ import com.tencent.devops.process.engine.service.PipelineStageService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.WebhookBuildParameterService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.utils.BuildUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -925,9 +926,15 @@ class PipelineBuildFacadeService(
         }
         val executeCount = buildInfo.executeCount ?: 1
         if (approve) {
-            pipelineRuntimeService.approveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
+            pipelineRuntimeService.approveTriggerReview(
+                userId = userId, buildId = buildId, pipelineId = pipelineId, projectId = projectId,
+                resourceVersion = buildInfo.version, executeCount = executeCount
+            )
         } else {
-            pipelineRuntimeService.disapproveTriggerReview(userId, buildId, pipelineId, projectId, executeCount)
+            pipelineRuntimeService.disapproveTriggerReview(
+                userId = userId, buildId = buildId, pipelineId = pipelineId,
+                projectId = projectId, executeCount = executeCount
+            )
         }
         return true
     }
@@ -1185,7 +1192,7 @@ class PipelineBuildFacadeService(
     }
 
     fun serviceShutdown(projectId: String, pipelineId: String, buildId: String, channelCode: ChannelCode) {
-        val redisLock = RedisLock(redisOperation, "process.pipeline.build.shutdown.$buildId", 10)
+        val redisLock = PipelineBuildShutdownLock(redisOperation, buildId)
         try {
             redisLock.lock()
 
@@ -1359,7 +1366,7 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+                message = null
             )
         }
 
@@ -2202,7 +2209,7 @@ class PipelineBuildFacadeService(
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)
         // 防止接口有并发问题
-        val redisLock = RedisLock(redisOperation, "refreshBuild$buildId", 10L)
+        val redisLock = PipelineRefreshBuildLock(redisOperation, buildId)
         try {
             if (redisLock.tryLock()) {
                 // 同一个buildId只能有一个在refresh的请求

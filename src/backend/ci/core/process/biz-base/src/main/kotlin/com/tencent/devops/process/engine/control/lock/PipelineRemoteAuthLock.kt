@@ -30,14 +30,14 @@ package com.tencent.devops.process.engine.control.lock
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 
-class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
+class PipelineRemoteAuthLock(redisOperation: RedisOperation, pipelineId: String) :
     RedisLock(
         redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
-        expiredTimeInSeconds = 60L
+        lockKey = "process_pipeline_remote_token_lock_key_$pipelineId",
+        expiredTimeInSeconds = 10L
     ) {
     override fun decorateKey(key: String): String {
-        // buildId在各集群唯一，key无需加上集群信息前缀来区分
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
         return key
     }
 }

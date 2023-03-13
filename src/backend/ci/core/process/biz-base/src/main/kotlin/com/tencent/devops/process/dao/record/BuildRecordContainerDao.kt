@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.KEY_EXECUTE_COUNT
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record15
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -149,7 +150,7 @@ class BuildRecordContainerDao {
         }
     }
 
-    fun getLatestRecords(
+    fun getLatestNormalRecords(
         dslContext: DSLContext,
         projectId: String,
         pipelineId: String,
@@ -161,6 +162,7 @@ class BuildRecordContainerDao {
                 .and(PROJECT_ID.eq(projectId))
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(EXECUTE_COUNT.lessOrEqual(executeCount))
+                .and(MATRIX_GROUP_ID.isNull)
             // 获取每个最大执行次数
             val max = DSL.select(
                 CONTAINER_ID.`as`(KEY_CONTAINER_ID),
@@ -176,30 +178,60 @@ class BuildRecordContainerDao {
             ).where(conditions).orderBy(CONTAINER_ID.asc())
                 .fetch()
             return result.map { record ->
-                BuildRecordContainer(
-                    buildId = record[BUILD_ID],
-                    projectId = record[PROJECT_ID],
-                    pipelineId = record[PIPELINE_ID],
-                    resourceVersion = record[RESOURCE_VERSION],
-                    stageId = record[STAGE_ID],
-                    containerId = record[CONTAINER_ID],
-                    executeCount = record[EXECUTE_COUNT],
-                    status = record[STATUS],
-                    containerVar = JsonUtil.to(
-                        record[CONTAINER_VAR], object : TypeReference<MutableMap<String, Any>>() {}
-                    ),
-                    containerType = record[CONTAINER_TYPE],
-                    matrixGroupFlag = record[MATRIX_GROUP_FLAG],
-                    matrixGroupId = record[MATRIX_GROUP_ID],
-                    startTime = record[START_TIME],
-                    endTime = record[END_TIME],
-                    timestamps = record[TIMESTAMPS]?.let {
-                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-                    } ?: mapOf()
-                )
+                generateBuildRecordContainer(record)
             }
         }
     }
+
+    fun getLatestMatrixRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int
+    ): List<BuildRecordContainer> {
+        with(TPipelineBuildRecordContainer.T_PIPELINE_BUILD_RECORD_CONTAINER) {
+            val conditions = BUILD_ID.eq(buildId)
+                .and(PROJECT_ID.eq(projectId))
+                .and(PIPELINE_ID.eq(pipelineId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(MATRIX_GROUP_ID.isNotNull)
+            val result = dslContext.select(
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID,
+                CONTAINER_VAR, EXECUTE_COUNT, CONTAINER_TYPE, STATUS, MATRIX_GROUP_FLAG,
+                MATRIX_GROUP_ID, START_TIME, END_TIME, TIMESTAMPS
+            ).from(this).where(conditions).orderBy(CONTAINER_ID.asc()).fetch()
+            return result.map { record ->
+                generateBuildRecordContainer(record)
+            }
+        }
+    }
+
+    private fun TPipelineBuildRecordContainer.generateBuildRecordContainer(
+        record: Record15<String, String, String, Int,
+            String, String, String, Int, String, String, Boolean, String, LocalDateTime, LocalDateTime, String>
+    ) =
+        BuildRecordContainer(
+            buildId = record[BUILD_ID],
+            projectId = record[PROJECT_ID],
+            pipelineId = record[PIPELINE_ID],
+            resourceVersion = record[RESOURCE_VERSION],
+            stageId = record[STAGE_ID],
+            containerId = record[CONTAINER_ID],
+            executeCount = record[EXECUTE_COUNT],
+            status = record[STATUS],
+            containerVar = JsonUtil.to(
+                record[CONTAINER_VAR], object : TypeReference<MutableMap<String, Any>>() {}
+            ),
+            containerType = record[CONTAINER_TYPE],
+            matrixGroupFlag = record[MATRIX_GROUP_FLAG],
+            matrixGroupId = record[MATRIX_GROUP_ID],
+            startTime = record[START_TIME],
+            endTime = record[END_TIME],
+            timestamps = record[TIMESTAMPS]?.let {
+                JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+            } ?: mapOf()
+        )
 
     class BuildRecordContainerJooqMapper : RecordMapper<TPipelineBuildRecordContainerRecord, BuildRecordContainer> {
         override fun map(record: TPipelineBuildRecordContainerRecord?): BuildRecordContainer? {

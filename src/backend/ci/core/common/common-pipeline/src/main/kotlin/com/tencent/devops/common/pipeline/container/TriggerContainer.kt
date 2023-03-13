@@ -72,7 +72,7 @@ data class TriggerContainer(
     @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
+    override var executeCount: Int? = null,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
@@ -80,7 +80,7 @@ data class TriggerContainer(
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost()
+    override var timeCost: BuildRecordTimeCost? = null
 ) : Container {
     companion object {
         const val classType = "trigger"

@@ -34,5 +34,10 @@ class PipelineVersionLock(redisOperation: RedisOperation, pipelineId: String, ve
     RedisLock(
         redisOperation = redisOperation,
         lockKey = "lock:pipeline:$pipelineId:version:$version",
-        expiredTimeInSeconds = 30
-    )
+        expiredTimeInSeconds = 30L
+    ) {
+    override fun decorateKey(key: String): String {
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
+        return key
+    }
+}

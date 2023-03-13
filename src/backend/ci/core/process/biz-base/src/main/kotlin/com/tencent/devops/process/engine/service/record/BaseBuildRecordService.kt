@@ -41,12 +41,12 @@ import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildRecordTimeCost
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
+import com.tencent.devops.process.engine.control.lock.PipelineBuildRecordLock
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
@@ -76,18 +76,15 @@ open class BaseBuildRecordService(
     ) {
         val watcher = Watcher(id = "updateRecord#$buildId#$operation")
         var message = "nothing"
-        val lock = RedisLock(
-            redisOperation = redisOperation,
-            lockKey = "process.build.record.lock.$buildId.$executeCount",
-            expiredTimeInSeconds = ExpiredTimeInSeconds
-        )
+        val lock = PipelineBuildRecordLock(redisOperation, buildId, executeCount)
         try {
             watcher.start("lock")
             lock.lock()
 
             watcher.start("getRecord")
             val record = buildRecordModelDao.getRecord(
-                dslContext, projectId, pipelineId, buildId, executeCount
+                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
+                buildId = buildId, executeCount = executeCount
             ) ?: run {
                 message = "Will not update"
                 return
@@ -116,6 +113,7 @@ open class BaseBuildRecordService(
                 modelVar = emptyMap(), // 暂时没有变量，保留修改可能
                 startTime = null,
                 endTime = null,
+                errorInfoList = null,
                 cancelUser = cancelUser // 系统行为导致的取消状态(仅当在取消状态时，还没有设置过取消人，才默认为System)
                     ?: if (buildStatus.isCancel() && record.cancelUser.isNullOrBlank()) "System" else null,
                 timestamps = null
@@ -209,7 +207,6 @@ open class BaseBuildRecordService(
     }
 
     companion object {
-        private const val ExpiredTimeInSeconds: Long = 10
         private val logger = LoggerFactory.getLogger(BaseBuildRecordService::class.java)
 
         fun mergeTimestamps(

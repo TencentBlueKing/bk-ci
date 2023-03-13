@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.service.record
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.constant.KEY_VERSION
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.pojo.ErrorInfo
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -64,6 +65,7 @@ import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordModel
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordStage
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
+import com.tencent.devops.process.pojo.pipeline.record.MergeBuildRecordParam
 import com.tencent.devops.process.service.StageTagService
 import com.tencent.devops.process.service.record.PipelineRecordModelService
 import com.tencent.devops.process.utils.KEY_PIPELINE_ID
@@ -110,21 +112,6 @@ class PipelineBuildRecordService @Autowired constructor(
 
     companion object {
         val logger = LoggerFactory.getLogger(PipelineBuildRecordService::class.java)!!
-    }
-
-    fun batchGet(
-        transactionContext: DSLContext?,
-        projectId: String,
-        pipelineId: String,
-        buildId: String,
-        executeCount: Int
-    ): Triple<List<BuildRecordStage>, List<BuildRecordContainer>, List<BuildRecordTask>> {
-        val context = transactionContext ?: dslContext
-        return Triple(
-            recordStageDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordContainerDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount),
-            recordTaskDao.getLatestRecords(context, projectId, pipelineId, buildId, executeCount)
-        )
     }
 
     fun batchSave(
@@ -175,12 +162,12 @@ class PipelineBuildRecordService @Autowired constructor(
 
         // 如果请求的次数为空则填补为最新的次数，旧数据直接按第一次查询
         var fixedExecuteCount = executeCount ?: buildInfo.executeCount ?: 1
-        val buildRecordPipeline = recordModelDao.getRecord(
+        val buildRecordModel = recordModelDao.getRecord(
             dslContext, projectId, pipelineId, buildId, fixedExecuteCount
         )
 
         val version = buildInfo.version
-        val model = if (buildRecordPipeline != null && buildInfo.executeCount != null) {
+        val model = if (buildRecordModel != null && buildInfo.executeCount != null) {
             val resourceStr = pipelineResVersionDao.getVersionModelString(
                 dslContext = dslContext, projectId = projectId, pipelineId = pipelineId, version = version
             ) ?: pipelineResDao.getVersionModelString(
@@ -192,19 +179,30 @@ class PipelineBuildRecordService @Autowired constructor(
                 errorCode = CommonMessageCode.ERROR_INVALID_PARAM_,
                 params = arrayOf("$KEY_PROJECT_ID:$projectId,$KEY_PIPELINE_ID:$pipelineId,$KEY_VERSION:$version")
             )
+            var recordMap: Map<String, Any>? = null
             try {
-                val recordMap = recordModelService.generateFieldRecordModelMap(
-                    projectId, pipelineId, buildId, fixedExecuteCount, buildRecordPipeline
-                )
                 val fullModel = JsonUtil.to(resourceStr, Model::class.java)
                 // 为model填充element
                 pipelineElementService.fillElementWhenNewBuild(fullModel, projectId, pipelineId)
+                val baseModelMap = JsonUtil.toMutableMap(fullModel)
+                val mergeBuildRecordParam = MergeBuildRecordParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    executeCount = fixedExecuteCount,
+                    recordModelMap = buildRecordModel.modelVar,
+                    pipelineBaseModelMap = baseModelMap
+                )
+                recordMap = recordModelService.generateFieldRecordModelMap(mergeBuildRecordParam)
                 ModelUtils.generatePipelineBuildModel(
-                    baseModelMap = JsonUtil.toMutableMap(fullModel),
+                    baseModelMap = baseModelMap,
                     modelFieldRecordMap = recordMap
                 )
             } catch (t: Throwable) {
-                logger.warn("RECORD|parse record($buildId)-$executeCount with error: ", t)
+                logger.warn(
+                    "RECORD|parse record($buildId)-recordMap(${JsonUtil.toJson(recordMap ?: "")})" +
+                        "-$executeCount with error: ", t
+                )
                 // 遇到解析问题直接返回最新记录，表现为前端无法切换
                 fixedExecuteCount = buildInfo.executeCount!!
                 null
@@ -228,13 +226,12 @@ class PipelineBuildRecordService @Autowired constructor(
         val buildSummaryRecord = pipelineBuildSummaryDao.get(dslContext, projectId, buildInfo.pipelineId)
         logger.info(
             "RECORD|turn to detail($buildId)|buildInfoExecuteCount=${buildInfo.executeCount}" +
-                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount\n\n" +
-                JsonUtil.toJson(model)
+                "executeCount=$executeCount|fixedExecuteCount=$fixedExecuteCount"
         )
 
         // 判断需要刷新状态，目前只会改变canRetry & canSkip 状态
         // #7983 仅当查看最新一次执行记录时可以选择重试
-        if (refreshStatus || fixedExecuteCount == buildInfo.executeCount) {
+        if (refreshStatus && fixedExecuteCount == buildInfo.executeCount) {
             // #4245 仅当在有限时间内并已经失败或者取消(终态)的构建上可尝试重试或跳过
             // #6400 无需流水线是终态就可以进行task重试
             if (checkPassDays(buildInfo.startTime)) {
@@ -296,22 +293,21 @@ class PipelineBuildRecordService @Autowired constructor(
             userId = buildInfo.startUser,
             triggerUser = buildInfo.triggerUser,
             trigger = StartType.toReadableString(buildInfo.trigger, buildInfo.channelCode),
-            queueTime = buildRecordPipeline?.queueTime ?: buildInfo.queueTime,
-            startTime = buildRecordPipeline?.startTime?.timestampmilli()
+            queueTime = buildRecordModel?.queueTime ?: buildInfo.queueTime,
+            startTime = buildRecordModel?.startTime?.timestampmilli()
                 ?: buildInfo.startTime ?: LocalDateTime.now().timestampmilli(),
-            endTime = buildRecordPipeline?.endTime?.timestampmilli() ?: buildInfo.endTime,
+            endTime = buildRecordModel?.endTime?.timestampmilli() ?: buildInfo.endTime,
             status = buildInfo.status.name,
             model = model,
             currentTimestamp = System.currentTimeMillis(),
             buildNum = buildInfo.buildNum,
-            cancelUserId = buildRecordPipeline?.cancelUser
-                ?: pipelineBuildDetailService.getBuildCancelUser(projectId, buildId),
+            cancelUserId = buildRecordModel?.cancelUser,
             curVersion = buildInfo.version,
             latestVersion = pipelineInfo.version,
             latestBuildNum = buildSummaryRecord?.buildNum ?: -1,
             lastModifyUser = pipelineInfo.lastModifyUser,
             executeTime = buildInfo.executeTime,
-            errorInfoList = buildInfo.errorInfoList,
+            errorInfoList = buildRecordModel?.errorInfoList,
             triggerReviewers = triggerReviewers,
             executeCount = fixedExecuteCount,
             startUserList = startUserList,
@@ -428,7 +424,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
-                null, null
+                null, null, null
             )
         }
     }
@@ -439,6 +435,7 @@ class PipelineBuildRecordService @Autowired constructor(
         buildId: String,
         executeCount: Int,
         buildStatus: BuildStatus,
+        errorInfoList: List<ErrorInfo>?,
         errorMsg: String?
     ): Pair<Model, List<BuildStageStatus>> {
         logger.info("[$buildId]|BUILD_END|buildStatus=$buildStatus")
@@ -458,7 +455,7 @@ class PipelineBuildRecordService @Autowired constructor(
             )
             // 第1层循环：刷新运行中stage状态
             recordStages.forEach nextStage@{ stage ->
-                if (BuildStatus.parse(stage.status).isRunning()) {
+                if (!BuildStatus.parse(stage.status).isRunning()) {
                     return@nextStage
                 }
                 stage.status = buildStatus.name
@@ -468,7 +465,7 @@ class PipelineBuildRecordService @Autowired constructor(
                     stage.stageId, BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
-                    if (BuildStatus.parse(container.status).isRunning()) {
+                    if (!BuildStatus.parse(container.status).isRunning()) {
                         return@nextContainer
                     }
                     container.status = buildStatus.name
@@ -478,7 +475,7 @@ class PipelineBuildRecordService @Autowired constructor(
                         container.containerId, BuildStatus.RUNNING
                     )
                     recordTasks.forEach nextTask@{ task ->
-                        if (BuildStatus.parse(task.status).isRunning()) {
+                        if (!BuildStatus.parse(task.status).isRunning()) {
                             return@nextTask
                         }
                         task.status = buildStatus.name
@@ -500,7 +497,7 @@ class PipelineBuildRecordService @Autowired constructor(
             recordModelDao.updateRecord(
                 context, projectId, pipelineId, buildId, executeCount, buildStatus,
                 recordModel.modelVar.plus(modelVar), null, LocalDateTime.now(),
-                null, null
+                errorInfoList, null, null
             )
         }
 
@@ -553,7 +550,7 @@ class PipelineBuildRecordService @Autowired constructor(
                 dslContext = context, projectId = projectId, pipelineId = pipelineId,
                 buildId = buildId, executeCount = executeCount, cancelUser = null,
                 modelVar = recordModel.modelVar.plus(modelVar), buildStatus = buildStatus,
-                startTime = startTime, endTime = endTime,
+                startTime = startTime, endTime = endTime, errorInfoList = null,
                 timestamps = timestamps?.let { mergeTimestamps(timestamps, recordModel.timestamps) }
             )
         }

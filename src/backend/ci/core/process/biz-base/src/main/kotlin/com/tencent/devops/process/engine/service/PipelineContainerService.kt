@@ -48,7 +48,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.context.MatrixBuildContext
-import com.tencent.devops.process.engine.context.StartBuildContext
+import com.tencent.devops.process.pojo.app.StartBuildContext
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
 import com.tencent.devops.process.engine.dao.PipelineBuildContainerDao
@@ -56,7 +56,6 @@ import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainerControlOption
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
-import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer
@@ -90,7 +89,6 @@ class PipelineContainerService @Autowired constructor(
     private val dslContext: DSLContext,
     private val pipelineTaskService: PipelineTaskService,
     private val vmOperatorTaskGenerator: VmOperateTaskGenerator,
-    private val containerBuildDetailService: ContainerBuildDetailService,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineBuildContainerDao: PipelineBuildContainerDao
 ) {
@@ -330,9 +328,7 @@ class PipelineContainerService @Autowired constructor(
                         executeCount = context.executeCount,
                         originClassType = atomElement.getClassType(),
                         resourceVersion = resourceVersion,
-                        status = null,
-                        startTime = null,
-                        endTime = null,
+                        status = atomElement.status,
                         timestamps = mapOf(),
                         // 对矩阵产生的插件特殊表示类型
                         taskVar = mutableMapOf(
@@ -395,6 +391,7 @@ class PipelineContainerService @Autowired constructor(
         buildContainers: MutableList<Pair<PipelineBuildContainer, Container>>,
         updateExistsTask: MutableList<PipelineBuildTask>,
         updateExistsContainer: MutableList<Pair<PipelineBuildContainer, Container>>,
+        containerBuildRecords: MutableList<BuildRecordContainer>,
         lastTimeBuildContainers: Collection<PipelineBuildContainer>,
         lastTimeBuildTasks: Collection<PipelineBuildTask>
     ) {
@@ -583,6 +580,18 @@ class PipelineContainerService @Autowired constructor(
                 )
             }
             context.needUpdateStage = true
+        } else if (lastTimeBuildContainers.isEmpty()) {
+            // 新的构建需要为跳过的container增加SKIP的状态记录
+            containerBuildRecords.add(
+                BuildRecordContainer(
+                    projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+                    resourceVersion = context.resourceVersion, stageId = stage.id!!,
+                    containerId = container.containerId!!, containerType = container.getClassType(),
+                    executeCount = context.executeCount, matrixGroupFlag = container.matrixGroupFlag,
+                    matrixGroupId = null, status = BuildStatus.SKIP.name, containerVar = mutableMapOf(),
+                    startTime = null, endTime = null, timestamps = mapOf()
+                )
+            )
         }
     }
 

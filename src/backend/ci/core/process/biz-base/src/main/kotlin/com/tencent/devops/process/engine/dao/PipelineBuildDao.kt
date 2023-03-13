@@ -346,15 +346,13 @@ class PipelineBuildDao {
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
-        startTime: LocalDateTime? = null,
-        executeCount: Int = 1
+        startTime: LocalDateTime?,
+        executeCount: Int?
     ) {
         with(T_PIPELINE_BUILD_HISTORY) {
             val update = dslContext.update(this).set(STATUS, BuildStatus.RUNNING.ordinal)
-            if (executeCount == 1) {
-                update.set(START_TIME, startTime)
-            }
-            update.set(EXECUTE_COUNT, executeCount)
+            startTime?.let { update.set(START_TIME, startTime) }
+            executeCount?.let { update.set(EXECUTE_COUNT, executeCount) }
             update.setNull(ERROR_INFO)
             update.where(PROJECT_ID.eq(projectId).and(BUILD_ID.eq(buildId))).execute()
         }

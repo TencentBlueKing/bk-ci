@@ -39,6 +39,7 @@ import com.tencent.devops.process.pojo.KEY_TASK_ID
 import com.tencent.devops.process.pojo.pipeline.record.BuildRecordTask
 import org.jooq.Condition
 import org.jooq.DSLContext
+import org.jooq.Record17
 import org.jooq.RecordMapper
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -129,18 +130,21 @@ class BuildRecordTaskDao {
         }
     }
 
-    fun getLatestRecords(
+    fun getLatestNormalRecords(
         dslContext: DSLContext,
         projectId: String,
-        pipelineId: String,
         buildId: String,
-        executeCount: Int
+        executeCount: Int,
+        matrixContainerIds: List<String>
     ): List<BuildRecordTask> {
         with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
-            val conditions = BUILD_ID.eq(buildId)
-                .and(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
-                .and(EXECUTE_COUNT.lessOrEqual(executeCount))
+            val conditions = mutableListOf<Condition>()
+            conditions.add(BUILD_ID.eq(buildId))
+            conditions.add(PROJECT_ID.eq(projectId))
+            conditions.add(EXECUTE_COUNT.lessOrEqual(executeCount))
+            if (matrixContainerIds.isNotEmpty()) {
+                conditions.add(CONTAINER_ID.notIn(matrixContainerIds))
+            }
             // 获取每个最大执行次数
             val max = DSL.select(
                 TASK_ID.`as`(KEY_TASK_ID),
@@ -156,32 +160,61 @@ class BuildRecordTaskDao {
             ).where(conditions).orderBy(TASK_SEQ.asc())
                 .fetch()
             return result.map { record ->
-                BuildRecordTask(
-                    buildId = record[BUILD_ID],
-                    projectId = record[PROJECT_ID],
-                    pipelineId = record[PIPELINE_ID],
-                    resourceVersion = record[RESOURCE_VERSION],
-                    stageId = record[STAGE_ID],
-                    containerId = record[CONTAINER_ID],
-                    taskId = record[TASK_ID],
-                    taskSeq = record[TASK_SEQ],
-                    executeCount = record[EXECUTE_COUNT],
-                    taskVar = JsonUtil.to(
-                        record[TASK_VAR], object : TypeReference<MutableMap<String, Any>>() {}
-                    ),
-                    classType = record[CLASS_TYPE],
-                    atomCode = record[ATOM_CODE],
-                    status = record[STATUS],
-                    originClassType = record[ORIGIN_CLASS_TYPE],
-                    startTime = record[START_TIME],
-                    endTime = record[END_TIME],
-                    timestamps = record[TIMESTAMPS]?.let {
-                        JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
-                    } ?: mapOf()
-                )
+                generateBuildRecordTask(record)
             }
         }
     }
+
+    fun getLatestMatrixRecords(
+        dslContext: DSLContext,
+        projectId: String,
+        buildId: String,
+        executeCount: Int,
+        matrixContainerIds: List<String>
+    ): List<BuildRecordTask> {
+        with(TPipelineBuildRecordTask.T_PIPELINE_BUILD_RECORD_TASK) {
+            val conditions = BUILD_ID.eq(buildId)
+                .and(PROJECT_ID.eq(projectId))
+                .and(EXECUTE_COUNT.eq(executeCount))
+                .and(CONTAINER_ID.`in`(matrixContainerIds))
+            val result = dslContext.select(
+                BUILD_ID, PROJECT_ID, PIPELINE_ID, RESOURCE_VERSION, STAGE_ID, CONTAINER_ID, TASK_ID,
+                TASK_SEQ, EXECUTE_COUNT, TASK_VAR, CLASS_TYPE, ATOM_CODE, STATUS, ORIGIN_CLASS_TYPE,
+                START_TIME, END_TIME, TIMESTAMPS
+            ).from(this).where(conditions).orderBy(TASK_SEQ.asc()).fetch()
+            return result.map { record ->
+                generateBuildRecordTask(record)
+            }
+        }
+    }
+
+    private fun TPipelineBuildRecordTask.generateBuildRecordTask(
+        record: Record17<String, String, String, Int, String,
+            String, String, Int, Int, String, String, String, String, String, LocalDateTime, LocalDateTime, String>
+    ) =
+        BuildRecordTask(
+            buildId = record[BUILD_ID],
+            projectId = record[PROJECT_ID],
+            pipelineId = record[PIPELINE_ID],
+            resourceVersion = record[RESOURCE_VERSION],
+            stageId = record[STAGE_ID],
+            containerId = record[CONTAINER_ID],
+            taskId = record[TASK_ID],
+            taskSeq = record[TASK_SEQ],
+            executeCount = record[EXECUTE_COUNT],
+            taskVar = JsonUtil.to(
+                record[TASK_VAR], object : TypeReference<MutableMap<String, Any>>() {}
+            ),
+            classType = record[CLASS_TYPE],
+            atomCode = record[ATOM_CODE],
+            status = record[STATUS],
+            originClassType = record[ORIGIN_CLASS_TYPE],
+            startTime = record[START_TIME],
+            endTime = record[END_TIME],
+            timestamps = record[TIMESTAMPS]?.let {
+                JsonUtil.to(it, object : TypeReference<Map<BuildTimestampType, BuildRecordTimeStamp>>() {})
+            } ?: mapOf()
+        )
 
     fun getRecord(
         dslContext: DSLContext,

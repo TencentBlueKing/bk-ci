@@ -84,7 +84,7 @@ data class NormalContainer(
     @ApiModelProperty("构建环境启动状态", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var startVMStatus: String? = null,
     @ApiModelProperty("容器运行次数", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
-    override var executeCount: Int? = 0,
+    override var executeCount: Int? = null,
     @ApiModelProperty("用户自定义ID", required = false, hidden = false)
     override val jobId: String? = null,
     @ApiModelProperty("是否包含post任务标识", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
@@ -92,7 +92,7 @@ data class NormalContainer(
     @ApiModelProperty("是否为构建矩阵", required = false, accessMode = ApiModelProperty.AccessMode.READ_ONLY)
     override var matrixGroupFlag: Boolean? = false,
     @ApiModelProperty("各项耗时", required = true)
-    override var timeCost: BuildRecordTimeCost? = BuildRecordTimeCost(),
+    override var timeCost: BuildRecordTimeCost? = null,
     @ApiModelProperty("构建矩阵配置项", required = false)
     var matrixControlOption: MatrixControlOption? = null,
     @ApiModelProperty("所在构建矩阵组的containerHashId（分裂后的子容器特有字段）", required = false)

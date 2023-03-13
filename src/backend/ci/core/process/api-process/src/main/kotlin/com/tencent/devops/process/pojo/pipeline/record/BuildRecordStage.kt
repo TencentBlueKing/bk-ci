@@ -27,8 +27,12 @@
 
 package com.tencent.devops.process.pojo.pipeline.record
 
+import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
+import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
+import com.tencent.devops.process.pojo.app.StartBuildContext
+import com.tencent.devops.process.pojo.pipeline.record.BuildRecordContainer.Companion.addRecords
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 import java.time.LocalDateTime
@@ -52,11 +56,41 @@ data class BuildRecordStage(
     @ApiModelProperty("执行变量", required = true)
     val stageVar: MutableMap<String, Any>,
     @ApiModelProperty("构建状态", required = false)
-    var status: String?,
+    var status: String? = null,
     @ApiModelProperty("开始时间", required = true)
-    var startTime: LocalDateTime?,
+    var startTime: LocalDateTime? = null,
     @ApiModelProperty("结束时间", required = true)
-    var endTime: LocalDateTime?,
+    var endTime: LocalDateTime? = null,
     @ApiModelProperty("业务时间戳集合", required = true)
     var timestamps: Map<BuildTimestampType, BuildRecordTimeStamp>
-)
+) {
+    companion object {
+        fun MutableList<BuildRecordStage>.addRecords(
+            projectId: String,
+            pipelineId: String,
+            version: Int,
+            buildId: String,
+            stage: Stage,
+            context: StartBuildContext,
+            stageIndex: Int,
+            buildStatus: BuildStatus?,
+            containerBuildRecords: MutableList<BuildRecordContainer>,
+            taskBuildRecords: MutableList<BuildRecordTask>
+        ) {
+            this.add(
+                BuildRecordStage(
+                    projectId = projectId, pipelineId = pipelineId, resourceVersion = version,
+                    buildId = buildId, stageId = stage.id!!, executeCount = context.executeCount,
+                    stageSeq = stageIndex, stageVar = mutableMapOf(), status = buildStatus?.name,
+                    timestamps = mapOf()
+                )
+            )
+            stage.containers.forEach { container ->
+                containerBuildRecords.addRecords(
+                    projectId, pipelineId, version, buildId, stage, container,
+                    context, buildStatus, taskBuildRecords
+                )
+            }
+        }
+    }
+}

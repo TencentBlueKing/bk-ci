@@ -42,13 +42,13 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.engine.control.lock.PipelineBuildDetailLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -67,17 +67,12 @@ open class BaseBuildDetailService constructor(
     val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
     companion object {
-        private const val ExpiredTimeInSeconds: Long = 10
         const val TRIGGER_STAGE = "stage-1"
     }
 
     fun getBuildModel(projectId: String, buildId: String): Model? {
         val record = buildDetailDao.get(dslContext, projectId, buildId) ?: return null
         return JsonUtil.to(record.model, Model::class.java)
-    }
-
-    fun getBuildCancelUser(projectId: String, buildId: String): String? {
-        return buildDetailDao.getBuildCancelUser(dslContext, projectId, buildId)
     }
 
     @Suppress("LongParameterList", "ComplexMethod")
@@ -92,7 +87,7 @@ open class BaseBuildDetailService constructor(
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         var record: TPipelineBuildDetailRecord? = null // 在异常catch处共享，减少一次db查询
-        val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
+        val lock = PipelineBuildDetailLock(redisOperation, buildId)
 
         try {
             watcher.start("lock")

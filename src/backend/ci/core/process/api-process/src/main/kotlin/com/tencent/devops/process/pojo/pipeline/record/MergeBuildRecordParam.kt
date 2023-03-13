@@ -25,19 +25,23 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.control.lock
+package com.tencent.devops.process.pojo.pipeline.record
 
-import com.tencent.devops.common.redis.RedisLock
-import com.tencent.devops.common.redis.RedisOperation
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-class StageMatrixLock(redisOperation: RedisOperation, buildId: String, stageId: String) :
-    RedisLock(
-        redisOperation = redisOperation,
-        lockKey = "lock:build:$buildId:stage:matrix:$stageId",
-        expiredTimeInSeconds = 60L
-    ) {
-    override fun decorateKey(key: String): String {
-        // buildId在各集群唯一，key无需加上集群信息前缀来区分
-        return key
-    }
-}
+@ApiModel("合并流水线变量模型参数")
+data class MergeBuildRecordParam(
+    @ApiModelProperty("项目ID", required = true)
+    val projectId: String,
+    @ApiModelProperty("流水线ID", required = true)
+    val pipelineId: String,
+    @ApiModelProperty("构建ID", required = true)
+    val buildId: String,
+    @ApiModelProperty("执行次数", required = true)
+    val executeCount: Int,
+    @ApiModelProperty("执行变量模型", required = true)
+    var recordModelMap: MutableMap<String, Any>,
+    @ApiModelProperty("流水线基础模型", required = true)
+    var pipelineBaseModelMap: MutableMap<String, Any>
+)

@@ -234,7 +234,15 @@ class PipelineBuildTaskDao {
         }
     }
 
-    fun listByStatus(
+    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
+        return with(T_PIPELINE_BUILD_TASK) {
+            dslContext.selectFrom(this)
+                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
+                .orderBy(TASK_SEQ.asc()).fetch(mapper)
+        }
+    }
+
+    fun getTasksInCondition(
         dslContext: DSLContext,
         projectId: String,
         buildId: String,
@@ -244,38 +252,11 @@ class PipelineBuildTaskDao {
         return with(T_PIPELINE_BUILD_TASK) {
             val where = dslContext.selectFrom(this)
                 .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-            if (!containerId.isNullOrBlank()) {
-                where.and(CONTAINER_ID.eq(containerId))
-            }
-            if (statusSet != null && statusSet.isNotEmpty()) {
-                val statusIntSet = mutableSetOf<Int>()
-                statusSet.forEach {
-                    statusIntSet.add(it.ordinal)
-                }
-                where.and(STATUS.`in`(statusIntSet))
+            containerId?.let { where.and(CONTAINER_ID.eq(containerId)) }
+            if (!statusSet.isNullOrEmpty()) {
+                where.and(STATUS.`in`(statusSet.map { it.ordinal }))
             }
             where.orderBy(TASK_SEQ.asc()).fetch(mapper)
-        }
-    }
-
-    fun getByBuildId(dslContext: DSLContext, projectId: String, buildId: String): Collection<PipelineBuildTask> {
-        return with(T_PIPELINE_BUILD_TASK) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)))
-                .orderBy(TASK_SEQ.asc()).fetch(mapper)
-        }
-    }
-
-    fun getByContainerId(
-        dslContext: DSLContext,
-        projectId: String,
-        buildId: String,
-        containerId: String
-    ): Collection<PipelineBuildTask> {
-        return with(T_PIPELINE_BUILD_TASK) {
-            dslContext.selectFrom(this)
-                .where(BUILD_ID.eq(buildId).and(PROJECT_ID.eq(projectId)).and(CONTAINER_ID.eq(containerId)))
-                .orderBy(TASK_SEQ.asc()).fetch(mapper)
         }
     }
 
