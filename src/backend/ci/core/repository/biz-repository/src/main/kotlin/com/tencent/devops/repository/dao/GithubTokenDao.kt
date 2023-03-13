@@ -77,15 +77,13 @@ class GithubTokenDao {
     ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
-                .set(ACCESS_TOKEN, accessToken)
                 .set(TOKEN_TYPE, tokenType)
                 .let {
                     when (githubTokenType) {
                         GithubTokenType.GITHUB_APP -> it.set(ACCESS_TOKEN, accessToken)
-                        GithubTokenType.OAUTH_APP -> it.set(OAUTH_APP_TOKEN, accessToken)
+                        GithubTokenType.OAUTH_APP -> it.set(OAUTH_APP_TOKEN, accessToken).set(SCOPE, scope)
                     }
                 }
-                .set(SCOPE, scope)
                 .where(USER_ID.eq(userId))
                 .execute()
         }
