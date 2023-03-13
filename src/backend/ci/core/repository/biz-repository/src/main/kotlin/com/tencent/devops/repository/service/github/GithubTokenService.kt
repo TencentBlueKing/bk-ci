@@ -65,7 +65,7 @@ class GithubTokenService @Autowired constructor(
         githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ) {
         val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
-        if (getAccessToken(userId) == null) {
+        if (githubTokenDao.getOrNull(dslContext, userId) == null) {
             githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
             githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
