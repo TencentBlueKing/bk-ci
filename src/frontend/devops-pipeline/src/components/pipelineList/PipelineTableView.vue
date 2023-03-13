@@ -166,14 +166,14 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.permissions.canView"
+                    v-else-if="!props.row.permissions.canView && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
                 <template
-                    v-else-if="props.row.hasPermission"
+                    v-else-if="props.row.permissions.canView"
                 >
                     <bk-button
                         text
