@@ -84,8 +84,13 @@ class GithubOAuthService @Autowired constructor(
         if (userId != null) stateParams["userId"] = userId
 
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
-        return "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+
+        return when (tokenType) {
+            GithubTokenType.GITHUB_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            GithubTokenType.OAUTH_APP -> "$GITHUB_URL/login/oauth/authorize" +
+                "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state&scope=user,repo"
+        }
     }
 
     fun githubCallback(
