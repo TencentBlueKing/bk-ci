@@ -54,6 +54,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.engine.pojo.UpdateTaskInfo
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.PauseRedisUtils
 import com.tencent.devops.process.pojo.PipelineProjectRel
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
@@ -89,6 +90,7 @@ class PipelineTaskService @Autowired constructor(
     private val objectMapper: ObjectMapper,
     private val pipelineInfoDao: PipelineInfoDao,
     private val taskBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineModelTaskDao: PipelineModelTaskDao,
     private val pipelineBuildTaskDao: PipelineBuildTaskDao,
     private val pipelineBuildSummaryDao: PipelineBuildSummaryDao,
@@ -161,7 +163,7 @@ class PipelineTaskService @Autowired constructor(
     }
 
     fun getRunningTask(projectId: String, buildId: String): List<Map<String, Any>> {
-        val listByStatus = pipelineBuildTaskDao.listByStatus(
+        val listByStatus = pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
@@ -277,10 +279,10 @@ class PipelineTaskService @Autowired constructor(
     fun listContainerBuildTasks(
         projectId: String,
         buildId: String,
-        containerSeqId: String,
+        containerSeqId: String?,
         buildStatusSet: Set<BuildStatus>? = null
     ): List<PipelineBuildTask> {
-        return pipelineBuildTaskDao.listByStatus(
+        return pipelineBuildTaskDao.getTasksInCondition(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
@@ -608,13 +610,14 @@ class PipelineTaskService @Autowired constructor(
         // 修改任务状态位暂停
         updateTaskStatus(task = task, userId = task.starter, buildStatus = BuildStatus.PAUSE)
 
-        taskBuildDetailService.taskPause(
+        taskBuildRecordService.taskPause(
             projectId = task.projectId,
+            pipelineId = task.pipelineId,
             buildId = task.buildId,
             stageId = task.stageId,
             containerId = task.containerId,
             taskId = task.taskId,
-            buildStatus = BuildStatus.PAUSE
+            executeCount = task.executeCount ?: 1
         )
 
         redisOperation.set(
