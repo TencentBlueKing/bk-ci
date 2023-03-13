@@ -1044,9 +1044,12 @@ class WorkspaceService @Autowired constructor(
             usageTime = usageTime,
             sleepingTime = sleepingTime,
             discountTime = discountTime,
-            cpu = workspaces.sumOf { it.cpu },
-            memory = workspaces.sumOf { it.memory },
-            disk = workspaces.sumOf { it.disk }
+            cpu = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.cpu } else { 0 } },
+            memory = workspaces.sumOf { if (it.status == WorkspaceStatus.RUNNING.ordinal) { it.memory } else { 0 } },
+            disk = workspaces.sumOf {
+                if (it.status == WorkspaceStatus.RUNNING.ordinal ||
+                    it.status == WorkspaceStatus.SLEEP.ordinal) { it.disk } else { 0 }
+            }
         )
     }
 
