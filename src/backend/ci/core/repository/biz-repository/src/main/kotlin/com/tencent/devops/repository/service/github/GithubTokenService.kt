@@ -81,7 +81,7 @@ class GithubTokenService @Autowired constructor(
         tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
     ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId) ?: return null
-        val accessToken = when (tokenType){
+        val accessToken = when (tokenType) {
             GithubTokenType.GITHUB_APP -> githubTokenRecord.accessToken
             GithubTokenType.OAUTH_APP -> githubTokenRecord.oauthAppToken
         }
