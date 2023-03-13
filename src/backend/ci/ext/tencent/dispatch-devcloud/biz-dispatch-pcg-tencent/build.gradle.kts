@@ -25,27 +25,6 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.dispatch.devcloud
-
-import com.tencent.devops.common.dispatch.sdk.config.MQConfiguration
-import com.tencent.devops.common.service.MicroService
-import com.tencent.devops.common.service.MicroServiceApplication
-import org.springframework.context.annotation.ComponentScan
-import org.springframework.context.annotation.FilterType
-
-@ComponentScan(
-    basePackages = [
-        "com.tencent.devops.common.dispatch.sdk",
-        "com.tencent.devops.dispatch.devcloud",
-        "com.tencent.devops.dispatch.macos",
-        "com.tencent.devops.dispatch.pcg",
-        "com.tencent.devops.dispatch.windows"
-    ],
-    excludeFilters = [ComponentScan.Filter(type = FilterType.ASSIGNABLE_TYPE, value = [MQConfiguration::class])]
-)
-@MicroService
-class Application
-
-fun main(args: Array<String>) {
-    MicroServiceApplication.run(Application::class, args)
+dependencies {
+    api(project(":core:common:common-dispatch-sdk"))
 }

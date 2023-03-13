@@ -505,6 +505,7 @@ include(":ext:tencent:dispatch-devcloud:api-dispatch-windows-tencent")
 include(":ext:tencent:dispatch-devcloud:biz-dispatch-devcloud-tencent")
 include(":ext:tencent:dispatch-devcloud:biz-dispatch-macos-tencent")
 include(":ext:tencent:dispatch-devcloud:biz-dispatch-windows-tencent")
+include(":ext:tencent:dispatch-devcloud:biz-dispatch-pcg-tencent")
 include(":ext:tencent:dispatch-devcloud:model-dispatch-devcloud-tencent")
 include(":ext:tencent:dispatch-devcloud:boot-dispatch-devcloud-tencent")
 
