@@ -148,7 +148,8 @@ object TXStreamDispatchUtils {
                     user = info.userName,
                     password = info.password,
                     credentialId = info.credId,
-                    acrossTemplateId = info.acrossTemplateId
+                    acrossTemplateId = info.acrossTemplateId,
+                    jobId = job.id
                 )
 
             )
