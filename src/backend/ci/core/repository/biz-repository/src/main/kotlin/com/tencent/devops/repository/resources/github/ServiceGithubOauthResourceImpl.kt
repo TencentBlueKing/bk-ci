@@ -17,7 +17,7 @@ class ServiceGithubOauthResourceImpl @Autowired constructor(
         return Result(githubOAuthService.githubCallback(code, state, channelCode))
     }
 
-    override fun oauthUrl(redirectUrl: String, userId: String?, tokenType: GithubTokenType): Result<String> {
-        return Result(githubOAuthService.oauthUrl(redirectUrl, userId, tokenType))
+    override fun oauthUrl(redirectUrl: String, userId: String?, tokenType: GithubTokenType?): Result<String> {
+        return Result(githubOAuthService.oauthUrl(redirectUrl, userId, tokenType ?: GithubTokenType.GITHUB_APP))
     }
 }
