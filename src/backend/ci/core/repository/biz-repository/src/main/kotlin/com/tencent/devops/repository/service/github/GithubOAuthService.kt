@@ -152,9 +152,21 @@ class GithubOAuthService @Autowired constructor(
         )
     }
 
-    private fun getAccessTokenImpl(code: String): GithubToken {
+    private fun getAccessTokenImpl(
+        code: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken {
+        val clientId = when (githubTokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
+        }
+
+        val secret = when (githubTokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientSecret
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientSecret
+        }
         val url = "$GITHUB_URL/login/oauth/access_token" +
-            "?client_id=${gitConfig.githubClientId}&client_secret=${gitConfig.githubClientSecret}&code=$code"
+            "?client_id=$clientId&client_secret=$secret&code=$code"
 
         val request = Request.Builder()
             .url(url)
