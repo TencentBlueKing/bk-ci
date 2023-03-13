@@ -294,12 +294,12 @@ class ThirdPartyAgentService @Autowired constructor(
         val result = client.get(ServiceTemplateAcrossResource::class).getBuildAcrossTemplateInfo(
             projectId = projectId,
             templateId = credInfo.acrossTemplateId!!
-        ).data ?: return Pair(tickets["v1"], tickets["v2"])
+        ).data ?: Pair(null, null)
 
         val across = result.firstOrNull {
             it.templateType == TemplateAcrossInfoType.JOB &&
                     it.templateInstancesIds.contains(credInfo.jobId)
-        } ?: return Pair(tickets["v1"], tickets["v2"])
+        } ?: return Pair(null, null)
 
         // 校验成功后获取跨项目的凭据
         val acrossTickets = CommonUtils.getCredential(
@@ -308,7 +308,7 @@ class ThirdPartyAgentService @Autowired constructor(
             credentialId = credInfo.credentialId!!,
             type = CredentialType.USERNAME_PASSWORD
         )
-        return Pair(tickets["v1"], tickets["v2"])
+        return Pair(acrossTickets["v1"], acrossTickets["v2"])
     }
 
     fun checkIfCanUpgradeByVersion(
