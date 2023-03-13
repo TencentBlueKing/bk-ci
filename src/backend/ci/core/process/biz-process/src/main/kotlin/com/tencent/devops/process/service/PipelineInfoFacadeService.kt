@@ -519,8 +519,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipeline.channelCode}不符合$channelCode",
-                params = arrayOf(pipeline.channelCode.name)
+                params = arrayOf(
+                    "(复制/copy)",
+                    pipeline.channelCode.name,
+                    channelCode.name
+                )
             )
         }
 
@@ -639,8 +642,11 @@ class PipelineInfoFacadeService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.NOT_FOUND.statusCode,
                     errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                    defaultMessage = "指定要复制的流水线渠道来源${pipeline.channelCode}不符合$channelCode",
-                    params = arrayOf(pipeline.channelCode.name)
+                    params = arrayOf(
+                        "(复制/copy)",
+                        pipeline.channelCode.name,
+                        channelCode.name
+                    )
                 )
             }
 
@@ -758,8 +764,11 @@ class PipelineInfoFacadeService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_CHANNEL_CODE,
-                defaultMessage = "指定要复制的流水线渠道来源${pipelineInfo.channelCode}不符合$channelCode",
-                params = arrayOf(pipelineInfo.channelCode.name)
+                params = arrayOf(
+                    "(复制/copy)",
+                    pipelineInfo.channelCode.name,
+                    channelCode.name
+                )
             )
         }
 

@@ -12,3 +12,6 @@ const val BK_POLLING_WAIT_FOR_QUALITY_RESULT = "bkPollingWaitForQualityResult"
 const val BK_QUALITY_CHECK_RESULT = "bkQualityCheckResult"
 const val BK_AUDIT_TIMEOUT = "bkAuditTimeout"
 const val BK_AUDIT_RESULT = "bkAuditResult"
+const val BK_JOB_MATRIX_YAML_CONFIG_ERROR = "BkJobMatrixYamlConfigError"// Job[{0]的矩阵YAML配置错误:
+const val BK_PIPELINE_DELETE_NOT_EXIST = "PipelineDeleteNotExist"
+

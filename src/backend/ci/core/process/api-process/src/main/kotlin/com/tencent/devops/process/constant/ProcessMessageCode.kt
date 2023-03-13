@@ -65,7 +65,7 @@ object ProcessMessageCode {
     const val ERROR_ATOM_NOT_FOUND = "2101010" // 插件不存在
 
     const val USER_NEED_PIPELINE_X_PERMISSION = "2101008" // 流水线: 用户无{0}权限
-    const val ERROR_PIPELINE_CHANNEL_CODE = "2101009" // 流水线: 流水线渠道来源不符合({0})
+    const val ERROR_PIPELINE_CHANNEL_CODE = "2101009" // 流水线: 指定{0}的流水线渠道来源{1}不符合{2}
     const val ILLEGAL_PIPELINE_MODEL_JSON = "2101011" // 流水线: 流水线Model不合法
     const val OPERATE_PIPELINE_FAIL = "2101012" // 流水线: 流水线出现异常:{0}
     const val ERROR_PIPELINE_NAME_EXISTS = "2101013" // 流水线: 流水线名称已被使用
