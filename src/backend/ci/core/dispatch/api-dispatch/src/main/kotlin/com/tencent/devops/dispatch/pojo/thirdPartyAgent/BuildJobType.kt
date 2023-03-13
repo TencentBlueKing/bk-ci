@@ -25,39 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.dispatch.pojo.thirdPartyAgent
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+enum class BuildJobType {
+    ALL,
+    DOCKER,
+    BINARY;
 
-/**
- * 仓库配置
- */
-@Component
-class BkRepoClientConfig {
-
-    @Value("\${artifactory.realm:}")
-    lateinit var artifactoryRealm: String
-
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
-
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl:}")
-    val bkRepoApiUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库前缀地址
-    @Value("\${bkrepo.staticRepoPrefixUrl:}")
-    val bkRepoStaticRepoPrefixUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库用户名
-    @Value("\${bkrepo.staticUserName:g_bkstore}")
-    val bkRepoStaticUserName: String = "g_bkstore"
-
-    // 蓝盾新仓库静态资源仓库密码
-    @Value("\${bkrepo.staticPassword:}")
-    val bkRepoStaticPassword: String = ""
-
-    @Value("\${bkrepo.bkrepoUrl}")
-    val bkRepoIdcHost: String? = null
+    companion object {
+        fun toEnum(type: String?): BuildJobType {
+            return when (type) {
+                ALL.name -> ALL
+                DOCKER.name -> DOCKER
+                BINARY.name -> BINARY
+                // 兼容旧数据和其他非标准参数情况
+                else -> ALL
+            }
+        }
+    }
 }

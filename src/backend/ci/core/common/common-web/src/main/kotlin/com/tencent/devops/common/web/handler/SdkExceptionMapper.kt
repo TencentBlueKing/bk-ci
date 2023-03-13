@@ -25,39 +25,32 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.archive.config
+package com.tencent.devops.common.web.handler
 
-import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Component
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.service.Profile
+import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.common.web.annotation.BkExceptionMapper
+import com.tencent.devops.common.sdk.exception.SdkException
+import org.slf4j.LoggerFactory
+import javax.ws.rs.core.MediaType
+import javax.ws.rs.core.Response
+import javax.ws.rs.ext.ExceptionMapper
 
-/**
- * 仓库配置
- */
-@Component
-class BkRepoClientConfig {
+@BkExceptionMapper
+class SdkExceptionMapper : ExceptionMapper<SdkException> {
+    companion object {
+        val logger = LoggerFactory.getLogger(SdkExceptionMapper::class.java)!!
+    }
 
-    @Value("\${artifactory.realm:}")
-    lateinit var artifactoryRealm: String
-
-    @Value("\${bkrepo.logRepoCredentialsKey:}")
-    lateinit var logRepoCredentialsKey: String
-
-    // 蓝盾新仓库api接口地址
-    @Value("\${bkrepo.bkrepoApiUrl:}")
-    val bkRepoApiUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库前缀地址
-    @Value("\${bkrepo.staticRepoPrefixUrl:}")
-    val bkRepoStaticRepoPrefixUrl: String = ""
-
-    // 蓝盾新仓库静态资源仓库用户名
-    @Value("\${bkrepo.staticUserName:g_bkstore}")
-    val bkRepoStaticUserName: String = "g_bkstore"
-
-    // 蓝盾新仓库静态资源仓库密码
-    @Value("\${bkrepo.staticPassword:}")
-    val bkRepoStaticPassword: String = ""
-
-    @Value("\${bkrepo.bkrepoUrl}")
-    val bkRepoIdcHost: String? = null
+    override fun toResponse(exception: SdkException): Response {
+        logger.error("Failed with sdk exception", exception)
+        val message = if (SpringContextUtil.getBean(Profile::class.java).isDebug()) {
+            exception.message
+        } else {
+            "访问后台数据失败，已通知产品、开发，请稍后重试"
+        }
+        return Response.status(exception.errCode).type(MediaType.APPLICATION_JSON_TYPE)
+            .entity(Result(status = exception.errCode, message = message, data = exception.message)).build()
+    }
 }
