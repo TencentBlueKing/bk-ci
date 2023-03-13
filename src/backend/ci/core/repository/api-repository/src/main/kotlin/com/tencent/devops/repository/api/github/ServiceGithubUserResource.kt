@@ -58,7 +58,7 @@ interface ServiceGithubUserResource {
 
     @ApiOperation("获取用户 email 信息")
     @GET
-    @Path("/getUser")
+    @Path("/get_user_email")
     fun getUserEmail(
         @ApiParam("授权token", required = true)
         @HeaderParam(AUTH_HEADER_GITHUB_TOKEN)
