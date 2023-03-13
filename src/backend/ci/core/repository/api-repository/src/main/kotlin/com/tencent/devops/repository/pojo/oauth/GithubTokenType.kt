@@ -25,31 +25,16 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.repository.resources.github
+package com.tencent.devops.repository.pojo.oauth
 
-import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.sdk.github.response.GetUserEmailResponse
-import com.tencent.devops.common.sdk.github.response.GetUserResponse
-import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.repository.api.github.ServiceGithubUserResource
-import com.tencent.devops.repository.github.service.GithubUserService
-import org.springframework.beans.factory.annotation.Autowired
+import io.swagger.annotations.ApiModel
+import io.swagger.annotations.ApiModelProperty
 
-@RestResource
-
-class ServiceGithubUserResourceImpl @Autowired constructor(
-    val githubUserService: GithubUserService
-) : ServiceGithubUserResource {
-
-    override fun getUser(token: String): Result<GetUserResponse?> {
-        return Result(
-            githubUserService.getUser(token)
-        )
-    }
-
-    override fun getUserEmail(token: String): Result<List<GetUserEmailResponse>> {
-        return Result(
-            githubUserService.getUserEmail(token)
-        )
-    }
+@ApiModel("github token 类型")
+enum class GithubTokenType(
+    @ApiModelProperty("前缀")
+    var prefix: String
+) {
+    GITHUB_APP("ghu_"),
+    OAUTH_APP("gho_")
 }

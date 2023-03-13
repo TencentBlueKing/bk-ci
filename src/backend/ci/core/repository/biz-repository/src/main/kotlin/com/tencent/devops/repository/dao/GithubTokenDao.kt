@@ -29,13 +29,21 @@ package com.tencent.devops.repository.dao
 
 import com.tencent.devops.model.repository.tables.TRepositoryGithubToken
 import com.tencent.devops.model.repository.tables.records.TRepositoryGithubTokenRecord
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
 class GithubTokenDao {
-    fun create(dslContext: DSLContext, userId: String, accessToken: String, tokenType: String, scope: String) {
+    fun create(
+        dslContext: DSLContext,
+        userId: String,
+        accessToken: String,
+        tokenType: String,
+        scope: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ) {
         val now = LocalDateTime.now()
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.insertInto(
@@ -45,23 +53,38 @@ class GithubTokenDao {
                 TOKEN_TYPE,
                 SCOPE,
                 CREATE_TIME,
-                UPDATE_TIME
+                UPDATE_TIME,
+                OAUTH_APP_TOKEN
             ).values(
                 userId,
-                accessToken,
+                if (githubTokenType == GithubTokenType.GITHUB_APP) accessToken else "",
                 tokenType,
                 scope,
                 now,
-                now
+                now,
+                if (githubTokenType == GithubTokenType.OAUTH_APP) accessToken else null
             ).execute()
         }
     }
 
-    fun update(dslContext: DSLContext, userId: String, accessToken: String, tokenType: String, scope: String) {
+    fun update(
+        dslContext: DSLContext,
+        userId: String,
+        accessToken: String,
+        tokenType: String,
+        scope: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
                 .set(ACCESS_TOKEN, accessToken)
                 .set(TOKEN_TYPE, tokenType)
+                .let {
+                    when (githubTokenType) {
+                        GithubTokenType.GITHUB_APP -> it.set(ACCESS_TOKEN, accessToken)
+                        GithubTokenType.OAUTH_APP -> it.set(OAUTH_APP_TOKEN, accessToken)
+                    }
+                }
                 .set(SCOPE, scope)
                 .where(USER_ID.eq(userId))
                 .execute()
