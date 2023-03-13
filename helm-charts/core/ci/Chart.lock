@@ -1,27 +1,30 @@
 dependencies:
 - name: common
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 1.10.0
 - name: mysql
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.8.3
 - name: redis
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 14.8.8
 - name: elasticsearch
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 17.5.2
 - name: rabbitmq
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 8.20.1
 - name: influxdb
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 2.3.7
 - name: nginx-ingress-controller
-  repository: https://charts.bitnami.com/bitnami
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 7.6.21
 - name: mongodb
-  repository: https://charts.bitnami.com/bitnami
-  version: 10.10.2
-digest: sha256:fa218488738d77fec69f3b95a20323964c10b8bc82ae0daeb4ae02c65514e4ee
-generated: "2022-02-23T11:17:26.380277102+08:00"
+  repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
+  version: 10.30.6
+- name: kubernetes-manager
+  repository: file://../../../src/backend/dispatch-k8s-manager/manifests/chart
+  version: 0.0.36
+digest: sha256:905f11bb6e91266bbe76e4bc064691d30b1108fa41da21856422c90109ebd0dd
+generated: "2023-03-13T20:45:29.885547514+08:00"

@@ -168,6 +168,10 @@ rabbitmq:
   communityPlugins: "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
+    # ipv6 , 需要开启这些选项
+    # management.tcp.port = 15672
+    # management.tcp.ip  = ::
+    # 默认账户
     default_vhost = default-vhost
     default_permissions.configure = .*
     default_permissions.read = .*
@@ -215,7 +219,8 @@ influxdb:
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
-  enabled: true
+  enabled: false
+  # enableIPv6: true # ipv6 环境需要开启
   useStatefulSet: true
   auth:
     enabled: true
@@ -1415,9 +1420,9 @@ angetless:
 turbo:
   enabled: false
   image:
-    registry: mirrors.tencent.com/bkce
+    registry: mirrors.tencent.com/build/blueking
     repository: bkci-turbo
-    tag: 0.0.16
+    tag: 0.0.17
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
