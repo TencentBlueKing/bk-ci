@@ -40,6 +40,7 @@ import com.tencent.devops.repository.pojo.github.GithubAppUrl
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.scm.config.GitConfig
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
@@ -70,7 +71,11 @@ class GithubOAuthService @Autowired constructor(
 
     fun getGithubAppUrl() = GithubAppUrl(gitConfig.githubAppUrl)
 
-    fun oauthUrl(redirectUrl: String, userId: String?): String {
+    fun oauthUrl(redirectUrl: String, userId: String?, tokenType: GithubTokenType): String {
+        val clientId = when (tokenType) {
+            GithubTokenType.GITHUB_APP -> gitConfig.githubClientId
+            GithubTokenType.OAUTH_APP -> gitConfig.oauthAppClientId
+        }
         val stateParams = mutableMapOf(
             "redirectUrl" to redirectUrl,
             "randomStr" to RandomStringUtils.randomAlphanumeric(RANDOM_ALPHA_NUM)
@@ -80,18 +85,27 @@ class GithubOAuthService @Autowired constructor(
 
         val state = URLEncoder.encode(JsonUtil.toJson(stateParams), "UTF-8")
         return "$GITHUB_URL/login/oauth/authorize" +
-            "?client_id=${gitConfig.githubClientId}&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
+            "?client_id=$clientId&redirect_uri=${gitConfig.githubCallbackUrl}&state=$state"
     }
 
-    fun githubCallback(code: String, state: String?, channelCode: String? = null): GithubOauthCallback {
+    fun githubCallback(
+        code: String,
+        state: String?,
+        channelCode: String? = null,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
         return if (channelCode == ChannelCode.GIT.name || state?.contains("redirectUrl") == true) {
-            githubCallbackForGIT(code = code, state = state)
+            githubCallbackForGIT(code = code, state = state, githubTokenType = tokenType)
         } else {
-            githubCallbackForBS(code = code, state = state)
+            githubCallbackForBS(code = code, state = state, githubTokenType = tokenType)
         }
     }
 
-    fun githubCallbackForBS(code: String, state: String?): GithubOauthCallback {
+    fun githubCallbackForBS(
+        code: String,
+        state: String?,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
         if (state.isNullOrBlank() || !state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
@@ -102,23 +116,34 @@ class GithubOAuthService @Autowired constructor(
         val repoHashId = if (arrays[2].isNotBlank()) HashUtil.encodeOtherLongId(arrays[2].toLong()) else ""
         val githubToken = getAccessTokenImpl(code)
 
-        githubTokenService.createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
+        githubTokenService.createAccessToken(
+            userId = userId,
+            accessToken = githubToken.accessToken,
+            tokenType = githubToken.tokenType,
+            scope = githubToken.scope,
+            githubTokenType = githubTokenType
+        )
         return GithubOauthCallback(
             userId = userId,
             redirectUrl = "${gitConfig.githubRedirectUrl}/$projectId#popupGithub$repoHashId"
         )
     }
 
-    fun githubCallbackForGIT(code: String, state: String?): GithubOauthCallback {
+    fun githubCallbackForGIT(
+        code: String,
+        state: String?,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubOauthCallback {
         logger.info("github callback for git|code:$code|state:$state")
         val githubToken = getAccessTokenImpl(code)
         val userResponse = githubUserService.getUser(githubToken.accessToken)
         val stateMap = kotlin.runCatching { JsonUtil.toMap(state ?: "{}") }.getOrDefault(emptyMap())
         githubTokenService.createAccessToken(
-            stateMap["userId"]?.toString() ?: userResponse.login,
-            githubToken.accessToken,
-            githubToken.tokenType,
-            githubToken.scope
+            userId = stateMap["userId"]?.toString() ?: userResponse.login,
+            accessToken = githubToken.accessToken,
+            tokenType = githubToken.tokenType,
+            scope = githubToken.scope,
+            githubTokenType = githubTokenType
         )
         return GithubOauthCallback(
             userId = userResponse.login,

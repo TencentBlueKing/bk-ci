@@ -38,6 +38,7 @@ import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.repository.dao.GithubTokenDao
 import com.tencent.devops.repository.pojo.github.GithubToken
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -56,12 +57,18 @@ class GithubTokenService @Autowired constructor(
     @Value("\${aes.github:#{null}}")
     private val aesKey = ""
 
-    fun createAccessToken(userId: String, accessToken: String, tokenType: String, scope: String) {
+    fun createAccessToken(
+        userId: String,
+        accessToken: String,
+        tokenType: String,
+        scope: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ) {
         val encryptedAccessToken = AESUtil.encrypt(aesKey, accessToken)
         if (getAccessToken(userId) == null) {
-            githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope)
+            githubTokenDao.create(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         } else {
-            githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope)
+            githubTokenDao.update(dslContext, userId, encryptedAccessToken, tokenType, scope, githubTokenType)
         }
     }
 
@@ -69,11 +76,19 @@ class GithubTokenService @Autowired constructor(
         githubTokenDao.delete(dslContext, userId)
     }
 
-    fun getAccessToken(userId: String): GithubToken? {
+    fun getAccessToken(
+        userId: String,
+        tokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): GithubToken? {
         val githubTokenRecord = githubTokenDao.getOrNull(dslContext, userId) ?: return null
+        val accessToken = when (tokenType){
+            GithubTokenType.GITHUB_APP -> githubTokenRecord.accessToken
+            GithubTokenType.OAUTH_APP -> githubTokenRecord.oauthAppToken
+        }
+        if (accessToken.isNullOrBlank()) return null
         logger.info("github aesKey:$aesKey")
         return GithubToken(
-            AESUtil.decrypt(aesKey, githubTokenRecord.accessToken),
+            AESUtil.decrypt(aesKey, accessToken),
             githubTokenRecord.tokenType,
             githubTokenRecord.scope
         )
