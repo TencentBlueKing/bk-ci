@@ -29,7 +29,6 @@ package com.tencent.devops.worker.common.service
 
 import com.tencent.bkrepo.repository.pojo.token.TokenType
 
-
 interface RepoService {
 
     /**
