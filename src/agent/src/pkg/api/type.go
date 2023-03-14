@@ -66,6 +66,7 @@ type ThirdPartyDockerBuildInfo struct {
 type Credential struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
+	ErrMsg   string `json:"errMsg"`
 }
 
 type DockerResourceOptions struct {

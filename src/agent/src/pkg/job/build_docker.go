@@ -122,6 +122,11 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 	workDir := systemutil.GetWorkDir()
 
 	dockerBuildInfo := buildInfo.DockerBuildInfo
+	if dockerBuildInfo.Credential != nil && dockerBuildInfo.Credential.ErrMsg != "" {
+		logs.Error("DOCKER_JOB|get docker cred error ", dockerBuildInfo.Credential.ErrMsg)
+		dockerBuildFinish(buildInfo.ToFinish(false, "获取docker凭据错误|"+dockerBuildInfo.Credential.ErrMsg, api.DockerCredGetErrorEnum))
+		return
+	}
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
