@@ -351,7 +351,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun listResoureces(
+    override fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -376,15 +376,16 @@ class RbacPermissionResourceService(
         )
     }
 
-    override fun getRoleId(
+    override fun getResource(
         userId: String,
         projectId: String,
-        resourceType: String
-    ): String {
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo {
         return authResourceService.get(
             projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId
-        ).relationId
+            resourceType = resourceType,
+            resourceCode = resourceCode
+        )
     }
 }
