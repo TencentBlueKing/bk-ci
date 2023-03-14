@@ -137,6 +137,8 @@ class WorkspaceService @Autowired constructor(
         private val expiredTimeInSeconds = TimeUnit.MINUTES.toSeconds(2)
         private const val defaultPageSize = 20
         private const val DEFAULT_WAIT_TIME = 60
+        private const val BLANK_TEMPLATE_YAML_NAME = "BLANK"
+        private const val BLANK_TEMPLATE_ID = 1
     }
 
     fun getAuthorizedGitRepository(
@@ -199,8 +201,9 @@ class WorkspaceService @Autowired constructor(
                 )
             }
         } else {
-            // 防止污传
-            workspaceCreate.devFilePath = null
+            // 防止污传,如果是基于BLANK模板创建的则用BLANK作为devFilePath
+            workspaceCreate.devFilePath = if (workspaceCreate.wsTemplateId == BLANK_TEMPLATE_ID) {
+                BLANK_TEMPLATE_YAML_NAME } else null
             redisCache.get(REDIS_OFFICIAL_DEVFILE_KEY) ?: ""
         }
 
