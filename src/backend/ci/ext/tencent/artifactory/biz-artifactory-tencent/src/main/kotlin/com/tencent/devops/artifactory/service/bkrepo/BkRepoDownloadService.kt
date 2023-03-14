@@ -37,7 +37,6 @@ import com.tencent.devops.artifactory.service.ShortUrlService
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
 import com.tencent.devops.artifactory.util.EmailUtil
 import com.tencent.devops.artifactory.util.PathUtils
-import com.tencent.devops.artifactory.util.RegionUtil
 import com.tencent.devops.artifactory.util.RepoUtils
 import com.tencent.devops.artifactory.util.StringUtil
 import com.tencent.devops.common.api.constant.CommonMessageCode
@@ -383,15 +382,13 @@ open class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            // TODO bkrepo sdk 替换字符串逻辑有漏洞, 会报错
-            resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
-//            if (region == "EXTERNAL") {
-//                resultList.add(
-//                    "${commonConfig.devopsOuterHostGateWay}/bkrepo/api/external/repository$shareUri&download=true"
-//                )
-//            } else {
-//                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
-//            }
+            if (region == "EXTERNAL") {
+                resultList.add(
+                    "${commonConfig.devopsOuterHostGateWay}/bkrepo/api/external/repository$shareUri&download=true"
+                )
+            } else {
+                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
+            }
         }
         return resultList
     }
