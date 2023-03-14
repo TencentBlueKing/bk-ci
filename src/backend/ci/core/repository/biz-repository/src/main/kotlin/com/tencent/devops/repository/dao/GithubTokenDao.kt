@@ -54,15 +54,15 @@ class GithubTokenDao {
                 SCOPE,
                 CREATE_TIME,
                 UPDATE_TIME,
-                OAUTH_APP_TOKEN
+                TYPE
             ).values(
                 userId,
-                if (githubTokenType == GithubTokenType.GITHUB_APP) accessToken else "",
+                accessToken,
                 tokenType,
                 scope,
                 now,
                 now,
-                if (githubTokenType == GithubTokenType.OAUTH_APP) accessToken else null
+                githubTokenType.name
             ).execute()
         }
     }
@@ -78,24 +78,27 @@ class GithubTokenDao {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.update(this)
                 .set(TOKEN_TYPE, tokenType)
-                .let {
-                    when (githubTokenType) {
-                        GithubTokenType.GITHUB_APP -> it.set(ACCESS_TOKEN, accessToken)
-                        GithubTokenType.OAUTH_APP -> it.set(OAUTH_APP_TOKEN, accessToken).set(SCOPE, scope)
-                    }
-                }
-                .where(USER_ID.eq(userId))
+                .set(ACCESS_TOKEN, accessToken)
+                .set(SCOPE, scope)
+                .where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name))
                 .execute()
         }
     }
 
-    fun getOrNull(dslContext: DSLContext, userId: String): TRepositoryGithubTokenRecord? {
+    fun getOrNull(
+        dslContext: DSLContext,
+        userId: String,
+        githubTokenType: GithubTokenType = GithubTokenType.GITHUB_APP
+    ): TRepositoryGithubTokenRecord? {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
-            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).fetchOne()
+            return dslContext.selectFrom(this).where(USER_ID.eq(userId)).and(TYPE.eq(githubTokenType.name)).fetchOne()
         }
     }
 
-    fun delete(dslContext: DSLContext, userId: String) {
+    fun delete(
+        dslContext: DSLContext,
+        userId: String
+    ) {
         with(TRepositoryGithubToken.T_REPOSITORY_GITHUB_TOKEN) {
             dslContext.deleteFrom(this).where(USER_ID.eq(userId))
         }
