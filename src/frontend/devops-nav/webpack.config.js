@@ -101,7 +101,7 @@ module.exports = (env = {}, argv) => {
         new AddAssetHtmlPlugin([
             {
                 filepath: require.resolve('./src/assets/static/main.dll.js'),
-                publicPath: path.posix.join('/console/', 'static/'),
+                publicPath: path.posix.join('__BK_CI_PUBLIC_URL__', '/console/', 'static/'),
                 hash: true,
                 includeSourcemap: false
             }
