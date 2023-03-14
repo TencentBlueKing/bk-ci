@@ -152,7 +152,7 @@ class TxStoreIndexCronService(
                     tStoreIndexResultRecord.indexId = storeIndexBaseInfoId
                     tStoreIndexResultRecord.indexCode = indexCode
                     tStoreIndexResultRecord.iconTips =
-                        "<span style=\"line-height: 18px\"><span>插件SLA ： $elementValue%（$result）;</span>"
+                        "<span style=\"line-height: 18px\"><span>插件SLA ： $elementValue%（$result）</span>"
                     tStoreIndexResultRecord.levelId = indexLevelInfo?.id
                     tStoreIndexResultRecord.creator = SYSTEM_USER
                     tStoreIndexResultRecord.modifier = SYSTEM_USER
