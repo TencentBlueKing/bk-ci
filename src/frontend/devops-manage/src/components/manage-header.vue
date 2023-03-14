@@ -41,6 +41,7 @@ const goToManage = () => {
 .header-wrapper {
   display: flex;
   flex-direction: column;
+  border-bottom: 1px solid #DCDEE5;
 }
 .manage-header {
   height: 60px;

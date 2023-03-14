@@ -14,6 +14,7 @@ import 'bkui-vue/dist/style.css';
 import { handleProjectManageNoPermission } from './utils/permission'
 import ajax from './http/fetch/index'
 import { AuthorityDirectiveV3 } from '../../common-lib/permission/authority-directive'
+import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // i18n
 import { getCookies } from './common/util';
@@ -32,10 +33,12 @@ const i18n = createI18n({
   },
 });
 
-createApp(App)
+const app = createApp(App)
+app
   .use(router)
   .use(createPinia())
   .use(bkui)
   .use(i18n)
   .use(AuthorityDirectiveV3(handleProjectManageNoPermission, ajax))
   .mount('.app');
+app.directive('bk-tooltips', bkTooltips)

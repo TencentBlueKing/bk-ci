@@ -31,7 +31,7 @@
     "moreDetail": "查看更多",
     "accessDeny": {
         "title": "无该项目权限",
-        "desc": "你并非该项目组成员或者该项目不存在，请申请权限或切换项目试试",
+        "desc": "你不是项目成员，或项目不存在，请申请权限或切换项目",
         "switchProject": "切换项目",
         "applyJoin": "申请加入",
         "projectBan": "项目已禁用",

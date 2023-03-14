@@ -20,7 +20,7 @@ const manageTabs = ref([
     name: 'show',
   },
   {
-    title: t('用户组'),
+    title: t('用户管理'),
     name: 'group',
   },
   {

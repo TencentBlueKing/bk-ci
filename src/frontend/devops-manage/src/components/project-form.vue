@@ -39,6 +39,13 @@ const projectForm = ref(null);
 const iframeRef = ref(null);
 const vm = getCurrentInstance();
 const rules = {
+  englishName: [
+    {
+      validator: (value) => /^[a-z][a-z0-9\-]{1,32}$/.test(value),
+      message: t('英文缩写必须由小写字母+数字+中划线组成，以小写字母开头，长度限制32字符！'),
+      trigger: 'change',
+    }
+  ],
   bgId: [
     {
       validator: () => projectData.value.bgId && projectData.value.deptId,
@@ -241,7 +248,7 @@ watch(() => projectData.value.projectName, (val) => {
 
 const validateEnglishNameTips = ref('');
 watch(() => projectData.value.englishName, (val) => {
-  if (props.type === 'apply' && val) {
+  if (props.type === 'apply' && val && /^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
     http.validateEnglishName(val)
       .then(() => {
         validateEnglishNameTips.value = ''
@@ -250,7 +257,7 @@ watch(() => projectData.value.englishName, (val) => {
         projectForm.value.clearValidate();
         validateEnglishNameTips.value = t('项目ID已存在')
       })
-  } else if (!val) {
+  } else if (!val || !/^[a-z][a-z0-9\-]{1,32}$/.test(val)) {
     validateEnglishNameTips.value = ''
   }
 }, {
@@ -384,7 +391,7 @@ onBeforeUnmount(() => {
         @change="handleChangeForm"
       >
         <bk-radio class="mr10" :label="0">
-          <Popover :content="t('`最大授权范围`内的用户可以主动申请加入项目')">
+          <Popover :content="t('`项目最大可授权人员范围`内的用户可以主动申请加入项目')">
             <span class="authSecrecy-item">{{ t('私有项目') }}</span>
           </Popover>
         </bk-radio>

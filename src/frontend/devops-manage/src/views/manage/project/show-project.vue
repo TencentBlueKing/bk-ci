@@ -301,7 +301,7 @@ onMounted(async () => {
                       <svg v-else aria-hidden="true" class="enable-status-icon">
                         <use xlink:href="#manage-icon-unknown"></use>
                       </svg>
-                      {{ projectData.enabled ? t('已启用') : t('未启用') }}
+                      {{ projectData.enabled ? t('已启用') : t('已停用') }}
                     </span>
                   </div>
                   <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
@@ -323,7 +323,7 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
-                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.centerName }}</span>
+                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
                   <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
                     <p class="update-title">
                       {{ t('本次更新：') }}
@@ -517,6 +517,7 @@ onMounted(async () => {
     margin-left: 5px;
   }
   .content-main {
+    color: #313238;
     padding: 32px 48px;
   }
   .detail-content-form {

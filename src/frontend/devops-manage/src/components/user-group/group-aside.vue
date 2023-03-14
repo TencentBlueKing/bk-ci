@@ -51,7 +51,10 @@
                     {{ $t('重命名') }}
                   </bk-button>
                   <bk-button
-                    class="btn"
+                    :class="{
+                      'btn': true,
+                      'is-disable': group.defaultGroup
+                    }"
                     :disabled="group.defaultGroup"
                     text
                     @click="handleShowDeleteGroup(group)">
@@ -84,7 +87,7 @@
     >
       <template #header>
         <div class="manage-icon manage-icon-warning-circle-fill title-icon"></div>
-        <p>{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
+        <p class="delete-title">{{ $t('确认删除【】用户组？', [deleteObj.group.name]) }}</p>
       </template>
       <div class="delete-tips">
         <p>{{ $t('删除用户组【】将执行如下操作：', [deleteObj.group.name]) }}</p>
@@ -94,7 +97,7 @@
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
-          {{ $t('删除组内用户继承改组的权限') }}
+          {{ $t('删除组内用户继承该组的权限') }}
         </p>
         <p>
           <i class="manage-icon manage-icon-warning-circle-fill warning-icon"></i>
@@ -102,7 +105,7 @@
         </p>
       </div>
       <div class="confirm-delete">
-        <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认您的操作：" style="color: #737987;font-size: 14px;" tag="div">
+        <i18n-t keypath="此操作提交后将不能恢复，为避免误删除，请再次确认你的操作：" style="color: #737987;font-size: 14px;" tag="div">
           <span style="color: red;">{{$t('不能恢复')}}</span>
         </i18n-t>
         <bk-input
@@ -294,9 +297,10 @@ export default {
     line-height: 50px;
     padding-left: 24px;
     width: 100%;
-    background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px);
+    /* background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px); */
     font-size: 14px;
     margin-bottom: 8px;
+    font-weight: 700;
   }
   .group-aside {
     width: 240px;
@@ -322,6 +326,12 @@ export default {
       background-color: #E1ECFF;
       .small-size {
         color: #fff
+      }
+      .add-icon {
+        color: #3f86ff;
+      }
+      .more-icon {
+        color: #63656e;
       }
     }
   }
@@ -350,6 +360,12 @@ export default {
     }
     .small-size {
       color: #fff
+    }
+    .add-icon {
+      color: #3f86ff;
+    }
+    .more-icon {
+      color: #63656e;
     }
   }
   .user-num,
@@ -398,7 +414,7 @@ export default {
     align-items: center;
   }
   .add-icon {
-    margin-right: 10px;
+    margin-right: 8px;
     color: #979BA5;
   }
 
@@ -417,6 +433,9 @@ export default {
   .menu-content {
     display: flex;
     flex-direction: column;
+    .is-disable {
+      color: #dcdee5;
+    }
   }
   :deep(.bk-popover-content) {
     padding: 0;
@@ -428,6 +447,10 @@ export default {
   .small-size {
     scale: 0.9;
     color: #C4C6CC;
+  }
+  .delete-title {
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   .delete-tips {
     padding: 10px 25px;

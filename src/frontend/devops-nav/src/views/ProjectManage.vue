@@ -20,6 +20,7 @@
                     <bk-input
                         v-model="inputValue"
                         class="search-input"
+                        clearable
                         right-icon="bk-icon icon-search"
                         :placeholder="$t('searchProject')"
                     ></bk-input>
@@ -234,13 +235,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}`)
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`
                         break
                 }
             },
@@ -251,10 +252,10 @@
                 switch (projectTag) {
                     case 'v0':
                     case 'v3':
-                        window.open(`/console/store/serviceManage/${projectCode}`)
+                        window.location.href = `/console/store/serviceManage/${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/expand`)
+                        window.location.href = `/console/manage/${projectCode}/expand`
                         break
                 }
             },
@@ -273,13 +274,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}`)
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`
                         break
                 }
             },

@@ -22,7 +22,7 @@ export default {
   // 获取资源列表
   getResourceList(params: any) {
     const { projectId, resourceType, resourceName } = params;
-    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResoureces`)
+    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources`)
   },
   // 获取用户组列表
   getUserGroupList(params: any) {

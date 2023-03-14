@@ -180,9 +180,10 @@
   line-height: 50px;
   padding-left: 24px;
   width: 100%;
-  background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px);
+  // background-image: linear-gradient(transparent 49px, rgb(220, 222, 229) 1px);
   font-size: 14px;
   margin-bottom: 8px;
+  font-weight: 700;
 }
 .group-item {
   display: flex;
@@ -266,7 +267,8 @@
   align-items: center;
 }
 .add-icon {
-  margin-right: 10px;
+  margin-right: 8px;
+  color: #979BA5;
 }
 
 .group-more-option {

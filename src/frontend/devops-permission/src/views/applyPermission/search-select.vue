@@ -159,7 +159,7 @@ export default {
   props: {
     placeholder: {
       type: String,
-      default: '用户组/描述/资源实例/操作',
+      default: '资源实例/用户组/描述/操作/ID',
     },
     searchList: {
       type: Array,
@@ -817,7 +817,7 @@ export default {
       }
       &:hover,
       &.is-hover {
-        background: #FFF5F7FA;
+        background: #f5f7fa;
       }
     }
     .search-menu-item {
