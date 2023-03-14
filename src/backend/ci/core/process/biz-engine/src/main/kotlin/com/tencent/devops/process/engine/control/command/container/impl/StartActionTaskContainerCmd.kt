@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildAtomTaskEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildContainerEvent
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.PipelineContextService
@@ -62,12 +63,13 @@ import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Suppress("TooManyFunctions", "LongParameterList")
+@Suppress("TooManyFunctions", "LongParameterList", "ComplexMethod")
 @Service
 class StartActionTaskContainerCmd(
     private val redisOperation: RedisOperation,
     private val pipelineTaskService: PipelineTaskService,
     private val taskBuildDetailService: TaskBuildDetailService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineContextService: PipelineContextService
@@ -358,24 +360,28 @@ class StartActionTaskContainerCmd(
                 LOG.warn("ENGINE|$buildId|$source|CONTAINER_SKIP_TASK|$stageId|j($containerId)|$taskId|$taskStatus")
                 // 更新任务状态
                 pipelineTaskService.updateTaskStatus(task = this, userId = starter, buildStatus = taskStatus)
-                val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-                    TaskBuildEndParam(
-                        projectId = projectId,
-                        buildId = buildId,
-                        taskId = taskId,
-                        buildStatus = taskStatus
-                    )
+                val endParam = TaskBuildEndParam(
+                    projectId = projectId,
+                    pipelineId = pipelineId,
+                    buildId = buildId,
+                    containerId = containerId,
+                    taskId = taskId,
+                    buildStatus = taskStatus
                 )
+                val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
                 refreshTaskStatus(updateTaskStatusInfos, index, containerTasks)
                 message.insert(0, "[$taskName]").append(" | summary=${containerContext.latestSummary}")
             }
             parseException != null -> { // 如果执行条件判断是出错则直接将插件设为失败
-                taskBuildDetailService.updateTaskStatus(
+                taskBuildRecordService.updateTaskStatus(
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
+                    stageId = stageId,
+                    containerId = containerId,
                     taskId = taskId,
-                    taskStatus = BuildStatus.FAILED,
-                    buildStatus = BuildStatus.RUNNING,
+                    executeCount = executeCount ?: 1,
+                    buildStatus = BuildStatus.FAILED,
                     operation = "taskConditionInvalid"
                 )
                 pipelineTaskService.updateTaskStatus(
@@ -532,12 +538,15 @@ class StartActionTaskContainerCmd(
             pipelineTaskService.updateTaskStatus(currentTask, currentTask.starter, taskStatus)
             // 系统控制类插件不涉及到Detail编排状态修改
             if (EnvControlTaskType.parse(currentTask.taskType) == null) {
-                taskBuildDetailService.updateTaskStatus(
+                taskBuildRecordService.updateTaskStatus(
                     projectId = currentTask.projectId,
+                    pipelineId = currentTask.pipelineId,
                     buildId = currentTask.buildId,
+                    stageId = currentTask.stageId,
+                    containerId = currentTask.containerId,
                     taskId = currentTask.taskId,
-                    taskStatus = taskStatus,
-                    buildStatus = BuildStatus.RUNNING,
+                    executeCount = currentTask.executeCount ?: 1,
+                    buildStatus = taskStatus,
                     operation = if (parentTaskSkipFlag) "taskSkip" else "taskUnExec"
                 )
             }

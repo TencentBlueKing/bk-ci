@@ -53,6 +53,7 @@ import com.tencent.devops.process.engine.pojo.PipelineBuildTask
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessShutdownDispatchEvent
 import com.tencent.devops.process.pojo.mq.PipelineBuildLessStartupDispatchEvent
 import org.slf4j.LoggerFactory
@@ -72,6 +73,7 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
     private val pipelineRepositoryService: PipelineRepositoryService,
     private val client: Client,
     private val containerBuildDetailService: ContainerBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineEventDispatcher: MQRoutableEventDispatcher,
     private val buildLogPrinter: BuildLogPrinter
 ) : IAtomTask<NormalContainer> {
@@ -158,8 +160,13 @@ class DispatchBuildLessDockerStartupTaskAtom @Autowired constructor(
             taskId = taskId
         ))
 
-        containerBuildDetailService.containerPreparing(projectId, buildId, vmSeqId)
-
+        containerBuildRecordService.containerPreparing(
+            projectId = projectId,
+            pipelineId = pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            executeCount = param.executeCount ?: 1
+        )
         dispatch(container = container!!, task = task, pipelineInfo = pipelineInfo!!, param)
 
         logger.info("[$buildId]|STARTUP_DOCKER|($vmSeqId)|Dispatch startup")

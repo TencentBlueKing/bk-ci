@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.process.engine.context
+package com.tencent.devops.process.pojo.app
 
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.container.Container
@@ -35,7 +35,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.BuildNoType
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.process.engine.control.DependOnUtils
+import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.utils.PIPELINE_RETRY_ALL_FAILED_CONTAINER
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PIPELINE_RETRY_START_TASK_ID
@@ -55,6 +55,7 @@ data class StartBuildContext(
     val projectId: String,
     val pipelineId: String,
     val buildId: String,
+    val resourceVersion: Int,
     val actionType: ActionType,
     val executeCount: Int = 1,
     val stageRetry: Boolean,
@@ -163,6 +164,7 @@ data class StartBuildContext(
             projectId: String,
             pipelineId: String,
             buildId: String,
+            resourceVersion: Int,
             params: Map<String, Any>
         ): StartBuildContext {
 
@@ -183,6 +185,7 @@ data class StartBuildContext(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 buildId = buildId,
+                resourceVersion = resourceVersion,
                 actionType = actionType,
                 executeCount = executeCount,
                 firstTaskId = params[PIPELINE_START_TASK_ID]?.toString() ?: "",
