@@ -121,7 +121,7 @@ open class BaseBuildRecordService(
             message = "Will not update"
         } catch (ignored: Throwable) {
             message = ignored.message ?: ""
-            logger.warn("[$buildId]| Fail to update the build detail: ${ignored.message}", ignored)
+            logger.warn("[$buildId]| Fail to update the build record: ${ignored.message}", ignored)
         } finally {
             lock.unlock()
             watcher.stop()
