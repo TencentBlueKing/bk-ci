@@ -246,7 +246,6 @@ class ThirdPartyAgentService @Autowired constructor(
                         }
                         dockerInfo.credential?.user = userName
                         dockerInfo.credential?.password = password
-
                     }
                     buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
                     buildDockerInfo.credential?.errMsg = errMsg
