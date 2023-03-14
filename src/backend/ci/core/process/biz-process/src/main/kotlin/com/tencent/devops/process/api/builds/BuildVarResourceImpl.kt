@@ -34,7 +34,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_USER_NO_PERMISSION_GET_PIPELINE_BUILD_INFO
+import com.tencent.devops.process.constant.BK_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.enums.VariableType
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -104,9 +104,9 @@ class BuildVarResourceImpl @Autowired constructor(
         ) {
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_BUILD_INFO,
-                    I18nUtil.getLanguage(),
-                    arrayOf(userId)
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "build info")
                 )
             )
         }

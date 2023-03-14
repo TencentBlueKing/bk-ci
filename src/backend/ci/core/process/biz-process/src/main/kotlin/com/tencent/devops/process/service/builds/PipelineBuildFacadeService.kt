@@ -27,6 +27,7 @@
 
 package com.tencent.devops.process.service.builds
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.model.SQLPage
@@ -35,6 +36,7 @@ import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.IdValue
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.pojo.SimpleResult
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
@@ -62,6 +64,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_USER_NO_PERMISSION_GET_PIPELINE_INFO
+import com.tencent.devops.process.constant.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
@@ -173,12 +178,17 @@ class PipelineBuildFacadeService(
     ): BuildManualStartupInfo {
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId!!,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                )
             )
         }
 
@@ -312,7 +322,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限获取流水线($pipelineId)信息"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "")
+            )
         )
         return pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
     }
@@ -331,12 +345,17 @@ class PipelineBuildFacadeService(
         checkManualStartup: Boolean? = false
     ): String {
         if (checkPermission!!) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限重启流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "重启" else "retry", pipelineId)
+                )
             )
         }
 
@@ -542,12 +561,17 @@ class PipelineBuildFacadeService(
     ): String {
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                )
             )
         }
 
@@ -632,12 +656,17 @@ class PipelineBuildFacadeService(
     ): String? {
 
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限启动流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                )
             )
         }
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId = pipelineId) ?: return null
@@ -769,12 +798,17 @@ class PipelineBuildFacadeService(
         checkPermission: Boolean = true
     ) {
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 无权限停止流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "停止" else "stop", pipelineId)
+                )
             )
         }
 
@@ -892,7 +926,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.EXECUTE,
-                message = "用户（$userId) 没有流水线($pipelineId)的执行权限"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId)
+                )
             )
         }
         val buildInfo = pipelineRuntimeService.getBuildInfo(projectId, buildId)
@@ -1006,10 +1044,10 @@ class PipelineBuildFacadeService(
 
             if (interceptResult.isNotOk()) {
                 // 发送排队失败的事件
-                logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|流水线启动失败:[${interceptResult.message}]")
+                logger.warn("[$pipelineId]|START_PIPELINE_MANUAL|pipeline Startup failed:[${interceptResult.message}]")
                 throw ErrorCodeException(
                     errorCode = interceptResult.status.toString(),
-                    defaultMessage = "Stage启动失败![${interceptResult.message}]"
+                    defaultMessage = "Stage Startup failed![${interceptResult.message}]"
                 )
             }
             val success = if (isCancel) {
@@ -1238,7 +1276,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "detail")
+                )
             )
         }
 
@@ -1288,7 +1330,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "detail")
+            )
         )
         val buildId = pipelineRuntimeService.getBuildIdbyBuildNo(projectId, pipelineId, buildNo)
             ?: throw ErrorCodeException(
@@ -1316,7 +1362,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "detail")
+                )
             )
         }
         val buildId = pipelineRuntimeService.getLatestFinishedBuildId(projectId, pipelineId)
@@ -1343,7 +1393,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)构建状态"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "build status")
+                )
             )
         }
 
@@ -1426,7 +1480,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)构建变量"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "build variables")
+                )
             )
         }
 
@@ -1468,7 +1526,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId) 构建变量的值"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "build the value of the variable")
+                )
             )
         }
 
@@ -1547,7 +1609,11 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     permission = AuthPermission.VIEW,
-                    message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
+                    message = MessageUtil.getMessageByLocale(
+                        BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(userId, pipelineId, "history build")
+                    )
                 )
             }
 
@@ -1640,7 +1706,11 @@ class PipelineBuildFacadeService(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     permission = AuthPermission.VIEW,
-                    message = "用户（$userId) 无权限获取流水线($pipelineId)历史构建"
+                    message = MessageUtil.getMessageByLocale(
+                        BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(userId, pipelineId, "History build")
+                    )
                 )
             }
             val newTotalCount = pipelineRuntimeService.getPipelineBuildHistoryCount(
@@ -1728,7 +1798,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EXECUTE,
-            message = "用户（$userId) 没有流水线($pipelineId)的执行权限，无法修改备注"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId)
+            ) + "(Notes cannot be modified)"
         )
         pipelineRuntimeService.updateBuildRemark(projectId, pipelineId, buildId, remark)
     }
@@ -1739,7 +1813,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "history build")
+            )
         )
         val result = mutableListOf<IdValue>()
         BuildStatusSwitcher.pipelineStatusMaker.statusSet().filter { it.visible }.forEach {
@@ -1754,7 +1832,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "history build")
+            )
         )
         return StartType.getStartTypeMap()
     }
@@ -1765,7 +1847,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "history build")
+            )
         )
         return pipelineRuntimeService.getHistoryConditionRepo(projectId, pipelineId)
     }
@@ -1781,7 +1867,11 @@ class PipelineBuildFacadeService(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
-            message = "用户（$userId) 无权限查看流水线($pipelineId)历史构建"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                I18nUtil.getLanguage(userId),
+                arrayOf(userId, pipelineId, "history build")
+            )
         )
         return pipelineRuntimeService.getHistoryConditionBranch(projectId, pipelineId, alias)
     }
@@ -2095,7 +2185,11 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
-                message = "用户（$userId) 无权限获取流水线($pipelineId)详情"
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(userId, pipelineId, "detail")
+                )
             )
         }
         return pipelineRuntimeService.getBuildInfo(projectId, buildId)?.status?.name
@@ -2114,12 +2208,17 @@ class PipelineBuildFacadeService(
         buildId: String
     ): String {
         // 校验用户是否有执行流水线权限
+        val language = I18nUtil.getLanguage(userId)
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EXECUTE,
-            message = "用户（$userId) 无权限启动流水线($pipelineId)"
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+            )
         )
         // 校验是否pipeline跟buildId匹配, 防止误传参数
         val buildInfo = checkPipelineInfo(projectId, pipelineId, buildId)

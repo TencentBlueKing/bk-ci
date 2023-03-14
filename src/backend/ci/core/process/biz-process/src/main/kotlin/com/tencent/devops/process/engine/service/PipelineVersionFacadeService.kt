@@ -27,9 +27,13 @@
 
 package com.tencent.devops.process.engine.service
 
+import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.model.SQLLimit
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.service.utils.CommonUtils.ZH_CN
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
@@ -51,12 +55,17 @@ class PipelineVersionFacadeService @Autowired constructor(
         checkPermission: Boolean = true
     ): String {
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = AuthPermission.DELETE,
-                message = "用户($userId)无权限在工程($projectId)下删除流水线($pipelineId)"
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "删除" else "delete", pipelineId)
+                )
             )
         }
 

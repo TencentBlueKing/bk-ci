@@ -27,12 +27,15 @@
 
 package com.tencent.devops.process.notify
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.listener.pipeline.BaseListener
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyMessageTemplateResource
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.bean.PipelineUrlBean
+import com.tencent.devops.process.constant.BK_BUILD_IN_REVIEW_STATUS
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildNotifyEvent
 import com.tencent.devops.process.pojo.PipelineNotifyTemplateEnum
 import com.tencent.devops.process.service.ProjectCacheService
@@ -86,7 +89,11 @@ class PipelineBuildNotifyListener @Autowired constructor(
             if (titleParams["content"].isNullOrBlank()) {
                 val buildNum = bodyParams["buildNum"]
                 val pipelineName = bodyParams["pipelineName"]
-                titleParams["content"] = "项目【 $projectName 】下的流水线【 $pipelineName 】#$buildNum 构建处于待审核状态"
+                titleParams["content"] = MessageUtil.getMessageByLocale(
+                    BK_BUILD_IN_REVIEW_STATUS,
+                    I18nUtil.getLanguage(),
+                    arrayOf(projectName, "$pipelineName", "$buildNum")
+                )
             }
             titleParams["projectName"] = projectName
             bodyParams["reviewUrl"] = reviewUrl

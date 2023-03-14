@@ -27,7 +27,7 @@
 
 package com.tencent.devops.dispatch.kubernetes.service
 
-import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_EDIT_PIPELINE
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -345,20 +345,19 @@ class DispatchBaseDebugService @Autowired constructor(
                 projectId, pipelineId, AuthPermission.EDIT
             )
         ) {
+            val language = I18nUtil.getLanguage(userId)
             logger.info(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(USER_NOT_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
-                    userId,
-                    projectId,
-                    pipelineId
+                MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "编辑" else "edit", pipelineId)
                 )
             )
             throw PermissionForbiddenException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(USER_NOT_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
-                    userId,
-                    projectId,
-                    pipelineId
+                MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(userId, projectId, if (language == "zh_CN") "编辑" else "edit", pipelineId)
                 )
             )
         }

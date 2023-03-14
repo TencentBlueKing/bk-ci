@@ -40,11 +40,11 @@ import com.tencent.devops.common.log.pojo.QueryLogStatus
 import com.tencent.devops.common.log.pojo.QueryLogs
 import com.tencent.devops.common.log.pojo.enums.LogStatus
 import com.tencent.devops.common.log.pojo.enums.LogType
+import com.tencent.devops.common.service.utils.CommonUtils.ZH_CN
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.jmx.LogStorageBean
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Suppress("LongParameterList", "TooManyFunctions")
@@ -413,15 +413,14 @@ class BuildLogQueryService @Autowired constructor(
                 permission = permission
             )
         ) {
+            val language = I18nUtil.getLanguage(userId)
             throw PermissionForbiddenException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        CommonMessageCode.USER_NOT_PERMISSIONS_EDIT_PIPELINE,
-                        I18nUtil.getLanguage(userId)
-                    ),
-                    userId,
-                    projectId,
-                    permission.alias
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId, projectId, if (language == "zh_CN") "编辑" else "edit", permission.alias
+                    )
                 )
             )
         }
