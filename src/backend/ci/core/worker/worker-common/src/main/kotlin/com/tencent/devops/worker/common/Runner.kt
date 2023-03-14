@@ -109,7 +109,7 @@ object Runner {
             EngineService.submitError(
                 ErrorInfo(
                     stageId = "",
-                    jobId = buildVariables.containerId,
+                    containerId = buildVariables.containerId,
                     taskId = "",
                     taskName = "",
                     atomCode = "",
