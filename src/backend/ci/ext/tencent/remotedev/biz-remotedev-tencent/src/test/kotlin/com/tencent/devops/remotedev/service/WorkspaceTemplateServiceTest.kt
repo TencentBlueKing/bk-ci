@@ -30,6 +30,7 @@ internal class WorkspaceTemplateServiceTest : BkCiAbstractTest() {
         name = "test",
         source = "test",
         logo = "111",
+        url = "22",
         description = "test desc"
     )
 

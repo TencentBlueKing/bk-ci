@@ -22,6 +22,7 @@ import com.tencent.devops.repository.api.github.ServiceGithubUserResource
 import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.git.GitUserInfo
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -43,11 +44,12 @@ class GithubTransferService @Autowired constructor(
         redirectUrl: String?,
         refreshToken: Boolean?
     ): Result<AuthorizeResult> {
-        val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userId).data?.accessToken
+        val accessToken = kotlin.runCatching { getAndCheckOauthToken(userId) }.getOrNull()
         if (accessToken == null || refreshToken == true) {
             val url = client.get(ServiceGithubOauthResource::class).oauthUrl(
                 redirectUrl = redirectUrl ?: "",
-                userId = userId
+                userId = userId,
+                tokenType = GithubTokenType.OAUTH_APP
             ).data ?: ""
             return Result(AuthorizeResult(status = HTTP_403, url = url))
         }
@@ -104,19 +106,29 @@ class GithubTransferService @Autowired constructor(
 
     override fun getProjectBranches(
         userId: String,
-        pathWithNamespace: String,
-        page: Int?,
-        pageSize: Int?,
-        search: String?
+        pathWithNamespace: String
     ): List<String>? {
-        return client.get(ServiceGithubBranchResource::class).listBranch(
-            token = getAndCheckOauthToken(userId),
-            request = ListBranchesRequest(
-                repoName = pathWithNamespace,
-                page = page ?: DEFAULT_PAGE,
-                perPage = pageSize ?: DEFAULT_PAGE_SIZE
-            )
-        ).data?.map { it.name }
+        var githubPage = DEFAULT_PAGE
+        val branches = mutableListOf<String>()
+        run outside@{
+            while (true) {
+                val request = ListBranchesRequest(
+                    repoName = pathWithNamespace,
+                    page = githubPage,
+                    perPage = DEFAULT_GITHUB_PER_PAGE
+                )
+                val githubBranches = client.get(ServiceGithubBranchResource::class).listBranch(
+                    request = request,
+                    token = getAndCheckOauthToken(userId)
+                ).data!!
+                branches.addAll(githubBranches.map { it.name })
+                if (githubBranches.size < DEFAULT_GITHUB_PER_PAGE) {
+                    return@outside
+                }
+                githubPage++
+            }
+        }
+        return branches
     }
 
     override fun getFileContent(userId: String, pathWithNamespace: String, filePath: String, ref: String): String {
@@ -156,7 +168,8 @@ class GithubTransferService @Autowired constructor(
     override fun getAndCheckOauthToken(
         userId: String
     ): String {
-        return client.get(ServiceGithubResource::class).getAccessToken(userId).data?.accessToken
+        return client.get(ServiceGithubResource::class)
+            .getAccessToken(userId, GithubTokenType.OAUTH_APP).data?.accessToken
             ?: throw OauthForbiddenException(
                 message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
             )
@@ -176,5 +189,11 @@ class GithubTransferService @Autowired constructor(
                 avatarUrl = it.avatarUrl
             )
         }
+    }
+
+    override fun getUserEmail(userId: String): String {
+        return client.get(ServiceGithubUserResource::class).getUserEmail(
+            token = getAndCheckOauthToken(userId)
+        ).data!!.firstOrNull()?.email ?: ""
     }
 }
