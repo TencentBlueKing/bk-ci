@@ -1037,7 +1037,7 @@ class WorkspaceService @Autowired constructor(
 
         val endBilling = remoteDevSettingDao.fetchSingleUserBilling(dslContext, userId)
 
-        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10560
+        val discountTime = redisCache.get(REDIS_DISCOUNT_TIME_KEY)?.toLong() ?: 10000
         return WorkspaceUserDetail(
             runningCount = status.count { it.checkRunning() },
             sleepingCount = status.count { it.checkSleeping() },
