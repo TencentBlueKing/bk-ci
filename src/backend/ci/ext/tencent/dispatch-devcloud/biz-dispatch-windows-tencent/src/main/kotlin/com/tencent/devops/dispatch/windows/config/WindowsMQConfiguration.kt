@@ -162,8 +162,8 @@ class WindowsMQConfiguration @Autowired constructor() {
             rabbitAdmin = rabbitAdmin,
             startConsumerMinInterval = 10000,
             consecutiveActiveTrigger = 5,
-            concurrency = 60,
-            maxConcurrency = 100,
+            concurrency = 20,
+            maxConcurrency = 30,
             adapter = adapter,
             prefetchCount = 1
         )
