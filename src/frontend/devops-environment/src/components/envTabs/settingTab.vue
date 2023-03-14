@@ -1,6 +1,18 @@
 <template>
     <div class="env-setting-tab-wrapper">
-        <bk-button class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
+        <bk-button
+            v-perm="{
+                hasPermission: curEnvDetail.canEdit,
+                disablePermissionApi: true,
+                tooltips: $t('environment.noPermission'),
+                permissionData: {
+                    projectId: projectId,
+                    resourceType: ENV_RESOURCE_TYPE,
+                    resourceCode: envHashId,
+                    action: ENV_RESOURCE_ACTION.EDIT
+                }
+            }"
+            class="setting-header" theme="primary" @click="toggleShareProject">{{ $t('environment.addProject') }}</bk-button>
         <bk-table
             :data="shareEnvProjectList"
             :pagination="pagination"
@@ -12,7 +24,17 @@
             <bk-table-column :label="$t('environment.operateTime')" prop="updateTime"></bk-table-column>
             <bk-table-column :label="$t('environment.operation')" width="150">
                 <template slot-scope="props">
-                    <bk-button v-if="!props.row.isDefault" class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
+                    <bk-button
+                        v-perm="{
+                            tooltips: $t('environment.noPermission'),
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: ENV_RESOURCE_TYPE,
+                                resourceCode: envHashId,
+                                action: ENV_RESOURCE_ACTION.EDIT
+                            }
+                        }"
+                        class="mr10" text @click="remove(props.row)">{{ $t('environment.remove') }}</bk-button>
                 </template>
             </bk-table-column>
         </bk-table>
@@ -58,7 +80,8 @@
             return {
                 shareEnvProjectList: [],
                 showProjectDialog: false,
-                
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 pagination: {
                     current: 1,
                     count: 0,
@@ -68,7 +91,6 @@
         },
 
         created () {
-            console.log(this.curEnvDetail)
             this.fetchEnvProjects()
         },
         
@@ -123,7 +145,7 @@
             },
             actionWrapper (action, message) {
                 return async (...args) => {
-                    let theme = 'success'
+                    const theme = 'success'
                     try {
                         await action(...args)
                         this.fetchEnvProjects()

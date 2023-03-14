@@ -207,6 +207,9 @@
                     this.formData.expireTime = this.formatTimes(timestamp)
                 }
                 if (this.type === 'renewal') {
+                    const timestamp = this.newExpiredDisplay * 24 * 3600
+                    const expiredDisplayTime = this.formatTimes(timestamp)
+                    this.formData.expireTime = expiredDisplayTime
                     this.handleRenewalGroup()
                 } else {
                     this.handleApplyGroup()

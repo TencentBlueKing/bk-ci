@@ -89,7 +89,21 @@
                                     <template slot-scope="props">
                                         <div class="handler-btn">
                                             <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">编辑指标</span>
-                                            <span @click="toCreateRule(props.row.hashId)">创建规则</span>
+                                            <span
+                                                v-perm="{
+                                                    hasPermission: canEdit,
+                                                    disablePermissionApi: true,
+                                                    tooltips: '没有权限',
+                                                    permissionData: {
+                                                        projectId: projectId,
+                                                        resourceType: RULE_RESOURCE_TYPE,
+                                                        resourceCode: projectId,
+                                                        action: RULE_RESOURCE_ACTION.CREATE
+                                                    }
+                                                }"
+                                            >
+                                                <span @click="toCreateRule(props.row.hashId)">创建规则</span>
+                                            </span>
                                         </div>
                                     </template>
                                 </bk-table-column>
@@ -103,10 +117,13 @@
 </template>
 
 <script>
+    import { RULE_RESOURCE_ACTION, RULE_RESOURCE_TYPE } from '@/utils/permission.js'
 
     export default {
         data () {
             return {
+                RULE_RESOURCE_ACTION,
+                RULE_RESOURCE_TYPE,
                 showContent: false,
                 currentTab: 'all',
                 searchName: '',

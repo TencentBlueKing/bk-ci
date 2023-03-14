@@ -21,12 +21,21 @@
           />
         </div>
         <!-- 项目维度 -> 无权限 -->
-        <no-permission v-else-if="!hasPermission && resourceType === 'project'" :title="$t('无该项目用户组管理权限')"></no-permission>
+        <no-permission
+          v-else-if="!hasPermission && resourceType === 'project'"
+          :title="$t('无该项目用户组管理权限')"
+          v-bind="$props"
+          :resource-action="resourceAction"
+        >
+        </no-permission>
         <!-- 普通成员 -->
         <!-- <group-table v-else-if="!hasPermission && resourceType !== 'project'" v-bind="$props" /> -->
       </template>
       <!-- 未开启权限管理 -->
-      <not-open-manage v-else-if="!isEnablePermission && resourceType !== 'project'" v-bind="$props" />
+      <not-open-manage
+        v-else-if="!isEnablePermission && resourceType !== 'project'"
+        v-bind="$props"
+      />
     </template>
   </section>
 </template>
@@ -37,6 +46,9 @@ import GroupTable from './group-table.vue';
 import NotOpenManage from './not-open-manage.vue';
 import NoPermission from './no-permission.vue';
 import IamIframe from '../IAM-Iframe';
+import {
+  RESOURCE_ACTION,
+} from '@/utils/permission.js'
 
 export default {
   components: {
@@ -102,10 +114,20 @@ export default {
     fetchGroupList: {
       type: Function,
       default: () => {},
-    }
+    },
+    renameGroupName: {
+      type: Function,
+      default: () => {},
+    },
   },
 
   emits: ['delete-group'],
+
+  computed: {
+    resourceAction() {
+      return RESOURCE_ACTION.MANAGE;
+    },
+  },
 
   data() {
     return {
@@ -182,6 +204,7 @@ export default {
   .group-wrapper {
     display: flex;
     flex: 1;
+    width: 100%;
   }
   .group-manage {
     display: flex;

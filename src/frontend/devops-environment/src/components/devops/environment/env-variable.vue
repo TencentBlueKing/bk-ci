@@ -29,10 +29,23 @@
                     </li>
                 </template>
             </ul>
-            <p class="add-variable" :class="{ 'is-disabled': !nodeDetails.canEdit }"
-                v-if="editable || !renderList.length" @click="addHandle">
-                <i class="devops-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
-            </p>
+            <span
+                v-perm="{
+                    hasPermission: nodeDetails.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: NODE_RESOURCE_TYPE,
+                        resourceCode: nodeHashId,
+                        action: NODE_RESOURCE_ACTION.EDIT
+                    }
+                }"
+            >
+                <p class="add-variable" :class="{ 'is-disabled': !nodeDetails.canEdit }"
+                    v-if="editable || !renderList.length" @click="addHandle">
+                    <i class="devops-icon icon-plus-circle"></i>{{ $t('environment.envInfo.createVariable') }}
+                </p>
+            </span>
             <div class="footer-handle">
                 <bk-button theme="primary" :disabled="!nodeDetails.canEdit" v-if="!editable && renderList.length" @click="edithandle">{{ $t('environment.edit') }}</bk-button>
                 <bk-button theme="primary" v-if="editable" @click="save">{{ $t('environment.save') }}</bk-button>
@@ -52,7 +65,9 @@
             return {
                 editable: false,
                 paramList: [],
-                editableList: []
+                editableList: [],
+                NODE_RESOURCE_ACTION,
+                NODE_RESOURCE_TYPE
             }
         },
         computed: {

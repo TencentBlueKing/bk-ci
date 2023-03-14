@@ -14,7 +14,21 @@
                     </div>
                     <p v-else class="env-base cur-env-name"><span class="env-name-content">{{ curEnvDetail.name }}</span></p>
                     <div class="handler-btn">
-                        <i class="devops-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                tooltips: $t('environment.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i class="devops-icon icon-edit" v-if="!isEditingName" @click="toEditBaseForm('name')"></i>
+                        </span>
                         <span class="edit-base" v-if="isEditingName" @click="saveEnvDetail('name')">{{ $t('environment.save') }}</span>
                         <span class="edit-base" v-if="isEditingName" @click="cancelEnvDetail('name')">{{ $t('environment.cancel') }}</span>
                     </div>
@@ -34,7 +48,21 @@
                         <span v-else>--</span>
                     </p>
                     <div class="handler-btn">
-                        <i class="devops-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                tooltips: $t('environment.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <i class="devops-icon icon-edit" v-if="!isEditingDesc" @click="toEditBaseForm('desc')"></i>
+                        </span>
                         <span class="edit-base" v-if="isEditingDesc" @click="saveEnvDetail('desc')">{{ $t('environment.save') }}</span>
                         <span class="edit-base" v-if="isEditingDesc" @click="cancelEnvDetail('desc')">{{ $t('environment.cancel') }}</span>
                     </div>
@@ -106,6 +134,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_ACTION,
+                ENV_RESOURCE_TYPE,
                 isEditingName: false,
                 isEditingDesc: false,
                 isEditingType: false,

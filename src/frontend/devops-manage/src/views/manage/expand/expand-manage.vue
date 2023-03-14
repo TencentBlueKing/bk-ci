@@ -171,6 +171,7 @@ onMounted(() => {
 <style lang="postcss" scoped>
   .content-wrapper {
     height: 100%;
+    width: 100%;
     overflow: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;

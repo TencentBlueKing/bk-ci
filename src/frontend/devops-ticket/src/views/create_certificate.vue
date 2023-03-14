@@ -2,7 +2,7 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCert') }}</span>
+                <span class="inner-header-title">{{ isEdit ? $t('ticket.editCert') : $t('ticket.createCert') }}</span>
             </template>
         </content-header>
 
@@ -72,7 +72,17 @@
                     </transition>
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        <bk-button
+                            v-perm="{
+                                tooltips: $t('ticket.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CERT_RESOURCE_TYPE,
+                                    resourceCode: isEdit ? certId : projectId,
+                                    action: isEdit ? CERT_RESOURCE_ACTION.EDIT : CERT_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -100,6 +110,8 @@
 
         data () {
             return {
+                CERT_RESOURCE_ACTION,
+                CERT_RESOURCE_TYPE,
                 showContent: false,
                 isEdit: false,
                 credentialList: [],
@@ -160,7 +172,7 @@
             },
 
             certId () {
-                return this.$route.parmas.certId
+                return this.$route.params.certId
             },
 
             applyCreUrl () {

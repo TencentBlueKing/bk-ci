@@ -12,10 +12,22 @@
             <div class="rule-main-wrapper" v-if="showContent && ruleList.length">
                 <div class="rule-main-container">
                     <div class="rule-main-header">
-                        <button class="bk-button bk-primary" @click="toCreateRule">
-                            <i class="devops-icon icon-plus"></i>
-                            <span style="margin-left: 0;">创建规则</span>
-                        </button>
+                        <span
+                            v-perm="{
+                                tooltips: '没有权限',
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: RULE_RESOURCE_TYPE,
+                                    resourceCode: projectId,
+                                    action: RULE_RESOURCE_ACTION.CREATE
+                                }
+                            }"
+                        >
+                            <button class="bk-button bk-primary" @click="toCreateRule">
+                                <i class="devops-icon icon-plus"></i>
+                                <span style="margin-left: 0;">创建规则</span>
+                            </button>
+                        </span>
                     </div>
                     <div class="rule-table-wrapper">
                         <bk-table
@@ -69,9 +81,59 @@
                             </bk-table-column>
                             <bk-table-column label="操作" min-width="120">
                                 <template slot-scope="props">
-                                    <bk-button class="mr5 " :class="{ 'disabled no-permission-btn': !props.row.permissions.canEdit }" text @click="editRule(props.row)">编辑</bk-button>
-                                    <bk-button class="mr5" :class="{ 'disabled no-permission-btn': !props.row.permissions.canEnable }" text @click="switchRule(props.row)">{{ props.row.enable ? '停用' : '启用' }}</bk-button>
-                                    <bk-button :class="{ 'disabled no-permission-btn': !props.row.permissions.canDelete }" text @click="toDeleteRule(props.row)">删除</bk-button>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.EDIT
+                                            }
+                                        }"
+                                        class="mr5 "
+                                        text
+                                        @click="editRule(props.row)"
+                                    >
+                                        编辑
+                                    </bk-button>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.ENABLE
+                                            }
+                                        }"
+                                        class="mr5"
+                                        text
+                                        @click="switchRule(props.row)"
+                                    >
+                                        {{ props.row.enable ? '停用' : '启用' }}
+                                    </bk-button>
+                                    <bk-button
+                                        v-perm="{
+                                            hasPermission: props.row.permissions.canEdit,
+                                            disablePermissionApi: true,
+                                            tooltips: '没有权限',
+                                            permissionData: {
+                                                projectId: projectId,
+                                                resourceType: RULE_RESOURCE_TYPE,
+                                                resourceCode: props.row.ruleHashId,
+                                                action: RULE_RESOURCE_ACTION.DELETE
+                                            }
+                                        }"
+                                        text
+                                        @click="toDeleteRule(props.row)"
+                                    >
+                                        删除
+                                    </bk-button>
                                 </template>
                             </bk-table-column>
                         </bk-table>
@@ -238,7 +300,11 @@
             'image-empty': imageEmpty
         },
         data () {
+            const { projectId } = this.$route.params
+
             return {
+                RULE_RESOURCE_ACTION,
+                RULE_RESOURCE_TYPE,
                 lastClickRule: '',
                 curActiveTab: '',
                 showContent: false,
@@ -264,7 +330,13 @@
                             type: 'primary',
                             size: 'normal',
                             handler: () => this.toCreateRule(),
-                            text: '创建规则'
+                            text: '创建规则',
+                            permissionData: {
+                                projectId: projectId,
+                                resourceType: RULE_RESOURCE_TYPE,
+                                resourceCode: projectId,
+                                action: RULE_RESOURCE_ACTION.CREATE
+                            }
                         }
                     ]
                 },
@@ -510,13 +582,6 @@
                             this.deleteRule(row.ruleHashId)
                         }
                     })
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: RULE_RESOURCE_TYPE,
-                        resourceCode: row.ruleHashId,
-                        action: RULE_RESOURCE_ACTION.DELETE
-                    })
                 }
             },
             async toSwitchRule (row) {
@@ -640,13 +705,6 @@
                             ruleId: row.ruleHashId
                         }
                     })
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: RULE_RESOURCE_TYPE,
-                        resourceCode: row.ruleHashId,
-                        action: RULE_RESOURCE_ACTION.EDIT
-                    })
                 }
             },
             switchRule (row) {
@@ -665,13 +723,6 @@
                         confirmFn: async () => {
                             this.toSwitchRule(row)
                         }
-                    })
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: RULE_RESOURCE_TYPE,
-                        resourceCode: row.ruleHashId,
-                        action: RULE_RESOURCE_ACTION.ENABLE
                     })
                 }
             },
@@ -816,15 +867,6 @@
             }
             td.controlPoint-item .cell {
                 -webkit-line-clamp: 3;
-            }
-        }
-        .no-permission-btn {
-            &.disabled {
-                color: #C4C6CC;
-                &:hover {
-                    color: #C4C6CC;
-                }
-                cursor: url(../images/cursor-lock.png), auto !important;
             }
         }
         .bk-sideslider-wrapper {

@@ -126,6 +126,7 @@ function destroy (cloneEl, vNode) {
  */
 function validatePermission (data) {
     return new Promise((resolve, reject) => {
+        if (!data) return
         const { projectId, resourceType, resourceCode, action } = data
         // 通过下面三个数据确定发送请求
         const key = projectId + resourceType + resourceCode

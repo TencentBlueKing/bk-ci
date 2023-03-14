@@ -148,8 +148,8 @@ body {
   line-height: 1.5;
   font-size: 12px;
   color: #000;
-  user-select: none;
-  user-select: none;
+  /* user-select: none;
+  user-select: none; */
   text-size-adjust: 100%;
   -webkit-tap-highlight-color: transparent;
   outline: 0;

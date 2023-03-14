@@ -3,7 +3,9 @@
     <section class="credential-certificate-content">
         <content-header>
             <template slot="left">
-                <span class="inner-header-title">{{ $t('ticket.createCredential') }}</span>
+                <span class="inner-header-title">
+                    {{ pageType === 'create' ? $t('ticket.createCredential') : $t('ticket.editCredential') }}
+                </span>
             </template>
         </content-header>
 
@@ -117,7 +119,18 @@
                     <!-- 凭据描述 end -->
 
                     <div class="operate-btn">
-                        <bk-button theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
+                        
+                        <bk-button
+                            v-perm="{
+                                tooltips: $t('ticket.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: CRED_RESOURCE_TYPE,
+                                    resourceCode: pageType === 'create' ? projectId : creId,
+                                    action: pageType === 'create' ? CRED_RESOURCE_ACTION.CREATE : CRED_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                            theme="primary" @click="submit">{{ $t('ticket.comfirm') }}</bk-button>
                         <bk-button @click="cancel">{{ $t('ticket.cancel') }}</bk-button>
                     </div>
                 </div>
@@ -134,7 +147,7 @@
     import Selector from '@/components/atomFormField/Selector'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
-    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '../utils/permission'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -146,6 +159,8 @@
         },
         data () {
             return {
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
                 ticketDocsUrl: `${DOCS_URL_PREFIX}/Services/Ticket/ticket-add.md`,
                 showContent: false,
                 hasPermission: true,

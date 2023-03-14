@@ -1386,6 +1386,27 @@
                                     theme
                                 })
                             } catch (e) {
+                                if (this.ruleId) {
+                                    this.handleError(
+                                        e,
+                                        {
+                                            projectId: this.projectId,
+                                            resourceType: RULE_RESOURCE_TYPE,
+                                            resourceCode: this.projectId,
+                                            action: RULE_RESOURCE_ACTION.CREATE
+                                        }
+                                    )
+                                } else {
+                                    this.handleError(
+                                        e,
+                                        {
+                                            projectId: this.projectId,
+                                            resourceType: RULE_RESOURCE_TYPE,
+                                            resourceCode: this.ruleId,
+                                            action: RULE_RESOURCE_ACTION.EDIT
+                                        }
+                                    )
+                                }
                                 this.handleError(
                                     e,
                                     {

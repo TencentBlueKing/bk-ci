@@ -148,7 +148,7 @@
                             projectId: this.projectId,
                             resourceType: ENV_RESOURCE_TYPE,
                             resourceCode: this.envHashId,
-                            action: ENV_RESOURCE_ACTION.EDIT
+                            action: ENV_RESOURCE_ACTION.VIEW
                         }
                     )
                 } finally {

@@ -12,8 +12,22 @@
             }">
 
             <div class="group-content">
-                <bk-button theme="primary" class="create-group-btn" v-if="showContent && noticeGroupList.length"
-                    @click="toCreateGroup">新增</bk-button>
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary"
+                    class="create-group-btn"
+                    v-if="showContent && noticeGroupList.length"
+                    @click="toCreateGroup"
+                >
+                    新增
+                </bk-button>
                 <div class="table-container" v-if="showContent && noticeGroupList.length">
                     <bk-table
                         size="small"
@@ -49,8 +63,41 @@
                         </bk-table-column>
                         <bk-table-column label="操作" width="150">
                             <template slot-scope="props">
-                                <bk-button class="mr5" :class="{ 'no-permission-btn disabled': !props.row.permissions.canEdit }" text @click="toEditGroup(props.row)">编辑</bk-button>
-                                <bk-button :class="{ 'no-permission-btn disabled': !props.row.permissions.canDelete }" text @click="toDeleteGruop(props.row)">删除</bk-button>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canEdit,
+                                        disablePermissionApi: true,
+                                        tooltips: '没有权限',
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                                            resourceCode: props.row.groupHashId,
+                                            action: QUALITY_GROUP_RESOURCE_ACTION.EDIT
+                                        }
+                                    }"
+                                    class="mr5"
+                                    text
+                                    @click="toEditGroup(props.row)"
+                                >
+                                    编辑
+                                </bk-button>
+                                <bk-button
+                                    v-perm="{
+                                        hasPermission: props.row.permissions.canEdit,
+                                        disablePermissionApi: true,
+                                        tooltips: '没有权限',
+                                        permissionData: {
+                                            projectId: projectId,
+                                            resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                                            resourceCode: props.row.groupHashId,
+                                            action: QUALITY_GROUP_RESOURCE_ACTION.DELETE
+                                        }
+                                    }"
+                                    text
+                                    @click="toDeleteGruop(props.row)"
+                                >
+                                    删除
+                                </bk-button>
                             </template>
                         </bk-table-column>
                     </bk-table>
@@ -87,7 +134,10 @@
             createGroup
         },
         data () {
+            const { projectId } = this.$route.params
             return {
+                QUALITY_GROUP_RESOURCE_ACTION,
+                QUALITY_GROUP_RESOURCE_TYPE,
                 noticeGroupList: [],
                 showContent: false,
                 loading: {
@@ -116,7 +166,13 @@
                 },
                 emptyInfo: {
                     title: '暂无通知组',
-                    desc: '您可以新增一个通知组'
+                    desc: '您可以新增一个通知组',
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: QUALITY_GROUP_RESOURCE_TYPE,
+                        resourceCode: projectId,
+                        action: QUALITY_GROUP_RESOURCE_ACTION.CREATE
+                    }
                 },
                 urlParams: getQueryString('groupId') || ''
             }
@@ -300,13 +356,6 @@
                     } finally {
                         this.dialogLoading.isLoading = false
                     }
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: QUALITY_GROUP_RESOURCE_TYPE,
-                        resourceCode: row.groupHashId,
-                        action: QUALITY_GROUP_RESOURCE_ACTION.EDIT
-                    })
                 }
             },
             toDeleteGruop (row) {
@@ -344,13 +393,6 @@
                                 this.requestList()
                             }
                         }
-                    })
-                } else {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: QUALITY_GROUP_RESOURCE_TYPE,
-                        resourceCode: row.groupHashId,
-                        action: QUALITY_GROUP_RESOURCE_ACTION.DELETE
                     })
                 }
             }
@@ -425,15 +467,6 @@
             padding: 20px;
             min-height: 320px;
             overflow: auto;
-        }
-        .no-permission-btn {
-            &.disabled {
-                color: #C4C6CC;
-                &:hover {
-                    color: #C4C6CC;
-                }
-                cursor: url(../images/cursor-lock.png), auto !important;
-            }
         }
     }
 </style>

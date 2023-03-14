@@ -1130,7 +1130,7 @@
   "exit": "Exit",
   "userGroup": "User group",
   "createdTime": "Add time",
-  "expiredTime": "Expire time",
+  "expiredTime": "Validity time",
   "permissionDetail": "Permission details",
   "pipelineManage": "Pipeline manage",
   "notJoined": "Not joined",

@@ -384,12 +384,12 @@ onBeforeUnmount(() => {
         @change="handleChangeForm"
       >
         <bk-radio class="mr10" :label="0">
-          <Popover :content="t('非项目成员可通过`申请加入项目`申请加入')">
+          <Popover :content="t('`最大授权范围`内的用户可以主动申请加入项目')">
             <span class="authSecrecy-item">{{ t('私有项目') }}</span>
           </Popover>
         </bk-radio>
         <bk-radio :label="1">
-          <Popover :content="t('非项目成员不可通过`申请加入项目`申请加入')">
+          <Popover :content="t('拥有项目/资源管理权限的成员才可以主动添加用户')">
             <span class="authSecrecy-item">{{ t('保密项目') }}</span>
           </Popover>
         </bk-radio>
@@ -469,5 +469,11 @@ onBeforeUnmount(() => {
   .text-link {
     font-size: 12px;
     color: #3c96ff;
+  }
+</style>
+
+<style lang="postcss">
+  .dark {
+    background: #26323d !important;
   }
 </style>

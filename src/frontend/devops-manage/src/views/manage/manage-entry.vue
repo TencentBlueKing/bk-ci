@@ -97,10 +97,10 @@ onMounted(() => {
   }
 }
 .manage-main {
-  margin: 24px;
+  /* margin: 16px 24px 24px; */
   width: calc(100% - 48px);
   height: 100%;
-  background-color: #fff;
-  box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%);
+  /* background-color: #fff; */
+  /* box-shadow: 0 2px 2px 0 rgb(0 0 0 / 15%); */
 }
 </style>

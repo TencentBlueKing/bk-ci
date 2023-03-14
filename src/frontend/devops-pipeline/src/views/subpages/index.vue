@@ -23,16 +23,63 @@
 
             </div>
             <template v-if="$route.name === 'pipelinesPreview'" slot="right">
-                <router-link :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
-                <bk-button :disabled="btnDisabled" :icon="executeStatus ? 'loading' : ''" theme="primary" @click="startExcuete">
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    @click="$router.push({ name: 'pipelinesEdit' })"
+                >
+                    {{ $t('edit') }}
+                </bk-button>
+                <bk-button
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EXECUTE
+                        }
+                    }"
+                    :disabled="btnDisabled" :icon="executeStatus ? 'loading' : ''" theme="primary" @click="startExcuete">
                     {{ $t('exec') }}
                 </bk-button>
             </template>
             <template v-else slot="right">
-                <bk-button v-if="isEditPage" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
-                    {{ $t('save') }}
+                <span
+                    v-if="isEditPage"
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                >
+                    <bk-button
+                        v-if="isEditPage" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
+                        {{ $t('save') }}
+                    </bk-button>
+                </span>
+                <bk-button
+                    v-else
+                    v-perm="{
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: 'pipeline',
+                            resourceCode: pipelineId,
+                            action: RESOURCE_ACTION.EDIT
+                        }
+                    }"
+                    @click="$router.push({ name: 'pipelinesEdit' })"
+                >
+                    {{ $t('edit') }}
                 </bk-button>
-                <router-link v-else :to="{ name: 'pipelinesEdit' }"><bk-button>{{ $t('edit') }}</bk-button></router-link>
                 <triggers
                     class="bkdevops-header-trigger-btn"
                     :pipeline-id="pipelineId"
@@ -41,7 +88,21 @@
                     :before-exec="isSaveAndRun ? save : undefined"
                     @exec="toExecute">
                     <section slot="exec-bar" slot-scope="triggerProps">
-                        <bk-button v-if="pipelineStatus !== 'running'" theme="primary" :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''" :title="canManualStartup ? '' : '不支持手动启动流水线'">
+                        <!-- :disabled="btnDisabled || !canManualStartup || triggerProps.isDisable" -->
+                        <!-- :title="canManualStartup ? '' : '不支持手动启动流水线'" -->
+                        <bk-button
+                            v-if="pipelineStatus !== 'running'"
+                            v-perm="{
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            theme="primary"
+                            :icon="executeStatus || triggerProps.isDisable ? 'loading' : ''"
+                        >
                             {{ isSaveAndRun ? $t('subpage.saveAndExec') : $t('exec') }}
                         </bk-button>
                     </section>
@@ -57,8 +118,11 @@
                         <ul v-for="(parent, index) in actionConfMenus" :key="index">
                             <li
                                 v-for="action in parent"
-                                v-if="!action.hidden"
                                 :key="action.label"
+                                v-perm="{
+                                    permissionData: action.permissionData
+                                }"
+                                v-if="!action.hidden"
                                 @click="action.handler"
                             >
                                 {{ $t(action.label) }}
@@ -118,6 +182,10 @@
     import SaveAsTemplateDialog from '@/components/PipelineActionDialog/SaveAsTemplateDialog'
     import RenameDialog from '@/components/PipelineActionDialog/RenameDialog'
     import RemoveConfirmDialog from '@/views/PipelineList/RemoveConfirmDialog'
+    import {
+        RESOURCE_ACTION,
+        PROJECT_RESOURCE_ACTION
+    } from '@/utils/permission'
 
     export default {
         components: {
@@ -146,7 +214,9 @@
                 isLoading: false,
                 hasNoPermission: false,
                 showExportDialog: false,
-                showImportDialog: false
+                showImportDialog: false,
+                RESOURCE_ACTION,
+                PROJECT_RESOURCE_ACTION
             }
         },
         computed: {
@@ -186,6 +256,12 @@
                             label: 'rename',
                             handler: () => {
                                 this.toggleRenameDialog(true)
+                            },
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: this.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
                             }
                         },
                         {
@@ -196,19 +272,44 @@
                     [
                         {
                             label: 'newlist.exportPipelineJson',
-                            handler: this.exportPipeline
+                            handler: this.exportPipeline,
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: this.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
                         },
                         {
                             label: 'newlist.importModifyPipelineJson',
                             handler: this.importModifyPipeline,
-                            hidden: this.isTemplatePipeline
+                            hidden: this.isTemplatePipeline,
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: this.projectId,
+                                action: RESOURCE_ACTION.CREATE
+                            }
                         },
                         {
                             label: 'newlist.copyAs',
-                            handler: () => this.copyAs(pipeline)
-                        }, {
+                            handler: () => this.copyAs(pipeline),
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: this.pipelineId,
+                                action: RESOURCE_ACTION.EDIT
+                            }
+                        },
+                        {
                             label: 'newlist.saveAsTemp',
-                            handler: () => this.saveAsTempHandler(pipeline)
+                            handler: () => this.saveAsTempHandler(pipeline),
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'project',
+                                resourceCode: this.projectId,
+                                action: PROJECT_RESOURCE_ACTION.MANAGE
+                            }
                         },
                         {
                             label: 'newlist.jumpToTemp',
@@ -217,7 +318,13 @@
                         },
                         {
                             label: 'delete',
-                            handler: () => this.deleteHandler(this.curPipeline)
+                            handler: () => this.deleteHandler(this.curPipeline),
+                            permissionData: {
+                                projectId: this.projectId,
+                                resourceType: 'pipeline',
+                                resourceCode: this.pipelineId,
+                                action: RESOURCE_ACTION.DELETE
+                            }
                         }
                     ]
                 ]

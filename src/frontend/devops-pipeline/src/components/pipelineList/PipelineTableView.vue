@@ -14,6 +14,7 @@
         @selection-change="handleSelectChange"
         :row-style="{ height: '56px' }"
         v-on="$listeners"
+        :key="viewId"
     >
         <PipelineListEmpty slot="empty" :is-patch="isPatchView"></PipelineListEmpty>
         <div v-if="selectionLength > 0" slot="prepend" class="selected-all-indicator">
@@ -27,7 +28,7 @@
             <template slot-scope="props">
                 <!-- hack disabled event -->
                 <span
-                    v-if="!props.row.delete && !props.row.hasPermission && !isDeleteView"
+                    v-if="!props.row.permissions.canView"
                     class="pointer"
                     @click="applyPermission(props.row)"
                 >
@@ -36,7 +37,7 @@
                 <router-link
                     v-else-if="!props.row.delete && !isDeleteView && props.row.historyRoute"
                     class="pipeline-cell-link"
-                    :disabled="!props.row.hasPermission"
+                    :disabled="!props.row.permissions.canView"
                     :to="props.row.historyRoute">
                     {{props.row.pipelineName}}
                 </router-link>
@@ -106,8 +107,8 @@
                         <template v-if="props.row.latestBuildNum">
                             <router-link
                                 class="pipeline-cell-link pipeline-exec-msg-title"
-                                :disabled="!props.row.hasPermission"
-                                :event="props.row.hasPermission ? 'click' : ''"
+                                :disabled="!props.row.permissions.canView"
+                                :event="props.row.permissions.canView ? 'click' : ''"
                                 :to="props.row.latestBuildRoute"
                             >
                                 <b>#{{ props.row.latestBuildNum }}</b>
@@ -165,14 +166,14 @@
                     {{ $t('removeFromGroup') }}
                 </bk-button>
                 <bk-button
-                    v-else-if="!props.row.hasPermission && !props.row.delete"
+                    v-else-if="!props.row.permissions.canView && !props.row.delete"
                     outline
                     theme="primary"
                     @click="applyPermission(props.row)">
                     {{ $t('applyPermission') }}
                 </bk-button>
                 <template
-                    v-else-if="props.row.hasPermission"
+                    v-else-if="props.row.permissions.canView"
                 >
                     <bk-button
                         text
@@ -181,7 +182,18 @@
                         :disabled="props.row.disabled"
                         @click="execPipeline(props.row)"
                     >
-                        <span class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
+                        <span
+                            v-perm="{
+                                hasPermission: props.row.permissions.canExecute,
+                                disablePermissionApi: true,
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: 'pipeline',
+                                    resourceCode: props.row.pipelineId,
+                                    action: RESOURCE_ACTION.EXECUTE
+                                }
+                            }"
+                            class="exec-btn-span" v-bk-tooltips="props.row.tooltips">
                             <logo v-if="props.row.lock" name="minus-circle"></logo>
                             <logo
                                 v-else
@@ -251,7 +263,8 @@
                     limit: parseInt(this.$route.query.pageSize ?? 50),
                     count: 0
                 },
-                visibleTagCountList: {}
+                visibleTagCountList: {},
+                RESOURCE_ACTION
             }
         },
         computed: {
@@ -300,6 +313,9 @@
                     prop: sortType ?? localStorage.getItem('pipelineSortType') ?? PIPELINE_SORT_FILED.createTime,
                     order: collation ?? localStorage.getItem('pipelineSortCollation') ?? ORDER_ENUM.descending
                 }
+            },
+            projectId () {
+                return this.$route.params.projectId
             }
         },
 
@@ -384,6 +400,7 @@
                 this.isLoading = true
 
                 try {
+                    this.pipelineList = []
                     const { count, page, records } = await this.getPipelines({
                         page: this.pagination.current,
                         pageSize: this.pagination.limit,
@@ -451,7 +468,7 @@
                 handlePipelineNoPermission({
                     projectId: this.$route.params.projectId,
                     resourceCode: row.pipelineId,
-                    action: RESOURCE_ACTION.LIST
+                    action: RESOURCE_ACTION.VIEW
                 })
             }
         }

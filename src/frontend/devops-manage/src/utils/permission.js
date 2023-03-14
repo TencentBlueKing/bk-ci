@@ -29,7 +29,8 @@ export const handleProjectManageNoPermission = (query) => {
 export const RESOURCE_ACTION = {
     VIEW: 'project_view',
     EDIT: 'project_edit',
-    ENABLE: 'project_enable'
+    ENABLE: 'project_enable',
+    MANAGE: 'project_manage'
 };
 
 export const RESOURCE_TYPE = 'project';

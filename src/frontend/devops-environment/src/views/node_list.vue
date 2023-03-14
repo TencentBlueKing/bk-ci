@@ -3,7 +3,17 @@
         <content-header class="env-header">
             <div slot="left">{{ $t('environment.node') }}</div>
             <div slot="right" v-if="nodeList.length > 0">
-                <bk-button theme="primary" class="import-vmbuild-btn" @click="toImportNode('construct')">{{ $t('environment.nodeInfo.importNode') }}</bk-button>
+                <bk-button
+                    v-perm="{
+                        tooltips: $t('environment.noPermission'),
+                        permissionData: {
+                            projectId: projectId,
+                            resourceType: NODE_RESOURCE_TYPE,
+                            resourceCode: projectId,
+                            action: NODE_RESOURCE_ACTION.CREATE
+                        }
+                    }"
+                    theme="primary" @click="toImportNode('cmdb')">{{ $t('environment.nodeInfo.idcTestMachine') }}</bk-button>
             </div>
         </content-header>
         <section class="sub-view-port" v-bkloading="{
@@ -13,7 +23,7 @@
             <bk-table v-if="showContent && nodeList.length"
                 size="medium"
                 class="node-table-wrapper"
-                :row-class-name="getRowCls"
+                row-class-name="node-item-row"
                 :data="nodeList">
                 <bk-table-column :label="$t('environment.nodeInfo.displayName')" prop="displayName">
                     <template slot-scope="props">
@@ -32,12 +42,40 @@
                             </div>
                         </div>
                         <div class="table-node-item node-item-id" v-else>
-                            <span class="node-name"
+                            <span
+                                v-perm="canShowDetail(props.row) ? {
+                                    hasPermission: props.row.canView,
+                                    disablePermissionApi: true,
+                                    tooltips: $t('environment.noPermission'),
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.VIEW
+                                    }
+                                } : {}"
+                                class="node-name"
                                 :class="{ 'pointer': canShowDetail(props.row), 'useless': !canShowDetail(props.row) || !props.row.canUse }"
                                 :title="props.row.displayName"
                                 @click="toNodeDetail(props.row)"
-                            >{{ props.row.displayName || '-' }}</span>
-                            <i class="devops-icon icon-edit" v-if="!isEditNodeStatus && props.row.canEdit" @click="editNodeName(props.row)"></i>
+                            >
+                                {{ props.row.displayName || '-' }}
+                            </span>
+                            <span
+                                v-perm="{
+                                    hasPermission: props.row.canEdit,
+                                    disablePermissionApi: true,
+                                    tooltips: $t('environment.noPermission'),
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                            >
+                                <i class="devops-icon icon-edit" v-if="!isEditNodeStatus" @click="editNodeName(props.row)"></i>
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -111,10 +149,24 @@
                     <template slot-scope="props">
                         <div class="table-node-item node-item-handler"
                             :class="{ 'over-handler': isMultipleBtn }">
-                            <span class="node-handle delete-node-text" :class="{ 'no-node-delete-permission disabled': !props.row.canDelete }"
-                                v-if="props.row.canDelete && !['TSTACK'].includes(props.row.nodeType)"
+                            <span
+                                v-if="!['TSTACK'].includes(props.row.nodeType)"
+                                v-perm="{
+                                    hasPermission: props.row.canDelete,
+                                    disablePermissionApi: true,
+                                    tooltips: $t('environment.noPermission'),
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: NODE_RESOURCE_TYPE,
+                                        resourceCode: props.row.nodeHashId,
+                                        action: NODE_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
+                                class="node-handle delete-node-text"
                                 @click.stop="confirmDelete(props.row, index)"
-                            >{{ $t('environment.delete') }}</span>
+                            >
+                                {{ $t('environment.delete') }}
+                            </span>
                         </div>
                     </template>
                 </bk-table-column>
@@ -146,7 +198,7 @@
     import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
-    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '../utils/permission'
+    import { NODE_RESOURCE_ACTION, NODE_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -155,6 +207,8 @@
         },
         data () {
             return {
+                NODE_RESOURCE_TYPE,
+                NODE_RESOURCE_ACTION,
                 curEditNodeItem: '',
                 curEditNodeDisplayName: '',
                 nodeIp: '',
@@ -267,9 +321,6 @@
             await this.init()
         },
         methods: {
-            getRowCls ({ row }) {
-                return `node-item-row ${row.canUse ? '' : 'node-row-useless'}`
-            },
             async init () {
                 const {
                     loading
@@ -339,16 +390,12 @@
             },
             toNodeDetail (node) {
                 if (this.canShowDetail(node)) {
-                    if (node.canUse) {
-                        this.$router.push({ name: 'nodeDetail', params: { nodeHashId: node.nodeHashId } })
-                    } else {
-                        this.handleNoPermission({
-                            projectId: this.projectId,
-                            resourceType: NODE_RESOURCE_TYPE,
-                            resourceCode: node.nodeHashId,
-                            action: NODE_RESOURCE_ACTION.USE
-                        })
-                    }
+                    this.$router.push({
+                        name: 'nodeDetail',
+                        params: {
+                            nodeHashId: node.nodeHashId
+                        }
+                    })
                 }
             },
             /**
@@ -359,50 +406,42 @@
                 const id = row.nodeHashId
 
                 params.push(id)
-                if (!row.canDelete) {
-                    this.handleNoPermission({
-                        projectId: this.projectId,
-                        resourceType: NODE_RESOURCE_TYPE,
-                        resourceCode: row.nodeHashId,
-                        action: NODE_RESOURCE_ACTION.DELETE
-                    })
-                } else {
-                    this.$bkInfo({
-                        theme: 'warning',
-                        type: 'warning',
-                        title: this.$t('environment.delete'),
-                        subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.nodeId])}`,
-                        confirmFn: async () => {
-                            let message, theme
-                            try {
-                                await this.$store.dispatch('environment/toDeleteNode', {
-                                    projectId: this.projectId,
-                                    params: params
-                                })
+                
+                this.$bkInfo({
+                    theme: 'warning',
+                    type: 'warning',
+                    title: this.$t('environment.delete'),
+                    subTitle: `${this.$t('environment.nodeInfo.deleteNodetips', [row.displayName])}`,
+                    confirmFn: async () => {
+                        let message, theme
+                        try {
+                            await this.$store.dispatch('environment/toDeleteNode', {
+                                projectId: this.projectId,
+                                params
+                            })
 
-                                message = this.$t('environment.successfullyDeleted')
-                                theme = 'success'
-                                
-                                message && this.$bkMessage({
-                                    message,
-                                    theme
-                                })
-                            } catch (e) {
-                                this.handleError(
-                                    e,
-                                    {
-                                        projectId: this.projectId,
-                                        resourceType: NODE_RESOURCE_TYPE,
-                                        resourceCode: row.nodeHashId,
-                                        action: NODE_RESOURCE_ACTION.DELETE
-                                    }
-                                )
-                            } finally {
-                                this.requestList()
-                            }
+                            message = this.$t('environment.successfullyDeleted')
+                            theme = 'success'
+                            
+                            message && this.$bkMessage({
+                                message,
+                                theme
+                            })
+                        } catch (e) {
+                            this.handleError(
+                                e,
+                                {
+                                    projectId: this.projectId,
+                                    resourceType: NODE_RESOURCE_TYPE,
+                                    resourceCode: row.nodeHashId,
+                                    action: NODE_RESOURCE_ACTION.DELETE
+                                }
+                            )
+                        } finally {
+                            this.requestList()
                         }
-                    })
-                }
+                    }
+                })
             },
             /**
              * 构建机信息
@@ -900,15 +939,6 @@
                 color: $fontLigtherColor;
                 .node-count-item {
                   color: $fontLigtherColor;
-                }
-              }
-              .no-node-delete-permission {
-                  &.disabled {
-                    color: #C4C6CC;
-                    &:hover {
-                        color: #C4C6CC;
-                    }
-                    cursor: url(../images/cursor-lock.png), auto !important;
                 }
               }
             }

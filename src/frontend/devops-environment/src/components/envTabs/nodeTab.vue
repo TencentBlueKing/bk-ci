@@ -1,7 +1,21 @@
 <template>
     <div class="node-content-wrapper">
         <div class="node-content-header">
-            <bk-button theme="primary" @click="importNewNode">{{ $t('environment.import') }}</bk-button>
+            <bk-button
+                v-perm="{
+                    hasPermission: curEnvDetail.canEdit,
+                    disablePermissionApi: true,
+                    permissionData: {
+                        projectId: projectId,
+                        resourceType: ENV_RESOURCE_TYPE,
+                        resourceCode: envHashId,
+                        action: ENV_RESOURCE_ACTION.EDIT
+                    }
+                }"
+                theme="primary" @click="importNewNode"
+            >
+                {{ $t('environment.import') }}
+            </bk-button>
         </div>
 
         <div class="node-table" v-if="showContent && nodeList.length">
@@ -47,7 +61,21 @@
                 </bk-table-column>
                 <bk-table-column :width="80" :label="$t('environment.operation')">
                     <template slot-scope="props">
-                        <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                        <span
+                            v-perm="{
+                                hasPermission: curEnvDetail.canEdit,
+                                disablePermissionApi: true,
+                                tooltips: $t('environment.noPermission'),
+                                permissionData: {
+                                    projectId: projectId,
+                                    resourceType: ENV_RESOURCE_TYPE,
+                                    resourceCode: envHashId,
+                                    action: ENV_RESOURCE_ACTION.EDIT
+                                }
+                            }"
+                        >
+                            <span class="node-delete delete-node-text" @click.stop="confirmDelete(props.row)">{{ $t('environment.remove') }}</span>
+                        </span>
                     </template>
                 </bk-table-column>
             </bk-table>
@@ -99,6 +127,8 @@
         },
         data () {
             return {
+                ENV_RESOURCE_TYPE,
+                ENV_RESOURCE_ACTION,
                 timer: null,
                 loading: {
                     isLoading: false,

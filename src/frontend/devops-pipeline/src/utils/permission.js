@@ -44,3 +44,13 @@ export const RESOURCE_ACTION = {
     DOWNLOAD: 'pipeline_download',
     DELETE: 'pipeline_delete'
 }
+
+export const PROJECT_RESOURCE_ACTION = {
+    MANAGE: 'project_manage',
+    VISIT: 'project_visit',
+    VIEW: 'project_view',
+    VIEWS_MANAGE: 'project_views_manage',
+    CREATE: 'project_create',
+    EDIT: 'project_edit',
+    ENABLE: 'project_enable'
+}

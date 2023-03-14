@@ -21,13 +21,37 @@
                     <bk-table-column :label="$t('ticket.remark')" prop="credentialRemark"></bk-table-column>
                     <bk-table-column :label="$t('ticket.operation')" width="200">
                         <template slot-scope="props">
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'edit') }" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
-                            <bk-button theme="primary" :class="{ 'cert-operation-btn': true, disabled: !hasPermission(props.row.permissions, 'delete') }" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
+                            <bk-button
+                                v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
+                                    hasPermission: props.row.permissions.edit,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: CRED_RESOURCE_TYPE,
+                                        resourceCode: props.row.credentialId,
+                                        action: CRED_RESOURCE_ACTION.EDIT
+                                    }
+                                }"
+                                theme="primary" text @click="handleEditCredential(props.row)">{{ $t('ticket.edit') }}</bk-button>
+  
+                            <bk-button
+                                v-perm="{
+                                    tooltips: $t('ticket.noPermission'),
+                                    hasPermission: props.row.permissions.delete,
+                                    disablePermissionApi: true,
+                                    permissionData: {
+                                        projectId: projectId,
+                                        resourceType: CRED_RESOURCE_TYPE,
+                                        resourceCode: props.row.credentialId,
+                                        action: CRED_RESOURCE_ACTION.DELETE
+                                    }
+                                }"
+                                theme="primary" text @click="handleDeleteCredentail(props.row)">{{ $t('ticket.delete') }}</bk-button>
                         </template>
                     </bk-table-column>
                 </bk-table>
             </div>
-
             <empty-tips :title="tip.title" :desc="tip.desc" :btns="tip.btns" v-if="showContent && !renderList.length"></empty-tips>
         </section>
     </article>
@@ -36,7 +60,7 @@
 <script>
     import { mapGetters } from 'vuex'
     import EmptyTips from '@/components/devops/emptyTips'
-    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '../utils/permission'
+    import { CRED_RESOURCE_ACTION, CRED_RESOURCE_TYPE } from '@/utils/permission'
 
     export default {
         components: {
@@ -44,6 +68,8 @@
         },
         data () {
             return {
+                CRED_RESOURCE_TYPE,
+                CRED_RESOURCE_ACTION,
                 viewId: 0,
                 loading: {
                     isLoading: true,
@@ -230,7 +256,4 @@
 
 <style lang="scss">
     @import './../scss/conf';
-    .credential-operation-btn[disabled] {
-      cursor: url(../images/cursor-lock.png),auto !important;
-    }
 </style>
