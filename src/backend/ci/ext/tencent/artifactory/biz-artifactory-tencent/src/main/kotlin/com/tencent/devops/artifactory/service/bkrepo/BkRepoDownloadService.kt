@@ -386,7 +386,9 @@ open class BkRepoDownloadService @Autowired constructor(
             if (region == "OPENAPI") {
                 resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
             } else {
-                resultList.add("${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true")
+                resultList.add(
+                    "${RegionUtil.getRegionUrl(region)}/bkrepo/api/external/repository$shareUri&download=true"
+                )
             }
         }
         return resultList
