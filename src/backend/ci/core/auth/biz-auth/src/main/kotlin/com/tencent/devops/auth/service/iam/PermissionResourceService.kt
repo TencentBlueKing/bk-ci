@@ -125,9 +125,10 @@ interface PermissionResourceService {
         pageSize: Int
     ): Pagination<AuthResourceInfo>
 
-    fun getRoleId(
+    fun getResource(
         userId: String,
         projectId: String,
-        resourceType: String
-    ): String
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo
 }

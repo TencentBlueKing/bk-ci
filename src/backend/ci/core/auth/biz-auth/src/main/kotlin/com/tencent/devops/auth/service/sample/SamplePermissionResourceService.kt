@@ -97,9 +97,19 @@ class SamplePermissionResourceService : PermissionResourceService {
         pageSize: Int
     ): Pagination<AuthResourceInfo> = Pagination(hasNext = false, records = emptyList())
 
-    override fun getRoleId(
+    override fun getResource(
         userId: String,
         projectId: String,
-        resourceType: String
-    ) = ""
+        resourceType: String,
+        resourceCode: String
+    ) = AuthResourceInfo(
+        id = null,
+        projectCode = "",
+        resourceType = "",
+        resourceCode = "",
+        resourceName = "",
+        iamResourceCode = "",
+        enable = true,
+        relationId = ""
+    )
 }

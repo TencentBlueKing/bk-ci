@@ -184,9 +184,9 @@ interface UserAuthResourceResource {
     ): Result<Pagination<AuthResourceInfo>>
 
     @GET
-    @Path("getRoleId")
-    @ApiOperation("获取分级/二级管理员id")
-    fun getRoleId(
+    @Path("{resourceCode}/getResourece")
+    @ApiOperation("获取资源实例信息")
+    fun getResource(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -195,6 +195,9 @@ interface UserAuthResourceResource {
         projectId: String,
         @ApiParam("资源类型")
         @PathParam("resourceType")
-        resourceType: String
-    ): Result<String>
+        resourceType: String,
+        @ApiParam("资源ID")
+        @PathParam("resourceCode")
+        resourceCode: String
+    ): Result<AuthResourceInfo>
 }
