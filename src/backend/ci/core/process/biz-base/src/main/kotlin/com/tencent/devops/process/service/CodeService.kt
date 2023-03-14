@@ -32,7 +32,13 @@ import com.tencent.devops.common.api.enums.RepositoryType
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_CODE_BASE_NOT_EXIST
+import com.tencent.devops.process.constant.BK_FAIL_TO_GET_SVN_DIRECTORY
+import com.tencent.devops.process.constant.BK_NOT_SVN_CODE_BASE
+import com.tencent.devops.process.constant.BK_REPOSITORY_ID_AND_NAME_ARE_EMPTY
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.repository.api.ServiceRepositoryResource
 import com.tencent.devops.repository.api.scm.ServiceSvnResource
@@ -45,6 +51,7 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import org.tmatesoft.svn.core.wc.SVNRevision
+import java.text.MessageFormat
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
@@ -62,8 +69,18 @@ class CodeService @Autowired constructor(
             repositoryId = repositoryConfig.getURLEncodeRepositoryId(),
             repositoryType = repositoryConfig.repositoryType
         ).data
-            ?: throw NotFoundException("代码库($repoHashId)不存在")) as? CodeSvnRepository
-            ?: throw IllegalArgumentException("代码库($repoHashId)不是svn代码库")
+            ?: throw NotFoundException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_CODE_BASE_NOT_EXIST, I18nUtil.getLanguage()),
+                    repoHashId
+                )
+            )) as? CodeSvnRepository
+            ?: throw IllegalArgumentException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_NOT_SVN_CODE_BASE, I18nUtil.getLanguage()),
+                    repoHashId
+                )
+            )
 
         try {
             val credential = getSvnCredential(projectId, repository)
@@ -95,7 +112,12 @@ class CodeService @Autowired constructor(
             return directories
         } catch (t: Throwable) {
             logger.warn("[$projectId|$repoHashId|$relativePath] Fail to get SVN directory", t)
-            throw OperationException("获取Svn目录失败, msg:${t.message}")
+            throw OperationException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(BK_FAIL_TO_GET_SVN_DIRECTORY, I18nUtil.getLanguage()),
+                    t.message
+                )
+            )
         }
     }
 
@@ -219,7 +241,9 @@ class CodeService @Autowired constructor(
         if (!repoName.isNullOrBlank()) {
             return RepositoryConfig(null, repoName, RepositoryType.NAME)
         }
-        throw OperationException("仓库ID和仓库名都为空")
+        throw OperationException(
+            MessageUtil.getMessageByLocale(BK_REPOSITORY_ID_AND_NAME_ARE_EMPTY, I18nUtil.getLanguage())
+        )
     }
 
     companion object {

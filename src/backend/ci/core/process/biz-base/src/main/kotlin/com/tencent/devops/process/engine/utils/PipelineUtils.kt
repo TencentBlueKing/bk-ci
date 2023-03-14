@@ -105,7 +105,6 @@ object PipelineUtils {
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH,
-                defaultMessage = "Stage审核参数 $key 超出4000长度限制",
                 params = arrayOf(key)
             )
         }

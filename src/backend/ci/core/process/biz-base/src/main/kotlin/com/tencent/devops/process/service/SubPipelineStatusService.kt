@@ -30,10 +30,13 @@ package com.tencent.devops.process.service
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildFinishBroadCastEvent
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.pojo.pipeline.SubPipelineStatus
 import org.springframework.beans.factory.annotation.Autowired
@@ -97,7 +100,10 @@ class SubPipelineStatusService @Autowired constructor(
                 status = BuildStatus.FAILED.name,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorMsg = "找不到对应子流水线的构建记录"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    BK_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE,
+                    I18nUtil.getLanguage()
+                )
             )
         }
     }
