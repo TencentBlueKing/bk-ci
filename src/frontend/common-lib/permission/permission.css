@@ -68,6 +68,8 @@
     padding: 0 14px;
     line-height: 32px;
     cursor: pointer;
+    font-size: 14px !important;
+    font-weight: normal;
 }
 
 .permission-list .bk-dropdown-list>li:hover {

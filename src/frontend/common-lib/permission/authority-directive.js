@@ -126,7 +126,7 @@ function destroy (cloneEl, vNode) {
  */
 function validatePermission (data) {
     return new Promise((resolve, reject) => {
-        if (!data) return
+        if (!data) return resolve(true)
         const { projectId, resourceType, resourceCode, action } = data
         // 通过下面三个数据确定发送请求
         const key = projectId + resourceType + resourceCode
@@ -140,8 +140,15 @@ function validatePermission (data) {
         postData.actionList.push(action)
 
         // 接口执行完以后的回调
-        const callBack = (detail) => resolve(detail[action])
-        validatePermission.callBacks = [...validatePermission.callBacks || [], callBack]
+        let callBackMap = validatePermission.callBackMaps?.[key]
+        if (!callBackMap) {
+            callBackMap = []
+            validatePermission.callBackMaps = {
+                ...validatePermission.callBackMaps,
+                [key]: callBackMap
+            }
+        }
+        callBackMap.push((detail) => resolve(detail[action]))
 
         // 使用节流的方式防止发送太多请求，对请求进行组合
         clearTimeout(validatePermission[key])
@@ -152,10 +159,10 @@ function validatePermission (data) {
                 .post('/auth/api/user/auth/permission/batch/validate', others, { headers: { 'X-DEVOPS-PROJECT-ID': projectId } })
                 .then((res) => {
                     const detail = res.data || res
-                    validatePermission.callBacks.map(callBack => callBack(detail))
+                    validatePermission.callBackMaps[key].map(callBack => callBack(detail))
                 })
                 .catch((err) => {
-                    validatePermission.callBacks.map(callBack => callBack({}))
+                    validatePermission.callBackMaps[key].map(callBack => callBack({}))
                     console.error(err.message || err)
                 })
         }, 0)
