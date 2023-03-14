@@ -9,7 +9,6 @@ import com.tencent.devops.common.dispatch.sdk.listener.BuildListener
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
-import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.dispatch.pcg.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.pojo.enums.JobQuotaVmType
 import com.tencent.devops.process.pojo.mq.PipelineAgentShutdownEvent
@@ -36,7 +35,6 @@ class PCGBuildListener @Autowired constructor(
     private val redisOperation: RedisOperation,
     private val buildLogPrinter: BuildLogPrinter
 ) : BuildListener {
-
 
     @Value("\${pcg.docker.url:#{null}}")
     private val pcgDockerStartURL: String = "http://ciserver.wsd.com/interface"
@@ -189,8 +187,8 @@ class PCGBuildListener @Autowired constructor(
                 "Fail to start up pcg docker, response is null"
             )
         }
-        //{"data":"","err_msg":"get container fail","errMsg":"没有空闲编译容器","ret_code":"500"}
-        //{"data":{"password":"HI71a4173d993635","host":"9.77.29.50"},"errMsg":"","ret_code":200}
+        // {"data":"","err_msg":"get container fail","errMsg":"没有空闲编译容器","ret_code":"500"}
+        // {"data":{"password":"HI71a4173d993635","host":"9.77.29.50"},"errMsg":"","ret_code":200}
         val jsonResponse = try {
             JSONObject(response)
         } catch (e: JSONException) {
