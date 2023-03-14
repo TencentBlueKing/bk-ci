@@ -50,7 +50,7 @@
                 </bk-button>
             </template>
             <template v-else slot="right">
-                <span
+                <bk-button
                     v-if="isEditPage"
                     v-perm="{
                         permissionData: {
@@ -60,12 +60,13 @@
                             action: RESOURCE_ACTION.EDIT
                         }
                     }"
+                    theme="primary"
+                    :disabled="saveBtnDisabled"
+                    :icon="saveStatus ? 'loading' : ''"
+                    @click="save"
                 >
-                    <bk-button
-                        v-if="isEditPage" @click="save" :disabled="saveBtnDisabled" :icon="saveStatus ? 'loading' : ''" theme="primary">
-                        {{ $t('save') }}
-                    </bk-button>
-                </span>
+                    {{ $t('save') }}
+                </bk-button>
                 <bk-button
                     v-else
                     v-perm="{

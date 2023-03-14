@@ -5,19 +5,31 @@
 }
 
 .bk-permission-disable.bk-button, .bk-permission-disable.bk-button:hover, .bk-permission-disable .bk-button, .bk-permission-disable .bk-button:hover {
-    background: #C4C6CC !important;
-    border-color: #C4C6CC !important;
+    background: #fff !important;
+    border-color: #dcdee5 !important;
+    color: #c4c6cc !important;
+}
+
+.bk-permission-disable.bk-button.bk-primary, .bk-permission-disable.bk-button.bk-primary:hover, .bk-permission-disable .bk-button.bk-primary, .bk-permission-disable .bk-button.bk-primary:hover {
+    background: #dcdee5 !important;
+    border-color: #dcdee5 !important;
+    color: #fff !important;
+}
+
+.bk-permission-disable.bk-button.bk-button-primary, .bk-permission-disable.bk-button.bk-button-primary:hover, .bk-permission-disable .bk-button.bk-button-primary, .bk-permission-disable .bk-button.bk-button-primary:hover {
+    background: #dcdee5 !important;
+    border-color: #dcdee5 !important;
     color: #fff !important;
 }
 
 .bk-permission-disable.bk-button.bk-button-text, .bk-permission-disable.bk-button.bk-button-text:hover, .bk-permission-disable .bk-button.bk-button-text, .bk-permission-disable .bk-button.bk-button-text:hover {
     background: transparent !important;
     border-color: transparent !important;
-    color: #C4C6CC !important;
+    color: #dcdee5 !important;
 }
 
 .bk-permission-disable, .bk-permission-disable:hover {
-    color: #C4C6CC !important;
+    color: #dcdee5 !important;
 }
 
 .bk-permission-tooltips {
