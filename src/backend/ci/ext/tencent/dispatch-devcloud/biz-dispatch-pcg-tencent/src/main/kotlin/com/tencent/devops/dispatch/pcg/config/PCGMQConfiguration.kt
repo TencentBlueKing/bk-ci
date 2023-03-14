@@ -27,9 +27,9 @@
 
 package com.tencent.devops.dispatch.pcg.config
 
-import com.tencent.devops.common.event.dispatcher.pipeline.Tools
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_SHUTDOWN
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ.ROUTE_AGENT_STARTUP
+import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.dispatch.pcg.listener.PCGBuildListener
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.core.Binding
