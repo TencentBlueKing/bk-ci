@@ -159,10 +159,10 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("listResoureces")
+    @Path("listResources")
     @ApiOperation("获取资源列表")
     @SuppressWarnings("LongParameterList")
-    fun listResoureces(
+    fun listResources(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,

@@ -137,7 +137,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         )
     }
 
-    override fun listResoureces(
+    override fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -146,7 +146,7 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         pageSize: Int
     ): Result<Pagination<AuthResourceInfo>> {
         return Result(
-            permissionResourceService.listResoureces(
+            permissionResourceService.listResources(
                 userId = userId,
                 projectId = projectId,
                 resourceType = resourceType,

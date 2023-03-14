@@ -88,7 +88,7 @@ class SamplePermissionResourceService : PermissionResourceService {
         resourceCode: String
     ) = true
 
-    override fun listResoureces(
+    override fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,

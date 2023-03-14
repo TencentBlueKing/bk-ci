@@ -116,7 +116,7 @@ interface PermissionResourceService {
         resourceCode: String
     ): Boolean
 
-    fun listResoureces(
+    fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
