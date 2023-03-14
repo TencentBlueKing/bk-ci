@@ -7,17 +7,5 @@ vscode:
     - golang.go-nightly
     - eamodio.gitlens
 
-envs:
-  # NAME: xxxx
-  # MY_PASSWORD: ${{ preci.envs.PROJECT_PASSWORD }}
-
-ports:
-- name: web-ide
-  desc: webIde预览端口
-  port: 23000
-- name: api
-  desc: api端口
-  port: 22999    
-
 commands:
-  postCreateCommand: "cd src/backend/devopsRemoting;go mod tidy;echo 'go init dome'"
+  postCreateCommand: "cd src/backend/devopsRemoting;go mod tidy"
