@@ -20,8 +20,8 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>> {
 
-        val projectActionList = mutableListOf<String>()
-        val resourceActionList = mutableListOf<String>()
+        val projectActionList = mutableSetOf<String>()
+        val resourceActionList = mutableSetOf<String>()
 
         permissionBatchValidateDTO.actionList.forEach { action ->
             val actionInfo = rbacCacheService.getActionInfo(action)
@@ -35,7 +35,7 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
 
         val projectActionPermissions = permissionService.batchValidateUserResourcePermission(
             userId = userId,
-            actions = projectActionList,
+            actions = projectActionList.toList(),
             projectCode = projectCode,
             resourceCode = projectCode,
             resourceType = AuthResourceType.PROJECT.value,
@@ -43,7 +43,7 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
 
         val resourceActionPermissions = permissionService.batchValidateUserResourcePermission(
             userId = userId,
-            actions = resourceActionList,
+            actions = resourceActionList.toList(),
             projectCode = projectCode,
             resourceCode = permissionBatchValidateDTO.resourceCode,
             resourceType = permissionBatchValidateDTO.resourceType
