@@ -697,7 +697,6 @@ class CodeWebhookService @Autowired constructor(
         }
     }
 
-
     companion object {
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
     }
