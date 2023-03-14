@@ -89,6 +89,7 @@ module.exports = (env = {}, argv) => {
                 ? 'index.html'
                 : `${dist}/frontend#console#index.html`,
             inject: false,
+            publicPath: '__BK_CI_PUBLIC_URL__/console/',
             minify: {
                 removeComments: false
             },

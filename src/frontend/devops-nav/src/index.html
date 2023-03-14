@@ -35,7 +35,7 @@
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
     <link
-      href="__BK_CI_PUBLIC_URL__<%= htmlWebpackPlugin.files.js[key] %>"
+      href="<%= htmlWebpackPlugin.files.js[key] %>"
       as="script"
       rel="preload"
     />
@@ -44,7 +44,7 @@
 
     <!-- devops:css -->
     <% for (key in htmlWebpackPlugin.files.css) { %>
-    <link href="__BK_CI_PUBLIC_URL__<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
+    <link href="<%= htmlWebpackPlugin.files.css[key] %>" rel="stylesheet" />
     <% } %>
     
     
@@ -110,7 +110,7 @@
           oScript.onload = fOnload
         }
 
-        oScript.setAttribute('src', window.PUBLIC_URL_PREFIX + src)
+        oScript.setAttribute('src', src)
         oScript.setAttribute('defer', '')
         oHead.appendChild(oScript)
       }
@@ -120,7 +120,7 @@
         var oStyle = document.createElement('link')
         oStyle.setAttribute('rel', 'stylesheet')
         oStyle.setAttribute('type', 'text/css')
-        oStyle.setAttribute('href', window.PUBLIC_URL_PREFIX + href)
+        oStyle.setAttribute('href', href)
         oHead.appendChild(oStyle)
       }
 
@@ -408,8 +408,8 @@
           var css_url = page.css_url
           var title = page.title
 
-          importScript(js_url, document.body, loadJsAssets)
-          importStyle(css_url, headTag)
+          importScript(window.PUBLIC_URL_PREFIX + js_url, document.body, loadJsAssets)
+          importStyle(window.PUBLIC_URL_PREFIX + css_url, headTag)
         } else {
           loadJsAssets()
         }
