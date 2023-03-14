@@ -137,13 +137,32 @@ class V0AuthPermissionServiceImpl @Autowired constructor(
         )
     }
 
-    override fun filterUserResourceByPermission(
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType =  resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
+    override fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
         projectCode: String,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return emptyList()
+        resourceType: String
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     companion object {

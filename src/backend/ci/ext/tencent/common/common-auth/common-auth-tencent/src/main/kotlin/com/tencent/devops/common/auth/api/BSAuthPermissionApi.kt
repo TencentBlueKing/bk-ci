@@ -385,15 +385,14 @@ class BSAuthPermissionApi @Autowired constructor(
         return result
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
-        resourceType: AuthResourceType,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return resources.map { it.resourceCode }
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     companion object {
