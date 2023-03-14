@@ -229,6 +229,7 @@ class ThirdPartyAgentService @Autowired constructor(
                         object : TypeReference<ThirdPartyAgentDockerInfoDispatch>() {}
                     )
                 }
+                var errMsg: String? = null
                 var buildDockerInfo: ThirdPartyBuildDockerInfo? = null
                 // 只有凭据ID的参与计算
                 if (dockerInfo != null) {
@@ -240,12 +241,15 @@ class ThirdPartyAgentService @Autowired constructor(
                             getTicket(projectId, dockerInfo.credential!!)
                         } catch (e: Exception) {
                             logger.error("$projectId agent docker build get ticket ${dockerInfo.credential} error", e)
+                            errMsg = e.message
                             Pair(null, null)
                         }
                         dockerInfo.credential?.user = userName
                         dockerInfo.credential?.password = password
+
                     }
                     buildDockerInfo = ThirdPartyBuildDockerInfo(dockerInfo)
+                    buildDockerInfo.credential?.errMsg = errMsg
                 }
 
                 return AgentResult(
