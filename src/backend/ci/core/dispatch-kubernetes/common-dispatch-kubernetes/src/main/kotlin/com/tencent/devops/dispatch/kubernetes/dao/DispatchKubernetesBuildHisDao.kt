@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesBuildHistory
-import com.tencent.devops.model.dispatch_kubernetes.tables.records.TDispatchKubernetesBuildHistoryRecord
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesBuildHistory
+import com.tencent.devops.model.dispatch.kubernetes.tables.records.TDispatchKubernetesBuildHistoryRecord
 import org.jooq.DSLContext
 import org.jooq.Result
 import org.springframework.stereotype.Repository

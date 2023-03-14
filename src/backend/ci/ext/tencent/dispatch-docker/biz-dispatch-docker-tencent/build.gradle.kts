@@ -27,5 +27,6 @@
 
 dependencies {
     api(project(":core:dispatch-docker:biz-dispatch-docker"))
+    api(project(":ext:tencent:dispatch-devcloud:biz-dispatch-devcloud-tencent"))
     api(project(":ext:tencent:common:common-kafka-tencent"))
 }
