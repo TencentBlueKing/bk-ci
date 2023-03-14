@@ -1420,9 +1420,9 @@ angetless:
 turbo:
   enabled: false
   image:
-    registry: mirrors.tencent.com/build/blueking
+    registry: registry-1.docker.io/bkci
     repository: bkci-turbo
-    tag: 0.0.17
+    tag: 0.0.18
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1

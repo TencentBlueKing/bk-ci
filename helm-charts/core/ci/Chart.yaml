@@ -40,5 +40,5 @@ dependencies:
   condition: mongodb.enabled
 - name: kubernetes-manager
   version: 0.0.36
-  repository: "file://../../../src/backend/dispatch-k8s-manager/manifests/chart"
+  repository: "file://./local_chart/kubernetes-management"
   condition: kubernetes-manager.enabled

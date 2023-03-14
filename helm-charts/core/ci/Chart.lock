@@ -24,7 +24,7 @@ dependencies:
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 10.30.6
 - name: kubernetes-manager
-  repository: file://../../../src/backend/dispatch-k8s-manager/manifests/chart
+  repository: file://./local_chart/kubernetes-management
   version: 0.0.36
-digest: sha256:905f11bb6e91266bbe76e4bc064691d30b1108fa41da21856422c90109ebd0dd
-generated: "2023-03-13T20:45:29.885547514+08:00"
+digest: sha256:521a93d5e92e46288b16ef26391656c9a7041dd880a01cf5c04389f1bb4f4186
+generated: "2023-03-14T17:35:25.523011238+08:00"
