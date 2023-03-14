@@ -114,8 +114,8 @@ const longLogTag = "toolong"
 
 // doDockerJob 使用docker启动构建
 func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
-	// 各种情况退出时减运行任务数量
 	defer func() {
+		// 各种情况退出时减运行任务数量
 		GBuildDockerManager.RemoveBuild(buildInfo.BuildId)
 	}()
 
