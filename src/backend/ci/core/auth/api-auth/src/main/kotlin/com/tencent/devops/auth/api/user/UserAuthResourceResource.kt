@@ -184,7 +184,7 @@ interface UserAuthResourceResource {
     ): Result<Pagination<AuthResourceInfo>>
 
     @GET
-    @Path("{resourceCode}/getResourece")
+    @Path("{resourceCode}/getResource")
     @ApiOperation("获取资源实例信息")
     fun getResource(
         @ApiParam(name = "用户名", required = true)
