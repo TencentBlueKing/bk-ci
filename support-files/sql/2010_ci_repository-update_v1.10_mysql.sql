@@ -16,9 +16,11 @@ BEGIN
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
                     AND TABLE_NAME = 'T_REPOSITORY_GITHUB_TOKEN'
-                    AND COLUMN_NAME = 'OAUTH_APP_TOKEN') THEN
+                    AND COLUMN_NAME = 'TYPE') THEN
     ALTER TABLE `T_REPOSITORY_GITHUB_TOKEN`
-        ADD COLUMN `OAUTH_APP_TOKEN` varchar(96) DEFAULT NULL COMMENT 'github oauth app token.';
+        ADD COLUMN `TYPE` varchar(32) DEFAULT 'GITHUB_APP' COMMENT 'GitHub token类型（GITHUB_APP、OAUTH_APP）';
+	alter table T_REPOSITORY_GITHUB_TOKEN drop key USER_ID;
+    alter table T_REPOSITORY_GITHUB_TOKEN add constraint USER_ID unique (USER_ID, TYPE);
     END IF;
 
     COMMIT;
