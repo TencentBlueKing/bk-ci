@@ -35,5 +35,12 @@ import com.fasterxml.jackson.annotation.JsonInclude
 data class Credential(
     val user: String?,
     val password: String?,
-    val credentialId: String? = null
-)
+    val credentialId: String? = null,
+    val fromRemote: Remote? = null
+) {
+    data class Remote(
+        val targetProjectId: String,
+        val templateId: String,
+        val jobId: String
+    )
+}
