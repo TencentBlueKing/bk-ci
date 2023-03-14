@@ -219,26 +219,8 @@ class TaskBuildRecordService(
                     recordTask.originClassType == QualityGateOutElement.classType
                 ) {
                     taskStatus = BuildStatus.REVIEWING
-                    containerBuildRecordService.updateContainerStatus(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        containerId = containerId,
-                        executeCount = executeCount,
-                        buildStatus = BuildStatus.REVIEWING,
-                        operation = "taskStart#$taskId"
-                    )
                 } else {
                     taskStatus = BuildStatus.RUNNING
-                    containerBuildRecordService.updateContainerStatus(
-                        projectId = projectId,
-                        pipelineId = pipelineId,
-                        buildId = buildId,
-                        containerId = containerId,
-                        executeCount = executeCount,
-                        buildStatus = BuildStatus.RUNNING,
-                        operation = "taskStart#$taskId"
-                    )
                 }
 
                 // TODO #7983 即将废除的旧数据兼容
@@ -395,6 +377,7 @@ class TaskBuildRecordService(
             taskId = taskId,
             element = element
         )
+        // #7983 此处需要保持Container状态独立刷新，不能放进更新task的并发锁
         containerBuildRecordService.updateContainerStatus(
             projectId = projectId,
             pipelineId = pipelineId,

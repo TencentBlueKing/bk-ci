@@ -546,7 +546,7 @@ class PipelineBuildFacadeService(
         frequencyLimit: Boolean = true,
         triggerReviewers: List<String>? = null
     ): String {
-        logger.info("Manual build start with value [$values][$buildNo]")
+        logger.info("[$pipelineId] Manual build start with buildNo[$buildNo] and vars: $values")
         if (checkPermission) {
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
