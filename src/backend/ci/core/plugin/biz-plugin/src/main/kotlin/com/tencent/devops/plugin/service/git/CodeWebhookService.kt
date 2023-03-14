@@ -52,6 +52,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REPO_TYPE
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_REVISION
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import com.tencent.devops.model.plugin.tables.records.TPluginGitCheckRecord
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckEvent
 import com.tencent.devops.plugin.api.pojo.GitCommitCheckInfo
 import com.tencent.devops.plugin.api.pojo.GithubCheckRun
@@ -413,8 +414,8 @@ class CodeWebhookService @Autowired constructor(
                         Thread.sleep(100)
                         return@use
                     }
-
-                    val record = pluginGitCheckDao.getOrNull(
+                    // 存在目标分支
+                    val targetBranchRecord = pluginGitCheckDao.getOrNull(
                         dslContext = dslContext,
                         pipelineId = pipelineId,
                         repositoryConfig = repositoryConfig,
@@ -422,13 +423,23 @@ class CodeWebhookService @Autowired constructor(
                         context = context,
                         targetBranch = webhookTargetBranch
                     )
-
-                    if (record == null) {
+                    // 无目标分支
+                    val noneTargetBranchRecord = pluginGitCheckDao.getOrNull(
+                        dslContext = dslContext,
+                        pipelineId = pipelineId,
+                        repositoryConfig = repositoryConfig,
+                        commitId = commitId,
+                        context = context,
+                        targetBranch = null
+                    )
+                    // 新提交，直接添加commit check
+                    if (noneTargetBranchRecord == null && targetBranchRecord == null) {
                         scmCheckService.addGitCommitCheck(
                             event = event,
                             targetUrl = targetUrl,
                             context = context,
-                            description = description
+                            description = description,
+                            targetBranch = webhookTargetBranch
                         )
                         pluginGitCheckDao.create(
                             dslContext = dslContext,
@@ -442,22 +453,26 @@ class CodeWebhookService @Autowired constructor(
                                 targetBranch = webhookTargetBranch
                             )
                         )
+                    } else if (noneTargetBranchRecord != null && targetBranchRecord == null) {
+                        // 旧提交（无targetBranch字段），不能传递targetBranch字段
+                        updateCommitCheck(
+                            buildNum = buildNum,
+                            record = noneTargetBranchRecord,
+                            event = event,
+                            targetUrl = targetUrl,
+                            pipelineName = pipelineName,
+                            description = description
+                        )
                     } else {
-                        if (buildNum.toInt() >= record.buildNumber) {
-                            scmCheckService.addGitCommitCheck(
-                                event = event,
-                                targetUrl = targetUrl,
-                                context = record.context ?: pipelineName,
-                                description = description
-                            )
-                            pluginGitCheckDao.update(
-                                dslContext = dslContext,
-                                id = record.id,
-                                buildNumber = buildNum.toInt()
-                            )
-                        } else {
-                            logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
-                        }
+                        // 旧数据（有targetBranch字段），更新T_PLUGIN_GIT_CHECK
+                        updateCommitCheck(
+                            buildNum = buildNum,
+                            record = targetBranchRecord,
+                            event = event,
+                            targetUrl = targetUrl,
+                            pipelineName = pipelineName,
+                            description = description
+                        )
                     }
                     // mr锁定并且状态为pending时才需要解锁hook锁
                     if (block && state == GIT_COMMIT_CHECK_STATE_PENDING) {
@@ -466,6 +481,36 @@ class CodeWebhookService @Autowired constructor(
                     return
                 }
             }
+        }
+    }
+
+    private fun updateCommitCheck(
+        buildNum: String,
+        record: TPluginGitCheckRecord?,
+        event: GitCommitCheckEvent,
+        targetUrl: String,
+        pipelineName: String,
+        description: String
+    ) {
+        if (record == null) {
+            logger.warn("Illegal pluginGitCheck data,Failed to add commit check information")
+            return
+        }
+        if (buildNum.toInt() >= record.buildNumber) {
+            scmCheckService.addGitCommitCheck(
+                event = event,
+                targetUrl = targetUrl,
+                context = record.context ?: pipelineName,
+                description = description,
+                targetBranch = record.targetBranch
+            )
+            pluginGitCheckDao.update(
+                dslContext = dslContext,
+                id = record.id,
+                buildNumber = buildNum.toInt()
+            )
+        } else {
+            logger.info("Code web hook commit check has bigger build number(${record.buildNumber})")
         }
     }
 
@@ -651,6 +696,7 @@ class CodeWebhookService @Autowired constructor(
             }
         }
     }
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(CodeWebhookService::class.java)
