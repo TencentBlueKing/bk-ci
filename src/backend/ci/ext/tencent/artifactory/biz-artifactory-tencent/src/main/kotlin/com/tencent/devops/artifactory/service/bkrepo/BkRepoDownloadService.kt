@@ -382,12 +382,12 @@ open class BkRepoDownloadService @Autowired constructor(
                 downloadIps = listOf(),
                 timeoutInSeconds = (ttl ?: 24 * 3600).toLong()
             )
-            if (region == "EXTERNAL") {
+            if (region == "OPENAPI") {
+                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
+            } else {
                 resultList.add(
                     "${commonConfig.devopsOuterHostGateWay}/bkrepo/api/external/repository$shareUri&download=true"
                 )
-            } else {
-                resultList.add("${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true")
             }
         }
         return resultList
