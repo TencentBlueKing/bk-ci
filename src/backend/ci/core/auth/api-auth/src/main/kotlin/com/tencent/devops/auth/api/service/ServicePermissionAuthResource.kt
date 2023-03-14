@@ -180,10 +180,10 @@ interface ServicePermissionAuthResource {
         action: List<String>
     ): Result<Boolean>
 
-    @POST
-    @Path("/projects/{projectCode}/action/instance/filter")
-    @ApiOperation("过滤用户某项目下指定操作的资源实例列表")
-    fun filterUserResourceByPermission(
+    @GET
+    @Path("/projects/{projectCode}/action/instanceAndParent")
+    @ApiOperation("获取用户所拥有指定权限下的指定类型资源和类型父资源code列表")
+    fun getUserResourceAndParentByPermission(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
         userId: String,
@@ -199,8 +199,10 @@ interface ServicePermissionAuthResource {
         @PathParam("projectCode")
         @ApiParam("项目Code", required = true)
         projectCode: String,
-        resources: List<AuthResourceInstance>
-    ): Result<List<String>>
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String
+    ): Result<Map<String, List<String>>>
 
     @GET
     @Path("/projects/{projectCode}/actions/instance/map")
