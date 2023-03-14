@@ -27,10 +27,22 @@
 
 package com.tencent.devops.common.pipeline.init
 
+import com.tencent.devops.common.api.constant.CommonCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES
+import com.tencent.devops.common.api.constant.CommonCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW
+import com.tencent.devops.common.api.constant.CommonCode.BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD
+import com.tencent.devops.common.api.constant.CommonCode.BK_PCG_PUBLIC_BUILD_RESOURCES
+import com.tencent.devops.common.api.constant.CommonCode.BK_PRIVATE_BUILD_A_CLUSTER
+import com.tencent.devops.common.api.constant.CommonCode.BK_PRIVATE_SINGLE_BUIL_MACHINE
+import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_BCS
+import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_DEVCLOUD
+import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL
+import com.tencent.devops.common.api.constant.CommonCode.BK_TENCENT_SELF_DEVELOPED_CLOUD
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.type.BuildType
+import com.tencent.devops.common.web.utils.I18nUtil
 
 class BuildTypeEnumModifier : EnumModifier {
 
@@ -38,52 +50,92 @@ class BuildTypeEnumModifier : EnumModifier {
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.ESXi.name,
-            additionalValues = arrayOf("蓝盾公共构建资源", listOf(OS.MACOS), false, true, false)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.MACOS), false, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.MACOS.name,
-            additionalValues = arrayOf("蓝盾公共构建资源(NEW)", listOf(OS.MACOS), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.MACOS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.DOCKER.name,
-            additionalValues = arrayOf("公共：Docker on Devnet 物理机", listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_DEVCLOUD.name,
-            additionalValues = arrayOf("公共：Docker on DevCloud", listOf(OS.LINUX), true, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_PUBLIC_DOCKER_ON_DEVCLOUD,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.LINUX), true, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.PUBLIC_BCS.name,
-            additionalValues = arrayOf("公共：Docker on Bcs", listOf(OS.LINUX), true, true, false)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_PUBLIC_DOCKER_ON_BCS,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.LINUX), true, true, false)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ID.name,
-            additionalValues = arrayOf("私有：单构建机", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_PRIVATE_SINGLE_BUIL_MACHINE,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_AGENT_ENV.name,
-            additionalValues = arrayOf("私有：构建集群", listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PRIVATE_BUILD_A_CLUSTER,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), listOf(OS.MACOS, OS.LINUX, OS.WINDOWS), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_PCG.name,
-            additionalValues = arrayOf("PCG公共构建资源", listOf(OS.LINUX), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PCG_PUBLIC_BUILD_RESOURCES,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.THIRD_PARTY_DEVCLOUD.name,
-            additionalValues = arrayOf("腾讯自研云（云devnet资源）", listOf(OS.LINUX), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_TENCENT_SELF_DEVELOPED_CLOUD,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), listOf(OS.LINUX), false, true, true)
         )
         EnumUtil.addEnum(
             enumType = BuildType::class.java,
             enumName = BuildType.WINDOWS.name,
-            additionalValues = arrayOf("云托管：Windows on DevCloud", listOf(OS.WINDOWS), false, true, true)
+            additionalValues = arrayOf(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), listOf(OS.WINDOWS), false, true, true)
         )
     }
 }

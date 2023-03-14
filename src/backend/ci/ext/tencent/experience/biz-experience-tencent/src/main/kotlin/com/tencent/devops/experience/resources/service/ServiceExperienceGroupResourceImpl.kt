@@ -3,9 +3,12 @@ package com.tencent.devops.experience.resources.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceGroupResource
+import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_NOT_PERMISSION
 import com.tencent.devops.experience.pojo.GroupCreate
 import com.tencent.devops.experience.pojo.GroupUpdate
 import com.tencent.devops.experience.pojo.GroupUsers
@@ -53,7 +56,10 @@ class ServiceExperienceGroupResourceImpl @Autowired constructor(
                 .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
         ) {
             throw ErrorCodeException(
-                defaultMessage = "用户没有权限",
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_PERMISSION,
+                    language = I18nUtil.getLanguage(userId)
+                ),
                 errorCode = ProcessMessageCode.USER_NEED_PROJECT_X_PERMISSION
             )
         }

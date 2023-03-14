@@ -3,7 +3,10 @@ package com.tencent.devops.experience.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_ORGANIZATION_NAME
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_UNABLE_TO_ACCESS
 import com.tencent.devops.experience.constant.ExperienceConstant.HEADER_O_TOKEN
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
@@ -38,7 +41,10 @@ class OuterLoginFilter @Autowired constructor(
                     throw ErrorCodeException(
                         statusCode = Response.Status.UNAUTHORIZED.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
-                        defaultMessage = "无法访问"
+                        defaultMessage = MessageUtil.getMessageByLocale(
+                            messageCode = BK_UNABLE_TO_ACCESS,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                     )
                 }
                 // 路径过滤
@@ -52,7 +58,10 @@ class OuterLoginFilter @Autowired constructor(
                     throw ErrorCodeException(
                         statusCode = Response.Status.UNAUTHORIZED.statusCode,
                         errorCode = ExperienceMessageCode.OUTER_ACCESS_FAILED,
-                        defaultMessage = "无法访问"
+                        defaultMessage = MessageUtil.getMessageByLocale(
+                            messageCode = BK_UNABLE_TO_ACCESS,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        )
                     )
                 }
                 // 续期token

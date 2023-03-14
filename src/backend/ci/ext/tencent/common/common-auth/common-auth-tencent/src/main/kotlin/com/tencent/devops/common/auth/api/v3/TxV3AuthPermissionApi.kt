@@ -30,7 +30,9 @@ package com.tencent.devops.common.auth.api.v3
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.pojo.dto.GrantInstanceDTO
+import com.tencent.devops.common.api.constant.CommonCode.BK_USERS_EXCEEDS_THE_LIMIT
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -38,8 +40,10 @@ import com.tencent.devops.common.auth.code.AuthServiceCode
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import java.util.concurrent.TimeUnit
 
 class TxV3AuthPermissionApi @Autowired constructor(
@@ -179,7 +183,13 @@ class TxV3AuthPermissionApi @Autowired constructor(
         // 此处做保护,防止用户一次加太多用户
         if (userIdList.size > GRANT_USER_MAX_SIZE) {
             logger.warn("grant instance user too long $projectCode|$resourceCode|$resourceType|$userIdList")
-            throw ParamBlankException("授权用户数越界:$GRANT_USER_MAX_SIZE")
+            throw ParamBlankException(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_USERS_EXCEEDS_THE_LIMIT,
+                        language = I18nUtil.getLanguage(userId)
+                    ),GRANT_USER_MAX_SIZE
+                ))
         }
         userIdList.forEach {
             val grantInstanceDTO = GrantInstanceDTO(

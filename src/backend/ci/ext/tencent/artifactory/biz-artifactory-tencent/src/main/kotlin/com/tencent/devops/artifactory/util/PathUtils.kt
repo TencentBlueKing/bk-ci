@@ -27,8 +27,11 @@
 
 package com.tencent.devops.artifactory.util
 
+import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_ILLEGAL_PATH
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import java.net.URLEncoder
 import java.nio.file.Paths
 import java.util.regex.Pattern
@@ -38,7 +41,10 @@ object PathUtils {
     fun checkAndNormalizeAbsPath(path: String): String {
         val normalizePath = Paths.get(path).normalize().toString()
         if (!normalizePath.startsWith("/")) {
-            throw BadRequestException("非法路径")
+            throw BadRequestException(MessageUtil.getMessageByLocale(
+                messageCode = BK_ILLEGAL_PATH,
+                language = I18nUtil.getLanguage()
+            ))
         }
         return normalizePath
     }

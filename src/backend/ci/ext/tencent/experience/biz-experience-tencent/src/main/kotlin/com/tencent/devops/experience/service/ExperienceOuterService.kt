@@ -7,9 +7,18 @@ import com.tencent.bkuser.model.Profile
 import com.tencent.bkuser.model.ProfileLogin
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_ACCOUNT_HAS_BEEN_BLOCKED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_ACCOUNT_INFORMATION_ABNORMAL
+import com.tencent.devops.experience.constant.ExperienceCode.BK_LOGIN_ACCOUNT_FREQUENT
+import com.tencent.devops.experience.constant.ExperienceCode.BK_LOGIN_ERROR
+import com.tencent.devops.experience.constant.ExperienceCode.BK_LOGIN_EXPIRED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_LOGIN_IP_FREQUENTLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_UNABLE_GET_IP
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceOuterLoginRecordDao
 import com.tencent.devops.experience.pojo.outer.OuterLoginParam
@@ -47,7 +56,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录错误"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_LOGIN_ERROR,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
@@ -57,7 +69,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录IP频繁,请稍后重试"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_LOGIN_IP_FREQUENTLY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
@@ -67,7 +82,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录账号频繁,请稍后重试"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_LOGIN_ACCOUNT_FREQUENT,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
@@ -85,7 +103,10 @@ class ExperienceOuterService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                    defaultMessage = "账号已被封禁"
+                    defaultMessage = MessageUtil.getMessageByLocale(
+                            messageCode = BK_ACCOUNT_HAS_BEEN_BLOCKED,
+                            language = I18nUtil.getLanguage()
+                )
                 )
             }
 
@@ -125,7 +146,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录错误"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_LOGIN_ERROR,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
     }
@@ -138,7 +162,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "登录过期,请重新登录"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_LOGIN_EXPIRED,
+                        language = I18nUtil.getLanguage()
+            )
             )
         }
 
@@ -155,7 +182,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "账号信息异常,请重新登录"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_ACCOUNT_INFORMATION_ABNORMAL,
+                language = I18nUtil.getLanguage()
+            )
             )
         }
     }
@@ -179,7 +209,10 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = "无法获取IP , 请联系相关人员排查"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_UNABLE_GET_IP,
+                language = I18nUtil.getLanguage()
+            )
             )
         }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
@@ -216,7 +249,10 @@ class ExperienceOuterService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                    defaultMessage = "账号已被封禁"
+                    defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_ACCOUNT_HAS_BEEN_BLOCKED,
+                        language = I18nUtil.getLanguage()
+                    )
                 )
             }
         } else {
@@ -226,7 +262,10 @@ class ExperienceOuterService @Autowired constructor(
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
                     errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                    defaultMessage = "账号已被封禁"
+                    defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_ACCOUNT_HAS_BEEN_BLOCKED,
+                        language = I18nUtil.getLanguage()
+                    )
                 )
             }
         }

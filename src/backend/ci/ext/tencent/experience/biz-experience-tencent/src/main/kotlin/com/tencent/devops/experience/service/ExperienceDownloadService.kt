@@ -41,6 +41,10 @@ import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXP_FILE_NOT_FOUND
+import com.tencent.devops.experience.constant.ExperienceMessageCode.TOKEN_EXPIRED
+import com.tencent.devops.experience.constant.ExperienceMessageCode.TOKEN_NOT_EXISTS
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceDownloadDao
@@ -122,12 +126,10 @@ class ExperienceDownloadService @Autowired constructor(
         val tokenRecord = tokenDao.getOrNull(dslContext, token)
             ?: throw ErrorCodeException(
                 statusCode = 404,
-                defaultMessage = "token不存在",
                 errorCode = ExperienceMessageCode.TOKEN_NOT_EXISTS
             )
         if (tokenRecord.expireTime.isBefore(LocalDateTime.now())) {
             throw ErrorCodeException(
-                defaultMessage = "token已过期",
                 errorCode = ExperienceMessageCode.TOKEN_EXPIRED
             )
         }
@@ -151,7 +153,6 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
                 errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
@@ -170,7 +171,6 @@ class ExperienceDownloadService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = 404,
-                defaultMessage = "文件不存在",
                 errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
             )
         }
@@ -255,7 +255,6 @@ class ExperienceDownloadService @Autowired constructor(
         if (!canExperience) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "该版本不可用，可能已被下架、已过期或被新版本覆盖，请刷新页面重试",
                 errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
@@ -272,7 +271,6 @@ class ExperienceDownloadService @Autowired constructor(
         ) {
             throw ErrorCodeException(
                 statusCode = 404,
-                defaultMessage = "文件不存在",
                 errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
             )
         }
@@ -294,13 +292,11 @@ class ExperienceDownloadService @Autowired constructor(
         val isExpired = DateUtil.isExpired(experienceRecord.endDate)
         if (isExpired) {
             throw ErrorCodeException(
-                defaultMessage = "体验已过期",
                 errorCode = ExperienceMessageCode.EXP_EXPIRE
             )
         }
         if (!experienceRecord.online) {
             throw ErrorCodeException(
-                defaultMessage = "体验已下架",
                 errorCode = ExperienceMessageCode.EXP_REMOVED
             )
         }
@@ -446,7 +442,6 @@ class ExperienceDownloadService @Autowired constructor(
             logger.warn("platform is illegal , {}", platform)
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "平台错误",
                 errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }
@@ -467,7 +462,6 @@ class ExperienceDownloadService @Autowired constructor(
             )
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "未找到对应的体验",
                 errorCode = ExperienceMessageCode.EXPERIENCE_NO_AVAILABLE
             )
         }

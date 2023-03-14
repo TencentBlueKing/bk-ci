@@ -31,9 +31,17 @@ import ExperiencePublicExternalAdd
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.op.OpExperienceResource
+import com.tencent.devops.experience.constant.ExperienceCode.BK_CREATED_SUCCESSFULLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_DELETE_SEARCH_RECOMMENDATION_SUCCEEDED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NEW_SEARCH_RECOMMENDATION_SUCCEEDED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_RECORD_COULD_NOT_FOUND
+import com.tencent.devops.experience.constant.ExperienceCode.BK_UPDATED_SUCCESSFULLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_UPDATED_SUCCESSFULLY_AND_SET
 import com.tencent.devops.experience.constant.ExperiencePublicType
 import com.tencent.devops.experience.dao.ExperienceExtendBannerDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
@@ -45,6 +53,7 @@ import com.tencent.devops.experience.pojo.ExperienceExtendBanner
 import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.ws.rs.NotFoundException
 
@@ -61,7 +70,11 @@ class OpExperienceResourceImpl @Autowired constructor(
     private val experienceExtendBannerDao: ExperienceExtendBannerDao
 ) : OpExperienceResource {
     override fun switchNecessary(userId: String, id: Long): Result<String> {
-        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_RECORD_COULD_NOT_FOUND,
+                language = I18nUtil.getLanguage(userId)
+        ))
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -69,11 +82,22 @@ class OpExperienceResourceImpl @Autowired constructor(
             necessary = record.necessary.not()
         )
 
-        return Result("更新成功,已置为${record.necessary.not()}")
+        return Result(
+            MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
+                    language = I18nUtil.getLanguage(userId)
+                ), record.necessary.not()
+            ))
     }
 
     override fun setNecessaryIndex(userId: String, id: Long, necessaryIndex: Int): Result<String> {
-        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_RECORD_COULD_NOT_FOUND,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -81,11 +105,20 @@ class OpExperienceResourceImpl @Autowired constructor(
             necessaryIndex = necessaryIndex
         )
 
-        return Result("更新成功")
+        return Result(
+            MessageUtil.getMessageByLocale(
+            messageCode = BK_UPDATED_SUCCESSFULLY,
+            language = I18nUtil.getLanguage(userId)
+        ))
     }
 
     override fun setBannerUrl(userId: String, id: Long, bannerUrl: String): Result<String> {
-        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_RECORD_COULD_NOT_FOUND,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -93,11 +126,23 @@ class OpExperienceResourceImpl @Autowired constructor(
             bannerUrl = bannerUrl
         )
 
-        return Result("更新成功,已置为$bannerUrl")
+        return Result(
+            MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
+                    language = I18nUtil.getLanguage(userId)
+                ), bannerUrl
+            )
+        )
     }
 
     override fun setBannerIndex(userId: String, id: Long, bannerIndex: Int): Result<String> {
-        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+        experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_RECORD_COULD_NOT_FOUND,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -105,11 +150,21 @@ class OpExperienceResourceImpl @Autowired constructor(
             bannerIndex = bannerIndex
         )
 
-        return Result("更新成功")
+        return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UPDATED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     override fun switchOnline(userId: String, id: Long): Result<String> {
-        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException("找不到该记录")
+        val record = experiencePublicDao.getById(dslContext, id) ?: throw NotFoundException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_RECORD_COULD_NOT_FOUND,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
 
         experiencePublicDao.updateById(
             dslContext = dslContext,
@@ -117,17 +172,33 @@ class OpExperienceResourceImpl @Autowired constructor(
             online = record.online.not()
         )
 
-        return Result("更新成功,已置为${record.online.not()}")
+        return Result(
+            MessageFormat.format(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UPDATED_SUCCESSFULLY_AND_SET,
+                language = I18nUtil.getLanguage(userId)
+            ), record.online.not()
+        ))
     }
 
     override fun addRecommend(userId: String, content: String, platform: PlatformEnum): Result<String> {
         experienceSearchRecommendDao.add(dslContext, content, platform.name)
-        return Result("新增搜索推荐成功")
+        return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_NEW_SEARCH_RECOMMENDATION_SUCCEEDED,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     override fun removeRecommend(userId: String, id: Long): Result<String> {
         experienceSearchRecommendDao.remove(dslContext, id)
-        return Result("删除搜索推荐成功")
+        return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_DELETE_SEARCH_RECOMMENDATION_SUCCEEDED,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     override fun addExternal(userId: String, externalAdd: ExperiencePublicExternalAdd): Result<String> {
@@ -148,7 +219,12 @@ class OpExperienceResourceImpl @Autowired constructor(
             version = ""
         )
 
-        return Result("创建成功")
+        return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_CREATED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId)
+            )
+        )
     }
 
     override fun addExtendBanner(userId: String, experienceExtendBanner: ExperienceExtendBanner): Result<Int> {

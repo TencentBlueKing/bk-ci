@@ -77,7 +77,7 @@ object I18nUtil {
     fun getLanguage (userId: String? = null): String{
         userId ?: return  getDefaultLocaleLanguage()
         val requestChannel = getRequestChannel()
-        return if (requestChannel == RequestChannelTypeEnum.USER.name || requestChannel == RequestChannelTypeEnum.OPEN.name) {
+        return if (requestChannel != RequestChannelTypeEnum.BUILD.name) {
             var language = getUserLocaleLanguageFromCache(userId)
             if (language.isNullOrBlank()){
                 val client = SpringContextUtil.getBean(Client::class.java)

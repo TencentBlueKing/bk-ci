@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -38,20 +39,22 @@ import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.ExperienceGroupDao
 import com.tencent.devops.experience.dao.ExperienceGroupInnerDao
 import com.tencent.devops.experience.dao.ExperienceGroupOuterDao
-import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import com.tencent.devops.experience.pojo.Group
 import com.tencent.devops.experience.pojo.GroupCreate
 import com.tencent.devops.experience.pojo.GroupPermission
 import com.tencent.devops.experience.pojo.GroupSummaryWithPermission
 import com.tencent.devops.experience.pojo.GroupUpdate
-import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.GroupUsers
+import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.ProjectGroupAndUsers
 import com.tencent.devops.experience.pojo.enums.ProjectGroup
 import com.tencent.devops.experience.util.DateUtil
@@ -59,6 +62,7 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Service
@@ -166,7 +170,6 @@ class GroupService @Autowired constructor(
     fun create(projectId: String, userId: String, group: GroupCreate): String {
         if (groupDao.has(dslContext, projectId, group.name)) {
             throw ErrorCodeException(
-                defaultMessage = "体验组(${group.name})已存在",
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
                 params = arrayOf(group.name)
             )
@@ -241,19 +244,22 @@ class GroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.EDIT,
-            message = "用户在项目($projectId)没有体验组($groupHashId)的编辑权限"
+            message = MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = ExperienceCode.BK_USER_NOT_EDIT_PERMISSION_GROUP,
+                    language = I18nUtil.getLanguage(userId)
+                ), projectId, groupHashId
+            )
         )
         if (groupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = "体验组($groupHashId)不存在",
                 errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
                 params = arrayOf(groupHashId)
             )
         }
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
-                defaultMessage = "体验组(${group.name})已存在",
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
                 params = arrayOf(group.name)
             )

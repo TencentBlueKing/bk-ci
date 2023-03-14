@@ -37,11 +37,15 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_GRANT_EXPERIENCE_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
@@ -65,9 +69,11 @@ import com.tencent.devops.model.experience.tables.records.TExperienceRecord
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.jooq.DSLContext
+import org.jooq.impl.DSL.timestamp
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.net.URI
+import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.util.concurrent.Executors
 import javax.ws.rs.core.Response
@@ -139,7 +145,12 @@ class ExperienceAppService(
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "请联系产品负责人：\n${experience.creator} 授予体验权限。",
+                defaultMessage = MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_GRANT_EXPERIENCE_PERMISSION,
+                        language = I18nUtil.getLanguage(userId)
+                    ), experience.creator
+                ),
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }
@@ -449,7 +460,10 @@ class ExperienceAppService(
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = "没有查询该体验的权限。",
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_NO_PERMISSION_QUERY_EXPERIENCE,
+                    language = I18nUtil.getLanguage(userId)
+                ),
                 errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
             )
         }

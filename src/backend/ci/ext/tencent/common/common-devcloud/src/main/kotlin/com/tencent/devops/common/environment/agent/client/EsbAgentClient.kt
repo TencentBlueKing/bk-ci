@@ -30,11 +30,17 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_AGENT_STATUS
+import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_CMDB_LIST
+import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_CMDB_NODE
+import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_QUERY_GSE_AGENT_STATUS
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.environment.agent.pojo.agent.CmdbServerPage
 import com.tencent.devops.common.environment.agent.pojo.agent.RawCmdbNode
+import com.tencent.devops.common.web.utils.I18nUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -87,7 +93,10 @@ class EsbAgentClient {
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get user cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "查询 Gse Agent 状态失败")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_TO_QUERY_GSE_AGENT_STATUS,
+                        language = I18nUtil.getLanguage(userId)
+                    ))
                 }
 
                 val ipInfoMap = (responseData["data"] as Map<String, *>)["data"] as Map<String, *>
@@ -111,7 +120,12 @@ class EsbAgentClient {
                 return resultMap
             } catch (e: Exception) {
                 logger.error("get agent status failed", e)
-                throw OperationException("获取agent状态失败")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_TO_GET_AGENT_STATUS,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
         }
     }
@@ -146,7 +160,11 @@ class EsbAgentClient {
                 if (responseData["result"] == false) {
                     val msg = responseData["msg"]
                     logger.error("get cmdb nodes failed: $msg")
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取 CMDB 节点失败")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_TO_GET_CMDB_NODE,
+                            language = I18nUtil.getLanguage()
+                        ))
                 }
 
                 val data = responseData["data"] as Map<String, *>
@@ -186,7 +204,12 @@ class EsbAgentClient {
                 )
             } catch (e: Exception) {
                 logger.error("get cmdb nodes error", e)
-                throw OperationException("获取CMDB列表失败")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_TO_GET_CMDB_LIST,
+                        language = I18nUtil.getLanguage()
+                    )
+                )
             }
         }
     }

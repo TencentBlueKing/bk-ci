@@ -32,16 +32,24 @@ import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_UNDER_PROJECT
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_USER_GROUP
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
+import java.text.MessageFormat
 
 @Service
 class AuthExperienceService @Autowired constructor(
@@ -66,7 +74,14 @@ class AuthExperienceService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (experienceTaskInfos == null) {
-            logger.info("$projectId 项目下无体验")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE_UNDER_PROJECT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), projectId
+                )
+            )
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -92,7 +107,14 @@ class AuthExperienceService @Autowired constructor(
         val experienceTaskInfos = experienceDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceTaskInfos == null || experienceTaskInfos.isEmpty()) {
-            logger.info("$hashIds 无体验")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), hashIds
+                )
+            )
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -123,7 +145,14 @@ class AuthExperienceService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (experienceTaskInfos == null) {
-            logger.info("$projectId 项目下无体验")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE_UNDER_PROJECT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), projectId
+                )
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -153,7 +182,14 @@ class AuthExperienceService @Autowired constructor(
         )
         val result = ListInstanceInfo()
         if (experienceGroupInfos == null) {
-            logger.info("$projectId 项目下无体验组")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), projectId
+                )
+            )
             return result.buildListInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -178,7 +214,14 @@ class AuthExperienceService @Autowired constructor(
         val experienceGroupInfos = experienceGroupDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceGroupInfos == null || experienceGroupInfos.isEmpty()) {
-            logger.info("$ids 无体验用户组")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE_USER_GROUP,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), ids
+                )
+            )
             return result.buildFetchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()
@@ -209,7 +252,14 @@ class AuthExperienceService @Autowired constructor(
         )
         val result = SearchInstanceInfo()
         if (experienceGroupInfos == null) {
-            logger.info("$projectId 项目下无体验用户组")
+            logger.info(
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ), projectId
+                )
+            )
             return result.buildSearchInstanceFailResult()
         }
         val entityInfo = mutableListOf<InstanceInfoDTO>()

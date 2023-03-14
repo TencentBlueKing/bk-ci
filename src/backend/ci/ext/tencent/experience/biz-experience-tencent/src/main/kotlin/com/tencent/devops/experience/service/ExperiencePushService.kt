@@ -30,6 +30,24 @@ package com.tencent.devops.experience.service
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_CANNOT_BE_CANCELLED_BY_ITSELF
+import com.tencent.devops.experience.constant.ExperienceCode.BK_EXPERIENCE_IS_SUBSCRIBED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_INTERNAL_EXPERIENCE_CANNOT_UNSUBSCRIBED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_INTERNAL_EXPERIENCE_SUBSCRIBED_DEFAULT
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NOT_ALLOWED_TO_CANCEL_THE_EXPERIENCE
+import com.tencent.devops.experience.constant.ExperienceCode.BK_NOT_REPEATEDLY_BIND
+import com.tencent.devops.experience.constant.ExperienceCode.BK_PLATFORM_IS_INCONSISTENT
+import com.tencent.devops.experience.constant.ExperienceCode.BK_PLEASE_CHANGE_CONFIGURATION
+import com.tencent.devops.experience.constant.ExperienceCode.BK_SUBSCRIPTION_EXPERIENCE_NOT_ALLOWED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_SUBSCRIPTION_EXPERIENCE_SUCCESSFUL
+import com.tencent.devops.experience.constant.ExperienceCode.BK_UNSUBSCRIBED_SUCCESSFULLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_BOUND_DEVICE_SUCCESSFULLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_FAILED_TO_MODIFY_DEVICE
+import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_MODIFIED_DEVICE_SUCCESSFULLY
+import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_NOT_BOUND_DEVICE
+import com.tencent.devops.experience.constant.ExperienceCode.BK_VERSIONS_APPLICATIONS_CANNOT_UNSUBSCRIBE
 import com.tencent.devops.experience.dao.ExperiencePublicDao
 import com.tencent.devops.experience.dao.ExperiencePushHistoryDao
 import com.tencent.devops.experience.dao.ExperiencePushSubscribeDao
@@ -94,7 +112,11 @@ class ExperiencePushService @Autowired constructor(
             } catch (e: DuplicateKeyException) {
                 logger.warn("user token is exist , token:$token")
             }
-            return Result("用户绑定设备成功！", true)
+            return Result(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_USER_BOUND_DEVICE_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId)
+            ), true)
         }
     }
 
@@ -108,7 +130,11 @@ class ExperiencePushService @Autowired constructor(
         userTokenGetByToken: TExperiencePushTokenRecord?
     ): Result<Boolean> {
         return if (token == userTokenGetByUserId.token) {
-            Result("请勿重复绑定同台设备！", false)
+            Result(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NOT_REPEATEDLY_BIND,
+                    language = I18nUtil.getLanguage(userId)
+                ), false)
         } else {
             if (userTokenGetByToken != null) {
                 experiencePushTokenDao.deleteUserToken(
@@ -124,8 +150,16 @@ class ExperiencePushService @Autowired constructor(
                 platform = platform
             )
             when {
-                isUpdate -> Result("用户修改设备成功！", true)
-                else -> Result("用户修改设备失败！", false)
+                isUpdate -> Result(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_USER_MODIFIED_DEVICE_SUCCESSFULLY,
+                        language = I18nUtil.getLanguage(userId)
+                    ), true)
+                else -> Result(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_USER_FAILED_TO_MODIFY_DEVICE,
+                        language = I18nUtil.getLanguage(userId)
+                    ), false)
             }
         }
     }
@@ -147,9 +181,17 @@ class ExperiencePushService @Autowired constructor(
         when {
             isExperienceGroups -> {
                 if (publicExperience != null) {
-                    return Result("该体验已订阅，不允许重复订阅", false)
+                    return Result(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_EXPERIENCE_IS_SUBSCRIBED,
+                            language = I18nUtil.getLanguage(userId)
+                        ), false)
                 }
-                return Result("内部体验默认已订阅", false)
+                return Result(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_INTERNAL_EXPERIENCE_SUBSCRIBED_DEFAULT,
+                        language = I18nUtil.getLanguage(userId)
+                    ), false)
             }
             // 若不在体验组中，进一步查看能否订阅
             else -> {
@@ -168,7 +210,11 @@ class ExperiencePushService @Autowired constructor(
         platform: String
     ): Result<Boolean> {
         if (publicExperience == null) {
-            return Result("不允许订阅内部体验", false)
+            return Result(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_SUBSCRIPTION_EXPERIENCE_NOT_ALLOWED,
+                    language = I18nUtil.getLanguage(userId)
+                ), false)
         }
         // 查询公开订阅表是否有记录
         val subscriptionRecord =
@@ -180,7 +226,11 @@ class ExperiencePushService @Autowired constructor(
                 platform = platform
             )
         if (subscriptionRecord != null) {
-            return Result("该体验已订阅，不允许重复订阅", false)
+            return Result(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_EXPERIENCE_IS_SUBSCRIBED,
+                    language = I18nUtil.getLanguage(userId)
+                ), false)
         }
         experiencePushSubscribeDao.createSubscription(
             dslContext = dslContext,
@@ -189,7 +239,11 @@ class ExperiencePushService @Autowired constructor(
             bundle = publicExperience.bundleIdentifier,
             platform = platform
         )
-        return Result("订阅体验成功！", true)
+        return Result(
+            MessageUtil.getMessageByLocale(
+            messageCode = BK_SUBSCRIPTION_EXPERIENCE_SUCCESSFUL,
+            language = I18nUtil.getLanguage(userId)
+        ), true)
     }
 
     fun unSubscribe(
@@ -210,13 +264,17 @@ class ExperiencePushService @Autowired constructor(
             isExperienceGroups -> {
                 if (publicExperience != null) {
                     return Result(
-                        "既是公开体验又是内部体验的应用版本无法自行取消订阅。" +
-                                "蓝盾App已不再支持同时选中两种体验范围，请尽快更改发布体验版本的配置。", false
+                        MessageUtil.getMessageByLocale(
+                                    messageCode = BK_PLEASE_CHANGE_CONFIGURATION,
+                                    language = I18nUtil.getLanguage(userId)
+                                ), false
                     )
                 }
                 return Result(
-                    "内部体验默认为已订阅状态，无法自行取消。如需取消订阅，" +
-                            "请联系产品负责人退出内部体验，退出后将不接收订阅信息。", false
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_CANNOT_BE_CANCELLED_BY_ITSELF,
+                        language = I18nUtil.getLanguage(userId)
+                    ), false
                 )
             }
             // 若不在体验组中，进一步查看能否取消订阅
@@ -236,7 +294,11 @@ class ExperiencePushService @Autowired constructor(
         platform: String
     ): Result<Boolean> {
         if (publicExperience == null) {
-            return Result("内部体验不可取消订阅", false)
+            return Result(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_INTERNAL_EXPERIENCE_CANNOT_UNSUBSCRIBED,
+                    language = I18nUtil.getLanguage(userId)
+                ), false)
         }
         // 查询公开订阅表是否有记录
         experiencePushSubscribeDao.getSubscription(
@@ -245,7 +307,11 @@ class ExperiencePushService @Autowired constructor(
             projectId = publicExperience.projectId,
             bundle = publicExperience.bundleIdentifier,
             platform = platform
-        ) ?: return Result("由于没有订阅该体验，不允许取消体验", false)
+        ) ?: return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_NOT_ALLOWED_TO_CANCEL_THE_EXPERIENCE,
+                language = I18nUtil.getLanguage(userId)
+            ), false)
         experiencePushSubscribeDao.deleteSubscription(
             dslContext,
             userId = userId,
@@ -253,7 +319,11 @@ class ExperiencePushService @Autowired constructor(
             bundle = publicExperience.bundleIdentifier,
             platform = platform
         )
-        return Result("取消订阅成功", true)
+        return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UNSUBSCRIBED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId)
+            ), true)
     }
 
     fun pushMessage(appNotifyMessage: AppNotifyMessage): Result<Boolean> {
@@ -264,11 +334,19 @@ class ExperiencePushService @Autowired constructor(
         val userTokenRecord = experiencePushTokenDao.getByUserId(
             dslContext = dslContext,
             userId = userId
-        ) ?: return Result("该用户未绑定设备", false)
+        ) ?: return Result(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_USER_NOT_BOUND_DEVICE,
+                language = I18nUtil.getLanguage(userId)
+            ), false)
 
         val platform = userTokenRecord.platform
         if (platform != appNotifyMessage.platform) {
-            return Result("绑定平台与包平台不一致", false)
+            return Result(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PLATFORM_IS_INCONSISTENT,
+                    language = I18nUtil.getLanguage(userId)
+                ), false)
         }
 
         // 创建推送消息记录，此时状态发送中

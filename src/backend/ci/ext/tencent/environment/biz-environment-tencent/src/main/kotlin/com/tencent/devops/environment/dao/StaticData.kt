@@ -27,28 +27,75 @@
 
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_ESTIMATED_DELIVERY_TIME
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_HIGH_END_VERSION
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_INTEL_XEON_SKYLAKE_PROCESSOR
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_MEMORY
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_NORMAL_VERSION
+import com.tencent.devops.environment.constant.EnvironmentCode.BK_SOLID_STATE_DISK
 import com.tencent.devops.environment.pojo.DevCloudModel
+import java.text.MessageFormat
 
 object StaticData {
 
     fun getDevCloudModelList() = listOf(
         DevCloudModel(
-            moduleId = "system_base", moduleName = "8核16G（普通版）", cpu = 8, memory = "16384M", disk = "100G",
+            moduleId = "system_base", moduleName = MessageUtil.getMessageByLocale(
+                messageCode = BK_NORMAL_VERSION,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), cpu = 8, memory = "16384M", disk = "100G",
             description = listOf(
-                "2.5GHz 64核 Intel Xeon Skylake 6133处理器",
-                "32GB*12 DDR3 内存",
-                "100GB 固态硬盘"
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_INTEL_XEON_SKYLAKE_PROCESSOR,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MEMORY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_SOLID_STATE_DISK,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),"100"
+                )
             ),
-            produceTime = "预计交付周期：5分钟"
+            produceTime = MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ESTIMATED_DELIVERY_TIME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),"5"
+            )
         ),
         DevCloudModel(
-            moduleId = "system_pro", moduleName = "32核64G（高配版）", cpu = 32, memory = "65535M", disk = "500G",
+            moduleId = "system_pro", moduleName = MessageUtil.getMessageByLocale(
+                messageCode = BK_HIGH_END_VERSION,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), cpu = 32, memory = "65535M", disk = "500G",
             description = listOf(
-                "2.5GHz 64核 Intel Xeon Skylake 6133处理器",
-                "32GB*12 DDR3 内存",
-                "500GB 固态硬盘"
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_INTEL_XEON_SKYLAKE_PROCESSOR,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MEMORY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),
+                MessageFormat.format(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_SOLID_STATE_DISK,
+                        language = I18nUtil.getDefaultLocaleLanguage()
+                    ),"500"
+                )
             ),
-            produceTime = "预计交付周期：10分钟"
+            produceTime = MessageFormat.format(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ESTIMATED_DELIVERY_TIME,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ),"10"
+            )
         )
     )
 }
