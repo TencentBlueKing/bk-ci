@@ -18,7 +18,9 @@ BEGIN
                     AND TABLE_NAME = 'T_REPOSITORY_GITHUB_TOKEN'
                     AND COLUMN_NAME = 'TYPE') THEN
     ALTER TABLE `T_REPOSITORY_GITHUB_TOKEN`
-        ADD COLUMN `TYPE` varchar(32) DEFAULT NULL COMMENT 'GitHub token类型（GITHUB_APP、OAUTH_APP）';
+        ADD COLUMN `TYPE` varchar(32) DEFAULT 'GITHUB_APP' COMMENT 'GitHub token类型（GITHUB_APP、OAUTH_APP）';
+	alter table T_REPOSITORY_GITHUB_TOKEN drop key USER_ID;
+    alter table T_REPOSITORY_GITHUB_TOKEN add constraint USER_ID unique (USER_ID, TYPE);
     END IF;
 
     COMMIT;
