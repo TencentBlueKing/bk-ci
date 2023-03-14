@@ -159,10 +159,10 @@ interface UserAuthResourceResource {
     ): Result<Boolean>
 
     @GET
-    @Path("listResoureces")
+    @Path("listResources")
     @ApiOperation("获取资源列表")
     @SuppressWarnings("LongParameterList")
-    fun listResoureces(
+    fun listResources(
         @ApiParam(name = "用户名", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String,
@@ -182,4 +182,22 @@ interface UserAuthResourceResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<AuthResourceInfo>>
+
+    @GET
+    @Path("{resourceCode}/getResource")
+    @ApiOperation("获取资源实例信息")
+    fun getResource(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String,
+        @ApiParam("资源ID")
+        @PathParam("resourceCode")
+        resourceCode: String
+    ): Result<AuthResourceInfo>
 }

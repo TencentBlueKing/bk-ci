@@ -88,7 +88,7 @@ class SamplePermissionResourceService : PermissionResourceService {
         resourceCode: String
     ) = true
 
-    override fun listResoureces(
+    override fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -96,4 +96,20 @@ class SamplePermissionResourceService : PermissionResourceService {
         page: Int,
         pageSize: Int
     ): Pagination<AuthResourceInfo> = Pagination(hasNext = false, records = emptyList())
+
+    override fun getResource(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ) = AuthResourceInfo(
+        id = null,
+        projectCode = "",
+        resourceType = "",
+        resourceCode = "",
+        resourceName = "",
+        iamResourceCode = "",
+        enable = true,
+        relationId = ""
+    )
 }

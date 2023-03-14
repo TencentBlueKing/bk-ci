@@ -116,7 +116,7 @@ interface PermissionResourceService {
         resourceCode: String
     ): Boolean
 
-    fun listResoureces(
+    fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -124,4 +124,11 @@ interface PermissionResourceService {
         page: Int,
         pageSize: Int
     ): Pagination<AuthResourceInfo>
+
+    fun getResource(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo
 }

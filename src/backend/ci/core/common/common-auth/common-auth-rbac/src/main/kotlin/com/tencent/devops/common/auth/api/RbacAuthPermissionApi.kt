@@ -146,21 +146,20 @@ class RbacAuthPermissionApi(
         ).data ?: emptyMap()
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
-        resourceType: AuthResourceType,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return client.get(ServicePermissionAuthResource::class).filterUserResourceByPermission(
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return client.get(ServicePermissionAuthResource::class).getUserResourceAndParentByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectCode,
             action = RbacAuthUtils.buildAction(authResourceType = resourceType, authPermission = permission),
-            resources = resources
-        ).data!!
+            resourceType = resourceType.value
+        ).data ?: emptyMap()
     }
 
     override fun addResourcePermissionForUsers(

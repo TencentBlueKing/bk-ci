@@ -33,6 +33,7 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
@@ -62,6 +63,9 @@ class RbacPermissionProjectService(
 
     override fun getProjectUsers(projectCode: String, group: BkAuthGroup?): List<String> {
         // 新的rbac版本中，没有ci管理员组，不可以调用此接口来获取ci管理员组的成员!
+        if (group == BkAuthGroup.CIADMIN || group == BkAuthGroup.CI_MANAGER) {
+            return emptyList()
+        }
         val allGroupAndUser = getProjectGroupAndUserList(projectCode)
         return if (group == null) {
             val allMembers = mutableSetOf<String>()
@@ -94,7 +98,12 @@ class RbacPermissionProjectService(
         val pageInfoDTO = V2PageInfoDTO()
         pageInfoDTO.page = 1
         pageInfoDTO.pageSize = 1000
-        val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(gradeManagerId, null, pageInfoDTO).results
+        val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
+        val groupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
+            gradeManagerId,
+            searchGroupDTO,
+            pageInfoDTO
+        ).results
         logger.info(
             "[RBAC-IAM] getProjectGroupAndUserList: projectCode = $projectCode |" +
                 " gradeManagerId = $gradeManagerId | groupInfoList: $groupInfoList"

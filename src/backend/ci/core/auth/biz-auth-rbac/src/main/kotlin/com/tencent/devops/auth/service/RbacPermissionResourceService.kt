@@ -351,7 +351,7 @@ class RbacPermissionResourceService(
         return true
     }
 
-    override fun listResoureces(
+    override fun listResources(
         userId: String,
         projectId: String,
         resourceType: String,
@@ -373,6 +373,19 @@ class RbacPermissionResourceService(
         return Pagination(
             hasNext = resourceList.size == pageSize,
             records = resourceList
+        )
+    }
+
+    override fun getResource(
+        userId: String,
+        projectId: String,
+        resourceType: String,
+        resourceCode: String
+    ): AuthResourceInfo {
+        return authResourceService.get(
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         )
     }
 }

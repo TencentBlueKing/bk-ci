@@ -57,7 +57,7 @@ class RbacQualityPermissionServiceImpl(
             resourceCode = HashUtil.encodeLongId(groupId),
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
             relationResourceType = null,
-            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
         ).data ?: false
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
@@ -74,7 +74,7 @@ class RbacQualityPermissionServiceImpl(
             userId = userId,
             projectCode = projectId,
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
-            resourceCode = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP)
+            resourceCode = AuthResourceType.QUALITY_GROUP_NEW.value
         ).data ?: false
     }
 
@@ -127,7 +127,7 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             userId = user,
             projectCode = projectId,
-            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_GROUP),
+            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
             action = actions
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)
@@ -139,7 +139,7 @@ class RbacQualityPermissionServiceImpl(
             userId = userId,
             projectCode = projectId,
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceCode = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE)
+            resourceCode = AuthResourceType.QUALITY_RULE.value
         ).data ?: false
     }
 
@@ -156,7 +156,7 @@ class RbacQualityPermissionServiceImpl(
             projectCode = projectId,
             resourceCode = HashUtil.encodeLongId(ruleId),
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_RULE),
-            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+            resourceType = AuthResourceType.QUALITY_RULE.value,
             relationResourceType = null
         ).data ?: false
         if (!checkPermission) {
@@ -203,7 +203,7 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
             projectCode = projectId,
-            resourceType = RbacAuthUtils.extResourceType(AuthResourceType.QUALITY_RULE),
+            resourceType = AuthResourceType.QUALITY_RULE.value,
             action = actions
         ).data ?: emptyMap()
         return RbacAuthUtils.buildResultMap(instancesMap)

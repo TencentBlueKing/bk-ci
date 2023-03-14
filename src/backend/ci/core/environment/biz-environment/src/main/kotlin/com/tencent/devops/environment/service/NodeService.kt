@@ -53,7 +53,6 @@ import com.tencent.devops.environment.service.node.NodeActionFactory
 import com.tencent.devops.environment.service.slave.SlaveGatewayService
 import com.tencent.devops.environment.utils.AgentStatusUtils.getAgentStatus
 import com.tencent.devops.environment.utils.NodeStringIdUtils
-import com.tencent.devops.model.environment.tables.records.TNodeRecord
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -320,6 +319,14 @@ class NodeService @Autowired constructor(
         val canUseNodeIds = environmentPermissionService.listNodeByPermission(userId, projectId, AuthPermission.USE)
 
         val validRecordList = nodeRecordList.filter { canUseNodeIds.contains(it.nodeId) }
+
+        val canViewNodeIds = environmentPermissionService.listNodeByRbacPermission(
+            userId = userId,
+            projectId = projectId,
+            nodeRecordList = nodeRecordList,
+            authPermission = AuthPermission.VIEW
+        ).map { it.nodeId }
+
         return validRecordList.map {
             val nodeStringId = NodeStringIdUtils.getNodeStringId(it)
             NodeWithPermission(
@@ -337,6 +344,7 @@ class NodeService @Autowired constructor(
                 canUse = canUseNodeIds.contains(it.nodeId),
                 canEdit = null,
                 canDelete = null,
+                canView = canViewNodeIds.contains(it.nodeId),
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {
@@ -497,6 +505,7 @@ class NodeService @Autowired constructor(
                 canUse = false,
                 canEdit = false,
                 canDelete = false,
+                canView = false,
                 gateway = "",
                 displayName = NodeStringIdUtils.getRefineDisplayName(nodeStringId, it.displayName),
                 createTime = if (null == it.createdTime) {

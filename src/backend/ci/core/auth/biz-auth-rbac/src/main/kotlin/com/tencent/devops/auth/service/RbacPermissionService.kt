@@ -30,11 +30,11 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
-import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
 import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
 import com.tencent.bk.sdk.iam.dto.action.ActionDTO
+import com.tencent.bk.sdk.iam.dto.resource.ResourceDTO
 import com.tencent.bk.sdk.iam.dto.resource.V2ResourceNode
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
@@ -127,6 +127,30 @@ class RbacPermissionService constructor(
         return policyService.verifyPermissions(queryPolicyDTO)
     }
 
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        val actionList = actions.map { action ->
+            val actionDTO = ActionDTO()
+            actionDTO.id = action
+            actionDTO
+        }
+        val resource = ResourceDTO.builder()
+            .id(resourceCode)
+            .type(resourceType)
+            .system(iamConfiguration.systemId)
+            .build()
+        return policyService.batchVerifyPermissions(
+            userId,
+            actionList,
+            listOf(resource)
+        )
+    }
+
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -184,30 +208,25 @@ class RbacPermissionService constructor(
             "[rbac] getUserResourcesByActions : userId = $userId | actions = $action |" +
                 " projectCode = $projectCode | resourceType = $resourceType"
         )
-        val instanceList = if (resourceType == AuthResourceType.PROJECT.value) {
-            authHelper.getInstanceList(userId, action, resourceType)
-        } else {
-            val pathInfoDTO = PathInfoDTO()
-            pathInfoDTO.type = AuthResourceType.PROJECT.value
-            pathInfoDTO.id = projectCode
-            authHelper.getInstanceList(userId, action, resourceType, pathInfoDTO)
-        }
-        return if (instanceList.contains("*")) {
-            // 如果有项目下所有流水线权限,由流水线自己查询所有的流水线
-            if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
-                instanceList
-            } else {
+        val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+        return when {
+            resourceType == AuthResourceType.PROJECT.value ->
+                instanceMap[resourceType] ?: emptyList()
+            // 如果有项目下所有该资源权限,返回资源列表
+            instanceMap[AuthResourceType.PROJECT.value]?.contains(projectCode) == true ->
                 authResourceService.listByProjectAndType(
                     projectCode = projectCode,
                     resourceType = resourceType
                 )
-            }
-        } else {
-            authResourceCodeConverter.batchIamCode2Code(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                iamResourceCodes = instanceList
-            )
+            // 返回具体资源列表
+            else ->
+                instanceMap[resourceType]?.let {
+                    authResourceCodeConverter.batchIamCode2Code(
+                        projectCode = projectCode,
+                        resourceType = resourceType,
+                        iamResourceCodes = it
+                    )
+                } ?: emptyList()
         }
     }
 
@@ -235,34 +254,17 @@ class RbacPermissionService constructor(
         return result
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
         projectCode: String,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        logger.info("filter user resource by permission|$userId|$action|$projectCode")
-        val instanceDTOList = resources.map { resource ->
-            resource2InstanceDTO(projectCode = projectCode, resource = resource)
-        }
-        logger.info("filter user resource by permission|$instanceDTOList")
-        return authHelper.isAllowed(userId, action, instanceDTOList)
-    }
-
-
-    private fun resource2InstanceDTO(projectCode: String, resource: AuthResourceInstance): InstanceDTO {
-        val paths = mutableListOf<PathInfoDTO>()
-        resourcesPaths(projectCode = projectCode, resource = resource, child = null, paths = paths, needSystem = false)
-        val instanceDTO = InstanceDTO()
-        instanceDTO.id = authResourceCodeConverter.code2IamCode(
-            projectCode = projectCode,
-            resourceType = resource.resourceType,
-            resourceCode = resource.resourceCode
+        resourceType: String
+    ): Map<String, List<String>> {
+        logger.info(
+            "[rbac] getUserResourcesByActions : userId = $userId | actions = $action |" +
+                " projectCode = $projectCode | resourceType = $resourceType"
         )
-        instanceDTO.type = resource.resourceType
-        instanceDTO.paths = paths
-        instanceDTO.system = iamConfiguration.systemId
-        return instanceDTO
+        return authHelper.groupRbacInstanceByType(userId, action)
     }
 
     private fun resourcesPaths(

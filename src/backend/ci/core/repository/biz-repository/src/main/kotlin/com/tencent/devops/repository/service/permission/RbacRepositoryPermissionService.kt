@@ -41,13 +41,23 @@ class RbacRepositoryPermissionService(
     private val client: Client,
     private val tokenService: ClientTokenService
 ) : RepositoryPermissionService {
-    override fun validatePermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?, message: String) {
+    override fun validatePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?,
+        message: String
+    ) {
         if (!hasPermission(userId, projectId, authPermission, repositoryId)) {
             throw PermissionForbiddenException(message)
         }
     }
 
-    override fun filterRepository(userId: String, projectId: String, authPermission: AuthPermission): List<Long> {
+    override fun filterRepository(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission
+    ): List<Long> {
         return client.get(ServicePermissionAuthResource::class).getUserResourceByPermission(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -58,7 +68,11 @@ class RbacRepositoryPermissionService(
 
     }
 
-    override fun filterRepositories(userId: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterRepositories(
+        userId: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
             actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.CODE_REPERTORY))
@@ -74,7 +88,12 @@ class RbacRepositoryPermissionService(
         return buildResultMap(permissionResourcesMap)
     }
 
-    override fun hasPermission(userId: String, projectId: String, authPermission: AuthPermission, repositoryId: Long?): Boolean {
+    override fun hasPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        repositoryId: Long?
+    ): Boolean {
         val resourceCode: String
         val resourceType: String
         if (repositoryId != null) {
@@ -95,7 +114,12 @@ class RbacRepositoryPermissionService(
         ).data ?: false
     }
 
-    override fun createResource(userId: String, projectId: String, repositoryId: Long, repositoryName: String) {
+    override fun createResource(
+        userId: String,
+        projectId: String,
+        repositoryId: Long,
+        repositoryName: String
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceCreateRelation(
             userId = userId,
             token = tokenService.getSystemToken(null)!!,
@@ -106,7 +130,11 @@ class RbacRepositoryPermissionService(
         )
     }
 
-    override fun editResource(projectId: String, repositoryId: Long, repositoryName: String) {
+    override fun editResource(
+        projectId: String,
+        repositoryId: Long,
+        repositoryName: String
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceModifyRelation(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
@@ -116,7 +144,10 @@ class RbacRepositoryPermissionService(
         )
     }
 
-    override fun deleteResource(projectId: String, repositoryId: Long) {
+    override fun deleteResource(
+        projectId: String,
+        repositoryId: Long
+    ) {
         client.get(ServicePermissionAuthResource::class).resourceDeleteRelation(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,

@@ -32,13 +32,15 @@ import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.notify.enums.NotifyType
+import com.tencent.devops.common.pipeline.pojo.element.Element
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
+import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.model.quality.tables.records.TQualityRuleRecord
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.api.service.ServicePipelineTaskResource
-import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.api.template.ServicePTemplateResource
+import com.tencent.devops.process.api.template.ServiceTemplateInstanceResource
 import com.tencent.devops.process.engine.pojo.PipelineModelTask
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
 import com.tencent.devops.process.pojo.template.OptionalTemplate
@@ -46,8 +48,6 @@ import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityControlPoint
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
-import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.quality.api.v2.pojo.request.CopyRuleRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v2.pojo.request.RuleUpdateRequest
@@ -207,7 +207,7 @@ class QualityRuleService @Autowired constructor(
             projectId = projectId,
             ruleId = ruleId,
             authPermission = AuthPermission.DELETE,
-            message = "用户没拦截规则的删除权限"
+            message = "用户没有拦截规则的删除权限"
         )
         qualityRuleDao.delete(dslContext, ruleId)
         qualityPermissionService.deleteRuleResource(projectId, ruleId)

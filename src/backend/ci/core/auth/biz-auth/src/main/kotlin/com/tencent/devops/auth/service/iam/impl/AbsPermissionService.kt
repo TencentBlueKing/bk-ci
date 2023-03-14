@@ -86,6 +86,25 @@ open class AbsPermissionService @Autowired constructor(
         return authHelper.isAllowed(userId, action, instanceDTO)
     }
 
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resourceCode,
+                resourceType =  resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -173,13 +192,13 @@ open class AbsPermissionService @Autowired constructor(
         return result
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
         projectCode: String,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return emptyList()
+        resourceType: String
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     companion object {
