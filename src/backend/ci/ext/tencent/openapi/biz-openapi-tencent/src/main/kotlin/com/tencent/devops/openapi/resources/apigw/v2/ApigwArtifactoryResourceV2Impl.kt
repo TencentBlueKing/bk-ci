@@ -78,7 +78,7 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
         logger.info("getThirdPartyDownloadUrl pipelineId:$pipelineId")
         logger.info("getThirdPartyDownloadUrl buildId:$buildId")
         logger.info("getThirdPartyDownloadUrl subPath:$subPath")
-        return client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
+        val thirdPartyDownloadUrl = client.get(ServiceArtifactoryDownLoadResource::class).getThirdPartyDownloadUrl(
             projectId = projectId,
             pipelineId = pipelineId,
             buildId = buildId,
@@ -91,6 +91,16 @@ class ApigwArtifactoryResourceV2Impl @Autowired constructor(
             region = region,
             userId = userId
         )
+        val urls = thirdPartyDownloadUrl.data?.map {
+            val proxyPath = "/bkrepo/api/external"
+            if (it.contains(proxyPath)) {
+                "https://bkrepo.woa.com/" + it.split(proxyPath)[1]
+            } else {
+                it
+            }
+        } ?: emptyList()
+
+        return Result(urls)
     }
 
     override fun getUserDownloadUrl(
