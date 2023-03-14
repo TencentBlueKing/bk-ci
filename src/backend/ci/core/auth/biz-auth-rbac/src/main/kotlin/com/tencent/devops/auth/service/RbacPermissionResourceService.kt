@@ -375,4 +375,16 @@ class RbacPermissionResourceService(
             records = resourceList
         )
     }
+
+    override fun getRoleId(
+        userId: String,
+        projectId: String,
+        resourceType: String
+    ): String {
+        return authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        ).relationId
+    }
 }

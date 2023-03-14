@@ -182,4 +182,19 @@ interface UserAuthResourceResource {
         @QueryParam("pageSize")
         pageSize: Int
     ): Result<Pagination<AuthResourceInfo>>
+
+    @GET
+    @Path("getRoleId")
+    @ApiOperation("获取分级/二级管理员id")
+    fun getRoleId(
+        @ApiParam(name = "用户名", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("资源类型")
+        @PathParam("resourceType")
+        resourceType: String
+    ): Result<String>
 }

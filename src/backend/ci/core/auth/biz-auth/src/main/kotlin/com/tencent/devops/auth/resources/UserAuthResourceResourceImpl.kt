@@ -156,4 +156,18 @@ class UserAuthResourceResourceImpl @Autowired constructor(
             )
         )
     }
+
+    override fun getRoleId(
+        userId: String,
+        projectId: String,
+        resourceType: String
+    ): Result<String> {
+        return Result(
+            permissionResourceService.getRoleId(
+                userId = userId,
+                projectId = projectId,
+                resourceType = resourceType
+            )
+        )
+    }
 }
