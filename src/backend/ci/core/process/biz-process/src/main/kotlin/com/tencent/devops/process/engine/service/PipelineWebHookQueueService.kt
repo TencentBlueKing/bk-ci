@@ -34,7 +34,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.engine.dao.PipelineWebHookQueueDao
@@ -46,6 +45,7 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_REPO_
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_PROJECT_ID
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_REPO_NAME
+import com.tencent.devops.process.engine.control.lock.PipelineWebHookQueueLock
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
@@ -250,16 +250,13 @@ class PipelineWebHookQueueService @Autowired constructor(
             )
             return
         }
-        val lock = RedisLock(
+        val lock = PipelineWebHookQueueLock(
             redisOperation = redisOperation,
-            lockKey = getRedisLockKey(
-                pipelineId = pipelineId,
-                sourceProjectId = sourceProjectId,
-                sourceBranch = sourceBranch,
-                targetProjectId = targetProjectId,
-                targetBranch = targetBranch
-            ),
-            expiredTimeInSeconds = 30
+            pipelineId = pipelineId,
+            sourceProjectId = sourceProjectId,
+            sourceBranch = sourceBranch,
+            targetProjectId = targetProjectId,
+            targetBranch = targetBranch
         )
         try {
             lock.lock()
@@ -278,15 +275,5 @@ class PipelineWebHookQueueService @Autowired constructor(
         } finally {
             lock.unlock()
         }
-    }
-
-    private fun getRedisLockKey(
-        pipelineId: String,
-        sourceProjectId: Long,
-        sourceBranch: String,
-        targetProjectId: Long,
-        targetBranch: String
-    ): String {
-        return "lock:webhook:queue:$pipelineId:$sourceProjectId:$sourceBranch:$targetProjectId:$targetBranch"
     }
 }
