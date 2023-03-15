@@ -22,15 +22,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="ie=edge" />
-    <link rel="icon" href="__BK_CI_PUBLIC_URL__/console/static/favicon.ico" type="image/x-icon" />
+    <link rel="icon" href="__BK_CI_PUBLIC_PATH__/console/static/favicon.ico" type="image/x-icon" />
     <link
       rel="shortcut icon"
-      href="__BK_CI_PUBLIC_URL__/console/static/favicon.ico"
+      href="__BK_CI_PUBLIC_PATH__/console/static/favicon.ico"
       type="image/x-icon"
     />
-    <link rel="preload" as="script" href="__BK_CI_PUBLIC_URL__/console/static/vue.min.js" />
-    <link rel="preload" as="script" href="__BK_CI_PUBLIC_URL__/console/static/vuex.min.js" />
-    <link rel="preload" as="script" href="__BK_CI_PUBLIC_URL__/console/static/vue-router.min.js" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js" />
+    <link rel="preload" as="script" href="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js" />
 
     <!-- devops:preload -->
     <% for (key in htmlWebpackPlugin.files.js) { %>
@@ -56,7 +56,7 @@
       var ajax = new XMLHttpRequest()
       ajax.open(
         'GET',
-        '__BK_CI_PUBLIC_URL__/svg-sprites/devops_sprite.svg?t=' + Math.random(),
+        '__BK_CI_PUBLIC_PATH__/svg-sprites/devops_sprite.svg?t=' + Math.random(),
         true
       )
       ajax.send()
@@ -80,15 +80,15 @@
         </div>
       </div>
     </div>
-    <script src="__BK_CI_PUBLIC_URL__/console/static/vue.min.js"></script>
-    <script src="__BK_CI_PUBLIC_URL__/console/static/vuex.min.js"></script>
-    <script src="__BK_CI_PUBLIC_URL__/console/static/vue-router.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js"></script>
+    <script src="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js"></script>
     <!-- devops:assets -->
     <!-- end devops:assets -->
 
     <script>
       var API_URL_PREFIX = '/ms' // api接口前缀
-      var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_URL__' // 静态资源前缀
+      var PUBLIC_URL_PREFIX = '__BK_CI_PUBLIC_PATH__' // 静态资源前缀
       var PERM_URL_PREFIX = '__BK_PAAS_PUBLIC_URL__/o/bk_iam_app' // EE PERM URL PREFIX
       var DOCS_URL_PREFIX = '__BK_CI_DOCS_URL__' // 文档中心域名
       var LOGIN_SERVICE_URL = '__BK_CI_PAAS_LOGIN_URL__' // 蓝鲸PaaS登录入口
@@ -278,7 +278,7 @@
       }
 
       function fetchAssetsJSON() {
-        return asyncGet('__BK_CI_PUBLIC_URL__/assets_bundle.json?t=' + Math.random(), undefined, false)
+        return asyncGet('__BK_CI_PUBLIC_PATH__/assets_bundle.json?t=' + Math.random(), undefined, false)
       }
 
       function fetchAllProjects() {
@@ -517,7 +517,7 @@
             : '后端服务异常，请稍后重试'
         document.writeln(
           '<div style="height: 100%; width: 100%; display: flex; align-items: center; justify-content: center; flex-direction: column;">' +
-            '<img src="__BK_CI_PUBLIC_URL__/console/static/' +
+            '<img src="__BK_CI_PUBLIC_PATH__/console/static/' +
             (status || 503) +
             '.png" />' +
             '<p style="font-size: 20px; color: #979797; margin: 32px 0;">' +
