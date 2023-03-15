@@ -5,7 +5,9 @@
             <template v-if="recentHoner">
                 <img class="honer-self" src="../images/honer.png">
                 <span
+                    v-bk-overflow-tips
                     :class="{
+                        'text-overflow': true,
                         'honer-txt': true,
                         'is-big': isBig
                     }"
@@ -64,6 +66,7 @@
             color: #FFFFFF;
             font-size: 12px;
             scale: 83%;
+            width: 69%;
             &.is-big {
                 scale: 100%;
                 bottom: 6%;

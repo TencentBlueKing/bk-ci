@@ -7,7 +7,7 @@
         >
             <img class="tag-image" src="../images/honer-left.png">
             <span class="tag-txt">
-                <span class="tag-txt-main">{{ renderHoner.honorTitle }}</span>
+                <span class="tag-txt-main text-overflow" v-bk-overflow-tips>{{ renderHoner.honorTitle }}</span>
                 <img class="tag-txt-image" src="../images/honer-center.png">
             </span>
             <img class="tag-image" src="../images/honer-right.png">
@@ -48,7 +48,7 @@
                     theme: 'light',
                     allowHTML: true,
                     content: this.honorInfos.reduce((acc, cur) => {
-                        acc += `<section class="honor-gap"><span class="honor-title">${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
+                        acc += `<section class="honor-gap"><span class="honor-title text-overflow" title=${cur.honorTitle}>${cur.honorTitle}</span><span class="honor-name">${cur.honorName}</span></section>`
                         return acc
                     }, '')
                 }
@@ -77,6 +77,7 @@
             z-index: 11;
             font-size: 12px;
             color: #fff;
+            max-width: 70px;
         }
         .tag-txt-image {
             position: absolute;
