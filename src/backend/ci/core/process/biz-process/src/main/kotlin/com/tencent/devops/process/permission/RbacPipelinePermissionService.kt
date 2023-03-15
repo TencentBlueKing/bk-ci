@@ -114,6 +114,18 @@ class RbacPipelinePermissionService constructor(
         permission: AuthPermission,
         message: String?
     ) {
+        if (pipelineId == "*") {
+            if (!checkPipelinePermission(
+                    userId = userId,
+                    projectId = projectId,
+                    permission = permission
+                )
+            ) {
+                throw PermissionForbiddenException(message)
+            }
+            return
+        }
+
         val permissionCheck = checkPipelinePermission(
             userId = userId,
             projectId = projectId,
