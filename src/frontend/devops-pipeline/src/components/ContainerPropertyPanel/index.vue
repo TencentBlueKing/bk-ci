@@ -62,7 +62,6 @@
                     })
                 }
             },
-
             showDebugDockerBtn () {
                 return this.checkShowDebugDockerBtn(this.container, this.$route.name, this.execDetail)
             }

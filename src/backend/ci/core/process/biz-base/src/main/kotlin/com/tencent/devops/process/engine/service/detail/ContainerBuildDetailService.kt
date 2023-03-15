@@ -39,6 +39,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.dao.BuildDetailDao
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.utils.ContainerUtils
+import com.tencent.devops.process.pojo.VmInfo
 import com.tencent.devops.process.service.StageTagService
 import org.jooq.DSLContext
 import org.springframework.stereotype.Service
@@ -154,10 +155,10 @@ class ContainerBuildDetailService(
                                 is NormalContainer -> targetContainer.mutexGroup
                                 else -> null
                             }?.let {
-                                ContainerUtils.setMutexWaitName(targetContainer)
+                                container.name = ContainerUtils.getMutexWaitName(container.name)
                             }
                         } else {
-                            ContainerUtils.clearMutexContainerName(targetContainer)
+                            container.name = ContainerUtils.getMutexFixedContainerName(container.name)
                         }
                         targetContainer.status = buildStatus.name
                         targetContainer.executeCount = executeCount
@@ -251,6 +252,34 @@ class ContainerBuildDetailService(
                 }
             },
             buildStatus = BuildStatus.RUNNING, operation = "containerSkip#$containerId"
+        )
+    }
+
+    fun saveBuildVmInfo(projectId: String, pipelineId: String, buildId: String, containerId: String, vmInfo: VmInfo) {
+        update(
+            projectId = projectId,
+            buildId = buildId,
+            modelInterface = object : ModelInterface {
+                var update = false
+
+                override fun onFindContainer(container: Container, stage: Stage): Traverse {
+                    val targetContainer = container.getContainerById(containerId)
+                    if (targetContainer != null) {
+                        if (targetContainer is VMBuildContainer && targetContainer.showBuildResource == true) {
+                            targetContainer.name = vmInfo.name
+                        }
+                        update = true
+                        return Traverse.BREAK
+                    }
+                    return Traverse.CONTINUE
+                }
+
+                override fun needUpdate(): Boolean {
+                    return update
+                }
+            },
+            buildStatus = BuildStatus.RUNNING,
+            operation = "saveBuildVmInfo($projectId,$pipelineId)"
         )
     }
 }

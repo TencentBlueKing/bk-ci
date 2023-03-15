@@ -694,7 +694,7 @@ interface ServiceGitResource {
     fun getGitFileTree(
         @ApiParam(value = "gitProjectId")
         @QueryParam("gitProjectId")
-        gitProjectId: Long,
+        gitProjectId: String,
         @ApiParam(value = "目录路径")
         @QueryParam("path")
         path: String,

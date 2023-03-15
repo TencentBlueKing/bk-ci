@@ -757,8 +757,8 @@ class BkRepoService @Autowired constructor(
             downloadIps = listOf(),
             timeoutInSeconds = ttl.toLong()
         )
-        return "${HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)}" +
-                "/bkrepo/api/external/repository$shareUri&download=true"
+
+        return "${bkRepoClient.getRkRepoIdcHost()}/repository$shareUri&download=true"
     }
 
     fun internalTemporaryAccessDownloadUrls(
