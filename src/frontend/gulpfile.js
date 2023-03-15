@@ -1,12 +1,18 @@
 const { src, dest, parallel, series, task } = require('gulp')
 const fetch = require('node-fetch')
 const chalk = require('chalk')
-const svgSprite = require('gulp-svg-sprite')
-const rename = require('gulp-rename')
-const Ora = require('ora')
-const yargs = require('yargs')
 const fs = require('fs')
 const path = require('path')
+const htmlmin = require('gulp-htmlmin')
+const svgSprite = require('gulp-svg-sprite')
+const inject = require('gulp-inject')
+const rename = require('gulp-rename')
+const hash = require('gulp-hash')
+const replace = require('gulp-replace')
+const Ora = require('ora')
+const yargs = require('yargs')
+const del = require('del')
+
 const argv = yargs.alias({
     dist: 'd',
     env: 'e',
@@ -68,6 +74,17 @@ function renameSvg (type) {
     }
 }
 
+function generatorSvgJs (type) {
+    return () => {
+        const svgCode = fs.readFileSync(`${dist}/svg-sprites/${type}_sprite.svg`, 'utf8')
+        return src('./svg-sprites/svgjs-template.js')
+            .pipe(replace('__SVG_SPRITES_SYMBOLS__', svgCode))
+            .pipe(rename(`${type}_sprite.js`))
+            .pipe(hash())
+            .pipe(dest(`${dist}/svg-sprites/`))
+    }
+}
+
 function getScopeStr (scope) {
     try {
         if (!scope) return ''
@@ -87,11 +104,11 @@ function getScopeStr (scope) {
     }
 }
 
-task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
-task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
+task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSvgJs('devops')]))
+task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
-task('build', async cb => {
+task('build', async () => {
     const assetJson = await getAssetsJSON(ASSETS_JSON_URL)
     fs.writeFileSync(path.join(__dirname, dist, BUNDLE_NAME), JSON.stringify(assetJson))
     const spinner = new Ora('building bk-ci frontend project').start()
@@ -101,20 +118,61 @@ task('build', async cb => {
         version: type,
         lsVersion
     }
-    Object.keys(envConfMap).forEach((key) => {
-        process.env[key] = envConfMap[key]
-    })
-
-    require('child_process').exec(`lerna run public:master ${scopeStr}`, {
-        maxBuffer: 5000 * 1024
-    }, (err, res) => {
-        if (err) {
-            console.log(err)
-            process.exit(1)
-        }
-        spinner.succeed('Finished building bk-ci frontend project')
-        cb()
+    const envQueryStr = Object.keys(envConfMap).reduce((acc, key) => {
+        acc += ` --env ${key}=${envConfMap[key]}`
+        return acc
+    }, '')
+    console.log(envQueryStr)
+    return new Promise((resolve, reject) => {
+        require('child_process').exec(`lerna run public:${env} ${scopeStr}`, {
+            maxBuffer: 5000 * 1024,
+            env: {
+                ...process.env,
+                dist,
+                lsVersion
+            }
+        }, (err, res) => {
+            if (err) {
+                reject(err)
+                process.exit(1)
+            }
+            spinner.succeed('Finished building bk-ci frontend project')
+            resolve()
+        })
     })
 })
+task('generate-assets-json', () => {
+    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(path.join(__dirname, dist, BUNDLE_NAME), 'utf8')}`
+    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
+    return src(`${dist}/assetsBundles.js`).pipe(hash()).pipe(dest(`${dist}/`))
+})
+
+task('injectAsset', parallel(['console', 'pipeline'].map(prefix => {
+    const dir = path.join(dist, prefix)
+    const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
+    const fileName = `frontend#${prefix}#index.html`
+    return () => src(path.join(dir, fileName))
+        .pipe(inject(src([
+            ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+            `${dist}/svg-sprites/${spriteNameGlob}`
+        ], {
+            read: false
+        }), {
+            ignorePath: dist,
+            addRootSlash: false,
+            addPrefix: '__BK_CI_PUBLIC_PATH__'
+        }))
+        .pipe(htmlmin({
+            collapseWhitespace: true,
+            removeComments: true,
+            minifyJS: true
+        }))
+        .pipe(dest(dir))
+}
+)))
+
+task('clean', () => {
+    return del(dist)
+})
   
-exports.default = parallel('devops', 'pipeline', 'copy', 'build')
+exports.default = series('clean', parallel('devops', 'pipeline', 'copy', 'build'))

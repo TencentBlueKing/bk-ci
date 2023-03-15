@@ -38,7 +38,12 @@
                             <bk-popover placement="right" :max-width="250">
                                 <i class="devops-icon icon-info-circle"></i>
                                 <div slot="content" style="white-space: normal;">
-                                    <div> {{ getTypeDesc(localConfig.credentialType) }}<a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">{{ $t('ticket.learnMore') }}。</a> </div>
+                                    <div>
+                                        {{ getTypeDesc(localConfig.credentialType) }}
+                                        <a style="color:#3c96ff" target="_blank" :href="ticketDocsUrl">
+                                            {{ $t('ticket.learnMore') }}
+                                        </a>
+                                    </div>
                                 </div>
                             </bk-popover>
                         </div>
@@ -84,7 +89,7 @@
                     <!-- 凭据别名 end -->
 
                     <!-- 凭据内容 start -->
-                    <div v-for="(obj, key) in newModel" :key="key" :class="{ &quot;bk-form-item&quot;: true, &quot;is-required&quot;: obj.rules }">
+                    <div v-for="(obj, key) in newModel" :key="key" :class="{ 'bk-form-item': true, 'is-required': obj.rules }">
                         <label v-if="obj.label" class="bk-label">{{ $t(obj.label) }}：</label>
                         <div class="bk-form-content">
                             <component v-validate="($t(obj.label) === $t('ticket.credential.sshKey') && localConfig.credential[obj.modelName] === '******') ? {} : obj.rule" v-if="obj.type !== 'password' || !showPwdCon[obj.modelName]" :is="obj.component" :name="key" :handle-change="updateElement" v-model="localConfig.credential[obj.modelName]" v-bind="obj" :placeholder="$t(obj.placeholder)" :class="{ 'is-danger': errors.has(key) }"></component>
@@ -128,10 +133,10 @@
 </template>
 
 <script>
-    import empty from '@/components/common/empty'
+    import Selector from '@/components/atomFormField/Selector'
     import VuexInput from '@/components/atomFormField/VuexInput'
     import VuexTextarea from '@/components/atomFormField/VuexTextarea'
-    import Selector from '@/components/atomFormField/Selector'
+    import empty from '@/components/common/empty'
     import emptyTips from '@/components/devops/emptyTips'
     import { mapGetters } from 'vuex'
 
@@ -145,7 +150,7 @@
         },
         data () {
             return {
-                ticketDocsUrl: `${IWIKI_DOCS_URL}/services/ticket`,
+                ticketDocsUrl: this.BKCI_DOCS.TICKET_DOC,
                 showContent: false,
                 hasPermission: true,
                 newModel: {},

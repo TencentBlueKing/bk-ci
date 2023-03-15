@@ -1,6 +1,7 @@
 {
   "codelib": "Code Repositories",
   "linkCodelib": "Link Repo",
+  "linkCodelibLabel": "Link {0} Repo",
   "repo": "Code Repositories",
   "link": "link",
   "codelibDesc": "Code Repositories service can link your existed SVN and GIT repositories to CI，which will be a pipeline's materials",

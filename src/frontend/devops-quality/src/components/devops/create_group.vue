@@ -10,18 +10,18 @@
                 title: loading.title
             }">
             <div class="experience-group-header">
-                <div class="title">{{ nodeSelectConf.title }}</div>
+                <div class="title">{{nodeSelectConf.title}}</div>
             </div>
 
             <form class="bk-form create-group-form" id="create-group-form">
                 <div class="bk-form-wrapper">
                     <bk-form :label-width="100" :model="createGroupForm">
-                        <devops-form-item label="通知组名称" :required="true" :property="'name'"
+                        <devops-form-item :label="$t('quality.通知组名称')" :required="true" :property="'name'"
                             :is-error="errors.has('groupName')"
                             :error-msg="errors.first('groupName')">
                             <bk-input
                                 class="group-name-input"
-                                placeholder="最长不超过10个汉字"
+                                :placeholder="$t('quality.最长不超过10个汉字')"
                                 name="groupName"
                                 v-model="createGroupForm.name"
                                 v-validate="{
@@ -30,36 +30,15 @@
                                 }">
                             </bk-input>
                         </devops-form-item>
-                        <bk-form-item label="通知人员：" :property="'internal_list'">
-                            <template v-if="isExtendTx">
-                                <staff-input :name="'innerList'"
-                                    :placeholder="placeholder"
-                                    :value="createGroupForm.internal_list" :handle-change="onChange"></staff-input>
-                                <div v-if="errors.has('groupInternalList')" class="error-tips">内部人员不能为空</div>
-                                <div class="dropdown-menu" v-clickoutside="close">
-                                    <div class="dropdown-trigger" @click="importMember">
-                                        <span>从用户组导入</span>
-                                        <i :class="['devops-icon icon-angle-down', { 'icon-flip': isDropdownShow }]"></i>
-                                    </div>
-                                    <div class="dropdown-list" v-if="isDropdownShow">
-                                        <ul class="list-wrapper">
-                                            <li v-for="(entry, index) in userGroupList" :key="index">
-                                                <a href="javascript:;" @click="selectUsers(entry)">{{ entry.groupName }}
-                                                    <span>({{ entry.users.length }})</span>
-                                                </a>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </template>
-                            <user-input v-else
+                        <bk-form-item :label="$t('quality.通知人员：')" :property="'internal_list'">
+                            <user-input
                                 :handle-change="onChange"
                                 name="innerList"
                                 :value="createGroupForm.internal_list"
-                                placeholder="请输入通知人员"
+                                :placeholder="$t('quality.请输入通知人员')"
                             ></user-input>
                         </bk-form-item>
-                        <bk-form-item label="通知人员：" :property="'desc'">
+                        <bk-form-item :label="$t('quality.通知人员：')" :property="'desc'">
                             <bk-input
                                 class="group-desc-textarea"
                                 type="textarea"
@@ -72,8 +51,8 @@
                 </div>
             </form>
             <div class="footer">
-                <bk-button theme="primary" @click.native="confirm">确认</bk-button>
-                <bk-button @click="cancelFn">取消</bk-button>
+                <bk-button theme="primary" @click.native="confirm">{{$t('quality.确认')}}</bk-button>
+                <bk-button @click="cancelFn">{{$t('quality.取消')}}</bk-button>
             </div>
         </div>
     </bk-dialog>
@@ -106,7 +85,7 @@
         data () {
             return {
                 isDropdownShow: false,
-                placeholder: '仅填写项目组内的人员有效',
+                placeholder: this.$t('quality.仅填写项目组内的人员有效'),
                 userGroupList: []
             }
         },

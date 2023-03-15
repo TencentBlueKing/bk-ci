@@ -102,16 +102,10 @@
                 >
                     <label class="bk-label env-label"> {{ $t('store.适用Job类型') }} </label>
                     <div class="bk-form-content atom-item-content">
-                        <bk-radio-group
-                            v-model="atomForm.jobType"
-                            class="radio-group"
-                        >
-                            <bk-radio
-                                :value="entry.value"
-                                v-for="(entry, key) in jobTypeList"
-                                :key="key"
-                                @click.native="changeJobType"
-                            >{{entry.label}}</bk-radio>
+                        <bk-radio-group v-model="atomForm.jobType" class="radio-group">
+                            <span v-for="(entry, key) in jobTypeList" :key="key">
+                                <bk-radio v-show="entry.isShow" :value="entry.value" @click.native="changeJobType">{{entry.label}}</bk-radio>
+                            </span>
                         </bk-radio-group>
                         <div
                             v-if="formErrors.jobError"
@@ -173,7 +167,8 @@
                             maxlength="256"
                             v-model="atomForm.summary"
                             v-validate="{
-                                required: true
+                                required: true,
+                                max: 256
                             }"
                             :class="{ 'is-danger': errors.has('introduction') }"
                         >
@@ -199,6 +194,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             @imgAdd="addImage('mdHook', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -390,6 +386,7 @@
                             preview-background="#fff"
                             name="versionContent"
                             v-validate="{ required: true }"
+                            :language="mavenLang"
                             @imgAdd="addImage('versionMd', ...arguments)"
                             @imgDel="delImage"
                             @change="changeData"
@@ -416,12 +413,12 @@
 </template>
 
 <script>
+    import api from '@/api'
+    import breadCrumbs from '@/components/bread-crumbs.vue'
+    import bkFileUpload from '@/components/common/file-upload'
     import selectLogo from '@/components/common/selectLogo'
     import { toolbars } from '@/utils/editor-options'
-    import bkFileUpload from '@/components/common/file-upload'
-    import breadCrumbs from '@/components/bread-crumbs.vue'
-    import api from '@/api'
-
+    
     export default {
         components: {
             selectLogo,
@@ -435,7 +432,7 @@
                 initJobType: '',
                 initReleaseType: '',
                 descTemplate: '',
-                docsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=15008942`,
+                docsLink: this.BKCI_DOCS.PLUGIN_GUIDE_DOC,
                 showContent: false,
                 isUploading: false,
                 initOs: [],
@@ -444,8 +441,8 @@
                     // { label: '流水线触发器', value: 'TRIGGER' }
                 ],
                 jobTypeList: [
-                    { label: this.$t('store.编译环境'), value: 'AGENT' },
-                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS' }
+                    { label: this.$t('store.编译环境'), value: 'AGENT', isShow: true },
+                    { label: this.$t('store.无编译环境'), value: 'AGENT_LESS', isShow: true }
                 ],
                 envList: [
                     { label: 'Linux', value: 'LINUX', icon: 'linux-view' },
@@ -518,7 +515,8 @@
                     releaseTypeError: false
                 },
                 versionMap: {},
-                publishersList: []
+                publishersList: [],
+                containerList: []
             }
         },
         computed: {
@@ -546,6 +544,9 @@
             },
             userName () {
                 return this.$store.state.user.username
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         watch: {
@@ -574,12 +575,19 @@
             }
         },
         async created () {
+            await this.fetchContainerList()
             await this.requestAtomlabels()
             await this.requestAtomDetail(this.$route.params.atomId)
             await this.fetchPublishersList(this.atomForm.atomCode)
             this.requestAtomClassify()
         },
         methods: {
+            fetchContainerList () {
+                this.$store.dispatch('store/getContainerList').then(res => {
+                    this.containerList = res
+                    this.jobTypeList[1].isShow = !!this.containerList.find(i => i.type === 'normal')
+                })
+            },
             toPublishProgress (type, id) {
                 this.$router.push({
                     name: 'releaseProgress',

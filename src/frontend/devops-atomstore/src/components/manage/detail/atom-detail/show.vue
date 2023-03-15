@@ -7,28 +7,18 @@
                     <span class="item-name">{{ detail.name }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.标识') }}：</span>
+                    <span class="detail-label">{{ $t('store.标识：') }}</span>
                     <span>{{ detail.atomCode || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.范畴') }}：</span>
+                    <span class="detail-label">{{ $t('store.范畴：') }}</span>
                     <span>{{ categoryMap[detail.category] || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.分类') }}：</span>
+                    <span class="detail-label">{{ $t('store.分类：') }}</span>
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
-                <li class="detail-item" v-if="isEnterprise">
-                    <span class="detail-label">{{ $t('store.适用机器类型') }}：</span>
-                    <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
-                        <span v-if="detail.jobType === 'AGENT'">（
-                            <i class="devops-icon icon-linux-view" v-if="detail.os.indexOf('LINUX') !== -1"></i>
-                            <i class="devops-icon icon-windows" v-if="detail.os.indexOf('WINDOWS') !== -1"></i>
-                            <i class="devops-icon icon-macos" v-if="detail.os.indexOf('MACOS') !== -1"></i>）
-                        </span>
-                    </div>
-                </li>
-                <li class="detail-item" v-else>
+                <li class="detail-item">
                     <span class="detail-label">{{ $t('store.适用Job类型') }}：</span>
                     <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
                         <span v-if="detail.jobType === 'AGENT'">（
@@ -39,23 +29,23 @@
                     </div>
                 </li>
                 <li class="detail-item" v-if="!isEnterprise">
-                    <span class="detail-label">{{ $t('store.是否开源') }}：</span>
+                    <span class="detail-label">{{ $t('store.是否开源：') }}</span>
                     <span>{{ detail.visibilityLevel | levelFilter }}</span>
                 </li>
                 <li class="detail-item" v-if="isEnterprise">
-                    <span class="detail-label">{{ $t('store.发布包') }}：</span>
+                    <span class="detail-label">{{ $t('store.发布包：') }}</span>
                     <span>{{ detail.pkgName || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.功能标签') }}：</span>
-                    <label-list :label-list="detail.labelList.map(x => x.labelName)"></label-list>
+                    <span class="detail-label">{{ $t('store.功能标签：') }}</span>
+                    <label-list :label-list="labelNameList"></label-list>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.简介') }}：</span>
+                    <span class="detail-label">{{ $t('store.简介：') }}</span>
                     <span>{{ detail.summary || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.详细描述') }}：</span>
+                    <span class="detail-label">{{ $t('store.详细描述：') }}</span>
                     <mavon-editor
                         :editable="false"
                         default-open="preview"
@@ -64,6 +54,7 @@
                         :external-link="false"
                         :box-shadow="false"
                         preview-background="#fff"
+                        :language="mavenLang"
                         v-model="detail.description"
                     />
                 </li>
@@ -74,8 +65,8 @@
 </template>
 
 <script>
-    import labelList from '../../../labelList'
     import defaultPic from '../../../../images/defaultPic.svg'
+    import labelList from '../../../labelList'
 
     export default {
         filters: {
@@ -107,10 +98,12 @@
                 }
             }
         },
-
         computed: {
-            isEnterprise () {
-                return VERSION_TYPE === 'ee'
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
+            },
+            labelNameList () {
+                return this.detail?.labelList?.map(item => item.labelName) ?? []
             }
         }
     }

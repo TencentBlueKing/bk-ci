@@ -323,6 +323,7 @@
     "noticeGroup": "Groups",
     "emptyNoticeGroup": "Groups to be notified are empty",
     "additionUser": "Additional user",
+    "additionUserPlaceholder": "Support environment variables (${var}), multiple environment variables are separated by commas",
     "noticeContent": "Content",
     "pipelineLink": "add pipeline link in the content",
     "pipelineLinkDesc": "When selected, url of the pipeline build detail will be added to the end of notification that is sent through Wechat Work, Wechat or SMS",
@@ -457,7 +458,7 @@
     "cardLayout": "Card layout",
     "tableLayout": "Table layout",
     "sumPipelinesTips": "Total {0} Pipelines",
-    "applyPerm": "Apply for permission",
+    "applyPerm": "Apply",
     "temp": "Template",
     "multipleBuilds": "Multi-Builds are running",
     "cannotManual": "Manually trigger is not suppoted",
@@ -1004,7 +1005,9 @@
     "queuePlaceholder": " Please fill in an integer between 1 and 10",
     "noEnv": "Agentless",
     "afterPreStageSuccess": "After Pre Stage done",
-    "manualRunStage": "Manual"
+    "manualRunStage": "Manual",
+    "autoSkip": "Auto",
+    "manualSkip": "Manual"
   },
   "permissionRefreshtitle": "Permission Request form has been submitted",
   "permissionRefreshSubtitle": "Please fill in the permission request form in the permission center and refresh the page after submission",

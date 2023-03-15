@@ -61,6 +61,7 @@
                     :external-link="false"
                     :box-shadow="false"
                     preview-background="#fff"
+                    :language="mavenLang"
                     @imgAdd="addImage"
                 />
             </bk-form-item>
@@ -115,6 +116,11 @@
                     trigger: 'blur'
                 },
                 hasChange: false
+            }
+        },
+        computed: {
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

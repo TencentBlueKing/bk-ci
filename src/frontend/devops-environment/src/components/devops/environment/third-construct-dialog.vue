@@ -129,8 +129,8 @@
         data () {
             return {
                 defaultMachineCover: require('../../../scss/logo/machine.svg'),
-                installDocsLink: `${IWIKI_DOCS_URL}/pages/viewpage.action?pageId=36426596`,
-                spawnNodesDescLink: `${IWIKI_DOCS_URL}/p/1083624634`
+                installDocsLink: this.BKCI_DOCS.WIN_AGENT_GUIDE,
+                spawnNodesDescLink: this.BKCI_DOCS.SPAN_NODE_DESC_LINK
             }
         },
         methods: {

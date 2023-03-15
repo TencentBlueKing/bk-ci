@@ -23,7 +23,7 @@ module.exports = (env, argv) => {
         env,
         argv,
         entry: {
-            ticket: './src/index'
+            ticket: './src/entry'
         },
         publicPath: '/ticket/',
         dist: '/ticket',

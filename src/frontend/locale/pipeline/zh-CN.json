@@ -324,6 +324,7 @@
     "noticeGroup": "通知组",
     "emptyNoticeGroup": "通知组为空",
     "additionUser": "附加通知人",
+    "additionUserPlaceholder": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
     "noticeContent": "通知内容",
     "pipelineLink": "通知内容附加流水线链接",
     "pipelineLinkDesc": "若勾选，则会在企业微信、微信、短信通知的末尾加上相应构建详情的流水线链接",
@@ -1006,7 +1007,9 @@
     "queuePlaceholder": "请填写1-10之间的整数",
     "noEnv": "无编译环境",
     "afterPreStageSuccess": "前一个Stage成功时运行",
-    "manualRunStage": "手动触发运行"
+    "manualRunStage": "手动触发运行",
+    "autoSkip": "自动跳过",
+    "manualSkip": "手动跳过"
   },
   "permissionRefreshtitle": "权限申请单已提交",
   "permissionRefreshSubtitle": "请在权限中心填写权限申请单，提交完成后再刷新该页面",

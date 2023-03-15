@@ -194,13 +194,13 @@
 </template>
 
 <script>
-    import emptyNode from './empty_node'
-    import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import configManageNode from '@/components/devops/environment/config-manage-node'
     import dropdownList from '@/components/devops/environment/dropdown-list'
     import makeMirrorDialog from '@/components/devops/environment/make-mirror-dialog'
+    import thirdConstruct from '@/components/devops/environment/third-construct-dialog'
     import { getQueryString } from '@/utils/util'
     import webSocketMessage from '../utils/webSocketMessage.js'
+    import emptyNode from './empty_node'
 
     export default {
         components: {
