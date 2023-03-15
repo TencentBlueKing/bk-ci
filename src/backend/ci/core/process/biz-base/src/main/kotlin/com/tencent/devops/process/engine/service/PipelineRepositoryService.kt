@@ -49,7 +49,6 @@ import com.tencent.devops.common.pipeline.pojo.MatrixPipelineInfo
 import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.utils.MatrixContextUtils
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineSettingDao
@@ -60,6 +59,7 @@ import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
 import com.tencent.devops.process.engine.cfg.PipelineIdGenerator
 import com.tencent.devops.process.engine.cfg.VersionConfigure
 import com.tencent.devops.process.engine.common.VMUtils
+import com.tencent.devops.process.engine.control.lock.PipelineModelLock
 import com.tencent.devops.process.engine.dao.PipelineBuildSummaryDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.engine.dao.PipelineModelTaskDao
@@ -483,7 +483,7 @@ class PipelineRepositoryService constructor(
 
         val taskCount: Int = model.taskCount()
         val id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_INFO").data
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -622,7 +622,7 @@ class PipelineRepositoryService constructor(
     ): DeployPipelineResult {
         val taskCount: Int = model.taskCount()
         var version = 0
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -829,7 +829,7 @@ class PipelineRepositoryService constructor(
             )
 
         val pipelineResult = DeletePipelineResult(pipelineId, record.pipelineName, record.version)
-        val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineId), 20)
+        val lock = PipelineModelLock(redisOperation, pipelineId)
         try {
             lock.lock()
             dslContext.transaction { configuration ->
@@ -1119,7 +1119,7 @@ class PipelineRepositoryService constructor(
         pipelineModelVersionList: List<PipelineModelVersion>
     ) {
         pipelineModelVersionList.forEach { pipelineModelVersion ->
-            val lock = RedisLock(redisOperation, pipelineModelLockKey(pipelineModelVersion.pipelineId), 20)
+            val lock = PipelineModelLock(redisOperation, pipelineModelVersion.pipelineId)
             try {
                 lock.lock()
                 pipelineResDao.updatePipelineModel(dslContext, userId, pipelineModelVersion)
@@ -1285,6 +1285,5 @@ class PipelineRepositoryService constructor(
         private const val MAX_LEN_FOR_NAME = 255
         private val logger = LoggerFactory.getLogger(PipelineRepositoryService::class.java)
         private const val PIPELINE_SETTING_VERSION_BIZ_TAG_NAME = "PIPELINE_SETTING_VERSION"
-        private fun pipelineModelLockKey(pipelineId: String) = "pipelineModelLock:$pipelineId"
     }
 }

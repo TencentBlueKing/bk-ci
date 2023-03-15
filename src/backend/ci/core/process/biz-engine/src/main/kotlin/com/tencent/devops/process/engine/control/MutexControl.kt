@@ -29,9 +29,12 @@ package com.tencent.devops.process.engine.control
 
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.container.MutexGroup
+import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
+import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.common.redis.RedisLockByValue
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.process.bean.PipelineUrlBean
@@ -39,6 +42,7 @@ import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineContainerService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -51,6 +55,7 @@ class MutexControl @Autowired constructor(
     private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineUrlBean: PipelineUrlBean,
+    private val containerBuildRecordService: ContainerBuildRecordService,
     private val pipelineContainerService: PipelineContainerService
 ) {
 
@@ -119,7 +124,9 @@ class MutexControl @Autowired constructor(
             // 抢到锁则可以继续运行，并退出队列
             quitMutexQueue(
                 projectId = container.projectId,
+                pipelineId = container.pipelineId,
                 buildId = container.buildId,
+                executeCount = container.executeCount,
                 containerId = container.containerId,
                 mutexGroup = mutexGroup
             )
@@ -131,6 +138,7 @@ class MutexControl @Autowired constructor(
                 // 排队失败说明超时或者超出队列则取消运行，解锁并退出队列
                 releaseContainerMutex(
                     projectId = container.projectId,
+                    pipelineId = container.pipelineId,
                     buildId = container.buildId,
                     stageId = container.stageId,
                     containerId = container.containerId,
@@ -149,6 +157,7 @@ class MutexControl @Autowired constructor(
      */
     internal fun releaseContainerMutex(
         projectId: String,
+        pipelineId: String,
         buildId: String,
         stageId: String,
         containerId: String,
@@ -165,7 +174,9 @@ class MutexControl @Autowired constructor(
             redisOperation.delete(mutexGroup.genMutexLinkTipKey(containerMutexId)) // #5454 删除tip
             quitMutexQueue(
                 projectId = projectId,
+                pipelineId = pipelineId,
                 buildId = buildId,
+                executeCount = executeCount ?: 1,
                 containerId = containerId,
                 mutexGroup = mutexGroup
             )
@@ -273,7 +284,9 @@ class MutexControl @Autowired constructor(
                 )
                 quitMutexQueue(
                     projectId = container.projectId,
+                    pipelineId = container.pipelineId,
                     buildId = container.buildId,
+                    executeCount = container.executeCount,
                     containerId = container.containerId,
                     mutexGroup = mutexGroup
                 )
@@ -303,7 +316,9 @@ class MutexControl @Autowired constructor(
                 // 则进入队列,并返回成功
                 enterMutexQueue(
                     projectId = container.projectId,
+                    pipelineId = container.pipelineId,
                     buildId = container.buildId,
+                    executeCount = container.executeCount,
                     containerId = container.containerId,
                     mutexGroup = mutexGroup
                 )
@@ -319,17 +334,48 @@ class MutexControl @Autowired constructor(
         }
     }
 
-    private fun enterMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
+    private fun enterMutexQueue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        containerId: String,
+        mutexGroup: MutexGroup
+    ) {
         val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
         val queueKey = mutexGroup.genMutexQueueKey(projectId)
-        val currentTime = LocalDateTime.now().timestamp()
-        redisOperation.hset(queueKey, containerMutexId, currentTime.toString())
+        redisOperation.hset(queueKey, containerMutexId, LocalDateTime.now().timestamp().toString())
+        containerBuildRecordService.updateContainerRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+            containerId = containerId, executeCount = executeCount,
+            containerVar = emptyMap(), buildStatus = null,
+            timestamps = mapOf(
+                BuildTimestampType.JOB_MUTEX_QUEUE to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
+        )
     }
 
-    private fun quitMutexQueue(projectId: String, buildId: String, containerId: String, mutexGroup: MutexGroup) {
+    private fun quitMutexQueue(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int,
+        containerId: String,
+        mutexGroup: MutexGroup
+    ) {
         val containerMutexId = getMutexContainerId(buildId = buildId, containerId = containerId)
         val queueKey = mutexGroup.genMutexQueueKey(projectId)
         redisOperation.hdelete(queueKey, containerMutexId)
+        containerBuildRecordService.updateContainerRecord(
+            projectId = projectId, pipelineId = pipelineId, buildId = buildId,
+            containerId = containerId, executeCount = executeCount,
+            containerVar = emptyMap(), buildStatus = null,
+            timestamps = mapOf(
+                BuildTimestampType.JOB_MUTEX_QUEUE to
+                    BuildRecordTimeStamp(LocalDateTime.now().timestampmilli(), null)
+            )
+        )
     }
 
     private fun logContainerMutex(

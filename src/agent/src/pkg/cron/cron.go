@@ -29,16 +29,17 @@ package cron
 
 import (
 	"fmt"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/config"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/job"
 	"io/ioutil"
 	"os"
 	"strings"
 	"time"
 
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/logs"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util"
-	"github.com/Tencent/bk-ci/src/agent/src/pkg/util/systemutil"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job"
+
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util/systemutil"
 )
 
 func CleanJob() {

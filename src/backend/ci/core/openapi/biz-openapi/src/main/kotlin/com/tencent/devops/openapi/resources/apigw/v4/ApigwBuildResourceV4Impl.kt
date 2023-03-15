@@ -205,7 +205,8 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
         userId: String,
         projectId: String,
         pipelineId: String?,
-        buildId: String,
+        buildId: String?,
+        buildNumber: Int?,
         taskId: String?,
         failedContainer: Boolean?,
         skipFailedTask: Boolean?
@@ -214,11 +215,22 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             "OPENAPI_BUILD_V4|$userId|retry|$projectId|$pipelineId|$buildId|$taskId|$failedContainer" +
                 "|$skipFailedTask"
         )
+
+        val checkPipelineId = if (buildId.isNullOrBlank()) {
+            pipelineId ?: throw ParamBlankException("pipelineId and buildId cannot be empty at the same time")
+        } else checkPipelineId(projectId, pipelineId, buildId)
+
+        val checkBuildId = if (buildId.isNullOrBlank()) {
+            val buildNum = buildNumber
+                ?: throw ParamBlankException("buildId and buildNumber cannot be empty at the same time")
+            checkBuildId(projectId, checkPipelineId, buildNum)
+        } else buildId
+
         return client.get(ServiceBuildResource::class).retry(
             userId = userId,
             projectId = projectId,
-            pipelineId = checkPipelineId(projectId, pipelineId, buildId),
-            buildId = buildId,
+            pipelineId = checkPipelineId,
+            buildId = checkBuildId,
             taskId = taskId,
             failedContainer = failedContainer,
             skipFailedTask = skipFailedTask,
@@ -401,6 +413,12 @@ class ApigwBuildResourceV4Impl @Autowired constructor(
             throw ParamBlankException("PipelineId is invalid ")
         }
         return pipelineIdFormDB
+    }
+
+    private fun checkBuildId(projectId: String, pipelineId: String, buildNumber: Int): String {
+        return client.get(ServiceBuildResource::class)
+            .getBuildIdFromBuildNumber(projectId, pipelineId, buildNumber).data
+            ?: throw ParamBlankException("Invalid buildNumber")
     }
 
     companion object {

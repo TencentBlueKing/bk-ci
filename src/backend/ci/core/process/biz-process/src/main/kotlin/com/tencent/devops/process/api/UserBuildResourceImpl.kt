@@ -45,6 +45,7 @@ import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.pojo.BuildManualStartupInfo
 import com.tencent.devops.process.pojo.ReviewParam
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.process.pojo.pipeline.ModelRecord
 import com.tencent.devops.process.service.PipelineRecentUseService
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.process.service.builds.PipelineBuildMaintainFacadeService
@@ -266,6 +267,29 @@ class UserBuildResourceImpl @Autowired constructor(
         )
         pipelineRecentUseService.record(userId, projectId, pipelineId)
         return Result(buildDetail)
+    }
+
+    override fun getBuildRecordByExecuteCount(
+        userId: String,
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        executeCount: Int?
+    ): Result<ModelRecord> {
+        checkParam(userId, projectId, pipelineId)
+        if (buildId.isBlank()) {
+            throw ParamBlankException("Invalid buildId")
+        }
+        return Result(
+            pipelineBuildFacadeService.getBuildRecord(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                executeCount = executeCount,
+                channelCode = ChannelCode.BS
+            )
+        )
     }
 
     override fun getBuildDetailByBuildNo(
