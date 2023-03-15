@@ -52,21 +52,7 @@
     <title>持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 首页</title>
   </head>
   <body>
-    <script>
-      var ajax = new XMLHttpRequest()
-      ajax.open(
-        'GET',
-        '__BK_CI_PUBLIC_PATH__/svg-sprites/devops_sprite.svg?t=' + Math.random(),
-        true
-      )
-      ajax.send()
-      ajax.onload = function (e) {
-        var div = document.createElement('div')
-        div.setAttribute('style', 'position: absolute; width: 0; height: 0')
-        div.innerHTML = ajax.responseText
-        document.body.insertBefore(div, document.body.childNodes[0])
-      }
-    </script>
+    <script src="__BK_CI_PUBLIC_PATH__/svg-sprites/devops_sprite.js"></script>
     <div id="devops-root">
       <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">

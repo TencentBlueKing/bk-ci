@@ -37,24 +37,7 @@
         <meta charset="utf-8" />
         <title>流水线</title>
 
-        <script>
-            var ajax = new XMLHttpRequest();
-            ajax.open(
-                "GET",
-                "__BK_CI_PUBLIC_PATH__/svg-sprites/pipeline_sprite.svg?t=" + Math.random(),
-                true
-            );
-            ajax.send();
-            ajax.onload = function (e) {
-                var div = document.createElement("div");
-                div.setAttribute(
-                    "style",
-                    "position: absolute; width: 0; height: 0"
-                );
-                div.innerHTML = ajax.responseText;
-                document.body.insertBefore(div, document.body.childNodes[0]);
-            };
-        </script>
+        <script src="__BK_CI_PUBLIC_PATH__/svg-sprites/pipeline_sprite.js"></script>
     </head>
     <body>
         <div id="app"></div>

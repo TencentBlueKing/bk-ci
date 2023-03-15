@@ -1,6 +1,8 @@
 const { src, dest, parallel, series, task } = require('gulp')
+const fs = require('fs')
 const svgSprite = require('gulp-svg-sprite')
 const rename = require('gulp-rename')
+const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
 const argv = yargs.alias({
@@ -40,6 +42,16 @@ function renameSvg (type) {
     }
 }
 
+function generatorSvgJs (type) {
+    return () => {
+        const svgCode = fs.readFileSync(`${dist}/svg-sprites/${type}_sprite.svg`, 'utf8')
+        return src('./svg-sprites/svgjs-template.js')
+            .pipe(replace('__SVG_SPRITES_SYMBOLS__', svgCode))
+            .pipe(rename(`${type}_sprite.js`))
+            .pipe(dest(`${dist}/svg-sprites/`))
+    }
+}
+
 function getScopeStr (scope) {
     try {
         if (!scope) return ''
@@ -59,8 +71,8 @@ function getScopeStr (scope) {
     }
 }
 
-task('devops', series([taskGenerator('devops'), renameSvg('devops')]))
-task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline')]))
+task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSvgJs('devops')]))
+task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
 task('build', cb => {
