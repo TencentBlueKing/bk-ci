@@ -28,6 +28,9 @@
 package com.tencent.devops.process.yaml.v2.parsers.template
 
 import com.fasterxml.jackson.core.JsonProcessingException
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import com.tencent.devops.process.yaml.v2.models.Extends
@@ -457,7 +460,13 @@ class YamlTemplate<T>(
             } else {
                 // 校验id不能超过64，因为id可能为数字无法在schema支持，放到后台
                 if (key.length > 64) {
-                    throw YamlFormatException("$fromPath job.id 超过长度限制64 $key")
+                    throw YamlFormatException(
+                        MessageUtil.getMessageByLocale(
+                            ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED,
+                            I18nUtil.getLanguage(),
+                            arrayOf(fromPath, key)
+                        )
+                    )
                 }
                 jobMap[key] = getJob(fromPath, YamlObjects.transValue(fromPath, TemplateType.JOB.text, value), deepTree)
             }

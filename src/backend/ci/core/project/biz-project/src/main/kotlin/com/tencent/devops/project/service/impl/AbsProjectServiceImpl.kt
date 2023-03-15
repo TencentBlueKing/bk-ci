@@ -35,6 +35,7 @@ import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.util.FileUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
@@ -45,10 +46,14 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
+import com.tencent.devops.project.constant.BK_AUTH_CENTER_CREATE_PROJECT_INFO
+import com.tencent.devops.project.constant.BK_BOUND_IAM_GRADIENT_ADMIN
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -179,7 +184,11 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         } catch (e: PermissionForbiddenException) {
             throw e
         } catch (e: Exception) {
-            logger.warn("权限中心创建项目信息： $projectCreateInfo", e)
+            logger.warn(
+                MessageUtil.getMessageByLocale(BK_AUTH_CENTER_CREATE_PROJECT_INFO, I18nUtil.getLanguage(userId)) +
+                "$projectCreateInfo",
+                e
+            )
             throw OperationException(MessageCodeUtil.getCodeLanMessage(ProjectMessageCode.PEM_CREATE_FAIL))
         }
         if (projectId.isNullOrEmpty()) {
@@ -308,7 +317,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     val projectId = projectDao.getByEnglishName(
                         dslContext = dslContext,
                         englishName = englishName
-                    )?.projectId ?: throw NotFoundException("项目 -$englishName 不存在")
+                    )?.projectId ?: throw NotFoundException(
+                        "-$englishName" +
+                                MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage(userId))
+                    )
                     projectDao.update(
                         dslContext = context,
                         userId = userId,
@@ -415,7 +427,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         try {
 
             val projects = getProjectFromAuth(userId, null)
-            logger.info("项目列表：$projects")
+            logger.info("projects：$projects")
             val list = ArrayList<ProjectVO>()
             projectDao.listByEnglishName(dslContext, projects, null, null, null).map {
                 list.add(ProjectUtils.packagingBean(it))
@@ -691,10 +703,15 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
     }
 
     override fun relationIamProject(projectCode: String, relationId: String): Boolean {
-        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException("项目不存在")
+        val projectInfo = projectDao.getByEnglishName(dslContext, projectCode) ?: throw InvalidParamException(
+            MessageUtil.getMessageByLocale(PROJECT_NOT_EXIST, I18nUtil.getLanguage())
+        )
         val currentRelationId = projectInfo.relationId
         if (!currentRelationId.isNullOrEmpty()) {
-            throw InvalidParamException("$projectCode 已绑定IAM分级管理员")
+            throw InvalidParamException(
+                projectCode +
+                        MessageUtil.getMessageByLocale(BK_BOUND_IAM_GRADIENT_ADMIN, I18nUtil.getLanguage())
+            )
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)
         return updateCount > 0

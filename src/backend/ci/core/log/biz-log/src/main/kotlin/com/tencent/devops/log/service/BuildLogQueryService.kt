@@ -419,7 +419,10 @@ class BuildLogQueryService @Autowired constructor(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
                     arrayOf(
-                        userId, projectId, if (language == "zh_CN") "编辑" else "edit", permission.alias
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") AuthPermission.EDIT.alias else AuthPermission.EDIT.value,
+                        permission.alias
                     )
                 )
             )

@@ -28,6 +28,7 @@
 package com.tencent.devops.process.yaml.modelCreate
 
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Stage
@@ -35,7 +36,10 @@ import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.user.UserPipelineGroupResource
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_MANUAL
+import com.tencent.devops.process.constant.ProcessMessageCode.BUILD_MSG_TRIGGERS
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.classify.PipelineGroup
 import com.tencent.devops.process.pojo.classify.PipelineGroupCreate
@@ -76,12 +80,15 @@ class ModelCreate @Autowired constructor(
 
         // 第一个stage，触发类
         val triggerElementList = mutableListOf<Element>()
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(BUILD_MSG_MANUAL, I18nUtil.getLanguage()),
+            "T-1-1-1"
+        )
         triggerElementList.add(manualTriggerElement)
 
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = "构建触发",
+            name = MessageUtil.getMessageByLocale(BUILD_MSG_TRIGGERS, I18nUtil.getLanguage()),
             elements = triggerElementList,
             status = null,
             startEpoch = null,

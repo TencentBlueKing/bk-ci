@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.EnvUtils
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
@@ -41,7 +42,9 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
 import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -306,7 +309,12 @@ abstract class SubPipelineStartUpService @Autowired constructor() {
 
         if (existPipelines.contains(pipelineId)) {
             logger.warn("subPipeline does not allow loop calls|projectId:$projectId|pipelineId:$pipelineId")
-            throw OperationException("子流水线不允许循环调用,循环流水线:projectId:$projectId,pipelineId:$pipelineId")
+            throw OperationException(MessageUtil.getMessageByLocale(
+                ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL,
+                I18nUtil.getLanguage(),
+                arrayOf(projectId, pipelineId)
+            )
+            )
         }
         existPipelines.add(pipelineId)
         val pipeline = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId) ?: return

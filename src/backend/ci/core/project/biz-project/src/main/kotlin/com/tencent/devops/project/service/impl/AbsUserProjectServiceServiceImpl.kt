@@ -28,11 +28,14 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.SERVICE_ADD_FAIL
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -157,7 +160,10 @@ abstract class AbsUserProjectServiceServiceImpl @Autowired constructor(
         if (tServiceRecord != null) {
             return Result(genServiceVO(tServiceRecord))
         }
-        return Result(500, "服务添加失败")
+        return Result(
+            500,
+            MessageUtil.getMessageByLocale(SERVICE_ADD_FAIL, I18nUtil.getLanguage(userId))
+        )
     }
 
     /**

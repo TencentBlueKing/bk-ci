@@ -33,11 +33,15 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
+import com.tencent.devops.process.constant.BK_CREATOR
+import com.tencent.devops.process.constant.BK_PIPELINE_NAME
 import com.tencent.devops.process.constant.PipelineViewType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.dao.PipelineViewUserLastViewDao
@@ -597,7 +601,7 @@ class PipelineViewService @Autowired constructor(
             if (filter is PipelineViewFilterByName) {
                 hitFilters.filters.add(
                     PipelineViewHitFilters.FilterInfo(
-                        key = "流水线名称",
+                        key = MessageUtil.getMessageByLocale(BK_PIPELINE_NAME, I18nUtil.getLanguage(userId)),
                         hits = mutableListOf(
                             PipelineViewHitFilters.FilterInfo.Hit(
                                 hit = StringUtils.containsIgnoreCase(pipelineInfo.pipelineName, filter.pipelineName),
@@ -610,7 +614,7 @@ class PipelineViewService @Autowired constructor(
                 filter.userIds.forEach {
                     hitFilters.filters.add(
                         PipelineViewHitFilters.FilterInfo(
-                            key = "创建人",
+                            key = MessageUtil.getMessageByLocale(BK_CREATOR, I18nUtil.getLanguage(userId)),
                             hits = mutableListOf(
                                 PipelineViewHitFilters.FilterInfo.Hit(
                                     hit = it == pipelineInfo.creator,

@@ -32,11 +32,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.QualityAuthServiceCode
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.BK_USER_NO_USER_GROUP_EDIT_PERMISSION
 import com.tencent.devops.quality.constant.QualityMessageCode
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.pojo.Group
@@ -194,7 +197,10 @@ class QualityNotifyGroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.EDIT,
-            message = "用户没有用户组的编辑权限"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_USER_GROUP_EDIT_PERMISSION,
+                I18nUtil.getLanguage(userId)
+            )
         )
         if (qualityNotifyGroupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
@@ -238,7 +244,10 @@ class QualityNotifyGroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.DELETE,
-            message = "用户没有用户组的删除权限"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_USER_GROUP_EDIT_PERMISSION,
+                I18nUtil.getLanguage(userId)
+            )
         )
 
         qualityPermissionService.deleteGroupResource(projectId = projectId, groupId = groupId)

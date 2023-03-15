@@ -35,9 +35,11 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.event.enums.ActionType
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
@@ -163,7 +165,14 @@ class StreamTimerService @Autowired constructor(
         return if (count > 0) {
             Result(true)
         } else {
-            Result(ERROR_DEL_PIPELINE_TIMER.toInt(), "删除流水线${pipelineId}定时触发调度失败！")
+            Result(
+                ERROR_DEL_PIPELINE_TIMER.toInt(),
+                MessageUtil.getMessageByLocale(
+                    ERROR_DEL_PIPELINE_TIMER,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(pipelineId)
+                )
+            )
         }
     }
 

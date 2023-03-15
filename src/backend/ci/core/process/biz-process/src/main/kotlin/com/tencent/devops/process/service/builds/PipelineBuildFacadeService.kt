@@ -179,15 +179,17 @@ class PipelineBuildFacadeService(
 
         if (checkPermission) { // 不用校验查看权限，只校验执行权限
             val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId!!,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
-                message = MessageUtil.getMessageByLocale(
-                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
-                    language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                permission = permission,
+                message = arrayOf(
+                    userId,
+                    projectId,
+                    if (language == "zh_CN") permission.alias else permission.value,
+                    pipelineId
                 )
             )
         }
@@ -562,15 +564,21 @@ class PipelineBuildFacadeService(
         logger.info("Manual build start with value [$values][$buildNo]")
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
                 )
             )
         }
@@ -657,15 +665,21 @@ class PipelineBuildFacadeService(
 
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.DELETE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
                 )
             )
         }
@@ -799,15 +813,21 @@ class PipelineBuildFacadeService(
     ) {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EXECUTE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EXECUTE,
+                permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "停止" else "stop", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
                 )
             )
         }
@@ -2209,15 +2229,21 @@ class PipelineBuildFacadeService(
     ): String {
         // 校验用户是否有执行流水线权限
         val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EXECUTE
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EXECUTE,
+            permission = permission,
             message = MessageUtil.getMessageByLocale(
                 CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                 language,
-                arrayOf(userId, projectId, if (language == "zh_CN") "启动" else "start", pipelineId)
+                arrayOf(
+                    userId,
+                    projectId,
+                    if (language == "zh_CN") permission.alias else permission.value,
+                    pipelineId
+                )
             )
         )
         // 校验是否pipeline跟buildId匹配, 防止误传参数

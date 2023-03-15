@@ -350,14 +350,24 @@ class DispatchBaseDebugService @Autowired constructor(
                 MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "编辑" else "edit", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") AuthPermission.EDIT.alias else AuthPermission.EDIT.value,
+                        pipelineId
+                    )
                 )
             )
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
                     USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "编辑" else "edit", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") AuthPermission.EDIT.alias else AuthPermission.EDIT.value,
+                        pipelineId
+                    )
                 )
             )
         }

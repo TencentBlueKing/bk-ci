@@ -30,11 +30,14 @@ package com.tencent.devops.process.service
 import com.fasterxml.jackson.core.JsonParseException
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
+import com.tencent.devops.common.api.constant.MESSAGE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.exception.PipelineAlreadyExistException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
@@ -52,6 +55,9 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.BK_MAX_PIPELINE_COUNT_PER_PROJECT
+import com.tencent.devops.process.constant.BK_NO_PERMISSION_PLUGIN_IN_TEMPLATE
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
@@ -119,12 +125,23 @@ class PipelineInfoFacadeService @Autowired constructor(
         .build<String/*pipelineId*/, ChannelCode>()
 
     fun exportPipeline(userId: String, projectId: String, pipelineId: String): Response {
+        val language = I18nUtil.getLanguage(userId)
+        val permission = AuthPermission.EDIT
         pipelinePermissionService.validPipelinePermission(
             userId = userId,
             projectId = projectId,
             pipelineId = pipelineId,
-            permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下导出流水线"
+            permission = permission,
+            message = MessageUtil.getMessageByLocale(
+                CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                language,
+                arrayOf(
+                    userId,
+                    projectId,
+                    if (language == "zh_CN") permission.alias else permission.value,
+                    pipelineId
+                )
+            )
         )
 
         val settingInfo = pipelineRepositoryService.getSetting(projectId, pipelineId)
@@ -230,12 +247,23 @@ class PipelineInfoFacadeService @Autowired constructor(
 
             if (checkPermission) {
                 watcher.start("perm_v_perm")
+                val language = I18nUtil.getLanguage(userId)
+                val permission = AuthPermission.CREATE
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = "*",
-                    permission = AuthPermission.CREATE,
-                    message = "用户($userId)无权限在工程($projectId)下创建流水线"
+                    permission = permission,
+                    message = MessageUtil.getMessageByLocale(
+                        CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        language,
+                        arrayOf(
+                            userId,
+                            projectId,
+                            if (language == "zh_CN") permission.alias else permission.value,
+                            "*"
+                        )
+                    )
                 )
                 watcher.stop()
             }
@@ -276,7 +304,12 @@ class PipelineInfoFacadeService @Autowired constructor(
                         projectCode = projectId
                     )
                 if (validateRet.isNotOk()) {
-                    throw OperationException(validateRet.message ?: "模版下存在无权限的插件")
+                    throw OperationException(
+                        validateRet.message ?: MessageUtil.getMessageByLocale(
+                            BK_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
+                            I18nUtil.getLanguage(userId),
+                        )
+                    )
                 }
                 watcher.stop()
             }
@@ -287,7 +320,13 @@ class PipelineInfoFacadeService @Autowired constructor(
             if (projectVO?.pipelineLimit != null) {
                 val preCount = pipelineRepositoryService.countByProjectIds(setOf(projectId), ChannelCode.BS)
                 if (preCount >= projectVO.pipelineLimit!!) {
-                    throw OperationException("该项目最多只能创建${projectVO.pipelineLimit}条流水线")
+                    throw OperationException(
+                        MessageUtil.getMessageByLocale(
+                            BK_MAX_PIPELINE_COUNT_PER_PROJECT,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf("${projectVO.pipelineLimit}")
+                        )
+                    )
                 }
             }
             watcher.stop()
@@ -440,7 +479,7 @@ class PipelineInfoFacadeService @Autowired constructor(
             watcher.start("isProjectManager")
             // 判断用户是否为项目管理员
             if (!pipelinePermissionService.checkProjectManager(userId, projectId)) {
-                val defaultMessage = "管理员"
+                val defaultMessage = "admin"
                 val permissionMsg = MessageCodeUtil.getCodeLanMessage(
                     messageCode = "${CommonMessageCode.MSG_CODE_ROLE_PREFIX}${BkAuthGroup.MANAGER.value}",
                     defaultMessage = defaultMessage
@@ -490,13 +529,24 @@ class PipelineInfoFacadeService @Autowired constructor(
             )
 
         logger.info("Start to copy the pipeline $pipelineId")
+        val language = I18nUtil.getLanguage(userId)
         if (checkPermission) {
+            val permission = AuthPermission.EDIT
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EDIT,
-                message = "用户无流水线编辑权限"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
+                )
             )
 //            pipelinePermissionService.validPipelinePermission(
 //                userId = userId,
@@ -511,7 +561,19 @@ class PipelineInfoFacadeService @Autowired constructor(
                     permission = AuthPermission.CREATE
                 )
             ) {
-                throw PermissionForbiddenException("用户($userId)无权限在工程($projectId)下创建流水线")
+                val permission = AuthPermission.CREATE
+                throw PermissionForbiddenException(
+                    MessageUtil.getMessageByLocale(
+                        USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(
+                            userId,
+                            projectId,
+                            if (language == "zh_CN") permission.alias else permission.value,
+                            "*"
+                        )
+                    )
+                )
             }
         }
 
@@ -607,12 +669,23 @@ class PipelineInfoFacadeService @Autowired constructor(
 
         try {
             if (checkPermission) {
+                val language = I18nUtil.getLanguage(userId)
+                val permission = AuthPermission.EDIT
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    permission = AuthPermission.EDIT,
-                    message = "用户($userId)无权限在工程($projectId)下编辑流水线($pipelineId)"
+                    permission = permission,
+                    message = MessageUtil.getMessageByLocale(
+                        USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(
+                            userId,
+                            projectId,
+                            if (language == "zh_CN") permission.alias else permission.value,
+                            pipelineId
+                        )
+                    )
                 )
             }
 
@@ -744,12 +817,23 @@ class PipelineInfoFacadeService @Autowired constructor(
         checkPermission: Boolean = true
     ): Model {
         if (checkPermission) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.VIEW
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW,
-                message = "用户($userId)无权限在工程($projectId)下获取流水线($pipelineId)"
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
+                )
             )
         }
 
@@ -838,12 +922,23 @@ class PipelineInfoFacadeService @Autowired constructor(
         try {
             if (checkPermission) {
                 watcher.start("perm_v_perm")
+                val language = I18nUtil.getLanguage(userId)
+                val permission = AuthPermission.DELETE
                 pipelinePermissionService.validPipelinePermission(
                     userId = userId,
                     projectId = projectId,
                     pipelineId = pipelineId,
-                    permission = AuthPermission.DELETE,
-                    message = "用户($userId)无权限在工程($projectId)下删除流水线($pipelineId)"
+                    permission = permission,
+                    message = MessageUtil.getMessageByLocale(
+                        USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(
+                            userId,
+                            projectId,
+                            if (language == "zh_CN") permission.alias else permission.value,
+                            pipelineId
+                        )
+                    )
                 )
                 watcher.stop()
             }

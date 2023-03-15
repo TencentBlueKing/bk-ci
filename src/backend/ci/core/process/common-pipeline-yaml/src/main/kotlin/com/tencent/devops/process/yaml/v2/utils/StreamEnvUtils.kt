@@ -27,22 +27,42 @@
 
 package com.tencent.devops.process.yaml.v2.utils
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 
 object StreamEnvUtils {
     fun checkEnv(env: Map<String, Any?>?, fileName: String? = null): Boolean {
         if (env != null) {
             if (env.size > 100) {
-                throw YamlFormatException("${fileName ?: ""}配置Env数量超过100限制!")
+                throw YamlFormatException(
+                    MessageUtil.getMessageByLocale(
+                        ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED,
+                        I18nUtil.getLanguage(),
+                        arrayOf(fileName ?: "")
+                    )
+                )
             }
 
             env.forEach { (t, u) ->
                 if (t.length > 128) {
-                    throw YamlFormatException("${fileName ?: ""}Env单变量key长度超过128字符!($t)")
+                    throw YamlFormatException(
+                        MessageUtil.getMessageByLocale(
+                            ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
+                            I18nUtil.getLanguage(),
+                            arrayOf(fileName ?: "", "key", "128", t)
+                        )
+                    )
                 }
 
                 if (u != null && u.toString().length > 4000) {
-                    throw YamlFormatException("${fileName ?: ""}Env单变量value长度超过4K字符!($t)")
+                    throw YamlFormatException(MessageUtil.getMessageByLocale(
+                        ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED,
+                        I18nUtil.getLanguage(),
+                        arrayOf(fileName ?: "", "value", "4k", t)
+                    ))
                 }
             }
             return true

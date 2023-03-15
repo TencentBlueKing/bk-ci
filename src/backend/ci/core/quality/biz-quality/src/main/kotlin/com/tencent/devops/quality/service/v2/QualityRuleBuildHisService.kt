@@ -33,13 +33,16 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.common.quality.pojo.enums.RuleInterceptResult
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.quality.tables.records.TQualityRuleBuildHisRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.StageQualityRequest
+import com.tencent.devops.project.constant.BK_CHANGE_QUALITY_GATE_VALUE
 import com.tencent.devops.quality.api.v2.pojo.ControlPointPosition
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
@@ -175,8 +178,13 @@ class QualityRuleBuildHisService constructor(
                 }
             }
         }
-        throw OperationException("指标[${requestIndicator.enName}]值类型为[${indicator.thresholdType}]，" +
-            "请修改红线阈值[${requestIndicator.threshold}]")
+        throw OperationException(
+            MessageUtil.getMessageByLocale(
+                BK_CHANGE_QUALITY_GATE_VALUE,
+                I18nUtil.getLanguage(),
+                arrayOf(requestIndicator.enName, "${indicator.thresholdType}", requestIndicator.threshold)
+            )
+        )
     }
 
     fun list(ruleBuildIds: Collection<Long>): List<QualityRule> {

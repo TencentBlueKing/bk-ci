@@ -37,6 +37,7 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.api.util.timestampmilli
@@ -49,12 +50,14 @@ import com.tencent.devops.common.pipeline.enums.PipelineInstanceTypeEnum
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.TPipelineSetting
 import com.tencent.devops.model.process.tables.TTemplatePipeline
 import com.tencent.devops.model.process.tables.records.TPipelineBuildHistoryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineBuildSummaryRecord
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE
 import com.tencent.devops.process.dao.PipelineFavorDao
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.dao.label.PipelineLabelPipelineDao
@@ -1668,14 +1671,27 @@ class PipelineListFacadeService @Autowired constructor(
         projectId: String,
         pipelineId: String
     ): PipelineDetailInfo? {
+        val permission = AuthPermission.VIEW
         if (!pipelinePermissionService.checkPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.VIEW
+                permission = permission
             )
         ) {
-            throw PermissionForbiddenException("$userId 无流水线$pipelineId 查看权限")
+            val language = I18nUtil.getLanguage(userId)
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
+                )
+            )
         }
         val pipelineInfo = pipelineInfoDao.getPipelineInfo(
             dslContext = dslContext,
@@ -1683,7 +1699,13 @@ class PipelineListFacadeService @Autowired constructor(
             pipelineId = pipelineId
         ) ?: return null
         if (pipelineInfo.projectId != projectId) {
-            throw ParamBlankException("$pipelineId 非 $projectId 流水线")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(pipelineId, projectId)
+                )
+            )
         }
         val hasEditPermission = pipelinePermissionService.checkPipelinePermission(
             userId = userId,

@@ -32,7 +32,6 @@ import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
-import com.tencent.devops.common.service.utils.CommonUtils.ZH_CN
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.PipelineInfo
 import com.tencent.devops.process.permission.PipelinePermissionService
@@ -56,15 +55,21 @@ class PipelineVersionFacadeService @Autowired constructor(
     ): String {
         if (checkPermission) {
             val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.DELETE
             pipelinePermissionService.validPipelinePermission(
                 userId = userId,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.DELETE,
+                permission = permission,
                 message = MessageUtil.getMessageByLocale(
                     CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
                     language,
-                    arrayOf(userId, projectId, if (language == "zh_CN") "删除" else "delete", pipelineId)
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
                 )
             )
         }

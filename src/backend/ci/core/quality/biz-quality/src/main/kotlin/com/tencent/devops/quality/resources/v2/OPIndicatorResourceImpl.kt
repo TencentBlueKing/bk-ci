@@ -30,7 +30,10 @@ package com.tencent.devops.quality.resources.v2
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.BK_INDEX_ENGLISH_NAME_CANNOT_EMPTY
 import com.tencent.devops.quality.api.v2.OPIndicatorResource
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
@@ -58,7 +61,11 @@ class OPIndicatorResourceImpl @Autowired constructor(
     override fun add(userId: String, indicatorUpdate: IndicatorUpdate): Result<Boolean> {
         checkParams(userId)
         if (indicatorUpdate.enName.isNullOrBlank()) {
-            return Result(-1, "指标英文名不能为空", false)
+            return Result(
+                -1,
+                MessageUtil.getMessageByLocale(BK_INDEX_ENGLISH_NAME_CANNOT_EMPTY, I18nUtil.getLanguage(userId)),
+                false
+            )
         }
         val result = indicatorService.opCreate(userId, indicatorUpdate)
         return Result(result.code, result.msg, result.flag)

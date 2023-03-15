@@ -98,7 +98,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS = "2101040" // 流水线的模型中指定构建容器{0}不存在
     const val ERROR_SAVE_PIPELINE_TIMER = "2101041" // 流水线的定时触发器保存失败
     const val ERROR_PIPELINE_JOB_NEED_TASK = "2101042" // Job需要至少有一个任务插件
-    const val ERROR_DEL_PIPELINE_TIMER = "2101043" // 流水线的定时触发器删除失败
+    const val ERROR_DEL_PIPELINE_TIMER = "2101043" // 流水线{0}的定时触发器删除失败
     const val SVN_NOT_SUPPORT_TAG = "2101044" // SVN do not support tag
     const val ERROR_PIPELINE_REPO_ID_NULL = "2101045" // 仓库ID为空
     const val ERROR_PIPELINE_REPO_NAME_NULL = "2101046" // 仓库名为空
@@ -137,6 +137,19 @@ object ProcessMessageCode {
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
+    const val ERROR_PIPELINE_ID_NOT_PROJECT_PIPELINE = "2101083"// {0} 非 {1} 流水线
+    const val ERROR_NO_MATCHING_PIPELINE = "2101084"// 没有找到对应的流水线
+    const val ERROR_SUB_PIPELINE_NOT_ALLOWED_CIRCULAR_CALL = "2101085"// 子流水线不允许循环调用,循环流水线:projectId:{0},pipelineId:{1}
+    const val BK_BUILD_RESOURCE_NOT_EXIST = "2101086"// {0}构建资源不存在，请检查yml配置.
+    const val ERROR_YAML_FORMAT_EXCEPTION_NEED_PARAM = "2101087"// {0} 中的step必须包含uses或run或checkout!
+    const val ERROR_YAML_FORMAT_EXCEPTION_LENGTH_LIMIT_EXCEEDED = "2101088"// "{0} job.id 超过长度限制64 {1}}"
+    const val ERROR_YAML_FORMAT_EXCEPTION = "2101089"// {0} 中 {1} 格式有误,应为 {2}, error message:${3}
+    const val ERROR_YAML_FORMAT_EXCEPTION_STEP_ID_UNIQUENESS = "2101090"// 请确保step.id唯一性!({0})
+    const val ERROR_YAML_FORMAT_EXCEPTION_CHECK_STAGE_LABEL = "2101091"// 请核对Stage标签是否正确
+    const val ERROR_YAML_FORMAT_EXCEPTION_SERVICE_IMAGE_FORMAT_ILLEGAL = "2101092"// STREAM Service镜像格式非法
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093"// {0}配置Env数量超过100限制!
+    const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"// {0}Env单变量{1}长度超过{2}字符!({3})
+    const val BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -159,6 +172,7 @@ object ProcessMessageCode {
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
     const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
     const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
+    const val BK_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED = "2101112"// 生成远程触发token失败
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}
@@ -243,6 +257,7 @@ object ProcessMessageCode {
     const val BUILD_MSG_SERVICE = "2101315" // 服务触发
     const val BUILD_MSG_PIPELINE = "2101316" // 流水线触发
     const val BUILD_MSG_DESC = "2101317" // 构建信息描述
+    const val BUILD_MSG_TRIGGERS = "2101320"// 构建触发
 
     // 其他构建进程挂掉的参考信息，自由添加方便打印卫通日志里
     const val BUILD_WORKER_DEAD_ERROR = "2101318"
