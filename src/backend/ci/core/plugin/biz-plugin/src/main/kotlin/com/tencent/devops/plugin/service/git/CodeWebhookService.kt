@@ -439,7 +439,7 @@ class CodeWebhookService @Autowired constructor(
                             targetUrl = targetUrl,
                             context = context,
                             description = description,
-                            targetBranch = webhookTargetBranch
+                            targetBranch = mutableListOf(webhookTargetBranch)
                         )
                         pluginGitCheckDao.create(
                             dslContext = dslContext,
@@ -502,7 +502,11 @@ class CodeWebhookService @Autowired constructor(
                 targetUrl = targetUrl,
                 context = record.context ?: pipelineName,
                 description = description,
-                targetBranch = record.targetBranch
+                targetBranch = if (record.targetBranch != null) {
+                    mutableListOf(record.targetBranch)
+                } else {
+                    mutableListOf()
+                }
             )
             pluginGitCheckDao.update(
                 dslContext = dslContext,

@@ -71,7 +71,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         targetUrl: String,
         context: String,
         description: String,
-        targetBranch: String? = null
+        targetBranch: List<String>? = null
     ): String {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
@@ -117,15 +117,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 block = block,
                 mrRequestId = event.mergeRequestId,
                 reportData = QualityUtils.getQualityGitMrResult(client, event),
-                targetBranch = if (event.mergeRequestId != null) {
-                    if (targetBranch != null) {
-                        mutableListOf(targetBranch)
-                    } else {
-                        mutableListOf()
-                    }
-                } else {
-                    mutableListOf("~NONE")
-                }
+                targetBranch = targetBranch
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
