@@ -46,7 +46,7 @@ module.exports = (env, argv) => {
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
-            publicPath: '__BK_CI_PUBLIC_URL__/pipeline/',
+            publicPath: '__BK_CI_PUBLIC_PATH__/pipeline/',
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
             extUrlPrefix
         }),
