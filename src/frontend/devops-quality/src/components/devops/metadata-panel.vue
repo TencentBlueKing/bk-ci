@@ -18,20 +18,20 @@
                 <template v-if="isCtrPointPanel">
                     <div class="property-item-wrapper"
                         v-for="(classify, index) in metaTree" :key="index">
-                        <div class="classify-header"><span class="title">{{ classify.stage }}</span></div>
+                        <div class="classify-header"><span class="title">{{classify.stage}}</span></div>
                         <div class="control-point-wrapper" v-for="(atom, childIndex) in classify.controlPoints" :key="childIndex">
                             <div :class="{
-                                     &quot;proprety-item-contnet&quot;: true,
-                                     &quot;control-point-content&quot;: true,
-                                     &quot;optional-item&quot;: !atom.isSelected
+                                     'proprety-item-contnet': true,
+                                     'control-point-content': true,
+                                     'optional-item': !atom.isSelected
                                  }"
                                 v-if="atom.isDisplay">
                                 <div class="info-title">
-                                    <icon :name="getAtomIcon(atom.type)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{ atom.name }}</span>
+                                    <icon :name="getAtomIcon(atom.type)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{atom.name}}</span>
                                 </div>
-                                <div class="handle-btn selected-btn" v-if="atom.isSelected">已选择</div>
+                                <div class="handle-btn selected-btn" v-if="atom.isSelected">{{$t('quality.已选择')}}</div>
                                 <div class="handle-btn select-btn" v-if="!atom.isSelected"
-                                    @click="selectNode(atom, 'controlPoint')">选择
+                                    @click="selectNode(atom, 'controlPoint')">{{$t('quality.选择')}}
                                 </div>
                             </div>
                         </div>
@@ -43,15 +43,15 @@
                     <div class="task-item-wrapper"
                         v-for="(task, index) in metaTree" :key="index">
                         <div :class="{
-                                 &quot;proprety-item-contnet&quot;: true,
-                                 &quot;task-item-content&quot;: true,
-                                 &quot;optional-item&quot;: isIndexList && !task.isSelected,
-                                 &quot;hover&quot;: task.isDropdownShow
+                                 'proprety-item-contnet': true,
+                                 'task-item-content': true,
+                                 'optional-item': isIndexList && !task.isSelected,
+                                 'hover': task.isDropdownShow
                              }"
                             v-if="task.isDisplay"
                             @click="toggleDropdown(task.hashId)">
-                            <div class="task-name" :title="task.name">{{ task.name }}</div>
-                            <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
+                            <div class="task-name" :title="task.name">{{task.name}}</div>
+                            <div class="task-desc" :title="task.desc">{{task.desc}}</div>
                             <div class="dropdown-icon" :class="{ 'hide': !task.indicators.length }">
                                 <i :class="{
                                     'devops-icon': true,
@@ -60,17 +60,17 @@
                                 }"></i>
                             </div>
                             <div class="handle-btn select-btn" v-if="isIndexList && !task.isSelected"
-                                @click.stop="selectNode(task, 'indexList')">添加</div>
+                                @click.stop="selectNode(task, 'indexList')">{{$t('quality.添加')}}</div>
                         </div>
                         <template v-if="task.isDropdownShow">
                             <div class="metadata-item-wrapper"
                                 v-for="(metadata, metaIndex) in task.indicators" :key="metaIndex">
                                 <div class="proprety-item-contnet metadata-item-content"
                                     v-if="task.indicators.length && metadata.isDisplay">
-                                    <div class="meta-name" :title="metadata.cnName">{{ metadata.cnName }}</div>
+                                    <div class="meta-name" :title="metadata.cnName">{{metadata.cnName}}</div>
                                     <!-- <div class="meta-desc" :title="getIndicatorDesc(metadata.metadataList)">{{ getIndicatorDesc(metadata.metadataList) }}</div> -->
-                                    <div class="meta-desc" :title="metadata.desc">{{ metadata.desc }}</div>
-                                    <div class="handle-btn selected-btn" v-if="metadata.isSelected">已选择</div>
+                                    <div class="meta-desc" :title="metadata.desc">{{metadata.desc}}</div>
+                                    <div class="handle-btn selected-btn" v-if="metadata.isSelected">{{$t('quality.已选择')}}</div>
                                 </div>
                             </div>
                         </template>
@@ -81,25 +81,25 @@
                 <template v-if="!isCtrPointPanel && !isIndexList">
                     <div class="property-item-wrapper"
                         v-for="(classify, index) in metaTree" :key="index">
-                        <div class="classify-header"><span class="title">{{ classify.stage }}</span></div>
+                        <div class="classify-header"><span class="title">{{classify.stage}}</span></div>
                         <div class="control-point-wrapper" v-for="(atom, atomIndex) in classify.controlPoints" :key="atomIndex">
                             <div class="proprety-item-contnet control-point-content"
                                 v-if="atom.isDisplay">
                                 <div class="info-title">
-                                    <icon :name="getAtomIcon(atom.controlPoint)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{ atom.controlPointName }}</span>
+                                    <icon :name="getAtomIcon(atom.controlPoint)" size="24" style="fill:#C3CDD7" /><span class="atom-name">{{atom.controlPointName}}</span>
                                 </div>
                             </div>
                             <div class="task-item-wrapper" style="padding-left:10px;"
                                 v-for="(task, taskIndex) in atom.details" :key="taskIndex">
                                 <div :class="{
-                                         &quot;proprety-item-contnet&quot;: true,
-                                         &quot;task-item-content&quot;: true,
-                                         &quot;hover&quot;: task.isDropdownShow
+                                         'proprety-item-contnet': true,
+                                         'task-item-content': true,
+                                         'hover': task.isDropdownShow
                                      }"
                                     v-if="task.isDisplay || atom.isMatch"
                                     @click="toggleDropdown(task.hashId)">
-                                    <div class="task-name" :title="task.detail">{{ task.detail }}</div>
-                                    <div class="task-desc" :title="task.desc">{{ task.desc }}</div>
+                                    <div class="task-name" :title="task.detail">{{task.detail}}</div>
+                                    <div class="task-desc" :title="task.desc">{{task.desc}}</div>
                                     <div class="dropdown-icon" :class="{ 'hide': !task.items.length }">
                                         <i :class="{
                                             'devops-icon': true,
@@ -112,17 +112,17 @@
                                     <div class="metadata-item-wrapper"
                                         v-for="(metadata, metaIndex) in task.items" :key="metaIndex">
                                         <div :class="{
-                                                 &quot;proprety-item-contnet&quot;: true,
-                                                 &quot;metadata-item-content&quot;: true,
-                                                 &quot;optional-item&quot;: !metadata.isSelected && !isIndexList
+                                                 'proprety-item-contnet': true,
+                                                 'metadata-item-content': true,
+                                                 'optional-item': !metadata.isSelected && !isIndexList
                                              }"
                                             v-if="task.items.length && metadata.isDisplay">
-                                            <div class="meta-name" :title="metadata.cnName">{{ metadata.cnName }}</div>
+                                            <div class="meta-name" :title="metadata.cnName">{{metadata.cnName}}</div>
                                             <!-- <div class="meta-desc" :title="getIndicatorDesc(metadata.metadataList)">{{ getIndicatorDesc(metadata.metadataList) }}</div> -->
-                                            <div class="meta-desc" :title="metadata.desc">{{ metadata.desc }}</div>
-                                            <div class="handle-btn selected-btn" v-if="metadata.isSelected">已选择</div>
+                                            <div class="meta-desc" :title="metadata.desc">{{metadata.desc}}</div>
+                                            <div class="handle-btn selected-btn" v-if="metadata.isSelected">{{$t('quality.已选择')}}</div>
                                             <div class="handle-btn select-btn" v-if="!metadata.isSelected && !isIndexList"
-                                                @click="selectNode(metadata, 'singleIndex')">添加
+                                                @click="selectNode(metadata, 'singleIndex')">{{$t('quality.添加')}}
                                             </div>
                                         </div>
                                     </div>
@@ -171,8 +171,8 @@
                 indicatorList: [],
                 controlPointList: [],
                 panels: [
-                    { name: 'indexList', label: '指标集' },
-                    { name: 'singleIndex', label: '单个指标' }
+                    { name: 'indexList', label: this.$t('quality.指标集') },
+                    { name: 'singleIndex', label: this.$t('quality.单个指标') }
                 ]
             }
         },

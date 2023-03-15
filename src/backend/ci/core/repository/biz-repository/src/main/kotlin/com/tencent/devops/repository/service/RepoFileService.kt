@@ -378,7 +378,7 @@ class RepoFileService @Autowired constructor(
         )
     }
 
-    fun getAndCheckOauthToken(
+    private fun getAndCheckOauthToken(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(

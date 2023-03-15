@@ -7,6 +7,7 @@ import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
 import com.tencent.devops.remotedev.service.UserRefreshService
+import com.tencent.devops.remotedev.service.WhiteListService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import org.springframework.beans.factory.annotation.Autowired
@@ -16,7 +17,8 @@ class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService,
     private val workspaceService: WorkspaceService,
     private val userRefreshService: UserRefreshService,
-    private val remoteDevSettingService: RemoteDevSettingService
+    private val remoteDevSettingService: RemoteDevSettingService,
+    private val whiteListService: WhiteListService
 ) : OpRemoteDevResource {
 
     override fun addWorkspaceTemplate(userId: String, workspaceTemplate: WorkspaceTemplate): Result<Boolean> {
@@ -53,5 +55,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
 
     override fun refreshUserInfo(userId: String): Result<Boolean> {
         return Result(userRefreshService.refreshAllUser())
+    }
+
+    override fun addWhiteListUser(userId: String, whiteListUser: String): Result<Boolean> {
+        return Result(whiteListService.addWhiteListUser(userId, whiteListUser))
     }
 }

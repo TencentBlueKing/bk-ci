@@ -41,7 +41,6 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
             if (toImageRepo.endsWith("/")) it else it + "/"
         } + "bkci-" + service + ":" + toImageTag
     }
-    println("the image will to : $toImage")
 
     val configNamespace = System.getProperty("config.namespace")
 
@@ -63,7 +62,8 @@ if (toImage.isNullOrBlank() || (toImageRepo.isNullOrBlank() && toImageTag.isNull
         "-XX:+UseContainerSupport",
         "-XX:InitialRAMPercentage=70.0",
         "-XX:MaxRAMPercentage=70.0",
-        "-XX:MaxRAMPercentage=70.0",
+        "-XX:MetaspaceSize=500m",
+        "-XX:MaxMetaspaceSize=500m",
         "-XX:-UseAdaptiveSizePolicy",
         "-Dspring.jmx.enabled=true",
         "-Dservice.log.dir=/data/workspace/$service/logs/",

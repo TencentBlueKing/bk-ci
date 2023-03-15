@@ -112,8 +112,8 @@ spec:
       volumes:
       - name: mypvc
         nfs:
-          path: /4c1q3vbj/{{ .Values.cfsPath }}/openapi
-          server: 9.136.137.6
+          path: /{{ .Values.cfsPath }}/openapi
+          server: {{ .Values.cfsIP }}
       - hostPath:
           path: /data
         name: log-volume

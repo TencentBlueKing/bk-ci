@@ -30,6 +30,8 @@ package com.tencent.devops.store.dao.common
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.model.store.tables.TStoreDockingPlatform
+import com.tencent.devops.model.store.tables.TStoreDockingPlatformErrorCode
+import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformErrorCodeRecord
 import com.tencent.devops.model.store.tables.records.TStoreDockingPlatformRecord
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformInfo
 import com.tencent.devops.store.pojo.common.StoreDockingPlatformRequest
@@ -60,7 +62,8 @@ class StoreDockingPlatformDao {
                 CREATOR,
                 MODIFIER,
                 OWNER_DEPT_NAME,
-                LABELS
+                LABELS,
+                ERROR_CODE_PREFIX
             )
                 .values(
                     UUIDUtil.generate(),
@@ -73,47 +76,9 @@ class StoreDockingPlatformDao {
                     userId,
                     userId,
                     storeDockingPlatformRequest.ownerDeptName,
-                    storeDockingPlatformRequest.labels?.joinToString(",")
+                    storeDockingPlatformRequest.labels?.joinToString(","),
+                    storeDockingPlatformRequest.errorCodePrefix
                 ).execute()
-        }
-    }
-
-    fun batchCreate(
-        dslContext: DSLContext,
-        userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
-        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-                return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                    dslContext.insertInto(
-                        this,
-                        ID,
-                        PLATFORM_CODE,
-                        PLATFORM_NAME,
-                        WEBSITE,
-                        SUMMARY,
-                        PRINCIPAL,
-                        LOGO_URL,
-                        CREATOR,
-                        MODIFIER,
-                        OWNER_DEPT_NAME,
-                        LABELS
-                    )
-                        .values(
-                            UUIDUtil.generate(),
-                            storeDockingPlatformRequest.platformCode,
-                            storeDockingPlatformRequest.platformName,
-                            storeDockingPlatformRequest.website,
-                            storeDockingPlatformRequest.summary,
-                            storeDockingPlatformRequest.principal,
-                            storeDockingPlatformRequest.logoUrl,
-                            userId,
-                            userId,
-                            storeDockingPlatformRequest.ownerDeptName,
-                            storeDockingPlatformRequest.labels?.joinToString(",")
-                        )
-                }
-            ).execute().size
         }
     }
 
@@ -135,33 +100,31 @@ class StoreDockingPlatformDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+                .set(ERROR_CODE_PREFIX, storeDockingPlatformRequest.errorCodePrefix)
                 .where(ID.eq(id))
                 .execute()
         }
     }
 
-    fun batchUpdate(
+    fun update(
         dslContext: DSLContext,
         userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
+        storeDockingPlatformRequest: StoreDockingPlatformRequest
+    ) {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                var step = dslContext.update(this)
-                    .set(SUMMARY, storeDockingPlatformRequest.summary)
-                    .set(PRINCIPAL, storeDockingPlatformRequest.principal)
-                    .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
-                    .set(WEBSITE, storeDockingPlatformRequest.website)
-                    .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
-                    .set(UPDATE_TIME, LocalDateTime.now())
-                    .set(MODIFIER, userId)
-                    .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
-                if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
-                    step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
-                }
-                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+            var step = dslContext.update(this)
+                .set(SUMMARY, storeDockingPlatformRequest.summary)
+                .set(PRINCIPAL, storeDockingPlatformRequest.principal)
+                .set(PLATFORM_NAME, storeDockingPlatformRequest.platformName)
+                .set(WEBSITE, storeDockingPlatformRequest.website)
+                .set(LABELS, storeDockingPlatformRequest.labels?.joinToString(","))
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .set(MODIFIER, userId)
+                .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
+            if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
+                step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
             }
-            ).execute().size
+            step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode)).execute()
         }
     }
 
@@ -173,17 +136,15 @@ class StoreDockingPlatformDao {
         }
     }
 
-    fun batchDelete(
+    fun delete(
         dslContext: DSLContext,
-        userId: String,
-        storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
-    ): Int {
+        storeDockingPlatformRequest: StoreDockingPlatformRequest
+    ) {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            return dslContext.batch(storeDockingPlatformRequests.map {
-                dslContext.deleteFrom(this)
-                    .where(PLATFORM_CODE.eq(it.platformCode))
-                    .and(OWNER_DEPT_NAME.eq(it.ownerDeptName))
-            }).execute().size
+            dslContext.deleteFrom(this)
+                .where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+                .and(OWNER_DEPT_NAME.eq(storeDockingPlatformRequest.ownerDeptName))
+                .execute()
         }
     }
 
@@ -191,6 +152,14 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectCount().from(this)
                 .where(PLATFORM_NAME.eq(platformName))
+                .fetchOne(0, Int::class.java)!!
+        }
+    }
+
+    fun countByErrorCodePrefix(dslContext: DSLContext, errorCodePrefix: Int): Int {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectCount().from(this)
+                .where(ERROR_CODE_PREFIX.eq(errorCodePrefix))
                 .fetchOne(0, Int::class.java)!!
         }
     }
@@ -207,6 +176,14 @@ class StoreDockingPlatformDao {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectFrom(this)
                 .where(ID.eq(id))
+                .fetchOne()
+        }
+    }
+
+    fun getStoreDockingPlatformByErrorCode(dslContext: DSLContext, prefix: Int): TStoreDockingPlatformRecord? {
+        with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
+            return dslContext.selectFrom(this)
+                .where(ERROR_CODE_PREFIX.eq(prefix))
                 .fetchOne()
         }
     }
@@ -326,6 +303,19 @@ class StoreDockingPlatformDao {
     fun isPlatformCodeRegistered(dslContext: DSLContext, platformCode: String): Boolean {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
             return dslContext.selectFrom(this).where(PLATFORM_CODE.eq(platformCode)).fetchOne() != null
+        }
+    }
+
+    fun getPlatformErrorCode(
+        dslContext: DSLContext,
+        platformCode: String,
+        errorCode: Int
+    ): TStoreDockingPlatformErrorCodeRecord? {
+        with(TStoreDockingPlatformErrorCode.T_STORE_DOCKING_PLATFORM_ERROR_CODE) {
+            return dslContext.selectFrom(this)
+                .where(PLATFORM_CODE.eq(platformCode))
+                .and(ERROR_CODE.eq(errorCode))
+                .fetchOne()
         }
     }
 }

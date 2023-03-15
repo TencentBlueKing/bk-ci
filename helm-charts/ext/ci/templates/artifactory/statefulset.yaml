@@ -1,6 +1,6 @@
 #artifactory Deployment (文件名主要是为了覆盖core)
 {{ if .Values.artifactory.enabled -}}
-apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
+apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
   name: {{ include "bkci.names.fullname" . }}-artifactory

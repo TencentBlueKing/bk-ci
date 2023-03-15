@@ -212,4 +212,6 @@ class StreamScheduleAction(
     override fun updatePipelineLastBranchAndDisplayName(pipelineId: String, branch: String?, displayName: String?) {}
 
     override fun getStartType() = StartType.TIME_TRIGGER
+
+    override fun checkIfModify() = true
 }

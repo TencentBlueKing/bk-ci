@@ -121,5 +121,25 @@ class P4WebHookMatcherTest {
                 webHookParams = webHookParams
             ).isMatch
         )
+
+        webHookParams = WebHookParams(
+            repositoryConfig = RepositoryConfig(
+                repositoryHashId = "dfd",
+                repositoryType = RepositoryType.ID,
+                repositoryName = null
+            ),
+            eventType = CodeEventType.CHANGE_COMMIT,
+            includePaths = "//depot/**",
+            excludePaths = "",
+            version = "2.0.0"
+        )
+        Assertions.assertFalse(
+            matcher.isMatch(
+                projectId = "mht",
+                pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+                repository = repository,
+                webHookParams = webHookParams
+            ).isMatch
+        )
     }
 }

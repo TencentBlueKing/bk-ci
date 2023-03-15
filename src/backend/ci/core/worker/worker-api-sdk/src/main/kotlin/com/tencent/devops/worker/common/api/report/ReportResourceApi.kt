@@ -96,11 +96,13 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     }
 
     override fun createReportRecord(
+        buildVariables: BuildVariables,
         taskId: String,
         indexFile: String,
         name: String,
         reportType: String?,
-        reportEmail: ReportEmail?
+        reportEmail: ReportEmail?,
+        token: String?
     ): Result<Boolean> {
         val indexFileEncode = encode(indexFile)
         val nameEncode = encode(name)

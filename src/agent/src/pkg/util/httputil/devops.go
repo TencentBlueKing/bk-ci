@@ -78,7 +78,7 @@ func (r *HttpResult) IntoDevopsResult() (*DevopsResult, error) {
 	result := new(DevopsResult)
 	err := json.Unmarshal(r.Body, result)
 	if nil != err {
-		logs.Error("parse result error: ", err.Error())
+		logs.Errorf("parse devops result %s status %d error: %s", r.Body, r.Status, err.Error())
 		return nil, errors.New("parse result error")
 	} else {
 		return result, nil
@@ -93,7 +93,7 @@ func (r *HttpResult) IntoAgentResult() (*AgentResult, error) {
 	result := new(AgentResult)
 	err := json.Unmarshal(r.Body, result)
 	if nil != err {
-		logs.Error("parse result error: ", err.Error())
+		logs.Errorf("parse agent result %s status %d error: %s", r.Body, r.Status, err.Error())
 		return nil, errors.New("parse result error")
 	} else {
 		return result, nil

@@ -54,7 +54,6 @@ import com.tencent.devops.repository.pojo.git.GitCodeFileInfo
 import com.tencent.devops.repository.pojo.git.GitCodeProjectInfo
 import com.tencent.devops.repository.pojo.git.GitMrChangeInfo
 import com.tencent.devops.repository.pojo.git.GitOperationFile
-import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.repository.pojo.git.GitUserInfo
 import com.tencent.devops.repository.pojo.git.UpdateGitProjectInfo
 import com.tencent.devops.repository.pojo.gitlab.GitlabFileInfo
@@ -77,11 +76,13 @@ import com.tencent.devops.scm.pojo.ChangeFileInfo
 import com.tencent.devops.scm.pojo.Commit
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.scm.pojo.GitMrReviewInfo
 import com.tencent.devops.scm.pojo.GitProjectGroupInfo
+import com.tencent.devops.scm.pojo.GitProjectInfo
 import com.tencent.devops.scm.pojo.GitRepositoryDirItem
 import com.tencent.devops.scm.pojo.GitRepositoryResp
 import com.tencent.devops.scm.pojo.Project
@@ -438,6 +439,10 @@ class GitService @Autowired constructor(
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the token")
         }
+    }
+
+    override fun getUserInfoById(userId: String, token: String, tokenType: TokenTypeEnum): GitUserInfo {
+        return getGitUserInfo(userId, token, tokenType).data!!
     }
 
     @BkTimed(extraTags = ["operation", "RedirectUrl"], value = "bk_tgit_api_time")
@@ -1891,6 +1896,29 @@ class GitService @Autowired constructor(
                 id = gitProjectId,
                 type = type,
                 iid = iid
+            )
+        )
+    }
+
+    override fun getCommitDiff(
+        accessToken: String,
+        tokenType: TokenTypeEnum,
+        gitProjectId: String,
+        sha: String,
+        path: String?,
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>> {
+        val gitApi = if (tokenType == TokenTypeEnum.OAUTH) {
+            GitOauthApi()
+        } else {
+            GitApi()
+        }
+        return Result(
+            gitApi.getCommitDiff(
+                host = gitConfig.gitApiUrl,
+                sha = sha,
+                token = accessToken,
+                projectName = gitProjectId
             )
         )
     }

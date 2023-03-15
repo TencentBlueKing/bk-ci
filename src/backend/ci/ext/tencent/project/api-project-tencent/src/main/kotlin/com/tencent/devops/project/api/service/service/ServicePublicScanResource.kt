@@ -38,6 +38,7 @@ import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
+import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_PUBLICSCAN"], description = "开源代码扫描项目接口")
@@ -53,6 +54,12 @@ interface ServicePublicScanResource {
         @ApiParam("用户ID", required = true)
         @PathParam("userId")
         userId: String,
+        @ApiParam("TAG", required = false)
+        @QueryParam("tag")
+        tag: String? = null,
+        @ApiParam("CodeCC路由Tag", required = false)
+        @QueryParam("codeccTag")
+        codeccTag: String? = null,
         @ApiParam(value = "项目创建信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO>

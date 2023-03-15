@@ -4,18 +4,17 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.environment.agent.utils.ShaUtils
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.macos.dao.DevcloudVirtualMachineDao
 import com.tencent.devops.dispatch.macos.enums.DevCloudCreateMacVMStatus
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreate
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmCreateInfo
 import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmDelete
+import com.tencent.devops.dispatch.macos.pojo.devcloud.DevCloudMacosVmInfo
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.RandomStringUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -41,9 +40,6 @@ class DevCloudMacosService @Autowired constructor(
 
     @Value("\${macos.devCloud.url:}")
     private lateinit var devCloudUrl: String
-
-    @Value("\${macos.devCloud.smartProxyToken:}")
-    private lateinit var smartProxyToken: String
 
     @Value("\${devopsGateway.idcProxy:}")
     private lateinit var devopsIdcProxyGateway: String
@@ -74,7 +70,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("$buildId DevCloud creatVM request body: $body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -156,7 +152,7 @@ class DevCloudMacosService @Autowired constructor(
         val url = "$devCloudUrl/api/mac/task/result/$taskId"
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -234,7 +230,7 @@ class DevCloudMacosService @Autowired constructor(
         logger.info("DevCloud deleteVM body:$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
@@ -254,25 +250,76 @@ class DevCloudMacosService @Autowired constructor(
         return result
     }
 
+    fun getVmList(): List<DevCloudMacosVmInfo> {
+        val url = "$devCloudUrl/api/mac/pool/list?page=1&size=9999"
+        val request = Request.Builder()
+            .url(toIdcUrl(url))
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, "").toHeaders())
+            .get()
+            .build()
+
+        OkhttpUtils.doHttp(request).use { response ->
+            val responseContent = response.body!!.string()
+            logger.info("DevCloud getVmList http code is ${response.code}, $responseContent")
+            if (!response.isSuccessful) {
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
+                return emptyList()
+            }
+            val responseData: Map<String, Any> = jacksonObjectMapper().readValue(responseContent)
+            val code = responseData["actionCode"] as Int
+            if (200 != code) {
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
+                return emptyList()
+            }
+
+            val dataMap = responseData["data"] as Map<String, Any>
+            if (!dataMap.containsKey("items")) {
+                logger.error(
+                    "Fail to request to DevCloud getVmList, http response code: ${response.code}, " +
+                        "msg: $responseContent"
+                )
+                return emptyList()
+            }
+
+            return getVMInfos(dataMap)
+        }
+    }
+
+    private fun getVMInfos(
+        dataMap: Map<String, Any>
+    ): List<DevCloudMacosVmInfo> {
+        val vmInfoList = mutableListOf<DevCloudMacosVmInfo>()
+        val itemsList = dataMap["items"] as List<Any>
+        itemsList.forEach { item ->
+            val itemTmp = item as Map<String, Any>
+
+            if (itemTmp["ip"] == null) {
+                return@forEach
+            }
+
+            vmInfoList.add(
+                DevCloudMacosVmInfo(
+                    name = itemTmp["name"] as String ?: "",
+                    memory = itemTmp["memory"] as String ?: "",
+                    assetId = itemTmp["assetId"] as String ?: "",
+                    ip = itemTmp["ip"] as String ?: "",
+                    disk = itemTmp["disk"] as String ?: "",
+                    os = itemTmp["os"] as String ?: "",
+                    id = itemTmp["id"] as Int ?: 0,
+                    cpu = itemTmp["cpu"] as String ?: ""
+                )
+            )
+        }
+
+        return vmInfoList
+    }
+
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
-
-    fun makeHeaders(appId: String, token: String, staffname: String, proxyToken: String): Map<String, String> {
-        val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["APPID"] = appId
-        val random = RandomStringUtils.randomAlphabetic(8)
-        headerBuilder["RANDOM"] = random
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        headerBuilder["TIMESTP"] = timestamp
-        val encKey = DigestUtils.md5Hex("$token$timestamp$random")
-        headerBuilder["ENCKEY"] = encKey
-        headerBuilder["TIMESTAMP"] = timestamp
-        // 发给devcloud的header里加入创建者,有STAFFNAME会被智能网关拦截
-//        headerBuilder["STAFFNAME"] = staffname
-        headerBuilder["X-STAFFNAME"] = staffname
-        val signature = ShaUtils.sha256("$timestamp$proxyToken$timestamp")
-        headerBuilder["SIGNATURE"] = signature.toUpperCase()
-
-        return headerBuilder
-    }
 }

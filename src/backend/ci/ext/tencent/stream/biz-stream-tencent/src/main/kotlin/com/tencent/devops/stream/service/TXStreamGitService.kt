@@ -65,7 +65,7 @@ class TXStreamGitService @Autowired constructor(
                     gitSshUrl = it.gitSshUrl,
                     nameWithNamespace = it.nameWithNamespace,
                     pathWithNamespace = it.pathWithNamespace,
-                    defaultBranch = "master",
+                    defaultBranch = it.defaultBranch ?: "master",
                     description = it.description,
                     avatarUrl = it.avatarUrl,
                     routerTag = null

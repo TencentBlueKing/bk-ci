@@ -123,10 +123,21 @@ interface OpRemoteDevResource {
     @ApiOperation("更新用户组织架构")
     @POST
     @Path("/refresh/all")
-
     fun refreshUserInfo(
         @ApiParam(value = "用户ID", required = true)
         @HeaderParam(AUTH_HEADER_USER_ID)
         userId: String
+    ): Result<Boolean>
+
+    @ApiOperation("添加客户端白名单用户")
+    @POST
+    @Path("/whiteList/add")
+    fun addWhiteListUser(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam(value = "需要添加的白名单用户，多个用;分隔", required = true)
+        @QueryParam("whiteListUser")
+        whiteListUser: String
     ): Result<Boolean>
 }

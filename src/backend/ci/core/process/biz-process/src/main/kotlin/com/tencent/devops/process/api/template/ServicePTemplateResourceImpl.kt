@@ -65,6 +65,10 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         return pipelineTemplateService.getTemplateDetailInfo(templateCode)
     }
 
+    override fun checkImageReleaseStatus(userId: String, templateCode: String): Result<String?> {
+        return pipelineTemplateService.checkImageReleaseStatus(userId, templateCode)
+    }
+
     override fun getSrcTemplateCodes(projectId: String): Result<List<String>> {
         return templateFacadeService.getSrcTemplateCodes(projectId)
     }
@@ -84,43 +88,34 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<TemplateListModel> {
-        return Result(templateFacadeService.listTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateType = templateType,
-            storeFlag = storeFlag,
-            page = page ?: 1,
-            pageSize = pageSize ?: 1000
-        ))
+        return Result(
+            templateFacadeService.listTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateType = templateType,
+                storeFlag = storeFlag,
+                page = page ?: 1,
+                pageSize = pageSize ?: 1000
+            )
+        )
     }
 
     override fun getTemplate(
         userId: String,
         projectId: String,
         templateId: String,
-        version: Long?
-    ): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            version = version
-        ))
-    }
-
-    override fun getTemplate(
-        userId: String,
-        projectId: String,
-        templateId: String,
+        version: Long?,
         versionName: String?
     ): Result<TemplateModelDetail> {
-        return Result(templateFacadeService.getTemplate(
-            projectId = projectId,
-            userId = userId,
-            templateId = templateId,
-            version = null,
-            versionName = versionName
-        ))
+        return Result(
+            templateFacadeService.getTemplate(
+                projectId = projectId,
+                userId = userId,
+                templateId = templateId,
+                version = version,
+                versionName = versionName
+            )
+        )
     }
 
     override fun listAllTemplate(
@@ -130,13 +125,15 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         page: Int?,
         pageSize: Int?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(
-            projectId = projectId,
-            templateType = templateType,
-            templateIds = null,
-            page = page ?: 1,
-            pageSize = pageSize ?: 1000
-        ))
+        return Result(
+            templateFacadeService.listAllTemplate(
+                projectId = projectId,
+                templateType = templateType,
+                templateIds = null,
+                page = page ?: 1,
+                pageSize = pageSize ?: 1000
+            )
+        )
     }
 
     override fun updateStoreFlag(userId: String, templateId: String, storeFlag: Boolean): Result<Boolean> {
@@ -152,11 +149,13 @@ class ServicePTemplateResourceImpl @Autowired constructor(
         projectId: String?,
         templateType: TemplateType?
     ): Result<OptionalTemplateList> {
-        return Result(templateFacadeService.listAllTemplate(
-            projectId = projectId,
-            templateType = templateType,
-            templateIds = templateIds
-        ))
+        return Result(
+            templateFacadeService.listAllTemplate(
+                projectId = projectId,
+                templateType = templateType,
+                templateIds = templateIds
+            )
+        )
     }
 
     override fun checkTemplate(userId: String, projectId: String, templateId: String): Result<Boolean> {

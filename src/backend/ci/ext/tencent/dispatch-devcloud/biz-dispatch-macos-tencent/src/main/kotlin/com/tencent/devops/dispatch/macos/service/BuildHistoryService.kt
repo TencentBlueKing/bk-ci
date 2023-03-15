@@ -62,6 +62,9 @@ class BuildHistoryService @Autowired constructor(
                 buildTaskRecord.executeCount = dispatchMessage.executeCount
                 logger.info("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] " +
                                 "save buildHistoryId: ${buildHistoryRecord.id}, vmIp: $vmIp")
+
+                // 插入构建运行时，shutdown时依赖这个记录
+                buildTaskDao.save(context, buildTaskRecord)
             } else {
                 logger.error("[${dispatchMessage.buildId}]|[${dispatchMessage.vmSeqId}] fail to save buildTask.")
                 throw RuntimeException("Insert into build history table failed.")

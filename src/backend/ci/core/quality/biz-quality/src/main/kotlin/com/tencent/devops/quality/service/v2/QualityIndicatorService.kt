@@ -32,12 +32,12 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.model.quality.tables.records.TQualityIndicatorRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.enums.IndicatorType
 import com.tencent.devops.quality.api.v2.pojo.enums.QualityDataType
-import com.tencent.devops.common.quality.pojo.enums.QualityOperation
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorData
 import com.tencent.devops.quality.api.v2.pojo.op.IndicatorUpdate
 import com.tencent.devops.quality.api.v2.pojo.request.IndicatorCreate
@@ -47,8 +47,7 @@ import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityTemplateIndicatorMapDao
 import com.tencent.devops.quality.pojo.enum.RunElementType
 import com.tencent.devops.quality.util.ElementUtils
-import com.tencent.devops.store.api.atom.ServiceAtomResource
-import com.tencent.devops.store.pojo.atom.InstalledAtom
+import com.tencent.devops.store.api.atom.ServiceMarketAtomResource
 import com.tencent.devops.store.pojo.common.enums.StoreProjectTypeEnum
 import org.jooq.DSLContext
 import org.jooq.Result
@@ -522,9 +521,9 @@ class QualityIndicatorService @Autowired constructor(
     }
 
     fun listIndicatorByProject(projectId: String): List<TQualityIndicatorRecord> {
-        val installedAtoms = getProjectAtomCodes(projectId)
-        val atomCodes = installedAtoms.map { it.atomCode }.toSet()
-        val installedAtomMap = installedAtoms.map { it.atomCode to it }.toMap()
+        val projectAtomsMap = getProjectAtomCodes(projectId)
+        logger.info("QUALITY|get project atoms map: $projectAtomsMap")
+        val atomCodes = projectAtomsMap.map { it.key }.toSet()
 
         val result = mutableListOf<TQualityIndicatorRecord>()
         val indicators = indicatorDao.listAll(dslContext)
@@ -533,11 +532,11 @@ class QualityIndicatorService @Autowired constructor(
         indicators.filter { it.type != IndicatorType.CUSTOM.name || it.indicatorRange == projectId } // 过滤调非本项目的脚本插件
             .groupBy { it.elementType }
             .forEach { (type, list) ->
-                val atom = installedAtomMap[type] ?: return@forEach
+                val installType = projectAtomsMap[type] ?: return@forEach
                 // 测试项目和测试指标不为空的话，就只列出插件测试相关的指标
                 val testIndicators = list.filter { isTestIndicator(it) }
-                val isTestProject = atom.installType == StoreProjectTypeEnum.TEST.name ||
-                    atom.installType == StoreProjectTypeEnum.INIT.name
+                val isTestProject = installType == StoreProjectTypeEnum.TEST.name ||
+                        installType == StoreProjectTypeEnum.INIT.name
                 if (isTestProject && testIndicators.isNotEmpty()) {
                     result.addAll(testIndicators)
                 } else {
@@ -602,8 +601,8 @@ class QualityIndicatorService @Autowired constructor(
         val indicators = indicatorDao.listByType(dslContext, IndicatorType.CUSTOM) ?: return false
         indicators.forEach { indicator ->
             if (indicator.indicatorRange != projectId) return@forEach
-            if (indicators.any { it.enName == enName }) throw OperationException("英文名($enName)的指标已存在")
-            if (indicators.any { it.cnName == cnName }) throw OperationException("中文名($cnName)的指标已存在")
+            if (indicator.enName == enName) throw OperationException("英文名($enName)的指标已存在")
+            if (indicator.cnName == cnName) throw OperationException("中文名($cnName)的指标已存在")
         }
         return false
     }
@@ -649,8 +648,8 @@ class QualityIndicatorService @Autowired constructor(
         )
     }
 
-    private fun getProjectAtomCodes(projectId: String): List<InstalledAtom> {
-        return client.get(ServiceAtomResource::class).getInstalledAtoms(projectId).data ?: listOf()
+    private fun getProjectAtomCodes(projectId: String): Map<String, String> {
+        return client.get(ServiceMarketAtomResource::class).getProjectElementsInfo(projectId).data ?: mutableMapOf()
     }
 
     private fun serviceListIndicatorRecord(qualityIndicators: List<TQualityIndicatorRecord>?): List<QualityIndicator> {

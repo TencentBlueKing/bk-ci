@@ -67,6 +67,7 @@ import com.tencent.devops.store.pojo.common.KEY_CLASS_TYPE
 import com.tencent.devops.store.pojo.common.KEY_CREATE_TIME
 import com.tencent.devops.store.pojo.common.KEY_CREATOR
 import com.tencent.devops.store.pojo.common.KEY_DEFAULT_FLAG
+import com.tencent.devops.store.pojo.common.KEY_HOT_FLAG
 import com.tencent.devops.store.pojo.common.KEY_HTML_TEMPLATE_VERSION
 import com.tencent.devops.store.pojo.common.KEY_ICON
 import com.tencent.devops.store.pojo.common.KEY_ID
@@ -680,7 +681,8 @@ class AtomDao : AtomBaseDao() {
             ta.HTML_TEMPLATE_VERSION.`as`(KEY_HTML_TEMPLATE_VERSION),
             taf.RECOMMEND_FLAG.`as`(KEY_RECOMMEND_FLAG),
             tsst.SCORE_AVERAGE.`as`(KEY_AVG_SCORE),
-            tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM)
+            tsst.RECENT_EXECUTE_NUM.`as`(KEY_RECENT_EXECUTE_NUM),
+            tsst.HOT_FLAG.`as`(KEY_HOT_FLAG)
         )
             .from(ta)
             .join(tc)
@@ -1264,6 +1266,47 @@ class AtomDao : AtomBaseDao() {
                         .and(ATOM_CODE.`in`(atomCodes))
                 )
                 .fetch()
+        }
+    }
+
+    fun getPublishedAtoms(
+        dslContext: DSLContext,
+        timeDescFlag: Boolean = true,
+        page: Int,
+        pageSize: Int
+    ): List<String> {
+        with(TAtom.T_ATOM) {
+            val baseStep = dslContext.select(ATOM_CODE)
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+            if (timeDescFlag) {
+                baseStep.orderBy(CREATE_TIME.desc(), ID)
+            } else {
+                baseStep.orderBy(CREATE_TIME.asc(), ID)
+            }
+            return baseStep.groupBy(ATOM_CODE)
+                .limit((page - 1) * pageSize, pageSize).fetchInto(String::class.java)
+        }
+    }
+
+    fun getPublishedAtomCount(
+        dslContext: DSLContext
+    ): Int {
+        with(TAtom.T_ATOM) {
+            return dslContext.select()
+                .from(this)
+                .where(ATOM_STATUS.eq(AtomStatusEnum.RELEASED.status.toByte()))
+                .groupBy(ATOM_CODE)
+                .execute()
+        }
+    }
+
+    fun getAtomCodeSrc(dslContext: DSLContext, atomCode: String): String? {
+        with(TAtom.T_ATOM) {
+            return dslContext.select(CODE_SRC)
+                .from(this)
+                .where(ATOM_CODE.eq(atomCode).and(LATEST_FLAG.eq(true)))
+                .fetchOne(0, String::class.java)
         }
     }
 

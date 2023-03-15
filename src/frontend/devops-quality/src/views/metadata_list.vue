@@ -1,7 +1,7 @@
 <template>
     <div class="metadata-list-wrapper">
         <div class="metadata-list-header">
-            <div class="title">指标列表</div>
+            <div class="title">{{$t('quality.指标列表')}}</div>
         </div>
 
         <section class="sub-view-port"
@@ -14,11 +14,13 @@
                     <ul class="metadata-tabs">
                         <li class="item-tab" :class="{ 'active-tab': currentTab === entry.value }"
                             v-for="(entry, index) in metaTypeList" :key="index"
-                            @click="changeTab(entry.value)">{{ entry.label }}
+                            @click="changeTab(entry.value)">{{entry.label}}
                         </li>
                     </ul>
                     <div class="search-input-row">
-                        <input class="bk-form-input" type="text" placeholder="请输入指标名称..."
+                        <input class="bk-form-input"
+                            type="text"
+                            :placeholder="$t('quality.请输入指标名称')"
                             v-model="searchName"
                             @keyup.enter="toSearch()">
                         <i class="devops-icon icon-search" @click="toSearch()"></i>
@@ -28,68 +30,68 @@
                     <div class="metadata-item-wrapper">
                         <section v-for="(row, index) in renderList" :key="index">
                             <div class="info-title">
-                                <label>{{ row.label }}
+                                <label>{{row.label}}
                                     <bk-popover placement="right">
                                         <i class="devops-icon icon-info-circle" v-if="row.desc"></i>
                                         <template slot="content">
-                                            <p style="width: 196px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{ row.desc }}</p>
+                                            <p style="width: 196px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">{{row.desc}}</p>
                                         </template>
                                     </bk-popover>
                                 </label>
                                 <div class="create-metadata" v-if="row.key === 'scriptIndicators'" @click="toCreateMeta()">
-                                    <i class="devops-icon icon-plus-circle-shape"></i>自定义指标
+                                    <i class="devops-icon icon-plus-circle-shape"></i>{{$t('quality.自定义指标')}}
                                 </div>
                             </div>
                             <bk-table
                                 size="small"
                                 class="metadata-list-table"
                                 :data="row.records"
-                                :empty-text="'暂无数据'">
-                                <bk-table-column label="指标中文名" prop="cnName">
+                                :empty-text="$t('quality.暂无数据')">
+                                <bk-table-column :label="$t('quality.指标中文名')" prop="cnName">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.cnName }}</span>
+                                        <span>{{props.row.cnName}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="指标英文名" prop="name">
+                                <bk-table-column :label="$t('quality.指标英文名')" prop="name">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.name }}</span>
+                                        <span>{{props.row.name}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="产出插件" prop="elementName" min-width="80">
+                                <bk-table-column :label="$t('quality.产出插件')" prop="elementName" min-width="80">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.elementName }}</span>
+                                        <span>{{props.row.elementName}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="工具/插件子类" prop="elementDetail" min-width="90">
+                                <bk-table-column :label="$t('quality.工具/插件子类')" prop="elementDetail" min-width="90">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.elementDetail }}</span>
+                                        <span>{{props.row.elementDetail}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="可选操作" prop="availableOperation">
+                                <bk-table-column :label="$t('quality.可选操作')" prop="availableOperation">
                                     <template slot-scope="props">
-                                        <span>{{ getOperation(props.row.availableOperation) }}</span>
+                                        <span>{{getOperation(props.row.availableOperation)}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="数值类型" prop="dataType">
+                                <bk-table-column :label="$t('quality.数值类型')" prop="dataType">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.dataType }}</span>
+                                        <span>{{props.row.dataType}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="默认阈值" prop="threshold">
+                                <bk-table-column :label="$t('quality.默认阈值')" prop="threshold">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.threshold }}</span>
+                                        <span>{{props.row.threshold}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="描述" prop="desc">
+                                <bk-table-column :label="$t('quality.描述')" prop="desc">
                                     <template slot-scope="props">
-                                        <span>{{ props.row.desc }}</span>
+                                        <span>{{props.row.desc}}</span>
                                     </template>
                                 </bk-table-column>
-                                <bk-table-column label="操作" width="150">
+                                <bk-table-column :label="$t('quality.操作')" width="150">
                                     <template slot-scope="props">
                                         <div class="handler-btn">
-                                            <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">编辑指标</span>
-                                            <span @click="toCreateRule(props.row.hashId)">创建规则</span>
+                                            <span v-if="row.key === 'scriptIndicators'" @click="editMeta(props.row.hashId)">{{$t('quality.编辑指标')}}</span>
+                                            <span @click="toCreateRule(props.row.hashId)">{{$t('quality.创建规则')}}</span>
                                         </div>
                                     </template>
                                 </bk-table-column>
@@ -110,15 +112,15 @@
                 showContent: false,
                 currentTab: 'all',
                 searchName: '',
-                scriptTips: '支持自定义指标，由脚本任务插件上报指标数值',
-                marketTips: '添加研发商店的插件后将会在这里自动添加相关红线指标',
+                scriptTips: this.$t('quality.支持自定义指标，由脚本任务插件上报指标数值'),
+                marketTips: this.$t('quality.添加研发商店的插件后将会在这里自动添加相关红线指标'),
                 renderList: [],
                 metaDataList: [],
                 metaTypeList: [
-                    { label: '全部指标', value: 'all' },
-                    { label: '脚本任务指标', value: 'scriptIndicators' },
-                    { label: '研发商店指标', value: 'marketIndicators' },
-                    { label: '系统指标', value: 'systemIndicators' }
+                    { label: this.$t('quality.全部指标'), value: 'all' },
+                    { label: this.$t('quality.脚本任务指标'), value: 'scriptIndicators' },
+                    { label: this.$t('quality.研发商店指标'), value: 'marketIndicators' },
+                    { label: this.$t('quality.系统指标'), value: 'systemIndicators' }
                 ],
                 operationMap: {
                     LT: '<',
@@ -154,7 +156,7 @@
         methods: {
             async requestList () {
                 this.loading.isLoading = true
-                this.loading.title = '数据加载中，请稍候'
+                this.loading.title = this.$t('quality.数据加载中，请稍候')
 
                 const keyword = this.searchName.trim()
 

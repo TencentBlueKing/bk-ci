@@ -250,6 +250,24 @@ interface UserThirdPartyAgentResource {
         parallelTaskCount: Int
     ): Result<Boolean>
 
+    @ApiOperation("设置agent Docker构建并发数")
+    @POST
+    @Path("/projects/{projectId}/nodes/{nodeHashId}/dockerParallelTaskCount")
+    fun setAgentDockerParallelTaskCount(
+        @ApiParam(value = "用户ID", required = true, defaultValue = AUTH_HEADER_USER_ID_DEFAULT_VALUE)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @ApiParam("项目ID", required = true)
+        @PathParam("projectId")
+        projectId: String,
+        @ApiParam("Node Hash ID", required = true)
+        @PathParam("nodeHashId")
+        nodeHashId: String,
+        @ApiParam("count", required = true)
+        @QueryParam("count")
+        count: Int
+    ): Result<Boolean>
+
     @ApiOperation("获取构建机详情")
     @GET
     @Path("/projects/{projectId}/nodes/{nodeHashId}/thirdPartyAgentDetail")

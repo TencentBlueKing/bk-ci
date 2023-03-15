@@ -4,7 +4,7 @@
 apiVersion: autoscaling/v2beta1
 kind: HorizontalPodAutoscaler
 metadata:
-  name: {{ include "bkci.names.fullname" . }}-dispatchKubernetes
+  name: {{ include "bkci.names.fullname" . }}-dispatch-kubernetes
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
     app.kubernetes.io/name: dispatchKubernetes
     app.kubernetes.io/component: microservice
@@ -18,7 +18,7 @@ spec:
   scaleTargetRef:
     apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
     kind: Deployment
-    name: {{ include "bkci.names.fullname" . }}-dispatchKubernetes
+    name: {{ include "bkci.names.fullname" . }}-dispatch-kubernetes
   minReplicas: {{ .Values.dispatchKubernetes.autoscaling.minReplicas }}
   maxReplicas: {{ .Values.dispatchKubernetes.autoscaling.maxReplicas }}
   metrics:

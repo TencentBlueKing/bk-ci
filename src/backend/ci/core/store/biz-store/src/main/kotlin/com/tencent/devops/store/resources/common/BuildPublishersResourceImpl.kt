@@ -61,7 +61,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.createPlatformsData(userId, storeDockingPlatformRequests))
+        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")
@@ -77,7 +77,7 @@ class BuildPublishersResourceImpl @Autowired constructor(
         userId: String,
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Result<Int> {
-        return Result(publishersDataService.updatePlatformsData(userId, storeDockingPlatformRequests))
+        return Result(publishersDataService.savePlatformsData(userId, storeDockingPlatformRequests))
     }
 
     @SensitiveApiPermission("syn_platforms_data")

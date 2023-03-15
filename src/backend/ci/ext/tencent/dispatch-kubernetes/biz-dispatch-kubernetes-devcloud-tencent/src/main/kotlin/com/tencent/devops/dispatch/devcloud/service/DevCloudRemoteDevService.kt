@@ -28,6 +28,7 @@
 package com.tencent.devops.dispatch.devcloud.service
 
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.service.Profile
 import com.tencent.devops.dispatch.devcloud.client.WorkspaceDevCloudClient
 import com.tencent.devops.dispatch.devcloud.pojo.Container
 import com.tencent.devops.dispatch.devcloud.pojo.DataDiskSource
@@ -62,7 +63,8 @@ class DevCloudRemoteDevService @Autowired constructor(
     private val dslContext: DSLContext,
     private val devcloudWorkspaceRedisUtils: DevcloudWorkspaceRedisUtils,
     private val dispatchWorkspaceDao: DispatchWorkspaceDao,
-    private val workspaceDevCloudClient: WorkspaceDevCloudClient
+    private val workspaceDevCloudClient: WorkspaceDevCloudClient,
+    private val profile: Profile
 ) : RemoteDevInterface {
 
     @Value("\${devCloud.workspace.environment.cpu:8000}")
@@ -85,6 +87,9 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     @Value("\${devCloud.appId}")
     val devCloudAppId: String = ""
+
+    @Value("\${remotedev.idePort}")
+    val idePort: String = ""
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
@@ -142,7 +147,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                             name = VOLUME_MOUNT_NAME,
                             volumeSource = VolumeSource(
                                 dataDisk = DataDiskSource(
-                                    type = "pvc",
+                                    type = "local",
                                     sizeLimit = workspaceDisk
                                 )
                             )
@@ -217,13 +222,16 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun getWorkspaceInfo(userId: String, workspaceName: String): WorkspaceInfo {
         val environmentStatus = workspaceDevCloudClient.getWorkspaceStatus(userId, getEnvironmentUid(workspaceName))
+        val podInfo = environmentStatus.containerStatuses.firstOrNull { it.name == workspaceName }
         return WorkspaceInfo(
             status = environmentStatus.status,
             hostIP = environmentStatus.hostIP,
             environmentIP = environmentStatus.environmentIP,
             clusterId = environmentStatus.clusterId,
             namespace = environmentStatus.namespace,
-            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName)
+            environmentHost = getEnvironmentHost(environmentStatus.clusterId, workspaceName),
+            ready = podInfo?.ready,
+            started = podInfo?.started
         )
     }
 
@@ -249,14 +257,14 @@ class DevCloudRemoteDevService @Autowired constructor(
 
         envVarList.addAll(
             listOf(
-                EnvVar(DEVOPS_REMOTING_IDE_PORT, "23000"),
+                EnvVar(DEVOPS_REMOTING_IDE_PORT, idePort),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ROOT_PATH, WORKSPACE_PATH),
                 EnvVar(DEVOPS_REMOTING_GIT_REPO_ROOT_PATH, gitRepoRootPath),
                 EnvVar(DEVOPS_REMOTING_GIT_USERNAME, userId),
                 EnvVar(DEVOPS_REMOTING_GIT_EMAIL, event.devFile.gitEmail ?: ""),
                 EnvVar(DEVOPS_REMOTING_DOTFILE_REPO, event.devFile.dotfileRepo ?: ""),
                 EnvVar(DEVOPS_REMOTING_YAML_NAME, event.devFilePath),
-                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, "true"),
+                EnvVar(DEVOPS_REMOTING_DEBUG_ENABLE, if (profile.isDebug()) "true" else "false"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_FIRST_CREATE, "true"),
                 EnvVar(DEVOPS_REMOTING_WORKSPACE_ID, event.workspaceName),
                 EnvVar(DEVOPS_REMOTING_PRECI_DOWN_URL, preCIDownUrl),

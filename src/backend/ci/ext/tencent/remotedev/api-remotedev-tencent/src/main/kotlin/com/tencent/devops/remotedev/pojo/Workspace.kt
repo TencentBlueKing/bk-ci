@@ -56,6 +56,8 @@ data class Workspace(
     val createUserId: String,
     @ApiModelProperty("工作空间操作路径")
     val workPath: String?,
+    @ApiModelProperty("工作空间默认打开工程相对路径，默认根目录")
+    val workspaceFolder: String?,
     @ApiModelProperty("工作空间对应的IP")
     val hostName: String?
 )
