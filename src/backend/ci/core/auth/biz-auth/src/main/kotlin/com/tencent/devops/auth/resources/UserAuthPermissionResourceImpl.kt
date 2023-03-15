@@ -5,6 +5,7 @@ import com.tencent.devops.auth.pojo.dto.PermissionBatchValidateDTO
 import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -18,21 +19,39 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
         projectCode: String,
         permissionBatchValidateDTO: PermissionBatchValidateDTO
     ): Result<Map<String, Boolean>> {
-        val actionCheckPermissionMap = mutableMapOf<String, Boolean>()
-        permissionBatchValidateDTO.actionList.forEach {
-            // 如果action的iam挂靠资源是project，则资源类型为project,资源code为项目id
-            val actionInfo = rbacCacheService.getActionInfo(it)
+
+        val projectActionList = mutableSetOf<String>()
+        val resourceActionList = mutableSetOf<String>()
+
+        permissionBatchValidateDTO.actionList.forEach { action ->
+            val actionInfo = rbacCacheService.getActionInfo(action)
             val iamRelatedResourceType = actionInfo.relatedResourceType
-            val checkActionPermission = permissionService.validateUserResourcePermissionByRelation(
-                userId = userId,
-                action = it,
-                projectCode = projectCode,
-                resourceCode = permissionBatchValidateDTO.resourceCode,
-                resourceType = iamRelatedResourceType,
-                relationResourceType = null
-            )
-            actionCheckPermissionMap[it] = checkActionPermission
+            if (iamRelatedResourceType == AuthResourceType.PROJECT.value) {
+                projectActionList.add(action)
+            } else {
+                resourceActionList.add(action)
+            }
         }
+
+        val projectActionPermissions = permissionService.batchValidateUserResourcePermission(
+            userId = userId,
+            actions = projectActionList.toList(),
+            projectCode = projectCode,
+            resourceCode = projectCode,
+            resourceType = AuthResourceType.PROJECT.value,
+        )
+
+        val resourceActionPermissions = permissionService.batchValidateUserResourcePermission(
+            userId = userId,
+            actions = resourceActionList.toList(),
+            projectCode = projectCode,
+            resourceCode = permissionBatchValidateDTO.resourceCode,
+            resourceType = permissionBatchValidateDTO.resourceType
+        )
+
+        val actionCheckPermissionMap = mutableMapOf<String, Boolean>()
+        actionCheckPermissionMap.putAll(projectActionPermissions)
+        actionCheckPermissionMap.putAll(resourceActionPermissions)
         return Result(actionCheckPermissionMap)
     }
 }

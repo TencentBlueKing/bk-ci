@@ -135,22 +135,21 @@ interface AuthPermissionApi {
     ): Map<AuthPermission, List<String>>
 
     /**
-     * 过滤resources下用户所拥有指定权限下的指定类型资源的资源code列表
+     * 获取用户所拥有指定权限下的指定类型资源和类型父资源code列表
      *
      * @param user 用户ID
      * @param serviceCode 服务模块代码
      * @param projectCode projectCode英文id
      * @param permission 权限类型
-     * @return 返回资源code列表
+     * @return 返回资源和父资源code列表
      */
-    fun filterUserResourceByPermission(
+    fun getUserResourceAndParentByPermission(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
-        resourceType: AuthResourceType,
-        resources: List<AuthResourceInstance>
-    ): List<String>
+        resourceType: AuthResourceType
+    ): Map<String, List<String>>
 
     fun addResourcePermissionForUsers(
         userId: String,

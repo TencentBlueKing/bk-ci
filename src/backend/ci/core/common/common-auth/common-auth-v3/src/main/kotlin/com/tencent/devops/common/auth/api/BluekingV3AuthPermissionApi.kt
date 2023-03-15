@@ -212,15 +212,14 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return permissionMap
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
-        resourceType: AuthResourceType,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return resources.map { it.resourceCode }
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 
     // 此处为不在common内依赖业务接口，固只从redis内取，前置有写入逻辑

@@ -60,6 +60,14 @@ interface PermissionService {
         resource: AuthResourceInstance
     ): Boolean
 
+    fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean>
+
     fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -74,10 +82,10 @@ interface PermissionService {
         resourceType: String
     ): Map<AuthPermission, List<String>>
 
-    fun filterUserResourceByPermission(
+    fun getUserResourceAndParentByPermission(
         userId: String,
         action: String,
         projectCode: String,
-        resources: List<AuthResourceInstance>
-    ): List<String>
+        resourceType: String
+    ): Map<String, List<String>>
 }

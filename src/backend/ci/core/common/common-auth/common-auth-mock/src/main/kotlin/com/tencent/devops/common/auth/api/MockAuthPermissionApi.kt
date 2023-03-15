@@ -124,14 +124,13 @@ class MockAuthPermissionApi : AuthPermissionApi {
         return mock
     }
 
-    override fun filterUserResourceByPermission(
+    override fun getUserResourceAndParentByPermission(
         user: String,
         serviceCode: AuthServiceCode,
         projectCode: String,
         permission: AuthPermission,
-        resourceType: AuthResourceType,
-        resources: List<AuthResourceInstance>
-    ): List<String> {
-        return emptyList()
+        resourceType: AuthResourceType
+    ): Map<String, List<String>> {
+        return emptyMap()
     }
 }
