@@ -1,5 +1,6 @@
 package com.tencent.devops.dispatch.devcloud.api.service
 
+import com.tencent.devops.common.api.annotation.ServiceInterface
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID_DEFAULT_VALUE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -22,6 +23,7 @@ import javax.ws.rs.core.MediaType
 
 @Api(tags = ["SERVICE_DISPATCH_DEVCLOUD"], description = "SERVICE_DISPATCH_DEVCLOUD")
 @Path("/service/dispatchDevcloud")
+@ServiceInterface("dispatch-devcloud")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface ServiceDispatchDcResource {
