@@ -7,7 +7,7 @@
         >
             <img class="tag-image" src="../../images/honer-left.png">
             <span class="tag-txt">
-                <span class="tag-txt-main text-overflow" v-bk-overflow-tips="{ extCls: 'tippy-padding' }">{{ renderHoner.honorTitle }}</span>
+                <span class="tag-txt-main text-overflow" v-bk-overflow-tips="{ extCls: 'tippy-padding', zIndex: 10000 }">{{ renderHoner.honorTitle }}</span>
                 <img class="tag-txt-image" src="../../images/honer-center.png">
             </span>
             <img class="tag-image" src="../../images/honer-right.png">

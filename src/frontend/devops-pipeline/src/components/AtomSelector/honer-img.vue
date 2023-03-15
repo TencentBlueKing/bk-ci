@@ -5,7 +5,7 @@
             <template v-if="recentHoner">
                 <img class="honer-self" src="../../images/honer.png">
                 <span
-                    v-bk-overflow-tips="{ extCls: 'tippy-padding' }"
+                    v-bk-overflow-tips="{ extCls: 'tippy-padding', zIndex: 10000 }"
                     :class="{
                         'text-overflow': true,
                         'honer-txt': true,
