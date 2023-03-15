@@ -27,8 +27,6 @@
 
 package com.tencent.devops.process.engine.atom.parser
 
-import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
-import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,6 +46,8 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.PipelineBuildTemplateAcrossInfoService
 import com.tencent.devops.process.util.CommonCredentialUtils
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
+import com.tencent.devops.process.yaml.modelCreate.utils.TXStreamDispatchUtils
+import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -220,11 +220,22 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         if (!dispatchType.credentialProject.isNullOrBlank()) {
             credentialProject = dispatchType.credentialProject!!
         }
+        val containerPool: Pool? =
+            kotlin.runCatching { objectMapper.readValue(dispatchType.image, Pool::class.java) }.getOrNull()
+        checkCredential(
+            pool = containerPool,
+            credentialId = dispatchType.credentialId ?: containerPool?.credential?.credentialId,
+            fromRemote = containerPool?.credential?.fromRemote,
+            projectId = credentialProject,
+            pipelineId = pipelineId,
+            buildId = buildId
+        )
         // 通过凭证获取账号密码
         if (!dispatchType.credentialId.isNullOrBlank()) {
             val realCredentialId = EnvUtils.parseEnv(
                 command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId))
+                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+            )
             if (realCredentialId.isNotEmpty()) {
                 val ticketsMap = CommonCredentialUtils.getCredential(
                     client = client,
@@ -236,8 +247,70 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 password = ticketsMap["v2"] as String
             }
         }
-        val credential = Credential(user, password)
+        val credential = Credential(
+            containerPool?.credential?.user ?: user, containerPool?.credential?.password ?: password
+        )
         val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
         dispatchType.image = JsonUtil.toJson(pool)
+    }
+
+    private fun checkCredential(
+        pool: Pool?,
+        credentialId: String?,
+        fromRemote: Credential.Remote?,
+        projectId: String,
+        pipelineId: String,
+        buildId: String
+    ) {
+        if (credentialId.isNullOrBlank() || pool?.credential == null) return
+        val realCredentialId = EnvUtils.parseEnv(
+            command = credentialId,
+            data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
+        )
+        val ticketsMap = try {
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = projectId,
+                credentialId = realCredentialId,
+                type = CredentialType.USERNAME_PASSWORD
+            )
+        } catch (ignore: Exception) {
+            logger.info("get credential from $projectId failed, try to get from across project")
+            // 没有跨项目的模板引用就直接扔出错误
+            if (fromRemote == null) {
+                throw ignore
+            }
+
+            kotlin.runCatching {
+                templateAcrossInfoService.getAcrossInfo(
+                    projectId, null, fromRemote.templateId
+                )
+            }.onFailure {
+                logger.warn("checkCredential get across info failed ${it.message}", it)
+                throw ignore
+            }.onSuccess {
+                if (it.isEmpty()) {
+                    logger.warn("checkCredential get across info empty")
+                    throw ignore
+                }
+                it.firstOrNull { info ->
+                    info.templateType == TemplateAcrossInfoType.JOB &&
+                        info.templateInstancesIds.contains(fromRemote.jobId)
+                } ?: run {
+                    logger.warn("checkCredential compare with across info failed|$it")
+                    throw ignore
+                }
+            }
+
+            CommonCredentialUtils.getCredential(
+                client = client,
+                projectId = fromRemote.targetProjectId,
+                credentialId = realCredentialId,
+                type = CredentialType.USERNAME_PASSWORD,
+                acrossProject = true
+            )
+        }
+        pool.credential?.user = ticketsMap["v1"] as String
+        pool.credential?.password = ticketsMap["v2"] as String
     }
 }

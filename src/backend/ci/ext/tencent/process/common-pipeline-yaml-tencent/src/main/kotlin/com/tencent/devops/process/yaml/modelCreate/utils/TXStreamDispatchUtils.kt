@@ -196,7 +196,7 @@ object TXStreamDispatchUtils {
             }
 
             val dockerVMContainerPool = makeContainerPool(
-                BuildType.DOCKER_VM,
+                BuildType.DEVCLOUD,
                 client,
                 job,
                 projectCode,
@@ -205,7 +205,11 @@ object TXStreamDispatchUtils {
                 buildTemplateAcrossInfo
             )
 
-            return GitCIDispatchType(objectMapper.writeValueAsString(dockerVMContainerPool))
+            return PublicDevCloudDispathcType(
+                objectMapper.writeValueAsString(dockerVMContainerPool),
+                "0",
+                imageType = ImageType.THIRD
+            )
         }
 
         if (bizType == DispatchBizType.PRECI) {
