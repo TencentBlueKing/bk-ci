@@ -18,7 +18,7 @@
  */
 const path = require('path')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
-
+const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -50,10 +50,19 @@ module.exports = (env, argv) => {
             VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
             extUrlPrefix
         }),
+        new AddAssetHtmlPlugin([
+            {
+                filepath: require.resolve('./src/images/pipeline_sprite.js'),
+                publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/pipeline/'),
+                hash: true,
+                includeSourcemap: false
+            }
+        ]),
         new webpack.DllReferencePlugin({
             context: __dirname,
             manifest: require('./dist/manifest.json')
         }),
+        
         new CopyWebpackPlugin({
             patterns: [{ from: path.join(__dirname, './dist'), to: dist }]
         })

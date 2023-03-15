@@ -1,5 +1,6 @@
 const { src, dest, parallel, series, task } = require('gulp')
 const fs = require('fs')
+const path = require('path')
 const svgSprite = require('gulp-svg-sprite')
 const rename = require('gulp-rename')
 const replace = require('gulp-replace')
@@ -45,10 +46,11 @@ function renameSvg (type) {
 function generatorSvgJs (type) {
     return () => {
         const svgCode = fs.readFileSync(`${dist}/svg-sprites/${type}_sprite.svg`, 'utf8')
+        const dir = type === 'devops' ? 'devops-nav/src/assets/images' : 'devops-pipeline/src/images'
         return src('./svg-sprites/svgjs-template.js')
             .pipe(replace('__SVG_SPRITES_SYMBOLS__', svgCode))
             .pipe(rename(`${type}_sprite.js`))
-            .pipe(dest(`${dist}/svg-sprites/`))
+            .pipe(dest(path.join(__dirname, dir)))
     }
 }
 
