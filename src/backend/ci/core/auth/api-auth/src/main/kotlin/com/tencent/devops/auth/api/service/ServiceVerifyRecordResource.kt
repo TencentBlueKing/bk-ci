@@ -13,7 +13,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 import com.tencent.devops.common.api.pojo.Result
 
-@Api(tags = ["AUTH_VERIFY_RECORD"], description = "校验记录")
+@Api(tags = ["AUTH_VERIFY_RECORD"], description = "鉴权记录")
 @Path("/service/verify/record")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
