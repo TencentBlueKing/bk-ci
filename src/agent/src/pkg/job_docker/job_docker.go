@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
-	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/network"
@@ -33,7 +31,7 @@ type ContainerCreateInfo struct {
 	NetWorkingConfig *network.NetworkingConfig
 }
 
-func ParseDockeroptions(dockerClient *client.Client, userOptionStr string) (config *ContainerConfig, err error) {
+func ParseDockeroptions(dockerClient *client.Client, userOptionStr string) (*ContainerConfig, error) {
 	// 解析用户输入为shell args
 	argv, err := shellwords.Parse(userOptionStr)
 	if err != nil {
@@ -51,17 +49,13 @@ func ParseDockeroptions(dockerClient *client.Client, userOptionStr string) (conf
 	}
 
 	// 获取当前仅支持的flag
-	options, err := getDockerOptions()
-	if err != nil {
-		errMsg := fmt.Sprintf("获取docker options支持列表失败: %s", err.Error())
-		return nil, errors.New(errMsg)
-	}
+	options := config.GAgentConfig.DockerOptions
 
 	// 校验用户option是否符合预期
 	pflag.CommandLine.Visit(func(f *pflag.Flag) {
 		check := false
 		for _, op := range options {
-			if f.Name == op {
+			if f.Name == strings.TrimSpace(op) {
 				check = true
 			}
 		}
@@ -90,29 +84,4 @@ func ParseDockeroptions(dockerClient *client.Client, userOptionStr string) (conf
 	}
 
 	return containerConfig, nil
-}
-
-// getBuild 从服务器认领要构建的信息
-func getDockerOptions() ([]string, error) {
-	result, err := api.GetDockerOptions()
-	if err != nil {
-		return nil, err
-	}
-
-	if result.IsNotOk() {
-		logs.Error("get docker options failed, message", result.Message)
-		return nil, errors.New("get docker options failed")
-	}
-
-	if result.Data == nil {
-		return nil, nil
-	}
-
-	options := []string{}
-	err = util.ParseJsonToData(result.Data, options)
-	if err != nil {
-		return nil, err
-	}
-
-	return options, nil
 }
