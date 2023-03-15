@@ -30,7 +30,9 @@ package com.tencent.devops.auth.service.permission.iam
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.helper.AuthHelper
 import com.tencent.bk.sdk.iam.service.PolicyService
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.auth.service.AuthPipelineIdService
+import com.tencent.devops.auth.service.AuthVerifyRecordService
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.auth.service.iam.IamCacheService
 import com.tencent.devops.auth.service.iam.impl.AbsPermissionService
@@ -47,7 +49,8 @@ class TxPermissionServiceImpl @Autowired constructor(
     val managerService: ManagerService,
     val iamCacheService: IamCacheService,
     val client: Client,
-    val authPipelineIdService: AuthPipelineIdService
+    val authPipelineIdService: AuthPipelineIdService,
+    val authVerifyRecordService: AuthVerifyRecordService
 ) : AbsPermissionService(authHelper, policyService, iamConfiguration, iamCacheService) {
 
     override fun validateUserActionPermission(userId: String, action: String): Boolean {
@@ -98,7 +101,7 @@ class TxPermissionServiceImpl @Autowired constructor(
             action
         }
 
-        return super.validateUserResourcePermissionByRelation(
+        val verifyResult = super.validateUserResourcePermissionByRelation(
             userId = userId,
             action = useAction,
             projectCode = projectCode,
@@ -106,6 +109,18 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
+        authVerifyRecordService.createOrUpdateVerifyRecord(
+            VerifyRecordDTO(
+                userId = userId,
+                projectId = projectCode,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                action = useAction,
+                environmentTag = "v3",
+                verifyResult = verifyResult
+            )
+        )
+        return verifyResult
     }
 
     override fun getUserResourceByAction(

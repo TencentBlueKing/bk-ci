@@ -79,9 +79,10 @@ class GitCIAuthAutoConfiguration {
         bkAuthProperties: BkAuthProperties,
         objectMapper: ObjectMapper,
         bsAuthTokenApi: BSAuthTokenApi,
-        jmxAuthApi: JmxAuthApi
+        jmxAuthApi: JmxAuthApi,
+        client: Client
     ) =
-        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi)
+        BSAuthPermissionApi(bkAuthProperties, objectMapper, bsAuthTokenApi, jmxAuthApi, client)
 
     @Bean
     @Primary

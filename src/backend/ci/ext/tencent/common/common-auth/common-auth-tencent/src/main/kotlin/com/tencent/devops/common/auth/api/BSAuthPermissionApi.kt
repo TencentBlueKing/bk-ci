@@ -29,6 +29,8 @@ package com.tencent.devops.common.auth.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.auth.api.service.ServiceVerifyRecordResource
+import com.tencent.devops.auth.pojo.dto.VerifyRecordDTO
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.pojo.BkAuthPermissionGrantRequest
@@ -42,6 +44,8 @@ import com.tencent.devops.common.auth.jmx.JmxAuthApi
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCE
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.LIST_USER_RESOURCES
 import com.tencent.devops.common.auth.jmx.JmxAuthApi.Companion.VALIDATE_USER_RESOURCE
+import com.tencent.devops.common.auth.utils.TActionUtils
+import com.tencent.devops.common.client.Client
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -52,7 +56,8 @@ class BSAuthPermissionApi @Autowired constructor(
     private val bkAuthProperties: BkAuthProperties,
     private val objectMapper: ObjectMapper,
     private val bsAuthTokenApi: BSAuthTokenApi,
-    private val jmxAuthApi: JmxAuthApi
+    private val jmxAuthApi: JmxAuthApi,
+    private val client: Client
 ) : AuthPermissionApi {
 
     override fun validateUserResourcePermission(
@@ -121,6 +126,18 @@ class BSAuthPermissionApi @Autowired constructor(
                 if (!result) {
                     logger.warn("Fail to validate the user resource permission with response: $responseContent")
                 }
+                client.get(ServiceVerifyRecordResource::class).createOrUpdate(
+                    userId = user,
+                    verifyRecordDTO = VerifyRecordDTO(
+                        userId = user,
+                        projectId = projectCode,
+                        resourceType = TActionUtils.extResourceType(resourceType),
+                        resourceCode = resourceCode,
+                        action = TActionUtils.buildAction(permission, resourceType),
+                        environmentTag = "v0",
+                        verifyResult = result
+                    )
+                )
                 return result
             }
         } finally {
