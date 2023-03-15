@@ -1,10 +1,10 @@
-package com.tencent.devops.auth.pojo
+package com.tencent.devops.auth.pojo.dto
 
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("鉴权记录实体")
-data class VerifyRecordInfo(
+data class VerifyRecordDTO(
     @ApiModelProperty("用户ID")
     val userId: String,
     @ApiModelProperty("项目ID")
