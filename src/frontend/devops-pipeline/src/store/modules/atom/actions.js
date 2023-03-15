@@ -22,7 +22,7 @@ import {
     PROCESS_API_URL_PREFIX,
     STORE_API_URL_PREFIX,
     LOG_API_URL_PREFIX,
-    MACOS_API_URL_PREFIX
+    DEVCLOUD_API_URL_PREFIX
 } from '@/store/constants'
 import {
     SET_STAGE_TAG_LIST,
@@ -593,15 +593,15 @@ export default {
     },
 
     getMacSysVersion () {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/systemVersions/v2`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/systemVersions/v2`)
     },
 
     getMacXcodeVersion (_, systemVersion = '') {
-        return request.get(`${MACOS_API_URL_PREFIX}/user/xcodeVersions/v2?systemVersion=${systemVersion}`)
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/macos/xcodeVersions/v2?systemVersion=${systemVersion}`)
     },
 
     getWinVersion () {
-        return request.get('/dispatch-windows/api/user/systemVersions').then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/api/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },

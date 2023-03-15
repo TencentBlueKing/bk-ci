@@ -29,7 +29,7 @@ export const QUALITY_API_URL_PREFIX = 'quality/api'
 export const STORE_API_URL_PREFIX = 'store/api'
 export const PLUGIN_API_URL_PREFIX = 'plugin/api'
 export const LOG_API_URL_PREFIX = 'log/api'
-export const MACOS_API_URL_PREFIX = 'dispatch-macos/api'
+export const DEVCLOUD_API_URL_PREFIX = 'dispatch-devcloud/api'
 export const AUTH_URL_PREFIX = 'auth/api'
 
 export const ALL_PIPELINE_VIEW_ID = 'allPipeline'
