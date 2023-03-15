@@ -13,7 +13,7 @@ import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_XCODE_VERSION"], description = "USER接口-xcode版本资源")
-@Path("user/xcodeVersions")
+@Path("user/macos/xcodeVersions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserXcodeVersionResource {

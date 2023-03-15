@@ -11,7 +11,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["USER_SYSTEM_VERSION"], description = "USER接口-系统版本资源")
-@Path("user/systemVersions")
+@Path("user/macos/systemVersions")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface UserSystemVersionResource {
