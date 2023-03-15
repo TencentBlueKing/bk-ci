@@ -14,6 +14,7 @@ import (
 
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/api"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/config"
+	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/job_docker"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/logs"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/upgrade/download"
 	"github.com/TencentBlueKing/bk-ci/src/agent/src/pkg/util"
@@ -22,6 +23,7 @@ import (
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/mount"
+	"github.com/docker/docker/api/types/network"
 	"github.com/docker/docker/client"
 	"github.com/pkg/errors"
 )
@@ -190,6 +192,17 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		return
 	}
 
+	// 解析docker options
+	var dockerConfig *job_docker.ContainerConfig = nil
+	if dockerBuildInfo.Options != "" {
+		dockerConfig, err = job_docker.ParseDockeroptions(cli, dockerBuildInfo.Options)
+		if err != nil {
+			logs.Error("DOCKER_JOB|" + err.Error())
+			dockerBuildFinish(buildInfo.ToFinish(false, err.Error(), api.DockerDockerOptionsErrorEnum))
+			return
+		}
+	}
+
 	// 创建容器
 	containerName := fmt.Sprintf("dispatch-%s-%s-%s", buildInfo.BuildId, buildInfo.VmSeqId, util.RandStringRunes(8))
 	mounts, err := parseContainerMounts(buildInfo)
@@ -199,27 +212,41 @@ func doDockerJob(buildInfo *api.ThirdPartyBuildInfo) {
 		dockerBuildFinish(buildInfo.ToFinish(false, errMsg, api.DockerMountCreateErrorEnum))
 		return
 	}
-	var resources container.Resources
-	if dockerBuildInfo.DockerResource != nil {
-		resources = container.Resources{
-			Memory:    dockerBuildInfo.DockerResource.MemoryLimitBytes,
-			CPUQuota:  dockerBuildInfo.DockerResource.CpuQuota,
-			CPUPeriod: dockerBuildInfo.DockerResource.CpuPeriod,
+
+	var confg *container.Config
+	var hostConfig *container.HostConfig
+	var netConfig *network.NetworkingConfig
+	if dockerConfig != nil {
+		confg = dockerConfig.Config
+		confg.Image = imageStr
+		confg.Cmd = []string{}
+		confg.Entrypoint = []string{"/bin/sh", "-c", entryPointCmd}
+		confg.Env = parseContainerEnv(dockerBuildInfo)
+
+		hostConfig = dockerConfig.HostConfig
+		hostConfig.CapAdd = append(hostConfig.CapAdd, "SYS_PTRACE")
+		hostConfig.Mounts = append(hostConfig.Mounts, mounts...)
+		hostConfig.NetworkMode = container.NetworkMode("bridge")
+
+		netConfig = dockerConfig.NetworkingConfig
+	} else {
+		confg = &container.Config{
+			Image:      imageStr,
+			Cmd:        []string{},
+			Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
+			Env:        parseContainerEnv(dockerBuildInfo),
 		}
-	}
-	hostConfig := &container.HostConfig{
-		CapAdd:      []string{"SYS_PTRACE"},
-		Mounts:      mounts,
-		NetworkMode: container.NetworkMode("bridge"),
-		Resources:   resources,
+
+		hostConfig = &container.HostConfig{
+			CapAdd:      []string{"SYS_PTRACE"},
+			Mounts:      mounts,
+			NetworkMode: container.NetworkMode("bridge"),
+		}
+
+		netConfig = nil
 	}
 
-	creatResp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image:      imageStr,
-		Cmd:        []string{},
-		Entrypoint: []string{"/bin/sh", "-c", entryPointCmd},
-		Env:        parseContainerEnv(dockerBuildInfo),
-	}, hostConfig, nil, nil, containerName)
+	creatResp, err := cli.ContainerCreate(ctx, confg, hostConfig, netConfig, nil, containerName)
 	if err != nil {
 		logs.Error(fmt.Sprintf("DOCKER_JOB|create container %s error ", containerName), err)
 		dockerBuildFinish(buildInfo.ToFinish(false, fmt.Sprintf("创建容器 %s 失败|%s", containerName, err.Error()), api.DockerContainerCreateErrorEnum))

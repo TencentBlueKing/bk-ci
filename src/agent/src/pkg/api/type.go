@@ -56,11 +56,11 @@ const (
 )
 
 type ThirdPartyDockerBuildInfo struct {
-	AgentId        string      `json:"agentId"`
-	SecretKey      string      `json:"secretKey"`
-	Image          string      `json:"image"`
-	Credential     *Credential `json:"credential"`
-	DockerResource *DockerResourceOptions
+	AgentId    string      `json:"agentId"`
+	SecretKey  string      `json:"secretKey"`
+	Image      string      `json:"image"`
+	Credential *Credential `json:"credential"`
+	Options    string      `json:"options"`
 }
 
 type Credential struct {
