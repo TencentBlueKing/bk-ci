@@ -473,6 +473,9 @@ export default {
       color: #ff9c01;
       margin-bottom: 15px;
     }
+    .delete-title {
+      white-space: normal !important;
+    }
     .bk-dialog-header {
       padding: 15px 0;
     }

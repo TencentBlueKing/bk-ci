@@ -17,7 +17,7 @@
                     <img src="./svg/organization.svg" class="group-icon">
                     {{ group.departmentCount }}
                 </span>
-                <bk-popover
+                <!-- <bk-popover
                     v-if="resourceType === 'project'"
                     class="group-more-option"
                     placement="bottom"
@@ -35,7 +35,7 @@
                             {{ $t('删除') }}
                         </bk-button>
                     </template>
-                </bk-popover>
+                </bk-popover> -->
             </div>
             <div class="line-split" />
             <div
@@ -49,19 +49,57 @@
             </div>
         </section>
         <div class="close-btn">
-            <bk-button @click="handleCloseManage">{{ $t('关闭权限管理') }}</bk-button>
+            <bk-button @click="showCloseManageDialog">{{ $t('关闭权限管理') }}</bk-button>
         </div>
         <bk-dialog
             header-align="center"
             theme="danger"
-            quick-close
-            :value="deleteObj.isShow"
-            :title="$t('删除')"
-            :is-loading="deleteObj.isLoading"
-            @cancel="handleHiddenDeleteGroup"
-            @confirm="handleDeleteGroup"
+            :quick-close="false"
+            ext-cls="close-manage-dialog"
+            :show-footer="false"
+            :value="closeObj.isShow"
+            @cancel="handleHiddenCloseManage"
         >
-            {{ $t('是否删除用户组', [deleteObj.group.name]) }}
+            <template #header>
+                <img src="./svg/warning-circle-fill.svg" style="width: 42px;">
+                <p class="close-title">{{ $t('确认关闭【】的权限管理？', [resourceType === 'pipeline' ? projectName : groupName]) }}</p>
+            </template>
+            <div class="close-tips">
+                
+                <p>{{ $t('关闭流水线权限管理，将执行如下操作：', [resourceType === 'pipeline' ? $t('流水线') : $t('流水线组')]) }}</p>
+                <p>
+                    <img src="./svg/warning-circle-fill.svg" style="width: 14px;">
+                    {{ $t('将编辑者、执行者、查看者中的用户移除') }}
+                </p>
+                <p>
+                    <img src="./svg/warning-circle-fill.svg" style="width: 14px;">
+                    {{ $t('删除对应组内用户继承该组的权限') }}
+                </p>
+                <p>
+                    <img src="./svg/warning-circle-fill.svg" style="width: 14px;">
+                    {{ $t('删除对应组信息和组权限') }}
+                </p>
+            </div>
+            <div class="confirm-close">
+                <i18n path="提交后，再次开启权限管理时对应组内用户将不能恢复，请谨慎操作!" style="color: #737987;font-size: 14px;" tag="div">
+                    <span style="color: red;">{{$t('不能恢复')}}</span>
+                </i18n>
+            </div>
+            <div class="option-btns">
+                <bk-button
+                    class="close-btn"
+                    theme="danger"
+                    @click="handleCloseManage"
+                >
+                    {{ $t('关闭权限管理') }}
+                </bk-button>
+                <bk-button
+                    class="btn"
+                    @click="handleHiddenCloseManage"
+                >
+                    {{ $t('取消') }}
+                </bk-button>
+            </div>
         </bk-dialog>
     </article>
 </template>
@@ -103,16 +141,22 @@
             },
             showCreateGroup: {
                 type: Boolean
+            },
+            projectName: {
+                type: String
+            },
+            groupName: {
+                type: String
             }
         },
         data () {
             return {
                 activeTab: '',
-                deleteObj: {
-                    group: {},
+                closeObj: {
                     isShow: false,
                     isLoading: false
-                }
+                },
+                keyWords: ''
             }
         },
         watch: {
@@ -129,23 +173,6 @@
             }
         },
         methods: {
-            handleShowDeleteGroup (group) {
-                this.deleteObj.group = group
-                this.deleteObj.isShow = true
-            },
-            handleHiddenDeleteGroup () {
-                this.deleteObj.isShow = false
-                this.deleteObj.group = {}
-            },
-            handleDeleteGroup () {
-                this.deleteObj.isLoading = true
-                return this
-                    .deleteGroup(this.deleteObj.group)
-                    .then(() => {
-                        this.deleteObj.isLoading = false
-                        this.handleHiddenDeleteGroup()
-                    })
-            },
             handleChangeTab (group) {
                 this.activeTab = group.groupId
                 this.$emit('choose-group', group)
@@ -154,8 +181,15 @@
                 this.activeTab = ''
                 this.$emit('create-group')
             },
+            showCloseManageDialog () {
+                this.closeObj.isShow = true
+                // this.closeManage()
+            },
+            handleHiddenCloseManage () {
+                this.closeObj.isShow = false
+            },
             handleCloseManage () {
-                this.closeManage()
+                console.log(123)
             }
         }
     }
@@ -282,6 +316,43 @@
 }
 .small-size {
   scale: 0.9;
+}
+
+.close-manage-dialog {
+    .title-icon {
+        font-size: 42px;
+        color: #ff9c01;
+        margin-bottom: 15px;
+    }
+    .close-title {
+        margin-top: 10px;
+        white-space: normal !important;
+    }
+    .bk-dialog-header {
+        padding: 15px 0;
+    }
+    .bk-dialog-title {
+        height: 26px !important;
+        overflow: initial !important;
+    }
+    .confirm-close {
+        margin: 15px 0 30px;
+    }
+    .close-tips {
+        padding: 10px;
+        background: #f5f6fa;
+    }
+    .option-btns {
+        text-align: center;
+        margin-top: 20px;
+        .close-btn {
+            margin-right: 10px;
+            margin-bottom: 0 !important;
+        }
+        .btn {
+            width: 88px;
+        }
+    }
 }
 </style>
 <style lang="scss">

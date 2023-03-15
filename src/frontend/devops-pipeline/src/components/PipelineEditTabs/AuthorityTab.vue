@@ -14,6 +14,7 @@
         :delete-group="handleDeleteGroup"
         :fetch-group-list="fetchGroupList"
         :show-create-group="false"
+        :project-name="projectName"
     />
 </template>
 
@@ -46,6 +47,9 @@
             },
             resourceCode () {
                 return this.$route.params.pipelineId
+            },
+            projectName () {
+                return this.curProject.projectName
             }
         },
         async created () {

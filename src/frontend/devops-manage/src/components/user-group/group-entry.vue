@@ -119,6 +119,10 @@ export default {
       type: Function,
       default: () => {},
     },
+    roleId: {
+      type: String,
+      default: '',
+    }
   },
 
   emits: ['delete-group'],
@@ -159,7 +163,7 @@ export default {
 
     handleCreateGroup() {
       this.activeIndex = '';
-      this.path = 'create-user-group';
+      this.path = `create-user-group?role_id=${this.roleId}`;
     },
 
     async handleComfigCreate() {

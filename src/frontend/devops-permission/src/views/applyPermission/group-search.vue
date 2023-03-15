@@ -293,7 +293,6 @@ const columns = [
   },
   {
     label: t('描述'),
-    field: 'description',
     render ({ cell, row }) {
       return h(
         'span',

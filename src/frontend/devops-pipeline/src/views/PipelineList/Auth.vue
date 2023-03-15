@@ -16,6 +16,7 @@
         :delete-group="handleDeleteGroup"
         :fetch-group-list="fetchGroupList"
         :show-create-group="false"
+        :group-name="groupName"
     />
 </template>
 
@@ -46,6 +47,9 @@
             },
             resourceCode () {
                 return this.$route.params.id
+            },
+            groupName () {
+                return this.$route.query.groupName
             }
         },
         async created () {

@@ -213,4 +213,9 @@ export default {
       groupName 
     });
   },
+
+  async getResource(params: any) {
+    const { projectCode, resourceType, resourceCode } = params;
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/getResource`);
+  }
 };
