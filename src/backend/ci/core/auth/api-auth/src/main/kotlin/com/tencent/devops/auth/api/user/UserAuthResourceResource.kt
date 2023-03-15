@@ -101,8 +101,14 @@ interface UserAuthResourceResource {
         resourceType: String,
         @ApiParam("资源ID")
         @PathParam("resourceCode")
-        resourceCode: String
-    ): Result<List<IamGroupInfoVo>>
+        resourceCode: String,
+        @ApiParam("第几页")
+        @QueryParam("page")
+        page: Int,
+        @ApiParam("每页多少条")
+        @QueryParam("pageSize")
+        pageSize: Int
+    ): Result<Pagination<IamGroupInfoVo>>
 
     @GET
     @Path("{resourceCode}/groupMember")

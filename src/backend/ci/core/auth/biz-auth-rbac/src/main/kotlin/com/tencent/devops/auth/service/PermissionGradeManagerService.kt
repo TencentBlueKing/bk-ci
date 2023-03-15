@@ -470,11 +470,13 @@ class PermissionGradeManagerService @Autowired constructor(
     }
 
     fun listGroup(
-        gradeManagerId: String
+        gradeManagerId: String,
+        page: Int,
+        pageSize: Int
     ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
-        pageInfoDTO.pageSize = PageUtil.MAX_PAGE_SIZE
+        pageInfoDTO.page = page
+        pageInfoDTO.pageSize = pageSize
         val searchGroupDTO = SearchGroupDTO.builder().inherit(false).build()
         val iamGroupInfoList = iamV2ManagerService.getGradeManagerRoleGroupV2(
             gradeManagerId,
