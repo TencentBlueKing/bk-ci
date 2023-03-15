@@ -1,32 +1,21 @@
 package com.tencent.devops.dispatch.docker.service
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
-import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_USER_ID
-import com.tencent.devops.common.api.auth.AUTH_HEADER_GATEWAY_TAG
-import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.BuildType
-import com.tencent.devops.common.service.BkTag
-import com.tencent.devops.common.service.config.CommonConfig
+import com.tencent.devops.dispatch.devcloud.api.service.ServiceDispatchDcResource
+import com.tencent.devops.dispatch.devcloud.pojo.performance.PerformanceMap
 import com.tencent.devops.dispatch.docker.common.ErrorCodeEnum
 import com.tencent.devops.dispatch.docker.exception.DockerServiceException
-import com.tencent.devops.dispatch.docker.pojo.PerformanceMap
-import com.tencent.devops.dispatch.docker.pojo.UserPerformanceOptionsVO
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsMap
 import com.tencent.devops.dispatch.docker.pojo.resource.DockerResourceOptionsShow
 import com.tencent.devops.dispatch.docker.pojo.resource.UserDockerResourceOptionsVO
-import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 
 @Service
 class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
-    private val objectMapper: ObjectMapper,
-    private val commonConfig: CommonConfig,
-    private val bkTag: BkTag
+    private val client: Client
 ) : ExtDockerResourceOptionsService {
 
     private val logger = LoggerFactory.getLogger(ExtDockerResourceOptionsServiceImpl::class.java)
@@ -47,39 +36,26 @@ class ExtDockerResourceOptionsServiceImpl @Autowired constructor(
         userId: String,
         projectId: String
     ): UserDockerResourceOptionsVO {
-        val url = String.format(
-            "%s/ms/dispatch-devcloud/api/service/dispatchDevcloud/project/%s/performanceConfig/list",
-            commonConfig.devopsIdcGateway,
-            projectId
+        val result = client.get(ServiceDispatchDcResource::class).getDcPerformanceConfigList(
+            userId = userId,
+            projectId = projectId
         )
-        val request = Request.Builder().url(url)
-            .addHeader("Accept", "application/json; charset=utf-8")
-            .addHeader("Content-Type", "application/json; charset=utf-8")
-            .addHeader(AUTH_HEADER_DEVOPS_USER_ID, userId)
-            .addHeader(AUTH_HEADER_GATEWAY_TAG, bkTag.getLocalTag())
-            .get()
-            .build()
 
-        OkhttpUtils.doHttp(request).use { resp ->
-            val responseBody = resp.body!!.string()
-            logger.info("[$projectId get devcloud resourceConfig responseBody: $responseBody")
-            val response: Map<String, Any> = jacksonObjectMapper().readValue(responseBody)
-            if (response["code"] == 0) {
-                val dcUserPerformanceOptionsVO = objectMapper.readValue(JsonUtil.toJson(response["data"] ?: ""),
-                    UserPerformanceOptionsVO::class.java)
-
-                return UserDockerResourceOptionsVO(
-                    default = dcUserPerformanceOptionsVO.default,
-                    needShow = dcUserPerformanceOptionsVO.needShow,
-                    dockerResourceOptionsMaps = getDockerResourceOptionsMap(dcUserPerformanceOptionsVO.performanceMaps)
-                )
-            } else {
-                val msg = response["message"] as String
-                logger.error("[$projectId] get devcloud resourceConfig failed, msg: $msg")
-                throw DockerServiceException(errorType = ErrorCodeEnum.END_VM_ERROR.errorType,
-                    errorCode = ErrorCodeEnum.END_VM_ERROR.errorCode,
-                    errorMsg = "Get devcloud resourceConfig failed, msg: $msg")
-            }
+        if (result.code == 0 && result.data != null) {
+            val dcUserPerformanceOptionsVO = result.data!!
+            return UserDockerResourceOptionsVO(
+                default = dcUserPerformanceOptionsVO.default,
+                needShow = dcUserPerformanceOptionsVO.needShow,
+                dockerResourceOptionsMaps = getDockerResourceOptionsMap(dcUserPerformanceOptionsVO.performanceMaps)
+            )
+        } else {
+            val msg = result.message
+            logger.error("[$projectId] get devcloud resourceConfig failed, msg: $msg")
+            throw DockerServiceException(
+                errorType = ErrorCodeEnum.END_VM_ERROR.errorType,
+                errorCode = ErrorCodeEnum.END_VM_ERROR.errorCode,
+                errorMsg = "Get devcloud resourceConfig failed, msg: $msg"
+            )
         }
     }
 
