@@ -72,26 +72,7 @@ class RbacPipelinePermissionService constructor(
         logger.info("[rbac] check pipeline permission|$userId|$projectId|$pipelineId|$permission")
         val startEpoch = System.currentTimeMillis()
         try {
-            val parents = mutableListOf<AuthResourceInstance>()
-            val projectInstance = AuthResourceInstance(
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId
-            )
-            parents.add(projectInstance)
-            pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
-                parents.add(
-                    AuthResourceInstance(
-                        resourceType = AuthResourceType.PIPELINE_GROUP.value,
-                        resourceCode = HashUtil.encodeLongId(viewId),
-                        parents = listOf(projectInstance)
-                    )
-                )
-            }
-            val pipelineInstance = AuthResourceInstance(
-                resourceType = resourceType.value,
-                resourceCode = pipelineId,
-                parents = parents
-            )
+            val pipelineInstance = pipeline2AuthResource(projectId, pipelineId)
             return authPermissionApi.validateUserResourcePermission(
                 user = userId,
                 serviceCode = pipelineAuthServiceCode,
@@ -105,6 +86,32 @@ class RbacPipelinePermissionService constructor(
                     "$userId|$projectId|$pipelineId|$permission"
             )
         }
+    }
+
+    private fun pipeline2AuthResource(
+        projectId: String,
+        pipelineId: String
+    ): AuthResourceInstance {
+        val parents = mutableListOf<AuthResourceInstance>()
+        val projectInstance = AuthResourceInstance(
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        parents.add(projectInstance)
+        pipelineViewGroupService.listViewIdsByPipelineId(projectId, pipelineId).forEach { viewId ->
+            parents.add(
+                AuthResourceInstance(
+                    resourceType = AuthResourceType.PIPELINE_GROUP.value,
+                    resourceCode = HashUtil.encodeLongId(viewId),
+                    parents = listOf(projectInstance)
+                )
+            )
+        }
+        return AuthResourceInstance(
+            resourceType = resourceType.value,
+            resourceCode = pipelineId,
+            parents = parents
+        )
     }
 
     override fun validPipelinePermission(
@@ -178,14 +185,21 @@ class RbacPipelinePermissionService constructor(
     override fun filterPipelines(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
         logger.info("[rbac] filter pipeline|$userId|$projectId|$authPermissions")
         val startEpoch = System.currentTimeMillis()
         try {
-            return authPermissions.associateWith { permission ->
-                getResourceByPermission(userId, projectId, permission)
-            }
+            val resources = pipelineIds.map { pipeline2AuthResource(projectId = projectId, pipelineId = it) }
+            return authPermissionApi.filterResourcesByPermissions(
+                user = userId,
+                serviceCode = pipelineAuthServiceCode,
+                resourceType = resourceType,
+                projectCode = projectId,
+                permissions = authPermissions,
+                resources = resources
+            )
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter pipeline" +

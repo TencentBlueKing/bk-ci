@@ -146,16 +146,12 @@ abstract class AbstractPipelinePermissionService constructor(
     override fun filterPipelines(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
-        return authPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = supplierForFakePermission(projectId)
-        )
+        return authPermissions.associateWith {
+            pipelineIds
+        }
     }
 
     /**

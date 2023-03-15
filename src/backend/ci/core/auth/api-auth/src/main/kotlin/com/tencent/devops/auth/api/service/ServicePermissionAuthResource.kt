@@ -206,7 +206,7 @@ interface ServicePermissionAuthResource {
 
     @GET
     @Path("/projects/{projectCode}/actions/instance/map")
-    @ApiOperation("过滤用户某项目下多操作的资源实例列表")
+    @ApiOperation("获取用户某项目下多操作的资源实例列表")
     fun getUserResourcesByPermissions(
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("待校验用户ID", required = true)
@@ -251,6 +251,31 @@ interface ServicePermissionAuthResource {
         @ApiParam("资源类型")
         resourceType: String
     ): Result<List<String>>
+
+    @POST
+    @Path("/projects/{projectCode}/actions/instance/filter")
+    @ApiOperation("过滤用户某项目下多操作的资源实例列表")
+    fun filterUserResourcesByPermissions(
+        @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
+        @ApiParam("待校验用户ID", required = true)
+        userId: String,
+        @HeaderParam(AUTH_HEADER_DEVOPS_BK_TOKEN)
+        @ApiParam("认证token", required = true)
+        token: String,
+        @HeaderParam(AUTH_HEADER_GIT_TYPE)
+        @ApiParam("系统类型")
+        type: String? = null,
+        @QueryParam("action")
+        @ApiParam("action类型")
+        actions: List<String>,
+        @PathParam("projectCode")
+        @ApiParam("项目Code", required = true)
+        projectCode: String,
+        @QueryParam("resourceType")
+        @ApiParam("资源类型")
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Result<Map<AuthPermission, List<String>>>
 
     @Path("/projects/{projectCode}/create/relation")
     @POST

@@ -103,6 +103,24 @@ abstract class StreamPermissionServiceImpl : PermissionService {
         }
     }
 
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resource.resourceCode,
+                resourceType =  resource.resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -149,6 +167,19 @@ abstract class StreamPermissionServiceImpl : PermissionService {
             instanceMap[AuthPermission.get(it)] = actionList
         }
         return instanceMap
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate { action ->
+            val authPermission = action.substringAfterLast("_")
+            AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+        }
     }
 
     override fun getUserResourceAndParentByPermission(

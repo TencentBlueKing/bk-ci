@@ -88,7 +88,8 @@ interface PipelinePermissionService {
     fun filterPipelines(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
     ): Map<AuthPermission, List<String>>
 
     /**

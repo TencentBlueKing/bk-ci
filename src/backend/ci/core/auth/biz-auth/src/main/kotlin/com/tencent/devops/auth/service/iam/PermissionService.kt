@@ -68,6 +68,18 @@ interface PermissionService {
         resourceType: String
     ): Map<String, Boolean>
 
+    /**
+     * 根据资源实例批量验证用户资源
+     *
+     * 如果资源有多个父资源，如流水线有项目、流水线组
+     */
+    fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean>
+
     fun getUserResourceByAction(
         userId: String,
         action: String,
@@ -80,6 +92,14 @@ interface PermissionService {
         actions: List<String>,
         projectCode: String,
         resourceType: String
+    ): Map<AuthPermission, List<String>>
+
+    fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
     ): Map<AuthPermission, List<String>>
 
     fun getUserResourceAndParentByPermission(

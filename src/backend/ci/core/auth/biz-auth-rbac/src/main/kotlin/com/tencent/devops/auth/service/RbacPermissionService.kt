@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.bk.sdk.iam.config.IamConfiguration
 import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
+import com.tencent.bk.sdk.iam.dto.InstanceDTO
 import com.tencent.bk.sdk.iam.dto.PathInfoDTO
 import com.tencent.bk.sdk.iam.dto.SubjectDTO
 import com.tencent.bk.sdk.iam.dto.V2QueryPolicyDTO
@@ -63,7 +64,7 @@ class RbacPermissionService constructor(
             return authHelper.isAllowed(userId, action)
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user action permission" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user action permission|" +
                     "$userId|$action"
             )
         }
@@ -93,97 +94,15 @@ class RbacPermissionService constructor(
         resourceType: String,
         relationResourceType: String?
     ): Boolean {
-        logger.info(
-            "[rbac] validate user resource permission|$userId|$action|$projectCode|$resourceType|$resourceCode"
-        )
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
+        return validateUserResourcePermissionByInstance(
+            userId = userId,
+            action = action,
+            projectCode = projectCode,
+            resource = AuthResourceInstance(
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
-            val subject = SubjectDTO.builder()
-                .id(userId)
-                .type(ManagerScopesEnum.getType(ManagerScopesEnum.USER))
-                .build()
-
-            val actionDTO = ActionDTO()
-            actionDTO.id = action
-
-            val resourcePath = PathInfoDTO()
-            resourcePath.system = iamConfiguration.systemId
-            resourcePath.type = resourceType
-            resourcePath.id = iamResourceCode
-            val projectPath = PathInfoDTO()
-            projectPath.system = iamConfiguration.systemId
-            projectPath.type = AuthResourceType.PROJECT.value
-            projectPath.id = projectCode
-            projectPath.child = resourcePath
-
-            val attribute = mapOf(
-                PATH_ATTRIBUTE to listOf(projectPath.toString())
-            )
-
-            val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
-                .type(resourceType)
-                .id(resourceCode)
-                .attribute(attribute)
-                .build()
-
-            val queryPolicyDTO = V2QueryPolicyDTO.builder().system(iamConfiguration.systemId)
-                .subject(subject)
-                .action(actionDTO)
-                .resources(listOf(resourceNode))
-                .build()
-
-            return policyService.verifyPermissions(queryPolicyDTO)
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission" +
-                    "$userId|$action|$projectCode|$resourceType|$resourceCode"
-            )
-        }
-    }
-
-    override fun batchValidateUserResourcePermission(
-        userId: String,
-        actions: List<String>,
-        projectCode: String,
-        resourceCode: String,
-        resourceType: String
-    ): Map<String, Boolean> {
-        logger.info(
-            "[rbac] batch validate user resource permission|$userId|$actions|$projectCode|$resourceType|$resourceCode"
         )
-        val startEpoch = System.currentTimeMillis()
-        try {
-            val actionList = actions.map { action ->
-                val actionDTO = ActionDTO()
-                actionDTO.id = action
-                actionDTO
-            }
-            val iamResourceCode = authResourceCodeConverter.code2IamCode(
-                projectCode = projectCode,
-                resourceType = resourceType,
-                resourceCode = resourceCode
-            )
-            val resource = ResourceDTO.builder()
-                .id(iamResourceCode)
-                .type(resourceType)
-                .system(iamConfiguration.systemId)
-                .build()
-            return policyService.batchVerifyPermissions(
-                userId,
-                actionList,
-                listOf(resource)
-            )
-        } finally {
-            logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to batch validate user resource permission" +
-                    "$userId|$actions|$projectCode|$resourceType|$resourceCode"
-            )
-        }
     }
 
     override fun validateUserResourcePermissionByInstance(
@@ -212,9 +131,13 @@ class RbacPermissionService constructor(
                 child = null,
                 paths = paths
             )
-            val attribute = mapOf(
-                PATH_ATTRIBUTE to paths.map { it.toString() }
-            )
+            val attribute = if (paths.isNotEmpty()) {
+                mapOf(
+                    PATH_ATTRIBUTE to paths.map { it.toString() }
+                )
+            } else {
+                emptyMap()
+            }
 
             val resourceNode = V2ResourceNode.builder().system(iamConfiguration.systemId)
                 .type(resource.resourceType)
@@ -237,8 +160,95 @@ class RbacPermissionService constructor(
             return policyService.verifyPermissions(queryPolicyDTO)
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to validate user resource permission|" +
                     "$userId|$action|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+            )
+        }
+    }
+
+    override fun batchValidateUserResourcePermission(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceCode: String,
+        resourceType: String
+    ): Map<String, Boolean> {
+        val resource = if (resourceType == AuthResourceType.PROJECT.value) {
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+            )
+        } else {
+            val projectResourceInstance = AuthResourceInstance(
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectCode
+            )
+            AuthResourceInstance(
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                parents = listOf(projectResourceInstance)
+            )
+        }
+
+        return batchValidateUserResourcePermissionByInstance(
+            userId = userId,
+            actions = actions,
+            projectCode = projectCode,
+            resource = resource
+        )
+    }
+
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        logger.info(
+            "[rbac] batch validate user resource permission|" +
+                "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
+        )
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val actionList = actions.map { action ->
+                val actionDTO = ActionDTO()
+                actionDTO.id = action
+                actionDTO
+            }
+            val paths = mutableListOf<PathInfoDTO>()
+            resourcesPaths(
+                projectCode = projectCode,
+                resource = resource,
+                child = null,
+                paths = paths
+            )
+            val attribute = if (paths.isNotEmpty()) {
+                mapOf(
+                    PATH_ATTRIBUTE to paths.map { it.toString() }
+                )
+            } else {
+                emptyMap()
+            }
+            val iamResourceCode = authResourceCodeConverter.code2IamCode(
+                projectCode = projectCode,
+                resourceType = resource.resourceType,
+                resourceCode = resource.resourceCode
+            )
+            val resourceDTO = ResourceDTO.builder()
+                .id(iamResourceCode)
+                .type(resource.resourceType)
+                .attribute(attribute)
+                .system(iamConfiguration.systemId)
+                .build()
+            return policyService.batchVerifyPermissions(
+                userId,
+                actionList,
+                listOf(resourceDTO)
+            )
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to batch validate user resource permission|" +
+                    "$userId|$actions|$projectCode|${resource.resourceType}|${resource.resourceCode}"
             )
         }
     }
@@ -276,7 +286,7 @@ class RbacPermissionService constructor(
             }
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources|" +
                     "$userId|$action|$projectCode|$resourceType"
             )
         }
@@ -305,7 +315,7 @@ class RbacPermissionService constructor(
             }
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to batch get user resources" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to batch get user resources|" +
                     "$userId|$actions|$projectCode|$resourceType"
             )
         }
@@ -325,8 +335,47 @@ class RbacPermissionService constructor(
             return authHelper.groupRbacInstanceByType(userId, action)
         } finally {
             logger.info(
-                "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources and parent resource" +
+                "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources and parent resource|" +
                     "$userId|$action|$projectCode|$resourceType"
+            )
+        }
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        logger.info(
+            "[rbac] filter user resources|$userId|$actions|$projectCode|$resourceType"
+        )
+        val startEpoch = System.currentTimeMillis()
+        try {
+            val instanceList = resources.map { resource ->
+                val paths = mutableListOf<PathInfoDTO>()
+                resourcesPaths(
+                    projectCode = projectCode,
+                    resource = resource,
+                    child = null,
+                    paths = paths
+                )
+                val instance = InstanceDTO()
+                instance.type = resource.resourceType
+                instance.id = resource.resourceCode
+                instance.system = iamConfiguration.systemId
+                instance.paths = paths
+                instance
+            }
+            return actions.associate { action ->
+                val authPermission = action.substringAfterLast("_")
+                AuthPermission.get(authPermission) to authHelper.isAllowed(userId, action, instanceList)
+            }
+        } finally {
+            logger.info(
+                "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
+                    "$userId|$actions|$projectCode|$resourceType"
             )
         }
     }
