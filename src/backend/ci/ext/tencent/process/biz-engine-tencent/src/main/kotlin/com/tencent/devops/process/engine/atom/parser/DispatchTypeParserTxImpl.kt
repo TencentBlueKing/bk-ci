@@ -235,7 +235,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         // 通过凭证获取账号密码
         val credential = checkCredentialId(
             pool = containerPool,
-            credentialId = dispatchType.credentialId ?: containerPool?.credential?.credentialId,
+            credentialId = dispatchType.credentialId?.ifBlank { null }
+                ?: containerPool?.credential?.credentialId?.ifBlank { null },
             fromRemote = containerPool?.credential?.fromRemote,
             projectId = credentialProject,
             pipelineId = pipelineId,
