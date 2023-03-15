@@ -230,7 +230,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             credentialProject = dispatchType.credentialProject!!
         }
         val containerPool: Pool? =
-            kotlin.runCatching { objectMapper.readValue(dispatchType.image, Pool::class.java) }.getOrNull()
+            kotlin.runCatching { objectMapper.readValue(dispatchType.value, Pool::class.java) }.getOrNull()
 
         // 通过凭证获取账号密码
         val credential = checkCredentialId(
@@ -242,7 +242,17 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         )
-        val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
+        val pool = Pool(
+            /*
+            container 应该是一个镜像地址字符串
+            containerPool?.container 走 stream 的情况, dispatchType.value走蓝盾的情况
+            */
+            container = containerPool?.container ?: dispatchType.value,
+            credential = credential,
+            macOS = null,
+            third = true,
+            performanceConfigId = dispatchType.performanceConfigId
+        )
         dispatchType.image = JsonUtil.toJson(pool)
     }
 
@@ -253,8 +263,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         projectId: String,
         pipelineId: String,
         buildId: String
-    ): Credential? {
-        if (credentialId.isNullOrBlank()) return /*兼容直接输入user/password的情况*/ pool?.credential
+    ): Credential {
+        if (credentialId.isNullOrBlank()) {
+            return /*兼容直接输入user/password的情况*/ pool?.credential ?: Credential("", "")
+        }
         val realCredentialId = EnvUtils.parseEnv(
             command = credentialId,
             data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
