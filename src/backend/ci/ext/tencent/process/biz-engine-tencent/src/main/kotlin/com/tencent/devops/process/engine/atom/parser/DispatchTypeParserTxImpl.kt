@@ -101,8 +101,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                         dispatchType.dockerBuildVersion = dispatchType.value.removePrefix("paas/")
                     } else if (dispatchType is PublicDevCloudDispathcType) {
                         // 在商店发布的蓝盾源镜像，无需凭证
-                        val pool = Pool(dispatchType.value.removePrefix("/"), null, null,
-                            false, dispatchType.performanceConfigId)
+                        val pool = Pool(
+                            dispatchType.value.removePrefix("/"), null, null,
+                            false, dispatchType.performanceConfigId
+                        )
                         dispatchType.image = JsonUtil.toJson(pool)
                     }
                 } else {
@@ -117,7 +119,8 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             } else if (dispatchType.imageType == ImageType.BKDEVOPS) {
                 // 针对非商店的旧数据处理
                 if (dispatchType.value != DockerVersion.TLINUX1_2.value &&
-                    dispatchType.value != DockerVersion.TLINUX2_2.value) {
+                    dispatchType.value != DockerVersion.TLINUX2_2.value
+                ) {
                     dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                     dispatchType.value = "bkdevops/" + dispatchType.value
                 } else {
@@ -126,7 +129,13 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 // DevCloud镜像历史数据特殊处理
                 if (dispatchType is PublicDevCloudDispathcType) {
                     if (dispatchType.image != null) {
-                        val pool = Pool("devcloud/" + dispatchType.image!!.removePrefix("/"), null, null, false, dispatchType.performanceConfigId)
+                        val pool = Pool(
+                            "devcloud/" + dispatchType.image!!.removePrefix("/"),
+                            null,
+                            null,
+                            false,
+                            dispatchType.performanceConfigId
+                        )
                         dispatchType.image = JsonUtil.toJson(pool)
                     } else {
                         logger.warn("[$buildId]|image=null,dispatchType=${JsonUtil.toJson(dispatchType)}")
@@ -138,8 +147,10 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     genThirdDevCloudDispatchMessage(dispatchType, projectId, pipelineId, buildId)
                 }
             }
-            logger.info("$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
-                            "dispatchType=(${JsonUtil.toJson(dispatchType)})")
+            logger.info(
+                "$buildId DispatchTypeParserTxImpl:AfterTransfer:" +
+                    "dispatchType=(${JsonUtil.toJson(dispatchType)})"
+            )
         } else {
             logger.info("$buildId DispatchTypeParserTxImpl:not StoreDispatchType, no transfer")
         }
@@ -183,7 +194,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                     templateId = runVariables[TEMPLATE_ACROSS_INFO_ID]!!
                 ).firstOrNull {
                     it.templateType == TemplateAcrossInfoType.JOB &&
-                            it.templateInstancesIds.contains(customInfo.job.id)
+                        it.templateInstancesIds.contains(customInfo.job.id)
                 }
             } else {
                 null
@@ -214,15 +225,15 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         pipelineId: String,
         buildId: String
     ) {
-        var user = ""
-        var password = ""
         var credentialProject = projectId
         if (!dispatchType.credentialProject.isNullOrBlank()) {
             credentialProject = dispatchType.credentialProject!!
         }
         val containerPool: Pool? =
             kotlin.runCatching { objectMapper.readValue(dispatchType.image, Pool::class.java) }.getOrNull()
-        checkCredential(
+
+        // 通过凭证获取账号密码
+        val credential = checkCredentialId(
             pool = containerPool,
             credentialId = dispatchType.credentialId ?: containerPool?.credential?.credentialId,
             fromRemote = containerPool?.credential?.fromRemote,
@@ -230,39 +241,19 @@ class DispatchTypeParserTxImpl @Autowired constructor(
             pipelineId = pipelineId,
             buildId = buildId
         )
-        // 通过凭证获取账号密码
-        if (!dispatchType.credentialId.isNullOrBlank()) {
-            val realCredentialId = EnvUtils.parseEnv(
-                command = dispatchType.credentialId!!,
-                data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
-            )
-            if (realCredentialId.isNotEmpty()) {
-                val ticketsMap = CommonCredentialUtils.getCredential(
-                    client = client,
-                    projectId = credentialProject,
-                    credentialId = realCredentialId,
-                    type = CredentialType.USERNAME_PASSWORD
-                )
-                user = ticketsMap["v1"] as String
-                password = ticketsMap["v2"] as String
-            }
-        }
-        val credential = Credential(
-            containerPool?.credential?.user ?: user, containerPool?.credential?.password ?: password
-        )
         val pool = Pool(dispatchType.value, credential, null, true, dispatchType.performanceConfigId)
         dispatchType.image = JsonUtil.toJson(pool)
     }
 
-    private fun checkCredential(
+    private fun checkCredentialId(
         pool: Pool?,
         credentialId: String?,
         fromRemote: Credential.Remote?,
         projectId: String,
         pipelineId: String,
         buildId: String
-    ) {
-        if (credentialId.isNullOrBlank() || pool?.credential == null) return
+    ): Credential? {
+        if (credentialId.isNullOrBlank()) return /*兼容直接输入user/password的情况*/ pool?.credential
         val realCredentialId = EnvUtils.parseEnv(
             command = credentialId,
             data = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
@@ -277,7 +268,7 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         } catch (ignore: Exception) {
             logger.info("get credential from $projectId failed, try to get from across project")
             // 没有跨项目的模板引用就直接扔出错误
-            if (fromRemote == null) {
+            if (fromRemote == null || pool?.credential == null) {
                 throw ignore
             }
 
@@ -310,7 +301,6 @@ class DispatchTypeParserTxImpl @Autowired constructor(
                 acrossProject = true
             )
         }
-        pool.credential?.user = ticketsMap["v1"] as String
-        pool.credential?.password = ticketsMap["v2"] as String
+        return Credential(user = ticketsMap["v1"] as String, password = ticketsMap["v2"] as String)
     }
 }
