@@ -291,7 +291,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 )
             )
         }
-        return groupPermissionDetailVoList
+        return groupPermissionDetailVoList.sortedBy { it.relatedResourceInfo.type  }
     }
 
     private fun buildRelatedResourceTypesDTO(instancesDTO: InstancesDTO) {
