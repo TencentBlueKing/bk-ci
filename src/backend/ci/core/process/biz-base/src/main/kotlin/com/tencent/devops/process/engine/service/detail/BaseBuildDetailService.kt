@@ -42,13 +42,13 @@ import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.pojo.element.Element
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.model.process.tables.records.TPipelineBuildDetailRecord
 import com.tencent.devops.process.dao.BuildDetailDao
+import com.tencent.devops.process.engine.control.lock.PipelineBuildDetailLock
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.pojo.BuildStageStatus
@@ -67,8 +67,7 @@ open class BaseBuildDetailService constructor(
     val logger = LoggerFactory.getLogger(BaseBuildDetailService::class.java)!!
 
     companion object {
-        private const val ExpiredTimeInSeconds: Long = 10
-        const val STATUS_STAGE = "stage-1"
+        const val TRIGGER_STAGE = "stage-1"
     }
 
     fun getBuildModel(projectId: String, buildId: String): Model? {
@@ -88,7 +87,7 @@ open class BaseBuildDetailService constructor(
         val watcher = Watcher(id = "updateDetail#$buildId#$operation")
         var message = "nothing"
         var record: TPipelineBuildDetailRecord? = null // 在异常catch处共享，减少一次db查询
-        val lock = RedisLock(redisOperation, "process.build.detail.lock.$buildId", ExpiredTimeInSeconds)
+        val lock = PipelineBuildDetailLock(redisOperation, buildId)
 
         try {
             watcher.start("lock")
@@ -179,7 +178,7 @@ open class BaseBuildDetailService constructor(
                     stageTagMap.getOrDefault(tag, "null")
                 },
                 // #6655 利用stageStatus中的第一个stage传递构建的状态信息
-                showMsg = if (stage.id == STATUS_STAGE) {
+                showMsg = if (stage.id == TRIGGER_STAGE) {
                     MessageCodeUtil.getCodeLanMessage(statusMessage) + (reason?.let { ": $reason" } ?: "")
                 } else null
             )

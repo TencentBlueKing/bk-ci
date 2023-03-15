@@ -229,7 +229,7 @@ class PipelineBuildContainerDao {
             if (!stageId.isNullOrBlank()) {
                 conditionStep.and(STAGE_ID.eq(stageId))
             }
-            if (statusSet != null && statusSet.isNotEmpty()) {
+            if (!statusSet.isNullOrEmpty()) {
                 val statusIntSet = mutableSetOf<Int>()
                 statusSet.forEach {
                     statusIntSet.add(it.ordinal)
