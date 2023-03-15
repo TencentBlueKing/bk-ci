@@ -601,7 +601,7 @@ export default {
     },
 
     getWinVersion () {
-        return request.get(`${DEVCLOUD_API_URL_PREFIX}/api/user/windows/systemVersions`).then((res) => {
+        return request.get(`${DEVCLOUD_API_URL_PREFIX}/user/windows/systemVersions`).then((res) => {
             return res.data
         })
     },
