@@ -505,7 +505,7 @@ class CodeWebhookService @Autowired constructor(
                 targetBranch = if (record.targetBranch != null) {
                     mutableListOf(record.targetBranch)
                 } else {
-                    mutableListOf()
+                    null
                 }
             )
             pluginGitCheckDao.update(

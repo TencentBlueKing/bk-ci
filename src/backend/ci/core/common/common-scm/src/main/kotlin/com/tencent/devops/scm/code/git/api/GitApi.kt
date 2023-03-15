@@ -217,9 +217,7 @@ open class GitApi {
             "description" to description,
             "context" to context,
             "block" to block,
-            "target_branches" to targetBranch?.ifEmpty {
-                null
-            }
+            "target_branches" to targetBranch
         )
 
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
