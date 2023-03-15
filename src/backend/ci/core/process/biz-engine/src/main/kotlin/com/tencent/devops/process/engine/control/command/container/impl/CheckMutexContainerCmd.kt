@@ -113,6 +113,7 @@ class CheckMutexContainerCmd(
 
                 mutexControl.releaseContainerMutex(
                     projectId = commandContext.event.projectId,
+                    pipelineId = commandContext.event.pipelineId,
                     buildId = commandContext.event.buildId,
                     stageId = commandContext.event.stageId,
                     containerId = commandContext.event.containerId,
