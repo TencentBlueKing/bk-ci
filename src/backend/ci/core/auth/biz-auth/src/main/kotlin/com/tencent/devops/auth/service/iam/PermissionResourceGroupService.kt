@@ -33,6 +33,7 @@ import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
 import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
+import com.tencent.devops.common.api.pojo.Pagination
 
 interface PermissionResourceGroupService {
     /**
@@ -41,8 +42,10 @@ interface PermissionResourceGroupService {
     fun listGroup(
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo>
+        resourceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Pagination<IamGroupInfoVo>
 
     /**
      * 获取用户所属组

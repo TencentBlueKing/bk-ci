@@ -34,15 +34,18 @@ import com.tencent.devops.auth.pojo.vo.IamGroupInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupMemberInfoVo
 import com.tencent.devops.auth.pojo.vo.IamGroupPoliciesVo
 import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
+import com.tencent.devops.common.api.pojo.Pagination
 
 class SamplePermissionResourceGroupService : PermissionResourceGroupService {
 
     override fun listGroup(
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo> {
-        return emptyList()
+        resourceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Pagination<IamGroupInfoVo> {
+        return Pagination(false, emptyList())
     }
 
     override fun listUserBelongGroup(
