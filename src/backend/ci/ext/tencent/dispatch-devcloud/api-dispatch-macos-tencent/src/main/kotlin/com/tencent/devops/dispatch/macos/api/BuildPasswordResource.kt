@@ -18,7 +18,7 @@ import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_REAL_IP
 import com.tencent.devops.dispatch.macos.pojo.PasswordInfo
 
 @Api(tags = ["BUILD_PASSWORD"], description = "BUILD接口-密码资源")
-@Path("build/password")
+@Path("build/macos/password")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface BuildPasswordResource {
