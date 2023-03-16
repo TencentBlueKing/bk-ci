@@ -52,7 +52,9 @@
     <title>持续集成平台-蓝盾 | 腾讯蓝鲸智云 | 首页</title>
   </head>
   <body>
-    
+    <!-- gulp inject: svg sprite js -->
+    <!-- inject:js -->
+    <!-- endinject -->
     <div id="devops-root">
       <div class="bk-loading" style="position: absolute">
         <div class="bk-loading-wrapper">
@@ -69,6 +71,7 @@
     <script src="__BK_CI_PUBLIC_PATH__/console/static/vue.min.js"></script>
     <script src="__BK_CI_PUBLIC_PATH__/console/static/vuex.min.js"></script>
     <script src="__BK_CI_PUBLIC_PATH__/console/static/vue-router.min.js"></script>
+    
     <!-- devops:assets -->
     <!-- end devops:assets -->
 
@@ -263,10 +266,6 @@
         return asyncGet(API_URL_PREFIX + '/project/api/user/services/', pathPid)
       }
 
-      function fetchAssetsJSON() {
-        return asyncGet('__BK_CI_PUBLIC_PATH__/assets_bundle.json?t=' + Math.random(), undefined, false)
-      }
-
       function fetchAllProjects() {
         return asyncGet(
           API_URL_PREFIX + '/project/api/user/projects/?enabled=true'
@@ -365,11 +364,11 @@
         }
       }
 
-      function init(projectList, allServices, userInfo, assetsJSON) {
+      function init(projectList, allServices, userInfo) {
         var path = location.pathname.replace('/console', '')
         var headTag = document.head || document.getElementsByTagName('head')[0]
         var pathReg = /^\/(\w+)\/?/
-        var serviceObject = getServiceObject(allServices, assetsJSON)
+        var serviceObject = getServiceObject(allServices, window.__SERVICE_ASSETS__)
         var serviceMap = serviceObject.serviceMap
         var serviceMatchResult = path.match(pathReg)
         var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null

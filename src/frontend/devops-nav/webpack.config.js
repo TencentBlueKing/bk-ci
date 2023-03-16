@@ -105,12 +105,6 @@ module.exports = (env = {}, argv) => {
                 publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/console/', 'static/'),
                 hash: true,
                 includeSourcemap: false
-            },
-            {
-                filepath: require.resolve('./src/assets/images/devops_sprite.js'),
-                publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/console/'),
-                hash: true,
-                includeSourcemap: false
             }
         ]),
         new webpack.DllReferencePlugin({

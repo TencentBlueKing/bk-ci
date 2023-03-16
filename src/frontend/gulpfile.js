@@ -1,8 +1,11 @@
 const { src, dest, parallel, series, task } = require('gulp')
 const fs = require('fs')
 const path = require('path')
+const htmlmin = require('gulp-htmlmin')
 const svgSprite = require('gulp-svg-sprite')
+const inject = require('gulp-inject')
 const rename = require('gulp-rename')
+const hash = require('gulp-hash')
 const replace = require('gulp-replace')
 const Ora = require('ora')
 const yargs = require('yargs')
@@ -46,11 +49,11 @@ function renameSvg (type) {
 function generatorSvgJs (type) {
     return () => {
         const svgCode = fs.readFileSync(`${dist}/svg-sprites/${type}_sprite.svg`, 'utf8')
-        const dir = type === 'devops' ? 'devops-nav/src/assets/images' : 'devops-pipeline/src/images'
         return src('./svg-sprites/svgjs-template.js')
             .pipe(replace('__SVG_SPRITES_SYMBOLS__', svgCode))
             .pipe(rename(`${type}_sprite.js`))
-            .pipe(dest(path.join(__dirname, dir)))
+            .pipe(hash())
+            .pipe(dest(`${dist}/svg-sprites/`))
     }
 }
 
@@ -77,7 +80,7 @@ task('devops', series([taskGenerator('devops'), renameSvg('devops'), generatorSv
 task('pipeline', series([taskGenerator('pipeline'), renameSvg('pipeline'), generatorSvgJs('pipeline')]))
 task('copy', () => src(['common-lib/**'], { base: '.' }).pipe(dest(`${dist}/`)))
 
-task('build', cb => {
+task('build', series([cb => {
     const spinner = new Ora('building bk-ci frontend project').start()
     const scopeStr = getScopeStr(scope)
     const envConfMap = {
@@ -105,6 +108,36 @@ task('build', cb => {
         spinner.succeed('Finished building bk-ci frontend project')
         cb()
     })
-})
+}], () => {
+    const fileContent = `window.__SERVICE_ASSETS__ = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
+    fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
+    return src(`${dist}/assetsBundles.js`)
+        .pipe(hash())
+        .pipe(dest(`${dist}/`))
+}, (cb) => {
+    ['console', 'pipeline'].map(prefix => {
+        const dir = path.join(dist, prefix)
+        const spriteNameGlob = `${prefix === 'console' ? 'devops' : 'pipeline'}_sprite-*.js`
+        const fileName = `frontend#${prefix}#index.html`
+        return src(path.join(dir, fileName))
+            .pipe(inject(src([
+                ...(prefix === 'console' ? [`${dist}/assetsBundles-*.js`] : []),
+                `${dist}/svg-sprites/${spriteNameGlob}`
+            ], {
+                read: false
+            }), {
+                ignorePath: dist,
+                addRootSlash: false,
+                addPrefix: '__BK_CI_PUBLIC_PATH__'
+            }))
+            .pipe(htmlmin({
+                collapseWhitespace: true,
+                removeComments: true,
+                minifyJS: true
+            }))
+            .pipe(dest(dir))
+    })
+    cb()
+}))
   
 exports.default = parallel('devops', 'pipeline', 'copy', 'build')

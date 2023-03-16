@@ -18,7 +18,6 @@
  */
 const path = require('path')
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin')
-const AddAssetHtmlPlugin = require('add-asset-html-webpack-plugin')
 const webpack = require('webpack')
 const HtmlWebpackPlugin = require('html-webpack-plugin')
 const CopyWebpackPlugin = require('copy-webpack-plugin')
@@ -26,7 +25,6 @@ const webpackBaseConfig = require('../webpack.base')
 module.exports = (env, argv) => {
     const isProd = argv.mode === 'production'
     const envDist = env && env.dist ? env.dist : 'frontend'
-    const extUrlPrefix = env && env.name ? `${env.name}-` : ''
     const dist = path.join(__dirname, `../${envDist}/pipeline`)
     const config = webpackBaseConfig({
         env,
@@ -47,17 +45,11 @@ module.exports = (env, argv) => {
             template: 'index.html',
             inject: true,
             publicPath: '__BK_CI_PUBLIC_PATH__/pipeline/',
-            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`,
-            extUrlPrefix
+            minify: {
+                removeComments: false
+            },
+            VENDOR_LIBS: `/pipeline/main.dll.js?v=${Math.random()}`
         }),
-        new AddAssetHtmlPlugin([
-            {
-                filepath: require.resolve('./src/images/pipeline_sprite.js'),
-                publicPath: path.posix.join('__BK_CI_PUBLIC_PATH__', '/pipeline/'),
-                hash: true,
-                includeSourcemap: false
-            }
-        ]),
         new webpack.DllReferencePlugin({
             context: __dirname,
             manifest: require('./dist/manifest.json')
