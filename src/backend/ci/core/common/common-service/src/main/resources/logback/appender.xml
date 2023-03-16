@@ -7,9 +7,9 @@
     </appender>
 
     <appender name="sync-app-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${service.log.dir}/${app_name}.log</file>
+        <file>${service.log.dir}/service.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/${app_name}.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${service.log.dir}/service.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
             <maxFileSize>1GB</maxFileSize>
         </rollingPolicy>
@@ -27,9 +27,9 @@
 
 
     <appender name="sync-error-log" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <file>${service.log.dir}/${app_name}-error.log</file>
+        <file>${service.log.dir}/service-error.log</file>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <fileNamePattern>${service.log.dir}/${app_name}-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
+            <fileNamePattern>${service.log.dir}/service-error.%d{yyyy-MM-dd}.%i.log.gz</fileNamePattern>
             <maxHistory>30</maxHistory>
             <maxFileSize>1GB</maxFileSize>
         </rollingPolicy>
