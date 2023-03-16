@@ -6,6 +6,7 @@ import com.tencent.devops.remotedev.api.op.OpRemoteDevResource
 import com.tencent.devops.remotedev.pojo.OPUserSetting
 import com.tencent.devops.remotedev.pojo.WorkspaceTemplate
 import com.tencent.devops.remotedev.service.RemoteDevSettingService
+import com.tencent.devops.remotedev.service.UserRefreshService
 import com.tencent.devops.remotedev.service.WorkspaceService
 import com.tencent.devops.remotedev.service.WorkspaceTemplateService
 import org.springframework.beans.factory.annotation.Autowired
@@ -14,6 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpRemoteDevResourceImpl @Autowired constructor(
     private val workspaceTemplateService: WorkspaceTemplateService,
     private val workspaceService: WorkspaceService,
+    private val userRefreshService: UserRefreshService,
     private val remoteDevSettingService: RemoteDevSettingService
 ) : OpRemoteDevResource {
 
@@ -47,5 +49,9 @@ class OpRemoteDevResourceImpl @Autowired constructor(
             remoteDevSettingService.updateSetting4Op(it)
         }
         return Result(true)
+    }
+
+    override fun refreshUserInfo(): Result<Boolean> {
+        return Result(userRefreshService.refreshAllUser())
     }
 }

@@ -119,4 +119,9 @@ interface OpRemoteDevResource {
         userId: String,
         data: List<OPUserSetting>
     ): Result<Boolean>
+
+    @ApiOperation("更新用户组织架构")
+    @POST
+    @Path("/refresh/all")
+    fun refreshUserInfo(): Result<Boolean>
 }

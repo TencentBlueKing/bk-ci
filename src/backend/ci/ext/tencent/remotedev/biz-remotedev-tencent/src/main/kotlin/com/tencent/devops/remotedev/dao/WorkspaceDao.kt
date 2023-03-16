@@ -292,6 +292,27 @@ class WorkspaceDao {
             }
         }
     }
+    fun updateWorkspaceCreatorInfo(
+        dslContext: DSLContext,
+        workspaceName: String,
+        creator: String,
+        bgName: String,
+        deptName: String,
+        centerName: String,
+        groupName: String
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(NAME, name)
+                .set(CREATOR_BG_NAME, bgName)
+                .set(CREATOR_DEPT_NAME, deptName)
+                .set(CREATOR_CENTER_NAME, centerName)
+                .set(CREATOR_GROUP_NAME, groupName)
+                .set(UPDATE_TIME, LocalDateTime.now())
+                .where(NAME.eq(workspaceName).and(CREATOR.eq(creator)))
+                .execute()
+        }
+    }
 
     fun updateWorkspaceUsageTime(
         workspaceName: String,
