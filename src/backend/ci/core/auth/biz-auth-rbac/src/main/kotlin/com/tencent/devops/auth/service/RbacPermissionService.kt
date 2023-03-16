@@ -43,7 +43,9 @@ import com.tencent.devops.auth.service.iam.PermissionService
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.AuthResourceInstance
+import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
+import org.slf4j.MDC
 
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
@@ -276,13 +278,7 @@ class RbacPermissionService constructor(
                     )
                 // 返回具体资源列表
                 else ->
-                    instanceMap[resourceType]?.let {
-                        authResourceCodeConverter.batchIamCode2Code(
-                            projectCode = projectCode,
-                            resourceType = resourceType,
-                            iamResourceCodes = it
-                        )
-                    } ?: emptyList()
+                    instanceMap[resourceType] ?: emptyList()
             }
         } finally {
             logger.info(
@@ -332,7 +328,13 @@ class RbacPermissionService constructor(
         )
         val startEpoch = System.currentTimeMillis()
         try {
-            return authHelper.groupRbacInstanceByType(userId, action)
+            return authHelper.groupRbacInstanceByType(userId, action).mapValues {
+                authResourceCodeConverter.batchIamCode2Code(
+                    projectCode = projectCode,
+                    resourceType = it.key,
+                    iamResourceCodes = it.value
+                )
+            }
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to get user resources and parent resource|" +
@@ -363,15 +365,23 @@ class RbacPermissionService constructor(
                 )
                 val instance = InstanceDTO()
                 instance.type = resource.resourceType
-                instance.id = resource.resourceCode
+                instance.id = authResourceCodeConverter.code2IamCode(
+                    projectCode = projectCode,
+                    resourceType = resource.resourceType,
+                    resourceCode = resource.resourceCode
+                )
                 instance.system = iamConfiguration.systemId
                 instance.paths = paths
                 instance
             }
-            return actions.associate { action ->
+            val permissionMap = mutableMapOf<AuthPermission, List<String>>()
+            val traceId = MDC.get(TraceTag.BIZID)
+            actions.parallelStream().forEach { action ->
+                MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                AuthPermission.get(authPermission) to authHelper.isAllowed(userId, action, instanceList)
+                permissionMap[AuthPermission.get(authPermission)] = authHelper.isAllowed(userId, action, instanceList)
             }
+            return permissionMap
         } finally {
             logger.info(
                 "It take(${System.currentTimeMillis() - startEpoch})ms to filter user resources |" +
