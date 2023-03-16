@@ -58,6 +58,6 @@ interface ServicePublicScanResource {
         @QueryParam("tag")
         tag: String? = null,
         @ApiParam(value = "项目创建信息", required = true)
-        projectCreateInfo: ProjectCreateInfo,
+        projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO>
 }
