@@ -148,7 +148,6 @@ class ProjectDao {
     fun listByCodes(dslContext: DSLContext, projectCodeList: Set<String>, enabled: Boolean?): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(projectCodeList))
-                .and(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .let { if (null == enabled) it else it.and(ENABLED.eq(enabled)) }
                 .orderBy(PROJECT_NAME.asc())
                 .limit(10000).fetch() // 硬限制10000保护
