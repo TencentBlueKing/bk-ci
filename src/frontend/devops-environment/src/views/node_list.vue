@@ -513,10 +513,8 @@
                     } else if (this.gatewayList.length && gateway && gateway !== 'shenzhen') {
                         const isTarget = this.gatewayList.find(item => item.showName === gateway)
                         this.constructImportForm.location = isTarget && isTarget.zoneName
-                    } else if (this.gatewayList.length && !gateway) {
-                        this.constructImportForm.location = this.gatewayList[0].zoneName
                     }
-
+                    
                     if (node && ['THIRDPARTY'].includes(node.nodeType)) { // 如果是第三方构建机类型则获取构建机详情以获得安装命令或下载链接
                         this.getVmBuildDetail(node.nodeHashId)
                     } else {
