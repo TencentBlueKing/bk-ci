@@ -226,22 +226,31 @@ class RbacPermissionResourceService(
         resourceCode: String
     ): Boolean {
         // 一期先不上流水线组权限,流水线组权限由项目控制
-        val newResourceType = if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
-            AuthResourceType.PROJECT.value
+        return if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = RbacAuthUtils.buildAction(
+                    authPermission = AuthPermission.MANAGE,
+                    authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
+                ),
+                projectCode = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                relationResourceType = null
+            )
         } else {
-            resourceType
+            permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = RbacAuthUtils.buildAction(
+                    authPermission = AuthPermission.MANAGE,
+                    authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+                ),
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationResourceType = null
+            )
         }
-        return permissionService.validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(newResourceType)
-            ),
-            projectCode = projectId,
-            resourceType = newResourceType,
-            resourceCode = resourceCode,
-            relationResourceType = null
-        )
     }
 
     override fun isEnablePermission(
