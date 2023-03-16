@@ -114,7 +114,7 @@ class TxPermissionServiceImpl @Autowired constructor(
                 userId = userId,
                 projectId = projectCode,
                 resourceType = resourceType,
-                resourceCode = resourceCode,
+                resourceCode = useResourceCode,
                 action = useAction,
                 verifyResult = verifyResult
             )
