@@ -197,46 +197,12 @@ class PipelinePermissionServiceImpl @Autowired constructor(
     override fun filterPipelines(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
-        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = resourceType,
-            projectCode = projectId,
-            permissions = authPermissions
-        ) { emptyList() }
-
-        val allPipelineIds = pipelineDao.listPipelineIdByProject(dslContext, projectId)
-        val managerPermissionMap = mutableMapOf<AuthPermission, List<String>>()
-        var isManager = false
-        permissionResourcesMap.keys.forEach {
-            if (managerService.isManagerPermission(
-                    userId = userId,
-                    projectId = projectId,
-                    resourceType = resourceType,
-                    authPermission = it
-                )
-            ) {
-                if (permissionResourcesMap[it] == null) {
-                    managerPermissionMap[it] = allPipelineIds
-                } else {
-                    val collectionSet = mutableSetOf<String>()
-                    collectionSet.addAll(allPipelineIds)
-                    collectionSet.addAll(permissionResourcesMap[it]!!.toSet())
-                    managerPermissionMap[it] = collectionSet.toList()
-                }
-
-                isManager = true
-            } else {
-                managerPermissionMap[it] = permissionResourcesMap[it] ?: emptyList()
-            }
+        return authPermissions.associateWith {
+            pipelineIds
         }
-
-        if (isManager) {
-            return managerPermissionMap
-        }
-        return permissionResourcesMap
     }
 
     /**
