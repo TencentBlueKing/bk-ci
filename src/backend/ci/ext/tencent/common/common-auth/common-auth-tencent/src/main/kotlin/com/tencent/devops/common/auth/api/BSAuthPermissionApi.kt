@@ -134,7 +134,6 @@ class BSAuthPermissionApi @Autowired constructor(
                         resourceType = TActionUtils.extResourceType(resourceType),
                         resourceCode = resourceCode,
                         action = TActionUtils.buildAction(permission, resourceType),
-                        environmentTag = "v0",
                         verifyResult = result
                     )
                 )

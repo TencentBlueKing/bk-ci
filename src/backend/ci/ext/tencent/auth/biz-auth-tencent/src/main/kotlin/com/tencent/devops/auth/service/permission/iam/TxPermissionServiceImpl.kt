@@ -116,7 +116,6 @@ class TxPermissionServiceImpl @Autowired constructor(
                 resourceType = resourceType,
                 resourceCode = resourceCode,
                 action = useAction,
-                environmentTag = "v3",
                 verifyResult = verifyResult
             )
         )
