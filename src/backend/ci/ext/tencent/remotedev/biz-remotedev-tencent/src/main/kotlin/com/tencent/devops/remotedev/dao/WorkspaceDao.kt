@@ -116,12 +116,12 @@ class WorkspaceDao {
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId, workspaceName)
+            val query = dslContext.selectFrom(this)
 
-            if (condition.isEmpty()) {
-                return null
+            if (condition.isNotEmpty()) {
+                query.where(condition)
             }
-            return dslContext.selectFrom(this)
-                .where(condition).orderBy(CREATE_TIME.desc(), ID.desc())
+            return query.orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }

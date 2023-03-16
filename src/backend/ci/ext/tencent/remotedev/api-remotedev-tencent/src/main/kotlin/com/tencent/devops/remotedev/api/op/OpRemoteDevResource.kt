@@ -123,5 +123,10 @@ interface OpRemoteDevResource {
     @ApiOperation("更新用户组织架构")
     @POST
     @Path("/refresh/all")
-    fun refreshUserInfo(): Result<Boolean>
+
+    fun refreshUserInfo(
+        @ApiParam(value = "用户ID", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String
+    ): Result<Boolean>
 }

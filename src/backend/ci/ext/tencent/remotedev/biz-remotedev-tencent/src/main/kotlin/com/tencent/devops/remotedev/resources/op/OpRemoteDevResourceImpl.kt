@@ -51,7 +51,7 @@ class OpRemoteDevResourceImpl @Autowired constructor(
         return Result(true)
     }
 
-    override fun refreshUserInfo(): Result<Boolean> {
+    override fun refreshUserInfo(userId: String): Result<Boolean> {
         return Result(userRefreshService.refreshAllUser())
     }
 }

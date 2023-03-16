@@ -23,6 +23,7 @@ class UserRefreshService @Autowired constructor(
     private val executorService = Executors.newSingleThreadExecutor()
 
     fun refreshAllUser(): Boolean {
+        logger.info("start refreshAllUser")
         executorService.execute {
             val startTime = System.currentTimeMillis()
             // 开始同步数据
