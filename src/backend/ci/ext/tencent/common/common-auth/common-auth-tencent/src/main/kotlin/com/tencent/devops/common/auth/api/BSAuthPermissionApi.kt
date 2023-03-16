@@ -395,6 +395,17 @@ class BSAuthPermissionApi @Autowired constructor(
         return emptyMap()
     }
 
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
+
     companion object {
         private const val HTTP_403 = 403
         private const val HTTP_400 = 400

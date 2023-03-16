@@ -252,6 +252,17 @@ class TxV3AuthPermissionApi @Autowired constructor(
         return hasAllAction
     }
 
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
+
     private fun buildAction(resourceType: String, permission: AuthPermission): String {
         return "${resourceType}_${permission.value}"
     }
