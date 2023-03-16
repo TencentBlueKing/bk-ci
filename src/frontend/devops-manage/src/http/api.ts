@@ -170,9 +170,9 @@ export default {
   /**
    * 获取用户组列表
    */
-  async fetchUserGroupList(params: any) {
+  async fetchUserGroupList(params: any, { page, pageSize }: any) {
     const { projectCode, resourceType, resourceCode } = params;
-    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/listGroup`);
+    return http.get(`${IAM_PERFIX}/${projectCode}/${resourceType}/${resourceCode}/listGroup?page=${page}&pageSize=${pageSize}`);
   },
 
   /**

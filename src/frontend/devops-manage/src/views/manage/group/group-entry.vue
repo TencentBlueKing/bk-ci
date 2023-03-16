@@ -11,8 +11,6 @@
     :is-enable-permission="isEnablePermission"
     :open-manage="handleOpenManage"
     :close-manage="handleCloseManage"
-    :delete-group="handleDeleteGroup"
-    :fetch-group-list="fetchGroupList"
     :rename-group-name="handelRenameGroupName"
   />
 </template>
@@ -49,9 +47,9 @@ export default {
     await this.fetchHasManagerPermission();
     await this.fetchEnablePermission();
     // 管理员获取用户组数据
-    if (this.isEnablePermission && this.hasPermission) {
-      await this.fetchGroupList();
-    }
+    // if (this.isEnablePermission && this.hasPermission) {
+    //   await this.fetchGroupList();
+    // }
     // 普通成员获取成员数据
     if (this.isEnablePermission && !this.hasPermission && this.resourceType !== 'project') {
       await this.fetchMemberGroupList();
@@ -157,28 +155,6 @@ export default {
     },
 
     /**
-     * 获取用户组列表 (管理员、创建者)
-     */
-    fetchGroupList() {
-      const {
-        resourceType,
-        projectCode: resourceCode,
-        projectCode,
-      } = this;
-
-      return http
-        .fetchUserGroupList({
-          resourceType,
-          resourceCode,
-          projectCode,
-        })
-        .then((res) => {
-          this.groupList = res;
-          this.iamIframePath = `user-group-detail/${res[0]?.groupId}?role_id=${res[0]?.managerId}`;
-        });
-    },
-
-    /**
      * 获取用户所属组 (普通成员)
      */
     fetchMemberGroupList() {
@@ -196,30 +172,6 @@ export default {
         })
         .then((res) => {
           this.memberGroupList = res;
-        });
-    },
-
-    /**
-     * 删除用户组
-     */
-    handleDeleteGroup(group: any) {
-      const {
-        resourceType,
-        projectCode,
-      } = this;
-
-      return http
-        .deleteGroup({
-          resourceType,
-          projectCode,
-          groupId: group.groupId,
-        })
-        .then(() => {
-          Message({
-            theme: 'success',
-            message: this.$t('删除成功'),
-          })
-          this.fetchGroupList();
         });
     },
 

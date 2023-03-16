@@ -11,8 +11,6 @@
         :is-enable-permission="isEnablePermission"
         :open-manage="handleOpenManage"
         :close-manage="handleCloseManage"
-        :delete-group="handleDeleteGroup"
-        :fetch-group-list="fetchGroupList"
         :show-create-group="false"
     />
 </template>
@@ -62,12 +60,6 @@
                 'fetchUserGroupList',
                 'deleteGroup'
             ]),
-            async getUserList () {
-                // 管理员获取用户组数据
-                if (this.isEnablePermission && this.hasPermission) {
-                    await this.fetchGroupList()
-                }
-            },
             /**
              * 是否为资源的管理员
              */
@@ -205,64 +197,6 @@
                     subTitle: this.$t('closeManageTips'),
                     confirmFn
                 })
-            },
-
-            /**
-             * 获取用户组列表 (管理员、创建者)
-             */
-            fetchGroupList () {
-                const {
-                    resourceType,
-                    resourceCode,
-                    projectCode
-                } = this
-
-                return this
-                    .fetchUserGroupList({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        this.groupList = res.data
-                        this.iamIframePath = `user-group-detail/${res[0]?.groupId}?role_id=${res[0]?.managerId}`
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-            },
-            
-            /**
-             * 删除用户组
-             */
-            handleDeleteGroup (group) {
-                const {
-                    resourceType,
-                    projectCode
-                } = this
-
-                return this
-                    .deleteGroup({
-                        resourceType,
-                        projectCode,
-                        groupId: group.id
-                    })
-                    .then(() => {
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: this.$t('删除成功')
-                        })
-                        this.fetchGroupList()
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
             }
         }
     }
