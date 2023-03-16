@@ -425,12 +425,10 @@
       }
 
       function fetchData() {
-        console.log(pathPid)
         return Promise.all([
           fetchAllProjects(),
           fetchAllServices(),
           requestUser(),
-          fetchAssetsJSON(false),
           fetchProjectById(pathPid),
         ]).then((response) => {
           var project = response.pop()
