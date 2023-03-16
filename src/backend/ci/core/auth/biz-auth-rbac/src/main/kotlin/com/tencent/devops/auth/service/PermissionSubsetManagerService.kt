@@ -83,6 +83,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
+            resourceType = resourceType,
             resourceName = resourceName,
             groupName = managerGroupConfig.groupName
         )
@@ -130,6 +131,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
         val name = IamGroupUtils.buildSubsetManagerGroupName(
+            resourceType = resourceType,
             resourceName = resourceName,
             groupName = managerGroupConfig.groupName
         )
@@ -179,7 +181,6 @@ class PermissionSubsetManagerService @Autowired constructor(
     /**
      * 创建二级管理员默认分组
      *
-     * @param createMode false-创建资源时就创建默认分组,true-启用资源时才创建
      */
     @Suppress("LongParameterList")
     fun createSubsetManagerDefaultGroup(
@@ -190,8 +191,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        iamResourceCode: String,
-        createMode: Boolean
+        iamResourceCode: String
     ) {
         // 创建资源时，先同步二级管理员创建时创建的组
         syncSubsetManagerGroup(
@@ -204,8 +204,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         )
         val resourceGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
-            resourceType = resourceType,
-            createMode = createMode
+            resourceType = resourceType
         )
         resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
