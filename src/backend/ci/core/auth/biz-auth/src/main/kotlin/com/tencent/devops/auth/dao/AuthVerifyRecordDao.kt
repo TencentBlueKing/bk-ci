@@ -7,6 +7,7 @@ import org.springframework.stereotype.Repository
 import java.time.LocalDateTime
 
 @Repository
+@Suppress("ALL")
 class AuthVerifyRecordDao {
     fun createOrUpdate(
         dslContext: DSLContext,
