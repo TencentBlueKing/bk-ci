@@ -85,7 +85,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 region = repository.region ?: CodeSvnRegion.TC,
-                projectName = SvnUtils.getProjectName(repository.getFormatURL()),
+                projectName = SvnUtils.getSvnProjectName(repository.getFormatURL()),
                 userName = repository.userName,
                 privateToken = repository.credentialId,
                 svnType = repository.svnType
@@ -119,7 +119,7 @@ class CodeSvnRepositoryService @Autowired constructor(
                 dslContext = transactionContext,
                 repositoryId = repositoryId,
                 region = repository.region ?: CodeSvnRegion.TC,
-                projectName = SvnUtils.getProjectName(repository.getFormatURL()),
+                projectName = SvnUtils.getSvnProjectName(repository.getFormatURL()),
                 userName = repository.userName,
                 credentialId = repository.credentialId,
                 svnType = repository.svnType
