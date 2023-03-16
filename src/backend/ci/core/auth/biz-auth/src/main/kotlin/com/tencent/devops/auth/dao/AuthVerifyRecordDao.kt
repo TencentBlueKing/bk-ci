@@ -11,7 +11,7 @@ import java.time.LocalDateTime
 class AuthVerifyRecordDao {
     fun createOrUpdate(
         dslContext: DSLContext,
-        VerifyRecordDTO: VerifyRecordDTO
+        verifyRecordDTO: VerifyRecordDTO
     ) {
         val now = LocalDateTime.now()
         with(TAuthTemporaryVerifyRecord.T_AUTH_TEMPORARY_VERIFY_RECORD) {
@@ -25,15 +25,15 @@ class AuthVerifyRecordDao {
                 VERIFY_RESULT,
                 LAST_VERIFY_TIME
             ).values(
-                VerifyRecordDTO.userId,
-                VerifyRecordDTO.projectId,
-                VerifyRecordDTO.resourceType,
-                VerifyRecordDTO.resourceCode,
-                VerifyRecordDTO.action,
-                VerifyRecordDTO.verifyResult,
+                verifyRecordDTO.userId,
+                verifyRecordDTO.projectId,
+                verifyRecordDTO.resourceType,
+                verifyRecordDTO.resourceCode,
+                verifyRecordDTO.action,
+                verifyRecordDTO.verifyResult,
                 now
             ).onDuplicateKeyUpdate()
-                .set(VERIFY_RESULT, VerifyRecordDTO.verifyResult)
+                .set(VERIFY_RESULT, verifyRecordDTO.verifyResult)
                 .set(LAST_VERIFY_TIME, now)
                 .execute()
         }
