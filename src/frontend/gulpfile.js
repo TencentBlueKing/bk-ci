@@ -109,7 +109,7 @@ task('build', series([cb => {
         cb()
     })
 }], () => {
-    const fileContent = `window.__SERVICE_ASSETS__ = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
+    const fileContent = `window.SERVICE_ASSETS = ${fs.readFileSync(`${dist}/assets_bundle.json`, 'utf8')}`
     fs.writeFileSync(`${dist}/assetsBundles.js`, fileContent)
     return src(`${dist}/assetsBundles.js`)
         .pipe(hash())

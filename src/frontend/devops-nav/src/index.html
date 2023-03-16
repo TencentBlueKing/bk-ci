@@ -368,7 +368,7 @@
         var path = location.pathname.replace('/console', '')
         var headTag = document.head || document.getElementsByTagName('head')[0]
         var pathReg = /^\/(\w+)\/?/
-        var serviceObject = getServiceObject(allServices, window.__SERVICE_ASSETS__)
+        var serviceObject = getServiceObject(allServices, window.SERVICE_ASSETS)
         var serviceMap = serviceObject.serviceMap
         var serviceMatchResult = path.match(pathReg)
         var subServiceId = serviceMatchResult ? serviceMatchResult[1] : null
