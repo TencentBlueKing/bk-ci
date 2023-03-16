@@ -21,7 +21,6 @@ class AuthVerifyRecordDao {
                 RESOURCE_TYPE,
                 RESOURCE_CODE,
                 ACTION,
-                ENVIRONMENT_TAG,
                 VERIFY_RESULT,
                 LAST_VERIFY_TIME
             ).values(
@@ -30,7 +29,6 @@ class AuthVerifyRecordDao {
                 VerifyRecordDTO.resourceType,
                 VerifyRecordDTO.resourceCode,
                 VerifyRecordDTO.action,
-                VerifyRecordDTO.environmentTag,
                 VerifyRecordDTO.verifyResult,
                 now
             ).onDuplicateKeyUpdate()
