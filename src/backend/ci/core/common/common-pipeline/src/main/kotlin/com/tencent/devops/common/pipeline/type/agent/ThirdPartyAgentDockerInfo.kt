@@ -8,7 +8,8 @@ import com.tencent.devops.common.api.util.EnvUtils
 @JsonIgnoreProperties(ignoreUnknown = true)
 data class ThirdPartyAgentDockerInfo(
     var image: String,
-    var credential: Credential?
+    var credential: Credential?,
+    var options: String?
 )
 
 fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
@@ -21,6 +22,9 @@ fun ThirdPartyAgentDockerInfo.replaceField(variables: Map<String, String>) {
     }
     if (!credential?.credentialId.isNullOrBlank()) {
         credential?.credentialId = EnvUtils.parseEnv(credential?.credentialId, variables)
+    }
+    if (!options.isNullOrBlank()) {
+        options = EnvUtils.parseEnv(options, variables)
     }
 }
 
@@ -43,9 +47,10 @@ data class ThirdPartyAgentDockerInfoDispatch(
     val agentId: String,
     val secretKey: String,
     val image: String,
-    val credential: Credential?
+    val credential: Credential?,
+    val options: String?
 ) {
     constructor(agentId: String, secretKey: String, info: ThirdPartyAgentDockerInfo) : this(
-        agentId, secretKey, info.image, info.credential
+        agentId, secretKey, info.image, info.credential, info.options
     )
 }

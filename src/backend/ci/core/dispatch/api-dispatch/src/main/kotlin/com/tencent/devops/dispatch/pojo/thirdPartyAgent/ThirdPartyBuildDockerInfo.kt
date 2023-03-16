@@ -39,13 +39,15 @@ data class ThirdPartyBuildDockerInfo(
     val agentId: String,
     val secretKey: String,
     val image: String,
-    val credential: ThirdPartyBuildDockerInfoCredential?
+    val credential: ThirdPartyBuildDockerInfoCredential?,
+    val options: String?
 ) {
     constructor(input: ThirdPartyAgentDockerInfoDispatch) : this(
         agentId = input.agentId,
         secretKey = input.secretKey,
         image = input.image,
-        credential = ThirdPartyBuildDockerInfoCredential(input.credential)
+        credential = ThirdPartyBuildDockerInfoCredential(input.credential),
+        options = input.options
     )
 }
 
