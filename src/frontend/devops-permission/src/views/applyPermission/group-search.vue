@@ -109,7 +109,9 @@ watch(() => userGroupList.value, () => {
   const { groupId } = route?.query;
   if (groupId && filter.value.length) {
     const group = userGroupList.value.find(group => String(group.id) === groupId);
-    group && selections.value.push(group);
+    if (group && selections.value.findIndex(selection => String(selection.id) === groupId) === -1) {
+      selections.value.push(group);
+    }
   }
   checkSelectedAll();
   checkIndeterminate();

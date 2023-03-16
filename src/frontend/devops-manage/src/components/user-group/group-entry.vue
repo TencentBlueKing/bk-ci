@@ -183,10 +183,10 @@ export default {
       const { data } = event;
       if (data.type === 'IAM') {
         switch (data.code) {
-          case 'cancel':
+          case 'create_user_group_cancel':
             this.handleCancelCreate();
             break;
-          case 'success':
+          case 'create_user_group_submit':
             this.handleComfigCreate();
             break;
         }
