@@ -177,4 +177,24 @@ object SvnUtils {
             filePath.removePrefix("/")
         }
     }
+
+    fun getProjectName(svnUrl: String): String {
+        val urlArray = svnUrl.split("//")
+        // urlArray[0] -> 协议  urlArray[1] -> repo路径
+        if (urlArray.size < 2) {
+            throw ScmException("Invalid svn url($svnUrl)", ScmType.CODE_SVN.name)
+        }
+        val path = urlArray[1]
+        val pathArray = path.split("/")
+        // pathArray[0] -> 域名
+        if (pathArray.size < 3) {
+            throw ScmException("Invalid svn url($svnUrl)", ScmType.CODE_SVN.name)
+        }
+        return if (pathArray.size >= 4 && pathArray[3].endsWith("_proj")) {
+            // 兼容旧工蜂svn
+            "${pathArray[1]}/${pathArray[2]}/${pathArray[3]}"
+        } else {
+            "${pathArray[1]}/${pathArray[2]}"
+        }
+    }
 }
