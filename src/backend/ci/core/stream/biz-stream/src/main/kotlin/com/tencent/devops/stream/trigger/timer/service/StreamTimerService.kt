@@ -44,6 +44,7 @@ import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamConstant.BK_ERROR_SAVE_PIPELINE_TIMER
 import com.tencent.devops.stream.dao.StreamTimerDao
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamChangeEvent
@@ -98,7 +99,10 @@ class StreamTimerService @Autowired constructor(
                         actionType = ActionType.TERMINATE
                     )
                 )
-                Result(ERROR_SAVE_PIPELINE_TIMER.toInt(), "添加流水线的定时触发器保存失败！可能是定时器参数过长！")
+                Result(
+                    ERROR_SAVE_PIPELINE_TIMER.toInt(),
+                    MessageUtil.getMessageByLocale(BK_ERROR_SAVE_PIPELINE_TIMER, I18nUtil.getLanguage(userId))
+                )
             }
         }
     }

@@ -150,8 +150,9 @@ object ProcessMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093"// {0}配置Env数量超过100限制!
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"// {0}Env单变量{1}长度超过{2}字符!({3})
     const val BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "ErrorYamlFormatExceptionVariableNameIllegal"// 变量名称必须是英文字母、数字或下划线(_)
 
-    // 通用参数错误
+        // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
     const val ERROR_UPDATE_FAILED = "2101990" // 更新失败: {0}
     const val ERROR_NO_PUBLIC_WINDOWS_BUILDER = "2101900" // Windows暂时没有公共构建机可用，请联系持续集成助手添加

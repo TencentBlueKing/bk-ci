@@ -51,9 +51,6 @@ import com.tencent.devops.process.utils.PIPELINE_NAME
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.process.utils.PIPELINE_START_USER_NAME
 import com.tencent.devops.project.api.service.ServiceProjectResource
-import com.tencent.devops.project.constant.BK_BLOCKED
-import com.tencent.devops.project.constant.BK_PASSED
-import com.tencent.devops.project.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.api.v2.pojo.QualityHisMetadata
 import com.tencent.devops.quality.api.v2.pojo.QualityIndicator
 import com.tencent.devops.quality.api.v2.pojo.QualityRule
@@ -63,11 +60,14 @@ import com.tencent.devops.quality.api.v2.pojo.response.AtomRuleResponse
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.bean.QualityUrlBean
+import com.tencent.devops.quality.constant.BK_BLOCKED
 import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TERMINATED
 import com.tencent.devops.quality.constant.BK_BUILD_INTERCEPTED_TO_BE_REVIEWED
 import com.tencent.devops.quality.constant.BK_INTERCEPTION_METRICS
 import com.tencent.devops.quality.constant.BK_INTERCEPTION_RULES
 import com.tencent.devops.quality.constant.BK_NO_TOOL_OR_RULE_ENABLED
+import com.tencent.devops.quality.constant.BK_PASSED
+import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.constant.DEFAULT_CODECC_URL
 import com.tencent.devops.quality.constant.codeccToolUrlPathMap
 import com.tencent.devops.quality.pojo.RefreshType

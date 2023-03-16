@@ -31,12 +31,17 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.api.UserCertResource
 import com.tencent.devops.ticket.constant.TicketMessageCode
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_MUST_BE
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_TYPE_ERROR
+import com.tencent.devops.ticket.constant.TicketMessageCode.DESCRIPTION_FILE_TYPE_ERROR
 import com.tencent.devops.ticket.pojo.Cert
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
@@ -78,10 +83,18 @@ class UserCertResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParams(userId, projectId, certId)
         if (!p12Disposition.fileName.endsWith(".p12")) {
-            throw IllegalArgumentException("证书文件必须是.p12文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(CERT_FILE_TYPE_ERROR, I18nUtil.getLanguage(userId), arrayOf(".p12"))
+            )
         }
         if (!mpDisposition.fileName.endsWith(".mobileprovision")) {
-            throw IllegalArgumentException("描述文件必须是.mobileprovision文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    DESCRIPTION_FILE_TYPE_ERROR,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(".mobileprovision")
+                )
+            )
         }
         certService.uploadIos(
             userId,
@@ -149,7 +162,13 @@ class UserCertResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid aliasCredentialId")
         }
         if (!disposition.fileName.endsWith(".jks") && !disposition.fileName.endsWith(".keystore")) {
-            throw IllegalArgumentException("证书文件必须是.jks或者.keystore文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    CERT_FILE_MUST_BE,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(".jks||.keystore")
+                )
+            )
         }
         certService.uploadAndroid(
             userId,
@@ -211,13 +230,17 @@ class UserCertResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParams(userId, projectId, certId)
         if (!serverCrtDisposition.fileName.endsWith(".crt")) {
-            throw IllegalArgumentException("证书文件必须是.crt文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(CERT_FILE_MUST_BE, I18nUtil.getLanguage(userId), arrayOf(".crt"))
+            )
         }
         if (!serverKeyDisposition.fileName.endsWith(".key")) {
             throw IllegalArgumentException("密钥文件必须是.key文件")
         }
         if (clientCrtDisposition != null && !clientCrtDisposition.fileName.endsWith(".crt")) {
-            throw IllegalArgumentException("证书文件必须是.crt文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(CERT_FILE_MUST_BE, I18nUtil.getLanguage(userId), arrayOf(".crt"))
+            )
         }
         if (clientKeyDisposition != null && !clientKeyDisposition.fileName.endsWith(".key")) {
             throw IllegalArgumentException("密钥文件必须是.key文件")

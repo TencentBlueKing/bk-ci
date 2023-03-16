@@ -44,6 +44,10 @@ package com.tencent.devops.ticket.constant
  */
 object TicketMessageCode {
     const val CERT_ID_TOO_LONG = "2118001" // 证书名字不能超过128个字符
+    const val CERT_NOT_FOUND = "2118108" // 证书{0}不存在
+    const val CERT_FILE_TYPE_ERROR = "2118109"// 证书文件必须是{0}}文件
+    const val DESCRIPTION_FILE_TYPE_ERROR = "2118110"// 描述文件必须是{0}文件
+    const val CERT_FILE_MUST_BE = "2118111"// 证书文件必须是{0}文件
 
     const val CREDENTIAL_NAME_ILLEGAL = "2118101" // 凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)
     const val CREDENTIAL_ID_ILLEGAL = "2118102" // 凭证标识必须是英文字母、数字或下划线(_)

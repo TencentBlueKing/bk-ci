@@ -30,14 +30,17 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.prometheus.BkTimed
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamConstant.BK_STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -164,7 +167,13 @@ abstract class BaseManualTriggerService @Autowired constructor(
             commitId = triggerBuildReq.commitId,
             buildId = result.id,
             buildUrl = StreamPipelineUtils.genStreamV2BuildUrl(
-                homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+                homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                    MessageUtil.getMessageByLocale(
+                        BK_STARTUP_CONFIG_MISSING,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf(" streamUrl")
+                    )
+                ),
                 gitProjectId = buildPipeline.gitProjectId,
                 pipelineId = pipelineId,
                 buildId = result.id

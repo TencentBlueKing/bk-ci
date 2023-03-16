@@ -29,12 +29,15 @@ package com.tencent.devops.stream.trigger.listener.components
 
 import com.tencent.devops.common.api.enums.BuildReviewType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamConstant
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishStageData
@@ -203,7 +206,13 @@ class SendCommitCheck @Autowired constructor(
             checkOut = pair.second
         }
         return StreamPipelineUtils.genStreamV2BuildUrl(
-            homePage = streamGitConfig.streamUrl ?: throw ParamBlankException("启动配置缺少 streamUrl"),
+            homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    StreamConstant.BK_STARTUP_CONFIG_MISSING,
+                    I18nUtil.getLanguage(),
+                    arrayOf(" streamUrl")
+                )
+            ),
             gitProjectId = action.data.getGitProjectId(),
             pipelineId = action.data.context.pipeline!!.pipelineId,
             buildId = finishData.buildId,

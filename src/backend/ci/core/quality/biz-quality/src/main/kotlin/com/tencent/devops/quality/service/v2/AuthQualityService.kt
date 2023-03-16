@@ -38,9 +38,9 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.project.constant.BK_PROJECT_QUALITY_GROUPING
-import com.tencent.devops.project.constant.BK_PROJECT_QUALITY_RULE
-import com.tencent.devops.project.constant.BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP
+import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_GROUPING
+import com.tencent.devops.quality.constant.BK_PROJECT_QUALITY_RULE
+import com.tencent.devops.quality.constant.BK_PROJECT_UNDER_NO_QUALITY_USER_GROUP
 import com.tencent.devops.quality.dao.QualityNotifyGroupDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao
 import org.jooq.DSLContext

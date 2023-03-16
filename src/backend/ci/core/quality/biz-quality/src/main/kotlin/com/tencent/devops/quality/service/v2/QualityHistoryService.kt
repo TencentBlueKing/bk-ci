@@ -42,11 +42,11 @@ import com.tencent.devops.model.quality.tables.records.THistoryRecord
 import com.tencent.devops.plugin.codecc.CodeccUtils
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.process.pojo.pipeline.SimplePipeline
-import com.tencent.devops.project.constant.BK_BLOCKED
-import com.tencent.devops.project.constant.BK_CURRENT_VALUE
-import com.tencent.devops.project.constant.BK_PASSED
-import com.tencent.devops.project.constant.BK_VALIDATION_INTERCEPTED
-import com.tencent.devops.project.constant.BK_VALIDATION_PASSED
+import com.tencent.devops.quality.constant.BK_BLOCKED
+import com.tencent.devops.quality.constant.BK_CURRENT_VALUE
+import com.tencent.devops.quality.constant.BK_PASSED
+import com.tencent.devops.quality.constant.BK_VALIDATION_INTERCEPTED
+import com.tencent.devops.quality.constant.BK_VALIDATION_PASSED
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
 import com.tencent.devops.quality.dao.v2.QualityRuleDao

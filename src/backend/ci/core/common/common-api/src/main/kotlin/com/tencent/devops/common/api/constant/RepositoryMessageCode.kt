@@ -88,4 +88,11 @@ object RepositoryMessageCode {
     const val P4_INVALID = "2115043" // 无效的p4仓库
     const val P4_EVENT_PATH_EMPTY = "2115044" // p4事件触发路径为空
     const val P4_USERNAME_PASSWORD_FAIL = "2115045" // p4用户名密码错误
+    const val GIT_NOT_FOUND = "2115046"// 代码库{0}不存在
+    const val PARAM_ERROR= "2115047"// 参数错误
+    const val GITHUB_AUTH_FAIL = "2115048"// GitHub认证失败
+    const val ACCOUNT_NO_OPERATION_PERMISSIONS = "2115049"// 账户没有{0}的权限
+    const val GITHUB_REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION = "2115050"// GitHub仓库不存在或者是账户没有该项目{0}的权限
+    const val GITHUB_PLATFORM_OPERATION_FAIL = "2115051"// GitHub平台{0}失败
+    const val USER_CREATE_PEM_ERROR = "2115039" // 用户{0}在工程{1}下没有代码库创建权限
 }

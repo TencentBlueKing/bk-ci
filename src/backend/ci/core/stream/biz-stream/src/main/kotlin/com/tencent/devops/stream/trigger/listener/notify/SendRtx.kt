@@ -27,10 +27,13 @@
 
 package com.tencent.devops.stream.trigger.listener.notify
 
+import com.tencent.devops.common.api.constant.BK_SEE_DETAILS
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.NotifyType
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.SendNotifyMessageTemplateRequest
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.stream.trigger.pojo.enums.StreamNotifyTemplateEnum
@@ -117,7 +120,8 @@ object SendRtx {
             pipelineId = pipelineId,
             buildId = build.id
         )
-        return " <font color=\"${state.second}\"> ${state.first} </font> $content \n [查看详情]($detailUrl)"
+        return " <font color=\"${state.second}\"> ${state.first} </font>" +
+                " $content \n [${MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage())}]($detailUrl)"
     }
 
     private fun getRtxCustomContent(
@@ -157,7 +161,7 @@ object SendRtx {
                 "$projectName($branchName) - $pipelineName #${build.buildNum} run ${state.third} \n " +
                 request +
                 costTime +
-                "[查看详情]" +
+                "[${MessageUtil.getMessageByLocale(BK_SEE_DETAILS, I18nUtil.getLanguage())}]" +
                 "(${
                     StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamUrl,
