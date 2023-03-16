@@ -42,8 +42,9 @@ class ServicePublicScanResourceImpl @Autowired constructor(
 
     override fun createCodeCCScanProject(
         userId: String,
+        tag: String?,
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO> {
-        return Result(projectCodeCCScanFacadeService.createCodeCCScanProject(userId, projectCreateInfo))
+        return Result(projectCodeCCScanFacadeService.createCodeCCScanProject(userId, tag, projectCreateInfo))
     }
 }

@@ -45,7 +45,7 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
         private val logger = LoggerFactory.getLogger(ProjectCodeCCScanFacadeService::class.java)
     }
 
-    fun createCodeCCScanProject(userId: String, projectCreateInfo: ProjectCreateInfo): ProjectVO {
+    fun createCodeCCScanProject(userId: String, tag: String? = null, projectCreateInfo: ProjectCreateInfo): ProjectVO {
         logger.info("createCodeCCScanProject|${projectCreateInfo.englishName}|${projectCreateInfo.projectName}|$userId")
         var publicScanProject = projectService.getByEnglishName(projectCreateInfo.englishName)
         if (null != publicScanProject) {
@@ -63,7 +63,7 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
             )
 
             // codecc任务自动将流量指向auto集群
-            projectTagService.updateTagByProject(projectCreateInfo.englishName, null)
+            projectTagService.updateTagByProject(projectCreateInfo.englishName, tag)
         } catch (e: Throwable) {
             logger.error("CodeCC_Scan_Project_Create_Failed| error=${e.message}", e)
             throw e
