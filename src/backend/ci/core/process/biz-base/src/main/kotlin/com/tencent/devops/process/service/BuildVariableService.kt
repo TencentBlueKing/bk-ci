@@ -31,9 +31,9 @@ import com.tencent.devops.common.api.util.TemplateFastReplaceUtils
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.pipeline.enums.BuildFormPropertyType
 import com.tencent.devops.common.pipeline.pojo.BuildParameters
-import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.process.engine.control.lock.PipelineBuildVarLock
 import com.tencent.devops.process.engine.dao.PipelineBuildVarDao
 import com.tencent.devops.process.utils.PIPELINE_RETRY_COUNT
 import com.tencent.devops.process.utils.PipelineVarUtil
@@ -51,10 +51,6 @@ class BuildVariableService @Autowired constructor(
     private val pipelineAsCodeService: PipelineAsCodeService,
     private val redisOperation: RedisOperation
 ) {
-
-    companion object {
-        private const val PIPELINE_BUILD_VAR_KEY = "pipelineBuildVar"
-    }
 
     /**
      * 获取构建执行次数（重试次数+1），如没有重试过，则为1
@@ -175,7 +171,7 @@ class BuildVariableService @Autowired constructor(
         name: String,
         value: Any
     ) {
-        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId:$name", 10)
+        val redisLock = PipelineBuildVarLock(redisOperation, buildId, name)
         try {
             redisLock.lock()
             val varMap = pipelineBuildVarDao.getVars(dslContext, projectId, buildId, name)
@@ -233,7 +229,7 @@ class BuildVariableService @Autowired constructor(
             }
         }
 
-        val redisLock = RedisLock(redisOperation, "$PIPELINE_BUILD_VAR_KEY:$buildId", 60)
+        val redisLock = PipelineBuildVarLock(redisOperation, buildId)
         try {
             watch.start("getLock")
             // 加锁防止数据被重复插入

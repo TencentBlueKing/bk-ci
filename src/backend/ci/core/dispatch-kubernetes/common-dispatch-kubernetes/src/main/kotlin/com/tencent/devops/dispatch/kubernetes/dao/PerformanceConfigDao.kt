@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.kubernetes.dao
 
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesPerformanceConfig
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchKubernetesPerformanceOption
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesPerformanceConfig
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchKubernetesPerformanceOption
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record5

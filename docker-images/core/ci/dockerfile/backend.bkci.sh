@@ -32,6 +32,7 @@ java_argv+=(
   "-Dspring.profiles.active=local,dev"
   "-Dspring.application.name=$MS_NAME"
   "-Dspring.main.allow-circular-references=true"
+  "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false"
 )
 
 echo "run java"
