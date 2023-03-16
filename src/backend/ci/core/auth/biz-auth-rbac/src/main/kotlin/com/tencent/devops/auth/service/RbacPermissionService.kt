@@ -131,7 +131,8 @@ class RbacPermissionService constructor(
                 projectCode = projectCode,
                 resource = resource,
                 child = null,
-                paths = paths
+                paths = paths,
+                needSystemFiled = true
             )
             val attribute = if (paths.isNotEmpty()) {
                 mapOf(
@@ -222,7 +223,8 @@ class RbacPermissionService constructor(
                 projectCode = projectCode,
                 resource = resource,
                 child = null,
-                paths = paths
+                paths = paths,
+                needSystemFiled = true
             )
             val attribute = if (paths.isNotEmpty()) {
                 mapOf(
@@ -361,7 +363,8 @@ class RbacPermissionService constructor(
                     projectCode = projectCode,
                     resource = resource,
                     child = null,
-                    paths = paths
+                    paths = paths,
+                    needSystemFiled = false
                 )
                 val instance = InstanceDTO()
                 instance.type = resource.resourceType
@@ -392,12 +395,15 @@ class RbacPermissionService constructor(
 
     /**
      * 将resource转换成iam path
+     *
+     * @param needSystemFiled path中是否需要系统字段,直接鉴权接口需要system字段，查询策略接口不需要
      */
     private fun resourcesPaths(
         projectCode: String,
         resource: AuthResourceInstance,
         child: PathInfoDTO?,
-        paths: MutableList<PathInfoDTO>
+        paths: MutableList<PathInfoDTO>,
+        needSystemFiled: Boolean
     ) {
         if (resource.parents.isNullOrEmpty()) {
             // 如果没有父资源,说明已经是最顶层
@@ -407,7 +413,9 @@ class RbacPermissionService constructor(
         } else {
             resource.parents!!.forEach { parent ->
                 val path = PathInfoDTO()
-                path.system = iamConfiguration.systemId
+                if (needSystemFiled) {
+                    path.system = iamConfiguration.systemId
+                }
                 path.id = authResourceCodeConverter.code2IamCode(
                     projectCode = projectCode,
                     resourceType = parent.resourceType,
@@ -419,7 +427,8 @@ class RbacPermissionService constructor(
                     projectCode = projectCode,
                     resource = parent,
                     child = path,
-                    paths = paths
+                    paths = paths,
+                    needSystemFiled = needSystemFiled
                 )
             }
         }
