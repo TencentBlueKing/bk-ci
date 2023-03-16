@@ -15,8 +15,6 @@ data class VerifyRecordDTO(
     val resourceCode: String,
     @ApiModelProperty("操作")
     val action: String,
-    @ApiModelProperty("环境")
-    val environmentTag: String,
     @ApiModelProperty("鉴权结果")
     val verifyResult: Boolean
 )

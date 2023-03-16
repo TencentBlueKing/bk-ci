@@ -26,6 +26,7 @@ interface ServiceVerifyRecordResource {
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         @ApiParam("用户ID")
         userId: String,
+        @ApiParam("鉴权记录实体")
         verifyRecordDTO: VerifyRecordDTO
     ): Result<Boolean>
 }
