@@ -225,12 +225,21 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        return permissionService.validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = RbacAuthUtils.buildAction(
+        // 一期先不上流水线组权限,流水线组权限由项目控制
+        val action = if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = AuthResourceType.PROJECT
+            )
+        } else {
+            RbacAuthUtils.buildAction(
                 authPermission = AuthPermission.MANAGE,
                 authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
-            ),
+            )
+        }
+        return permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = action,
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode,

@@ -48,6 +48,7 @@ import com.tencent.devops.auth.service.iam.PermissionResourceGroupService
 import com.tencent.devops.auth.service.iam.PermissionResourceService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -75,17 +76,19 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     override fun listGroup(
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): List<IamGroupInfoVo> {
+        resourceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Pagination<IamGroupInfoVo> {
         val resourceInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode
         )
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.listGroup(resourceInfo.relationId)
+            permissionGradeManagerService.listGroup(resourceInfo.relationId, page, pageSize)
         } else {
-            permissionSubsetManagerService.listGroup(resourceInfo.relationId)
+            permissionSubsetManagerService.listGroup(resourceInfo.relationId, page, pageSize)
         }
         val resourceGroupMap = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
@@ -93,7 +96,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId,
         ).associateBy { it.relationId.toInt() }
-        return iamGroupInfoList.map {
+        val iamGroupInfoVoList = iamGroupInfoList.map {
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
                 defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
@@ -104,6 +107,10 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 departmentCount = it.departmentCount
             )
         }.sortedBy { it.groupId }
+        return Pagination(
+            hasNext = iamGroupInfoVoList.size == pageSize,
+            records = iamGroupInfoVoList
+        )
     }
 
     override fun listUserBelongGroup(

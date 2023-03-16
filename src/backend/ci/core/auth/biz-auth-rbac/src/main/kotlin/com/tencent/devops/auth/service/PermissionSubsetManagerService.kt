@@ -164,11 +164,13 @@ class PermissionSubsetManagerService @Autowired constructor(
     }
 
     fun listGroup(
-        subsetManagerId: String
+        subsetManagerId: String,
+        page: Int,
+        pageSize: Int
     ): List<V2ManagerRoleGroupInfo> {
         val pageInfoDTO = V2PageInfoDTO()
-        pageInfoDTO.page = PageUtil.DEFAULT_PAGE
-        pageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE_SIZE
+        pageInfoDTO.page = page
+        pageInfoDTO.pageSize = pageSize
         val iamGroupInfoList =
             iamV2ManagerService.getSubsetManagerRoleGroup(subsetManagerId.toInt(), pageInfoDTO)
         return iamGroupInfoList.results

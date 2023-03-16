@@ -162,37 +162,11 @@ class V3PipelinePermissionService constructor(
     override fun filterPipelines(
         userId: String,
         projectId: String,
-        authPermissions: Set<AuthPermission>
+        authPermissions: Set<AuthPermission>,
+        pipelineIds: List<String>
     ): Map<AuthPermission, List<String>> {
-        val permissionResourcesMap = authPermissionApi.getUserResourcesByPermissions(
-            user = userId,
-            serviceCode = pipelineAuthServiceCode,
-            resourceType = AuthResourceType.PIPELINE_DEFAULT,
-            projectCode = projectId,
-            permissions = authPermissions,
-            supplier = supplierForFakePermission(projectId)
-        )
-        val instanceMap = mutableMapOf<AuthPermission, List<String>>()
-        permissionResourcesMap.forEach { (key, value) ->
-            instanceMap[key] = if (isProjectOwner(projectId, userId)) {
-                getAllInstance(arrayListOf("*"), projectId, userId)
-            } else {
-                getAllInstance(value, projectId, userId)
-            }
-        }
-        return instanceMap
-    }
-
-    private fun getAllInstance(resourceCodeList: List<String>, projectId: String, userId: String): List<String> {
-        return if (resourceCodeList.contains("*")) {
-            val pipelineIds = mutableListOf<String>()
-            val pipelineInfos = pipelineInfoDao.searchByProject(dslContext, projectId)
-            pipelineInfos?.map {
-                pipelineIds.add(it.pipelineId)
-            }
+        return authPermissions.associateWith {
             pipelineIds
-        } else {
-            resourceCodeList
         }
     }
 

@@ -78,13 +78,17 @@ class UserAuthResourceResourceImpl @Autowired constructor(
         userId: String,
         projectId: String,
         resourceType: String,
-        resourceCode: String
-    ): Result<List<IamGroupInfoVo>> {
+        resourceCode: String,
+        page: Int,
+        pageSize: Int
+    ): Result<Pagination<IamGroupInfoVo>> {
         return Result(
             permissionResourceGroupService.listGroup(
                 projectId = projectId,
                 resourceType = resourceType,
-                resourceCode = resourceCode
+                resourceCode = resourceCode,
+                page = page,
+                pageSize = pageSize
             )
         )
     }

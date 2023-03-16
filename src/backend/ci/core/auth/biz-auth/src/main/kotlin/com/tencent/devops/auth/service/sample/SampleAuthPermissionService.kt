@@ -49,6 +49,24 @@ class SampleAuthPermissionService : PermissionService {
         }
     }
 
+    override fun batchValidateUserResourcePermissionByInstance(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resource: AuthResourceInstance
+    ): Map<String, Boolean> {
+        return actions.associateWith { action ->
+            validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = action,
+                projectCode = projectCode,
+                resourceCode = resource.resourceCode,
+                resourceType =  resource.resourceType,
+                relationResourceType = null
+            )
+        }
+    }
+
     override fun validateUserResourcePermissionByInstance(
         userId: String,
         action: String,
@@ -75,6 +93,19 @@ class SampleAuthPermissionService : PermissionService {
         resourceType: String
     ): Map<AuthPermission, List<String>> {
         return emptyMap()
+    }
+
+    override fun filterUserResourcesByActions(
+        userId: String,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return actions.associate { action ->
+            val authPermission = action.substringAfterLast("_")
+            AuthPermission.get(authPermission) to resources.map { it.resourceCode }
+        }
     }
 
     override fun getUserResourceAndParentByPermission(

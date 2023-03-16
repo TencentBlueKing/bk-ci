@@ -169,6 +169,26 @@ class ServicePermissionAuthResourceImpl @Autowired constructor(
         )
     }
 
+    override fun filterUserResourcesByPermissions(
+        userId: String,
+        token: String,
+        type: String?,
+        actions: List<String>,
+        projectCode: String,
+        resourceType: String,
+        resources: List<AuthResourceInstance>
+    ): Result<Map<AuthPermission, List<String>>> {
+        return Result(
+            permissionService.filterUserResourcesByActions(
+                userId = userId,
+                actions = actions,
+                projectCode = projectCode,
+                resourceType = resourceType,
+                resources = resources
+            )
+        )
+    }
+
     override fun getUserResourceAndParentByPermission(
         userId: String,
         token: String,

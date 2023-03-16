@@ -222,6 +222,17 @@ class BluekingV3AuthPermissionApi @Autowired constructor(
         return emptyMap()
     }
 
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
+
     // 此处为不在common内依赖业务接口，固只从redis内取，前置有写入逻辑
     // 若前置失效会导致log,dispatch, artifactory等校验权限出现： 项目管理员没有该项目下其他人创建的某资源的权限。 处理概率极小
     private fun isProjectOwner(projectId: String, userId: String): Boolean {

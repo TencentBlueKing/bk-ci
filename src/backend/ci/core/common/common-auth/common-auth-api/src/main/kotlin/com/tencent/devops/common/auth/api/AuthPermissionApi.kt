@@ -151,6 +151,18 @@ interface AuthPermissionApi {
         resourceType: AuthResourceType
     ): Map<String, List<String>>
 
+    /**
+     * 批量过滤有权限的用户资源
+     */
+    fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>>
+
     fun addResourcePermissionForUsers(
         userId: String,
         projectCode: String,

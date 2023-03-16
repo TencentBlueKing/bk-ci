@@ -133,4 +133,15 @@ class MockAuthPermissionApi : AuthPermissionApi {
     ): Map<String, List<String>> {
         return emptyMap()
     }
+
+    override fun filterResourcesByPermissions(
+        user: String,
+        serviceCode: AuthServiceCode,
+        resourceType: AuthResourceType,
+        projectCode: String,
+        permissions: Set<AuthPermission>,
+        resources: List<AuthResourceInstance>
+    ): Map<AuthPermission, List<String>> {
+        return emptyMap()
+    }
 }
