@@ -382,7 +382,12 @@ class RbacPermissionService constructor(
             actions.parallelStream().forEach { action ->
                 MDC.put(TraceTag.BIZID, traceId)
                 val authPermission = action.substringAfterLast("_")
-                permissionMap[AuthPermission.get(authPermission)] = authHelper.isAllowed(userId, action, instanceList)
+                val iamResourceCodes = authHelper.isAllowed(userId, action, instanceList)
+                permissionMap[AuthPermission.get(authPermission)] = authResourceCodeConverter.batchIamCode2Code(
+                    projectCode = projectCode,
+                    resourceType = resourceType,
+                    iamResourceCodes = iamResourceCodes
+                )
             }
             return permissionMap
         } finally {
