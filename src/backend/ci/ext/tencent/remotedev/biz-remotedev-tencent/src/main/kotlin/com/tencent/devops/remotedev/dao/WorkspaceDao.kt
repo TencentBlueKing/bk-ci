@@ -76,7 +76,9 @@ class WorkspaceDao {
                 /* field17 = */ CREATOR,
                 /* field18 = */ CREATOR_BG_NAME,
                 /* field19 = */ CREATOR_DEPT_NAME,
-                /* field20 = */ CREATOR_CENTER_NAME
+                /* field20 = */ CREATOR_CENTER_NAME,
+                /* field21 = */ CREATOR_GROUP_NAME
+
             )
                 .values(
                     /* value1 = */ "",
@@ -98,7 +100,8 @@ class WorkspaceDao {
                     /* value17 = */ workspace.createUserId,
                     /* value18 = */ userInfo?.bgName ?: "",
                     /* value19 = */ userInfo?.deptName ?: "",
-                    /* value20 = */ userInfo?.centerName ?: ""
+                    /* value20 = */ userInfo?.centerName ?: "",
+                    /* value21 = */ userInfo?.groupName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id

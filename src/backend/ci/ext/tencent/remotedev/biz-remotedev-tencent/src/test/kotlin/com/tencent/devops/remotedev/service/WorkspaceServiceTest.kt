@@ -90,6 +90,7 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         /* creatorBgName = */ "xx事业群",
         /* creatorDeptName = */ "xx部",
         /* creatorCenterName = */ "xx中心",
+        /* creatorGroupName = */ "xx小组",
         /* status = */ 1,
         /* createTime = */ LocalDateTime.parse("2022-11-14 20:00:36", formatter),
         /* updateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter),
