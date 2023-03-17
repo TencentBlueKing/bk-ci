@@ -407,7 +407,8 @@ class TxProjectServiceImpl @Autowired constructor(
             centerName = centerName,
             deptId = deptId,
             deptName = deptName,
-            englishName = projectCreateInfo.englishName
+            englishName = projectCreateInfo.englishName,
+            authSecrecy = projectCreateInfo.authSecrecy
         )
     }
 
