@@ -39,6 +39,7 @@ import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
  * @param streamData stream微服务特有的函数需要的数据
  * @param changeSet 文件变更列表，主要用于实现 if-modify
  * @param jobTemplateAcrossInfo job级别的跨模板凭证需要的信息
+ * @param checkIfModify 是否检查if-modify
  */
 data class ModelCreateEvent(
     val userId: String,
@@ -48,7 +49,8 @@ data class ModelCreateEvent(
     val streamData: StreamData? = null,
     val changeSet: Set<String>? = null,
     val jobTemplateAcrossInfo: Map<String, BuildTemplateAcrossInfo>? = null,
-    val preCIData: PreCIData? = null
+    val preCIData: PreCIData? = null,
+    val checkIfModify: Boolean = false
 )
 
 /**
