@@ -57,6 +57,7 @@ import com.tencent.devops.scm.pojo.GitCIMrInfo
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.pojo.GitCodeGroup
 import com.tencent.devops.scm.pojo.GitCommit
+import com.tencent.devops.scm.pojo.GitDiff
 import com.tencent.devops.scm.pojo.GitFileInfo
 import com.tencent.devops.scm.pojo.GitMember
 import com.tencent.devops.scm.pojo.GitMrInfo
@@ -233,6 +234,21 @@ interface ServiceGitResource {
         @ApiParam("是否使用access token", required = true)
         @QueryParam("useAccessToken")
         useAccessToken: Boolean = true
+    ): Result<GitUserInfo>
+
+    @ApiOperation("获取用户的基本信息")
+    @GET
+    @Path("/getUserInfoById")
+    fun getUserInfoById(
+        @ApiParam("用户id", required = true)
+        @QueryParam("userId")
+        userId: String,
+        @ApiParam("token", required = true)
+        @QueryParam("token")
+        token: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH
     ): Result<GitUserInfo>
 
     @ApiOperation("获取项目的token")
@@ -1093,4 +1109,28 @@ interface ServiceGitResource {
         @QueryParam("iid")
         iid: Long
     ): Result<List<TapdWorkItem>>
+
+    @ApiOperation("获得某次commit的文件变更信息")
+    @GET
+    @Path("/get_commit_diff")
+    fun getCommitDiff(
+        @ApiParam("accessToken", required = true)
+        @QueryParam("accessToken")
+        accessToken: String,
+        @ApiParam(value = "token类型 0：oauth 1:privateKey", required = true)
+        @QueryParam("tokenType")
+        tokenType: TokenTypeEnum = TokenTypeEnum.OAUTH,
+        @ApiParam(value = "项目 ID 或 项目全路径 project_full_path")
+        @QueryParam("gitProjectId")
+        gitProjectId: String,
+        @ApiParam(value = "commit hash 值、分支名或 tag")
+        @QueryParam("sha")
+        sha: String,
+        @ApiParam(value = "文件路径")
+        @QueryParam("path")
+        path: String?,
+        @ApiParam(value = "有差异的内容是否忽略空白符，默认不忽略")
+        @QueryParam("ignore_white_space")
+        ignoreWhiteSpace: Boolean?
+    ): Result<List<GitDiff>>
 }
