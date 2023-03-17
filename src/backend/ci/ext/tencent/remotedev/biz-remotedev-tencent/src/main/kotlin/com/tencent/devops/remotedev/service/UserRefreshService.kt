@@ -73,8 +73,10 @@ class UserRefreshService @Autowired constructor(
                         userInfo.groupName != it.creatorGroupName) {
                         logger.info(
                             "${it.creator} cent id is diff, " +
-                                "tof ${userInfo.bgName} ${userInfo.deptName} ${userInfo.centerName} ${userInfo.groupName}, " +
-                                "local ${it.creatorBgName} ${it.creatorDeptName} ${it.creatorCenterName} ${it.creatorGroupName}"
+                                "tof ${userInfo.bgName} ${userInfo.deptName} " +
+                                 "${userInfo.centerName} ${userInfo.groupName}, " +
+                                "local ${it.creatorBgName} ${it.creatorDeptName} "+
+                                "${it.creatorCenterName} ${it.creatorGroupName}"
                         )
                         workspaceDao.updateWorkspaceCreatorInfo(
                             dslContext = dslContext,
