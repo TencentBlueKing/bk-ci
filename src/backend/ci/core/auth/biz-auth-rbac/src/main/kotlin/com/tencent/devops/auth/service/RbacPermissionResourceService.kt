@@ -110,7 +110,7 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
-                // 流水线和流水线组才需要主动开启权限管理
+                // 流水线组需要主动开启权限管理
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
@@ -225,23 +225,32 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        // 一期先不上流水线组权限,流水线组权限由项目控制
-        val newResourceType = if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
-            AuthResourceType.PROJECT.value
+        // TODO 流水线组一期先不上,流水线组权限由项目控制
+        return if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = RbacAuthUtils.buildAction(
+                    authPermission = AuthPermission.MANAGE,
+                    authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
+                ),
+                projectCode = projectId,
+                resourceType = AuthResourceType.PROJECT.value,
+                resourceCode = projectId,
+                relationResourceType = null
+            )
         } else {
-            resourceType
+            permissionService.validateUserResourcePermissionByRelation(
+                userId = userId,
+                action = RbacAuthUtils.buildAction(
+                    authPermission = AuthPermission.MANAGE,
+                    authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+                ),
+                projectCode = projectId,
+                resourceType = resourceType,
+                resourceCode = resourceCode,
+                relationResourceType = null
+            )
         }
-        return permissionService.validateUserResourcePermissionByRelation(
-            userId = userId,
-            action = RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(newResourceType)
-            ),
-            projectCode = projectId,
-            resourceType = newResourceType,
-            resourceCode = resourceCode,
-            relationResourceType = null
-        )
     }
 
     override fun isEnablePermission(
@@ -297,7 +306,8 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
-            iamResourceCode = resourceInfo.iamResourceCode
+            iamResourceCode = resourceInfo.iamResourceCode,
+            createMode = false
         )
         return authResourceService.enable(
             userId = userId,

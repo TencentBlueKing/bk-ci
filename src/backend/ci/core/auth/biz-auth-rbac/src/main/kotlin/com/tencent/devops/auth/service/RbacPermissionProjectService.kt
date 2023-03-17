@@ -139,11 +139,9 @@ class RbacPermissionProjectService(
     }
 
     override fun getUserProjects(userId: String): List<String> {
-        val projectList = authHelper.getInstanceList(
-            userId,
-            RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT),
-            RbacAuthUtils.extResourceType(AuthResourceType.PROJECT)
-        )
+        val action = RbacAuthUtils.buildAction(AuthPermission.VISIT, authResourceType = AuthResourceType.PROJECT)
+        val instanceMap = authHelper.groupRbacInstanceByType(userId, action)
+        val projectList = instanceMap[AuthResourceType.PROJECT.value] ?: emptyList()
         logger.info("get user projects:$projectList")
         return projectList
     }
@@ -151,7 +149,9 @@ class RbacPermissionProjectService(
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         val managerPermission = checkProjectManager(userId, projectCode)
         // 有管理员权限或者若为校验管理员权限,直接返回是否时管理员成员
-        if (managerPermission || (group != null && group == BkAuthGroup.MANAGER)) {
+        if (managerPermission ||
+            (group != null && (group == BkAuthGroup.MANAGER || group == BkAuthGroup.CI_MANAGER))
+        ) {
             return managerPermission
         }
         val instanceDTO = InstanceDTO()

@@ -52,6 +52,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -106,7 +107,12 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId,
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = iamGroupInfoList.map {
+        val iamGroupInfoVoList = iamGroupInfoList.filterNot {
+            // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
+            val resourceGroup = resourceGroupMap[it.id]
+            resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+                resourceGroup.groupCode == DefaultGroupType.MANAGER.value
+        }.map {
             IamGroupInfoVo(
                 managerId = resourceInfo.relationId.toInt(),
                 defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
