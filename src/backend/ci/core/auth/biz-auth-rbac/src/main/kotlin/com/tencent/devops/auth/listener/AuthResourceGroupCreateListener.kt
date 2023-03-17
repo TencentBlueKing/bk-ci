@@ -62,7 +62,8 @@ class AuthResourceGroupCreateListener(
                     resourceType = resourceType,
                     resourceCode = resourceCode,
                     resourceName = resourceName,
-                    iamResourceCode = iamResourceCode
+                    iamResourceCode = iamResourceCode,
+                    createMode = true
                 )
             }
         }

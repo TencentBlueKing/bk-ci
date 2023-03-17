@@ -110,7 +110,7 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
-                // 流水线和流水线组才需要主动开启权限管理
+                // 流水线组需要主动开启权限管理
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
@@ -225,7 +225,7 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        // 一期先不上流水线组权限,流水线组权限由项目控制
+        // TODO 流水线组一期先不上,流水线组权限由项目控制
         return if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
             permissionService.validateUserResourcePermissionByRelation(
                 userId = userId,
@@ -306,7 +306,8 @@ class RbacPermissionResourceService(
             resourceType = resourceType,
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
-            iamResourceCode = resourceInfo.iamResourceCode
+            iamResourceCode = resourceInfo.iamResourceCode,
+            createMode = false
         )
         return authResourceService.enable(
             userId = userId,

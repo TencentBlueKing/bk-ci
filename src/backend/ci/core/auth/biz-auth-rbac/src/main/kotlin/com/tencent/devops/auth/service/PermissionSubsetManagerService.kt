@@ -191,7 +191,8 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceType: String,
         resourceCode: String,
         resourceName: String,
-        iamResourceCode: String
+        iamResourceCode: String,
+        createMode: Boolean
     ) {
         // 创建资源时，先同步二级管理员创建时创建的组
         syncSubsetManagerGroup(
@@ -202,10 +203,18 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName,
             iamResourceCode = iamResourceCode
         )
-        val resourceGroupConfigs = authResourceGroupConfigDao.get(
-            dslContext = dslContext,
-            resourceType = resourceType
-        )
+        val resourceGroupConfigs = if (createMode) {
+            authResourceGroupConfigDao.get(
+                dslContext = dslContext,
+                resourceType = resourceType,
+                createMode = true
+            )
+        } else {
+            authResourceGroupConfigDao.get(
+                dslContext = dslContext,
+                resourceType = resourceType
+            )
+        }
         resourceGroupConfigs.filter {
             it.groupCode != DefaultGroupType.MANAGER.value
         }.forEach { groupConfig ->
