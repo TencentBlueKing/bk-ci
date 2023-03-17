@@ -250,6 +250,7 @@
             'constructImportForm.model' (val) {
                 if (val && !this.isAgent) {
                     this.constructImportForm.link = ''
+                    this.constructImportForm.location = ''
                     this.requestGateway()
                 }
             },
