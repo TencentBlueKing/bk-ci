@@ -11,6 +11,7 @@ import com.tencent.devops.auth.pojo.vo.ManagerRoleGroupVO
 import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -19,7 +20,8 @@ class UserAuthApplyResourceImpl @Autowired constructor(
     val permissionApplyService: PermissionApplyService
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
-        return Result(permissionApplyService.listResourceTypes(userId))
+        return Result(permissionApplyService.listResourceTypes(userId)
+                          .filterNot { it.resourceType == AuthResourceType.PIPELINE_GROUP.value })
     }
 
     override fun listActions(userId: String, resourceType: String): Result<List<ActionInfoVo>> {
@@ -67,7 +69,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        action: String
+        action: String?
     ): Result<AuthApplyRedirectInfoVo> {
         return Result(
             permissionApplyService.getRedirectInformation(

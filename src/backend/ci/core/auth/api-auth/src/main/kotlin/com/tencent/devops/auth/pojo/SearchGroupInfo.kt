@@ -6,7 +6,7 @@ import io.swagger.annotations.ApiModelProperty
 @ApiModel("搜索用户组实体")
 data class SearchGroupInfo(
     @ApiModelProperty("分级管理员是否继承查询二级管理员的用户组")
-    val inherit: Boolean? = true,
+    var inherit: Boolean? = true,
     @ApiModelProperty("操作id筛选")
     val actionId: String?,
     @ApiModelProperty("资源类型筛选")

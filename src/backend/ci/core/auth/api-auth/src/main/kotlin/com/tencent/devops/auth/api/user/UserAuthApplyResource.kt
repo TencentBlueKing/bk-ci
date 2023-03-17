@@ -118,8 +118,8 @@ interface UserAuthApplyResource {
         @ApiParam("资源实例", required = true)
         @QueryParam("resourceCode")
         resourceCode: String,
-        @ApiParam("动作", required = true)
+        @ApiParam("动作", required = false)
         @QueryParam("action")
-        action: String
+        action: String?
     ): Result<AuthApplyRedirectInfoVo>
 }

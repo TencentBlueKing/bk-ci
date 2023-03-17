@@ -234,7 +234,8 @@ class RbacAuthConfiguration {
         rbacCacheService: PermissionCacheService,
         config: CommonConfig,
         client: Client,
-        authResourceCodeConverter: AuthResourceCodeConverter
+        authResourceCodeConverter: AuthResourceCodeConverter,
+        permissionService: PermissionService
     ) = RbacPermissionApplyService(
         dslContext = dslContext,
         v2ManagerService = v2ManagerService,
@@ -244,6 +245,7 @@ class RbacAuthConfiguration {
         rbacCacheService = rbacCacheService,
         config = config,
         client = client,
-        authResourceCodeConverter = authResourceCodeConverter
+        authResourceCodeConverter = authResourceCodeConverter,
+        permissionService = permissionService
     )
 }

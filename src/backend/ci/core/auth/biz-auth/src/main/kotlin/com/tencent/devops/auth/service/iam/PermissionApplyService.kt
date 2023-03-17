@@ -44,6 +44,6 @@ interface PermissionApplyService {
         projectId: String,
         resourceType: String,
         resourceCode: String,
-        action: String
+        action: String?
     ): AuthApplyRedirectInfoVo
 }

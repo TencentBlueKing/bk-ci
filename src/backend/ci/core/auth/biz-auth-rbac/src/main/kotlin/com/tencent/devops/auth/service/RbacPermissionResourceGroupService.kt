@@ -85,10 +85,20 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+        val validPage = PageUtil.getValidPage(page)
+        val validPageSize = PageUtil.getValidPageSize(page)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.listGroup(resourceInfo.relationId, page, pageSize)
+            permissionGradeManagerService.listGroup(
+                gradeManagerId = resourceInfo.relationId,
+                page = validPage,
+                pageSize = validPageSize
+            )
         } else {
-            permissionSubsetManagerService.listGroup(resourceInfo.relationId, page, pageSize)
+            permissionSubsetManagerService.listGroup(
+                subsetManagerId = resourceInfo.relationId,
+                page = validPage,
+                pageSize = validPageSize
+            )
         }
         val resourceGroupMap = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,

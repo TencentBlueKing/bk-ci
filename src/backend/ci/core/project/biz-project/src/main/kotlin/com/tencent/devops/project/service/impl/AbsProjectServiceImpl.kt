@@ -517,40 +517,44 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         }
     }
 
-    override fun listProjectsWithoutPermissions(
+    override fun listProjectsForApply(
         userId: String,
         accessToken: String?,
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<ProjectVO> {
-        val startEpoch = System.currentTimeMillis()
-        var success = false
-        try {
-            val iamProjects = getProjectFromAuth(userId, accessToken)
-            val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-            val list = ArrayList<ProjectVO>()
-            projectDao.listProjectsWithoutPermissions(
-                dslContext = dslContext,
-                projectName = projectName,
-                projects = iamProjects,
-                offset = sqlLimit.offset,
-                limit = sqlLimit.limit
-            )?.map {
-                list.add(ProjectUtils.packagingBean(it))
-            } ?: emptyList()
-            if (list.isEmpty()) {
-                return Pagination(false, emptyList())
-            }
-            success = true
-            return Pagination(
-                hasNext = list.size == pageSize,
-                records = list
+    ): Pagination<Pair<Boolean, ProjectVO>> {
+        val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
+        val projectList: MutableList<Pair<Boolean, ProjectVO>> = mutableListOf()
+        // todo 还要拉取出该用户已经加入的保密项目。
+        // todo 拉取到保密项目，还得抛出异常
+        // 拉取出已经有访问权限的项目。
+        projectDao.listProjectsByProjectName(
+            dslContext = dslContext,
+            projectName = projectName,
+            offset = sqlLimit.offset,
+            limit = sqlLimit.limit
+        ).forEach {
+            projectList.add(
+                Pair(
+                    // todo 改成批量鉴权
+                    authPermissionApi.validateUserResourcePermission(
+                        user = userId,
+                        serviceCode = projectAuthServiceCode,
+                        resourceType = AuthResourceType.PROJECT,
+                        projectCode = it.englishName,
+                        permission = AuthPermission.VISIT
+                    ), ProjectUtils.packagingBean(it)
+                )
             )
-        } finally {
-            projectJmxApi.execute(PROJECT_LIST, System.currentTimeMillis() - startEpoch, success)
-            logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to list projects without permissions")
         }
+        if (projectList.isEmpty()) {
+            return Pagination(false, emptyList())
+        }
+        return Pagination(
+            hasNext = projectList.size == pageSize,
+            records = projectList
+        )
     }
 
     override fun list(projectCodes: Set<String>): List<ProjectVO> {
@@ -1021,6 +1025,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private const val ENGLISH_NAME_PATTERN = "[a-z][a-zA-Z0-9-]+"
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
+        private const val FIRST_PAGE = 1
+
         // 项目tips默认展示时间
         private const val DEFAULT_TIPS_SHOW_TIME = 7
     }
