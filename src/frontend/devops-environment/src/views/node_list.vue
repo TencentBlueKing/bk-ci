@@ -648,6 +648,8 @@
                     this.isAgent = false
                     this.constructToolConf.isShow = false
                     this.dialogLoading.isShow = false
+                    this.constructImportForm.link = ''
+                    this.constructImportForm.location = ''
                     this.constructToolConf.importText = this.$t('environment.import')
                 }
             },
