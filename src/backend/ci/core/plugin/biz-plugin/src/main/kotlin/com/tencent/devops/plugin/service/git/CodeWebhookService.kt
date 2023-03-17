@@ -395,16 +395,6 @@ class CodeWebhookService @Autowired constructor(
             val pipelineName = buildInfo.pipelineName
             val buildNum = variables[PIPELINE_BUILD_NUM]
             val webhookEventType = variables[BK_REPO_GIT_WEBHOOK_EVENT_TYPE]
-            if (variables[PIPELINE_WEBHOOK_MR_ID] != null && event.mergeRequestId == null &&
-                webhookEventType == CodeEventType.MERGE_REQUEST.name) {
-                logger.warn(
-                    "add mr commit check miss MrId,use pipeline variable for " +
-                        "commitId($commitId)," +
-                        "pipelineId($pipelineId)," +
-                        "buildId($buildId)"
-                )
-                event.mergeRequestId = variables[PIPELINE_WEBHOOK_MR_ID]?.toLong()
-            }
             val context = "$pipelineName@$webhookEventType"
 
             if (buildNum == null) {
