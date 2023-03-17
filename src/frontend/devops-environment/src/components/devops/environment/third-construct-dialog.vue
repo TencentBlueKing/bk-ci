@@ -43,9 +43,9 @@
                 <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
                 <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
                     <div class="command-line">
-                        {{ constructImportForm.link }}
+                        {{ constructImportForm.link || $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
-                    <div class="copy-button">
+                    <div class="copy-button" v-if="constructImportForm.link">
                         <a class="text-link copy-command"
                             @click="copyCommand">
                             {{ $t('environment.clickToCopy') }}</a>

@@ -244,6 +244,7 @@
             // 构建机型变化
             'constructImportForm.model' (val) {
                 if (val && !this.isAgent) {
+                    this.constructImportForm.link = ''
                     this.requestGateway()
                 }
             },
@@ -482,6 +483,8 @@
                             theme
                         })
                     }
+
+                    this.dialogLoading.isLoading = false
                 } catch (err) {
                     message = err.message ? err.message : err
                     theme = 'error'
@@ -503,7 +506,6 @@
                     })
 
                     this.gatewayList.splice(0, this.gatewayList.length)
-                    this.constructImportForm.location = ''
                     res.forEach(item => {
                         this.gatewayList.push(item)
                     })
@@ -538,6 +540,8 @@
              * 生成链接
              */
             async requestDevCommand () {
+                if (!this.constructImportForm.location) return
+
                 this.dialogLoading.isLoading = true
 
                 try {
