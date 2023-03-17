@@ -50,6 +50,8 @@ import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_TITLE
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_MR_URL
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REF
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATOR
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_GROUP
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_ID
 import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_NAME
@@ -226,7 +228,9 @@ object PipelineVarUtil {
         "ci.action" to PIPELINE_GIT_ACTION,
         "ci.build_url" to PIPELINE_BUILD_URL,
         "ci.mr_reviewers" to BK_REPO_GIT_WEBHOOK_MR_REVIEWERS,
-        "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH
+        "ci.pipeline_path" to PIPELINE_GIT_YAML_PATH,
+        "ci.repo_create_time" to PIPELINE_GIT_REPO_CREATE_TIME,
+        "ci.repo_creator" to PIPELINE_GIT_REPO_CREATOR
     )
 
     /**
