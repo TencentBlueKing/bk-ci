@@ -58,6 +58,8 @@ const (
 	templateKeyGateway     = "###{gateway}###"
 	templateKeyTlsCa       = "###{tls_ca}###"
 	templateKeyProjectId   = "###{projectId}###"
+	templateKeyHostName    = "###{hostName}###"
+	templateKeyHostIp      = "###{hostIp}###"
 )
 
 func DoAgentCollect() {
@@ -115,6 +117,9 @@ func writeTelegrafConfig() {
 	configContent = strings.Replace(configContent, templateKeyAgentSecret, config.GAgentConfig.SecretKey, 1)
 	configContent = strings.Replace(configContent, templateKeyGateway, buildGateway(config.GAgentConfig.Gateway), 1)
 	configContent = strings.Replace(configContent, templateKeyProjectId, config.GAgentConfig.ProjectId, 1)
+	configContent = strings.Replace(configContent, templateKeyHostName, config.GAgentEnv.HostName, 1)
+	configContent = strings.Replace(configContent, templateKeyHostIp, config.GAgentEnv.AgentIp, 1)
+
 	if config.UseCert {
 		configContent = strings.Replace(configContent, templateKeyTlsCa, `tls_ca = ".cert"`, 1)
 	} else {
