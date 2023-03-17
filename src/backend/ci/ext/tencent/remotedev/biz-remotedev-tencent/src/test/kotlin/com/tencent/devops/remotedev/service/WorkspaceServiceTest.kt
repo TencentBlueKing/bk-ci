@@ -8,10 +8,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -27,7 +23,6 @@ import io.mockk.spyk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 internal class WorkspaceServiceTest : BkCiAbstractTest() {
@@ -67,63 +62,63 @@ internal class WorkspaceServiceTest : BkCiAbstractTest() {
         ),
         recordPrivateCalls = true
     )
-
-    private val ws4Default = TWorkspaceRecord(
-        /* id = */ 1,
-        /* projectId = */ "",
-        /* name = */ "user001671019236319-cibkuizx",
-        /* templateId = */ 1,
-        /* url = */ "https://xxx/xxx/xx/xx.git",
-        /* branch = */ "master",
-        /* yaml = */ "",
-        /* yamlPath = */ "",
-        /* dockerfile = */ "",
-        /* imagePath = */ "",
-        /* workPath = */ "/data/landun/workspace/xxx",
-        /* hostName = */ "127.0.0.1",
-        /* cpu = */ 8,
-        /* memory = */ 16,
-        /* usageTime = */ 0,
-        /* sleepingTime = */ 0,
-        /* disk = */ 100,
-        /* creator = */ "user00",
-        /* creatorBgName = */ "xx事业群",
-        /* creatorDeptName = */ "xx部",
-        /* creatorCenterName = */ "xx中心",
-        /* status = */ 1,
-        /* createTime = */ LocalDateTime.parse("2022-11-14 20:00:36", formatter),
-        /* updateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter),
-        /* lastStatusUpdateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter)
-    )
-
-    private val wsh4Default = TWorkspaceHistoryRecord(
-        /* id = */ 1,
-        /* workspaceName = */ "",
-        /* starter = */ "user00",
-        /* stopper = */ "",
-        /* startTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-        /* endTime = */ null,
-        /* lastSleepTimeCost = */ 0,
-        /* updateTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
-        /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter)
-    )
-
-    private val wsoh4Default = TWorkspaceOpHisRecord(
-        /* id = */ 1,
-        /* workspaceName = */ "",
-        /* operator = */ "user00",
-        /* action = */ 0,
-        /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
-        /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter)
-    )
-
-    private val wss4Default = TWorkspaceSharedRecord(
-        /* id = */ 1,
-        /* workspaceName = */ "",
-        /* operator = */ "user00",
-        /* sharedUser = */ "user01",
-        /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter)
-    )
+    //
+    // private val ws4Default = TWorkspaceRecord(
+    //     /* id = */ 1,
+    //     /* projectId = */ "",
+    //     /* name = */ "user001671019236319-cibkuizx",
+    //     /* templateId = */ 1,
+    //     /* url = */ "https://xxx/xxx/xx/xx.git",
+    //     /* branch = */ "master",
+    //     /* yaml = */ "",
+    //     /* yamlPath = */ "",
+    //     /* dockerfile = */ "",
+    //     /* imagePath = */ "",
+    //     /* workPath = */ "/data/landun/workspace/xxx",
+    //     /* hostName = */ "127.0.0.1",
+    //     /* cpu = */ 8,
+    //     /* memory = */ 16,
+    //     /* usageTime = */ 0,
+    //     /* sleepingTime = */ 0,
+    //     /* disk = */ 100,
+    //     /* creator = */ "user00",
+    //     /* creatorBgName = */ "xx事业群",
+    //     /* creatorDeptName = */ "xx部",
+    //     /* creatorCenterName = */ "xx中心",
+    //     /* status = */ 1,
+    //     /* createTime = */ LocalDateTime.parse("2022-11-14 20:00:36", formatter),
+    //     /* updateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter),
+    //     /* lastStatusUpdateTime = */ LocalDateTime.parse("2022-12-14 20:00:39", formatter)
+    // )
+    //
+    // private val wsh4Default = TWorkspaceHistoryRecord(
+    //     /* id = */ 1,
+    //     /* workspaceName = */ "",
+    //     /* starter = */ "user00",
+    //     /* stopper = */ "",
+    //     /* startTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
+    //     /* endTime = */ null,
+    //     /* lastSleepTimeCost = */ 0,
+    //     /* updateTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter),
+    //     /* createdTime = */ LocalDateTime.parse("2022-11-28 00:27:16", formatter)
+    // )
+    //
+    // private val wsoh4Default = TWorkspaceOpHisRecord(
+    //     /* id = */ 1,
+    //     /* workspaceName = */ "",
+    //     /* operator = */ "user00",
+    //     /* action = */ 0,
+    //     /* actionMsg = */ "基于xxx的master分支创建了一个xxx的开发环境",
+    //     /* createdTime = */ LocalDateTime.parse("2022-11-20 15:04:21", formatter)
+    // )
+    //
+    // private val wss4Default = TWorkspaceSharedRecord(
+    //     /* id = */ 1,
+    //     /* workspaceName = */ "",
+    //     /* operator = */ "user00",
+    //     /* sharedUser = */ "user01",
+    //     /* createdTime = */ LocalDateTime.parse("2022-12-09 16:17:08", formatter)
+    // )
 
     @Nested
     inner class ThrowableTest {
