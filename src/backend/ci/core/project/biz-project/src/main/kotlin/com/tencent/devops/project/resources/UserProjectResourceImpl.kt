@@ -60,15 +60,15 @@ class UserProjectResourceImpl @Autowired constructor(
         return Result(projectService.list(userId, accessToken, enabled, unApproved ?: false))
     }
 
-    override fun listProjectsWithoutPermissions(
+    override fun listProjectsForApply(
         userId: String,
         accessToken: String?,
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Result<Pagination<ProjectVO>> {
+    ): Result<Pagination<Pair<Boolean, ProjectVO>>> {
         return Result(
-            projectService.listProjectsWithoutPermissions(
+            projectService.listProjectsForApply(
                 userId = userId,
                 accessToken = accessToken,
                 projectName = projectName,

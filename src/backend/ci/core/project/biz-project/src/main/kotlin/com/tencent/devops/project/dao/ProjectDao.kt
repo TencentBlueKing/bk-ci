@@ -511,19 +511,20 @@ class ProjectDao {
         }
     }
 
-    fun listProjectsWithoutPermissions(
+    fun listProjectsByProjectName(
         dslContext: DSLContext,
         projectName: String?,
-        projects: List<String>?,
         offset: Int,
         limit: Int
-    ): Result<TProjectRecord>? {
+    ): Result<TProjectRecord> {
         with(TProject.T_PROJECT) {
             return dslContext.selectFrom(this)
                 .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
                 .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
-                .let { if (projects.isNullOrEmpty()) it else it.and(ENGLISH_NAME.notIn(projects)) }
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
+                .and(IS_OFFLINED.eq(false))
+                .and(ENABLED.eq(true))
+                .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()

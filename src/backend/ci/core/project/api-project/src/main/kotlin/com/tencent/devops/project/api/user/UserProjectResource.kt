@@ -82,25 +82,25 @@ interface UserProjectResource {
     ): Result<List<ProjectVO>>
 
     @GET
-    @Path("/listProjectsWithoutPermissions")
-    @ApiOperation("查询无权限的项目")
-    fun listProjectsWithoutPermissions(
+    @Path("/listProjectsForApply")
+    @ApiOperation("查询项目--用于申请加入")
+    fun listProjectsForApply(
         @ApiParam("userId", required = true)
         @HeaderParam(AUTH_HEADER_DEVOPS_USER_ID)
         userId: String,
-        @ApiParam("access_token")
+        @ApiParam("access_token", required = false)
         @HeaderParam(AUTH_HEADER_DEVOPS_ACCESS_TOKEN)
         accessToken: String?,
         @ApiParam("项目名", required = false)
         @QueryParam("projectName")
         projectName: String? = null,
-        @ApiParam("页目", required = false)
+        @ApiParam("页目", required = true)
         @QueryParam("page")
         page: Int,
-        @ApiParam("每页数目", required = false)
+        @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Pagination<ProjectVO>>
+    ): Result<Pagination<Pair<Boolean, ProjectVO>>>
 
     @GET
     @Path("/{english_name}")

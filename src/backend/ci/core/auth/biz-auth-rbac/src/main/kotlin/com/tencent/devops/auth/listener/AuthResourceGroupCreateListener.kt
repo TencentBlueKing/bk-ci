@@ -63,7 +63,7 @@ class AuthResourceGroupCreateListener(
                     resourceCode = resourceCode,
                     resourceName = resourceName,
                     iamResourceCode = iamResourceCode,
-                    createMode = false
+                    createMode = true
                 )
             }
         }

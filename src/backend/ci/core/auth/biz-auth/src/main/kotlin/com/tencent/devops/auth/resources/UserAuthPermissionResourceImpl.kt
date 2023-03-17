@@ -67,7 +67,7 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
                     validateResourcePermission(
                         userId = userId,
                         projectCode = projectCode,
-                        actions = projectActionList.toList(),
+                        actions = resourceActionList.toList(),
                         resourceType = permissionBatchValidateDTO.resourceType,
                         resourceCode = permissionBatchValidateDTO.resourceCode
                     )

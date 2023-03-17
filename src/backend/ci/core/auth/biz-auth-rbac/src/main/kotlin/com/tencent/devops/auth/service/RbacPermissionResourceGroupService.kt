@@ -52,6 +52,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
+import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -85,10 +86,20 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = resourceType,
             resourceCode = resourceCode
         )
+        val validPage = PageUtil.getValidPage(page)
+        val validPageSize = PageUtil.getValidPageSize(pageSize)
         val iamGroupInfoList = if (resourceType == AuthResourceType.PROJECT.value) {
-            permissionGradeManagerService.listGroup(resourceInfo.relationId, page, pageSize)
+            permissionGradeManagerService.listGroup(
+                gradeManagerId = resourceInfo.relationId,
+                page = validPage,
+                pageSize = validPageSize
+            )
         } else {
-            permissionSubsetManagerService.listGroup(resourceInfo.relationId, page, pageSize)
+            permissionSubsetManagerService.listGroup(
+                subsetManagerId = resourceInfo.relationId,
+                page = validPage,
+                pageSize = validPageSize
+            )
         }
         val resourceGroupMap = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
@@ -96,17 +107,29 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId,
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = iamGroupInfoList.map {
-            IamGroupInfoVo(
-                managerId = resourceInfo.relationId.toInt(),
-                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
-                groupId = it.id,
-                name = it.name,
-                displayName = it.name,
-                userCount = it.userCount,
-                departmentCount = it.departmentCount
+        val iamGroupInfoVoList = mutableListOf<IamGroupInfoVo>()
+        iamGroupInfoList.forEach {
+            val resourceGroup = resourceGroupMap[it.id]
+            // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
+            if (resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+                resourceGroup.groupCode == DefaultGroupType.MANAGER.value
+            ) {
+                return@forEach
+            }
+
+            iamGroupInfoVoList.add(
+                IamGroupInfoVo(
+                    managerId = resourceInfo.relationId.toInt(),
+                    defaultGroup = resourceGroup?.defaultGroup ?: false,
+                    groupId = it.id,
+                    name = it.name,
+                    displayName = it.name,
+                    userCount = it.userCount,
+                    departmentCount = it.departmentCount
+                )
             )
-        }.sortedBy { it.groupId }
+        }
+        iamGroupInfoVoList.sortedBy { it.groupId }
         return Pagination(
             hasNext = iamGroupInfoVoList.size == pageSize,
             records = iamGroupInfoVoList

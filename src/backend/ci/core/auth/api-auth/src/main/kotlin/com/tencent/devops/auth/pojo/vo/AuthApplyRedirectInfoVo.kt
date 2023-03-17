@@ -12,7 +12,7 @@ data class AuthApplyRedirectInfoVo(
     @ApiModelProperty("资源实例名称")
     val resourceName: String,
     @ApiModelProperty("动作名称")
-    val actionName: String,
+    val actionName: String? = null,
     @ApiModelProperty("用户组信息列表")
     val groupInfoList: List<AuthRedirectGroupInfoVo>
 )

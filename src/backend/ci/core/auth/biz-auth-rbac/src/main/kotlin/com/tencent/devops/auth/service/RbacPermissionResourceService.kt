@@ -110,7 +110,7 @@ class RbacPermissionResourceService(
                 resourceCode = resourceCode,
                 resourceName = resourceName,
                 iamResourceCode = iamResourceCode,
-                // 流水线和流水线组才需要主动开启权限管理
+                // 流水线组需要主动开启权限管理
                 enable = resourceType != AuthResourceType.PIPELINE_GROUP.value,
                 relationId = managerId.toString()
             )
@@ -187,12 +187,14 @@ class RbacPermissionResourceService(
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         // 项目不能删除,不需要删除分级管理员
         if (resourceType != AuthResourceType.PROJECT.value) {
-            val resourceInfo = authResourceService.get(
+            val resourceInfo = authResourceService.getOrNull(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
-            permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+            if (resourceInfo != null) {
+                permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+            }
         }
         authResourceService.delete(
             projectCode = projectCode,
@@ -225,21 +227,27 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
-        // 一期先不上流水线组权限,流水线组权限由项目控制
-        val action = if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
-            RbacAuthUtils.buildAction(
+        val checkProjectManage = permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = RbacAuthUtils.buildAction(
                 authPermission = AuthPermission.MANAGE,
-                authResourceType = AuthResourceType.PROJECT
-            )
-        } else {
-            RbacAuthUtils.buildAction(
-                authPermission = AuthPermission.MANAGE,
-                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
-            )
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
+            ),
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            relationResourceType = null
+        )
+        // TODO 流水线组一期先不上,流水线组权限由项目控制
+        if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            return checkProjectManage
         }
         return permissionService.validateUserResourcePermissionByRelation(
             userId = userId,
-            action = action,
+            action = RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+            ),
             projectCode = projectId,
             resourceType = resourceType,
             resourceCode = resourceCode,
@@ -301,7 +309,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = true
+            createMode = false
         )
         return authResourceService.enable(
             userId = userId,

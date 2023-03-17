@@ -155,13 +155,13 @@ interface ProjectService {
         unApproved: Boolean
     ): List<ProjectVO>
 
-    fun listProjectsWithoutPermissions(
+    fun listProjectsForApply(
         userId: String,
         accessToken: String?,
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<ProjectVO>
+    ): Pagination<Pair<Boolean, ProjectVO>>
 
     fun list(userId: String): List<ProjectVO>
 
