@@ -1,5 +1,6 @@
 # 初始化制品库
 {{ if .Values.init.bkrepo }}
+{{ if not (empty .Values.config.bkRepoApiUrl) }}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -89,4 +90,5 @@ spec:
                   echo -e ""
               done
       restartPolicy: Never
+{{- end -}}
 {{- end -}}

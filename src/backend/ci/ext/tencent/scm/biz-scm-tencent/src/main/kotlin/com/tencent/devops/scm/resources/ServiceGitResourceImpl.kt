@@ -345,7 +345,7 @@ class ServiceGitResourceImpl @Autowired constructor(
     }
 
     override fun getGitCIFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,

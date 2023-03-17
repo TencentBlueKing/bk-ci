@@ -278,7 +278,7 @@ class TGitApiService @Autowired constructor(
             apiErrorCode = ErrorCodeEnum.GET_GIT_FILE_TREE_ERROR
         ) {
             client.get(ServiceGitResource::class).getGitFileTree(
-                gitProjectId = gitProjectId.toLong(),
+                gitProjectId = gitProjectId,
                 path = path ?: "",
                 token = cred.toToken(),
                 ref = ref,

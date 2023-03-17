@@ -30,5 +30,3 @@ dependencies {
     api(project(":core:common:common-auth:common-auth-blueking"))
     api(project(":core:common:common-auth:common-auth-v3"))
 }
-
-

@@ -301,7 +301,7 @@ interface IGitService {
     )
 
     fun getGitFileTree(
-        gitProjectId: Long,
+        gitProjectId: String,
         path: String,
         token: String,
         ref: String?,

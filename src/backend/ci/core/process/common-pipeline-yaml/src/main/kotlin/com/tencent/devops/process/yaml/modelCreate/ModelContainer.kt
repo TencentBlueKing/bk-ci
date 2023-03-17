@@ -103,12 +103,8 @@ class ModelContainer @Autowired(required = false) constructor(
                 job = job, jobEnable = jobEnable, finalStage = finalStage
             ),
             dispatchType = StreamDispatchUtils.getDispatchType(
-                client = client,
-                objectMapper = objectMapper,
                 job = job,
-                projectCode = projectCode,
                 defaultImage = defaultImage,
-                resources = resources,
                 containsMatrix = dispatchInfo != null,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             ),
