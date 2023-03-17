@@ -4,6 +4,7 @@ import (
 	"devopsRemoting/common/logs"
 	"net/http"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/gorilla/mux"
@@ -67,37 +68,9 @@ type hostHeaderProvider func(req *http.Request) string
 func matchWorkspaceHostHeader(wsHostSuffix string, headerProvider hostHeaderProvider, matchPort bool) mux.MatcherFunc {
 	return func(req *http.Request, m *mux.RouteMatch) bool {
 		hostname := headerProvider(req)
-		if hostname == "" {
-			return false
-		}
 
-		// TODO: 目前临时调试使用以 port+wsId 为主,wsid: userIdnumber-string，所以最多两个 -
-		matches := strings.Split(hostname, "-")
-
-		var workspaceID, workspacePort string
-
-		if len(matches) < 2 || len(matches) > 3 {
-			return false
-		}
-
-		// http://3000-wsId.host/index.html
-		// workspaceID: wsId
-		// workspacePort: 3000
-		if len(matches) == 3 {
-			workspaceID = strings.TrimSuffix(strings.TrimPrefix(hostname, matches[0]+"-"), wsHostSuffix)
-			workspacePort = matches[0]
-		} else {
-			// http://wsId.host/index.html
-			// workspaceID: wsId
-			workspaceID = strings.TrimSuffix(hostname, wsHostSuffix)
-			workspacePort = ""
-		}
-
-		if workspaceID == "" {
-			return false
-		}
-
-		if matchPort && workspacePort == "" {
+		workspaceID, workspacePort, ok := parseWsHostName(wsHostSuffix, hostname, matchPort)
+		if !ok {
 			return false
 		}
 
@@ -111,6 +84,59 @@ func matchWorkspaceHostHeader(wsHostSuffix string, headerProvider hostHeaderProv
 
 		return true
 	}
+}
+
+func parseWsHostName(wsHostSuffix, hostname string, matchPort bool) (workspaceID, workspacePort string, ok bool) {
+	if hostname == "" {
+		return "", "", false
+	}
+
+	// hostname可能情况
+	// 1、userid-string.hostsuffix 				  2
+	// 2、port-userid-string.hostsuffix 		  3
+	// 3、userid(v-xxx)-string.hostsuffix  	  3
+	// 4、port-userid(v-xxx)-string.hostsuffix  4
+	hostname = strings.TrimSuffix(hostname, wsHostSuffix)
+	matches := strings.Split(hostname, "-")
+
+	if len(matches) < 2 || len(matches) > 4 {
+		return "", "", false
+	}
+
+	if len(matches) == 4 {
+		workspaceID = strings.TrimPrefix(hostname, matches[0]+"-")
+		workspacePort = matches[0]
+		// port一定是数字否则false
+		if _, err := strconv.Atoi(matches[0]); err != nil {
+			return "", "", false
+		}
+	} else if len(matches) == 3 {
+		// 当第一位是数字是情况2，否则3
+		if _, err := strconv.Atoi(matches[0]); err == nil {
+			workspaceID = strings.TrimPrefix(hostname, matches[0]+"-")
+			workspacePort = matches[0]
+		} else {
+			workspaceID = hostname
+			workspacePort = ""
+		}
+	} else {
+		workspaceID = hostname
+		workspacePort = ""
+	}
+
+	if workspaceID == "" {
+		return "", "", false
+	}
+
+	if matchPort && workspacePort == "" {
+		return "", "", false
+	}
+
+	if !matchPort && workspacePort != "" {
+		return "", "", false
+	}
+
+	return workspaceID, workspacePort, true
 }
 
 func setupAcmeRouter(router *mux.Router) {
