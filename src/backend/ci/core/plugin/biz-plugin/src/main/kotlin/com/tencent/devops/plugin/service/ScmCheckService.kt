@@ -70,7 +70,8 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         event: GitCommitCheckEvent,
         targetUrl: String,
         context: String,
-        description: String
+        description: String,
+        targetBranch: List<String>? = null
     ): String {
         with(event) {
             logger.info("Project($$projectId) add git commit($commitId) commit check.")
@@ -99,17 +100,6 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 else ->
                     throw OperationException("不是Git 代码仓库")
             }
-            // 目标分支
-            val targetBranch = mergeRequestId?.let {
-                getMrInfo(
-                    projectName = repo.projectName,
-                    url = repo.url,
-                    scmType = type,
-                    token = token,
-                    mrId = it,
-                    isOauth = isOauth
-                ).targetBranch
-            }
             logger.info("Project($projectId) add git commit($commitId) commit check for targetBranch($targetBranch)")
             val request = CommitCheckRequest(
                 projectName = repo.projectName,
@@ -127,11 +117,7 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
                 block = block,
                 mrRequestId = event.mergeRequestId,
                 reportData = QualityUtils.getQualityGitMrResult(client, event),
-                targetBranch = if (!targetBranch.isNullOrEmpty()) {
-                    mutableListOf(targetBranch)
-                } else {
-                    mutableListOf("~NONE")
-                }
+                targetBranch = targetBranch
             )
             if (isOauth) {
                 client.get(ServiceScmOauthResource::class).addCommitCheck(request)
