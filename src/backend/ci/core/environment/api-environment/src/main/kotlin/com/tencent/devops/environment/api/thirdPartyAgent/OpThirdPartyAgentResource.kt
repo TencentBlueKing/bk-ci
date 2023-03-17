@@ -29,6 +29,7 @@ package com.tencent.devops.environment.api.thirdPartyAgent
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.environment.pojo.slave.SlaveGateway
 import com.tencent.devops.environment.pojo.thirdPartyAgent.UpdateAgentRequest
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineCreate
 import com.tencent.devops.environment.pojo.thirdPartyAgent.pipeline.PipelineResponse
@@ -37,6 +38,7 @@ import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DELETE
 import javax.ws.rs.GET
 import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
@@ -108,5 +110,35 @@ interface OpThirdPartyAgentResource {
     fun updateAgentGateway(
         @ApiParam("内容", required = false)
         updateAgentRequest: UpdateAgentRequest
+    ): Result<Boolean>
+
+    @ApiOperation("查询agent下载网关")
+    @GET
+    @Path("/gateways")
+    fun getGateways(): Result<List<SlaveGateway>>
+
+    @ApiOperation("新增agent下载网关")
+    @POST
+    @Path("/gateways")
+    fun addGateway(
+        @ApiParam("gateway", required = true)
+        gateway: SlaveGateway
+    ): Result<Boolean>
+
+    @ApiOperation("修改agent下载网关")
+    @PUT
+    @Path("/gateways")
+    fun updateGateway(
+        @ApiParam("gateway", required = true)
+        gateway: SlaveGateway
+    ): Result<Boolean>
+
+    @ApiOperation("删除agent下载网关")
+    @DELETE
+    @Path("/gateways/{zoneName}")
+    fun deleteGateway(
+        @ApiParam("zoneName", required = true)
+        @PathParam("zoneName")
+        zoneName: String,
     ): Result<Boolean>
 }
