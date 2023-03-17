@@ -581,6 +581,9 @@ open class MarketAtomTask : ITask() {
     }
 
     private fun getFileGateway(containerType: String?): String {
+        if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+            return AgentEnv.getFileGateway()!!
+        }
         val vmBuildEnvFlag = TaskUtil.isVmBuildEnv(containerType)
         var fileDevnetGateway = CommonEnv.fileDevnetGateway
         var fileIdcGateway = CommonEnv.fileIdcGateway
