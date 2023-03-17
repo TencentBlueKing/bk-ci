@@ -339,12 +339,15 @@ class PipelineViewService @Autowired constructor(
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data,
                 viewType = pipelineView.viewType
             )
-            pipelineGroupPermissionService.createResource(
-                userId = userId,
-                projectId = projectId,
-                viewId = viewId,
-                viewName = pipelineView.name
-            )
+            if (!pipelineView.projected) {
+                // 个人流水线组不需要权限管理
+                pipelineGroupPermissionService.createResource(
+                    userId = userId,
+                    projectId = projectId,
+                    viewId = viewId,
+                    viewName = pipelineView.name
+                )
+            }
             return viewId
         } catch (t: DuplicateKeyException) {
             logger.warn("Fail to create the pipeline $pipelineView by userId")
@@ -388,7 +391,7 @@ class PipelineViewService @Autowired constructor(
                 ),
                 viewType = pipelineView.viewType
             )
-            if (success) {
+            if (success && pipelineView.projected) {
                 pipelineGroupPermissionService.modifyResource(
                     userId = userId,
                     projectId = projectId,

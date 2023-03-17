@@ -187,12 +187,14 @@ class RbacPermissionResourceService(
         logger.info("resource delete relation|$projectCode|$resourceType|$resourceCode")
         // 项目不能删除,不需要删除分级管理员
         if (resourceType != AuthResourceType.PROJECT.value) {
-            val resourceInfo = authResourceService.get(
+            val resourceInfo = authResourceService.getOrNull(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode
             )
-            permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+            if (resourceInfo != null) {
+                permissionSubsetManagerService.deleteSubsetManager(resourceInfo.relationId)
+            }
         }
         authResourceService.delete(
             projectCode = projectCode,
@@ -225,32 +227,32 @@ class RbacPermissionResourceService(
         resourceType: String,
         resourceCode: String
     ): Boolean {
+        val checkProjectManage = permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
+            ),
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId,
+            relationResourceType = null
+        )
         // TODO 流水线组一期先不上,流水线组权限由项目控制
-        return if (resourceType == AuthResourceType.PIPELINE_GROUP.value) {
-            permissionService.validateUserResourcePermissionByRelation(
-                userId = userId,
-                action = RbacAuthUtils.buildAction(
-                    authPermission = AuthPermission.MANAGE,
-                    authResourceType = RbacAuthUtils.getResourceTypeByStr(AuthResourceType.PROJECT.value)
-                ),
-                projectCode = projectId,
-                resourceType = AuthResourceType.PROJECT.value,
-                resourceCode = projectId,
-                relationResourceType = null
-            )
-        } else {
-            permissionService.validateUserResourcePermissionByRelation(
-                userId = userId,
-                action = RbacAuthUtils.buildAction(
-                    authPermission = AuthPermission.MANAGE,
-                    authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
-                ),
-                projectCode = projectId,
-                resourceType = resourceType,
-                resourceCode = resourceCode,
-                relationResourceType = null
-            )
+        if (checkProjectManage || resourceType == AuthResourceType.PIPELINE_GROUP.value) {
+            return checkProjectManage
         }
+        return permissionService.validateUserResourcePermissionByRelation(
+            userId = userId,
+            action = RbacAuthUtils.buildAction(
+                authPermission = AuthPermission.MANAGE,
+                authResourceType = RbacAuthUtils.getResourceTypeByStr(resourceType)
+            ),
+            projectCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode,
+            relationResourceType = null
+        )
     }
 
     override fun isEnablePermission(
