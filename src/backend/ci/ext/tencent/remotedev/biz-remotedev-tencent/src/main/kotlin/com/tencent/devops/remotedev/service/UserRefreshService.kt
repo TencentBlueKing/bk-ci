@@ -55,6 +55,7 @@ class UserRefreshService @Autowired constructor(
         return true
     }
 
+    @Suppress("NestedBlockDepth","ComplexCondition")
     private fun updateInfoByTof(userInfo: List<TWorkspaceRecord>) {
         userInfo.forEach {
             try {
