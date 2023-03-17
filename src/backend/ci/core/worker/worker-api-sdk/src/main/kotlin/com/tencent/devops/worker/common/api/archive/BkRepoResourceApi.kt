@@ -38,6 +38,7 @@ import com.tencent.devops.artifactory.pojo.FileGatewayInfo
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_APP_TITLE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -46,9 +47,12 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_IMAGE
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_NAME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_SCHEME
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_VERSION
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_BUILD_NUM
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.BK_GET_BUILD_BASE_INFO_FAIL
+import com.tencent.devops.worker.common.BK_UPLOAD_FILE_FAILED
 import com.tencent.devops.worker.common.CommonEnv
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.pojo.BkRepoAccessToken
@@ -74,7 +78,10 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         return try {
             val path = "/artifactory/api/build/fileGateway/get"
             val request = buildGet(path)
-            val response = request(request, "获取构建机基本信息失败")
+            val response = request(
+                request,
+                MessageUtil.getMessageByLocale(BK_GET_BUILD_BASE_INFO_FAIL, I18nUtil.getLanguage())
+            )
             val fileGatewayResult = objectMapper.readValue<Result<FileGatewayInfo>>(response)
             fileGatewayResult.data
         } catch (e: Exception) {
@@ -157,10 +164,14 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(
+            request,
+            message
+        )
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -265,10 +276,11 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
             headers = getUploadHeader(file, buildVariables, parseAppMetadata),
             useFileDevnetGateway = true
         )
-        val response = request(request, "上传文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }

@@ -33,8 +33,14 @@ import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.report.ReportEmail
+import com.tencent.devops.worker.common.BK_CREATE_REPORT_FAIL
+import com.tencent.devops.worker.common.BK_GET_REPORT_ROOT_PATH_FAILURE
+import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_REPORT_FAILURE
+import com.tencent.devops.worker.common.BK_UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -75,12 +81,17 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
 
-        val response = request(request, "上传自定义报告失败")
+        val response = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_REPORT_FAILURE, I18nUtil.getLanguage())
+        )
 
         try {
             val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
-                throw RemoteServiceException("上传流水线文件失败")
+                throw RemoteServiceException(
+                    MessageUtil.getMessageByLocale(BK_UPLOAD_PIPELINE_FILE_FAILED, I18nUtil.getLanguage())
+                )
             }
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -91,7 +102,10 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
     override fun getRootUrl(taskId: String): Result<String> {
         val path = "/ms/artifactory/api/build/artifactories/report/$taskId/root"
         val request = buildGet(path)
-        val responseContent = request(request, "获取报告跟路径失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_GET_REPORT_ROOT_PATH_FAILURE, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -115,7 +129,8 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             )
             buildPost(path, requestBody)
         }
-        val responseContent = request(request, "创建报告失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(BK_CREATE_REPORT_FAIL, I18nUtil.getLanguage()))
         return objectMapper.readValue(responseContent)
     }
 

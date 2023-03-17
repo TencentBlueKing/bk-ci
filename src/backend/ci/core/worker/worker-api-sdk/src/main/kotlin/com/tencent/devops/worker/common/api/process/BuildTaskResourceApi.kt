@@ -29,14 +29,20 @@ package com.tencent.devops.worker.common.api.process
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.task.PipelineBuildTaskInfo
+import com.tencent.devops.worker.common.BK_RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class BuildTaskResourceApi : AbstractBuildResourceApi(), BuildTaskSDKApi {
     override fun getAllBuildTask(): Result<List<PipelineBuildTaskInfo>> {
         val path = "/ms/process/api/build/task/getAllBuildTask"
         val request = buildGet(path)
-        val responseContent = request(request, "领取构建机任务详情失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_RECEIVE_BUILD_MACHINE_TASK_DETAIL_FAILED, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

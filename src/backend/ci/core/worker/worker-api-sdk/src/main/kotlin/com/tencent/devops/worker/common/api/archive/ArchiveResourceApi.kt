@@ -34,7 +34,12 @@ import com.tencent.devops.artifactory.pojo.GetFileDownloadUrlsResponse
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.BK_GET_DOWNLOAD_LINK_REQUEST_ERROR
+import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_FILE_FAILED
+import com.tencent.devops.worker.common.BK_UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -67,7 +72,8 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val url = "/ms/artifactory/api/build/artifactories/pipeline/$pipelineId/build/$buildId/file/download/urls/get" +
                 "?fileType=$fileType&customFilePath=$purePath"
         val request = buildGet(url)
-        val response = request(request, "获取下载链接请求出错")
+        val message = MessageUtil.getMessageByLocale(BK_GET_DOWNLOAD_LINK_REQUEST_ERROR, I18nUtil.getLanguage(userId))
+        val response = request(request, message)
         val result = try {
             objectMapper.readValue<Result<GetFileDownloadUrlsResponse?>>(response)
         } catch (ignored: Exception) {
@@ -75,7 +81,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             throw RemoteServiceException("archive fail: $response")
         }
         if (result.isNotOk()) {
-            throw RemoteServiceException(result.message ?: "获取下载链接请求出错，${result.status.toLong()}")
+            throw RemoteServiceException(result.message ?: "$message，${result.status.toLong()}")
         }
 
         return result.data?.fileUrlList ?: emptyList()
@@ -100,11 +106,12 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             requestBody = requestBody,
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传自定义文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(request, message)
         try {
             val obj = JsonParser.parseString(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
-                throw RemoteServiceException("上传自定义文件失败")
+                throw RemoteServiceException(message)
             }
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
@@ -126,10 +133,11 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             requestBody = requestBody,
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传流水线文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_PIPELINE_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(request, message)
         try {
             val obj = JsonParser.parseString(response).asJsonObject
-            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException("上传流水线文件失败")
+            if (obj.has("code") && obj["code"].asString != "200") throw RemoteServiceException(message)
         } catch (ignored: Exception) {
             LoggerService.addNormalLine(ignored.message ?: "")
         }

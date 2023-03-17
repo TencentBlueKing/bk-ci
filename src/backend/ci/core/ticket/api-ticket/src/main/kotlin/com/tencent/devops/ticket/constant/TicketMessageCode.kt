@@ -48,6 +48,7 @@ object TicketMessageCode {
     const val CERT_FILE_TYPE_ERROR = "2118109"// 证书文件必须是{0}}文件
     const val DESCRIPTION_FILE_TYPE_ERROR = "2118110"// 描述文件必须是{0}文件
     const val CERT_FILE_MUST_BE = "2118111"// 证书文件必须是{0}文件
+    const val BK_INVALID_CERT_ID = "2118113"// 无效的证书ID
 
     const val CREDENTIAL_NAME_ILLEGAL = "2118101" // 凭证名称必须是汉字、英文字母、数字、连字符(-)、下划线(_)或英文句号(.)
     const val CREDENTIAL_ID_ILLEGAL = "2118102" // 凭证标识必须是英文字母、数字或下划线(_)
@@ -56,4 +57,12 @@ object TicketMessageCode {
     const val CREDENTIAL_NAME_TOO_LONG = "2118105" // 凭证名字超过32个字符
     const val CREDENTIAL_ID_TOO_LONG = "2118106" // 凭证ID超过32个字符
     const val CREDENTIAL_EXIST = "2118107" // 凭证{0}已存在
+
+    const val KEY_FILE_MUST_BE = "2118112"// 密钥文件必须是{0}文件
+    const val FILE_SIZE_CANT_EXCEED = "2118114"// {0}文件大小不能超过{1}
+    const val NAME_SIZE_CANT_EXCEED = "2118115"// {0}名称不能超过{1}
+    const val ILLEGAL_FILE = "2118116"// 不合法的{0}文件
+    const val CERTIFICATE_PASSWORD_WRONG = "2118117"// 证书密码错误
+    const val CERTIFICATE_ALIAS_OR_PASSWORD_WRONG = "2118118"// 证书别名或者别名密码错误
+    const val CERT_USED_BY_OTHERS = "2118119"// 证书{0}已被他人使用
 }

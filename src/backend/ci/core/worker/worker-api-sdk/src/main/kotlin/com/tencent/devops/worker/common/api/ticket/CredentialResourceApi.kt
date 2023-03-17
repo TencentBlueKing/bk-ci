@@ -29,9 +29,12 @@ package com.tencent.devops.worker.common.api.ticket
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.sdk.enums.HttpMethod
 import com.tencent.devops.common.util.ApiSignUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.pojo.CredentialInfo
+import com.tencent.devops.worker.common.BK_GET_CREDENTIAL_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
@@ -48,7 +51,10 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
             emptyMap()
         }
         val request = buildGet(path, signHeaders)
-        val responseContent = request(request, "获取凭据失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -70,7 +76,10 @@ class CredentialResourceApi : AbstractBuildResourceApi(), CredentialSDKApi {
             emptyMap()
         }
         val request = buildGet(path, signHeaders)
-        val responseContent = request(request, "获取凭据失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_FAILED, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

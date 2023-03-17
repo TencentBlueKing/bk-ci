@@ -29,13 +29,23 @@ package com.tencent.devops.worker.common.api.process
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildHistory
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildTaskResult
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.pojo.pipeline.ModelDetail
+import com.tencent.devops.worker.common.BK_BUILD_FINISH_REQUEST_FAILED
+import com.tencent.devops.worker.common.BK_BUILD_TIMEOUT_END_REQUEST_FAILURE
+import com.tencent.devops.worker.common.BK_GET_BUILD_TASK_DETAILS_FAILURE
+import com.tencent.devops.worker.common.BK_GET_TEMPLATE_CROSS_PROJECT_INFO_FAILURE
+import com.tencent.devops.worker.common.BK_HEARTBEAT_FAIL
+import com.tencent.devops.worker.common.BK_NOTIFY_SERVER_START_BUILD_FAILED
+import com.tencent.devops.worker.common.BK_RECEIVE_BUILD_MACHINE_TASK_FAILED
+import com.tencent.devops.worker.common.BK_REPORT_TASK_FINISH_FAILURE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType
 import okhttp3.RequestBody
@@ -45,7 +55,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun setStarted(): Result<BuildVariables> {
         val path = "/ms/process/api/build/builds/started"
         val request = buildPut(path)
-        val errorMessage = "通知服务端启动构建失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_NOTIFY_SERVER_START_BUILD_FAILED, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -59,7 +69,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun claimTask(): Result<BuildTask> {
         val path = "/ms/process/api/build/builds/claim"
         val request = buildGet(path)
-        val errorMessage = "领取构建机任务失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_RECEIVE_BUILD_MACHINE_TASK_FAILED, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -77,7 +87,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
             objectMapper.writeValueAsString(result)
         )
         val request = buildPost(path, requestBody)
-        val errorMessage = "报告任务完成失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_REPORT_TASK_FINISH_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -91,7 +101,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun endTask(): Result<Boolean> {
         val path = "/ms/process/api/build/builds/end"
         val request = buildPost(path)
-        val errorMessage = "构建完成请求失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_BUILD_FINISH_REQUEST_FAILED, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -105,7 +115,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
     override fun heartbeat(): Result<Boolean> {
         val path = "/ms/process/api/build/builds/heartbeat"
         val request = buildPost(path)
-        val errorMessage = "心跳失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_HEARTBEAT_FAIL, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -126,7 +136,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         if (channelCode != null) sb.append("?channelCode=${channelCode.name}")
         val path = sb.toString()
         val request = buildGet(path)
-        val errorMessage = "获取构建任务详情失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_GET_BUILD_TASK_DETAILS_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -149,7 +159,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         val path = sb.toString()
         val request = buildGet(path)
-        val errorMessage = "获取构建任务详情失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_GET_BUILD_TASK_DETAILS_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -164,7 +174,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
 
         val path = "/ms/process/api/build/builds/timeout"
         val request = buildPost(path)
-        val errorMessage = "构建超时结束请求失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_BUILD_TIMEOUT_END_REQUEST_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,
@@ -183,7 +193,7 @@ class BuildResourceApi : AbstractBuildResourceApi(), BuildSDKApi {
         )
         val path = sb.toString()
         val request = buildGet(path)
-        val errorMessage = "获取模板跨项目信息失败"
+        val errorMessage = MessageUtil.getMessageByLocale(BK_GET_TEMPLATE_CROSS_PROJECT_INFO_FAILURE, I18nUtil.getLanguage())
         val responseContent = request(
             request = request,
             connectTimeoutInSec = 5L,

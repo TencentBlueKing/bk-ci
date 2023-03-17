@@ -32,13 +32,23 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.archive.element.BuildPushDockerImageElement
 import com.tencent.devops.common.pipeline.enums.BuildScriptType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dockerhost.pojo.DockerBuildParam
 import com.tencent.devops.dockerhost.pojo.Status
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.BK_BUILD_IMAGE_FAIL_DETAIL
+import com.tencent.devops.worker.common.BK_BUILD_IMAGE_SUCCEED
+import com.tencent.devops.worker.common.BK_DOCKERFILE_FIRST_LINE_CHECK
+import com.tencent.devops.worker.common.BK_QUERY_BUILD_IMAGE_STATUS_FAIL
+import com.tencent.devops.worker.common.BK_START_BUILD_FAIL
+import com.tencent.devops.worker.common.BK_START_BUILD_IMAGE_FAIL
+import com.tencent.devops.worker.common.BK_START_BUILD_IMAGE_NAME
+import com.tencent.devops.worker.common.BK_WAIT_BUILD_IMAGE_FINISH
 import com.tencent.devops.worker.common.api.ArtifactApiFactory
 import com.tencent.devops.worker.common.api.archive.ArchiveSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv.isDockerEnv
@@ -87,7 +97,9 @@ class BuildPushDockerImageTask : ITask() {
         if (isDockerEnv()) {
             // docker 则需要调用母机进行docker build
             logger.info("Start docker build, $imageName:$imageTag")
-            LoggerService.addNormalLine("启动构建镜像，镜像名称：$imageName:$imageTag")
+            LoggerService.addNormalLine("${
+                MessageUtil.getMessageByLocale(BK_START_BUILD_IMAGE_NAME, I18nUtil.getLanguage())
+            }$imageName:$imageTag")
             startDockerBuild(buildVariables = buildVariables,
                 imageName = imageName,
                 imageTag = imageTag,
@@ -100,7 +112,9 @@ class BuildPushDockerImageTask : ITask() {
 
             Thread.sleep(2000)
             // 轮询状态
-            LoggerService.addNormalLine("启动构建镜像成功，等待构建镜像结束，镜像名称：$imageName:$imageTag")
+            LoggerService.addNormalLine("${
+                MessageUtil.getMessageByLocale(BK_WAIT_BUILD_IMAGE_FINISH, I18nUtil.getLanguage())
+            } $imageName:$imageTag")
             var status = getDockerBuildStatus(buildVariables)
             while (status.first == Status.RUNNING.name) {
                 logger.info("Wait for docker build finish...")
@@ -109,14 +123,18 @@ class BuildPushDockerImageTask : ITask() {
             }
             if (status.first == Status.FAILURE.name) {
                 logger.info("Docker build failed, msg: ${status.second}")
-                LoggerService.addNormalLine("构建镜像失败，错误详情：${status.second}")
+                LoggerService.addNormalLine("${
+                    MessageUtil.getMessageByLocale(BK_BUILD_IMAGE_FAIL_DETAIL, I18nUtil.getLanguage())
+                }${status.second}")
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
                     errorMsg = "failed to build docker image."
                 )
             } else {
-                LoggerService.addNormalLine("构建镜像成功！")
+                LoggerService.addNormalLine(
+                    MessageUtil.getMessageByLocale(BK_BUILD_IMAGE_SUCCEED, I18nUtil.getLanguage())
+                )
             }
         } else {
             // worker直接执行命令即可
@@ -151,11 +169,16 @@ class BuildPushDockerImageTask : ITask() {
                     asCodeEnabled = buildVariables.pipelineAsCodeSettings?.enable
                 )
             } catch (t: RuntimeException) {
-                LoggerService.addErrorLine("Dockerfile第一行请确认使用 $repoAddr")
+                val message = MessageUtil.getMessageByLocale(
+                    BK_DOCKERFILE_FIRST_LINE_CHECK,
+                    I18nUtil.getLanguage(),
+                    arrayOf(repoAddr)
+                )
+                LoggerService.addErrorLine(message)
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = "构建失败，Dockerfile第一行请确认使用 $repoAddr"
+                    errorMsg = "$message $repoAddr"
                 )
             }
 
@@ -189,7 +212,9 @@ class BuildPushDockerImageTask : ITask() {
             val responseBody = response.body()!!.string()
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
-                LoggerService.addErrorLine("启动构建镜像失败！请联系【蓝盾助手】")
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(BK_START_BUILD_IMAGE_FAIL, I18nUtil.getLanguage())
+                )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                     errorType = ErrorType.USER,
@@ -201,7 +226,9 @@ class BuildPushDockerImageTask : ITask() {
                 val map = responseData["data"] as Map<String, Any>
                 return Pair(map["first"] as String, map["second"])
             } else {
-                LoggerService.addErrorLine("查询构建镜像状态失败！请联系【蓝盾助手】")
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(BK_QUERY_BUILD_IMAGE_STATUS_FAIL, I18nUtil.getLanguage())
+                )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
@@ -248,7 +275,9 @@ class BuildPushDockerImageTask : ITask() {
             logger.info("responseBody: $responseBody")
             if (!response.isSuccessful) {
                 logger.error("failed to get start docker build")
-                LoggerService.addErrorLine("启动构建失败！请联系【蓝盾助手】")
+                LoggerService.addErrorLine(
+                    MessageUtil.getMessageByLocale(BK_START_BUILD_FAIL, I18nUtil.getLanguage())
+                )
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,

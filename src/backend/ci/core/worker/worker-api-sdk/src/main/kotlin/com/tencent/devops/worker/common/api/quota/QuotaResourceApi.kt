@@ -29,6 +29,10 @@ package com.tencent.devops.worker.common.api.quota
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.worker.common.BK_REPORT_AGENT_END_STATUS_FAILURE
+import com.tencent.devops.worker.common.BK_REPORT_AGENT_START_STATUS_FAILURE
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
@@ -43,7 +47,8 @@ class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
         try {
             val path = "/ms/dispatch/api/build/quotas/running/agent/shutdown?executeCount=$executeCount"
             val request = buildDelete(path)
-            val errorMessage = "Quota上报agent运行结束状态失败"
+            val errorMessage =
+                MessageUtil.getMessageByLocale(BK_REPORT_AGENT_END_STATUS_FAILURE, I18nUtil.getLanguage())
             val responseContent = request(
                 request = request,
                 connectTimeoutInSec = 5L,
@@ -68,7 +73,8 @@ class QuotaResourceApi : AbstractBuildResourceApi(), QuotaApi {
         try {
             val path = "/ms/dispatch/api/build/quotas/running/agent/start?executeCount=$executeCount"
             val request = buildPost(path)
-            val errorMessage = "Quota上报agent开始运行失败"
+            val errorMessage =
+                MessageUtil.getMessageByLocale(BK_REPORT_AGENT_START_STATUS_FAILURE, I18nUtil.getLanguage())
             val responseContent = request(
                 request = request,
                 connectTimeoutInSec = 5L,

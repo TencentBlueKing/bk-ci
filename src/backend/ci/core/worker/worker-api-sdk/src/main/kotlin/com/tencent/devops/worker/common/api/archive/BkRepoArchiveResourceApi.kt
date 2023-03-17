@@ -36,7 +36,12 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
+import com.tencent.devops.worker.common.BK_GET_CREDENTIAL_INFO_FAILED
+import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_FILE_FAILED
+import com.tencent.devops.worker.common.BK_UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -106,10 +111,11 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传自定义文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传自定义文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
             throw TaskExecuteException(
@@ -166,10 +172,11 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val response = request(request, "上传流水线文件失败")
+        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_PIPELINE_FILE_FAILED, I18nUtil.getLanguage())
+        val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
-            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException("上传流水线文件失败")
+            if (obj.has("code") && obj["code"].asText() != "0") throw RemoteServiceException(message)
         } catch (e: Exception) {
             logger.error(e.message ?: "")
         }
@@ -269,7 +276,10 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
     override fun dockerBuildCredential(projectId: String): Map<String, String> {
         val path = "/dockerbuild/credential"
         val request = buildGet(path)
-        val responseContent = request(request, "获取凭证信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_INFO_FAILED, I18nUtil.getLanguage())
+        )
         return jacksonObjectMapper().readValue(responseContent)
     }
 

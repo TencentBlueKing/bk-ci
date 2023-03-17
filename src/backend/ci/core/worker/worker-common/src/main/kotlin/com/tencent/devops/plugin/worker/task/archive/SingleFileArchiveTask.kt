@@ -31,10 +31,13 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.element.SingleArchiveElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
+import com.tencent.devops.worker.common.BK_NO_MATCHING_ARCHIVE_FILE
 import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.service.RepoServiceFactory
 import com.tencent.devops.worker.common.task.ITask
@@ -82,7 +85,7 @@ class SingleFileArchiveTask : ITask() {
                 throw TaskExecuteException(
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorType = ErrorType.USER,
-                    errorMsg = "没有匹配到任何待归档文件，请检查工作空间下面的文件"
+                    errorMsg = MessageUtil.getMessageByLocale(BK_NO_MATCHING_ARCHIVE_FILE, I18nUtil.getLanguage())
                 )
             }
         } finally {

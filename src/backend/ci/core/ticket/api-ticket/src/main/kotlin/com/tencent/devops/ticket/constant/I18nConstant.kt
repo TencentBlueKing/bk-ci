@@ -27,3 +27,11 @@
 
 package com.tencent.devops.ticket.constant
 
+const val BK_NO_CREDENTIAL = "BkNoCredential"// 无凭证
+const val BK_NO_CERT = "BkNoCert"// 无证书
+const val BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS = "BkUserNoEngineeringCertOperatePermissions"// 用户({0})在工程({1})下没有证书{2}的{3}权限
+const val BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS = "BkUserNoEngineeringCredentialOperatePermissions"// 用户({0})在工程({1})下没有凭据{2}的{3}权限
+const val BK_NAME_ALREADY_EXISTS = "BkNameAlreadyExists"// 名称{0}已存在
+const val BK_CERT_ALREADY_EXISTS = "BkCertAlreadyExists"// 证书{0}已存在
+const val BK_CERT_NO_EXISTS = "BkCertNoExists"// 证书{0}不存在
+const val BK_NAME_NO_EXISTS = "BkNameNoExists"// 名称{0}不存在

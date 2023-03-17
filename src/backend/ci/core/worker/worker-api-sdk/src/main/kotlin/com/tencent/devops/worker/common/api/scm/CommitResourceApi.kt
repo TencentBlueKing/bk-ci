@@ -30,9 +30,14 @@ package com.tencent.devops.worker.common.api.scm
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.PipelineBuildMaterial
 import com.tencent.devops.repository.pojo.commit.CommitData
 import com.tencent.devops.ticket.pojo.CertIOS
+import com.tencent.devops.worker.common.BK_ADD_CODE_BASE_COMMIT_INFO_FAIL
+import com.tencent.devops.worker.common.BK_ADD_SOURCE_MATERIAL_INFO_FAILURE
+import com.tencent.devops.worker.common.BK_GET_LAST_CODE_BASE_COMMIT_INFO_FAIL
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
 class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
@@ -40,7 +45,10 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
     override fun addCommit(commits: List<CommitData>): Result<CertIOS> {
         val path = "/ms/repository/api/build/commit/addCommit"
         val request = buildPost(path, getJsonRequest(commits))
-        val responseContent = request(request, "添加代码库commit信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_ADD_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
@@ -54,14 +62,20 @@ class CommitResourceApi : AbstractBuildResourceApi(), CommitSDKApi {
         val path = "/ms/repository/api/build/commit/getLatestCommit?pipelineId=$pipelineId" +
             "&elementId=$elementId&repoId=$repositoryId&repositoryType=$name"
         val request = buildGet(path)
-        val responseContent = request(request, "获取最后一次代码commit信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_GET_LAST_CODE_BASE_COMMIT_INFO_FAIL, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 
     override fun saveBuildMaterial(materialList: List<PipelineBuildMaterial>): Result<Int> {
         val path = "/process/api/build/repository/saveBuildMaterial"
         val request = buildPost(path, getJsonRequest(materialList), mutableMapOf())
-        val responseContent = request(request, "添加源材料信息失败")
+        val responseContent = request(
+            request,
+            MessageUtil.getMessageByLocale(BK_ADD_SOURCE_MATERIAL_INFO_FAILURE, I18nUtil.getLanguage())
+        )
         return objectMapper.readValue(responseContent)
     }
 }

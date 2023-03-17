@@ -31,11 +31,25 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
+import com.tencent.devops.ticket.constant.BK_CERT_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.BK_CERT_NO_EXISTS
+import com.tencent.devops.ticket.constant.BK_NAME_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.BK_NAME_NO_EXISTS
+import com.tencent.devops.ticket.constant.BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS
+import com.tencent.devops.ticket.constant.BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_ALIAS_OR_PASSWORD_WRONG
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_PASSWORD_WRONG
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_USED_BY_OTHERS
+import com.tencent.devops.ticket.constant.TicketMessageCode.FILE_SIZE_CANT_EXCEED
+import com.tencent.devops.ticket.constant.TicketMessageCode.ILLEGAL_FILE
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_SIZE_CANT_EXCEED
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CertEnterpriseDao
 import com.tencent.devops.ticket.dao.CertTlsDao
@@ -92,39 +106,79 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream,
         mpDisposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+            )
         )
 
         if (certCredentialId != null) {
+            val use = AuthPermission.USE
             certPermissionService.validatePermission(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                authPermission = AuthPermission.USE,
-                message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
+                authPermission = use,
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        certCredentialId,
+                        if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                )
             )
         }
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val p12FileContent = read(p12InputStream)
         val mpFileContent = read(mpInputStream)
         if (p12FileContent.size > certMaxSize) {
-            throw OperationException("p12文件大小不能超过64k")
+            throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        FILE_SIZE_CANT_EXCEED,
+                        I18nUtil.getLanguage(userId),
+                        arrayOf("p12", "64k")
+                    )
+            )
         }
         if (mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
-        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException("不合法的mobileprovision文件")
+        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException(
+            MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+        )
 
         val credentialId = certCredentialId ?: ""
         val remark = certRemark ?: ""
@@ -177,38 +231,72 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream?,
         mpDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有证书编辑权限"
+            edit,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_NAME_NO_EXISTS,  I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         if (certCredentialId != null) {
+            val use = AuthPermission.USE
             certPermissionService.validatePermission(
                 userId = userId,
                 projectId = projectId,
                 resourceCode = certCredentialId,
-                authPermission = AuthPermission.USE,
-                message = "用户($userId)在工程($projectId)下没有凭据($certCredentialId)的使用权限"
+                authPermission = use,
+                message = MessageUtil.getMessageByLocale(
+                    BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(
+                        userId,
+                        projectId,
+                        certCredentialId,
+                        if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+                )
             )
         }
 
         val p12FileContent = if (p12InputStream != null) read(p12InputStream) else null
         val mpFileContent = if (mpInputStream != null) read(mpInputStream) else null
         if (p12FileContent != null && p12FileContent.size > certMaxSize) {
-            throw OperationException("p12文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("p12", "64k")
+                )
+            )
         }
         if (mpFileContent != null && mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
 
         val mpInfo = if (mpFileContent != null) MobileProvisionUtil.parse(mpFileContent)
-            ?: throw OperationException("不合法的mobileprovision文件")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+            )
         else null
 
         val credentialId = certCredentialId ?: ""
@@ -262,26 +350,51 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream,
         mpDisposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+            )
         )
 
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val mpFileContent = read(mpInputStream)
         if (mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("mobileprovision", "64k")
+                )
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
-        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException("不合法的mobileprovision文件")
+        val mpInfo = MobileProvisionUtil.parse(mpFileContent) ?: throw OperationException(
+            MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+        )
 
         val remark = certRemark ?: ""
         val certType = CertType.ENTERPRISE.value
@@ -347,26 +460,41 @@ class CertServiceImpl @Autowired constructor(
         mpInputStream: InputStream?,
         mpDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.EDIT,
-            "用户($userId)在工程($projectId)下没有证书编辑权限"
+            edit,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("名称${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val certEnterpriseRecord = certEnterpriseDao.get(dslContext, projectId, certId)
 
         val mpFileContent = if (mpInputStream != null) read(mpInputStream) else null
         if (mpFileContent != null && mpFileContent.size > certMaxSize) {
-            throw OperationException("证书描述文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val mpInfo = if (mpFileContent != null) MobileProvisionUtil.parse(mpFileContent)
-            ?: throw OperationException("不合法的mobileprovision文件")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(ILLEGAL_FILE, I18nUtil.getLanguage(userId), arrayOf("mobileprovision"))
+            )
         else null
 
         val remark = certRemark ?: ""
@@ -436,44 +564,82 @@ class CertServiceImpl @Autowired constructor(
         inputStream: InputStream,
         disposition: FormDataContentDisposition
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+            )
         )
+        val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+            )
         )
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
             authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    aliasCredentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+            )
         )
 
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}已存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_CERT_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
 
         val jksFileContent = read(inputStream)
         if (jksFileContent.size > certMaxSize) {
-            throw OperationException("JKS文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("JKS", "64k")
+                )
+            )
         }
 
         val credential = credentialService.serviceGet(projectId, credentialId)
         if (!certHelper.validJksPassword(jksFileContent, credential.v1)) {
-            throw OperationException("证书密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val aliasCredential = credentialService.serviceGet(projectId, aliasCredentialId)
         if (!certHelper.validJksAlias(jksFileContent, credential.v1, alias, aliasCredential.v1)) {
-            throw OperationException("证书别名或者别名密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_ALIAS_OR_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val remark = certRemark ?: ""
@@ -525,48 +691,86 @@ class CertServiceImpl @Autowired constructor(
         inputStream: InputStream?,
         disposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = certId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有证书编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
 
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
-            ?: throw OperationException("证书${certId}不存在")
+            ?: throw OperationException(
+                MessageUtil.getMessageByLocale(BK_CERT_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
 
+        val use = AuthPermission.USE
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = credentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($credentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    credentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+            )
         )
 
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = aliasCredentialId,
-            authPermission = AuthPermission.USE,
-            message = "用户($userId)在工程($projectId)下没有凭据($aliasCredentialId)的使用权限"
+            authPermission = use,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    aliasCredentialId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") use.alias else use.value)
+            )
         )
 
         val jksFileContent =
             if (inputStream != null) read(inputStream)
             else certHelper.decryptBytes(certRecord.certJksFileContent)!!
         if (jksFileContent.size > certMaxSize) {
-            throw OperationException("JKS文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("JKS", "64k")
+                )
+            )
         }
 
         val credential = credentialService.serviceGet(projectId, credentialId)
         if (!certHelper.validJksPassword(jksFileContent, credential.v1)) {
-            throw OperationException("证书密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val aliasCredential = credentialService.serviceGet(projectId, aliasCredentialId)
         if (!certHelper.validJksAlias(jksFileContent, credential.v1, alias, aliasCredential.v1)) {
-            throw OperationException("证书别名或者别名密码错误")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERTIFICATE_ALIAS_OR_PASSWORD_WRONG, I18nUtil.getLanguage(userId))
+            )
         }
 
         val remark = certRemark ?: ""
@@ -620,17 +824,34 @@ class CertServiceImpl @Autowired constructor(
         clientKeyInputStream: InputStream?,
         clientKeyDisposition: FormDataContentDisposition?
     ) {
+        val create = AuthPermission.CREATE
         certPermissionService.validatePermission(
             userId,
             projectId,
-            AuthPermission.CREATE,
-            "用户($userId)在工程($projectId)下没有证书创建权限"
+            create,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") create.alias else create.value)
+            )
         )
         if (certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}已被他人使用")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(CERT_USED_BY_OTHERS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
         if (certId.length > certIdMaxSize) {
-            throw OperationException("证书名称不能超过32位")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    NAME_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("cert", "32bit")
+                )
+            )
         }
 
         val serverCrtFileName = String(serverCrtDisposition.fileName.toByteArray(Charset.forName("ISO-8859-1")))
@@ -663,7 +884,13 @@ class CertServiceImpl @Autowired constructor(
             (clientCrtFile != null && clientCrtFile.size > certMaxSize) ||
             (clientKeyFile != null && clientKeyFile.size > certMaxSize)
         ) {
-            throw OperationException("文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("", "64k")
+                )
+            )
         }
 
         val remark = certRemark ?: ""
@@ -736,15 +963,26 @@ class CertServiceImpl @Autowired constructor(
         clientKeyInputStream: InputStream?,
         clientKeyDisposition: FormDataContentDisposition?
     ) {
+        val edit = AuthPermission.EDIT
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
             resourceCode = certId,
-            authPermission = AuthPermission.EDIT,
-            message = "用户($userId)在工程($projectId)下没有证书编辑权限"
+            authPermission = edit,
+            message = MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    "",
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") edit.alias else edit.value)
+            )
         )
         if (!certDao.has(dslContext, projectId, certId)) {
-            throw OperationException("证书${certId}不存在")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(BK_CERT_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+            )
         }
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
 
@@ -794,7 +1032,13 @@ class CertServiceImpl @Autowired constructor(
             (clientCrtFile != null && clientCrtFile.size > certMaxSize) ||
             (clientKeyFile != null && clientKeyFile.size > certMaxSize)
         ) {
-            throw OperationException("文件大小不能超过64k")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    FILE_SIZE_CANT_EXCEED,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf("", "64k")
+                )
+            )
         }
 
         val remark = certRemark ?: ""
@@ -851,12 +1095,21 @@ class CertServiceImpl @Autowired constructor(
     }
 
     override fun delete(userId: String, projectId: String, certId: String) {
+        val delete = AuthPermission.DELETE
         certPermissionService.validatePermission(
             userId,
             projectId,
             certId,
-            AuthPermission.DELETE,
-            "用户($userId)在工程($projectId)下没有证书($certId)的删除权限"
+            delete,
+            MessageUtil.getMessageByLocale(
+                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                I18nUtil.getLanguage(userId),
+                arrayOf(
+                    userId,
+                    projectId,
+                    certId,
+                    if (I18nUtil.getLanguage(userId) == "zh_CN") delete.alias else delete.value)
+            )
         )
 
         certPermissionService.deleteResource(projectId, certId)

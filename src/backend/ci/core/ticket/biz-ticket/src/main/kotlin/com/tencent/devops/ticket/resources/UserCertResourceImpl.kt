@@ -39,9 +39,11 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.api.UserCertResource
 import com.tencent.devops.ticket.constant.TicketMessageCode
+import com.tencent.devops.ticket.constant.TicketMessageCode.BK_INVALID_CERT_ID
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_MUST_BE
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_TYPE_ERROR
 import com.tencent.devops.ticket.constant.TicketMessageCode.DESCRIPTION_FILE_TYPE_ERROR
+import com.tencent.devops.ticket.constant.TicketMessageCode.KEY_FILE_MUST_BE
 import com.tencent.devops.ticket.pojo.Cert
 import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
@@ -235,7 +237,9 @@ class UserCertResourceImpl @Autowired constructor(
             )
         }
         if (!serverKeyDisposition.fileName.endsWith(".key")) {
-            throw IllegalArgumentException("密钥文件必须是.key文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(KEY_FILE_MUST_BE, I18nUtil.getLanguage(userId), arrayOf(".key"))
+            )
         }
         if (clientCrtDisposition != null && !clientCrtDisposition.fileName.endsWith(".crt")) {
             throw IllegalArgumentException(
@@ -243,7 +247,9 @@ class UserCertResourceImpl @Autowired constructor(
             )
         }
         if (clientKeyDisposition != null && !clientKeyDisposition.fileName.endsWith(".key")) {
-            throw IllegalArgumentException("密钥文件必须是.key文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(KEY_FILE_MUST_BE, I18nUtil.getLanguage(userId), arrayOf(".key"))
+            )
         }
         certService.uploadTls(
             userId,
@@ -349,7 +355,9 @@ class UserCertResourceImpl @Autowired constructor(
             throw ParamBlankException("Invalid projectId")
         }
         if (certId != null && certId.isBlank()) {
-            throw ParamBlankException("无效的证书ID")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(BK_INVALID_CERT_ID, I18nUtil.getLanguage(userId))
+            )
         }
         if (certId != null && certId!!.length > 128) {
             throw OperationException(MessageCodeUtil.getCodeLanMessage(TicketMessageCode.CERT_ID_TOO_LONG))
@@ -386,7 +394,12 @@ class UserCertResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParams(userId, projectId, certId)
         if (!mpDisposition.fileName.endsWith(".mobileprovision")) {
-            throw IllegalArgumentException("描述文件必须是.mobileprovision文件")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(DESCRIPTION_FILE_TYPE_ERROR,
+                    I18nUtil.getLanguage(userId),
+                    arrayOf(".mobileprovision")
+                )
+            )
         }
         certService.uploadEnterprise(
             userId,
