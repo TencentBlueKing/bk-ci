@@ -541,7 +541,7 @@
              * 生成链接
              */
             async requestDevCommand () {
-                if (!this.constructImportForm.location) return
+                if (!this.constructImportForm.location && this.gatewayList.length) return
 
                 this.dialogLoading.isLoading = true
 
