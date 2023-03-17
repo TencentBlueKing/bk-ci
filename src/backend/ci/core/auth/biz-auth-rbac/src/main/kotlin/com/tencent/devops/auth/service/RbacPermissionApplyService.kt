@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.api.user.UserPipelineViewResource
@@ -83,7 +84,7 @@ class RbacPermissionApplyService @Autowired constructor(
         val visitProjectPermission =
             permissionService.validateUserResourcePermission(
                 userId = userId,
-                action = AuthPermission.VISIT.value,
+                action = RbacAuthUtils.buildAction(AuthPermission.VISIT, AuthResourceType.PROJECT),
                 projectCode = projectId,
                 resourceType = AuthResourceType.PROJECT.value
             )
