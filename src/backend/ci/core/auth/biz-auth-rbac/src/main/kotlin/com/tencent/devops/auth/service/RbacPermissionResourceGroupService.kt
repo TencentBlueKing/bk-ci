@@ -107,29 +107,22 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             resourceType = AuthResourceType.PROJECT.value,
             resourceCode = projectId,
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = mutableListOf<IamGroupInfoVo>()
-        iamGroupInfoList.forEach {
-            val resourceGroup = resourceGroupMap[it.id]
+        val iamGroupInfoVoList = iamGroupInfoList.filterNot {
             // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
-            if (resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+            val resourceGroup = resourceGroupMap[it.id]
+            resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
                 resourceGroup.groupCode == DefaultGroupType.MANAGER.value
-            ) {
-                return@forEach
-            }
-
-            iamGroupInfoVoList.add(
-                IamGroupInfoVo(
-                    managerId = resourceInfo.relationId.toInt(),
-                    defaultGroup = resourceGroup?.defaultGroup ?: false,
-                    groupId = it.id,
-                    name = it.name,
-                    displayName = it.name,
-                    userCount = it.userCount,
-                    departmentCount = it.departmentCount
-                )
+        }.map {
+            IamGroupInfoVo(
+                managerId = resourceInfo.relationId.toInt(),
+                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
+                groupId = it.id,
+                name = it.name,
+                displayName = it.name,
+                userCount = it.userCount,
+                departmentCount = it.departmentCount
             )
-        }
-        iamGroupInfoVoList.sortedBy { it.groupId }
+        }.sortedBy { it.groupId }
         return Pagination(
             hasNext = iamGroupInfoVoList.size == pageSize,
             records = iamGroupInfoVoList

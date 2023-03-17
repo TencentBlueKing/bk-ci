@@ -339,7 +339,7 @@ class PipelineViewService @Autowired constructor(
                 id = client.get(ServiceAllocIdResource::class).generateSegmentId("PIPELINE_VIEW").data,
                 viewType = pipelineView.viewType
             )
-            if (!pipelineView.projected) {
+            if (pipelineView.projected) {
                 // 个人流水线组不需要权限管理
                 pipelineGroupPermissionService.createResource(
                     userId = userId,
