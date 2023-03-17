@@ -139,6 +139,6 @@ interface OpThirdPartyAgentResource {
     fun deleteGateway(
         @ApiParam("zoneName", required = true)
         @PathParam("zoneName")
-        zoneName: String,
+        zoneName: String
     ): Result<Boolean>
 }
