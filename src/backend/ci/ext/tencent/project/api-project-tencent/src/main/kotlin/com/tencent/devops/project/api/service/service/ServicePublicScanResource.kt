@@ -57,6 +57,9 @@ interface ServicePublicScanResource {
         @ApiParam("TAG", required = false)
         @QueryParam("tag")
         tag: String? = null,
+        @ApiParam("CodeCC路由Tag", required = false)
+        @QueryParam("codeccTag")
+        codeccTag: String? = null,
         @ApiParam(value = "项目创建信息", required = true)
         projectCreateInfo: ProjectCreateInfo
     ): Result<ProjectVO>

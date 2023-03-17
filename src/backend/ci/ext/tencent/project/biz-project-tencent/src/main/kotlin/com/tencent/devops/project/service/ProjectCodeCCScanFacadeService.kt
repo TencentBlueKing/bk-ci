@@ -29,6 +29,7 @@ package com.tencent.devops.project.service
 
 import com.tencent.devops.project.pojo.ProjectCreateExtInfo
 import com.tencent.devops.project.pojo.ProjectCreateInfo
+import com.tencent.devops.project.pojo.ProjectExtSystemTagDTO
 import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import org.slf4j.LoggerFactory
@@ -43,9 +44,11 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(ProjectCodeCCScanFacadeService::class.java)
+        private const val CODECC_SYSTEM_CODE = "CODECC"
     }
 
-    fun createCodeCCScanProject(userId: String, tag: String? = null, projectCreateInfo: ProjectCreateInfo): ProjectVO {
+    fun createCodeCCScanProject(userId: String, tag: String? = null, codeccTag: String? = null,
+                                projectCreateInfo: ProjectCreateInfo): ProjectVO {
         logger.info("createCodeCCScanProject|${projectCreateInfo.englishName}|${projectCreateInfo.projectName}|$userId")
         var publicScanProject = projectService.getByEnglishName(projectCreateInfo.englishName)
         if (null != publicScanProject) {
@@ -64,6 +67,17 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
 
             // codecc任务自动将流量指向auto集群
             projectTagService.updateTagByProject(projectCreateInfo.englishName, tag)
+
+            // codecc任务自己系统的路由Tag
+            if (!codeccTag.isNullOrEmpty()) {
+                projectTagService.updateExtSystemRouterTag(
+                    ProjectExtSystemTagDTO(
+                        routerTag = codeccTag,
+                        projectCodeList = listOf(projectCreateInfo.englishName),
+                        system = CODECC_SYSTEM_CODE
+                    )
+                )
+            }
         } catch (e: Throwable) {
             logger.error("CodeCC_Scan_Project_Create_Failed| error=${e.message}", e)
             throw e
