@@ -28,9 +28,9 @@
 package com.tencent.devops.store.pojo.common.enums
 
 enum class LogoTypeEnum {
-    ATOM,      // 插件logo
-    TEMPLATE,  // 模版logo
-    IMAGE,  // 镜像logo
+    ATOM, // 插件logo
+    TEMPLATE, // 模版logo
+    IMAGE, // 镜像logo
     BANNER, // banner
     SERVICE; // 扩展服务
 }

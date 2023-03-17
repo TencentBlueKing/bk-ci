@@ -80,6 +80,7 @@ if (toImage.isNullOrBlank() || (toImageTemplate.isNullOrBlank() && toImageTag.is
         "-Dspring.cloud.kubernetes.config.sources[1].name=config-bk-ci-$service",
         "-Dspring.cloud.kubernetes.config.namespace=$configNamespace",
         "-Dspring.cloud.kubernetes.discovery.all-namespaces=true",
+        "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false",
         "-Dio.undertow.legacy.cookie.ALLOW_HTTP_SEPARATORS_IN_V0=true",
         "-Dserver.port=80"
     )

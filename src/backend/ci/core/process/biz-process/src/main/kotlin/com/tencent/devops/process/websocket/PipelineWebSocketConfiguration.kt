@@ -33,6 +33,7 @@ import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.process.websocket.listener.PipelineWebSocketListener
 import com.tencent.devops.process.websocket.page.DefaultDetailPageBuild
 import com.tencent.devops.process.websocket.page.DefaultHistoryPageBuild
+import com.tencent.devops.process.websocket.page.DefaultRecordPageBuild
 import com.tencent.devops.process.websocket.page.DefaultStatusPageBuild
 import com.tencent.devops.process.websocket.page.GithubDetailPageBuild
 import com.tencent.devops.process.websocket.page.GithubHistoryPageBuild
@@ -129,6 +130,10 @@ class PipelineWebSocketConfiguration {
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
     fun defaultDetailPage() = DefaultDetailPageBuild()
+
+    @Bean
+    @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")
+    fun defaultRecordPage() = DefaultRecordPageBuild()
 
     @Bean
     @ConditionalOnProperty(prefix = "cluster", name = ["tag"], havingValue = "devops")

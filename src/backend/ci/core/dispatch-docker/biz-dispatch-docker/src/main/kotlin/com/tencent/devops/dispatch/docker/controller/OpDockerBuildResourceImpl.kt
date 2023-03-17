@@ -38,8 +38,8 @@ import org.springframework.beans.factory.annotation.Autowired
 class OpDockerBuildResourceImpl @Autowired constructor(
     private val dockerHostBuildService: DockerHostBuildService,
     private val dockerHostQpcService: DockerHostQpcService
-)
-    : OpDockerBuildResource {
+) :
+    OpDockerBuildResource {
 
     override fun enable(pipelineId: String, vmSeqId: Int?, enable: Boolean): Result<Boolean> {
         dockerHostBuildService.enable(pipelineId, vmSeqId, enable)

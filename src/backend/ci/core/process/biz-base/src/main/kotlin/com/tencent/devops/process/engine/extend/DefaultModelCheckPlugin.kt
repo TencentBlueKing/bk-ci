@@ -48,7 +48,7 @@ import com.tencent.devops.common.pipeline.type.BuildType
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.atom.AtomUtils
 import com.tencent.devops.process.engine.common.Timeout
-import com.tencent.devops.process.engine.control.DependOnUtils
+import com.tencent.devops.process.utils.DependOnUtils
 import com.tencent.devops.process.engine.utils.PipelineUtils
 import com.tencent.devops.process.plugin.load.ContainerBizRegistrar
 import com.tencent.devops.process.plugin.load.ElementBizRegistrar
