@@ -309,7 +309,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = false
+            createMode = true
         )
         return authResourceService.enable(
             userId = userId,

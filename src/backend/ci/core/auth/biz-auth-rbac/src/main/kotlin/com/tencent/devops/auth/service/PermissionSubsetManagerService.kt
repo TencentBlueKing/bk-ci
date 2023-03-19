@@ -181,8 +181,9 @@ class PermissionSubsetManagerService @Autowired constructor(
     /**
      * 创建二级管理员默认分组
      *
+     * @param createMode true-开启权限管理时创建组，false-关闭权限管理创建默认组
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     fun createSubsetManagerDefaultGroup(
         subsetManagerId: Int,
         userId: String,

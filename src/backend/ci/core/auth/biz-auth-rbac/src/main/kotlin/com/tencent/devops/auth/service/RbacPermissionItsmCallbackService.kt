@@ -36,15 +36,23 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import org.slf4j.LoggerFactory
 
 class RbacPermissionItsmCallbackService constructor(
-    private val traceEventDispatcher: TraceEventDispatcher
+    private val traceEventDispatcher: TraceEventDispatcher,
+    private val itsmService: ItsmService
 ) : PermissionItsmCallbackService {
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionItsmCallbackService::class.java)
+        private const val CANCEL_ITSM_APPLICATION_STATUS = "REVOKED"
     }
 
     override fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create project callback info:$itsmCallBackInfo")
+        // 校验itsm回调token
+        itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        // 当用户主动取消创建时,会调itsm单取消创建,这时itsm也会发送回调,不处理
+        if (itsmCallBackInfo.currentStatus == CANCEL_ITSM_APPLICATION_STATUS) {
+            return
+        }
         traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.CREATE.name,
@@ -55,6 +63,12 @@ class RbacPermissionItsmCallbackService constructor(
 
     override fun updateProjectCallback(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
+        // 校验itsm回调token
+        itsmService.verifyItsmToken(itsmCallBackInfo.token)
+        // 当用户主动取消创建时,会调itsm单取消创建,这时itsm也会发送回调,不处理
+        if (itsmCallBackInfo.currentStatus == CANCEL_ITSM_APPLICATION_STATUS) {
+            return
+        }
         traceEventDispatcher.dispatch(
             AuthItsmCallbackEvent(
                 approveType = AuthItsmApprovalType.UPDATE.name,

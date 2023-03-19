@@ -105,4 +105,6 @@ object AuthMessageCode {
     const val ERROR_PROJECT_PERMISSION_CLOSE_FAIL = "21211517" // 项目权限管理不能被关闭
     const val ERROR_DEFAULT_GROUP_DELETE_FAIL = "21211518" // 默认组不能被删除
     const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "21211519" // 默认组不能重命名
+    const val ERROR_GROUP_NAME_TO_LONG = "21211520" // 用户组名不能超过32个字符
+    const val ERROR_GROUP_NAME_TO_SHORT = "21211520" // 用户组名不能不少于5个字符
 }
