@@ -66,7 +66,7 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         projectApprovalService.updateApproved(
             projectId = projectId,
             applicant = applicant,
-            approver = approver,
+            approver = approver
         )
         return Result(true)
     }
@@ -75,7 +75,7 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         projectApprovalService.updateReject(
             projectId = projectId,
             applicant = applicant,
-            approver = approver,
+            approver = approver
         )
         return Result(true)
     }

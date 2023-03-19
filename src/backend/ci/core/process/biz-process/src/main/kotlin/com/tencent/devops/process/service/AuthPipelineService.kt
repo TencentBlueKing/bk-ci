@@ -338,7 +338,6 @@ class AuthPipelineService @Autowired constructor(
         }
         logger.info("entityInfo $entityInfo, count ${entityInfo.size}")
         return result.buildListInstanceResult(entityInfo, entityInfo.size.toLong())
-
     }
 
     private fun getPipelineInfo(

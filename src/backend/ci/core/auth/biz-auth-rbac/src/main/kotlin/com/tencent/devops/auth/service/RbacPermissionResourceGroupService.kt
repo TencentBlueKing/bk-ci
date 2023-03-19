@@ -193,7 +193,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     createdTime = "",
                     status = status,
                     expiredAt = 0L,
-                    expiredDisplay = "",
+                    expiredDisplay = ""
                 )
             }
         }
