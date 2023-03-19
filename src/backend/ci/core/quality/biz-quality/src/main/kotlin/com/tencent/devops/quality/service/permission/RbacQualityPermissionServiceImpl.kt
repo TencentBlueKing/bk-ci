@@ -156,7 +156,8 @@ class RbacQualityPermissionServiceImpl(
     override fun validateRulePermission(
         userId: String,
         projectId: String,
-        authPermission: AuthPermission, message: String
+        authPermission: AuthPermission,
+        message: String
     ) {
         if (!validateRulePermission(userId, projectId, authPermission)) {
             throw PermissionForbiddenException(message)
