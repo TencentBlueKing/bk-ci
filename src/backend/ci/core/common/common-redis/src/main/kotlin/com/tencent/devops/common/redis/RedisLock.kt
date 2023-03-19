@@ -75,11 +75,8 @@ open class RedisLock(
      */
     fun lock() {
         while (true) {
-//            logger.info("Start to lock($lockKey) of value($lockValue) for $expiredTimeInSeconds sec")
             val result = set(lockKey, lockValue, expiredTimeInSeconds)
-//            logger.info("Get the lock result($result)")
-            val l = OK.equals(result, true)
-            if (l) {
+            if (result) {
                 locked = true
                 return
             }
@@ -89,10 +86,7 @@ open class RedisLock(
 
     fun tryLock(): Boolean {
         // 不存在则添加 且设置过期时间（单位ms）
-        // logger.info("Start to lock($lockKey) of value($lockValue) for $expiredTimeInSeconds sec")
-        val result = set(lockKey, lockValue, expiredTimeInSeconds)
-        // logger.info("Get the lock result($result)")
-        locked = OK.equals(result, true)
+        locked = set(lockKey, lockValue, expiredTimeInSeconds)
         return locked
     }
 
@@ -111,8 +105,8 @@ open class RedisLock(
      * @param seconds 过去时间（秒）
      * @return
      */
-    private fun set(key: String, value: String, seconds: Long): String? {
-        val finalLockKey = redisOperation.getKeyByRedisName(key)
+    private fun set(key: String, value: String, seconds: Long): Boolean {
+        val finalLockKey = decorateKey(key)
         return redisOperation.execute(RedisCallback { connection ->
             val result =
                 when (val nativeConnection = connection.nativeConnection) {
@@ -123,6 +117,7 @@ open class RedisLock(
                                 finalLockKey.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
                             )
                     }
+
                     is RedisAdvancedClusterAsyncCommands<*, *> -> {
                         (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>)
                             .statefulConnection.sync()
@@ -130,13 +125,15 @@ open class RedisLock(
                                 finalLockKey.toByteArray(), value.toByteArray(), SetArgs.Builder.nx().ex(seconds)
                             )
                     }
+
                     else -> {
                         logger.warn("Unknown redis connection($nativeConnection)")
                         null
                     }
                 }
-            result
-        })
+            val lockKey = OK.equals(result, true)
+            lockKey
+        }) ?: false
     }
 
     /**
@@ -154,7 +151,7 @@ open class RedisLock(
 //            logger.info("Start to unlock the key($lockKey) of value($lockValue)")
             return redisOperation.execute(RedisCallback { connection ->
                 val nativeConnection = connection.nativeConnection
-                val finalLockKey = redisOperation.getKeyByRedisName(lockKey)
+                val finalLockKey = decorateKey(lockKey)
                 val keys = arrayOf(finalLockKey.toByteArray())
                 val result =
                     when (nativeConnection) {
@@ -166,6 +163,7 @@ open class RedisLock(
                                 lockValue.toByteArray()
                             ).get()
                         }
+
                         is RedisAdvancedClusterAsyncCommands<*, *> -> {
                             (nativeConnection as RedisAdvancedClusterAsyncCommands<ByteArray, ByteArray>).eval<Long>(
                                 UNLOCK_LUA,
@@ -174,6 +172,7 @@ open class RedisLock(
                                 lockValue.toByteArray()
                             ).get()
                         }
+
                         else -> {
                             logger.warn("Unknown redis connection($nativeConnection)")
                             0
@@ -187,6 +186,10 @@ open class RedisLock(
         }
 
         return true
+    }
+
+    open fun decorateKey(key: String): String {
+        return redisOperation.getKeyByRedisName(key)
     }
 
     fun <T> lockAround(action: () -> T): T {

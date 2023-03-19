@@ -74,6 +74,7 @@ class MutexControlTest {
     private val mutexControl: MutexControl = MutexControl(
         buildLogPrinter = buildLogPrinter,
         redisOperation = redisOperation,
+        containerBuildRecordService = mockk(),
         pipelineUrlBean = mockk(),
         pipelineContainerService = mockk()
     )
@@ -110,6 +111,7 @@ class MutexControlTest {
         )
         mutexControl.releaseContainerMutex(
             projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             stageId = stageId,
             containerId = containerId,

@@ -59,6 +59,7 @@ data class ThirdPartyAgentEnvDispatchType(
         if (!workspace.isNullOrBlank()) {
             workspace = EnvUtils.parseEnv(workspace!!, variables)
         }
+        dockerInfo?.replaceField(variables)
     }
 
     override fun buildType() = BuildType.valueOf(BuildType.THIRD_PARTY_AGENT_ENV.name)
