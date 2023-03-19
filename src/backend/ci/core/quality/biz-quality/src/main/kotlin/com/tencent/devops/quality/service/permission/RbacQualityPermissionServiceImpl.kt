@@ -114,7 +114,7 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
-            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceCode = HashUtil.encodeLongId(groupId)
         )
     }
 

@@ -76,7 +76,7 @@ class AuthResourceGroupDao {
                 defaultGroup,
                 relationId,
                 now,
-                now,
+                now
             ).onDuplicateKeyIgnore()
                 .execute()
         }

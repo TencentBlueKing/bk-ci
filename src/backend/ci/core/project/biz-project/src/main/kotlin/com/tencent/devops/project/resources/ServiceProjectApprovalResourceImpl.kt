@@ -48,7 +48,7 @@ class ServiceProjectApprovalResourceImpl @Autowired constructor(
         projectApprovalService.createApproved(
             projectId = projectId,
             applicant = applicant,
-            approver = approver,
+            approver = approver
         )
         return Result(true)
     }

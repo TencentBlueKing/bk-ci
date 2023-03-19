@@ -28,6 +28,7 @@
 
 package com.tencent.devops.auth.listener
 
+import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
@@ -63,7 +64,7 @@ class AuthResourceGroupCreateListener(
                     resourceCode = resourceCode,
                     resourceName = resourceName,
                     iamResourceCode = iamResourceCode,
-                    createMode = false
+                    createMode = AuthGroupCreateMode.CREATE
                 )
             }
         }

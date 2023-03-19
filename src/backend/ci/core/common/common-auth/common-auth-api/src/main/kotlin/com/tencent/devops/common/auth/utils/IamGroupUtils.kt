@@ -47,7 +47,7 @@ object IamGroupUtils {
             DateTimeUtil.toDateTime(LocalDateTime.now(), "yyyy-MM-dd'T'HH:mm:ssZ")
     }
 
-    fun buildGradeManagerName(projectName: String) = "${SYSTEM_DEFAULT_NAME}-$projectName"
+    fun buildGradeManagerName(projectName: String) = "$SYSTEM_DEFAULT_NAME-$projectName"
 
     fun buildManagerDescription(projectName: String, userId: String): String {
         return "$projectName 分级管理员, 由$userId 创建于" +
@@ -82,7 +82,7 @@ object IamGroupUtils {
      * 构建二级管理员用户组名称
      */
     fun buildSubsetManagerGroupName(resourceType: String, resourceName: String, groupName: String) =
-        "${SYSTEM_DEFAULT_NAME}-$resourceType-${resourceName}-${groupName}"
+        "$SYSTEM_DEFAULT_NAME-$resourceType-$resourceName-$groupName"
 
     /**
      * 获取二级管理员用户组展示名称

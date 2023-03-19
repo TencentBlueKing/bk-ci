@@ -33,7 +33,6 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.code.EnvironmentAuthServiceCode
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.NodeDao
-import com.tencent.devops.environment.permission.AbstractEnvironmentPermissionService
 import org.jooq.DSLContext
 
 /**

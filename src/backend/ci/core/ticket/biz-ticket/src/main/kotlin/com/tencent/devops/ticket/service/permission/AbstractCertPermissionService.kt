@@ -61,7 +61,7 @@ abstract class AbstractCertPermissionService constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if(authPermission==AuthPermission.VIEW)
+        if (authPermission == AuthPermission.VIEW)
             return
         if (!validatePermission(userId, projectId, resourceCode, authPermission)) {
             throw PermissionForbiddenException(message)

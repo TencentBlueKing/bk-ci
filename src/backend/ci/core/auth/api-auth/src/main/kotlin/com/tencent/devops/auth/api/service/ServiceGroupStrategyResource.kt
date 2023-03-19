@@ -30,12 +30,10 @@ package com.tencent.devops.auth.api.service
 import com.tencent.devops.auth.pojo.StrategyEntity
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
-import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["AUTH_GROUP_STRATEGY"], description = "权限-用户-策略")

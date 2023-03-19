@@ -27,7 +27,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.constant.REPORT_TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -149,7 +148,7 @@ class RbacPermissionApplyService @Autowired constructor(
             // 若无项目访问权限，则只搜索出对应资源下的用户组
             if (!visitProjectPermission)
                 return ""
-            bkIamPath = StringBuilder("/${systemId},${AuthResourceType.PROJECT.value},${projectId}/")
+            bkIamPath = StringBuilder("/$systemId,${AuthResourceType.PROJECT.value},$projectId/")
             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
                 val pipelineId = authResourceCodeConverter.iamCode2Code(
                     projectCode = projectId,
@@ -164,7 +163,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 ).data
                 if (viewIds != null && viewIds.isNotEmpty()) {
                     viewIds.forEach {
-                        bkIamPath.append("${systemId},${AuthResourceType.PIPELINE_GROUP.value},${it}/")
+                        bkIamPath.append("$systemId,${AuthResourceType.PIPELINE_GROUP.value},$it/")
                     }
                 }
             }

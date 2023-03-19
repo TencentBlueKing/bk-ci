@@ -111,7 +111,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             dslContext = dslContext,
             projectCode = projectId,
             resourceType = resourceType,
-            resourceCode = resourceCode,
+            resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
         val iamGroupInfoVoList = iamGroupInfoList.filterNot {
             // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏

@@ -304,5 +304,4 @@ interface UserPipelineViewResource {
         @PathParam("pipelineId")
         pipelineId: String
     ): Result<Set<Long>>
-
 }

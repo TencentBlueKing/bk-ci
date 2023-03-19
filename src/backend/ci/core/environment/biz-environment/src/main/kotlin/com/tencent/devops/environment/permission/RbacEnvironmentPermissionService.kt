@@ -139,7 +139,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = envResourceType,
-            resourceCode = HashUtil.encodeLongId(envId),
+            resourceCode = HashUtil.encodeLongId(envId)
         )
     }
 

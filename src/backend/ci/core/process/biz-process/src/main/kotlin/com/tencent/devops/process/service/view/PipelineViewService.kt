@@ -49,7 +49,6 @@ import com.tencent.devops.process.dao.label.PipelineViewDao
 import com.tencent.devops.process.dao.label.PipelineViewTopDao
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import com.tencent.devops.process.permission.PipelineGroupPermissionService
-import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.classify.PipelineNewView
 import com.tencent.devops.process.pojo.classify.PipelineNewViewSummary
 import com.tencent.devops.process.pojo.classify.PipelineViewClassify
@@ -378,7 +377,7 @@ class PipelineViewService @Autowired constructor(
     ): Boolean {
         try {
             checkForUpset(context, projectId, userId, pipelineView, false, viewId)
-            val success =  pipelineViewDao.update(
+            val success = pipelineViewDao.update(
                 dslContext = context ?: dslContext,
                 projectId = projectId,
                 viewId = viewId,

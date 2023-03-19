@@ -37,4 +37,4 @@ import com.tencent.devops.common.event.pojo.trace.ITraceEvent
 data class AuthItsmCallbackEvent(
     val approveType: String,
     val itsmCallBackInfo: ItsmCallBackInfo
-): ITraceEvent()
+) : ITraceEvent()

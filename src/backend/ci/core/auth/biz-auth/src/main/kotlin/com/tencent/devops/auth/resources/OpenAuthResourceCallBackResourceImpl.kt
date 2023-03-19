@@ -31,7 +31,6 @@ package com.tencent.devops.auth.resources
 import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
 import com.tencent.devops.auth.api.callback.OpenAuthResourceCallBackResource
-import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionResourceCallbackService
 import com.tencent.devops.common.api.exception.TokenForbiddenException
 import com.tencent.devops.common.auth.api.AuthTokenApi

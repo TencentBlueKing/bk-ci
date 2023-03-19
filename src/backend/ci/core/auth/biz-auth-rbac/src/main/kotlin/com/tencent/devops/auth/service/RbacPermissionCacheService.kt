@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit
 class RbacPermissionCacheService @Autowired constructor(
     val dslContext: DSLContext,
     val authResourceTypeDao: AuthResourceTypeDao,
-    val authActionDao: AuthActionDao,
+    val authActionDao: AuthActionDao
 ) : PermissionCacheService {
     /*获取资源类型下的动作*/
     private val resourceType2ActionCache = CacheBuilder.newBuilder()

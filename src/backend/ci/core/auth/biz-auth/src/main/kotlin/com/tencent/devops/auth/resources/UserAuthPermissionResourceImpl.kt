@@ -90,7 +90,7 @@ class UserAuthPermissionResourceImpl @Autowired constructor(
             actions = actions,
             projectCode = projectCode,
             resourceCode = projectCode,
-            resourceType = AuthResourceType.PROJECT.value,
+            resourceType = AuthResourceType.PROJECT.value
         )
     }
 

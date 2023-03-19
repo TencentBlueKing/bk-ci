@@ -99,7 +99,7 @@ open class AbsPermissionService @Autowired constructor(
                 action = action,
                 projectCode = projectCode,
                 resourceCode = resourceCode,
-                resourceType =  resourceType,
+                resourceType = resourceType,
                 relationResourceType = null
             )
         }

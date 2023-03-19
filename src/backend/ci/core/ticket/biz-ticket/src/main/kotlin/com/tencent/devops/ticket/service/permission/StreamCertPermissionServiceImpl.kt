@@ -64,7 +64,7 @@ class StreamCertPermissionServiceImpl @Autowired constructor(
         authPermission: AuthPermission,
         message: String
     ) {
-        if(authPermission==AuthPermission.VIEW)
+        if (authPermission == AuthPermission.VIEW)
             return
         val permissionCheck = validatePermission(userId, projectId, authPermission)
         if (!permissionCheck) {

@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class PermissionResourceCallbackServiceImpl @Autowired constructor(
-    private val resourceService: ResourceService,
+    private val resourceService: ResourceService
 ) : PermissionResourceCallbackService {
     override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
         return resourceService.getProject(callBackInfo, token)

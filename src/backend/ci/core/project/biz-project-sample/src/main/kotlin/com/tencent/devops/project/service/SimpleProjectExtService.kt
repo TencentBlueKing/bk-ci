@@ -37,7 +37,7 @@ import org.springframework.stereotype.Service
 
 @Service
 class SimpleProjectExtService @Autowired constructor(
-    private val client: Client,
+    private val client: Client
 ) : ProjectExtService {
     override fun createExtProjectInfo(
         userId: String,

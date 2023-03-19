@@ -682,9 +682,10 @@ class QualityRuleService @Autowired constructor(
                 lackElements.add(controlPoint.type)
             }
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = info.pipelineId,
-                                                              name = info.pipelineName,
-                                                              type = "PIPELINE",
-                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+                name = info.pipelineName,
+                type = "PIPELINE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            )
         }
     }
 
@@ -712,9 +713,10 @@ class QualityRuleService @Autowired constructor(
                 lackElements.add(controlPoint.type)
             }
             QualityRuleSummaryWithPermission.RuleRangeSummary(id = template.templateId,
-                                                              name = template.name,
-                                                              type = "TEMPLATE",
-                                                              lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) })
+                name = template.name,
+                type = "TEMPLATE",
+                lackElements = lackElements.map { ElementUtils.getElementCnName(it, projectId) }
+            )
         }
     }
 

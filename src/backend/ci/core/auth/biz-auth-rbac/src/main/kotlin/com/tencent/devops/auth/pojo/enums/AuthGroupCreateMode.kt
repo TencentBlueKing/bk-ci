@@ -26,23 +26,11 @@
  *
  */
 
-package com.tencent.devops.auth.pojo.event
+package com.tencent.devops.auth.pojo.enums
 
-import com.tencent.devops.common.event.annotation.Event
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
-import com.tencent.devops.common.event.pojo.trace.ITraceEvent
-import io.swagger.annotations.ApiModelProperty
-
-@Event(exchange = MQ.EXCHANGE_AUTH_RBAC_LISTENER_EXCHANGE, routeKey = MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
-data class AuthResourceGroupModifyEvent(
-    @ApiModelProperty("分级管理员ID或二级管理员ID")
-    val managerId: Int,
-    @ApiModelProperty("项目ID")
-    val projectCode: String,
-    @ApiModelProperty("资源类型")
-    val resourceType: String,
-    @ApiModelProperty("资源ID")
-    val resourceCode: String,
-    @ApiModelProperty("资源名")
-    val resourceName: String
-) : ITraceEvent()
+enum class AuthGroupCreateMode(val value: Int) {
+    // 创建时创建
+    CREATE(0),
+    // 开启时创建
+    ENABLE(1);
+}

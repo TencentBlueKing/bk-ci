@@ -165,7 +165,7 @@ class RbacAuthConfiguration {
     fun rbacPermissionExtService(
         permissionResourceService: PermissionResourceService
     ) = RbacPermissionExtService(
-        permissionResourceService = permissionResourceService,
+        permissionResourceService = permissionResourceService
     )
 
     @Bean

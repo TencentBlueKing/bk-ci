@@ -384,7 +384,7 @@ class AuthPipelineService @Autowired constructor(
 
     private fun getPipelineGroupInfo(
         ids: Set<Long>,
-        token: String,
+        token: String
     ): FetchInstanceInfoResponseDTO {
         authTokenApi.checkToken(token)
         val pipelineGroupList = pipelineViewDao.list(
