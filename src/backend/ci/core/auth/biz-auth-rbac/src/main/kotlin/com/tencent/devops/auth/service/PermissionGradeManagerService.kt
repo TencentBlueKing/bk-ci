@@ -229,7 +229,7 @@ class PermissionGradeManagerService @Autowired constructor(
                 defaultMessage = "the resource not exists, projectCode:$projectCode"
             )
         val name = IamGroupUtils.buildGradeManagerName(
-            projectName = projectName,
+            projectName = projectName
         )
         val groupConfig = authResourceGroupConfigDao.get(
             dslContext = dslContext,

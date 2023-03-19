@@ -1485,7 +1485,6 @@ class PipelineListFacadeService @Autowired constructor(
     }
 
 
-
     fun listPermissionPipelineName(projectId: String, userId: String): List<Map<String, String>> {
         val pipelines = pipelinePermissionService.getResourceByPermission(
             userId = userId, projectId = projectId, permission = AuthPermission.EXECUTE

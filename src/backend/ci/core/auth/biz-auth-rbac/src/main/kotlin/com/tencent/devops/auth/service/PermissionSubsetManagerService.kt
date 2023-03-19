@@ -331,7 +331,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         subsetManagerId: Int,
         projectCode: String,
         resourceType: String,
-        resourceCode: String,
+        resourceCode: String
     ) {
         authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,

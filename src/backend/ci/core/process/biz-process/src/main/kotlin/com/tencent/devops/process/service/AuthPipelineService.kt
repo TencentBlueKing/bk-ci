@@ -414,7 +414,7 @@ class AuthPipelineService @Autowired constructor(
         keyword: String,
         limit: Int,
         offset: Int,
-        token: String,
+        token: String
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
         val pipelineGroupInfo = pipelineViewDao.listByPage(

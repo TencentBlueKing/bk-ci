@@ -33,7 +33,6 @@ class RbacPermissionCacheService @Autowired constructor(
         .expireAfterWrite(7L, TimeUnit.DAYS)
         .build<String/*action*/, ActionInfoVo>()
 
-
     override fun listResourceTypes(): List<ResourceTypeInfoVo> {
         if (resourceTypeCache.asMap().values.isEmpty()) {
             authResourceTypeDao.list(dslContext).forEach {
