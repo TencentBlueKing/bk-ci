@@ -60,6 +60,18 @@ Return the influxdb fullname
 {{- end -}}
 {{- end -}}
 
+{{/*
+Return the pulsar fullname
+*/}}
+{{- define "bkci.pulsar.fullname" -}}
+{{- if .Values.pulsar.fullnameOverride -}}
+{{- .Values.pulsar.fullnameOverride | trunc 63 | trimSuffix "-" -}}
+{{- else -}}
+{{- $name := default "pulsar" .Values.pulsar.nameOverride -}}
+{{- printf "%s-%s" .Release.Name $name | trunc 63 | trimSuffix "-" -}}
+{{- end -}}
+{{- end -}}
+
 
 {{/*
 Return the mongodb fullname
@@ -291,6 +303,50 @@ Return the db_quartz mongodb connection uri
 {{- printf "mongodb://%s:%s@%s:27017/db_quartz" .Values.mongodb.auth.username .Values.mongodb.auth.password (include "bkci.mongodb.fullname" .) -}}
 {{- else -}}
 {{- .Values.externalMongodb.turbo.quartzUrl -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return th pulsar service url
+*/}}
+{{- define "bkci.pulsarServiceUrl" -}}
+{{- if eq .Values.pulsar.enabled true -}}
+http://{{- include "bkci.pulsar.fullname" . -}}:{{- .Values.pulsar.proxy.ports.http -}}
+{{- else -}}
+{{- .Values.externalPulsar.serviceUrl -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return th pulsar namespace
+*/}}
+{{- define "bkci.pulsarNamespace" -}}
+{{- if eq .Values.pulsar.enabled true -}}
+default-ns
+{{- else -}}
+{{- .Values.externalPulsar.namespace -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return th pulsar tenant
+*/}}
+{{- define "bkci.pulsarTenant" -}}
+{{- if eq .Values.pulsar.enabled true -}}
+default-tenant
+{{- else -}}
+{{- .Values.externalPulsar.tenant -}}
+{{- end -}}
+{{- end -}}
+
+{{/*
+Return th pulsar tokenAuthValue
+*/}}
+{{- define "bkci.pulsarTokenAuthValue" -}}
+{{- if eq .Values.pulsar.enabled true -}}
+""
+{{- else -}}
+{{- .Values.externalPulsar.tokenAuthValue -}}
 {{- end -}}
 {{- end -}}
 

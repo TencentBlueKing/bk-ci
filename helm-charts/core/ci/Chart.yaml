@@ -38,6 +38,10 @@ dependencies:
   version: 10.30.6
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   condition: mongodb.enabled
+- name: pulsar
+  version: 2.9.4
+  repository: https://pulsar.apache.org/charts
+  condition: pulsar.enabled
 - name: kubernetes-manager
   version: 0.0.36
   repository: "file://./local_chart/kubernetes-management"

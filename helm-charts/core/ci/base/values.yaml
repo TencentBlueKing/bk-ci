@@ -249,6 +249,12 @@ mongodb:
   # extraEnvVars:
   # - name: MONGODB_CLIENT_EXTRA_FLAGS
   #   value: "--ipv6"
+pulsar:
+  enabled: true
+  toolset:
+    additionalCommand: 
+      bin/pulsar-admin tenants create default-tenant;
+      bin/pulsar-admin namespaces create default-tenant/default-ns;
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
