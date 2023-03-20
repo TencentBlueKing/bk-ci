@@ -104,29 +104,28 @@ class ProjectUserRefreshService @Autowired constructor(
         return true
     }
 
-    private fun updateInfoByTof(userInfo: List<TUserRecord>) {
-        userInfo.forEach {
+    private fun updateInfoByTof(userInfoList: List<UserDeptDetail>) {
+        userInfoList.forEach {
             try {
                 Thread.sleep(5)
                 try {
-                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId, "", false)
+                    val tofDeptInfo = tofService.getDeptFromTof(null, it.userId!!, "", false)
                     if (tofDeptInfo == null) {
-                        projectUserDao.delete(dslContext, it.userId)
+                        projectUserDao.delete(dslContext, it.userId!!)
                         logger.info("user ${it.userId} is level office, delete t_user info")
                     } else if (
-                        tofDeptInfo.bgId.toInt() != it.bgId ||
-                        tofDeptInfo.bgName != it.bgName ||
-                        tofDeptInfo.deptId.toInt() != it.deptId ||
-                        tofDeptInfo.deptName != it.deptName ||
-                        tofDeptInfo.centerId.toInt() != it.centerId ||
-                        tofDeptInfo.centerName != it.centerName) {
+                        isUserInfoChange(
+                            tofDeptInfo = tofDeptInfo,
+                            dbUserRecord = it
+                        )
+                    ) {
                         logger.info(
                             "${it.userId} cent id is diff, " +
                                 "tof ${tofDeptInfo.centerId} ${tofDeptInfo.centerName}, " +
                                 "local ${it.centerId} ${it.centerName}"
                         )
                         userDao.update(
-                            userId = it.userId,
+                            userId = it.userId!!,
                             groupId = tofDeptInfo.groupId.toInt(),
                             groupName = tofDeptInfo.groupName,
                             bgId = tofDeptInfo.bgId.toInt(),
@@ -136,7 +135,7 @@ class ProjectUserRefreshService @Autowired constructor(
                             deptId = tofDeptInfo.deptId.toInt(),
                             deptName = tofDeptInfo.deptName,
                             dslContext = dslContext,
-                            name = it.name
+                            name = it.name!!
                         )
                     }
                 } catch (oe: OperationException) {
@@ -182,7 +181,10 @@ class ProjectUserRefreshService @Autowired constructor(
                 bkTicket = "",
                 userCache = false
             ) ?: throw OperationException(MessageCodeUtil.getCodeLanMessage("user $userId level office"))
-            if (userInfo.groupId != deptInfo.groupId || userInfo.deptId != deptInfo.deptId) {
+            if (isUserInfoChange(
+                    tofDeptInfo = deptInfo,
+                    dbUserRecord = userInfo
+                )) {
                 logger.info("user info diff, bk:$userInfo, tof :$deptInfo")
                 // 组织信息不一致，刷新当前用户数据。 以tof数据为准, 数据源直接获取tof数据
                 projectUserDao.update(
@@ -346,6 +348,20 @@ class ProjectUserRefreshService @Autowired constructor(
             publicAccount = true
         )
         return true
+    }
+
+    private fun isUserInfoChange(
+        tofDeptInfo: UserDeptDetail,
+        dbUserRecord: UserDeptDetail
+    ): Boolean {
+        return tofDeptInfo.bgId != dbUserRecord.bgId ||
+            tofDeptInfo.bgName != dbUserRecord.bgName ||
+            tofDeptInfo.deptId != dbUserRecord.deptId ||
+            tofDeptInfo.deptName != dbUserRecord.deptName ||
+            tofDeptInfo.centerId != dbUserRecord.centerId ||
+            tofDeptInfo.centerName != dbUserRecord.centerName ||
+            tofDeptInfo.groupId != dbUserRecord.groupId ||
+            tofDeptInfo.groupName != dbUserRecord.groupName
     }
 
     companion object {
