@@ -54,6 +54,7 @@ object AgentEnv {
     private const val AGENT_GATEWAY = "landun.gateway"
     private const val DOCKER_GATEWAY = "devops_gateway"
     private const val AGENT_FILE_GATEWAY = "landun.fileGateway"
+    private const val DOCKER_FILE_GATEWAY = "devops_file_gateway"
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
@@ -171,7 +172,7 @@ object AgentEnv {
         if (fileGateway.isNullOrBlank()) {
             synchronized(this) {
                 if (fileGateway.isNullOrBlank()) {
-                    fileGateway = getProperty(AGENT_FILE_GATEWAY)
+                    fileGateway = getProperty(if (isDockerEnv()) DOCKER_FILE_GATEWAY else AGENT_FILE_GATEWAY)
                     logger.info("file gateway: $fileGateway")
                 }
             }
