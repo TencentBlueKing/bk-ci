@@ -76,7 +76,9 @@ class WorkspaceDao {
                 /* field17 = */ CREATOR,
                 /* field18 = */ CREATOR_BG_NAME,
                 /* field19 = */ CREATOR_DEPT_NAME,
-                /* field20 = */ CREATOR_CENTER_NAME
+                /* field20 = */ CREATOR_CENTER_NAME,
+                /* field21 = */ CREATOR_GROUP_NAME
+
             )
                 .values(
                     /* value1 = */ "",
@@ -98,7 +100,8 @@ class WorkspaceDao {
                     /* value17 = */ workspace.createUserId,
                     /* value18 = */ userInfo?.bgName ?: "",
                     /* value19 = */ userInfo?.deptName ?: "",
-                    /* value20 = */ userInfo?.centerName ?: ""
+                    /* value20 = */ userInfo?.centerName ?: "",
+                    /* value21 = */ userInfo?.groupName ?: ""
                 )
                 .returning(ID)
                 .fetchOne()!!.id
@@ -113,12 +116,12 @@ class WorkspaceDao {
     ): Result<TWorkspaceRecord>? {
         with(TWorkspace.T_WORKSPACE) {
             val condition = mixCondition(userId, workspaceName)
+            val query = dslContext.selectFrom(this)
 
-            if (condition.isEmpty()) {
-                return null
+            if (condition.isNotEmpty()) {
+                query.where(condition)
             }
-            return dslContext.selectFrom(this)
-                .where(condition).orderBy(CREATE_TIME.desc(), ID.desc())
+            return query.orderBy(CREATE_TIME.desc(), ID.desc())
                 .limit(limit.limit).offset(limit.offset)
                 .fetch()
         }
@@ -287,6 +290,25 @@ class WorkspaceDao {
                     .where(NAME.eq(workspaceName))
                     .execute()
             }
+        }
+    }
+    fun updateWorkspaceCreatorInfo(
+        dslContext: DSLContext,
+        workspaceName: String,
+        creator: String,
+        bgName: String,
+        deptName: String,
+        centerName: String,
+        groupName: String
+    ) {
+        with(TWorkspace.T_WORKSPACE) {
+            dslContext.update(this)
+                .set(CREATOR_BG_NAME, bgName)
+                .set(CREATOR_DEPT_NAME, deptName)
+                .set(CREATOR_CENTER_NAME, centerName)
+                .set(CREATOR_GROUP_NAME, groupName)
+                .where(NAME.eq(workspaceName).and(CREATOR.eq(creator)))
+                .execute()
         }
     }
 

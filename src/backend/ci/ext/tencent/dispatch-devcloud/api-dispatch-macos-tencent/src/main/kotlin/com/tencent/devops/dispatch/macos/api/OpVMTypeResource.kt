@@ -18,7 +18,7 @@ import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
 @Api(tags = ["OP_VMTYPE"], description = "OP接口-虚拟机类型资源")
-@Path("op/vmTypes")
+@Path("op/macos/vmTypes")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
 interface OpVMTypeResource {
