@@ -26,6 +26,7 @@ package com.tencent.devops.process.yaml.utils
 
 import java.util.regex.PatternSyntaxException
 
+@Suppress("ComplexCondition")
 object GlobsUtils {
     private const val regexMetaChars = ".^$+{[]|()"
     private const val globMetaChars = "\\*?[{"
