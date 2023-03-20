@@ -1875,7 +1875,7 @@ class GitService @Autowired constructor(
                     MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
                 } else {
                     try {
-                        Result(JsonUtil.to<List<GitDiff>>(data))
+                        Result(JsonUtil.to(data, object : TypeReference<List<GitDiff>>() {}))
                     } catch (e: Exception) {
                         logger.warn("getCommitDiff error: ${e.message}", e)
                         MessageCodeUtil.generateResponseDataObject(CommonMessageCode.SYSTEM_ERROR)
