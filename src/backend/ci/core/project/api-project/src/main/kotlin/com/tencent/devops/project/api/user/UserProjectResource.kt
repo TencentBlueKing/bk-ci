@@ -38,11 +38,14 @@ import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
+import org.glassfish.jersey.media.multipart.FormDataContentDisposition
+import org.glassfish.jersey.media.multipart.FormDataParam
 import java.io.InputStream
 import javax.ws.rs.Consumes
 import javax.ws.rs.GET
@@ -54,8 +57,6 @@ import javax.ws.rs.PathParam
 import javax.ws.rs.Produces
 import javax.ws.rs.QueryParam
 import javax.ws.rs.core.MediaType
-import org.glassfish.jersey.media.multipart.FormDataContentDisposition
-import org.glassfish.jersey.media.multipart.FormDataParam
 
 @Api(tags = ["USER_PROJECT"], description = "项目列表接口")
 @Path("/user/projects")
@@ -100,7 +101,7 @@ interface UserProjectResource {
         @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Pagination<Pair<Boolean/*是否有访问项目权限*/, ProjectVO>>>
+    ): Result<Pagination<ProjectWithPermission>>
 
     @GET
     @Path("/{english_name}")
