@@ -26,7 +26,7 @@
     "下架原因不能为空": "Reason for removal cannot be empty",
     "该": "The",
     "deleteAtomTip": "To avoid misoperation, please enter the identifier【{0}】before submitting for deletion",
-    "删除时将清理数据，包括工蜂代码库。删除后不可恢复！": "Data will be cleaned up when deleted, including the worker bee code base. Unrecoverable after deletion!",
+    "删除时将清理数据。删除后不可恢复！": "Data will be cleaned up when deleted. Unrecoverable after deletion!",
     "请输入插件标识": "Please enter the plugin ID",
     "由汉字、英文字母、数字、连字符、下划线或点组成，不超过20个字符": "It is composed of Chinese characters, English letters, numbers, hyphens (-), underscores (_) and periods (.), and the length is less than 20 characters",
     "由汉字、英文字母、数字、连字符、下划线或点组成，不超过40个字符": "It is composed of Chinese characters, English letters, numbers, space, hyphens (-), underscores (_) and periods (.), and the length is less than 40 characters",
