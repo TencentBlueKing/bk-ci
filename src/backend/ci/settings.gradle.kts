@@ -54,6 +54,7 @@ include(":boot-assembly")
 // CI Core Micro Service
 include(":core")
 include(":core:common")
+include(":core:common:common-dependencies")
 include(":core:common:common-event")
 include(":core:common:common-api")
 include(":core:common:common-web")
