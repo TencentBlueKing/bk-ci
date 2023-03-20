@@ -88,8 +88,6 @@ INSERT IGNORE INTO `T_CONTAINER` (`ID`, `NAME`, `TYPE`, `OS`, `REQUIRED`, `MAX_Q
   ('c024824008c011e99792fa163e50f2b5', 'macOS', 'vmBuild', 'MACOS', 0, 60, 900, '{}', 'system', 'system', '2018-12-26 12:16:21', '2018-12-26 12:16:21');
 INSERT IGNORE INTO `T_CONTAINER` (`ID`, `NAME`, `TYPE`, `OS`, `REQUIRED`, `MAX_QUEUE_MINUTES`, `MAX_RUNNING_MINUTES`, `PROPS`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES
   ('c029e57d08c011e99792fa163e50f2b5', 'Linux', 'vmBuild', 'LINUX', 0, 60, 900, '{}', 'system', 'system', '2018-12-26 12:16:21', '2018-12-26 12:16:21');
-INSERT IGNORE INTO `T_CONTAINER` (`ID`, `NAME`, `TYPE`, `OS`, `REQUIRED`, `MAX_QUEUE_MINUTES`, `MAX_RUNNING_MINUTES`, `PROPS`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`) VALUES
-  ('d51a712508c011e99792fa163e50f2b5', 'Agentless', 'normal', 'NONE', 0, NULL, NULL, NULL, 'system', 'system', '2018-12-26 12:15:21', '2018-12-26 12:15:21');
 
 REPLACE INTO `T_LOGO`(`ID`, `TYPE`, `LOGO_URL`, `LINK`, `CREATOR`, `MODIFIER`, `CREATE_TIME`, `UPDATE_TIME`, `ORDER`) VALUES ('ef3e60ba6ef44b92b0fec0b940af8fa1', 'BANNER', '/ms/artifactory/api/user/artifactories/file/download?filePath=%2Ffile%2Fpng%2FBANNER.png&logo=true', '', 'system', 'system', '2019-10-21 17:23:40', '2019-10-21 17:23:40', 2);
 
