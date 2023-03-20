@@ -776,6 +776,44 @@ dispatchKubernetes:
     targetCPU: 80
     targetMemory: 80
 
+# remotedev Deployment
+remotedev:
+  enabled: false
+  replicas: 1
+  podLabels: { }
+  resources:
+    requests:
+      cpu: 100m
+      memory: 2000Mi
+    limits:
+      cpu: 500m
+      memory: 2500Mi
+  hostAliases: [ ]
+  containerSecurityContext:
+    enabled: false
+    runAsUser: 1001
+    runAsNonRoot: true
+  podSecurityContext:
+    enabled: false
+    fsGroup: 1001
+  podAffinityPreset: ""
+  podAntiAffinityPreset: soft
+  nodeAffinityPreset:
+    type: ""
+    key: ""
+    values: [ ]
+  affinity: { }
+  nodeSelector: { }
+  tolerations: [ ]
+  podAnnotations: { }
+  priorityClassName: ""
+  autoscaling:
+    enabled: false
+    minReplicas: 1
+    maxReplicas: 3
+    targetCPU: 80
+    targetMemory: 80M
+
 # environment Deployment
 environment:
   enabled: false

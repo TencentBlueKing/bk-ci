@@ -30,9 +30,9 @@ package com.tencent.devops.worker.common.api.bugly
 import com.google.gson.JsonParser
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
-import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
 import org.slf4j.LoggerFactory
 import java.io.File
 import java.net.URLEncoder
@@ -62,7 +62,7 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
             .addFormDataPart("app_key", appKey)
             .addFormDataPart("symbolType", symbolType)
             .addFormDataPart("fileName", URLEncoder.encode(fileName, "UTF-8"))
-            .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+            .addFormDataPart("file", file.name, file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
             .build()
         val request = buildPost(path, body)
         val responseContent = request(request, "上传bugly文件失败")

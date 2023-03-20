@@ -60,7 +60,6 @@ class StoreDockingPlatformDao {
                 CREATOR,
                 MODIFIER,
                 OWNER_DEPT_NAME,
-                OWNERS,
                 LABELS
             )
                 .values(
@@ -74,7 +73,6 @@ class StoreDockingPlatformDao {
                     userId,
                     userId,
                     storeDockingPlatformRequest.ownerDeptName,
-                    storeDockingPlatformRequest.owner,
                     storeDockingPlatformRequest.labels?.joinToString(",")
                 ).execute()
         }
@@ -86,37 +84,35 @@ class StoreDockingPlatformDao {
         storeDockingPlatformRequests: List<StoreDockingPlatformRequest>
     ): Int {
         with(TStoreDockingPlatform.T_STORE_DOCKING_PLATFORM) {
-            return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
-                dslContext.insertInto(
-                    this,
-                    ID,
-                    PLATFORM_CODE,
-                    PLATFORM_NAME,
-                    WEBSITE,
-                    SUMMARY,
-                    PRINCIPAL,
-                    LOGO_URL,
-                    CREATOR,
-                    MODIFIER,
-                    OWNER_DEPT_NAME,
-                    OWNERS,
-                    LABELS
-                )
-                    .values(
-                        UUIDUtil.generate(),
-                        storeDockingPlatformRequest.platformCode,
-                        storeDockingPlatformRequest.platformName,
-                        storeDockingPlatformRequest.website,
-                        storeDockingPlatformRequest.summary,
-                        storeDockingPlatformRequest.principal,
-                        storeDockingPlatformRequest.logoUrl,
-                        userId,
-                        userId,
-                        storeDockingPlatformRequest.ownerDeptName,
-                        storeDockingPlatformRequest.owner,
-                        storeDockingPlatformRequest.labels?.joinToString(",")
+                return dslContext.batch(storeDockingPlatformRequests.map { storeDockingPlatformRequest ->
+                    dslContext.insertInto(
+                        this,
+                        ID,
+                        PLATFORM_CODE,
+                        PLATFORM_NAME,
+                        WEBSITE,
+                        SUMMARY,
+                        PRINCIPAL,
+                        LOGO_URL,
+                        CREATOR,
+                        MODIFIER,
+                        OWNER_DEPT_NAME,
+                        LABELS
                     )
-            }
+                        .values(
+                            UUIDUtil.generate(),
+                            storeDockingPlatformRequest.platformCode,
+                            storeDockingPlatformRequest.platformName,
+                            storeDockingPlatformRequest.website,
+                            storeDockingPlatformRequest.summary,
+                            storeDockingPlatformRequest.principal,
+                            storeDockingPlatformRequest.logoUrl,
+                            userId,
+                            userId,
+                            storeDockingPlatformRequest.ownerDeptName,
+                            storeDockingPlatformRequest.labels?.joinToString(",")
+                        )
+                }
             ).execute().size
         }
     }
@@ -139,7 +135,6 @@ class StoreDockingPlatformDao {
                 .set(UPDATE_TIME, LocalDateTime.now())
                 .set(MODIFIER, userId)
                 .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
-                .set(OWNERS, storeDockingPlatformRequest.owner)
                 .where(ID.eq(id))
                 .execute()
         }
@@ -161,11 +156,10 @@ class StoreDockingPlatformDao {
                     .set(UPDATE_TIME, LocalDateTime.now())
                     .set(MODIFIER, userId)
                     .set(OWNER_DEPT_NAME, storeDockingPlatformRequest.ownerDeptName)
-                    .set(OWNERS, storeDockingPlatformRequest.owner)
                 if (!storeDockingPlatformRequest.logoUrl.isNullOrBlank()) {
                     step = step.set(LOGO_URL, storeDockingPlatformRequest.logoUrl)
                 }
-                step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
+                    step.where(PLATFORM_CODE.eq(storeDockingPlatformRequest.platformCode))
             }
             ).execute().size
         }
@@ -324,8 +318,7 @@ class StoreDockingPlatformDao {
                 modifier = modifier,
                 createTime = DateTimeUtil.toDateTime(createTime),
                 updateTime = DateTimeUtil.toDateTime(updateTime),
-                ownerDeptName = record.ownerDeptName,
-                owner = record.owners
+                ownerDeptName = record.ownerDeptName
             )
         }
     }

@@ -60,7 +60,6 @@ import com.tencent.devops.process.yaml.v2.models.job.Container2
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.models.job.JobRunsOnType
 import com.tencent.devops.scm.api.ServiceGitCiResource
-import com.tencent.devops.ticket.pojo.enums.CredentialType
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.Response
 import com.tencent.devops.common.pipeline.type.agent.Credential as thirdPartDockerCredential
@@ -137,25 +136,21 @@ object TXStreamDispatchUtils {
                 )
             }
 
-            val (image, userName, password) = StreamDispatchUtils.parseRunsOnContainer(
-                client = client,
+            val info = StreamDispatchUtils.parseRunsOnContainer(
                 job = job,
-                projectCode = projectCode,
-                context = context,
                 buildTemplateAcrossInfo = buildTemplateAcrossInfo
             )
 
             val dockerInfo = ThirdPartyAgentDockerInfo(
-                image = image,
-                credential = if (userName.isBlank() || password.isBlank()) {
-                    null
-                } else {
-                    thirdPartDockerCredential(
-                        user = userName,
-                        password = password
-                    )
-                },
-                envs = job.env
+                image = info.image,
+                credential = thirdPartDockerCredential(
+                    user = info.userName,
+                    password = info.password,
+                    credentialId = info.credId,
+                    acrossTemplateId = info.acrossTemplateId,
+                    jobId = job.id
+                )
+
             )
 
             return ThirdPartyAgentEnvDispatchType(
@@ -316,19 +311,17 @@ object TXStreamDispatchUtils {
                     Container2::class.java
                 )
 
-                var user = ""
-                var password = ""
-                if (!container.credentials.isNullOrEmpty()) {
-                    val ticketsMap = getTicket(client, projectCode, container, context, buildTemplateAcrossInfo)
-                    user = ticketsMap["v1"] as String
-                    password = ticketsMap["v2"] as String
-                }
-
                 containerPool = Pool(
                     container = EnvUtils.parseEnv(container.image, context ?: mapOf()),
                     credential = Credential(
-                        user = user,
-                        password = password
+                        user = "",
+                        password = "",
+                        credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
+                        fromRemote = if (buildTemplateAcrossInfo != null) Credential.Remote(
+                            targetProjectId = buildTemplateAcrossInfo.targetProjectId,
+                            templateId = buildTemplateAcrossInfo.templateId,
+                            jobId = job.id ?: ""
+                        ) else null
                     ),
                     macOS = null,
                     third = null,
@@ -339,36 +332,6 @@ object TXStreamDispatchUtils {
         }
 
         return containerPool
-    }
-
-    private fun getTicket(
-        client: Client,
-        projectCode: String,
-        container: Container2,
-        context: Map<String, String>?,
-        buildTemplateAcrossInfo: BuildTemplateAcrossInfo?
-    ): MutableMap<String, String> {
-        val ticketsMap = try {
-            CommonCredentialUtils.getCredential(
-                client = client,
-                projectId = projectCode,
-                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                type = CredentialType.USERNAME_PASSWORD
-            )
-        } catch (ignore: Exception) {
-            // 没有跨项目的模板引用就直接扔出错误
-            if (buildTemplateAcrossInfo == null) {
-                throw ignore
-            }
-            CommonCredentialUtils.getCredential(
-                client = client,
-                projectId = buildTemplateAcrossInfo.targetProjectId,
-                credentialId = EnvUtils.parseEnv(container.credentials, context ?: mapOf()),
-                type = CredentialType.USERNAME_PASSWORD,
-                acrossProject = true
-            )
-        }
-        return ticketsMap
     }
 
     private fun getEnvName(client: Client, poolName: String, pools: List<ResourcesPools>?): String {

@@ -46,7 +46,7 @@ import com.tencent.devops.project.pojo.AuthProjectForCreateResult
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.service.ProjectPermissionService
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.slf4j.LoggerFactory
@@ -87,7 +87,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
             param["center_id"] = userDeptDetail.centerId
             logger.info("createProjectResources add org info $param")
         }
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
@@ -135,9 +135,9 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("Fail to request($request) with code ${response.code()} , message ${response.message()} and response $responseContent")
+                logger.warn("Fail to request($request) with code ${response.code} , message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent
@@ -150,7 +150,7 @@ class TxV0ProjectPermissionServiceImpl @Autowired constructor(
         } else accessToken
         val url = "${authProperties.url}/projects/$projectCode/users/$userId/verfiy?access_token=$accessTokenNew"
         logger.info("the verifyUserProjectPermission url is:$url")
-        val body = RequestBody.create(MediaType.parse(MessageProperties.CONTENT_TYPE_JSON), "{}")
+        val body = RequestBody.create(MessageProperties.CONTENT_TYPE_JSON.toMediaTypeOrNull(), "{}")
         val request = Request.Builder().url(url).post(body).build()
         val responseContent = request(request, "verifyUserProjectPermission error")
         val result = objectMapper.readValue<Result<Any?>>(responseContent)

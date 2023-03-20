@@ -688,7 +688,11 @@ class QualityRuleCheckService @Autowired constructor(
             if (record.detail.isNullOrBlank()) { // #4796 日志展示的链接去掉域名
                 "<a target='_blank' href='/console/codecc/$projectId/task/$taskId/detail'>查看详情</a>"
             } else {
-                val detailUrl = codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
+                val detailUrl = if (!record.logPrompt.isNullOrBlank()) {
+                    record.logPrompt!!
+                } else {
+                    codeccToolUrlPathMap[record.detail!!] ?: DEFAULT_CODECC_URL
+                }
                 val fillDetailUrl = detailUrl.replace("##projectId##", projectId)
                     .replace("##taskId##", taskId)
                     .replace("##buildId##", buildId)

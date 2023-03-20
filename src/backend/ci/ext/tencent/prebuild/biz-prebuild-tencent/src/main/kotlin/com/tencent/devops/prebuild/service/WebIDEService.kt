@@ -64,7 +64,7 @@ import com.tencent.devops.process.api.user.UserPipelineResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
 import com.tencent.devops.project.pojo.ProjectVO
-import okhttp3.Headers
+import okhttp3.Headers.Companion.toHeaders
 import okhttp3.Request
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.commons.lang3.RandomStringUtils
@@ -220,13 +220,13 @@ class WebIDEService @Autowired constructor(
         logger.info(url)
         val request = Request.Builder()
                 .url(url)
-                .headers(Headers.of(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0")))
+                .headers(makeDevCloudAPIHeaders("10004", "Eeav59x*xFki46B0").toHeaders())
                 .get()
                 .build()
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.info("response code: ${response.code()}")
+                logger.info("response code: ${response.code}")
                 logger.info("response: $responseContent")
                 throw RuntimeException("Fail to start docker")
             }

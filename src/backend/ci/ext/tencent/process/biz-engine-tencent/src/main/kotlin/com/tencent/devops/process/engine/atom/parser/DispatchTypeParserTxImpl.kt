@@ -152,42 +152,60 @@ class DispatchTypeParserTxImpl @Autowired constructor(
         customInfo: DispatchInfo,
         context: Map<String, String>
     ): SampleDispatchInfo? {
+        // 此处可以支持多种解析
+        return when (customInfo) {
+            is StreamDispatchInfo -> parseStreamDispatchInfo(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                customInfo = customInfo,
+                context = context
+            )
+
+            else -> null
+        }
+    }
+
+    private fun parseStreamDispatchInfo(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        customInfo: StreamDispatchInfo,
+        context: Map<String, String>
+    ): SampleDispatchInfo {
         val runVariables = buildVariableService.getAllVariable(projectId, pipelineId, buildId)
         // 获取跨项目引用模板信息
         val buildTemplateAcrossInfo =
-            if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null && customInfo is StreamDispatchInfo) {
+            if (runVariables[TEMPLATE_ACROSS_INFO_ID] != null) {
                 templateAcrossInfoService.getAcrossInfo(
                     projectId = projectId,
                     pipelineId = pipelineId,
                     templateId = runVariables[TEMPLATE_ACROSS_INFO_ID]!!
                 ).firstOrNull {
                     it.templateType == TemplateAcrossInfoType.JOB &&
-                        it.templateInstancesIds.contains(customInfo.job.id)
+                            it.templateInstancesIds.contains(customInfo.job.id)
                 }
             } else {
                 null
             }
-        // 此处可以支持多种解析
-        return when (customInfo) {
-            is StreamDispatchInfo -> SampleDispatchInfo(
-                name = customInfo.name,
-                dispatchType = TXStreamDispatchUtils.getDispatchType(
-                    client = client,
-                    objectMapper = objectMapper,
-                    job = customInfo.job,
-                    projectCode = customInfo.projectCode,
-                    defaultImage = customInfo.defaultImage,
-                    bizType = DispatchBizType.STREAM,
-                    resources = customInfo.resources,
-                    context = context,
-                    containsMatrix = true,
-                    buildTemplateAcrossInfo = buildTemplateAcrossInfo
-                ),
-                baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
-                buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
-            )
-            else -> null
-        }
+
+        return SampleDispatchInfo(
+            name = customInfo.name,
+            dispatchType = TXStreamDispatchUtils.getDispatchType(
+                client = client,
+                objectMapper = objectMapper,
+                job = customInfo.job,
+                projectCode = customInfo.projectCode,
+                defaultImage = customInfo.defaultImage,
+                bizType = DispatchBizType.STREAM,
+                resources = customInfo.resources,
+                context = context,
+                containsMatrix = true,
+                buildTemplateAcrossInfo = buildTemplateAcrossInfo
+            ),
+            baseOS = TXStreamDispatchUtils.getBaseOs(customInfo.job, context),
+            buildEnv = TXStreamDispatchUtils.getBuildEnv(customInfo.job, context)
+        )
     }
 
     private fun genThirdDevCloudDispatchMessage(

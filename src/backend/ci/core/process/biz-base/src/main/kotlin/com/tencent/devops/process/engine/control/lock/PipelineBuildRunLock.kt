@@ -35,4 +35,9 @@ class PipelineBuildRunLock(redisOperation: RedisOperation, pipelineId: String) :
         redisOperation = redisOperation,
         lockKey = "build:limit:$pipelineId",
         expiredTimeInSeconds = 30L
-    )
+    ) {
+    override fun decorateKey(key: String): String {
+        // pipelineId在各集群唯一，key无需加上集群信息前缀来区分
+        return key
+    }
+}

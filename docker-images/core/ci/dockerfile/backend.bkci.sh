@@ -1,7 +1,8 @@
 #!/bin/bash
 echo "source env files..."
 source service.env
-MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:MaxRAMPercentage=75.0 -XX:-UseAdaptiveSizePolicy -Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
+MEM_OPTS="-XX:+UseContainerSupport -XX:InitialRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:MaxRAMPercentage=70.0 -XX:-UseAdaptiveSizePolicy"
+GC_LOG="-Xloggc:/data/workspace/$MS_NAME/jvm/gc-%t.log -XX:+PrintTenuringDistribution -XX:+PrintGCDetails -XX:+PrintGCDateStamps"
 API_PORT=80
 
 echo "create log dir"
@@ -12,7 +13,7 @@ ln -srfT "$ci_ms_log" logs
 ln -srfT "$ci_ms_data" data
 
 echo "create java args"
-java_env=() java_argv=() java_run=""
+java_env=() java_argv=() java_run="" JAVA_OPTS=${JAVA_TOOL_OPTIONS:-}
 java_env+=("CLASSPATH=$CLASSPATH")
 java_argv+=("-Dfatjar=/$MS_NAME/boot-$MS_NAME.jar") # 兼容fatjar文件名匹配进程.
 java_run="$MAIN_CLASS"
@@ -26,10 +27,13 @@ java_argv+=(
   "-Dspring.cloud.kubernetes.config.sources[0].name=${RELEASE_NAME:-bkci}-${CHART_NAME:-bk-ci}-common"
   "-Dspring.cloud.kubernetes.config.sources[1].name=${RELEASE_NAME:-bkci}-${CHART_NAME:-bk-ci}-${MS_NAME}"
   "-Dspring.main.allow-bean-definition-overriding=true"
+  "-Dspring.main.allow-circular-references=true"
   "-Dservice-suffix="
   "-Dspring.profiles.active=local,dev"
   "-Dspring.application.name=$MS_NAME"
+  "-Dspring.main.allow-circular-references=true"
+  "-Dspring.cloud.kubernetes.config.includeProfileSpecificSources=false"
 )
 
 echo "run java"
-java -server "${java_argv[@]}" $MEM_OPTS $GC_LOG $java_run
+java -server "${java_argv[@]}" $MEM_OPTS $GC_LOG $JAVA_OPTS $java_run

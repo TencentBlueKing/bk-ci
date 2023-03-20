@@ -148,20 +148,20 @@ class WeworkRobotServiceImpl @Autowired constructor(
         val url = buildUrl("$weworkHost/cgi-bin/webhook/send?key=$robotKey")
         val requestBody = JsonUtil.toJson(weworkMessage)
         return OkhttpUtils.doPost(url, requestBody).use {
-            val responseBody = it.body()?.string() ?: ""
+            val responseBody = it.body?.string() ?: ""
             kotlin.runCatching {
                 val sendMessageResp = JsonUtil.to(responseBody, jacksonTypeRef<WeworkSendMessageResp>())
                 if (!it.isSuccessful || 0 != sendMessageResp.errCode) {
                     throw RemoteServiceException(
-                        httpStatus = it.code(),
+                        httpStatus = it.code,
                         responseContent = responseBody,
                         errorMessage = "send wework robot message failed：errMsg = ${sendMessageResp.errMsg}" +
-                            "|chatid = ${weworkMessage.chatid} ;",
+                                "|chatid = ${weworkMessage.chatid} ;",
                         errorCode = sendMessageResp.errCode
                     )
                 }
             }.fold({ Optional.empty() }, { e ->
-                logger.warn("${it.request()}|send wework robot message failed, $responseBody")
+                logger.warn("${it.request}|send wework robot message failed, $responseBody")
                 Optional.of(e)
             })
         }

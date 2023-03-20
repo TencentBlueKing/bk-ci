@@ -32,12 +32,14 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.repository.api.ServiceGithubResource
+import com.tencent.devops.repository.api.github.ServiceGithubOauthResource
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubToken
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import org.apache.commons.lang3.RandomStringUtils
@@ -80,6 +82,10 @@ class GithubOauthService @Autowired constructor(
     fun getGithubAppUrl() = appUrl
 
     fun githubCallback(code: String, state: String): Response {
+        if (state.contains("redirectUrl")) {
+            return githubCallbackForGIT(code, state)
+        }
+
         if (!state.contains(",BK_DEVOPS__")) {
             throw OperationException("TGIT call back contain invalid parameter: $state")
         }
@@ -90,23 +96,33 @@ class GithubOauthService @Autowired constructor(
         val repoHashId = if (arr[2].isNotBlank()) HashUtil.encodeOtherLongId(arr[2].toLong()) else ""
         val githubToken = getAccessToken(code)
 
-        client.get(ServiceGithubResource::class).createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
-        return javax.ws.rs.core.Response.temporaryRedirect(UriBuilder.fromUri("$redirectUrl/$projectId#popupGithub$repoHashId").build()).build()
+        client.get(ServiceGithubResource::class)
+            .createAccessToken(userId, githubToken.accessToken, githubToken.tokenType, githubToken.scope)
+        return Response.temporaryRedirect(
+            UriBuilder.fromUri("$redirectUrl/$projectId#popupGithub$repoHashId").build()
+        ).build()
+    }
+
+    fun githubCallbackForGIT(code: String, state: String?): Response {
+        logger.info("github callback for git|code:$code|state:$state")
+        val redirectUrl = client.get(ServiceGithubOauthResource::class)
+            .githubCallback(code, state, ChannelCode.GIT.name).data?.redirectUrl ?: ""
+        return Response.temporaryRedirect(UriBuilder.fromUri(redirectUrl).build()).build()
     }
 
     private fun getAccessToken(code: String): GithubToken {
         val url = "$GITHUB_URL/login/oauth/access_token?client_id=$clientId&client_secret=$clientSecret&code=$code"
 
         val request = Request.Builder()
-                .url(url)
-                .header("Accept", "application/json")
-                .post(RequestBody.create(MediaType.parse("application/x-www-form-urlencoded;charset=utf-8"), ""))
-                .build()
+            .url(url)
+            .header("Accept", "application/json")
+            .post(RequestBody.create("application/x-www-form-urlencoded;charset=utf-8".toMediaTypeOrNull(), ""))
+            .build()
         OkhttpUtils.doHttp(request).use { response ->
 //        okHttpClient.newCall(request).execute().use { response ->
-            val data = response.body()!!.string()
+            val data = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.info("Github get code(${response.code()}) and response($data)")
+                logger.info("Github get code(${response.code}) and response($data)")
                 throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取Github access_token失败")
             }
             return objectMapper.readValue(data)

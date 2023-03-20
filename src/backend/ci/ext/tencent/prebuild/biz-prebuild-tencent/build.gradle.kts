@@ -73,5 +73,4 @@ dependencies {
     api("org.json:json")
 
     testImplementation(project(":core:common:common-test"))
-    testImplementation("org.mockito:mockito-inline")
 }

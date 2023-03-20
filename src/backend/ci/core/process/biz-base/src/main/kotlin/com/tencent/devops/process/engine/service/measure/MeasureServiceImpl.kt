@@ -49,22 +49,41 @@ import com.tencent.devops.process.service.ProjectCacheService
 import com.tencent.devops.process.service.measure.MeasureEventDispatcher
 import com.tencent.devops.process.template.service.TemplateService
 import org.apache.lucene.util.RamUsageEstimator
+import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
+import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
+import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
 @Suppress("ALL", "UNUSED")
-class MeasureServiceImpl constructor(
-    private val projectCacheService: ProjectCacheService,
-    private val pipelineTaskService: PipelineTaskService,
-    private val buildVariableService: BuildVariableService,
-    private val templateService: TemplateService,
-    private val pipelineInfoService: PipelineInfoService,
-    private val redisOperation: RedisOperation,
-    private val pipelineEventDispatcher: PipelineEventDispatcher,
-    private val atomMonitorSwitch: String,
-    private val maxMonitorDataSize: String = "1677216",
-    private val measureEventDispatcher: MeasureEventDispatcher
-) : MeasureService {
+@Service
+class MeasureServiceImpl : MeasureService {
+
+    @Autowired
+    lateinit var projectCacheService: ProjectCacheService
+    @Autowired
+    lateinit var pipelineTaskService: PipelineTaskService
+    @Autowired
+    lateinit var buildVariableService: BuildVariableService
+    @Autowired
+    lateinit var dslContext: DSLContext
+    @Autowired
+    lateinit var templateService: TemplateService
+    @Autowired
+    lateinit var pipelineInfoService: PipelineInfoService
+    @Autowired
+    lateinit var redisOperation: RedisOperation
+    @Autowired
+    lateinit var pipelineEventDispatcher: PipelineEventDispatcher
+    @Autowired
+    lateinit var measureEventDispatcher: MeasureEventDispatcher
+
+    @Value("\${build.atomMonitorData.report.switch:false}")
+    private val atomMonitorSwitch: String = "false"
+
+    @Value("\${build.atomMonitorData.report.maxMonitorDataSize:1677216}")
+    private val maxMonitorDataSize: String = "1677216"
 
     override fun postCancelData(projectId: String, pipelineId: String, buildId: String, userId: String) {
         try {
@@ -105,7 +124,6 @@ class MeasureServiceImpl constructor(
             val vmSeqId = task.containerId
             val taskParams = task.taskParams
             val atomCode = task.atomCode ?: taskParams["atomCode"] as String? ?: task.taskType
-
             pipelineEventDispatcher.dispatch(
                 PipelineBuildTaskFinishBroadCastEvent(
                     source = "build-element-$taskId",

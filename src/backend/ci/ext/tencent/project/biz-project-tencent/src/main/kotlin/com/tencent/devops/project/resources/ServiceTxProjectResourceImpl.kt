@@ -47,11 +47,11 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
+import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectLocalService
 import com.tencent.devops.project.service.ProjectMemberService
 import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
-import com.tencent.devops.project.service.ProjectExtPermissionService
 import com.tencent.devops.project.service.ProjectTxInfoService
 import com.tencent.devops.project.util.ProjectUtils
 import org.slf4j.LoggerFactory
@@ -59,6 +59,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 
 @RestResource
+@Suppress("TooManyFunctions", "LongParameterList")
 class ServiceTxProjectResourceImpl @Autowired constructor(
     private val bsAuthPermissionApi: AuthPermissionApi,
     private val projectExtPermissionService: ProjectExtPermissionService,
@@ -214,6 +215,10 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
 
     override fun getPreUserProject(userId: String, accessToken: String): Result<ProjectVO?> {
         return Result(projectLocalService.getOrCreatePreProject(userId = userId, accessToken = accessToken))
+    }
+
+    override fun getRemoteDevUserProject(userId: String): Result<ProjectVO?> {
+        return Result(projectLocalService.getOrCreateRemoteDevProject(userId))
     }
 
     override fun getOrCreateRdsProject(userId: String, projectId: String, projectName: String): Result<ProjectVO?> {
@@ -379,6 +384,6 @@ class ServiceTxProjectResourceImpl @Autowired constructor(
     }
 
     companion object {
-        val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
+        private val logger = LoggerFactory.getLogger(ServiceTxProjectResourceImpl::class.java)
     }
 }

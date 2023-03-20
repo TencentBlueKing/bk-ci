@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateInElement
 import com.tencent.devops.common.pipeline.pojo.element.quality.QualityGateOutElement
+import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import org.slf4j.LoggerFactory
 
 @Suppress("ALL")
@@ -64,5 +65,25 @@ object QualityUtils {
         } else {
             null
         }
+    }
+
+    fun generateQualityRuleElement(
+        ruleMatchList: List<QualityRuleMatchTask>
+    ): Triple<List<String>?, List<String>?, Map<String, List<Map<String, Any>>>?> {
+        val ruleMatchTaskList = ruleMatchList.map { ruleMatch ->
+            val gatewayIds =
+                ruleMatch.ruleList.filter { rule -> !rule.gatewayId.isNullOrBlank() }.map { it.gatewayId!! }
+            mapOf(
+                "position" to ruleMatch.controlStage.name,
+                "taskId" to ruleMatch.taskId,
+                "gatewayIds" to gatewayIds
+            )
+        }
+        val beforeElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "BEFORE" }.map { it["taskId"] as String }
+        val afterElementSet =
+            ruleMatchTaskList.filter { it["position"] as String == "AFTER" }.map { it["taskId"] as String }
+        val elementRuleMap = ruleMatchTaskList.groupBy { it["taskId"] as String }.toMap()
+        return Triple(beforeElementSet, afterElementSet, elementRuleMap)
     }
 }

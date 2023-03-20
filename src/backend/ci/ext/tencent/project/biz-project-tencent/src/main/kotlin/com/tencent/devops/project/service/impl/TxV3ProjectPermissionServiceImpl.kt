@@ -163,7 +163,7 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
             param["center_id"] = userDeptDetail.centerId
             logger.info("createProjectResources add org info $param")
         }
-        val mediaType = MediaType.parse("application/json; charset=utf-8")
+        val mediaType = "application/json; charset=utf-8".toMediaTypeOrNull()
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
@@ -187,12 +187,11 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
 
     private fun request(request: Request, errorMessage: String): String {
         OkhttpUtils.doHttp(request).use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.warn(
-                    "Fail to request($request) with code ${response.code()} , " +
-                        "message ${response.message()} and response $responseContent"
-                )
+                    "Fail to request($request) with code ${response.code} , " +
+                            "message ${response.message} and response $responseContent")
                 throw OperationException(errorMessage)
             }
             return responseContent

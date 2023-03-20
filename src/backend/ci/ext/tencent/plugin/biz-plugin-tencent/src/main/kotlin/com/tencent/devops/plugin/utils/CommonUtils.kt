@@ -264,11 +264,11 @@ object CommonUtils {
             OkhttpUtils.doHttp(request).use { response ->
                 //            val response = okclient.newCall(request).execute()
                 if (response.isSuccessful) {
-                    val responseStr = response.body()!!.string()
+                    val responseStr = response.body!!.string()
                     logger.info("WeTest response: $responseStr")
                     return JSONObject(responseStr)
                 } else {
-                    errRet.put("msg", "http code:" + response.code())
+                    errRet.put("msg", "http code:" + response.code)
                 }
             }
         } catch (e: IOException) {

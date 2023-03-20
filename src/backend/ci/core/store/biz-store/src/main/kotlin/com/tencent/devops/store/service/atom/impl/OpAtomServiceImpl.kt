@@ -56,6 +56,7 @@ import com.tencent.devops.store.dao.common.ClassifyDao
 import com.tencent.devops.store.dao.common.LabelDao
 import com.tencent.devops.store.pojo.atom.ApproveReq
 import com.tencent.devops.store.pojo.atom.Atom
+import com.tencent.devops.store.pojo.atom.AtomFeatureUpdateRequest
 import com.tencent.devops.store.pojo.atom.AtomReleaseRequest
 import com.tencent.devops.store.pojo.atom.AtomResp
 import com.tencent.devops.store.pojo.atom.MarketAtomCreateRequest
@@ -82,6 +83,7 @@ import com.tencent.devops.store.utils.AtomReleaseTxtAnalysisUtil
 import com.tencent.devops.store.utils.StoreUtils
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
+import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
@@ -119,6 +121,7 @@ class OpAtomServiceImpl @Autowired constructor(
      */
     override fun getOpPipelineAtoms(
         atomName: String?,
+        atomCode: String?,
         atomType: AtomTypeEnum?,
         serviceScope: String?,
         os: String?,
@@ -135,6 +138,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val pipelineAtomList = atomDao.getOpPipelineAtoms(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -152,6 +156,7 @@ class OpAtomServiceImpl @Autowired constructor(
         val totalSize = atomDao.getOpPipelineAtomCount(
             dslContext = dslContext,
             atomName = atomName,
+            atomCode = atomCode,
             atomType = atomType,
             serviceScope = serviceScope,
             os = os,
@@ -402,8 +407,10 @@ class OpAtomServiceImpl @Autowired constructor(
                 )
             }
             val relativePath = logoUrlAnalysisResult.data
-            val logoFile = File("$atomPath${File.separator}file" +
-                    "${File.separator}${relativePath?.removePrefix(File.separator)}")
+            val logoFile = File(
+                "$atomPath${File.separator}file" +
+                        "${File.separator}${relativePath?.removePrefix(File.separator)}"
+            )
             if (logoFile.exists()) {
                 val result = storeLogoService.uploadStoreLogo(
                     userId = userId,
@@ -508,5 +515,19 @@ class OpAtomServiceImpl @Autowired constructor(
         }
         // 确认测试通过
         return atomReleaseService.passTest(userId, atomId)
+    }
+
+    override fun setDefault(userId: String, atomCode: String): Boolean {
+        return try {
+            dslContext.transaction { t ->
+                val context = DSL.using(t)
+                atomDao.updateAtomByCode(context, userId, atomCode, AtomFeatureUpdateRequest(defaultFlag = true))
+                redisOperation.delete(StoreUtils.getStorePublicFlagKey(StoreTypeEnum.ATOM.name)) // 直接删除重建
+            }
+            true
+        } catch (e: Exception) {
+            logger.error("set default atom failed , userId:$userId , atomCode:$atomCode")
+            false
+        }
     }
 }

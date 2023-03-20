@@ -30,6 +30,7 @@ package com.tencent.devops.common.gcloud
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.param.ReqParam
+import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.gcloud.api.pojo.ActionParam
 import com.tencent.devops.common.gcloud.api.pojo.CommonParam
 import com.tencent.devops.common.gcloud.api.pojo.GcloudListResult
@@ -43,8 +44,7 @@ import com.tencent.devops.common.gcloud.api.pojo.history.PrePublishParam
 import com.tencent.devops.common.gcloud.api.pojo.history.QueryVersionParam
 import com.tencent.devops.common.gcloud.api.pojo.history.UploadUpdateFileParam
 import com.tencent.devops.common.gcloud.utils.GcloudUtil
-import com.tencent.devops.common.api.util.OkhttpUtils
-import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.Request
 import okhttp3.RequestBody
@@ -74,7 +74,10 @@ class HistoryTaskGcloudClient constructor(
         val uri = GcloudUtil.getRequestUriWithSignature(host, fileHost, uploadUpdateFileParam.beanToMap(), commonParam, ModuleParam.FILE, ActionParam.UploadUpdateFile)
         val body = MultipartBody.Builder()
                 .setType(MultipartBody.FORM)
-                .addFormDataPart("file", file.name, RequestBody.create(MediaType.parse("application/octet-stream"), file))
+                .addFormDataPart("file", file.name, RequestBody.create(
+                    "application/octet-stream".toMediaTypeOrNull(),
+                    file
+                ))
                 .build()
         val request = Request.Builder()
                 .url(uri)
@@ -129,10 +132,10 @@ class HistoryTaskGcloudClient constructor(
     }
 
     private fun doGcloudRequest(request: Request, params: ReqParam, keyWord: String): GcloudResult {
-        logger.info("$keyWord url: ${request.url().url()}")
+        logger.info("$keyWord url: ${request.url.toUrl()}")
         logger.info("$keyWord param: $params")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val uploadResp = res.body()!!.string()
+            val uploadResp = res.body!!.string()
             logger.info("$keyWord response>> $uploadResp")
             if (!res.isSuccessful) throw RuntimeException("$keyWord fail:\n$uploadResp")
             val response = objectMapper.readValue<GcloudResult>(uploadResp)
@@ -145,10 +148,10 @@ class HistoryTaskGcloudClient constructor(
     }
 
     private fun doGcloudListRequest(request: Request, params: ReqParam, keyWord: String): GcloudListResult {
-        logger.info("$keyWord url: ${request.url().url()}")
+        logger.info("$keyWord url: ${request.url.toUrl()}")
         logger.info("$keyWord param: $params")
         OkhttpUtils.doLongHttp(request).use { res ->
-            val uploadResp = res.body()!!.string()
+            val uploadResp = res.body!!.string()
             logger.info("$keyWord response>> $uploadResp")
             if (!res.isSuccessful) throw RuntimeException("$keyWord fail:\n$uploadResp")
             val response = objectMapper.readValue<GcloudListResult>(uploadResp)

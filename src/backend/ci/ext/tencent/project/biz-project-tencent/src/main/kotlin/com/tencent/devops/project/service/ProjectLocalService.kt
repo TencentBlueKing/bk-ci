@@ -39,6 +39,7 @@ import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
+import com.tencent.devops.common.auth.api.AuthTokenApi
 import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.BKAuthProjectRolesResources
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -84,7 +85,8 @@ class ProjectLocalService @Autowired constructor(
     private val projectPermissionService: ProjectPermissionService,
     private val txProjectServiceImpl: TxProjectServiceImpl,
     private val projectExtPermissionService: ProjectExtPermissionService,
-    private val bkTag: BkTag
+    private val bkTag: BkTag,
+    private val authTokenApi: AuthTokenApi
 ) {
     private var authUrl: String = "${bkAuthProperties.url}/projects"
 
@@ -252,7 +254,11 @@ class ProjectLocalService @Autowired constructor(
         }
     }
 
-    fun getOrCreatePreProject(userId: String, accessToken: String): ProjectVO {
+    fun getOrCreateRemoteDevProject(userId: String): ProjectVO {
+        return getOrCreatePreProject(userId, null)
+    }
+
+    fun getOrCreatePreProject(userId: String, accessToken: String?): ProjectVO {
         val projectCode = "_$userId"
         var userProjectRecord = projectDao.getByEnglishName(dslContext, projectCode)
         if (userProjectRecord != null) {
@@ -279,7 +285,9 @@ class ProjectLocalService @Autowired constructor(
             kind = 0
         )
 
-        val projectId = getProjectIdInAuth(projectCode, accessToken)
+        val projectId = getProjectIdInAuth(
+            projectCode, accessToken ?: authTokenApi.getAccessToken(bsPipelineAuthServiceCode)
+        )
 
         val startEpoch = System.currentTimeMillis()
         var success = false
@@ -520,7 +528,7 @@ class ProjectLocalService @Autowired constructor(
             val url = "$authUrl/$projectCode?access_token=$accessToken"
             logger.info("Get request url: $url")
             OkhttpUtils.doGet(url).use { resp ->
-                val responseStr = resp.body()!!.string()
+                val responseStr = resp.body!!.string()
                 logger.info("responseBody: $responseStr")
                 val response: Map<String, Any> = jacksonObjectMapper().readValue(responseStr)
                 return if (response["code"] as Int == 0) {
@@ -628,7 +636,8 @@ class ProjectLocalService @Autowired constructor(
                     accessToken = null,
                     projectCode = projectId,
                     userId = userId
-                )) {
+                )
+            ) {
                 logger.warn("createPipelinePermission userId is not project user,userId[$it] projectId[$projectId]")
                 throw OperationException(
                     (MessageCodeUtil.getCodeLanMessage(

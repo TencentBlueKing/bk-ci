@@ -61,6 +61,7 @@ import javax.ws.rs.core.MediaType
 @Path("/service/projects/tx")
 @Produces(MediaType.APPLICATION_JSON)
 @Consumes(MediaType.APPLICATION_JSON)
+@Suppress("TooManyFunctions", "LongParameterList")
 interface ServiceTxProjectResource {
     @GET
     @Path("/")
@@ -162,6 +163,15 @@ interface ServiceTxProjectResource {
         @ApiParam("accessToken", required = true)
         @QueryParam("accessToken")
         accessToken: String
+    ): Result<ProjectVO?>
+
+    @GET
+    @Path("/remotedev/userProject/{userId}")
+    @ApiOperation("查询用户项目")
+    fun getRemoteDevUserProject(
+        @ApiParam("用户ID", required = true)
+        @PathParam("userId")
+        userId: String
     ): Result<ProjectVO?>
 
     @GET
