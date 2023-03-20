@@ -9,8 +9,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -72,7 +74,7 @@ class ItsmService @Autowired constructor(
         val headerStr = objectMapper.writeValueAsString(header).replace("\\s".toRegex(), "")
         val jsonBody = objectMapper.writeValueAsString(body)
         logger.info("jsonBody:$jsonBody")
-        val requestBody = RequestBody.create(MediaType.parse("application/json"), jsonBody)
+        val requestBody = jsonBody.toRequestBody("application/json; charset=utf-8".toMediaTypeOrNull())
         logger.info("headerStr:$headerStr")
         val url = itsmUrlPrefix + uri
         val request = Request.Builder()
@@ -92,7 +94,7 @@ class ItsmService @Autowired constructor(
                 logger.warn("itsm request failed, uri:($url)|response: ($it)")
                 throw RemoteServiceException("itsm request failed, response:($it)")
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             val responseDTO = objectMapper.readValue<ItsmResponseDTO>(responseStr)
             if (responseDTO.code != 0L || responseDTO.result == false) {
                 // 请求错误
