@@ -44,7 +44,7 @@ module.exports = (env, argv) => {
             filename: isProd ? `${dist}/frontend#pipeline#index.html` : `${dist}/index.html`,
             template: 'index.html',
             inject: true,
-            publicPath: '__BK_CI_PUBLIC_PATH__/pipeline/',
+            publicPath: '/pipeline/',
             minify: {
                 removeComments: false
             },

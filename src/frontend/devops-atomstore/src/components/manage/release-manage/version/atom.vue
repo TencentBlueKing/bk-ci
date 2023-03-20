@@ -93,6 +93,7 @@
                             :external-link="false"
                             :box-shadow="false"
                             preview-background="#fff"
+                            :language="mavenLang"
                             v-model="detail.versionContent"
                         />
                     </li>
@@ -153,6 +154,9 @@
             disableAddVersion () {
                 const firstVersion = this.versionList[0] || {}
                 return this.upgradeStatus.indexOf(firstVersion.atomStatus) === -1
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

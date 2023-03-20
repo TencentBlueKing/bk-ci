@@ -515,11 +515,12 @@
                 }
             }
             .atom-operate {
-                width: 60px;
+                width: 88px;
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
                 position: relative;
+
                 button.select-atom-btn[disabled] {
                     cursor: not-allowed !important;
                     background-color: #fff;

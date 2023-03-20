@@ -73,6 +73,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="templateDetail.description"
                                 >
@@ -167,6 +168,9 @@
                     { name: this.templateDetail.templateName, to: { name: 'setting', params: { code: this.templateDetail.templateCode, type: 'template' } } },
                     { name: this.$t('store.上架模板') }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
         created () {

@@ -94,6 +94,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
+                        :language="mavenLang"
                         @imgAdd="uploadimg('mdHook', ...arguments)"
                     />
                 </bk-form-item>
@@ -210,6 +211,7 @@
                         :toolbars="toolbars"
                         :external-link="false"
                         :box-shadow="false"
+                        :language="mavenLang"
                         @imgAdd="uploadimg('versionMd', ...arguments)"
                     />
                 </bk-form-item>
@@ -293,6 +295,9 @@
                     { name: this.$t('store.工作台'), to: { name: 'imageWork' } },
                     { name: `${this.$t('store.上架/升级镜像')}（${this.form.imageCode}）` }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

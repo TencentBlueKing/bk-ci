@@ -106,6 +106,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.description"
                                 >
@@ -141,6 +142,7 @@
                                     :toolbars-flag="false"
                                     :external-link="false"
                                     :box-shadow="false"
+                                    :language="mavenLang"
                                     preview-background="#fafbfd"
                                     v-model="versionDetail.versionContent"
                                 >
@@ -248,6 +250,9 @@
                     { name: this.versionDetail.atomCode, to: { name: 'statisticData', params: { code: this.versionDetail.atomCode, type: 'atom' } } },
                     { name: this.curTitle }
                 ]
+            },
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
             }
         },
 

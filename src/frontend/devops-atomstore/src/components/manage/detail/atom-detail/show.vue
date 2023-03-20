@@ -19,7 +19,7 @@
                     <span>{{ detail.classifyName || '--' }}</span>
                 </li>
                 <li class="detail-item">
-                    <span class="detail-label">{{ $t('store.适用机器类型') }}：</span>
+                    <span class="detail-label">{{ $t('store.适用机器类型：') }}</span>
                     <div v-if="detail.os">{{ jobTypeMap[detail.jobType] }}
                         <span v-if="detail.jobType === 'AGENT'">（
                             <i class="devops-icon icon-linux-view" v-if="detail.os.indexOf('LINUX') !== -1"></i>
@@ -34,7 +34,7 @@
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.功能标签') }}：</span>
-                    <label-list :label-list="detail.labelList.map(x => x.labelName)"></label-list>
+                    <label-list :label-list="labelNameList"></label-list>
                 </li>
                 <li class="detail-item">
                     <span class="detail-label">{{ $t('store.简介') }}：</span>
@@ -50,6 +50,7 @@
                         :external-link="false"
                         :box-shadow="false"
                         preview-background="#fff"
+                        :language="mavenLang"
                         v-model="detail.description"
                     />
                 </li>
@@ -83,6 +84,14 @@
                     AGENT: this.$t('store.编译环境'),
                     AGENT_LESS: this.$t('store.无编译环境')
                 }
+            }
+        },
+        computed: {
+            mavenLang () {
+                return this.$i18n.locale === 'en-US' ? 'en' : this.$i18n.locale
+            },
+            labelNameList () {
+                return this.detail?.labelList?.map(item => item.labelName) ?? []
             }
         }
     }

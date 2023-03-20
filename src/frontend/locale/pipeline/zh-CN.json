@@ -322,6 +322,7 @@
     "noticeGroup": "通知组",
     "emptyNoticeGroup": "通知组为空",
     "additionUser": "附加通知人",
+    "additionUserPlaceholder": "支持环境变量(${var})，多个环境变量以英文逗号分隔",
     "noticeContent": "通知内容",
     "pipelineLink": "通知内容附加流水线链接",
     "pipelineLinkDesc": "若勾选，则会在企业微信、微信、短信通知的末尾加上相应构建详情的流水线链接",
