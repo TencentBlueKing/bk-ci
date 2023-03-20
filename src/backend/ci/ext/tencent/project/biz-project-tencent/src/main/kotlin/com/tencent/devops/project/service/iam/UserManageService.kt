@@ -31,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.project.pojo.DepartmentInfo
 import okhttp3.Request
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -69,7 +68,7 @@ class UserManageService @Autowired constructor(
                 // 请求错误
                 throw RemoteServiceException("getDepartment request failed, response: ($it)")
             }
-            val responseStr = it.body()!!.string()
+            val responseStr = it.body!!.string()
             logger.info("getDepartment request responseStr[$responseStr]")
             val response = objectMapper.readValue<Map<String, Any>>(responseStr)
             if (response["code"] != 0 || response["result"] == false) {
