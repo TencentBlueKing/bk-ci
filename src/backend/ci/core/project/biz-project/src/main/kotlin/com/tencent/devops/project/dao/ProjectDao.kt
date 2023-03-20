@@ -48,6 +48,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
+import org.jooq.Record2
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -514,17 +515,22 @@ class ProjectDao {
         }
     }
 
-    fun listProjectsByProjectName(
+    fun listProjectsForApply(
         dslContext: DSLContext,
         projectName: String?,
+        englishNameList: List<String>,
         offset: Int,
         limit: Int
-    ): Result<TProjectRecord> {
-        with(TProject.T_PROJECT) {
-            return dslContext.selectFrom(this)
-                .where(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
-                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
-                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
+    ): Result<Record2<String, String>> {
+        return with(TProject.T_PROJECT) {
+            dslContext.select(PROJECT_NAME, ENGLISH_NAME).from(this).whereExists(
+                dslContext.selectFrom(this).where()
+                    .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                    .union(
+                        dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(englishNameList))
+                            .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
+                    )
+            ).let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
                 .and(IS_OFFLINED.eq(false))
                 .and(ENABLED.eq(true))
                 .orderBy(CREATED_AT.desc())

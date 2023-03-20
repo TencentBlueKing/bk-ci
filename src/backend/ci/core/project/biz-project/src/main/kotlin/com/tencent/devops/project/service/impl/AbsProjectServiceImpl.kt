@@ -49,7 +49,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
-import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -67,10 +66,10 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
-import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -84,16 +83,16 @@ import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ShardingRoutingRuleAssignService
 import com.tencent.devops.project.util.ProjectUtils
 import com.tencent.devops.project.util.exception.ProjectNotExistException
-import java.io.File
-import java.io.InputStream
-import java.util.regex.Pattern
-import javax.ws.rs.NotFoundException
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.dao.DuplicateKeyException
+import java.io.File
+import java.io.InputStream
+import java.util.regex.Pattern
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 abstract class AbsProjectServiceImpl @Autowired constructor(
@@ -525,46 +524,34 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<Pair<Boolean, ProjectVO>> {
+    ): Pagination<ProjectWithPermission> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectList: MutableList<TProjectRecord> = mutableListOf()
-        val projectListWithPermission: MutableList<Pair<Boolean, ProjectVO>> = mutableListOf()
-
-        val publicProjectInfos = projectDao.listProjectsByProjectName(
-            dslContext = dslContext,
-            projectName = projectName,
-            offset = sqlLimit.offset,
-            limit = sqlLimit.limit
-        )
+        val projectListWithPermission: MutableList<ProjectWithPermission> = mutableListOf()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
-        val privateProjectInfos = projectDao.listByEnglishName(
+        projectDao.listProjectsForApply(
             dslContext = dslContext,
+            projectName = projectName,
             englishNameList = hasVisitPermissionProjectIds,
-            authSecrecyStatus = ProjectAuthSecrecyStatus.PRIVATE,
-            searchName = projectName
-        )
-        projectList.addAll(publicProjectInfos)
-        if (page == 1)
-            projectList.addAll(privateProjectInfos)
-
-        projectList.forEach {
+            offset = sqlLimit.offset,
+            limit = sqlLimit.limit
+        ).forEach {
             projectListWithPermission.add(
-                Pair(
-                    // todo 改成批量鉴权
-                    authPermissionApi.validateUserResourcePermission(
+                ProjectWithPermission(
+                    projectName = it.value1(),
+                    englishName = it.value2(),
+                    permission = authPermissionApi.validateUserResourcePermission(
                         user = userId,
                         serviceCode = projectAuthServiceCode,
                         resourceType = AuthResourceType.PROJECT,
-                        projectCode = it.englishName,
+                        projectCode = it.value2(),
                         permission = AuthPermission.VISIT
-                    ), ProjectUtils.packagingBean(it)
+                    )
                 )
             )
         }
-        // todo 若projectListWithPermission为空是否需要抛出异常。
         return Pagination(
-            hasNext = publicProjectInfos.size == pageSize,
+            hasNext = projectListWithPermission.size == pageSize,
             records = projectListWithPermission
         )
     }
