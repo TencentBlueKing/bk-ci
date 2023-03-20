@@ -15,18 +15,18 @@ BEGIN
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 't_project'
+                    AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'AUTH_SECRECY') THEN
-    ALTER TABLE `t_project`
+    ALTER TABLE `T_PROJECT`
         ADD COLUMN `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开,1-保密,2-机密';
     END IF;
 
     IF NOT EXISTS(SELECT 1
                   FROM information_schema.COLUMNS
                   WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 't_project'
+                    AND TABLE_NAME = 'T_PROJECT'
                     AND COLUMN_NAME = 'SUBJECT_SCOPES') THEN
-    ALTER TABLE `t_project`
+    ALTER TABLE `T_PROJECT`
         ADD COLUMN `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围';
     END IF;
 
