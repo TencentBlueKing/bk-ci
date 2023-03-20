@@ -864,6 +864,7 @@
       "debugConsole": "登录调试",
       "loadingTitle": "启动容器中，若超过一分钟未启动成功，请联系DevOps(蓝盾人工客服)",
       "exitDebug": "退出调试",
+      "exiting": "退出调试中",
       "fromRunningTips": "本次调试是在流水线运行时的入口进入，调试的容器即为当前构建使用的容器",
       "failTitle": "登录调试失败",
       "failDesc": "镜像名称非法或其它异常",

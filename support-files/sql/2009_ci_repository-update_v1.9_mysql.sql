@@ -39,6 +39,15 @@ BEGIN
         ADD COLUMN `GIT_PROJECT_ID` bigint(20) DEFAULT 0 COMMENT 'GIT项目ID';
     END IF;
 
+    IF NOT EXISTS(SELECT 1
+                  FROM information_schema.COLUMNS
+                  WHERE TABLE_SCHEMA = db
+                    AND TABLE_NAME = 'T_REPOSITORY_COMMIT'
+                    AND COLUMN_NAME = 'URL') THEN
+    ALTER TABLE `T_REPOSITORY_COMMIT`
+        ADD COLUMN `URL` varchar(255) DEFAULT NULL COMMENT '代码库URL';
+    END IF;
+
     COMMIT;
 END <CI_UBF>
 DELIMITER ;
