@@ -111,7 +111,14 @@ class StreamRepoTriggerAction(
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         triggerCheckRepoTriggerCredentials(triggerOn)
-        check(triggerOn.repoHook)
+        check(triggerOn.repoHook).let {
+            if (!it.trigger) return TriggerResult(
+                trigger = it,
+                triggerOn = triggerOn,
+                timeTrigger = false,
+                deleteTrigger = false
+            )
+        }
         return baseAction.isMatch(triggerOn)
     }
 
