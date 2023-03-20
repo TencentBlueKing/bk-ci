@@ -27,6 +27,7 @@
 
 package com.tencent.devops.metrics.pojo.message
 
+import com.tencent.devops.common.event.pojo.IEvent
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
@@ -38,4 +39,4 @@ data class TurboReportEvent(
     val projectId: String,
     @ApiModelProperty("编译加速节省时间，单位：秒")
     val turboSaveTime: Double
-)
+): IEvent()

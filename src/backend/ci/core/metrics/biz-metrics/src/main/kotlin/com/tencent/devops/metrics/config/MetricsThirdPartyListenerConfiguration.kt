@@ -27,186 +27,38 @@
 
 package com.tencent.devops.metrics.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.event.dispatcher.pipeline.Tools
-import com.tencent.devops.common.service.trace.TraceTag
-import com.tencent.devops.metrics.listener.CodeCheckDailyMessageListener
-import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
-import com.tencent.devops.metrics.listener.TurboDailyReportMessageListener
-import org.slf4j.MDC
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.FanoutExchange
-import org.springframework.amqp.core.MessagePostProcessor
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.stream.constants.StreamBinding
+import com.tencent.devops.metrics.pojo.message.CodeCheckReportEvent
+import com.tencent.devops.metrics.pojo.message.TurboReportEvent
+import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
 @Configuration
 class MetricsThirdPartyListenerConfiguration {
 
-    // TODO #7443 后续利用SCS改造，因涉及多个模块无法直接修改
-
-    @Bean
-    @ConditionalOnMissingBean(RabbitAdmin::class)
-    fun rabbitAdmin(
-        connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        objectMapper: ObjectMapper
-    ): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter(objectMapper)
-        rabbitTemplate.addBeforePublishPostProcessors(MessagePostProcessor { message ->
-            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
-            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
-            message
-        })
-        return rabbitTemplate
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
-    fun receiveCodeCheckDailyMessageQueue() = Queue(QUEUE_METRICS_STATISTIC_CODECC_DAILY)
-
-    @Bean
-    fun receiveCodeCheckDailyMessageFanoutExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_METRICS_STATISTIC_CODECC_DAILY, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun receiveCodeCheckDailyMessageQueueBind(
-        @Autowired receiveCodeCheckDailyMessageQueue: Queue,
-        @Autowired receiveCodeCheckDailyMessageFanoutExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(receiveCodeCheckDailyMessageQueue)
-            .to(receiveCodeCheckDailyMessageFanoutExchange)
-    }
-
-    @Bean
-    fun metricsMessageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
-
-    @Bean
-    fun receiveCodeCheckDailyMessageListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired receiveCodeCheckDailyMessageQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: CodeCheckDailyMessageListener,
-        @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = receiveCodeCheckDailyMessageQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = metricsMessageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 5,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun metricsQualityDailyReportQueue() = Queue(QUEUE_QUALITY_DAILY_EVENT)
-
-    @Bean
-    fun metricsQualityDailyReportExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_QUALITY_DAILY_FANOUT, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun metricsQualityDailyQueueBind(
-        @Autowired metricsQualityDailyReportQueue: Queue,
-        @Autowired metricsQualityDailyReportExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(metricsQualityDailyReportQueue).to(metricsQualityDailyReportExchange)
-    }
-
-    @Bean
-    fun metricsQualityDailyReportListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired metricsQualityDailyReportQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: QualityReportDailyMessageListener,
-        @Autowired messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = metricsQualityDailyReportQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = messageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 5,
-            maxConcurrency = 20
-        )
-    }
-
-    @Bean
-    fun metricsTurboDailyReportQueue() = Queue(QUEUE_METRICS_STATISTIC_TURBO_DAILY)
-
-    @Bean
-    fun metricsTurboDailyReportExchange(): FanoutExchange {
-        val fanoutExchange = FanoutExchange(EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, true, false)
-        fanoutExchange.isDelayed = true
-        return fanoutExchange
-    }
-
-    @Bean
-    fun metricsTurboDailyReportQueueBind(
-        @Autowired metricsTurboDailyReportQueue: Queue,
-        @Autowired metricsTurboDailyReportExchange: FanoutExchange
-    ): Binding {
-        return BindingBuilder.bind(metricsTurboDailyReportQueue).to(metricsTurboDailyReportExchange)
-    }
-
-    @Bean
-    fun metricsTurboDailyReportListenerContainer(
-        @Autowired connectionFactory: ConnectionFactory,
-        @Autowired metricsTurboDailyReportQueue: Queue,
-        @Autowired rabbitAdmin: RabbitAdmin,
-        @Autowired listener: TurboDailyReportMessageListener,
-        @Autowired metricsMessageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        return Tools.createSimpleMessageListenerContainer(
-            connectionFactory = connectionFactory,
-            queue = metricsTurboDailyReportQueue,
-            rabbitAdmin = rabbitAdmin,
-            buildListener = listener,
-            messageConverter = metricsMessageConverter,
-            startConsumerMinInterval = 1000,
-            consecutiveActiveTrigger = 5,
-            concurrency = 5,
-            maxConcurrency = 20
-        )
-    }
-
     companion object {
-        private const val QUEUE_QUALITY_DAILY_EVENT = "q.metrics.quality.daily.exchange.queue"
-        private const val EXCHANGE_QUALITY_DAILY_FANOUT = "e.metrics.quality.daily.exchange.fanout"
-        private const val QUEUE_METRICS_STATISTIC_CODECC_DAILY = "q.metrics.statistic.codecc.daily"
-        private const val EXCHANGE_METRICS_STATISTIC_CODECC_DAILY = "e.metrics.statistic.codecc.daily"
-        private const val QUEUE_METRICS_STATISTIC_TURBO_DAILY = "q.metrics.statistic.turbo.daily"
-        private const val EXCHANGE_METRICS_STATISTIC_TURBO_DAILY = "e.metrics.statistic.turbo.daily"
+        const val STREAM_CONSUMER_GROUP = "metrics-service"
+    }
+
+    @EventConsumer(StreamBinding.EXCHANGE_METRICS_STATISTIC_CODE_CHECK_DAILY, STREAM_CONSUMER_GROUP)
+    fun metricsCodeCheckDailyReportListener(
+        @Autowired metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ): Consumer<Message<CodeCheckReportEvent>> {
+        return Consumer { event: Message<CodeCheckReportEvent> ->
+            metricsThirdPlatformDataReportFacadeService.metricsCodeCheckDataReport(event.payload)
+        }
+    }
+
+    @EventConsumer(StreamBinding.EXCHANGE_METRICS_STATISTIC_TURBO_DAILY, STREAM_CONSUMER_GROUP)
+    fun metricsTurboDailyReportListener(
+        @Autowired metricsThirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
+    ): Consumer<Message<TurboReportEvent>> {
+        return Consumer { event: Message<TurboReportEvent> ->
+            metricsThirdPlatformDataReportFacadeService.metricsTurboDataReport(event.payload)
+        }
     }
 }

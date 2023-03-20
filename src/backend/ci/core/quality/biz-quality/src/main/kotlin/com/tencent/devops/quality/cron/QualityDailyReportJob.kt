@@ -27,9 +27,9 @@
 
 package com.tencent.devops.quality.cron
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.service.utils.CommonUtils
-import com.tencent.devops.quality.config.QualityDailyDispatch
 import com.tencent.devops.quality.dao.HistoryDao
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
@@ -43,7 +43,7 @@ import java.time.format.DateTimeFormatter
 @Component
 class QualityDailyReportJob @Autowired constructor(
     private val historyDao: HistoryDao,
-    private val qualityDailyDispatch: QualityDailyDispatch,
+    private val qualityDailyDispatch: SampleEventDispatcher,
     private val dslContext: DSLContext
 ) {
 

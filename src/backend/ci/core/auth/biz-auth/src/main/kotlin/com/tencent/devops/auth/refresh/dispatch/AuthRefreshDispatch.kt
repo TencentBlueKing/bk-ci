@@ -27,8 +27,6 @@
 
 package com.tencent.devops.auth.refresh.dispatch
 
-import com.rabbitmq.client.ChannelContinuationTimeoutException
-import com.rabbitmq.client.impl.AMQImpl
 import com.tencent.devops.auth.refresh.event.RefreshBroadCastEvent
 import com.tencent.devops.common.event.dispatcher.EventDispatcher
 import org.slf4j.LoggerFactory

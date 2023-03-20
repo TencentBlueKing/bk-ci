@@ -27,24 +27,14 @@
 
 package com.tencent.devops.quality.config
 
-import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.event.annotation.EventConsumer
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildCancelBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQualityReviewBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildQueueBroadCastEvent
 import com.tencent.devops.common.event.pojo.pipeline.PipelineBuildReviewBroadCastEvent
-import com.tencent.devops.common.service.trace.TraceTag
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.quality.listener.PipelineBuildQualityListener
-import org.slf4j.MDC
-import org.springframework.amqp.core.MessagePostProcessor
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.core.RabbitTemplate
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean
-import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.messaging.Message
 import java.util.function.Consumer
@@ -55,32 +45,6 @@ class QualityMQConfig {
     companion object {
         const val STREAM_CONSUMER_GROUP = "quality-service"
     }
-
-    @Bean
-    @ConditionalOnMissingBean(RabbitAdmin::class)
-    fun rabbitAdmin(
-        connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
-    }
-
-    @Bean
-    fun rabbitTemplate(
-        connectionFactory: ConnectionFactory,
-        objectMapper: ObjectMapper
-    ): RabbitTemplate {
-        val rabbitTemplate = RabbitTemplate(connectionFactory)
-        rabbitTemplate.messageConverter = messageConverter(objectMapper)
-        rabbitTemplate.addBeforePublishPostProcessors(MessagePostProcessor { message ->
-            val traceId = MDC.get(TraceTag.BIZID)?.ifBlank { TraceTag.buildBiz() }
-            message.messageProperties.setHeader(TraceTag.X_DEVOPS_RID, traceId)
-            message
-        })
-        return rabbitTemplate
-    }
-
-    @Bean
-    fun messageConverter(objectMapper: ObjectMapper) = Jackson2JsonMessageConverter(objectMapper)
 
     @EventConsumer(StreamBinding.EXCHANGE_PIPELINE_BUILD_CANCEL_FANOUT, STREAM_CONSUMER_GROUP)
     fun pipelineCancelQualityListener(

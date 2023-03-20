@@ -32,7 +32,7 @@ import com.tencent.devops.common.event.pojo.IEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import io.swagger.annotations.ApiModelProperty
 
-@Event(destination = StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT)
+@Event(destination = StreamBinding.EXCHANGE_METRICS_STATISTIC_QUALITY_DAILY)
 data class QualityReportEvent(
     @ApiModelProperty("统计时间")
     val statisticsTime: String,

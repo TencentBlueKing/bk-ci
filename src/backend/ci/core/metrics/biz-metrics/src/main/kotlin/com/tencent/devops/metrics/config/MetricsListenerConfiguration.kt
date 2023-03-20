@@ -34,7 +34,6 @@ import com.tencent.devops.common.event.pojo.measure.QualityReportEvent
 import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.metrics.listener.BuildEndMetricsDataReportListener
 import com.tencent.devops.metrics.listener.LabelChangeMetricsDataSyncListener
-import com.tencent.devops.metrics.listener.QualityReportDailyMessageListener
 import com.tencent.devops.metrics.service.MetricsDataReportService
 import com.tencent.devops.metrics.service.MetricsThirdPlatformDataReportFacadeService
 import com.tencent.devops.metrics.service.SyncPipelineRelateLabelDataService
@@ -83,19 +82,12 @@ class MetricsListenerConfiguration {
         }
     }
 
-    @Bean
-    fun qualityReportDailyMessageListener(
-        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
-    ) = QualityReportDailyMessageListener(
-        metricsThirdPlatformDataReportFacadeService = thirdPlatformDataReportFacadeService
-    )
-
-    @EventConsumer(StreamBinding.EXCHANGE_QUALITY_DAILY_FANOUT, STREAM_CONSUMER_GROUP)
+    @EventConsumer(StreamBinding.EXCHANGE_METRICS_STATISTIC_QUALITY_DAILY, STREAM_CONSUMER_GROUP)
     fun metricsQualityDailyReportListener(
-        @Autowired listener: QualityReportDailyMessageListener
+        @Autowired thirdPlatformDataReportFacadeService: MetricsThirdPlatformDataReportFacadeService
     ): Consumer<Message<QualityReportEvent>> {
         return Consumer { event: Message<QualityReportEvent> ->
-            listener.execute(event.payload)
+            thirdPlatformDataReportFacadeService.metricsQualityDataReport(event.payload)
         }
     }
 }

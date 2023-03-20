@@ -186,8 +186,10 @@ object StreamBinding {
     // 流水线质量红线人工审核时间广播
     const val EXCHANGE_PIPELINE_BUILD_QUALITY_REVIEW_FANOUT = "quality.pipeline.build.review.fanout"
 
-    // 质量红线每日数据上报队列
-    const val EXCHANGE_QUALITY_DAILY_FANOUT = "metrics.quality.daily.exchange.fanout"
+    // 度量数据上报队列：质量红线每日数据 + 编译加速每日数据 + 代码检查每日数据
+    const val EXCHANGE_METRICS_STATISTIC_QUALITY_DAILY = "metrics.statistic.quality.daily"
+    const val EXCHANGE_METRICS_STATISTIC_TURBO_DAILY = "metrics.statistic.turbo.daily"
+    const val EXCHANGE_METRICS_STATISTIC_CODE_CHECK_DAILY = "metrics.statistic.code.check.daily"
 
     const val QUEUE_PIPELINE_STREAM_ENABLED = "engine.pipeline.stream.enabled"
 }
