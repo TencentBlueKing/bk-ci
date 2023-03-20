@@ -25,45 +25,19 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-<<<<<<<< HEAD:src/backend/ci/core/project/api-project/src/main/kotlin/com/tencent/devops/project/api/open/OpenProjectAuthCallBackResource.kt
-package com.tencent.devops.project.api.open
-
-import com.tencent.bk.sdk.iam.dto.callback.request.CallbackRequestDTO
-import com.tencent.bk.sdk.iam.dto.callback.response.CallbackBaseResponseDTO
-import com.tencent.devops.common.api.auth.AUTH_HEADER_IAM_TOKEN
-========
 package com.tencent.devops.dispatch.kubernetes.api.external
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.dispatch.kubernetes.pojo.kubernetes.TaskStatus
->>>>>>>> origin/integration:src/backend/ci/ext/tencent/dispatch-kubernetes/api-dispatch-kubernetes-tencent/src/main/kotlin/com/tencent/devops/dispatch/kubernetes/api/external/ExternalResource.kt
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
-import javax.ws.rs.HeaderParam
 import javax.ws.rs.POST
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
 import javax.ws.rs.core.MediaType
 
-<<<<<<<< HEAD:src/backend/ci/core/project/api-project/src/main/kotlin/com/tencent/devops/project/api/open/OpenProjectAuthCallBackResource.kt
-@Api(tags = ["AUTH_CALLBACK_PROJECT"], description = "iam回调project接口")
-@Path("/open/project/callback")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-interface OpenProjectAuthCallBackResource {
-    @POST
-    @Path("/")
-    @ApiOperation("iam项目回调接口")
-    fun projectInfo(
-        @HeaderParam(AUTH_HEADER_IAM_TOKEN)
-        @ApiParam("token")
-        token: String,
-        @ApiParam(value = "回调信息")
-        callBackInfo: CallbackRequestDTO
-    ): CallbackBaseResponseDTO?
-========
 @Api(tags = ["EXTERNAL_DISPATCH_KUBERNETES"], description = "External-dispatch-kubernetes")
 @Path("/external/remotedev/")
 @Produces(MediaType.APPLICATION_JSON)
@@ -77,5 +51,4 @@ interface ExternalResource {
         @ApiParam(value = "回调信息", required = true)
         taskStatus: TaskStatus
     ): Result<Boolean>
->>>>>>>> origin/integration:src/backend/ci/ext/tencent/dispatch-kubernetes/api-dispatch-kubernetes-tencent/src/main/kotlin/com/tencent/devops/dispatch/kubernetes/api/external/ExternalResource.kt
 }
