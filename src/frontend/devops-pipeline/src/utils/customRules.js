@@ -92,6 +92,11 @@ const customeRules = {
         validate: function (value, args) {
             return /^[\w-{}() +?.:$"]{1,256}$/.test(value)
         }
+    },
+    timeoutsRule: {
+        validate: function (value, args) {
+            return /^([1-9]\d{0,3}|10[0-7]\d{2}|10080)$/.test(value) || /\$\{{2}([\w\_]+)\}{2}/g.test(value)
+        }
     }
 }
 

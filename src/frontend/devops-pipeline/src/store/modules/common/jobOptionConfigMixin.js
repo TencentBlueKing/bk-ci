@@ -191,8 +191,8 @@ const jobOptionConfigMixin = {
                         return !(jobOption && jobOption.dependOnType === 'NAME')
                     }
                 },
-                timeout: {
-                    rule: { numeric: true, max_value: 10080 },
+                timeoutVar: {
+                    rule: { timeoutsRule: true },
                     component: 'vuex-input',
                     required: true,
                     label: this.$t('storeMap.jobTimeout'),
