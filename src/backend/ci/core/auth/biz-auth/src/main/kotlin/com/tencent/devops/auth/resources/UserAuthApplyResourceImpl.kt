@@ -21,7 +21,7 @@ class UserAuthApplyResourceImpl @Autowired constructor(
 ) : UserAuthApplyResource {
     override fun listResourceTypes(userId: String): Result<List<ResourceTypeInfoVo>> {
         return Result(permissionApplyService.listResourceTypes(userId)
-                          .filterNot { it.resourceType == AuthResourceType.PIPELINE_GROUP.value })
+            .filterNot { it.resourceType == AuthResourceType.PIPELINE_GROUP.value })
     }
 
     override fun listActions(userId: String, resourceType: String): Result<List<ActionInfoVo>> {

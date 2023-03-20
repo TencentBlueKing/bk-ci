@@ -44,6 +44,7 @@ import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.service.AuthResourceCodeConverter
 import com.tencent.devops.auth.service.AuthResourceService
 import com.tencent.devops.auth.service.DeptService
+import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.auth.service.PermissionGroupPoliciesService
 import com.tencent.devops.auth.service.PermissionSubsetManagerService
@@ -164,15 +165,17 @@ class RbacAuthConfiguration {
     fun rbacPermissionExtService(
         permissionResourceService: PermissionResourceService
     ) = RbacPermissionExtService(
-        permissionResourceService = permissionResourceService,
+        permissionResourceService = permissionResourceService
     )
 
     @Bean
     @Primary
     fun permissionItsmCallbackService(
-        traceEventDispatcher: TraceEventDispatcher
+        traceEventDispatcher: TraceEventDispatcher,
+        itsmService: ItsmService
     ) = RbacPermissionItsmCallbackService(
-        traceEventDispatcher = traceEventDispatcher
+        traceEventDispatcher = traceEventDispatcher,
+        itsmService = itsmService
     )
 
     @Bean

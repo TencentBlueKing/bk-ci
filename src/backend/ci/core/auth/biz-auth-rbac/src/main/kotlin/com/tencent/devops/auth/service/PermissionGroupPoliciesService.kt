@@ -67,7 +67,6 @@ class PermissionGroupPoliciesService(
         private const val RESOURCE_Name_PLACEHOLDER = "#resourceName#"
     }
 
-
     /**
      * 构建分级管理员或分级管理员用户组授权范围
      */

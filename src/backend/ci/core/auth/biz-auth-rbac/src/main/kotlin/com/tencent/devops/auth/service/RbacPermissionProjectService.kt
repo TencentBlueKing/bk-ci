@@ -148,10 +148,9 @@ class RbacPermissionProjectService(
 
     override fun isProjectUser(userId: String, projectCode: String, group: BkAuthGroup?): Boolean {
         val managerPermission = checkProjectManager(userId, projectCode)
+        val checkCiManager = group != null && (group == BkAuthGroup.MANAGER || group == BkAuthGroup.CI_MANAGER)
         // 有管理员权限或者若为校验管理员权限,直接返回是否时管理员成员
-        if (managerPermission ||
-            (group != null && (group == BkAuthGroup.MANAGER || group == BkAuthGroup.CI_MANAGER))
-        ) {
+        if (managerPermission || checkCiManager) {
             return managerPermission
         }
         val instanceDTO = InstanceDTO()

@@ -62,7 +62,7 @@ class UserCertResourceImpl @Autowired constructor(
     }
 
     override fun getIos(userId: String, projectId: String, certId: String): Result<CertIOSInfo> {
-        return Result(certService.getIos(userId,projectId, certId))
+        return Result(certService.getIos(userId, projectId, certId))
     }
 
     override fun uploadIos(
@@ -124,7 +124,7 @@ class UserCertResourceImpl @Autowired constructor(
     }
 
     override fun getAndroid(userId: String, projectId: String, certId: String): Result<CertAndroidInfo> {
-        return Result(certService.getAndroid(userId,projectId, certId))
+        return Result(certService.getAndroid(userId, projectId, certId))
     }
 
     override fun uploadAndroid(

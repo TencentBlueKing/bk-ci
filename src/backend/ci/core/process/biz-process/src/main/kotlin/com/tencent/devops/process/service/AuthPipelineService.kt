@@ -338,7 +338,6 @@ class AuthPipelineService @Autowired constructor(
         }
         logger.info("entityInfo $entityInfo, count ${entityInfo.size}")
         return result.buildListInstanceResult(entityInfo, entityInfo.size.toLong())
-
     }
 
     private fun getPipelineInfo(
@@ -384,7 +383,7 @@ class AuthPipelineService @Autowired constructor(
 
     private fun getPipelineGroupInfo(
         ids: Set<Long>,
-        token: String,
+        token: String
     ): FetchInstanceInfoResponseDTO {
         authTokenApi.checkToken(token)
         val pipelineGroupList = pipelineViewDao.list(
@@ -414,7 +413,7 @@ class AuthPipelineService @Autowired constructor(
         keyword: String,
         limit: Int,
         offset: Int,
-        token: String,
+        token: String
     ): SearchInstanceInfo {
         authTokenApi.checkToken(token)
         val pipelineGroupInfo = pipelineViewDao.listByPage(

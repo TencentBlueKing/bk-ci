@@ -31,16 +31,16 @@ import com.tencent.devops.common.api.model.SQLPage
 import com.tencent.devops.common.api.util.DHUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.ticket.pojo.Cert
-import com.tencent.devops.ticket.pojo.CertAndroidInfo
-import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
-import com.tencent.devops.ticket.pojo.CertIOSInfo
-import com.tencent.devops.ticket.pojo.CertTlsInfo
-import com.tencent.devops.ticket.pojo.CertIOS
-import com.tencent.devops.ticket.pojo.CertWithPermission
-import com.tencent.devops.ticket.pojo.CertEnterprise
 import com.tencent.devops.ticket.pojo.CertAndroid
+import com.tencent.devops.ticket.pojo.CertAndroidInfo
 import com.tencent.devops.ticket.pojo.CertAndroidWithCredential
+import com.tencent.devops.ticket.pojo.CertEnterprise
+import com.tencent.devops.ticket.pojo.CertEnterpriseInfo
+import com.tencent.devops.ticket.pojo.CertIOS
+import com.tencent.devops.ticket.pojo.CertIOSInfo
 import com.tencent.devops.ticket.pojo.CertTls
+import com.tencent.devops.ticket.pojo.CertTlsInfo
+import com.tencent.devops.ticket.pojo.CertWithPermission
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import java.io.ByteArrayOutputStream
@@ -171,11 +171,11 @@ interface CertService {
         limit: Int
     ): SQLPage<Cert>
 
-    fun getIos(userId: String,projectId: String, certId: String): CertIOSInfo
+    fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo
 
     fun getEnterprise(projectId: String, certId: String): CertEnterpriseInfo
 
-    fun getAndroid(userId: String,projectId: String, certId: String): CertAndroidInfo
+    fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo
 
     fun getTls(projectId: String, certId: String): CertTlsInfo
 

@@ -49,7 +49,7 @@ import org.springframework.stereotype.Service
 <<<<<<<< HEAD:src/backend/ci/core/auth/biz-auth/src/main/kotlin/com/tencent/devops/auth/service/iam/impl/PermissionResourceCallbackServiceImpl.kt
 @Service
 class PermissionResourceCallbackServiceImpl @Autowired constructor(
-    private val resourceService: ResourceService,
+    private val resourceService: ResourceService
 ) : PermissionResourceCallbackService {
     override fun getProject(callBackInfo: CallbackRequestDTO, token: String): CallbackBaseResponseDTO {
         return resourceService.getProject(callBackInfo, token)

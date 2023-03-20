@@ -65,7 +65,6 @@ class RbacRepositoryPermissionService(
             resourceType = AuthResourceType.CODE_REPERTORY.value,
             action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.CODE_REPERTORY)
         ).data?.map { HashUtil.decodeOtherIdToLong(it) } ?: emptyList()
-
     }
 
     override fun filterRepositories(

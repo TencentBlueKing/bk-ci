@@ -957,7 +957,7 @@ class CertServiceImpl @Autowired constructor(
         return SQLPage(count, certList)
     }
 
-    override fun getIos(userId: String,projectId: String, certId: String): CertIOSInfo {
+    override fun getIos(userId: String, projectId: String, certId: String): CertIOSInfo {
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,
@@ -984,7 +984,7 @@ class CertServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getAndroid(userId: String,projectId: String, certId: String): CertAndroidInfo {
+    override fun getAndroid(userId: String, projectId: String, certId: String): CertAndroidInfo {
         certPermissionService.validatePermission(
             userId = userId,
             projectId = projectId,

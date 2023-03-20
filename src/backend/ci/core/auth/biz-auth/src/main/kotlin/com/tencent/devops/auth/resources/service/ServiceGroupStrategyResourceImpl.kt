@@ -29,7 +29,6 @@ package com.tencent.devops.auth.resources.service
 
 import com.tencent.devops.auth.api.service.ServiceGroupStrategyResource
 import com.tencent.devops.auth.pojo.StrategyEntity
-import com.tencent.devops.auth.service.LocalManagerService
 import com.tencent.devops.auth.service.StrategyService
 import com.tencent.devops.common.web.RestResource
 import org.springframework.beans.factory.annotation.Autowired

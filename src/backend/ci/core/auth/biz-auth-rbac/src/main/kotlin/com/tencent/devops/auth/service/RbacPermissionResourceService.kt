@@ -30,6 +30,7 @@ package com.tencent.devops.auth.service
 
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.pojo.AuthResourceInfo
+import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupCreateEvent
 import com.tencent.devops.auth.pojo.event.AuthResourceGroupModifyEvent
 import com.tencent.devops.auth.service.iam.PermissionResourceService
@@ -164,7 +165,7 @@ class RbacPermissionResourceService(
                 projectCode = projectCode,
                 resourceType = resourceType,
                 resourceCode = resourceCode,
-                resourceName = resourceName,
+                resourceName = resourceName
             )
             traceEventDispatcher.dispatch(
                 AuthResourceGroupModifyEvent(
@@ -309,7 +310,7 @@ class RbacPermissionResourceService(
             resourceCode = resourceCode,
             resourceName = resourceInfo.resourceName,
             iamResourceCode = resourceInfo.iamResourceCode,
-            createMode = false
+            createMode = AuthGroupCreateMode.ENABLE
         )
         return authResourceService.enable(
             userId = userId,

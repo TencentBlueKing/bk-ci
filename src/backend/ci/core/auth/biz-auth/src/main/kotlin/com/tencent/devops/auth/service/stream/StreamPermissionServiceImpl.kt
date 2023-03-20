@@ -97,7 +97,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
                 action = action,
                 projectCode = projectCode,
                 resourceCode = resourceCode,
-                resourceType =  resourceType,
+                resourceType = resourceType,
                 relationResourceType = null
             )
         }
@@ -115,7 +115,7 @@ abstract class StreamPermissionServiceImpl : PermissionService {
                 action = action,
                 projectCode = projectCode,
                 resourceCode = resource.resourceCode,
-                resourceType =  resource.resourceType,
+                resourceType = resource.resourceType,
                 relationResourceType = null
             )
         }

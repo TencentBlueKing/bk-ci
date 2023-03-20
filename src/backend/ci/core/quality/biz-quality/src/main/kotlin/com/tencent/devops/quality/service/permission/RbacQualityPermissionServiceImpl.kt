@@ -50,15 +50,16 @@ class RbacQualityPermissionServiceImpl(
         authPermission: AuthPermission,
         message: String
     ) {
-        val permissionCheck = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
-            token = tokenService.getSystemToken(null)!!,
-            userId = userId,
-            projectCode = projectId,
-            resourceCode = HashUtil.encodeLongId(groupId),
-            action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
-            relationResourceType = null,
-            resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
-        ).data ?: false
+        val permissionCheck =
+            client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
+                token = tokenService.getSystemToken(null)!!,
+                userId = userId,
+                projectCode = projectId,
+                resourceCode = HashUtil.encodeLongId(groupId),
+                action = RbacAuthUtils.buildAction(authPermission, AuthResourceType.QUALITY_GROUP),
+                relationResourceType = null,
+                resourceType = AuthResourceType.QUALITY_GROUP_NEW.value
+            ).data ?: false
         if (!permissionCheck) {
             throw PermissionForbiddenException(message)
         }
@@ -78,7 +79,12 @@ class RbacQualityPermissionServiceImpl(
         ).data ?: false
     }
 
-    override fun validateGroupPermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateGroupPermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!validateGroupPermission(
                 userId = userId,
                 projectId = projectId,
@@ -114,11 +120,15 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_GROUP_NEW.value,
-            resourceCode = HashUtil.encodeLongId(groupId),
+            resourceCode = HashUtil.encodeLongId(groupId)
         )
     }
 
-    override fun filterGroup(user: String, projectId: String, authPermissions: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterGroup(
+        user: String,
+        projectId: String,
+        authPermissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val actions = mutableListOf<String>()
         authPermissions.forEach {
             actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_GROUP))
@@ -143,13 +153,24 @@ class RbacQualityPermissionServiceImpl(
         ).data ?: false
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         if (!validateRulePermission(userId, projectId, authPermission)) {
             throw PermissionForbiddenException(message)
         }
     }
 
-    override fun validateRulePermission(userId: String, projectId: String, ruleId: Long, authPermission: AuthPermission, message: String) {
+    override fun validateRulePermission(
+        userId: String,
+        projectId: String,
+        ruleId: Long,
+        authPermission: AuthPermission,
+        message: String
+    ) {
         val checkPermission = client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenService.getSystemToken(null)!!,
             userId = userId,
@@ -190,11 +211,15 @@ class RbacQualityPermissionServiceImpl(
             token = tokenService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = AuthResourceType.QUALITY_RULE.value,
-            resourceCode = HashUtil.encodeLongId(ruleId),
+            resourceCode = HashUtil.encodeLongId(ruleId)
         )
     }
 
-    override fun filterRules(userId: String, projectId: String, bkAuthPermissionSet: Set<AuthPermission>): Map<AuthPermission, List<Long>> {
+    override fun filterRules(
+        userId: String,
+        projectId: String,
+        bkAuthPermissionSet: Set<AuthPermission>
+    ): Map<AuthPermission, List<Long>> {
         val actions = mutableListOf<String>()
         bkAuthPermissionSet.forEach {
             actions.add(RbacAuthUtils.buildAction(it, AuthResourceType.QUALITY_RULE))

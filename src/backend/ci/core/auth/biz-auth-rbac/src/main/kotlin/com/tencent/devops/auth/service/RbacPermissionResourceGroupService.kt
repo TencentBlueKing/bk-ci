@@ -32,11 +32,15 @@ import com.tencent.bk.sdk.iam.constants.ManagerScopesEnum
 import com.tencent.bk.sdk.iam.dto.V2PageInfoDTO
 import com.tencent.bk.sdk.iam.dto.manager.ManagerRoleGroup
 import com.tencent.bk.sdk.iam.dto.manager.dto.GroupMemberRenewApplicationDTO
+import com.tencent.bk.sdk.iam.dto.manager.dto.SearchGroupDTO
 import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.constant.AuthMessageCode.AUTH_GROUP_MEMBER_EXPIRED_DESC
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_DELETE_FAIL
 import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_DEFAULT_GROUP_RENAME_FAIL
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_LONG
+import com.tencent.devops.auth.constant.AuthMessageCode.ERROR_GROUP_NAME_TO_SHORT
+import com.tencent.devops.auth.constant.AuthMessageCode.GROUP_EXIST
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
 import com.tencent.devops.auth.pojo.dto.GroupMemberRenewalDTO
 import com.tencent.devops.auth.pojo.dto.RenameGroupDTO
@@ -72,6 +76,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(RbacPermissionResourceGroupService::class.java)
+        private const val MAX_GROUP_NAME_LENGTH = 32
+        private const val MIN_GROUP_NAME_LENGTH = 5
     }
 
     override fun listGroup(
@@ -104,32 +110,25 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         val resourceGroupMap = authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,
             projectCode = projectId,
-            resourceType = AuthResourceType.PROJECT.value,
-            resourceCode = projectId,
+            resourceType = resourceType,
+            resourceCode = resourceCode
         ).associateBy { it.relationId.toInt() }
-        val iamGroupInfoVoList = mutableListOf<IamGroupInfoVo>()
-        iamGroupInfoList.forEach {
-            val resourceGroup = resourceGroupMap[it.id]
+        val iamGroupInfoVoList = iamGroupInfoList.filterNot {
             // TODO 流水线组管理一期先不上,需要先把流水线组管理员隐藏
-            if (resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
+            val resourceGroup = resourceGroupMap[it.id]
+            resourceGroup?.resourceType == AuthResourceType.PIPELINE_GROUP.value &&
                 resourceGroup.groupCode == DefaultGroupType.MANAGER.value
-            ) {
-                return@forEach
-            }
-
-            iamGroupInfoVoList.add(
-                IamGroupInfoVo(
-                    managerId = resourceInfo.relationId.toInt(),
-                    defaultGroup = resourceGroup?.defaultGroup ?: false,
-                    groupId = it.id,
-                    name = it.name,
-                    displayName = it.name,
-                    userCount = it.userCount,
-                    departmentCount = it.departmentCount
-                )
+        }.map {
+            IamGroupInfoVo(
+                managerId = resourceInfo.relationId.toInt(),
+                defaultGroup = resourceGroupMap[it.id]?.defaultGroup ?: false,
+                groupId = it.id,
+                name = it.name,
+                displayName = it.name,
+                userCount = it.userCount,
+                departmentCount = it.departmentCount
             )
-        }
-        iamGroupInfoVoList.sortedBy { it.groupId }
+        }.sortedBy { it.groupId }
         return Pagination(
             hasNext = iamGroupInfoVoList.size == pageSize,
             records = iamGroupInfoVoList
@@ -183,7 +182,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     createdTime = createTime,
                     status = status,
                     expiredAt = expiredAt,
-                    expiredDisplay = expiredDisplay,
+                    expiredDisplay = expiredDisplay
                 )
             } else {
                 val status = GroupMemberStatus.NOT_JOINED.name
@@ -194,7 +193,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                     createdTime = "",
                     status = status,
                     expiredAt = 0L,
-                    expiredDisplay = "",
+                    expiredDisplay = ""
                 )
             }
         }
@@ -287,6 +286,18 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         renameGroupDTO: RenameGroupDTO
     ): Boolean {
         logger.info("rename group name|$userId|$projectId|$resourceType|$groupId|${renameGroupDTO.groupName}")
+        if (renameGroupDTO.groupName.length > MAX_GROUP_NAME_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ERROR_GROUP_NAME_TO_LONG,
+                defaultMessage = "group name cannot exceed 32 characters"
+            )
+        }
+        if (renameGroupDTO.groupName.length < MIN_GROUP_NAME_LENGTH) {
+            throw ErrorCodeException(
+                errorCode = ERROR_GROUP_NAME_TO_SHORT,
+                defaultMessage = "group name cannot be less than 5 characters"
+            )
+        }
         if (!permissionResourceService.hasManagerPermission(
                 userId = userId,
                 projectId = projectId,
@@ -309,9 +320,37 @@ class RbacPermissionResourceGroupService @Autowired constructor(
                 defaultMessage = "default group cannot be rename"
             )
         }
+        checkDuplicateGroupName(projectId, renameGroupDTO.groupName)
         val managerRoleGroup = ManagerRoleGroup()
         managerRoleGroup.name = renameGroupDTO.groupName
         iamV2ManagerService.updateRoleGroupV2(groupId, managerRoleGroup)
         return true
+    }
+
+    private fun checkDuplicateGroupName(
+        projectId: String,
+        groupName: String
+    ) {
+        // 校验用户组是否存在
+        val projectInfo = authResourceService.get(
+            projectCode = projectId,
+            resourceType = AuthResourceType.PROJECT.value,
+            resourceCode = projectId
+        )
+        val searchGroupDTO = SearchGroupDTO
+            .builder()
+            .name(groupName)
+            .build()
+        val v2PageInfoDTO = V2PageInfoDTO()
+        v2PageInfoDTO.pageSize = PageUtil.DEFAULT_PAGE
+        v2PageInfoDTO.page = PageUtil.DEFAULT_PAGE
+        val gradeManagerRoleGroupList =
+            iamV2ManagerService.getGradeManagerRoleGroupV2(projectInfo.relationId, searchGroupDTO, v2PageInfoDTO)
+        if (gradeManagerRoleGroupList.results.isNotEmpty()) {
+            throw ErrorCodeException(
+                errorCode = GROUP_EXIST,
+                defaultMessage = "group name already exists"
+            )
+        }
     }
 }

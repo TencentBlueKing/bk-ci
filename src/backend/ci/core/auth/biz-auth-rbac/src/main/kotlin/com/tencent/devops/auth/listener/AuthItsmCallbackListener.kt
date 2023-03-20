@@ -70,17 +70,13 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun createProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm create callback info:$itsmCallBackInfo")
-        // 校验itsm回调token
-        itsmService.verifyItsmToken(itsmCallBackInfo.token)
-        if (itsmCallBackInfo.currentStatus == CANCEL_ITSM_APPLICATION_STATUS)
-            return
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
-            defaultMessage = "The itsm callback application does not exist!| sn = $sn"
+            defaultMessage = "itsm application form $sn does not exist"
         )
         val englishName = callBackInfo.englishName
         val projectInfo =
@@ -128,15 +124,13 @@ class AuthItsmCallbackListener @Autowired constructor(
 
     fun updateProjectCallBack(itsmCallBackInfo: ItsmCallBackInfo) {
         logger.info("auth itsm update callback info:$itsmCallBackInfo")
-        // 校验itsm回调token
-        itsmService.verifyItsmToken(itsmCallBackInfo.token)
         val sn = itsmCallBackInfo.sn
         val approveResult = itsmCallBackInfo.approveResult.toBoolean()
         // 蓝盾数据库存储的回调信息
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
-            defaultMessage = "The itsm callback application does not exist!| sn = $sn"
+            defaultMessage = "itsm application form $sn does not exist"
         )
         val englishName = callBackInfo.englishName
         val projectInfo =
@@ -180,9 +174,5 @@ class AuthItsmCallbackListener @Autowired constructor(
                 approver = itsmCallBackInfo.lastApprover
             )
         }
-    }
-
-    companion object {
-        private const val CANCEL_ITSM_APPLICATION_STATUS = "REVOKED"
     }
 }

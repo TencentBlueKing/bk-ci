@@ -99,24 +99,6 @@ BEGIN
             ADD `properties` text NULL COMMENT '项目其他配置';
     END IF;
 
-    IF NOT EXISTS(SELECT 1
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PROJECT'
-                    AND COLUMN_NAME = 'subjectScopes') THEN
-    ALTER TABLE T_PROJECT
-        ADD `subjectScopes` text DEFAULT NULL COMMENT '最大可授权人员范围';
-    END IF;
-
-    IF NOT EXISTS(SELECT 1
-                FROM information_schema.COLUMNS
-                WHERE TABLE_SCHEMA = db
-                    AND TABLE_NAME = 'T_PROJECT'
-                    AND COLUMN_NAME = 'is_auth_secrecy') THEN
-    ALTER TABLE T_PROJECT
-        ADD `is_auth_secrecy` bit(1) DEFAULT b'0' COMMENT '是否权限私密，0-公开，1-保密';
-    END IF;
-
     COMMIT;
 END <CI_UBF>
 DELIMITER ;

@@ -157,6 +157,7 @@ class ProjectApprovalDao {
                 .set(APPROVAL_STATUS, approvalStatus)
                 .set(UPDATED_AT, LocalDateTime.now())
                 .set(UPDATOR, userId)
+                .set(TIPS_STATUS, tipsStatus)
                 .where(ENGLISH_NAME.eq(projectId))
                 .execute()
         }

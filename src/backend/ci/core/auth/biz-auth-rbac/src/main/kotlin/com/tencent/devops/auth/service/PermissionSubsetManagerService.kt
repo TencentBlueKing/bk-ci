@@ -37,6 +37,7 @@ import com.tencent.bk.sdk.iam.service.v2.V2ManagerService
 import com.tencent.devops.auth.constant.AuthMessageCode
 import com.tencent.devops.auth.dao.AuthResourceGroupConfigDao
 import com.tencent.devops.auth.dao.AuthResourceGroupDao
+import com.tencent.devops.auth.pojo.enums.AuthGroupCreateMode
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -78,7 +79,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value
         ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
+            errorCode = AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND,
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
@@ -181,8 +182,9 @@ class PermissionSubsetManagerService @Autowired constructor(
     /**
      * 创建二级管理员默认分组
      *
+     * @param createMode true-创建时创建组，false-开启权限管理创建默认组
      */
-    @Suppress("LongParameterList")
+    @Suppress("LongParameterList", "LongMethod")
     fun createSubsetManagerDefaultGroup(
         subsetManagerId: Int,
         userId: String,
@@ -192,7 +194,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         resourceCode: String,
         resourceName: String,
         iamResourceCode: String,
-        createMode: Boolean
+        createMode: AuthGroupCreateMode
     ) {
         // 创建资源时，先同步二级管理员创建时创建的组
         syncSubsetManagerGroup(
@@ -203,11 +205,11 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceName = resourceName,
             iamResourceCode = iamResourceCode
         )
-        val resourceGroupConfigs = if (createMode) {
+        val resourceGroupConfigs = if (createMode == AuthGroupCreateMode.CREATE) {
             authResourceGroupConfigDao.get(
                 dslContext = dslContext,
                 resourceType = resourceType,
-                createMode = true
+                createMode = false
             )
         } else {
             authResourceGroupConfigDao.get(
@@ -306,7 +308,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         projectCode: String,
         resourceType: String,
         resourceCode: String,
-        resourceName: String,
+        resourceName: String
     ) {
         val defaultGroupConfigs = authResourceGroupConfigDao.get(
             dslContext = dslContext,
@@ -329,7 +331,7 @@ class PermissionSubsetManagerService @Autowired constructor(
         subsetManagerId: Int,
         projectCode: String,
         resourceType: String,
-        resourceCode: String,
+        resourceCode: String
     ) {
         authResourceGroupDao.getByResourceCode(
             dslContext = dslContext,

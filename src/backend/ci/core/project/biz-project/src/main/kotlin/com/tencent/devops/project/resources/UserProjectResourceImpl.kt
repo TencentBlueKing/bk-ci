@@ -38,13 +38,14 @@ import com.tencent.devops.project.pojo.ProjectDiffVO
 import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
 import com.tencent.devops.project.service.ProjectService
-import java.io.InputStream
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.springframework.beans.factory.annotation.Autowired
+import java.io.InputStream
 
 @RestResource
 class UserProjectResourceImpl @Autowired constructor(
@@ -66,7 +67,7 @@ class UserProjectResourceImpl @Autowired constructor(
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Result<Pagination<Pair<Boolean, ProjectVO>>> {
+    ): Result<Pagination<ProjectWithPermission>> {
         return Result(
             projectService.listProjectsForApply(
                 userId = userId,

@@ -49,7 +49,7 @@ interface EnvironmentPermissionService {
 
     fun getEnvListResult(
         canListEnv: List<TEnvRecord>,
-        envRecordList: List<TEnvRecord>,
+        envRecordList: List<TEnvRecord>
     ): List<TEnvRecord>
 
     fun checkEnvPermission(userId: String, projectId: String, envId: Long, permission: AuthPermission): Boolean

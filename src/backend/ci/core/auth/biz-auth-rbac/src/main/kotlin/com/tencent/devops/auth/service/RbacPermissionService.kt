@@ -179,7 +179,7 @@ class RbacPermissionService constructor(
         val resource = if (resourceType == AuthResourceType.PROJECT.value) {
             AuthResourceInstance(
                 resourceType = resourceType,
-                resourceCode = resourceCode,
+                resourceCode = resourceCode
             )
         } else {
             val projectResourceInstance = AuthResourceInstance(

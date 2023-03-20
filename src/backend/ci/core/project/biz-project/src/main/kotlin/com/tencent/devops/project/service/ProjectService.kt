@@ -39,6 +39,7 @@ import com.tencent.devops.project.pojo.ProjectLogo
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -161,7 +162,7 @@ interface ProjectService {
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<Pair<Boolean, ProjectVO>>
+    ): Pagination<ProjectWithPermission>
 
     fun list(userId: String): List<ProjectVO>
 

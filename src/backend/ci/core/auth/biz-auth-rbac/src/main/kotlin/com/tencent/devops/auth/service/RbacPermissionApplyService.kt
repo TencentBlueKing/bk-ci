@@ -27,7 +27,6 @@ import com.tencent.devops.auth.pojo.vo.ResourceTypeInfoVo
 import com.tencent.devops.auth.service.iam.PermissionApplyService
 import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.auth.service.iam.PermissionService
-import com.tencent.devops.common.api.constant.REPORT_TYPE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -142,14 +141,13 @@ class RbacPermissionApplyService @Autowired constructor(
             if (resourceType == null) {
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_EMPTY,
-                    params = arrayOf(iamResourceCode),
-                    defaultMessage = "权限系统：资源实例筛选时，资源类型不能为空！"
+                    defaultMessage = "the resource type cannot be empty"
                 )
             }
             // 若无项目访问权限，则只搜索出对应资源下的用户组
             if (!visitProjectPermission)
                 return ""
-            bkIamPath = StringBuilder("/${systemId},${AuthResourceType.PROJECT.value},${projectId}/")
+            bkIamPath = StringBuilder("/$systemId,${AuthResourceType.PROJECT.value},$projectId/")
             if (resourceType == AuthResourceType.PIPELINE_DEFAULT.value) {
                 val pipelineId = authResourceCodeConverter.iamCode2Code(
                     projectCode = projectId,
@@ -164,7 +162,7 @@ class RbacPermissionApplyService @Autowired constructor(
                 ).data
                 if (viewIds != null && viewIds.isNotEmpty()) {
                     viewIds.forEach {
-                        bkIamPath.append("${systemId},${AuthResourceType.PIPELINE_GROUP.value},${it}/")
+                        bkIamPath.append("$systemId,${AuthResourceType.PIPELINE_GROUP.value},$it/")
                     }
                 }
             }
@@ -253,7 +251,7 @@ class RbacPermissionApplyService @Autowired constructor(
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.APPLY_TO_JOIN_GROUP_FAIL,
                 params = arrayOf(applyJoinGroupInfo.groupIds.toString()),
-                defaultMessage = "权限系统：申请加入用户组[${applyJoinGroupInfo.groupIds}]失败！"
+                defaultMessage = "Failed to apply to join group(${applyJoinGroupInfo.groupIds})"
             )
         }
         return true
@@ -291,12 +289,11 @@ class RbacPermissionApplyService @Autowired constructor(
         val iamGroupPermissionDetailList: List<GroupPermissionDetailResponseDTO>
         try {
             iamGroupPermissionDetailList = v2ManagerService.getGroupPermissionDetail(groupId)
-            logger.info("RbacPermissionApplyService|getGroupPermissionDetail: iamGroupPermissionDetailList=$iamGroupPermissionDetailList")
         } catch (e: Exception) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_GROUP_PERMISSION_DETAIL_FAIL,
                 params = arrayOf(groupId.toString()),
-                defaultMessage = "权限系统：获取用户组[$groupId]权限信息失败！"
+                defaultMessage = "Failed to get group($groupId) permission info"
             )
         }
         val groupPermissionDetailVoList: MutableList<GroupPermissionDetailVo> = ArrayList()
@@ -381,7 +378,7 @@ class RbacPermissionApplyService @Autowired constructor(
         if (groupInfoList.isEmpty()) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.GET_REDIRECT_INFORMATION_FAIL,
-                defaultMessage = "权限系统: 获取权限申请跳转信息失败！"
+                defaultMessage = "Failed to get redirect url"
             )
         }
         return AuthApplyRedirectInfoVo(

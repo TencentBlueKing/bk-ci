@@ -38,7 +38,7 @@ import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceAuthResourceCallBackResourceImpl @Autowired constructor(
-    private val permissionResourceCallbackService: PermissionResourceCallbackService,
+    private val permissionResourceCallbackService: PermissionResourceCallbackService
 ) : ServiceAuthResourceCallBackResource {
     override fun projectInfo(
         callBackInfo: CallbackRequestDTO,

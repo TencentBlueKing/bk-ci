@@ -67,6 +67,7 @@ import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectTagUpdateDTO
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
 import com.tencent.devops.project.pojo.ProjectVO
+import com.tencent.devops.project.pojo.ProjectWithPermission
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
@@ -540,37 +541,35 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectName: String?,
         page: Int,
         pageSize: Int
-    ): Pagination<Pair<Boolean, ProjectVO>> {
+    ): Pagination<ProjectWithPermission> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectList: MutableList<Pair<Boolean, ProjectVO>> = mutableListOf()
-        // todo 还要拉取出该用户已经加入的保密项目。
-        // todo 拉取到保密项目，还得抛出异常
-        // 拉取出已经有访问权限的项目。
-        projectDao.listProjectsByProjectName(
+        val projectListWithPermission: MutableList<ProjectWithPermission> = mutableListOf()
+        // 拉取出该用户有访问权限的项目
+        val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
+        projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
+            englishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
         ).forEach {
-            projectList.add(
-                Pair(
-                    // todo 改成批量鉴权
-                    authPermissionApi.validateUserResourcePermission(
+            projectListWithPermission.add(
+                ProjectWithPermission(
+                    projectName = it.value1(),
+                    englishName = it.value2(),
+                    permission = authPermissionApi.validateUserResourcePermission(
                         user = userId,
                         serviceCode = projectAuthServiceCode,
                         resourceType = AuthResourceType.PROJECT,
-                        projectCode = it.englishName,
+                        projectCode = it.value2(),
                         permission = AuthPermission.VISIT
-                    ), ProjectUtils.packagingBean(it)
+                    )
                 )
             )
         }
-        if (projectList.isEmpty()) {
-            return Pagination(false, emptyList())
-        }
         return Pagination(
-            hasNext = projectList.size == pageSize,
-            records = projectList
+            hasNext = projectListWithPermission.size == pageSize,
+            records = projectListWithPermission
         )
     }
 
@@ -939,7 +938,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         ) {
             logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
                     "rejected during creation！| EnglishName=${projectInfo.englishName}"
@@ -952,7 +951,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The project cancel creation failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    messageCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                     defaultMessage = "The project cancel creation failed: ${projectInfo.englishName}"
                 )
             )
@@ -971,7 +970,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (status != ProjectApproveStatus.UPDATE_PENDING.status) {
             logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
                     "rejected during creation！| EnglishName=${projectInfo.englishName}"
@@ -989,7 +988,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The project cancel update failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    messageCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                     defaultMessage = "The project cancel update failed: ${projectInfo.englishName}"
                 )
             )

@@ -66,7 +66,11 @@ class RbacEnvironmentPermissionService(
         return listEnvByPermission(userId, projectId, AuthPermission.VIEW)
     }
 
-    override fun listEnvByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun listEnvByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -139,7 +143,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = envResourceType,
-            resourceCode = HashUtil.encodeLongId(envId),
+            resourceCode = HashUtil.encodeLongId(envId)
         )
     }
 
@@ -153,7 +157,11 @@ class RbacEnvironmentPermissionService(
         ).data?.map { HashUtil.decodeIdToLong(it) }?.toSet() ?: emptySet()
     }
 
-    override fun listNodeByPermissions(userId: String, projectId: String, permissions: Set<AuthPermission>): Map<AuthPermission, List<String>> {
+    override fun listNodeByPermissions(
+        userId: String,
+        projectId: String,
+        permissions: Set<AuthPermission>
+    ): Map<AuthPermission, List<String>> {
         return client.get(ServicePermissionAuthResource::class).getUserResourcesByPermissions(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -174,7 +182,12 @@ class RbacEnvironmentPermissionService(
         return hasRbacPermissionNode.ifEmpty { emptyList() }
     }
 
-    override fun checkNodePermission(userId: String, projectId: String, nodeId: Long, permission: AuthPermission): Boolean {
+    override fun checkNodePermission(
+        userId: String,
+        projectId: String,
+        nodeId: Long,
+        permission: AuthPermission
+    ): Boolean {
         return client.get(ServicePermissionAuthResource::class).validateUserResourcePermissionByRelation(
             token = tokenCheckService.getSystemToken(null)!!,
             userId = userId,
@@ -224,7 +237,7 @@ class RbacEnvironmentPermissionService(
             token = tokenCheckService.getSystemToken(null)!!,
             projectCode = projectId,
             resourceType = nodeResourceType,
-            resourceCode = HashUtil.encodeLongId(nodeId),
+            resourceCode = HashUtil.encodeLongId(nodeId)
         )
     }
 

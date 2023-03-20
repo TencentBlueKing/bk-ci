@@ -50,4 +50,4 @@ data class AuthResourceGroupCreateEvent(
     val iamResourceCode: String,
     @ApiModelProperty("资源名")
     val resourceName: String
-): ITraceEvent()
+) : ITraceEvent()
