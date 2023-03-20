@@ -40,4 +40,14 @@ object DockerConstants {
     const val ENV_KEY_GATEWAY = "devops_gateway"
 
     const val ENV_JOB_BUILD_TYPE = "JOB_POOL"
+
+    /**
+     * bkrepo网关配置
+     */
+    const val ENV_DEVOPS_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+
+    /**
+     * 蓝盾网关配置
+     */
+    const val ENV_DEVOPS_GATEWAY = "DEVOPS_GATEWAY"
 }

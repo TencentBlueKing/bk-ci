@@ -69,3 +69,13 @@ const val ENV_BK_CI_DOCKER_HOST_IP = "BK_CI_DOCKER_HOST_IP" // docker母机IP
 const val ENV_BK_CI_DOCKER_HOST_WORKSPACE = "BK_CI_DOCKER_HOST_WORKSPACE" // docker母机工作空间地址
 
 const val ENTRY_POINT_CMD = "/data/init.sh"
+
+/**
+ * bkrepo网关配置
+ */
+const val ENV_DEVOPS_FILE_GATEWAY = "DEVOPS_FILE_GATEWAY"
+
+/**
+ * 蓝盾网关配置
+ */
+const val ENV_DEVOPS_GATEWAY = "DEVOPS_GATEWAY"
