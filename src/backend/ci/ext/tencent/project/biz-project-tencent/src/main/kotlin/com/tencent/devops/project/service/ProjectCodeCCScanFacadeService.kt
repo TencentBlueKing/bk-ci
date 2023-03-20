@@ -47,8 +47,12 @@ class ProjectCodeCCScanFacadeService @Autowired constructor(
         private const val CODECC_SYSTEM_CODE = "CODECC"
     }
 
-    fun createCodeCCScanProject(userId: String, tag: String? = null, codeccTag: String? = null,
-                                projectCreateInfo: ProjectCreateInfo): ProjectVO {
+    fun createCodeCCScanProject(
+        userId: String,
+        tag: String? = null,
+        codeccTag: String? = null,
+        projectCreateInfo: ProjectCreateInfo
+    ): ProjectVO {
         logger.info("createCodeCCScanProject|${projectCreateInfo.englishName}|${projectCreateInfo.projectName}|$userId")
         var publicScanProject = projectService.getByEnglishName(projectCreateInfo.englishName)
         if (null != publicScanProject) {
