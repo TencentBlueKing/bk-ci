@@ -40,7 +40,9 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
+import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
+import kotlin.math.log
 
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
@@ -100,7 +102,6 @@ class TxPermissionServiceImpl @Autowired constructor(
         } else {
             action
         }
-
         val verifyResult = super.validateUserResourcePermissionByRelation(
             userId = userId,
             action = useAction,
@@ -109,6 +110,7 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = resourceType,
             relationResourceType = relationResourceType
         )
+        logger.info("The system starts recording the verify result:$verifyResult|$useResourceCode|$useAction")
         authVerifyRecordService.createOrUpdateVerifyRecord(
             VerifyRecordDTO(
                 userId = userId,
@@ -163,5 +165,9 @@ class TxPermissionServiceImpl @Autowired constructor(
             resourceType = TActionUtils.getResourceTypeByStr(resourceTypeStr),
             authPermission = TActionUtils.getAuthPermissionByAction(action)
         )
+    }
+
+    companion object {
+        val logger = LoggerFactory.getLogger(TxPermissionServiceImpl::class.java)
     }
 }
