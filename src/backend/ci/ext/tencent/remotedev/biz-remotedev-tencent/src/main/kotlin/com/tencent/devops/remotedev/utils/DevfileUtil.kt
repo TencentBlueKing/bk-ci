@@ -40,12 +40,13 @@ object DevfileUtil {
                                 Container(
                                     r.image,
                                     r.host,
-                                        when (val c = r.credentials) {
+                                    when (val c = r.credentials) {
                                         is String -> /*是凭据*/Credentials("", "")
                                         is Map<*, *> -> Credentials(
                                             c[Credentials::username.name] as String,
                                             c[Credentials::password.name] as String
                                         )
+                                        null -> null
                                         else -> throw ErrorCodeException(
                                             errorCode = ErrorCodeEnum.DEVFILE_ERROR.errorCode,
                                             defaultMessage = ErrorCodeEnum.DEVFILE_ERROR.formatErrorMessage
