@@ -27,8 +27,10 @@
 
 package com.tencent.devops.statistics.util.project
 
+import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.auth.api.pojo.SubjectScopeInfo
 import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectVO
@@ -79,6 +81,7 @@ object ProjectUtils {
             kind = tProjectRecord.kind,
             logoAddr = tProjectRecord.logoAddr ?: "",
             remark = tProjectRecord.remark ?: "",
+            updator = tProjectRecord.updator,
             updatedAt = if (tProjectRecord.updatedAt == null) {
                 ""
             } else {
@@ -94,7 +97,11 @@ object ProjectUtils {
             relationId = tProjectRecord.relationId,
             properties = tProjectRecord.properties?.let { self ->
                 JsonUtil.to(self, ProjectProperties::class.java)
-            }
+            },
+            subjectScopes = tProjectRecord.subjectScopes?.let {
+                JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
+            },
+            authSecrecy = tProjectRecord.authSecrecy
         )
     }
 }
