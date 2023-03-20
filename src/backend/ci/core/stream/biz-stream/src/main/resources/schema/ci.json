@@ -311,6 +311,18 @@
                   }
                 } ]
               },
+              "repos_ignore" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
+              "repos_ignore_condition" : {
+                "type" : "array",
+                "items" : {
+                  "type" : "string"
+                }
+              },
               "events" : {
                 "type" : "object",
                 "minProperties" : 1,
@@ -1033,7 +1045,7 @@
             "timeout-minutes" : {
               "type" : "integer",
               "minimum" : 1,
-              "maximum" : 480
+              "maximum" : 10080
             },
             "env" : {
               "$ref" : "#/definitions/env"
@@ -1305,7 +1317,7 @@
             "timeout-minutes" : {
               "type" : "integer",
               "minimum" : 1,
-              "maximum" : 480
+              "maximum" : 10080
             },
             "env" : {
               "$ref" : "#/definitions/env"
@@ -1416,7 +1428,7 @@
             "timeout-minutes" : {
               "type" : "integer",
               "minimum" : 1,
-              "maximum" : 480
+              "maximum" : 10080
             },
             "continue-on-error" : {
               "type" : "boolean"
