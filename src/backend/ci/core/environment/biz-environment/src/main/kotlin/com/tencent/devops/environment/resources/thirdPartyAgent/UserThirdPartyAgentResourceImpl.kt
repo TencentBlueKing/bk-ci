@@ -69,10 +69,15 @@ class UserThirdPartyAgentResourceImpl @Autowired constructor(
         return Result(thirdPartyAgentService.generateAgent(userId, projectId, os, zoneName))
     }
 
-    override fun getGateway(userId: String, projectId: String, os: OS): Result<List<SlaveGateway>> {
+    override fun getGateway(
+        userId: String,
+        projectId: String,
+        os: OS,
+        visibility: Boolean?
+    ): Result<List<SlaveGateway>> {
         checkUserId(userId)
         checkProjectId(projectId)
-        return Result(slaveGatewayService.getGateway())
+        return Result(slaveGatewayService.getGateway().filter { it.visibility == (visibility ?: true) })
     }
 
     override fun getLink(userId: String, projectId: String, nodeId: String): Result<ThirdPartyAgentLink> {
