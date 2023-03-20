@@ -8,10 +8,6 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.remotedev.RemoteDevDispatcher
 import com.tencent.devops.common.test.BkCiAbstractTest
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceHistoryRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceOpHisRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceRecord
-import com.tencent.devops.model.remotedev.tables.records.TWorkspaceSharedRecord
 import com.tencent.devops.remotedev.dao.RemoteDevBillingDao
 import com.tencent.devops.remotedev.dao.RemoteDevSettingDao
 import com.tencent.devops.remotedev.dao.WorkspaceDao
@@ -27,7 +23,6 @@ import io.mockk.spyk
 import org.junit.jupiter.api.Assertions
 import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
-import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 
 internal class WorkspaceServiceTest : BkCiAbstractTest() {
