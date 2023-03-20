@@ -27,11 +27,14 @@
 
 package com.tencent.devops.metrics.pojo.message
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.event.pojo.IEvent
+import com.tencent.devops.common.stream.constants.StreamBinding.EXCHANGE_METRICS_STATISTIC_TURBO_DAILY
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("Turbo上报消息")
+@Event(destination = EXCHANGE_METRICS_STATISTIC_TURBO_DAILY)
 data class TurboReportEvent(
     @ApiModelProperty("统计日期")
     val statisticsTime: String,

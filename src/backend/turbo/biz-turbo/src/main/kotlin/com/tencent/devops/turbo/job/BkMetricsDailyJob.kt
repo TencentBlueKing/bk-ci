@@ -4,15 +4,12 @@ import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.util.DateTimeUtils
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
-import com.tencent.devops.common.util.constants.EXCHANGE_METRICS_STATISTIC_TURBO_DAILY
 import com.tencent.devops.metrics.pojo.message.TurboReportEvent
 import com.tencent.devops.turbo.dao.mongotemplate.TurboSummaryDao
 import com.tencent.devops.turbo.pojo.TurboDaySummaryOverviewModel
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.core.Message
-import org.springframework.amqp.core.MessageDeliveryMode
 import org.springframework.beans.factory.annotation.Autowired
 import java.time.LocalDate
 
@@ -20,7 +17,7 @@ import java.time.LocalDate
 class BkMetricsDailyJob @Autowired constructor(
     private val eventDispatcher: SampleEventDispatcher,
     private val turboSummaryDao: TurboSummaryDao
-): Job {
+) : Job {
     companion object {
         private val logger = LoggerFactory.getLogger(BkMetricsDailyJob::class.java)
         private const val DEFAULT_PAGE_SIZE = 2000
