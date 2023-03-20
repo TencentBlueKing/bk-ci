@@ -1,156 +1,55 @@
 package com.tencent.devops.turbo.config
 
-import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
-import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_CREATE
-import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_CREATE
-import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
-import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
-import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_PLUGIN
+import com.tencent.devops.common.event.annotation.EventConsumer
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.util.constants.QUEUE_TURBO_PLUGIN_DATA
-import com.tencent.devops.common.util.constants.ROUTE_TURBO_PLUGIN_DATA
-import com.tencent.devops.common.web.mq.CORE_CONNECTION_FACTORY_NAME
-import com.tencent.devops.common.web.mq.CORE_RABBIT_ADMIN_NAME
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_CREATE
+import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_UPDATE
 import com.tencent.devops.turbo.component.TurboRecordConsumer
-import org.springframework.amqp.core.DirectExchange
-import org.springframework.amqp.core.Queue
-import org.springframework.amqp.core.Binding
-import org.springframework.amqp.core.BindingBuilder
-import org.springframework.amqp.core.CustomExchange
-import org.springframework.amqp.rabbit.connection.ConnectionFactory
-import org.springframework.amqp.rabbit.core.RabbitAdmin
-import org.springframework.amqp.rabbit.listener.SimpleMessageListenerContainer
-import org.springframework.amqp.rabbit.listener.adapter.MessageListenerAdapter
-import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter
+import com.tencent.devops.turbo.dto.TurboRecordCreateDto
+import com.tencent.devops.turbo.dto.TurboRecordPluginUpdateDto
+import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
+import org.springframework.cloud.stream.function.StreamBridge
+import org.springframework.messaging.Message
+import java.util.function.Consumer
 
-@Suppress("WildcardImport")
 @Configuration
 class TurboRecordMqConfig {
 
-    @Bean(value = [CORE_RABBIT_ADMIN_NAME])
-    fun rabbitAdmin(
-        @Qualifier(CORE_CONNECTION_FACTORY_NAME) @Autowired connectionFactory: ConnectionFactory
-    ): RabbitAdmin {
-        return RabbitAdmin(connectionFactory)
+    companion object {
+        const val STREAM_CONSUMER_GROUP = "turbo-service"
     }
 
     @Bean
-    fun turboRecordHandleExchange(): DirectExchange {
-        val directExchange = DirectExchange(EXCHANGE_TURBO_REPORT)
-        directExchange.isDelayed = true
-        directExchange.isDurable
-        return directExchange
+    fun measureEventDispatcher(streamBridge: StreamBridge) = SampleEventDispatcher(streamBridge)
+
+    @EventConsumer(QUEUE_TURBO_REPORT_CREATE, STREAM_CONSUMER_GROUP)
+    fun turboRecordCreateListener(
+        @Autowired turboRecordConsumer: TurboRecordConsumer
+    ): Consumer<Message<TurboRecordCreateDto>> {
+        return Consumer { event: Message<TurboRecordCreateDto> ->
+            turboRecordConsumer.createSingleTurboRecord(event.payload)
+        }
     }
 
-    @Bean
-    fun turboRecordCreateQueue(): Queue {
-        return Queue(QUEUE_TURBO_REPORT_CREATE)
+    @EventConsumer(QUEUE_TURBO_REPORT_UPDATE, STREAM_CONSUMER_GROUP)
+    fun turboRecordUpdateListener(
+        @Autowired turboRecordConsumer: TurboRecordConsumer
+    ): Consumer<Message<TurboRecordUpdateDto>> {
+        return Consumer { event: Message<TurboRecordUpdateDto> ->
+            turboRecordConsumer.updateSingleTurboRecord(event.payload)
+        }
     }
 
-    @Bean
-    fun turboRecordCreateBind(turboRecordCreateQueue: Queue, turboRecordHandleExchange: DirectExchange): Binding {
-        return BindingBuilder.bind(turboRecordCreateQueue)
-            .to(turboRecordHandleExchange)
-            .with(ROUTE_TURBO_REPORT_CREATE)
-    }
-
-    @Bean
-    fun turboRecordCreateListenerContainer(
-        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
-        turboRecordCreateQueue: Queue,
-        rabbitAdmin: RabbitAdmin,
-        turboRecordConsumer: TurboRecordConsumer,
-        messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setPrefetchCount(1)
-        container.setQueueNames(turboRecordCreateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(5)
-        container.setAmqpAdmin(rabbitAdmin)
-        // 确保只有一个消费者消费，保证负载不超时
-        val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::createSingleTurboRecord.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun turboRecordUpdateQueue(): Queue {
-        return Queue(QUEUE_TURBO_REPORT_UPDATE)
-    }
-
-    @Bean
-    fun turboRecordUpdateBind(turboRecordUpdateQueue: Queue, turboRecordHandleExchange: DirectExchange): Binding {
-        return BindingBuilder.bind(turboRecordUpdateQueue)
-            .to(turboRecordHandleExchange)
-            .with(ROUTE_TURBO_REPORT_UPDATE)
-    }
-
-    @Bean
-    fun turboRecordUpdateListenerContainer(
-        @Qualifier(CORE_CONNECTION_FACTORY_NAME) connectionFactory: ConnectionFactory,
-        turboRecordUpdateQueue: Queue,
-        rabbitAdmin: RabbitAdmin,
-        turboRecordConsumer: TurboRecordConsumer,
-        messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setPrefetchCount(1)
-        container.setQueueNames(turboRecordUpdateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(5)
-        container.setAmqpAdmin(rabbitAdmin)
-        // 确保只有一个消费者消费，保证负载不超时
-        val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::updateSingleTurboRecord.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
-    }
-
-    @Bean
-    fun turboPluginHandleExchange(): CustomExchange {
-        return CustomExchange(
-            EXCHANGE_TURBO_PLUGIN,
-            "x-delayed-message",
-            true,
-            false,
-            mapOf("x-delayed-type" to "direct")
-        )
-    }
-
-    @Bean
-    fun turboPluginUpdateQueue(): Queue {
-        return Queue(QUEUE_TURBO_PLUGIN_DATA)
-    }
-
-    @Bean
-    fun turboPluginUpdateBind(turboPluginUpdateQueue: Queue, turboPluginHandleExchange: CustomExchange): Binding {
-        return BindingBuilder.bind(turboPluginUpdateQueue).to(turboPluginHandleExchange)
-            .with(ROUTE_TURBO_PLUGIN_DATA).noargs()
-    }
-
-    @Bean
-    fun turboPluginUpdateListenerContainer(
-        connectionFactory: ConnectionFactory,
-        turboPluginUpdateQueue: Queue,
-        rabbitAdmin: RabbitAdmin,
-        turboRecordConsumer: TurboRecordConsumer,
-        messageConverter: Jackson2JsonMessageConverter
-    ): SimpleMessageListenerContainer {
-        val container = SimpleMessageListenerContainer(connectionFactory)
-        container.setPrefetchCount(1)
-        container.setQueueNames(turboPluginUpdateQueue.name)
-        container.setConcurrentConsumers(5)
-        container.setMaxConcurrentConsumers(5)
-        container.setAmqpAdmin(rabbitAdmin)
-        // 确保只有一个消费者消费，保证负载不超时
-        val adapter = MessageListenerAdapter(turboRecordConsumer, turboRecordConsumer::updateSingleRecordForPlugin.name)
-        adapter.setMessageConverter(messageConverter)
-        container.setMessageListener(adapter)
-        return container
+    @EventConsumer(QUEUE_TURBO_PLUGIN_DATA, STREAM_CONSUMER_GROUP)
+    fun turboPluginUpdateListener(
+        @Autowired turboRecordConsumer: TurboRecordConsumer
+    ): Consumer<Message<TurboRecordPluginUpdateDto>> {
+        return Consumer { event: Message<TurboRecordPluginUpdateDto> ->
+            turboRecordConsumer.updateSingleRecordForPlugin(event.payload)
+        }
     }
 }

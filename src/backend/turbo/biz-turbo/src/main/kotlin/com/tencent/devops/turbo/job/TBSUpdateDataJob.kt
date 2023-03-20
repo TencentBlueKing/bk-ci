@@ -1,10 +1,9 @@
 package com.tencent.devops.turbo.job
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Gray
 import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
-import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_UPDATE
-import com.tencent.devops.common.web.mq.CORE_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.service.TurboRecordService
@@ -18,8 +17,7 @@ import org.springframework.beans.factory.annotation.Qualifier
 @Suppress("SpringJavaAutowiredMembersInspection","NestedBlockDepth","MaxLineLength")
 class TBSUpdateDataJob @Autowired constructor(
     private val turboRecordService: TurboRecordService,
-    @Qualifier(CORE_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate,
+    private val eventDispatcher: SampleEventDispatcher,
     private val gray: Gray,
     private val redisOperation: RedisOperation
 ) : Job {
@@ -56,7 +54,7 @@ class TBSUpdateDataJob @Autowired constructor(
                             turboPlanId = turboRecordEntity.turboPlanId
                         )
                         logger.info("[update turbo job|$engineCode|${turboRecordEntity.turboPlanId}] ready to send message")
-                        rabbitTemplate.convertAndSend(EXCHANGE_TURBO_REPORT, ROUTE_TURBO_REPORT_UPDATE, turboRecordUpdateDto)
+                        eventDispatcher.dispatch(turboRecordUpdateDto)
                     }
                 }
             }

@@ -1,10 +1,8 @@
 package com.tencent.devops.turbo.job
 
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Gray
-import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
-import com.tencent.devops.common.util.constants.ROUTE_TURBO_REPORT_CREATE
-import com.tencent.devops.common.web.mq.CORE_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.turbo.dto.TurboRecordCreateDto
 import com.tencent.devops.turbo.sdk.TBSSdkApi
 import com.tencent.devops.turbo.service.TurboPlanService
@@ -13,12 +11,10 @@ import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 
 @Suppress("SpringJavaAutowiredMembersInspection", "MaxLineLength")
 class TBSCreateDataJob @Autowired constructor(
-    @Qualifier(CORE_RABBIT_TEMPLATE_NAME)
-    private val rabbitTemplate: RabbitTemplate,
+    private val eventDispatcher: SampleEventDispatcher,
     private val gray: Gray,
     private val turboPlanService: TurboPlanService,
     private val redisOperation: RedisOperation
@@ -67,7 +63,9 @@ class TBSCreateDataJob @Autowired constructor(
             }
             logger.info("[create turbo job|$engineCode|$turboPlanId] ready to send message")
             if (gray.isGrayMatchProject(turboPlanEntity.projectId, redisOperation)) {
-                rabbitTemplate.convertAndSend(EXCHANGE_TURBO_REPORT, ROUTE_TURBO_REPORT_CREATE, TurboRecordCreateDto(engineCode, turboRecord))
+                eventDispatcher.dispatch(
+                    TurboRecordCreateDto(engineCode, turboRecord)
+                )
             }
         }
     }

@@ -4,7 +4,6 @@ import com.tencent.devops.common.util.DateTimeUtils
 import com.tencent.devops.common.util.JsonUtil
 import com.tencent.devops.common.util.MathUtil
 import com.tencent.devops.common.util.constants.EXCHANGE_METRICS_STATISTIC_TURBO_DAILY
-import com.tencent.devops.common.web.mq.EXTEND_RABBIT_TEMPLATE_NAME
 import com.tencent.devops.turbo.dao.mongotemplate.TurboSummaryDao
 import com.tencent.devops.turbo.pojo.BkMetricsMessage
 import com.tencent.devops.turbo.pojo.TurboDaySummaryOverviewModel
@@ -20,7 +19,7 @@ import java.time.LocalDate
 
 @Suppress("SpringJavaAutowiredMembersInspection")
 class BkMetricsDailyJob @Autowired constructor(
-    @Qualifier(EXTEND_RABBIT_TEMPLATE_NAME)
+
     private val bkMetricsRabbitTemplate: RabbitTemplate,
     private val turboSummaryDao: TurboSummaryDao,
 ): Job {

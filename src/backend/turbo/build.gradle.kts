@@ -1,5 +1,5 @@
 plugins {
-	id("com.tencent.devops.boot") version "0.0.6"
+	id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
 	id("org.owasp.dependencycheck") version "7.1.0.1"
 }
 
@@ -11,6 +11,11 @@ allprojects {
 
     apply(plugin = "com.tencent.devops.boot")
 
+    repositories {
+        maven(url = "https://mirrors.tencent.com/repository/maven/bkdevops_maven")
+        maven(url = "https://mirrors.tencent.com/nexus/repository/maven-public")
+        maven(url = "https://mirrors.tencent.com/nexus/repository/gradle-plugins/")
+    }
 
     configurations.all {
         exclude(group = "org.slf4j", module = "log4j-over-slf4j")
