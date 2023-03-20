@@ -146,8 +146,8 @@ CREATE TABLE IF NOT EXISTS `T_PROJECT` (
   `relation_id` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
   `other_router_tags` varchar(128) DEFAULT NULL COMMENT '其他系统网关路由tags',
   `properties` text NULL COMMENT '项目其他配置',
-  `subjectScopes` text DEFAULT NULL COMMENT '最大可授权人员范围',
-  `is_auth_secrecy` bit(1) DEFAULT b'0' COMMENT '是否权限私密，0-公开，1-保密',
+  `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
+  `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开，1-保密,2-机密',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `project_name` (`project_name`) USING BTREE,
   UNIQUE KEY `project_id` (`project_id`) USING BTREE,
@@ -314,24 +314,32 @@ CREATE TABLE IF NOT EXISTS `T_TABLE_SHARDING_CONFIG` (
   UNIQUE KEY `UNI_INX_TTSC_CLUSTER_MODULE_NAME` (`CLUSTER_NAME`,`MODULE_CODE`,`TABLE_NAME`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='数据库表分片配置';
 
-CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL_CALLBACK`
-(
-    `ID`             int(11)           NOT NULL AUTO_INCREMENT COMMENT '自增ID',
-    `APPLICANT`      varchar(32)       NOT NULL COMMENT '申请人',
-    `ENGLISH_NAME`   varchar(64)       NOT NULL COMMENT '项目英文名',
-    `CALLBACK_ID`    varchar(32)       NOT NULL COMMENT '权限中心审批单ID',
-    `SN`             varchar(64)       NOT NULL COMMENT 'ITSM申请单ID',
-    `SUBJECT_SCOPES` text              DEFAULT NULL COMMENT '最大可授权人员范围',
-    `LAST_APPROVER`  varchar(32)       DEFAULT NULL COMMENT '最后审批人',
-    `APPROVE_RESULT` bit(1)            DEFAULT NULL COMMENT '审批结果，0-审批拒绝，1-审批成功',
-    `APPROVE_TYPE`   int(10)           DEFAULT '0'  COMMENT '审批类型，0-创建审批，1-编辑审批（仅修改项目是否保密），2-编辑审批（仅修改项目最大可授权范围），3-编辑审批（两者均被修改）',
-    `UPDATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '修改时间',
-    `CREATE_TIME` datetime(3) NOT NULL DEFAULT CURRENT_TIMESTAMP(3) COMMENT '创建时间',
-    INDEX `IDX_APPLICANT` (`APPLICANT`),
-    INDEX `IDX_ENGLISH_NAME` (`ENGLISH_NAME`),
-    INDEX `IDX_SN` (`SN`),
-    PRIMARY KEY (`ID`)
-) ENGINE = InnoDB
-    DEFAULT CHARSET = utf8mb4 COMMENT '项目审批回调表';
+CREATE TABLE IF NOT EXISTS `T_PROJECT_APPROVAL` (
+   `ID` bigint(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+   `PROJECT_NAME` varchar(64) NOT NULL COLLATE utf8mb4_bin COMMENT '项目名称',
+   `ENGLISH_NAME` varchar(64) NOT NULL COMMENT '英文名称',
+   `DESCRIPTION` text COMMENT '描述',
+   `CREATED_AT` timestamp NULL DEFAULT NULL COMMENT '创建时间',
+   `UPDATED_AT` timestamp NULL DEFAULT NULL COMMENT '更新时间',
+   `CREATOR` varchar(32) DEFAULT NULL COMMENT '创建者',
+   `UPDATOR` varchar(32) DEFAULT NULL COMMENT '更新人',
+   `BG_ID` bigint(20) DEFAULT NULL COMMENT '事业群ID',
+   `BG_NAME` varchar(255) DEFAULT NULL COMMENT '事业群名称',
+   `DEPT_ID` bigint(20) DEFAULT NULL COMMENT '项目所属二级机构ID',
+   `DEPT_NAME` varchar(255) DEFAULT NULL COMMENT '项目所属二级机构名称',
+   `CENTER_ID` bigint(20) DEFAULT NULL COMMENT '中心ID',
+   `CENTER_NAME` varchar(255) DEFAULT NULL COMMENT '中心名字',
+   `LOGO_ADDR` text COMMENT 'logo地址',
+   `APPROVER` varchar(32) DEFAULT NULL COMMENT '批准人',
+   `APPROVAL_STATUS` int(10) DEFAULT '1' COMMENT '审核状态',
+   `APPROVAL_TIME` timestamp NULL DEFAULT NULL COMMENT '批准时间',
+   `RELATION_ID` varchar(32) DEFAULT NULL COMMENT '扩展系统关联ID',
+   `SUBJECT_SCOPES` text DEFAULT NULL COMMENT '最大可授权人员范围',
+   `AUTH_SECRECY` int(10) DEFAULT b'0' COMMENT '项目性质,0-公开,1-保密,2-机密',
+   `TIPS_STATUS` int(10) DEFAULT b'0' COMMENT '提示状态,0-不展示,1-展示创建成功,2-展示更新成功',
+   PRIMARY KEY (`ID`) USING BTREE,
+   UNIQUE KEY `project_name` (`PROJECT_NAME`) USING BTREE,
+   UNIQUE KEY `english_name` (`ENGLISH_NAME`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='项目审批表';
 
 SET FOREIGN_KEY_CHECKS = 1;

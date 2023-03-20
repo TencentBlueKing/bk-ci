@@ -56,12 +56,6 @@ object AuthMessageCode {
     const val CAN_NOT_FIND_RELATION = "2121011" // 权限系统：用户组无关联系统用户组
     const val IAM_SYSTEM_ERROR = "2121012" // 权限系统：Iam权限中心异常。异常信息{0}
     const val USER_NOT_EXIST = "2121013" // 权限系统: 用户中心非法用户/组织
-    const val RESOURCE_NOT_FOUND = "2121014" // 权限系统：资源{0}不存在
-    const val DEFAULT_GROUP_NOT_FOUND = "2121015" // 权限系统：资源类型{0}关联的默认组{1}不存在
-    const val RESOURCE_ACTION_EMPTY = "2121016" // 权限系统：资源未绑定动作
-    const val ACTION_NOT_EXIST = "2121017" // 权限系统：操作不存在
-    const val RESOURCE_TYPE_NOT_FOUND = "2121018" // 权限系统：资源{0}不存在
-    const val RESOURCE_TYPE_NOT_EMPTY = "2121019" // 权限系统：资源类型不能为空
 
     const val TOKEN_TICKET_FAIL = "2121106" // 权限系统：token校验失败
     const val PARENT_TYPE_FAIL = "2121107" // 权限系统：父类资源必须为"项目"
@@ -83,28 +77,40 @@ object AuthMessageCode {
     const val STRATEGT_NAME_NOT_EXIST = "2121209" // 权限系统： 权限集合{0}不存在
     const val APPROVAL_RECORD_NOT_EXIST = "2121210" // 审批记录不存在
     const val MANAGER_PERMISSION_EXPIRE = "2121211" // 管理员权限过期
-    const val STRATEGT_NOT_EXIST = "2121212" // 策略不存在
 
     const val LOGIN_THIRD_CODE_INVALID = "2121501" // 权限系统： 第三方登陆code校验失败
     const val LOGIN_USER_INFO_EXIST = "2121502" // 权限系统： 用户已存在，无需重复创建
     const val LOGIN_USER_FREEZE = "212503" // 账号冻结中
     const val LOGIN_TOKEN_VERIFY_FAILED = "2121504" // 权限系统: token验证失败
-    const val APPLY_TO_JOIN_GROUP_FAIL = "2121505" // 权限系统: 申请加入用户组失败
-    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121506" // 权限系统: 获取用户组权限信息失败
-    const val GET_IAM_GROUP_FAIL = "2121507" // 权限系统: 获取用户组失败
-    const val GET_REDIRECT_INFORMATION_FAIL = "2121508" // 权限系统: 获取权限申请跳转信息失败
 
-    const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121509" // 用户{0}没有管理员权限
-    const val ERROR_AUTH_GROUP_NOT_EXIST = "2121510" // 用户组{0}不存在
-    const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121511" // 用户组配置{0}不存在
-    const val ERROR_ITSM_CALLBACK_APPLICATION_FAIL = "2121512" // 查询不到有效的项目审批回调单
-    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "21211513" // iam回调方法${0}不支持
-    const val ERROR_ITSM_APPLICATION_CANCEL_FAIL = "21211514" // ITSM单据取消失败
-    const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "21211515" // 检验ITSM的token失败
-    const val AUTH_GROUP_MEMBER_EXPIRED_DESC = "21211516" // 已过期
-    const val ERROR_PROJECT_PERMISSION_CLOSE_FAIL = "21211517" // 项目权限管理不能被关闭
-    const val ERROR_DEFAULT_GROUP_DELETE_FAIL = "21211518" // 默认组不能被删除
-    const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "21211519" // 默认组不能重命名
-    const val ERROR_GROUP_NAME_TO_LONG = "21211520" // 用户组名不能超过32个字符
-    const val ERROR_GROUP_NAME_TO_SHORT = "21211520" // 用户组名不能不少于5个字符
+    /**
+     * 后续的都是21216开始追加,每5一个一组，方便维护
+     */
+    const val RESOURCE_NOT_FOUND = "2121601" // 权限系统：资源{0}不存在
+    const val DEFAULT_GROUP_CONFIG_NOT_FOUND = "2121602" // 权限系统：默认组配置不存在
+    const val RESOURCE_ACTION_EMPTY = "2121603" // 权限系统：资源未绑定动作
+    const val ACTION_NOT_EXIST = "2121604" // 权限系统：操作不存在
+    const val RESOURCE_TYPE_NOT_FOUND = "2121605" // 权限系统：资源{0}不存在
+
+    const val RESOURCE_TYPE_NOT_EMPTY = "2121606" // 权限系统：资源类型不能为空
+    const val APPLY_TO_JOIN_GROUP_FAIL = "2121607" // 权限系统: 申请加入用户组失败
+    const val GET_GROUP_PERMISSION_DETAIL_FAIL = "2121608" // 权限系统: 获取用户组权限信息失败
+    const val GET_IAM_GROUP_FAIL = "2121609" // 权限系统: 获取用户组失败
+    const val GET_REDIRECT_INFORMATION_FAIL = "2121610" // 权限系统: 获取跳转链接失败
+
+    const val ERROR_AUTH_NO_MANAGE_PERMISSION = "2121611" // 用户没有管理员权限
+    const val ERROR_AUTH_GROUP_NOT_EXIST = "2121612" // 用户组{0}不存在
+    const val ERROR_AUTH_RESOURCE_GROUP_CONFIG_NOT_EXIST = "2121613" // 用户组配置{0}不存在
+    const val ERROR_ITSM_CALLBACK_APPLICATION_FAIL = "2121614" // 申请单{0}不存在
+    const val ERROR_AUTH_CALLBACK_METHOD_NOT_SUPPORT = "2121615" // iam回调方法${0}不支持
+
+    const val ERROR_ITSM_APPLICATION_CANCEL_FAIL = "2121616" // ITSM单据取消失败
+    const val ERROR_ITSM_VERIFY_TOKEN_FAIL = "2121617" // 检验ITSM的token失败
+    const val AUTH_GROUP_MEMBER_EXPIRED_DESC = "2121618" // 已过期
+    const val ERROR_PROJECT_PERMISSION_CLOSE_FAIL = "2121619" // 项目权限管理不能被关闭
+    const val ERROR_DEFAULT_GROUP_DELETE_FAIL = "2121620" // 默认组不能被删除
+
+    const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "2121621" // 默认组不能重命名
+    const val ERROR_GROUP_NAME_TO_LONG = "2121622" // 用户组名不能超过32个字符
+    const val ERROR_GROUP_NAME_TO_SHORT = "2121623" // 用户组名不能不少于5个字符
 }

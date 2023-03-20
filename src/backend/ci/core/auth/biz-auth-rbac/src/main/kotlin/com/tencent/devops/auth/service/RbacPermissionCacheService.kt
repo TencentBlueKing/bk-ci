@@ -55,7 +55,7 @@ class RbacPermissionCacheService @Autowired constructor(
                 throw ErrorCodeException(
                     errorCode = AuthMessageCode.RESOURCE_ACTION_EMPTY,
                     params = arrayOf(resourceType),
-                    defaultMessage = "权限系统：[$resourceType]资源类型关联的动作不存在"
+                    defaultMessage = "the action relate with the resource type($resourceType) does not exist"
                 )
             }
             val actionInfoVoList = actionList.map {
@@ -77,7 +77,7 @@ class RbacPermissionCacheService @Autowired constructor(
                 ?: throw ErrorCodeException(
                     errorCode = AuthMessageCode.ACTION_NOT_EXIST,
                     params = arrayOf(action),
-                    defaultMessage = "权限系统：[$action]操作不存在"
+                    defaultMessage = "the action($action) does not exist"
                 )
             val actionInfo = ActionInfoVo(
                 action = actionRecord.action,
@@ -97,7 +97,7 @@ class RbacPermissionCacheService @Autowired constructor(
         return resourceTypeCache.getIfPresent(resourceType) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RESOURCE_TYPE_NOT_FOUND,
             params = arrayOf(resourceType),
-            defaultMessage = "权限系统：[$resourceType]资源类型不存在"
+            defaultMessage = "the resource type($resourceType) does not exist"
         )
     }
 }

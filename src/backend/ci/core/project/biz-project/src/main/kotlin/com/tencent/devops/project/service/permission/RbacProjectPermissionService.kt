@@ -34,7 +34,7 @@ import com.tencent.devops.common.auth.api.AuthResourceApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.code.ProjectAuthServiceCode
-import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_UPDATE_FAIL
+import com.tencent.devops.project.constant.ProjectMessageCode.APPROVAL_PROJECT_CANT_UPDATE
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.pojo.AuthProjectCreateInfo
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
@@ -112,9 +112,9 @@ class RbacProjectPermissionService(
             approvalStatus == ProjectApproveStatus.UPDATE_PENDING.status
         ) {
             throw ErrorCodeException(
-                errorCode = UNDER_APPROVAL_UPDATE_FAIL,
+                errorCode = APPROVAL_PROJECT_CANT_UPDATE,
                 params = arrayOf(englishName),
-                defaultMessage = "The project $englishName is under approval, modification is not allowed！"
+                defaultMessage = "Projects($englishName) in approval cannot be modified"
             )
         }
         with(resourceUpdateInfo) {

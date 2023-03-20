@@ -917,7 +917,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         ) {
             logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
                     "rejected during creation！| EnglishName=${projectInfo.englishName}"
@@ -930,7 +930,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The project cancel creation failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    messageCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                     defaultMessage = "The project cancel creation failed: ${projectInfo.englishName}"
                 )
             )
@@ -949,7 +949,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (status != ProjectApproveStatus.UPDATE_PENDING.status) {
             logger.warn("The project can't be cancel:${projectInfo.englishName}|$status")
             throw ErrorCodeException(
-                errorCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                errorCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                 params = arrayOf(projectId),
                 defaultMessage = "The project can be canceled only it under approval or " +
                     "rejected during creation！| EnglishName=${projectInfo.englishName}"
@@ -967,7 +967,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
             logger.warn("The project cancel update failed: ${projectInfo.englishName}", e)
             throw OperationException(
                 MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.CANCEL_PROJECT_CREATE_FAIL,
+                    messageCode = ProjectMessageCode.CANCEL_CREATION_PROJECT_FAIL,
                     defaultMessage = "The project cancel update failed: ${projectInfo.englishName}"
                 )
             )

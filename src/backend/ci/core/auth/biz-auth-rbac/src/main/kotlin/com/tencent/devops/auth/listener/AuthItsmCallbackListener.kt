@@ -76,7 +76,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
-            defaultMessage = "The itsm callback application does not exist!| sn = $sn"
+            defaultMessage = "itsm application form $sn does not exist"
         )
         val englishName = callBackInfo.englishName
         val projectInfo =
@@ -130,7 +130,7 @@ class AuthItsmCallbackListener @Autowired constructor(
         val callBackInfo = authItsmCallbackDao.getCallbackBySn(dslContext, sn) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.ERROR_ITSM_CALLBACK_APPLICATION_FAIL,
             params = arrayOf(sn),
-            defaultMessage = "The itsm callback application does not exist!| sn = $sn"
+            defaultMessage = "itsm application form $sn does not exist"
         )
         val englishName = callBackInfo.englishName
         val projectInfo =

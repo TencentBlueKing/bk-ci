@@ -79,7 +79,7 @@ class PermissionSubsetManagerService @Autowired constructor(
             resourceType = resourceType,
             groupCode = DefaultGroupType.MANAGER.value
         ) ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.DEFAULT_GROUP_NOT_FOUND,
+            errorCode = AuthMessageCode.DEFAULT_GROUP_CONFIG_NOT_FOUND,
             params = arrayOf(DefaultGroupType.MANAGER.value),
             defaultMessage = "${resourceType}_${DefaultGroupType.MANAGER.value} group config  not exist"
         )
