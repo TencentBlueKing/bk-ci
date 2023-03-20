@@ -42,7 +42,7 @@ import com.tencent.devops.process.dao.record.BuildRecordContainerDao
 import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordTaskDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateContainerTimeCost
-import com.tencent.devops.process.engine.dao.PipelineBuildTaskDao
+import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateMatrixTimeCost
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.pojo.VmInfo
@@ -61,7 +61,6 @@ class ContainerBuildRecordService(
     private val dslContext: DSLContext,
     private val recordContainerDao: BuildRecordContainerDao,
     private val recordTaskDao: BuildRecordTaskDao,
-    private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildDetailService: ContainerBuildDetailService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
@@ -237,14 +236,22 @@ class ContainerBuildRecordService(
                     newTimestamps[BuildTimestampType.JOB_CONTAINER_SHUTDOWN] = BuildRecordTimeStamp(
                         null, LocalDateTime.now().timestampmilli()
                     )
-                    val recordTasks = recordTaskDao.getRecords(
-                        context, projectId, pipelineId, buildId, executeCount, containerId
-                    )
-                    buildTaskDao.getTasksInCondition(context, projectId, buildId, containerId, null)
-                        .associateBy { it.taskId }
-                    val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
-                    containerVar[Container::timeCost.name] = cost
-                    containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                    // 矩阵直接以类似stage的方式计算耗时
+                    if (recordContainer.matrixGroupFlag == true){
+                        val groupContainers = recordContainerDao.getRecords(
+                            context, projectId, pipelineId, buildId, executeCount, null, containerId
+                        )
+                        val (cost, timeLine) = recordContainer.generateMatrixTimeCost(groupContainers)
+                        containerVar[Container::timeCost.name] = cost
+                        containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                    } else {
+                        val recordTasks = recordTaskDao.getRecords(
+                            context, projectId, pipelineId, buildId, executeCount, containerId
+                        )
+                        val (cost, timeLine) = recordContainer.generateContainerTimeCost(recordTasks)
+                        containerVar[Container::timeCost.name] = cost
+                        containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                    }
                 }
                 recordContainerDao.updateRecord(
                     dslContext = context, projectId = projectId, pipelineId = pipelineId,
