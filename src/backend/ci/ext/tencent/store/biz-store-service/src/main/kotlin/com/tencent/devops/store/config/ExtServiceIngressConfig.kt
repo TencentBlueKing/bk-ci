@@ -33,21 +33,21 @@ import org.springframework.stereotype.Component
 @Component
 class ExtServiceIngressConfig {
 
-    @Value("\${store.extService.kubernetes.ingress.host}")
+    @Value("\${store.extService.bcs.ingress.host}")
     val host: String = ""
 
-    @Value("\${store.extService.kubernetes.ingress.grayHost}")
+    @Value("\${store.extService.bcs.ingress.grayHost}")
     val grayHost: String = ""
 
-    @Value("\${store.extService.kubernetes.ingress.contextPath}")
+    @Value("\${store.extService.bcs.ingress.contextPath}")
     val contextPath: String = ""
 
-    @Value("\${store.extService.kubernetes.ingress.annotation.class}")
+    @Value("\${store.extService.bcs.ingress.annotation.class}")
     val annotationClass: String = ""
 
-    @Value("\${store.extService.kubernetes.ingress.annotation.existLbId}")
+    @Value("\${store.extService.bcs.ingress.annotation.existLbId}")
     val annotationExistLbId: String = ""
 
-    @Value("\${store.extService.kubernetes.ingress.annotation.grayExistLbId}")
+    @Value("\${store.extService.bcs.ingress.annotation.grayExistLbId}")
     val annotationGrayExistLbId: String = ""
 }
