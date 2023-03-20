@@ -49,6 +49,7 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.model.project.tables.records.TProjectRecord
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
@@ -69,6 +70,7 @@ import com.tencent.devops.project.pojo.ProjectVO
 import com.tencent.devops.project.pojo.ResourceUpdateInfo
 import com.tencent.devops.project.pojo.Result
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
+import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
 import com.tencent.devops.project.pojo.enums.ProjectChannelCode
 import com.tencent.devops.project.pojo.enums.ProjectTipsStatus
 import com.tencent.devops.project.pojo.enums.ProjectValidateType
@@ -525,17 +527,29 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         pageSize: Int
     ): Pagination<Pair<Boolean, ProjectVO>> {
         val sqlLimit = PageUtil.convertPageSizeToSQLLimit(page, pageSize)
-        val projectList: MutableList<Pair<Boolean, ProjectVO>> = mutableListOf()
-        // todo 还要拉取出该用户已经加入的保密项目。
-        // todo 拉取到保密项目，还得抛出异常
-        // 拉取出已经有访问权限的项目。
-        projectDao.listProjectsByProjectName(
+        val projectList: MutableList<TProjectRecord> = mutableListOf()
+        val projectListWithPermission: MutableList<Pair<Boolean, ProjectVO>> = mutableListOf()
+
+        val publicProjectInfos = projectDao.listProjectsByProjectName(
             dslContext = dslContext,
             projectName = projectName,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
-        ).forEach {
-            projectList.add(
+        )
+        // 拉取出该用户有访问权限的项目
+        val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
+        val privateProjectInfos = projectDao.listByEnglishName(
+            dslContext = dslContext,
+            englishNameList = hasVisitPermissionProjectIds,
+            authSecrecyStatus = ProjectAuthSecrecyStatus.PRIVATE,
+            searchName = projectName
+        )
+        projectList.addAll(publicProjectInfos)
+        if (page == 1)
+            projectList.addAll(privateProjectInfos)
+
+        projectList.forEach {
+            projectListWithPermission.add(
                 Pair(
                     // todo 改成批量鉴权
                     authPermissionApi.validateUserResourcePermission(
@@ -548,12 +562,10 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 )
             )
         }
-        if (projectList.isEmpty()) {
-            return Pagination(false, emptyList())
-        }
+        // todo 若projectListWithPermission为空是否需要抛出异常。
         return Pagination(
-            hasNext = projectList.size == pageSize,
-            records = projectList
+            hasNext = publicProjectInfos.size == pageSize,
+            records = projectListWithPermission
         )
     }
 
