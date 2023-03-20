@@ -36,6 +36,7 @@ dependencies {
     api(project(":core:common:common-redis"))
     api(project(":core:common:common-db"))
     api(project(":core:common:common-websocket"))
+    implementation(project(mapOf("path" to ":ext:tencent:project:biz-project-tencent")))
 
     testImplementation(project(":core:common:common-test"))
 }
