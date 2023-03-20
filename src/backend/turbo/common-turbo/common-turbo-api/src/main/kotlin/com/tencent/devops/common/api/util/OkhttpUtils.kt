@@ -3,6 +3,7 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.exception.TurboException
 import com.tencent.devops.common.api.exception.code.TURBO_THIRDPARTY_SYSTEM_FAIL
 import okhttp3.MediaType
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
 import okhttp3.Response
@@ -35,9 +36,9 @@ object OkhttpUtils {
         val request = requestBuilder.build()
 
         okHttpClient.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("request failed, url:$url message: ${response.message()}")
+                logger.warn("request failed, url:$url message: ${response.message}")
                 throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "launch third party system fail!")
             }
             return responseContent
@@ -61,7 +62,7 @@ object OkhttpUtils {
             .url(url)
             .post(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), body
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), body
                 )
             )
         if (headers.isNotEmpty()) {
@@ -72,9 +73,9 @@ object OkhttpUtils {
         val request = requestBuilder.build()
         val client = okHttpClient.newBuilder().build()
         client.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("request failed, url: $url requestBody: $body message: ${response.message()}, content: $responseContent")
+                logger.warn("request failed, url: $url requestBody: $body message: ${response.message}, content: $responseContent")
                 throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "launch third party system fail!")
             }
             return responseContent
@@ -86,7 +87,7 @@ object OkhttpUtils {
             .url(url)
             .delete(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), body
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), body
                 )
             )
         if (headers.isNotEmpty()) {
@@ -97,9 +98,9 @@ object OkhttpUtils {
         val request = requestBuilder.build()
         val client = okHttpClient.newBuilder().build()
         client.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("request failed, message: ${response.message()}")
+                logger.warn("request failed, message: ${response.message}")
                 throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "launch third party system fail!")
             }
             return responseContent
@@ -111,7 +112,7 @@ object OkhttpUtils {
             .url(url)
             .put(
                 RequestBody.create(
-                    MediaType.parse("application/json; charset=utf-8"), body
+                    "application/json; charset=utf-8".toMediaTypeOrNull(), body
                 )
             )
         if (headers.isNotEmpty()) {
@@ -122,9 +123,9 @@ object OkhttpUtils {
         val request = requestBuilder.build()
         val client = okHttpClient.newBuilder().build()
         client.newCall(request).execute().use { response ->
-            val responseContent = response.body()!!.string()
+            val responseContent = response.body!!.string()
             if (!response.isSuccessful) {
-                logger.warn("request failed, message: ${response.message()}")
+                logger.warn("request failed, message: ${response.message}")
                 throw TurboException(errorCode = TURBO_THIRDPARTY_SYSTEM_FAIL, errorMessage = "launch third party system fail!")
             }
             return responseContent
@@ -137,17 +138,17 @@ object OkhttpUtils {
             .get()
             .build()
         okHttpClient.newCall(request).execute().use { response ->
-            if (response.code() == HttpStatus.NOT_FOUND.value()) {
+            if (response.code == HttpStatus.NOT_FOUND.value()) {
                 logger.warn("The file $url is not exist")
                 throw RuntimeException("文件不存在")
             }
             if (!response.isSuccessful) {
-                logger.warn("fail to download the file from $url because of ${response.message()} and code ${response.code()}")
+                logger.warn("fail to download the file from $url because of ${response.message} and code ${response.code}")
                 throw RuntimeException("获取文件失败")
             }
             if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
             val buf = ByteArray(4096)
-            response.body()!!.byteStream().use { bs ->
+            response.body!!.byteStream().use { bs ->
                 var len = bs.read(buf)
                 FileOutputStream(destPath).use { fos ->
                     while (len != -1) {
@@ -160,17 +161,17 @@ object OkhttpUtils {
     }
 
     fun downloadFile(response: Response, destPath: File) {
-        if (response.code() == HttpStatus.NOT_MODIFIED.value()) {
+        if (response.code == HttpStatus.NOT_MODIFIED.value()) {
             logger.info("file is newest, do not download to $destPath")
             return
         }
         if (!response.isSuccessful) {
-            logger.warn("fail to download the file because of ${response.message()} and code ${response.code()}")
+            logger.warn("fail to download the file because of ${response.message} and code ${response.code}")
             throw RuntimeException("获取文件失败")
         }
         if (!destPath.parentFile.exists()) destPath.parentFile.mkdirs()
         val buf = ByteArray(4096)
-        response.body()!!.byteStream().use { bs ->
+        response.body!!.byteStream().use { bs ->
             var len = bs.read(buf)
             FileOutputStream(destPath).use { fos ->
                 while (len != -1) {

@@ -25,6 +25,9 @@ allprojects {
     }
 
     dependencyManagement {
+        imports {
+            mavenBom("com.tencent.bk.devops.ci.common:common-dependencies:${Versions.ciVersion}")
+        }
         dependencies {
             dependency("javax.ws.rs:javax.ws.rs-api:${Versions.jaxrsVersion}")
             dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.jasyptVersion}")
@@ -32,22 +35,15 @@ allprojects {
             dependency("com.google.guava:guava:${Versions.guavaVersion}")
             dependency("io.jsonwebtoken:jjwt:${Versions.jjwtVersion}")
             dependency("commons-io:commons-io:${Versions.commonIo}")
-            // TODO: 临时同步ci依赖版本
-            dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
-            dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
-            dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
-            dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
-            dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
-            dependency("org.hashids:hashids:${Versions.HashIds}")
-            dependency("org.reflections:reflections:${Versions.reflections}")
 
-            dependencySet("io.swagger:${Versions.swaggerVersion}") {
-                entry("swagger-annotations")
-                entry("swagger-jersey2-jaxrs")
-                entry("swagger-models")
-            }
-            dependencySet("io.micrometer:${Versions.micrometerVersion}") {
-                entry("micrometer-registry-prometheus")
+            Versions.ciVersion.let {
+                dependency("com.tencent.bk.devops.ci.project:api-project:$it")
+                dependency("com.tencent.bk.devops.ci.common:common-api:$it")
+                dependency("com.tencent.bk.devops.ci.metrics:api-metrics:$it")
+                dependency("com.tencent.bk.devops.ci.auth:api-auth:$it")
+                dependency("com.tencent.bk.devops.ci.common:common-auth-api:$it")
+                dependency("com.tencent.bk.devops.ci.common:common-event:$it")
+                dependency("com.tencent.bk.devops.ci.common:common-api:$it")
             }
         }
     }
