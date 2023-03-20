@@ -67,7 +67,7 @@ class DispatchWorkspaceDao {
                     environmentUid,
                     event.repositoryUrl,
                     event.branch,
-                    event.devFile.image?.publicImage ?: "",
+                    event.devFile.runsOn?.container?.image ?: "",
                     status.ordinal
                 )
                 .returning(ID)

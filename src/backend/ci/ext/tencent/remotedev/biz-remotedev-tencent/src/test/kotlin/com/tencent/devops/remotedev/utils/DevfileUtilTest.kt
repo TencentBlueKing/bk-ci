@@ -9,7 +9,7 @@ internal class DevfileUtilTest {
         val yaml = """
 version: 1.0.0
 
-image: mirror.tencent.com/bkci/worksapce-full:1.0.0
+runs-on: mirror.tencent.com/bkci/worksapce-full:1.0.0
 
 vscode:
   extensions:
