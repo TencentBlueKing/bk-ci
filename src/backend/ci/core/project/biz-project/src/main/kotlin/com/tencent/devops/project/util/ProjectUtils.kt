@@ -100,7 +100,7 @@ object ProjectUtils {
                 JsonUtil.to(self, ProjectProperties::class.java)
             },
             subjectScopes = tProjectRecord.subjectScopes?.let {
-                JsonUtil.to(it, object : TypeReference<ArrayList<SubjectScopeInfo>>() {})
+                JsonUtil.to(it, object : TypeReference<List<SubjectScopeInfo>>() {})
             },
             authSecrecy = tProjectRecord.authSecrecy
         )
