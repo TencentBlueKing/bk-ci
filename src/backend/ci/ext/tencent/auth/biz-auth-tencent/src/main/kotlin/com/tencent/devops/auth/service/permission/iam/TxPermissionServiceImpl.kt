@@ -42,7 +42,6 @@ import com.tencent.devops.common.auth.utils.TActionUtils
 import com.tencent.devops.common.client.Client
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import kotlin.math.log
 
 class TxPermissionServiceImpl @Autowired constructor(
     val authHelper: AuthHelper,
