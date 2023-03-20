@@ -9,4 +9,4 @@ data class TurboRecordPluginUpdateDto(
     val buildId: String,
     val user: String,
     override var delayMills: Int
-): IEvent(delayMills)
+) : IEvent(delayMills)

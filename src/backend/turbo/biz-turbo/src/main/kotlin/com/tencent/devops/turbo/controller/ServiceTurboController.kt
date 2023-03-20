@@ -19,9 +19,9 @@ import java.time.LocalDate
 
 @RestController
 class ServiceTurboController @Autowired constructor(
-        private val turboPlanService: TurboPlanService,
-        private val turboRecordService: TurboRecordService,
-        private val turboAuthService: TurboAuthService
+    private val turboPlanService: TurboPlanService,
+    private val turboRecordService: TurboRecordService,
+    private val turboAuthService: TurboAuthService
 ) : IServiceTurboController {
 
     override fun getTurboPlanByProjectIdAndCreatedDate(
@@ -41,13 +41,13 @@ class ServiceTurboController @Autowired constructor(
     }
 
     override fun getTurboRecordHistoryList(
-            pageNum: Int?,
-            pageSize: Int?,
-            sortField: String?,
-            sortType: String?,
-            turboRecordModel: TurboRecordModel,
-            projectId: String,
-            userId: String
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?,
+        turboRecordModel: TurboRecordModel,
+        projectId: String,
+        userId: String
     ): Response<Page<TurboRecordHistoryVO>> {
         // 判断是否是管理员
         if (!turboAuthService.getAuthResult(projectId, userId)) {
@@ -58,9 +58,9 @@ class ServiceTurboController @Autowired constructor(
     }
 
     override fun getTurboPlanDetailByPlanId(
-            planId: String,
-            projectId: String,
-            userId: String
+        planId: String,
+        projectId: String,
+        userId: String
     ): Response<TurboPlanDetailVO> {
         // 判断是否是管理员
         if (!turboAuthService.getAuthResult(projectId, userId)) {

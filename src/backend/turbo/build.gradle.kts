@@ -1,6 +1,6 @@
 plugins {
-	id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
-	id("org.owasp.dependencycheck") version "7.1.0.1"
+    id("com.tencent.devops.boot") version "0.0.7-SNAPSHOT"
+    id("org.owasp.dependencycheck") version "7.1.0.1"
 }
 
 allprojects {
@@ -24,15 +24,24 @@ allprojects {
         resolutionStrategy.cacheChangingModulesFor(0, TimeUnit.MINUTES)
     }
 
-	dependencyManagement {
-		dependencies {
-			dependency("javax.ws.rs:javax.ws.rs-api:${Versions.jaxrsVersion}")
-			dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.jasyptVersion}")
-			dependency("org.bouncycastle:bcprov-jdk15on:${Versions.bouncyCastleVersion}")
-			dependency("com.google.guava:guava:${Versions.guavaVersion}")
-			dependency("io.jsonwebtoken:jjwt:${Versions.jjwtVersion}")
-			dependency("commons-io:commons-io:${Versions.commonIo}")
-			dependencySet("io.swagger:${Versions.swaggerVersion}") {
+    dependencyManagement {
+        dependencies {
+            dependency("javax.ws.rs:javax.ws.rs-api:${Versions.jaxrsVersion}")
+            dependency("com.github.ulisesbocchio:jasypt-spring-boot-starter:${Versions.jasyptVersion}")
+            dependency("org.bouncycastle:bcprov-jdk15on:${Versions.bouncyCastleVersion}")
+            dependency("com.google.guava:guava:${Versions.guavaVersion}")
+            dependency("io.jsonwebtoken:jjwt:${Versions.jjwtVersion}")
+            dependency("commons-io:commons-io:${Versions.commonIo}")
+            // TODO: 临时同步ci依赖版本
+            dependency("org.apache.commons:commons-csv:${Versions.CommonCsv}")
+            dependency("com.vdurmont:emoji-java:${Versions.EmojiJava}")
+            dependency("org.apache.lucene:lucene-core:${Versions.Lucene}")
+            dependency("org.apache.commons:commons-exec:${Versions.CommonExec}")
+            dependency("com.github.fge:json-schema-validator:${Versions.JsonSchema}")
+            dependency("org.hashids:hashids:${Versions.HashIds}")
+            dependency("org.reflections:reflections:${Versions.reflections}")
+
+            dependencySet("io.swagger:${Versions.swaggerVersion}") {
                 entry("swagger-annotations")
                 entry("swagger-jersey2-jaxrs")
                 entry("swagger-models")
@@ -40,6 +49,6 @@ allprojects {
             dependencySet("io.micrometer:${Versions.micrometerVersion}") {
                 entry("micrometer-registry-prometheus")
             }
-		}
-	}
+        }
+    }
 }

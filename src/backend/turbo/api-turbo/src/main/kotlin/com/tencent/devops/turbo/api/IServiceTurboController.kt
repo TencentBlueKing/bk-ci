@@ -23,7 +23,6 @@ import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 import java.time.LocalDate
 
-
 @Api(tags = ["SERVICE_TURBO"], description = "编译加速service接口")
 @RequestMapping("/service/turbo")
 @FeignClient(name = "turbo", contextId = "IServiceTurboController")
@@ -36,28 +35,27 @@ interface IServiceTurboController {
             produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getTurboPlanByProjectIdAndCreatedDate(
-            @ApiParam(value = "项目id", required = true)
-            @PathVariable("projectId")
-            projectId: String,
-            @ApiParam(value = "开始时间", required = false)
-            @RequestParam("startTime")
-            @DateTimeFormat(pattern = "yyyy-MM-dd")
-            startTime: LocalDate?,
-            @ApiParam(value = "结束时间", required = false)
-            @RequestParam("endTime")
-            @DateTimeFormat(pattern = "yyyy-MM-dd")
-            endTime: LocalDate?,
-            @ApiParam(value = "页数", required = false)
-            @RequestParam(value = "pageNum")
-            pageNum: Int?,
-            @ApiParam(value = "每页多少条", required = false)
-            @RequestParam("pageSize")
-            pageSize: Int?,
-            @ApiParam(value = "用户信息", required = true)
-            @PathVariable("userId")
-            userId: String
+        @ApiParam(value = "项目id", required = true)
+        @PathVariable("projectId")
+        projectId: String,
+        @ApiParam(value = "开始时间", required = false)
+        @RequestParam("startTime")
+        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        startTime: LocalDate?,
+        @ApiParam(value = "结束时间", required = false)
+        @RequestParam("endTime")
+        @DateTimeFormat(pattern = "yyyy-MM-dd")
+        endTime: LocalDate?,
+        @ApiParam(value = "页数", required = false)
+        @RequestParam(value = "pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "每页多少条", required = false)
+        @RequestParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "用户信息", required = true)
+        @PathVariable("userId")
+        userId: String
     ): Response<Page<TurboPlanStatRowVO>>
-
 
     @ApiOperation("获取加速历史列表")
     @PostMapping(
@@ -66,31 +64,30 @@ interface IServiceTurboController {
             produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getTurboRecordHistoryList(
-            @ApiParam(value = "页数", required = false)
-            @RequestParam(value = "pageNum")
-            pageNum: Int?,
-            @ApiParam(value = "每页多少条", required = false)
-            @RequestParam("pageSize")
-            pageSize: Int?,
-            @ApiParam(value = "排序字段", required = false)
-            @RequestParam("sortField")
-            sortField: String?,
-            @ApiParam(value = "排序类型", required = false)
-            @RequestParam("sortType")
-            sortType: String?,
-            @ApiParam(value = "编译加速历史请求数据信息", required = true)
-            @RequestBody
-            @Validated(TurboRecordGroup.OpenApi::class)
-            turboRecordModel: TurboRecordModel,
-            @ApiParam(value = "蓝盾项目id", required = true)
-            @PathVariable("projectId")
-            projectId: String,
-            @ApiParam(value = "用户信息", required = true)
-            @PathVariable("userId")
-            userId: String
+        @ApiParam(value = "页数", required = false)
+        @RequestParam(value = "pageNum")
+        pageNum: Int?,
+        @ApiParam(value = "每页多少条", required = false)
+        @RequestParam("pageSize")
+        pageSize: Int?,
+        @ApiParam(value = "排序字段", required = false)
+        @RequestParam("sortField")
+        sortField: String?,
+        @ApiParam(value = "排序类型", required = false)
+        @RequestParam("sortType")
+        sortType: String?,
+        @ApiParam(value = "编译加速历史请求数据信息", required = true)
+        @RequestBody
+        @Validated(TurboRecordGroup.OpenApi::class)
+        turboRecordModel: TurboRecordModel,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @PathVariable("projectId")
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @PathVariable("userId")
+        userId: String
 
     ): Response<Page<TurboRecordHistoryVO>>
-
 
     @ApiOperation("获取加速方案详情")
     @GetMapping(
@@ -98,14 +95,14 @@ interface IServiceTurboController {
             produces = [MediaType.APPLICATION_JSON_VALUE]
     )
     fun getTurboPlanDetailByPlanId(
-            @ApiParam(value = "方案id", required = true)
-            @PathVariable("planId")
-            planId: String,
-            @ApiParam(value = "蓝盾项目id", required = true)
-            @PathVariable("projectId")
-            projectId: String,
-            @ApiParam(value = "用户信息", required = true)
-            @PathVariable("userId")
-            userId: String
-            ): Response<TurboPlanDetailVO>
+        @ApiParam(value = "方案id", required = true)
+        @PathVariable("planId")
+        planId: String,
+        @ApiParam(value = "蓝盾项目id", required = true)
+        @PathVariable("projectId")
+        projectId: String,
+        @ApiParam(value = "用户信息", required = true)
+        @PathVariable("userId")
+        userId: String
+    ): Response<TurboPlanDetailVO>
 }

@@ -3,18 +3,15 @@ package com.tencent.devops.turbo.job
 import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.Gray
-import com.tencent.devops.common.util.constants.EXCHANGE_TURBO_REPORT
 import com.tencent.devops.turbo.dto.TurboRecordUpdateDto
 import com.tencent.devops.turbo.enums.EnumDistccTaskStatus
 import com.tencent.devops.turbo.service.TurboRecordService
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.beans.factory.annotation.Qualifier
 
-@Suppress("SpringJavaAutowiredMembersInspection","NestedBlockDepth","MaxLineLength")
+@Suppress("SpringJavaAutowiredMembersInspection", "NestedBlockDepth", "MaxLineLength")
 class TBSUpdateDataJob @Autowired constructor(
     private val turboRecordService: TurboRecordService,
     private val eventDispatcher: SampleEventDispatcher,

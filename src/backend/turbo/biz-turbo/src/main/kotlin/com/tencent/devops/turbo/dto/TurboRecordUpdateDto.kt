@@ -10,4 +10,4 @@ data class TurboRecordUpdateDto(
     val tbsTurboRecordId: String?,
     val buildId: String?,
     val turboPlanId: String?
-): IEvent()
+) : IEvent()

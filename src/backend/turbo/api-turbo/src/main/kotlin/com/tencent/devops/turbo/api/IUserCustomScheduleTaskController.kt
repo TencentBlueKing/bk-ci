@@ -14,7 +14,6 @@ import org.springframework.web.bind.annotation.RequestHeader
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
 
-
 @Api(tags = ["CUSTOM_SCHEDULE_JOB"], description = "自定义计划任务")
 @RequestMapping("/user/customScheduleJob")
 interface IUserCustomScheduleTaskController {

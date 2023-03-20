@@ -52,8 +52,6 @@ class JerseyFeignClientFactoryBean(
     private val jacksonEncoder = JacksonEncoder(JsonUtils.objectMapper)
     private val clientErrorDecoder = ClientErrorDecoder()
 
-
-
     override fun getObject(): Any? {
         return Feign.builder()
             .client(feignClient)

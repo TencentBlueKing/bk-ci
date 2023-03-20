@@ -177,7 +177,7 @@ object TBSSdkApi {
     /**
      * 查询编译加速地区关联的编译环境
      */
-    fun queryTurboCompileList(engineCode: String, queryParam: Map<String, Any>): List<ParamEnumDto>{
+    fun queryTurboCompileList(engineCode: String, queryParam: Map<String, Any>): List<ParamEnumDto> {
         val responseStr = tbsCommonRequest(
             engineCode = engineCode,
             resourceName = "images",

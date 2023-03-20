@@ -56,7 +56,7 @@ class JerseyFeignRequestRegistrar(
         val className = annotationMetadata.className
         val clazz = ClassUtils.resolveClassName(className, null)
         val tag = environment.getProperty("spring.cloud.consul.discovery.tags", "turbo")
-        val definition =BeanDefinitionBuilder.genericBeanDefinition(JerseyFeignClientFactoryBean::class.java)
+        val definition = BeanDefinitionBuilder.genericBeanDefinition(JerseyFeignClientFactoryBean::class.java)
         definition.addConstructorArgValue(clazz)
         definition.addConstructorArgValue(tag)
         definition.setAutowireMode(AbstractBeanDefinition.AUTOWIRE_BY_TYPE)

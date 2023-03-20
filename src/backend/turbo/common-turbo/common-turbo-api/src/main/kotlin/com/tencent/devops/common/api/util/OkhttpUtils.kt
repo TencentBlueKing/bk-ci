@@ -12,7 +12,7 @@ import java.io.File
 import java.io.FileOutputStream
 import java.util.concurrent.TimeUnit
 
-@Suppress("NestedBlockDepth","MaxLineLength")
+@Suppress("NestedBlockDepth", "MaxLineLength")
 object OkhttpUtils {
 
     private val logger = LoggerFactory.getLogger(OkhttpUtils::class.java)

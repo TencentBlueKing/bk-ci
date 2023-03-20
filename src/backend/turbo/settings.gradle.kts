@@ -14,7 +14,6 @@ include("biz-turbo")
 include("boot-turbo")
 include("model-turbo")
 
-
 pluginManagement {
     repositories {
         maven { url = java.net.URI("https://oss.sonatype.org/content/repositories/snapshots/") }

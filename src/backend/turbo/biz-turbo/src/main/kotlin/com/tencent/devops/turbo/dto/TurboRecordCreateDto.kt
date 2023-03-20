@@ -8,4 +8,4 @@ import com.tencent.devops.common.util.constants.QUEUE_TURBO_REPORT_CREATE
 data class TurboRecordCreateDto(
     val engineCode: String,
     val dataMap: Map<String, Any?>
-): IEvent()
+) : IEvent()

@@ -24,7 +24,7 @@ import java.time.ZoneOffset
  *    3. 以加速方案id和ip为条件，查询加速方案实例表，如果没有记录则创建一条加速方案实例，如果有记录则取出加速方案实例id
  *    4. 将实例id赋值给同步的记录详情，更新至详情表
  */
-@Suppress("ComplexMethod","NestedBlockDepth","ComplexCondition","MaxLineLength")
+@Suppress("ComplexMethod", "NestedBlockDepth", "ComplexCondition", "MaxLineLength")
 @Service
 class TurboDataSyncService @Autowired constructor(
     private val turboPlanService: TurboPlanService,

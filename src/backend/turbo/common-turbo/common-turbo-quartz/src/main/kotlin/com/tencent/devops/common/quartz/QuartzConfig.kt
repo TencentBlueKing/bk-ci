@@ -10,7 +10,7 @@ import org.springframework.context.annotation.PropertySource
 import org.springframework.core.env.Environment
 import org.springframework.core.io.FileSystemResource
 import java.io.File
-import java.util.*
+import java.util.Properties
 
 @Suppress("MaxLineLength", "SpringPropertySource")
 @Configuration

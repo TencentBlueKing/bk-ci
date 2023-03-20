@@ -9,4 +9,12 @@ object Versions {
     const val jjwtVersion = "0.9.0"
     const val ciAuthVersion = "1.8.0-RC.3-RELEASE"
     const val micrometerVersion = "1.6.6"
+    // TODO: 临时同步ci依赖版本
+    const val reflections = "0.10.2"
+    const val JsonSchema = "2.2.6"
+    const val CommonExec = "1.3"
+    const val EmojiJava = "5.1.1"
+    const val Lucene = "8.11.1"
+    const val CommonCsv = "1.8"
+    const val HashIds = "1.0.3"
 }

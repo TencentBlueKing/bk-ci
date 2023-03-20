@@ -10,7 +10,6 @@ import com.tencent.devops.turbo.service.TurboAuthService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.web.bind.annotation.RestController
 
-
 @RestController
 class UserCustomScheduleTaskController @Autowired constructor(
     private val turboAuthService: TurboAuthService,

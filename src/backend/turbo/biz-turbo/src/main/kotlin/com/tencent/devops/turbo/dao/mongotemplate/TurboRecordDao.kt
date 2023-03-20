@@ -208,7 +208,6 @@ class TurboRecordDao @Autowired constructor(
         mongoTemplate.updateFirst(query, update, TTurboRecordEntity::class.java)
     }
 
-
     /**
      * 更新记录状态
      */
@@ -231,7 +230,6 @@ class TurboRecordDao @Autowired constructor(
             .set("updated_by", user)
         mongoTemplate.updateFirst(query, update, TTurboRecordEntity::class.java)
     }
-
 
     /**
      * 通过方案id寻找记录清单

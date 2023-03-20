@@ -71,22 +71,22 @@ data class TTurboPlanEntity(
     // 迁移字段：老项目是否和流水线关联
     @Field("pipeline_related")
     val pipelineRelated: Boolean? = true,
-    //事业群id
+    // 事业群id
     @Field("bg_id")
     val bgId: String? = null,
-    //事业群名字
+    // 事业群名字
     @Field("bg_name")
     val bgName: String? = null,
-    //部门id
+    // 部门id
     @Field("dept_id")
     val deptId: String? = null,
-    //部门名字
+    // 部门名字
     @Field("dept_name")
     val deptName: String? = null,
-    //中心id
+    // 中心id
     @Field("center_id")
     val centerId: String? = null,
-    //中心名字
+    // 中心名字
     @Field("center_name")
     val centerName: String? = null,
 

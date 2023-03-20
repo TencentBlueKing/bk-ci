@@ -64,7 +64,6 @@ class OpTurboEngineConfigController @Autowired constructor(
         return Response.success(true)
     }
 
-
     override fun addWorkVersion(
         engineCode: String,
         paramEnum: ParamEnumModel
@@ -89,6 +88,4 @@ class OpTurboEngineConfigController @Autowired constructor(
         turboEngineConfigService.updateWorkerVersion(engineCode, "worker_version", paramValue, paramEnum)
         return Response.success(true)
     }
-
-
 }

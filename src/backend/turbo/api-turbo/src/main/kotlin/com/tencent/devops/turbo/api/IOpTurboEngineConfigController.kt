@@ -142,7 +142,6 @@ interface IOpTurboEngineConfigController {
         paramEnum: ParamEnumModel
     ): Response<Boolean>
 
-
     @ApiOperation("更新编译加速模式worker信息")
     @DeleteMapping(
         "/workVersion/engineCode/{engineCode}/paramValue/{paramValue}",
@@ -157,7 +156,6 @@ interface IOpTurboEngineConfigController {
         @PathVariable("paramValue")
         paramValue: String
     ): Response<Boolean>
-
 
     @ApiOperation("更新编译加速模式worker信息")
     @PutMapping(

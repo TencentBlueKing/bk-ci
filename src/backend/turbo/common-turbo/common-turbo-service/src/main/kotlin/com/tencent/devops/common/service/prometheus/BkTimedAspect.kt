@@ -61,7 +61,7 @@ class BkTimedAspect(
 
         private val logger = LoggerFactory.getLogger(BkTimedAspect::class.java)
 
-        private val pathMap = ConcurrentHashMap<String,String>()
+        private val pathMap = ConcurrentHashMap<String, String>()
     }
 
     @Around("execution(@com.tencent.devops.common.service.prometheus.BkTimed * *.*(..))")
@@ -85,10 +85,10 @@ class BkTimedAspect(
     }
 
     private fun processWithTimer(
-            point: ProceedingJoinPoint,
-            timed: BkTimed,
-            metricName: String,
-            stopWhenCompleted: Boolean
+        point: ProceedingJoinPoint,
+        timed: BkTimed,
+        metricName: String,
+        stopWhenCompleted: Boolean
     ): Any {
         val sample = Timer.start(registry)
         if (stopWhenCompleted) {
@@ -112,15 +112,14 @@ class BkTimedAspect(
         } finally {
             record(point, timed, metricName, sample, exceptionClass)
         }
-
     }
 
     private fun record(
-            point: ProceedingJoinPoint,
-            timed: BkTimed,
-            metricName: String,
-            sample: Timer.Sample,
-            exceptionClass: String
+        point: ProceedingJoinPoint,
+        timed: BkTimed,
+        metricName: String,
+        sample: Timer.Sample,
+        exceptionClass: String
     ) {
         try {
             val builder = Timer.builder(metricName)
@@ -151,7 +150,6 @@ class BkTimedAspect(
         )
     }
 
-
     private fun getExceptionTag(throwable: Throwable?): String {
 
         if (throwable == null) {
@@ -164,7 +162,6 @@ class BkTimedAspect(
             throwable.cause?.javaClass?.simpleName ?: "unknown"
         }
     }
-
 
     @Suppress("NAME_SHADOWING")
     @Throws(Throwable::class)

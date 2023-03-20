@@ -9,7 +9,6 @@ import com.tencent.devops.turbo.service.TurboPlanService
 import org.quartz.Job
 import org.quartz.JobExecutionContext
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 
 @Suppress("SpringJavaAutowiredMembersInspection", "MaxLineLength")

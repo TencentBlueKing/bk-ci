@@ -236,11 +236,12 @@ class TurboRecordService @Autowired constructor(
      * 获取加速历史列表
      */
     @BkTimed("api_get_turbo_record_history_page")
-    fun getTurboRecordHistoryList(pageNum: Int?,
-                                  pageSize: Int?,
-                                  sortField: String?,
-                                  sortType: String?,
-                                  turboRecordModel: TurboRecordModel
+    fun getTurboRecordHistoryList(
+        pageNum: Int?,
+        pageSize: Int?,
+        sortField: String?,
+        sortType: String?,
+        turboRecordModel: TurboRecordModel
     ): Page<TurboRecordHistoryVO> {
 
         val sortFieldInDb = CaseFormat.LOWER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, sortField ?: "execute_num")
@@ -373,7 +374,7 @@ class TurboRecordService @Autowired constructor(
                 )
             )
         }
-        val recordViewUrl = if(!turboRecordEntity.tbsRecordId.isNullOrBlank() && turboPlanEntity.engineCode.startsWith("disttask-") && !tbsDashboardUrl.isNullOrBlank()) {
+        val recordViewUrl = if (!turboRecordEntity.tbsRecordId.isNullOrBlank() && turboPlanEntity.engineCode.startsWith("disttask-") && !tbsDashboardUrl.isNullOrBlank()) {
             "$tbsDashboardUrl${turboRecordEntity.tbsRecordId}"
         } else {
             null
@@ -405,7 +406,7 @@ class TurboRecordService @Autowired constructor(
     /**
      * 插件扫描完成后调用后端接口，
      */
-    fun processAfterPluginFinish(buildId: String, user: String) : String?{
+    fun processAfterPluginFinish(buildId: String, user: String): String? {
         val turboRecordEntity = turboRecordRepository.findByBuildId(buildId)
         if (null != turboRecordEntity) {
             /**
@@ -424,7 +425,6 @@ class TurboRecordService @Autowired constructor(
     fun updateRecordStatusForPlugin(buildId: String, status: String, user: String) {
         turboRecordDao.updateRecordStatusForPlugin(buildId, status, user)
     }
-
 
     // ///////////////////////////以下逻辑为数据刷新逻辑，刷新后需要去除////////////////////////////////
     /**

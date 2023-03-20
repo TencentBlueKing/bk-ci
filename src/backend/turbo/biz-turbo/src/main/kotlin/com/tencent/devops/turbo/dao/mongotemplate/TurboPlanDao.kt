@@ -260,7 +260,7 @@ class TurboPlanDao @Autowired constructor(
      */
     fun getTurboPlanByProjectIdAndCreatedDate(projectId: String, startTime: LocalDate?, endTime: LocalDate?, pageable: Pageable): Page<TTurboPlanEntity> {
         val query = turboPlanParameter(projectId, startTime, endTime)
-        //先算总数
+        // 先算总数
         val totalCount = mongoTemplate.count(query, TTurboPlanEntity::class.java)
         query.with(pageable)
         // 分页排序
@@ -283,7 +283,7 @@ class TurboPlanDao @Autowired constructor(
     private fun turboPlanParameter(projectId: String, startTime: LocalDate?, endTime: LocalDate?): Query {
         val query = Query()
         query.addCriteria(Criteria.where("project_id").`is`(projectId))
-        if(null != startTime) {
+        if (null != startTime) {
             query.addCriteria(Criteria.where("created_date").gte(startTime))
         }
         if (null != endTime) {
