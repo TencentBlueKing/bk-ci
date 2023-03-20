@@ -100,7 +100,7 @@ interface UserProjectResource {
         @ApiParam("每页数目", required = true)
         @QueryParam("pageSize")
         pageSize: Int
-    ): Result<Pagination<Pair<Boolean, ProjectVO>>>
+    ): Result<Pagination<Pair<Boolean/*是否有访问项目权限*/, ProjectVO>>>
 
     @GET
     @Path("/{english_name}")
