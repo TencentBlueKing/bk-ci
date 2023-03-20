@@ -37,10 +37,6 @@ import io.swagger.annotations.ApiModelProperty
  */
 @ApiModel("用户部门信息")
 data class UserDeptDetail(
-    @ApiModelProperty("用户ID")
-    val userId: String? = null,
-    @ApiModelProperty("用户名称")
-    val name: String? = null,
     @ApiModelProperty("bg名称")
     val bgName: String,
     @ApiModelProperty("bgID")
@@ -56,5 +52,9 @@ data class UserDeptDetail(
     @ApiModelProperty("组ID")
     val groupId: String,
     @ApiModelProperty("组名称")
-    val groupName: String
+    val groupName: String,
+    @ApiModelProperty("用户ID")
+    val userId: String? = null,
+    @ApiModelProperty("用户名称")
+    val name: String? = null
 )
