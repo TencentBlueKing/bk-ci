@@ -237,7 +237,7 @@ class ContainerBuildRecordService(
                         null, LocalDateTime.now().timestampmilli()
                     )
                     // 矩阵直接以类似stage的方式计算耗时
-                    if (recordContainer.matrixGroupFlag == true){
+                    if (recordContainer.matrixGroupFlag == true) {
                         val groupContainers = recordContainerDao.getRecords(
                             context, projectId, pipelineId, buildId, executeCount, null, containerId
                         )
