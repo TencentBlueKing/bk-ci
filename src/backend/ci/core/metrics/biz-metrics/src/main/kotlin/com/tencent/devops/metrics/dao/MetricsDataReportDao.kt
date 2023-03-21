@@ -370,6 +370,7 @@ class MetricsDataReportDao {
                     .set(MODIFIER, saveErrorCodeInfoPO.modifier)
                     .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                     .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
+                    .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
                     .onDuplicateKeyUpdate()
                     .set(ERROR_MSG, saveErrorCodeInfoPO.errorMsg)
                     .set(MODIFIER, saveErrorCodeInfoPO.modifier)
@@ -393,12 +394,14 @@ class MetricsDataReportDao {
                 .set(MODIFIER, saveErrorCodeInfoPO.modifier)
                 .set(UPDATE_TIME, saveErrorCodeInfoPO.updateTime)
                 .set(CREATE_TIME, saveErrorCodeInfoPO.createTime)
+                .set(ATOM_CODE, saveErrorCodeInfoPO.atomCode)
                 .execute()
         }
     }
 
     fun updateErrorCodeInfo(
         dslContext: DSLContext,
+        atomCode: String,
         updateErrorCodeInfoPO: UpdateErrorCodeInfoPO
     ) {
         with(TErrorCodeInfo.T_ERROR_CODE_INFO) {
@@ -408,6 +411,7 @@ class MetricsDataReportDao {
                 .set(UPDATE_TIME, updateErrorCodeInfoPO.updateTime)
                 .where(
                     ERROR_CODE.eq(updateErrorCodeInfoPO.errorCode)
+                        .and(ATOM_CODE.eq(atomCode))
                         .and(ERROR_TYPE.eq(updateErrorCodeInfoPO.errorType))
                 )
                 .execute()
