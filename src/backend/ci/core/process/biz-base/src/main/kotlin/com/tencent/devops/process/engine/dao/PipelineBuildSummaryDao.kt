@@ -399,11 +399,11 @@ class PipelineBuildSummaryDao {
         if (sortType != null) {
             val sortTypeField = when (sortType) {
                 PipelineSortType.NAME -> {
-                    T_PIPELINE_INFO.PIPELINE_NAME_PINYIN.let {
+                    T_PIPELINE_INFO.PIPELINE_NAME.let {
                         if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.ASC) {
-                            it.asc()
+                            DSL.field("convert({0} USING gbk)", it).asc()
                         } else {
-                            it.desc()
+                            DSL.field("convert({0} USING gbk)", it).desc()
                         }
                     }
                 }

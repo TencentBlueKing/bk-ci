@@ -891,19 +891,6 @@ class PipelineInfoFacadeService @Autowired constructor(
         )
     }
 
-    fun batchUpdatePipelineNamePinYin(userId: String) {
-        logger.info("$userId batchUpdatePipelineNamePinYin")
-        val redisLock = RedisLock(redisOperation, "process:batchUpdatePipelineNamePinYin", 5 * 60)
-        if (redisLock.tryLock()) {
-            try {
-                pipelineInfoDao.batchUpdatePipelineNamePinYin(dslContext)
-            } finally {
-                redisLock.unlock()
-                logger.info("$userId batchUpdatePipelineNamePinYin finished")
-            }
-        }
-    }
-
     fun getPipelineChannel(projectId: String, pipelineId: String): ChannelCode? {
         if (pipelineChannelCache.getIfPresent(pipelineId) != null) {
             return pipelineChannelCache.getIfPresent(pipelineId)
