@@ -311,7 +311,7 @@ Return th pulsar service url
 */}}
 {{- define "bkci.pulsarServiceUrl" -}}
 {{- if eq .Values.pulsar.enabled true -}}
-http://{{- include "bkci.pulsar.fullname" . -}}:{{- .Values.pulsar.proxy.ports.http -}}
+http://{{- include "bkci.pulsar.fullname" . -}}-proxy:{{- .Values.pulsar.proxy.ports.http -}}
 {{- else -}}
 {{- .Values.externalPulsar.serviceUrl -}}
 {{- end -}}
