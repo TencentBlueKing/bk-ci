@@ -63,6 +63,7 @@ const rules = {
 };
 
 watch(() => formData.value.projectCode, (val) => {
+  groupList.value = [];
   const project = projectList.value.find(i => i.englishName === val)
   if (project) {
     isDisabled.value = !project.permission
@@ -169,8 +170,11 @@ const getAllProjectList = () => {
 };
 
 const getProjectByName = () => {
-  const params = {
-    projectName: projectName.value
+  const params = <any>{}
+  if (projectName.value) {
+    params.projectName = projectName.value
+  } else if (route?.query.project_code) {
+    params.english_name = route?.query.project_code
   }
   http.getAllProjectList(params).then(res => {
     curProject.value = res.records[0];
@@ -181,7 +185,7 @@ onMounted(() => {
   formData.value.projectCode = route?.query.project_code || '';
   getUserInfo();
   getAllProjectList();
-  if (projectName.value) {
+  if (projectName.value || route?.query.project_code) {
     getProjectByName();
   }
 });

@@ -130,9 +130,9 @@
         }
 
         handleApplyJoin () {
-            // this.$refs.applyProjectDialog.isShow = true
-            const hasPipelineId = this.$route.params.restPath.startsWith('p-')
-            const pipelineId = this.$route.params.restPath.split('/')[0]
+            const { restPath } = this.$route.params
+            const hasPipelineId = restPath && restPath.startsWith('p-')
+            const pipelineId = restPath && restPath.split('/')[0]
             const resourceType = hasPipelineId ? 'pipeline' : 'project'
             const resourceCode = hasPipelineId ? pipelineId : this.curProjectCode
 
