@@ -113,4 +113,6 @@ object AuthMessageCode {
     const val ERROR_DEFAULT_GROUP_RENAME_FAIL = "2121621" // 默认组不能重命名
     const val ERROR_GROUP_NAME_TO_LONG = "2121622" // 用户组名不能超过32个字符
     const val ERROR_GROUP_NAME_TO_SHORT = "2121623" // 用户组名不能不少于5个字符
+
+    const val ERROR_PROJECT_NOT_UPGRADE = "2121624" // 权限系统: 项目尚未升级到新版权限系统
 }

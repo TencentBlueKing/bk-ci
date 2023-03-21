@@ -518,6 +518,7 @@ class ProjectDao {
     fun listProjectsForApply(
         dslContext: DSLContext,
         projectName: String?,
+        projectId: String?,
         authEnglishNameList: List<String>,
         offset: Int,
         limit: Int
@@ -535,6 +536,7 @@ class ProjectDao {
                     )
                 )
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
+                .let { if (projectId == null) it else it.and(ENGLISH_NAME.eq(projectId)) }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)

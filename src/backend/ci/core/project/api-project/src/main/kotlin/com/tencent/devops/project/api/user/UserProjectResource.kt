@@ -95,6 +95,9 @@ interface UserProjectResource {
         @ApiParam("项目名", required = false)
         @QueryParam("projectName")
         projectName: String? = null,
+        @ApiParam("项目ID英文名标识", required = true)
+        @QueryParam("english_name")
+        projectId: String? = null,
         @ApiParam("页目", required = true)
         @QueryParam("page")
         page: Int,

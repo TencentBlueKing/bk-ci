@@ -522,6 +522,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         projectName: String?,
+        projectId: String?,
         page: Int,
         pageSize: Int
     ): Pagination<ProjectWithPermission> {
@@ -532,6 +533,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
+            projectId = projectId,
             authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
