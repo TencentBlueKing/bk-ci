@@ -95,11 +95,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", URLEncoder.encode(file.name, "utf-8"), fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
         val response = request(request, "上传自定义文件失败")
         try {
             val obj = JsonParser.parseString(response).asJsonObject
@@ -121,11 +117,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             .addFormDataPart("file", URLEncoder.encode(file.name, "utf-8"), fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
         val response = request(request, "上传流水线文件失败")
         try {
             val obj = JsonParser.parseString(response).asJsonObject
@@ -153,7 +145,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "/ms/artifactory/api/build/artifactories/file/archive/download" +
                     "?fileType=${FileTypeEnum.BK_CUSTOM}&customFilePath=$uri"
         }
-        val request = buildGet(url, useFileDevnetGateway = isVmBuildEnv)
+        val request = buildGet(url)
         download(request, destPath)
     }
 
@@ -173,7 +165,7 @@ class ArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             "/ms/artifactory/api/build/artifactories/file/archive/download" +
                     "?fileType=${FileTypeEnum.BK_ARCHIVE}&customFilePath=$uri"
         }
-        val request = buildGet(url, useFileDevnetGateway = isVmBuildEnv)
+        val request = buildGet(url)
         download(request, destPath)
     }
 

@@ -69,11 +69,7 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             .addFormDataPart("file", file.name, fileBody)
             .build()
 
-        val request = buildPost(
-            path = url,
-            requestBody = requestBody,
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
-        )
+        val request = buildPost(path = url, requestBody = requestBody)
 
         val response = request(request, "上传自定义报告失败")
 

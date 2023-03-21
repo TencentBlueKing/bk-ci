@@ -103,8 +103,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val response = request(request, "上传自定义文件失败")
         try {
@@ -163,8 +162,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val response = request(request, "上传流水线文件失败")
         try {

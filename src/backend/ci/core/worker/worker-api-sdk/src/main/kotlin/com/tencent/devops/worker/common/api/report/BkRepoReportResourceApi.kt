@@ -112,8 +112,7 @@ class BkRepoReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
         val request = buildPut(
             path = url,
             requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            headers = bkrepoResourceApi.getUploadHeader(file, buildVariables, parseAppMetadata = false)
         )
         val responseContent = request(request, "上传自定义报告失败")
         try {

@@ -196,7 +196,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val url = "/bkrepo/api/build/generic/$projectId/$repoName/${urlEncode(fullPath)}"
         val header = HashMap<String, String>()
         header[BKREPO_UID] = user
-        val request = buildGet(url, header, true)
+        val request = buildGet(url, header)
         download(request, destPath)
     }
 
@@ -266,8 +266,7 @@ class BkRepoResourceApi : AbstractBuildResourceApi() {
         val request = buildPut(
             path = url,
             requestBody = RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            headers = getUploadHeader(file, buildVariables, parseAppMetadata),
-            useFileDevnetGateway = true
+            headers = getUploadHeader(file, buildVariables, parseAppMetadata)
         )
         val response = request(request, "上传文件失败")
         try {
