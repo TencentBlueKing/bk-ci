@@ -68,14 +68,12 @@ import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.project.api.service.ServiceProjectApprovalResource
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import com.tencent.devops.project.pojo.enums.ProjectAuthSecrecyStatus
+import java.util.Arrays
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
-import org.springframework.stereotype.Service
-import java.util.Arrays
 
-@Service
 @Suppress("LongParameterList", "TooManyFunctions")
 class PermissionGradeManagerService @Autowired constructor(
     private val client: Client,

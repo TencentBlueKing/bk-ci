@@ -28,12 +28,17 @@
 
 package com.tencent.devops.auth.config
 
+import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.listener.AuthItsmCallbackListener
 import com.tencent.devops.auth.listener.AuthResourceGroupCreateListener
 import com.tencent.devops.auth.listener.AuthResourceGroupModifyListener
+import com.tencent.devops.auth.service.PermissionGradeManagerService
+import com.tencent.devops.auth.service.PermissionSubsetManagerService
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
 import com.tencent.devops.common.event.dispatcher.pipeline.mq.Tools
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
+import org.jooq.DSLContext
 import org.springframework.amqp.core.Binding
 import org.springframework.amqp.core.BindingBuilder
 import org.springframework.amqp.core.DirectExchange
@@ -78,6 +83,21 @@ class RbacMQConfiguration {
     }
 
     @Bean
+    fun authItsmCallbackListener(
+        client: Client,
+        dslContext: DSLContext,
+        authItsmCallbackDao: AuthItsmCallbackDao,
+        permissionGradeManagerService: PermissionGradeManagerService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthItsmCallbackListener(
+        client = client,
+        dslContext = dslContext,
+        authItsmCallbackDao = authItsmCallbackDao,
+        permissionGradeManagerService = permissionGradeManagerService,
+        traceEventDispatcher = traceEventDispatcher
+    )
+
+    @Bean
     fun itsmCallbackEventListenerContainer(
         @Autowired connectionFactory: ConnectionFactory,
         @Autowired itsmCallbackQueue: Queue,
@@ -114,6 +134,17 @@ class RbacMQConfiguration {
             .to(authRbacExchange)
             .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_CREATE)
     }
+
+    @Bean
+    fun authResourceGroupCreateListener(
+        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionSubsetManagerService: PermissionSubsetManagerService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthResourceGroupCreateListener(
+        permissionGradeManagerService = permissionGradeManagerService,
+        permissionSubsetManagerService = permissionSubsetManagerService,
+        traceEventDispatcher = traceEventDispatcher
+    )
 
     @Bean
     fun authResourceGroupCreateEventListenerContainer(
@@ -155,6 +186,17 @@ class RbacMQConfiguration {
             .to(authRbacExchange)
             .with(MQ.ROUTE_AUTH_RESOURCE_GROUP_MODIFY)
     }
+
+    @Bean
+    fun authResourceGroupModifyListener(
+        permissionGradeManagerService: PermissionGradeManagerService,
+        permissionSubsetManagerService: PermissionSubsetManagerService,
+        traceEventDispatcher: TraceEventDispatcher
+    ) = AuthResourceGroupModifyListener(
+        permissionGradeManagerService = permissionGradeManagerService,
+        permissionSubsetManagerService = permissionSubsetManagerService,
+        traceEventDispatcher = traceEventDispatcher
+    )
 
     @Bean
     fun authResourceGroupModifyEventListenerContainer(

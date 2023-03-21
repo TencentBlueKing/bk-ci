@@ -33,7 +33,6 @@ import com.tencent.devops.auth.dao.AuthItsmCallbackDao
 import com.tencent.devops.auth.pojo.ItsmCallBackInfo
 import com.tencent.devops.auth.pojo.enums.AuthItsmApprovalType
 import com.tencent.devops.auth.pojo.event.AuthItsmCallbackEvent
-import com.tencent.devops.auth.service.ItsmService
 import com.tencent.devops.auth.service.PermissionGradeManagerService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
@@ -47,15 +46,12 @@ import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Component
 
-@Component
 class AuthItsmCallbackListener @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,
     private val authItsmCallbackDao: AuthItsmCallbackDao,
     private val permissionGradeManagerService: PermissionGradeManagerService,
-    private val itsmService: ItsmService,
     traceEventDispatcher: TraceEventDispatcher
 ) : BaseTraceListener<AuthItsmCallbackEvent>(traceEventDispatcher) {
 

@@ -73,7 +73,7 @@ import org.springframework.context.annotation.Primary
 
 @Configuration
 @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
-@Suppress("TooManyFunctions")
+@Suppress("TooManyFunctions", "LongParameterList")
 class RbacAuthConfiguration {
 
     @Value("\${auth.url:}")
