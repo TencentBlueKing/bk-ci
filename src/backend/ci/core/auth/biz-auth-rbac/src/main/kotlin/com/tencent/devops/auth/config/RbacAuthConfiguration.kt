@@ -55,6 +55,7 @@ import com.tencent.devops.auth.service.RbacPermissionProjectService
 import com.tencent.devops.auth.service.RbacPermissionResourceCallbackService
 import com.tencent.devops.auth.service.RbacPermissionResourceGroupService
 import com.tencent.devops.auth.service.RbacPermissionResourceService
+import com.tencent.devops.auth.service.RbacPermissionResourceValidateService
 import com.tencent.devops.auth.service.RbacPermissionService
 import com.tencent.devops.auth.service.ResourceService
 import com.tencent.devops.auth.service.iam.PermissionCacheService
@@ -250,5 +251,17 @@ class RbacAuthConfiguration {
         client = client,
         authResourceCodeConverter = authResourceCodeConverter,
         permissionService = permissionService
+    )
+
+    @Bean
+    @Primary
+    fun rbacPermissionResourceValidateService(
+        permissionService: PermissionService,
+        rbacCacheService: PermissionCacheService,
+        client: Client
+    ) = RbacPermissionResourceValidateService(
+        permissionService = permissionService,
+        rbacCacheService = rbacCacheService,
+        client = client
     )
 }
