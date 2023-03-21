@@ -543,6 +543,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
+                    // todo routerTag 的处理还存在问题，得进一步修正
                     routerTag = getRouterTag(it.value3())
                 )
             )
