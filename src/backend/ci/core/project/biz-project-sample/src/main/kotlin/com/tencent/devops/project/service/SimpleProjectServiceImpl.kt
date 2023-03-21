@@ -163,7 +163,12 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun getRouterTag(routerTag: String?): String {
+        return RBAC_PERMISSION_CENTER
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)
+        private const val RBAC_PERMISSION_CENTER = "RBAC"
     }
 }

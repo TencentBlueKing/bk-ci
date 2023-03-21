@@ -542,7 +542,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ProjectWithPermission(
                     projectName = it.value1(),
                     englishName = it.value2(),
-                    permission = hasVisitPermissionProjectIds.contains(it.value2())
+                    permission = hasVisitPermissionProjectIds.contains(it.value2()),
+                    routerTag = getRouterTag(it.value3())
                 )
             )
         }
@@ -1014,6 +1015,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCode: String
     )
 
+    abstract fun getRouterTag(routerTag: String?): String
+
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
@@ -1021,7 +1024,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
         private const val FIRST_PAGE = 1
-
         // 项目tips默认展示时间
         private const val DEFAULT_TIPS_SHOW_TIME = 7
     }
