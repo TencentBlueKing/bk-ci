@@ -526,9 +526,11 @@ class ProjectDao {
             dslContext.select(PROJECT_NAME, ENGLISH_NAME).from(this).whereExists(
                 dslContext.selectFrom(this).where()
                     .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                    .and(CHANNEL.eq("BS"))
                     .union(
                         dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(englishNameList))
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
+                            .and(CHANNEL.eq("BS"))
                     )
             ).let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
                 .and(IS_OFFLINED.eq(false))
