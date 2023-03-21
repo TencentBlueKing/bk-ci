@@ -24,24 +24,47 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
+package com.tencent.devops.common.web.aop
 
-package com.tencent.devops.metrics.service
+import com.tencent.devops.common.web.annotation.BuildApiPermission
+import com.tencent.devops.common.web.factory.BuildApiHandleFactory
+import org.aspectj.lang.JoinPoint
+import org.aspectj.lang.annotation.Aspect
+import org.aspectj.lang.annotation.Before
+import org.aspectj.lang.annotation.Pointcut
+import org.aspectj.lang.reflect.MethodSignature
+import org.slf4j.LoggerFactory
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+@Aspect
+class BuildApiAspect {
 
-interface ErrorCodeInfoManageService {
+    @Pointcut("@annotation(com.tencent.devops.common.web.annotation.BuildApiPermission)")
+    fun pointCut() = Unit
+
+    companion object {
+        private val logger = LoggerFactory.getLogger(BuildApiAspect::class.java)
+    }
 
     /**
-     * 获取错误码列表
-     *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
-     * @return 错误码信息列表视图
+     * 前置增强：目标方法执行之前执行
+     *
+     * @param jp
      */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
-
-    /**
-     * 同步插件错误信息关联数据
-     */
-    fun syncAtomErrorCodeRel(userId: String): Boolean
+    @Before("pointCut()")
+    fun doBefore(jp: JoinPoint) {
+        val method = (jp.signature as MethodSignature).method
+        val methodName: String = method.name
+        val types = method.getAnnotation(BuildApiPermission::class.java)?.types?.toList()
+        logger.info("[doBefore] the method 【$methodName】 types$types")
+        // 参数value
+        val parameterValue = jp.args
+        // 参数key
+        val parameterNames = (jp.signature as MethodSignature).parameterNames
+        types?.forEach { type ->
+            BuildApiHandleFactory.createBuildApiHandleService(type).handleBuildApiService(
+                parameterNames,
+                parameterValue
+            )
+        }
+    }
 }

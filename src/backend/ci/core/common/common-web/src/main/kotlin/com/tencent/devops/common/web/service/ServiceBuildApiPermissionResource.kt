@@ -25,23 +25,60 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.common.web.service
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.common.api.annotation.ServiceInterface
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
+import com.tencent.devops.common.api.pojo.Result
+import io.swagger.annotations.ApiParam
+import javax.ws.rs.Consumes
+import javax.ws.rs.GET
+import javax.ws.rs.HeaderParam
+import javax.ws.rs.Path
+import javax.ws.rs.PathParam
+import javax.ws.rs.Produces
+import javax.ws.rs.core.MediaType
 
-interface ErrorCodeInfoManageService {
+/**
+ * 验证插件build接口调用,在process中实现
+ */
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+@Path("/service/sdk/buildApi/")
+@ServiceInterface("process")
+interface ServiceBuildApiPermissionResource {
 
     /**
-     * 获取错误码列表
-     *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
-     * @return 错误码信息列表视图
+     * 获取流水线启动用户
+     *
+     * @param projectId 项目编码
+     * @param buildId 构建ID
+     * @return 启动用户ID
      */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
+    @Path("startUser/{projectId}/{buildId}/get")
+    @GET
+    fun getStartUser(
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("buildId")
+        buildId: String
+    ): Result<String?>
 
     /**
-     * 同步插件错误信息关联数据
+     * 验证api调用是否越权
+     *
+     * @param projectId 项目编码
+     * @param pipelineId 流水线ID
      */
-    fun syncAtomErrorCodeRel(userId: String): Boolean
+    @Path("verify/{projectId}/{pipelineId}")
+    @GET
+    fun verifyApi(
+        @ApiParam(name = "userId", required = true)
+        @HeaderParam(AUTH_HEADER_USER_ID)
+        userId: String,
+        @PathParam("projectId")
+        projectId: String,
+        @PathParam("pipelineId")
+        pipelineId: String
+    ): Result<Boolean>
 }

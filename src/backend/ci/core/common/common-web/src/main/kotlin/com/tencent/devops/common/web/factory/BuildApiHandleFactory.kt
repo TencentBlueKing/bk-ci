@@ -25,23 +25,29 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.common.web.factory
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.common.web.constant.BuildApiHandleType
+import com.tencent.devops.common.web.service.BuildApiHandleService
+import com.tencent.devops.common.web.service.impl.BuildApiHandleAuthServiceImpl
+import java.util.concurrent.ConcurrentHashMap
 
-interface ErrorCodeInfoManageService {
+object BuildApiHandleFactory {
 
-    /**
-     * 获取错误码列表
-     *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
-     * @return 错误码信息列表视图
-     */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
+    private val buildApiHandleMap = ConcurrentHashMap<String, BuildApiHandleService>()
 
-    /**
-     * 同步插件错误信息关联数据
-     */
-    fun syncAtomErrorCodeRel(userId: String): Boolean
+    fun createBuildApiHandleService(
+        type: BuildApiHandleType
+    ): BuildApiHandleService {
+        var buildApiHandleMapService = buildApiHandleMap[type.name]
+        when (type) {
+            BuildApiHandleType.AUTH_CHECK -> {
+                if (buildApiHandleMapService == null) {
+                    buildApiHandleMapService = BuildApiHandleAuthServiceImpl()
+                    buildApiHandleMap[type.name] = buildApiHandleMapService
+                }
+            }
+        }
+        return buildApiHandleMapService
+    }
 }

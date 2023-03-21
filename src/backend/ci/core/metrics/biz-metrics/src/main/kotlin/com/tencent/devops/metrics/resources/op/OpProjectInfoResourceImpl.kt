@@ -30,14 +30,20 @@ package com.tencent.devops.metrics.resources.op
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.metrics.api.op.OpProjectInfoResource
+import com.tencent.devops.metrics.service.ErrorCodeInfoManageService
 import com.tencent.devops.metrics.service.ProjectInfoManageService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class OpProjectInfoResourceImpl @Autowired constructor(
-    private val projectInfoManageService: ProjectInfoManageService
+    private val projectInfoManageService: ProjectInfoManageService,
+    private val errorCodeInfoManageService: ErrorCodeInfoManageService
 ) : OpProjectInfoResource {
     override fun syncPipelineLabelData(userId: String): Result<Boolean> {
         return Result(projectInfoManageService.syncPipelineLabelData(userId))
+    }
+
+    override fun syncAtomErrorCodeRel(userId: String): Result<Boolean> {
+        return Result(errorCodeInfoManageService.syncAtomErrorCodeRel(userId))
     }
 }

@@ -25,23 +25,15 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.common.web.service
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
-
-interface ErrorCodeInfoManageService {
+interface BuildApiHandleService {
 
     /**
-     * 获取错误码列表
-     *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
-     * @return 错误码信息列表视图
+     * 处理build接口切面逻辑
+     * @param parameterNames 切点参数名列表
+     * @param parameterValue 切点参数列表
+     * @return 处理后的操作系统名称
      */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
-
-    /**
-     * 同步插件错误信息关联数据
-     */
-    fun syncAtomErrorCodeRel(userId: String): Boolean
+    fun handleBuildApiService(parameterNames: Array<String>, parameterValue: Array<Any>)
 }
