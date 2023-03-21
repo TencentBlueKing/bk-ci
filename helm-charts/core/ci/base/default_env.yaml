@@ -43,3 +43,4 @@ bkCiNotifyEmailSendChannel: blueking
 bkCiInitLocale: zh-CN
 bkCiRedisSsl: false
 bkCiEsHttps: false
+bkCiMqDefaultBinder: pulsar
