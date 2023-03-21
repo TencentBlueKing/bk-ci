@@ -529,33 +529,21 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val projectListWithPermission: MutableList<ProjectWithPermission> = mutableListOf()
         // 拉取出该用户有访问权限的项目
         val hasVisitPermissionProjectIds = getProjectFromAuth(userId, accessToken)
-        // filterResourcesByPermissions
-        val startDbEpoch = System.currentTimeMillis()
-        val dbProjectList = projectDao.listProjectsForApply(
+        projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
-            englishNameList = hasVisitPermissionProjectIds,
+            authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
-        )
-        logger.info("It took ${System.currentTimeMillis() - startDbEpoch}ms to list dbProjects")
-        val startVerifyEpoch = System.currentTimeMillis()
-        dbProjectList.forEach {
+        ).forEach {
             projectListWithPermission.add(
                 ProjectWithPermission(
                     projectName = it.value1(),
                     englishName = it.value2(),
-                    permission = authPermissionApi.validateUserResourcePermission(
-                        user = userId,
-                        serviceCode = projectAuthServiceCode,
-                        resourceType = AuthResourceType.PROJECT,
-                        projectCode = it.value2(),
-                        permission = AuthPermission.VISIT
-                    )
+                    permission = hasVisitPermissionProjectIds.contains(it.value2())
                 )
             )
         }
-        logger.info("It took ${System.currentTimeMillis() - startVerifyEpoch}ms to verify project")
         return Pagination(
             hasNext = projectListWithPermission.size == pageSize,
             records = projectListWithPermission

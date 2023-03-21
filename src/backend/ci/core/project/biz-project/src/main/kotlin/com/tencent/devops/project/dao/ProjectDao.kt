@@ -518,7 +518,7 @@ class ProjectDao {
     fun listProjectsForApply(
         dslContext: DSLContext,
         projectName: String?,
-        englishNameList: List<String>,
+        authEnglishNameList: List<String>,
         offset: Int,
         limit: Int
     ): Result<Record2<String, String>> {
@@ -530,7 +530,7 @@ class ProjectDao {
                     ID.`in`(
                         dslContext.select(ID).from(this)
                             .where(generateQueryProjectForApplyCondition())
-                            .and(ENGLISH_NAME.`in`(englishNameList))
+                            .and(ENGLISH_NAME.`in`(authEnglishNameList))
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
