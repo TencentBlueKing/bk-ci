@@ -76,6 +76,17 @@ object CommonMessageCode {
     const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
+
+
     const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100029" // 用户({0})无权限在工程({1})下{2}流水线({3})
-    const val BK_USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100030"// 用户 {0}无项目{1}权限
+    const val USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100030"// 用户 {0}无项目{1}权限
+    const val UNABLE_GET_PIPELINE_JOB_STATUS = "2100031"// 无法获取流水线JOB状态，构建停止
+    const val JOB_BUILD_STOPS = "2100032"// 流水线JOB已经不再运行，构建停止
+    const val COMMIT_CHECK_ADD_FAIL = "2100033"// Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ADD_MR_COMMENTS_FAIL = "2100034"// 添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val WEBHOOK_ADD_FAIL = "2100035"// Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限
+    const val WEBHOOK_UPDATE_FAIL = "2100036"// Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2100037"//unlock webhooklock失败,请确认token是否已经配置
+    const val BK_ENGINEERING_REPO_UNAUTHORIZED = "BkEngineeringRepoUnauthorized"// 工程仓库访问未授权
+
 }

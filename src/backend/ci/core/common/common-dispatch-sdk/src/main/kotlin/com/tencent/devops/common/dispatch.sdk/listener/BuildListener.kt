@@ -32,8 +32,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
 import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
+import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode.BK_FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
-import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.BK_FAILED_START_BUILD_MACHINE
 import com.tencent.devops.common.dispatch.sdk.service.DispatchService
 import com.tencent.devops.common.dispatch.sdk.service.JobQuotaService
 import com.tencent.devops.common.dispatch.sdk.utils.DispatchLogRedisUtils
@@ -256,7 +256,7 @@ interface BuildListener {
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${
-                    MessageUtil.getMessageByLocale(BK_FAILED_START_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()
+                    MessageUtil.getMessageByLocale("$BK_FAILED_START_BUILD_MACHINE", I18nUtil.getDefaultLocaleLanguage()
                 )}- ${e.message}",
                 executeCount = event.executeCount)
 
@@ -271,7 +271,7 @@ interface BuildListener {
                 containerHashId = event.containerHashId,
                 vmSeqId = event.vmSeqId,
                 message = "${
-                    MessageUtil.getMessageByLocale(BK_FAILED_START_BUILD_MACHINE, I18nUtil.getDefaultLocaleLanguage()
+                    MessageUtil.getMessageByLocale("$BK_FAILED_START_BUILD_MACHINE", I18nUtil.getDefaultLocaleLanguage()
                     )} - ${t.message}",
                 executeCount = event.executeCount)
 

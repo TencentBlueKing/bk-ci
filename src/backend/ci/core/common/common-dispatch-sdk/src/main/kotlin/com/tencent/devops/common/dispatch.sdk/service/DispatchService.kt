@@ -28,8 +28,8 @@
 package com.tencent.devops.common.dispatch.sdk.service
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.tencent.devops.common.api.constant.BK_JOB_BUILD_STOPS
-import com.tencent.devops.common.api.constant.BK_UNABLE_GET_PIPELINE_JOB_STATUS
+import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
+import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.exception.ClientException
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.ApiUtil
@@ -38,7 +38,6 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.dispatch.sdk.BuildFailureException
-import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
@@ -149,12 +148,12 @@ class DispatchService constructor(
             logger.warn("The build event($event) fail to check if pipeline task is running " +
                             "because of ${statusResult.message}")
             val errorMessage = MessageUtil.getMessageByLocale(
-                BK_UNABLE_GET_PIPELINE_JOB_STATUS,
+                UNABLE_GET_PIPELINE_JOB_STATUS,
                 I18nUtil.getDefaultLocaleLanguage()
             )
             throw BuildFailureException(
                 errorType = ErrorType.SYSTEM,
-                errorCode = DispatchSdkErrorCode.PIPELINE_STATUS_ERROR,
+                errorCode = UNABLE_GET_PIPELINE_JOB_STATUS.toInt(),
                 formatErrorMessage = errorMessage,
                 errorMessage = errorMessage
             )
@@ -163,12 +162,12 @@ class DispatchService constructor(
         if (!statusResult.data!!.isRunning()) {
             logger.warn("The build event($event) is not running")
             val errorMessage = MessageUtil.getMessageByLocale(
-                BK_JOB_BUILD_STOPS,
+                JOB_BUILD_STOPS,
                 I18nUtil.getDefaultLocaleLanguage()
             )
             throw BuildFailureException(
                 errorType = ErrorType.USER,
-                errorCode = DispatchSdkErrorCode.PIPELINE_NOT_RUNNING,
+                errorCode = JOB_BUILD_STOPS.toInt(),
                 formatErrorMessage = errorMessage,
                 errorMessage = errorMessage
             )

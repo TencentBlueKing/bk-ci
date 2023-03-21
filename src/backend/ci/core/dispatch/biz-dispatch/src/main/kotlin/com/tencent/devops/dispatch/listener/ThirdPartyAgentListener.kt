@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.listener
 
-import com.tencent.devops.common.api.constant.BK_JOB_BUILD_STOPS
-import com.tencent.devops.common.api.constant.BK_UNABLE_GET_PIPELINE_JOB_STATUS
+import com.tencent.devops.common.api.constant.CommonMessageCode.JOB_BUILD_STOPS
+import com.tencent.devops.common.api.constant.CommonMessageCode.UNABLE_GET_PIPELINE_JOB_STATUS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.prometheus.BkTimed
@@ -84,7 +84,7 @@ class ThirdPartyAgentListener @Autowired constructor(
                             "because of ${statusResult.message}")
             throw VMTaskFailException(
                 MessageUtil.getMessageByLocale(
-                    BK_UNABLE_GET_PIPELINE_JOB_STATUS,
+                    UNABLE_GET_PIPELINE_JOB_STATUS,
                     I18nUtil.getDefaultLocaleLanguage()
                 )
             )
@@ -94,7 +94,7 @@ class ThirdPartyAgentListener @Autowired constructor(
             logger.warn("The build event($event) is not running")
             throw VMTaskFailException(
                 MessageUtil.getMessageByLocale(
-                    BK_JOB_BUILD_STOPS,
+                    JOB_BUILD_STOPS,
                     I18nUtil.getDefaultLocaleLanguage()
                 )
             )
