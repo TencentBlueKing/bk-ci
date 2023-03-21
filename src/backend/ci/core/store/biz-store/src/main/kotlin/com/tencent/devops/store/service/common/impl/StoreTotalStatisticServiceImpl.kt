@@ -97,6 +97,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             StoreTypeEnum.values().forEach { storeType ->
                 val percentileValue = percentileCalculation(storeType)
                 logger.info("StoreTotalStatisticTask getStorePercentileValue $percentileValue")
+                // 类型组件百分位数计算正常，放入缓存待用
                 if (percentileValue > 0.0) {
                     redisOperation.set(
                         "STORE_${storeType.name}_PERCENTILE_VALUE",
@@ -367,7 +368,7 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
         var value = 0.0
         val count = storeStatisticTotalDao.getCountByType(dslContext, storeType)
         val index = (count + 1) * 0.8
-        val pluralFlag = "$index".contains(".")
+        val pluralFlag = "$index".contains(".0")
         if (index >= 1) {
             val result = storeStatisticTotalDao.getStorePercentileValue(
                 dslContext = dslContext,
@@ -380,6 +381,6 @@ class StoreTotalStatisticServiceImpl @Autowired constructor(
             }
             logger.info("getStorePercentileValue result:$result")
         }
-        return if (pluralFlag) value / 2 else value
+        return if (!pluralFlag) value / 2 else value
     }
 }
