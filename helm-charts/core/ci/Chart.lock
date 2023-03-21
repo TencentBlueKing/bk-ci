@@ -23,8 +23,11 @@ dependencies:
 - name: mongodb
   repository: https://raw.githubusercontent.com/bitnami/charts/eb5f9a9513d987b519f0ecd732e7031241c50328/bitnami
   version: 10.30.6
+- name: pulsar
+  repository: https://pulsar.apache.org/charts
+  version: 2.9.4
 - name: kubernetes-manager
   repository: file://./local_chart/kubernetes-management
   version: 0.0.36
-digest: sha256:521a93d5e92e46288b16ef26391656c9a7041dd880a01cf5c04389f1bb4f4186
-generated: "2023-03-14T17:35:25.523011238+08:00"
+digest: sha256:1ce4b50494ead247d371806c09c0c8c823c8857a7a1f1d7214410d279803e8a2
+generated: "2023-03-20T22:05:18.340401263+08:00"
