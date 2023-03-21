@@ -253,6 +253,38 @@ mongodb:
   # extraEnvVars:
   # - name: MONGODB_CLIENT_EXTRA_FLAGS
   #   value: "--ipv6"
+pulsar:
+  enabled: true
+  toolset:
+    additionalCommand: 
+      bin/pulsar-admin tenants create default-tenant;
+      bin/pulsar-admin namespaces create default-tenant/default-ns;
+  ## deployed withh emptyDir
+  volumes:
+    persistence: false
+  # disabled AntiAffinity
+  affinity:
+    anti_affinity: false
+  # disable auto recovery
+  components:
+    autorecovery: false
+    pulsar_manager: true
+  zookeeper:
+    replicaCount: 1
+  bookkeeper:
+    replicaCount: 1
+  broker:
+    replicaCount: 1
+    configData:
+      ## Enable `autoSkipNonRecoverableData` since bookkeeper is running
+      ## without persistence
+      autoSkipNonRecoverableData: "true"
+      # storage settings
+      managedLedgerDefaultEnsembleSize: "1"
+      managedLedgerDefaultWriteQuorum: "1"
+      managedLedgerDefaultAckQuorum: "1"
+  proxy:
+    replicaCount: 1
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
