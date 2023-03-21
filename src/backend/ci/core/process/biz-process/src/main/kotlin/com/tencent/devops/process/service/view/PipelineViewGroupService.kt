@@ -68,7 +68,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.text.Collator
 import java.time.LocalDateTime
-import java.util.Locale
 import java.util.concurrent.TimeUnit
 
 @Service
@@ -701,7 +700,7 @@ class PipelineViewGroupService @Autowired constructor(
         val viewScoreMap = pipelineViewTopDao.list(dslContext, projectId, userId).associate { it.viewId to score++ }
 
         return views.sortedWith(Comparator { a, b ->
-            Collator.getInstance(Locale.CHINESE).compare(a.name, b.name)
+            Collator.getInstance().compare(a.name, b.name)
         }).sortedBy {
             viewScoreMap[it.id] ?: Int.MAX_VALUE
         }.map {
