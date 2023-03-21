@@ -535,6 +535,7 @@ class ProjectDao {
                     )
                 )
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
+                .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
