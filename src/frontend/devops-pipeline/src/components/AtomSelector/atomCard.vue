@@ -9,7 +9,7 @@
         </div>
         <div class="atom-info-content">
             <p class="atom-name">
-                <span :class="[atomNameCls, 'mr16']" :title="atomNameTitle">{{ atom.name }}</span>
+                <span :class="[atomNameCls, 'mr16', 'text-overflow']" :title="atomNameTitle" v-bk-overflow-tips>{{ atom.name }}</span>
                 <honer-tag :detail="atom" :max-num="2" />
                 <img
                     v-for="indexInfo in atom.indexInfos"

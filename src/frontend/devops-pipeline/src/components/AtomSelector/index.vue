@@ -487,6 +487,7 @@
                 display: flex;
                 flex-direction: column;
                 justify-content: space-between;
+                width: calc(100% - 143px);
                 .atom-name {
                     display: flex;
                     align-items: center;
