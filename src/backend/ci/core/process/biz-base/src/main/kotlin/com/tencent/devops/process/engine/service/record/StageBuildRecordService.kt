@@ -41,11 +41,15 @@ import com.tencent.devops.process.dao.record.BuildRecordModelDao
 import com.tencent.devops.process.dao.record.BuildRecordStageDao
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateStageTimeCost
 import com.tencent.devops.process.engine.dao.PipelineBuildDao
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.pojo.PipelineBuildStageControlOption
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.StageBuildDetailService
 import com.tencent.devops.process.pojo.BuildStageStatus
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -61,6 +65,10 @@ class StageBuildRecordService(
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val stageBuildDetailService: StageBuildDetailService,
     private val pipelineBuildDao: PipelineBuildDao,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -70,7 +78,11 @@ class StageBuildRecordService(
     buildRecordModelDao = buildRecordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateStageStatus(

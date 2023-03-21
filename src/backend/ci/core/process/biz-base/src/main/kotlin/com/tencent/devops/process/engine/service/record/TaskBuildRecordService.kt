@@ -46,10 +46,14 @@ import com.tencent.devops.process.engine.pojo.PipelineTaskStatusInfo
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.pojo.time.BuildTimestampType
 import com.tencent.devops.process.engine.common.BuildTimeCostUtils.generateTaskTimeCost
+import com.tencent.devops.process.engine.dao.PipelineResDao
+import com.tencent.devops.process.engine.dao.PipelineResVersionDao
+import com.tencent.devops.process.engine.service.PipelineElementService
 import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.pojo.task.TaskBuildEndParam
 import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.StageTagService
+import com.tencent.devops.process.service.record.PipelineRecordModelService
 import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
@@ -72,6 +76,10 @@ class TaskBuildRecordService(
     private val buildTaskDao: PipelineBuildTaskDao,
     private val containerBuildRecordService: ContainerBuildRecordService,
     private val taskBuildDetailService: TaskBuildDetailService,
+    recordModelService: PipelineRecordModelService,
+    pipelineResDao: PipelineResDao,
+    pipelineResVersionDao: PipelineResVersionDao,
+    pipelineElementService: PipelineElementService,
     stageTagService: StageTagService,
     buildRecordModelDao: BuildRecordModelDao,
     pipelineEventDispatcher: PipelineEventDispatcher,
@@ -81,7 +89,11 @@ class TaskBuildRecordService(
     buildRecordModelDao = buildRecordModelDao,
     stageTagService = stageTagService,
     pipelineEventDispatcher = pipelineEventDispatcher,
-    redisOperation = redisOperation
+    redisOperation = redisOperation,
+    recordModelService = recordModelService,
+    pipelineResDao = pipelineResDao,
+    pipelineResVersionDao = pipelineResVersionDao,
+    pipelineElementService = pipelineElementService
 ) {
 
     fun updateTaskStatus(
