@@ -106,5 +106,7 @@ data class AtomRespItem(
     @ApiModelProperty("荣誉信息", required = false)
     val honorInfos: List<HonorInfo>? = null,
     @ApiModelProperty("指标信息列表")
-    val indexInfos: List<StoreIndexInfo>? = null
+    val indexInfos: List<StoreIndexInfo>? = null,
+    @ApiModelProperty("hotFlag")
+    val hotFlag: Boolean? = null
 )
