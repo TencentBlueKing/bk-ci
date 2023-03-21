@@ -88,12 +88,12 @@ class DevCloudRemoteDevService @Autowired constructor(
 
     override fun createWorkspace(userId: String, event: WorkspaceCreateEvent): Pair<String, String> {
         logger.info("User $userId create workspace: ${JsonUtil.toJson(event)}")
-        val imagePullCertificateList = if (event.devFile.image?.imagePullCertificate != null) {
+        val imagePullCertificateList = if (event.devFile.runsOn?.container?.credentials != null) {
             listOf(
                 ImagePullCertificate(
-                    host = event.devFile.image?.imagePullCertificate?.host,
-                    username = event.devFile.image?.imagePullCertificate?.username,
-                    password = event.devFile.image?.imagePullCertificate?.password
+                    host = event.devFile.runsOn?.container?.host,
+                    username = event.devFile.runsOn?.container?.credentials?.username,
+                    password = event.devFile.runsOn?.container?.credentials?.password
                 )
             )
         } else {
@@ -112,7 +112,7 @@ class DevCloudRemoteDevService @Autowired constructor(
                     containers = listOf(
                         Container(
                             name = event.workspaceName,
-                            image = event.devFile.image?.publicImage ?: "",
+                            image = event.devFile.runsOn?.container?.image ?: "",
                             resource = ResourceRequirements(workspaceCpu, workspaceMemory),
                             workingDir = gitRepoRootPath,
                             volumeMounts = listOf(

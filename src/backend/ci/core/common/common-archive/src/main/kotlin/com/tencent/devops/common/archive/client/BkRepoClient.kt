@@ -104,6 +104,10 @@ class BkRepoClient constructor(
         return HomeHostUtil.getHost(commonConfig.devopsIdcGateway!!)
     }
 
+    fun getRkRepoIdcHost(): String {
+        return HomeHostUtil.getHost(bkRepoClientConfig.bkRepoIdcHost!!)
+    }
+
     fun useBkRepo(): Boolean {
         return BKREPO_REALM == bkRepoClientConfig.artifactoryRealm
     }

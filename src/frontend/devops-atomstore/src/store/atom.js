@@ -386,5 +386,9 @@ export const actions = {
     // 获取发布者列表
     getPublishersList ({ commit }, { atomCode }) {
         return vue.$ajax.get(`${prefix}/user/market/publishers/get?storeType=ATOM&storeCode=${atomCode}`)
+    },
+    // 获取所有环境列表
+    getContainerList ({ commit }) {
+        return vue.$ajax.get(`${prefix}/user/pipeline/container/all`)
     }
 }

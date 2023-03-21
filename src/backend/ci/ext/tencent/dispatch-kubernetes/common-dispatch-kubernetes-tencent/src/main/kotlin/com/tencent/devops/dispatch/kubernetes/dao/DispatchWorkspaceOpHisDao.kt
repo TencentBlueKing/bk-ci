@@ -28,7 +28,7 @@
 package com.tencent.devops.dispatch.kubernetes.dao
 
 import com.tencent.devops.dispatch.kubernetes.pojo.EnvironmentAction
-import com.tencent.devops.model.dispatch_kubernetes.tables.TDispatchWorkspaceOpHis
+import com.tencent.devops.model.dispatch.kubernetes.tables.TDispatchWorkspaceOpHis
 import org.jooq.DSLContext
 import org.springframework.stereotype.Repository
 import java.time.LocalDateTime

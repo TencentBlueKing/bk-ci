@@ -23,6 +23,7 @@ class WorkspaceTemplateDao {
                 IMAGE,
                 SOURCE,
                 LOGO,
+                URL,
                 DESCRIPTION,
                 CREATOR
             ).values(
@@ -30,6 +31,7 @@ class WorkspaceTemplateDao {
                 workspaceTemplate.image,
                 workspaceTemplate.source,
                 workspaceTemplate.logo,
+                workspaceTemplate.url,
                 workspaceTemplate.description,
                 userId
             ).execute()
@@ -48,6 +50,7 @@ class WorkspaceTemplateDao {
                 .set(IMAGE, workspaceTemplate.image)
                 .set(SOURCE, workspaceTemplate.source)
                 .set(LOGO, workspaceTemplate.logo)
+                .set(URL, workspaceTemplate.url)
                 .set(DESCRIPTION, workspaceTemplate.description)
                 .where(ID.eq(wsTemplateId))
                 .execute()
