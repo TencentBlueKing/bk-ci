@@ -523,18 +523,15 @@ class ProjectDao {
         limit: Int
     ): Result<Record2<String, String>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(PROJECT_NAME, ENGLISH_NAME).from(this).where()
-                .and(
+            dslContext.select(PROJECT_NAME, ENGLISH_NAME).from(this)
+                .where(generateQueryProjectForApplyCondition())
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                .or(
                     ID.`in`(
                         dslContext.select(ID).from(this)
                             .where(generateQueryProjectForApplyCondition())
-                            .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
-                            .unionAll(
-                                dslContext.select(ID).from(this)
-                                    .where(generateQueryProjectForApplyCondition())
-                                    .and(ENGLISH_NAME.`in`(englishNameList))
-                                    .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
-                            )
+                            .and(ENGLISH_NAME.`in`(englishNameList))
+                            .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
                 )
                 .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
