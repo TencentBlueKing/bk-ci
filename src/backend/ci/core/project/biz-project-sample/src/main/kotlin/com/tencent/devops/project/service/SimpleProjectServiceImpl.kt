@@ -169,6 +169,6 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)
-        private const val RBAC_PERMISSION_CENTER = "RBAC"
+        private const val RBAC_PERMISSION_CENTER = "rbac"
     }
 }
