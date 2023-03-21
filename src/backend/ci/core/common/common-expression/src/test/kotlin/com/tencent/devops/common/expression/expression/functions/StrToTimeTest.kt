@@ -71,7 +71,7 @@ internal class StrToTimeTest {
     fun evaluateCoreTest(format: String) {
         val (exp, expect) = format.split(" => ")
         val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
-        Assertions.assertEquals(expect, (res as Double).toBigDecimal().toPlainString())
+        Assertions.assertEquals(expect.toDouble(), res)
     }
 
     @DisplayName("evaluateCore相关测试")
