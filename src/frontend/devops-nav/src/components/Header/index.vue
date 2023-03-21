@@ -276,7 +276,8 @@
         }
 
         handleApplyProject () {
-            this.$refs.applyProjectDialog.isShow = true
+            // this.$refs.applyProjectDialog.isShow = true
+            this.to('/console/permission/apply')
         }
 
         closeTooltip (): void {

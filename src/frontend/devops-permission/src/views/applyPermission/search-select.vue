@@ -263,6 +263,12 @@ export default {
       },
       deep: true
     },
+    projectCode: {
+      handler (val) {
+        this.searchSelectValue = []
+      },
+      deep: true
+    }
   },
   data() {
     return {

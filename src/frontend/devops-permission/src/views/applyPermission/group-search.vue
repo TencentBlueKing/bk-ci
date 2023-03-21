@@ -86,7 +86,8 @@ const handleChangeSelectGroup = (values) => {
 const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
 
 watch(() => props.projectCode, () => {
-  if (props.projectCode && !route.query.resourceType) {
+  if ((props.projectCode && !route.query.resourceType) || (props.projectCode && !route.query.action)) {
+    filter.value = [];
     fetchGroupList();
   };
 })
@@ -322,6 +323,7 @@ const columns = [
       :project-code="projectCode"
       @change="handleChangeSearch">
     </search-select>
+    <div v-if="isDisabled" style="color: #c4c6cd; font-size: 12px;">{{ $t('无该项目的权限，请先选择下方用户组申请加入项目') }}</div>
     <bk-loading
       class="group-table"
       :loading="isLoading">
