@@ -3,4 +3,5 @@ com.tencent.devops.common.web.GlobalProxyConfiguration,\
 com.tencent.devops.common.web.WebAutoConfiguration,\
 com.tencent.devops.common.web.FeignConfiguration,\
 com.tencent.devops.common.web.FilterAutoConfiguration,\
-com.tencent.devops.common.web.SensitiveApiAutoConfiguration
+com.tencent.devops.common.web.SensitiveApiAutoConfiguration,\
+com.tencent.devops.common.web.BuildApiAutoConfiguration

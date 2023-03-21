@@ -62,13 +62,16 @@ class SampleImageInitService @Autowired constructor(
     private val imageReleaseService: ImageReleaseService
 ) {
 
-    private val logger = LoggerFactory.getLogger(SampleImageInitService::class.java)
+    companion object {
+        private val logger = LoggerFactory.getLogger(SampleImageInitService::class.java)
+        private const val DEFAULT_IMAGE_CODE = "bkci"
+    }
 
     @Suppress("ALL")
     fun imageInit(imageInitRequest: ImageInitRequest?): Result<Boolean> {
         val projectCode = imageInitRequest?.projectCode ?: "demo"
         val userId = imageInitRequest?.userId ?: "admin"
-        val imageCode = imageInitRequest?.imageCode ?: "bkci"
+        val imageCode = imageInitRequest?.imageCode ?: DEFAULT_IMAGE_CODE
         val accessToken = imageInitRequest?.accessToken ?: ""
         val ticketId = imageInitRequest?.ticketId
         logger.info("begin init image: $imageInitRequest")
@@ -148,7 +151,7 @@ class SampleImageInitService @Autowired constructor(
                     ?: "FROM bkci/ci:latest\nRUN apt install -y git python-pip python3-pip\n",
                 version = "1.0.0",
                 releaseType = ReleaseTypeEnum.NEW,
-                versionContent = imageInitRequest?.versionContent ?: "bkci",
+                versionContent = imageInitRequest?.versionContent ?: DEFAULT_IMAGE_CODE,
                 publisher = userId
             ),
             checkLatest = false,
@@ -194,6 +197,28 @@ class SampleImageInitService @Autowired constructor(
                 description = "default job image"
             )
         )
+        // 同步修改镜像检查流水线
+        if (imageCode != DEFAULT_IMAGE_CODE) {
+            val pipelineModelConfig = businessConfigDao.get(
+                dslContext = dslContext,
+                business = BusinessEnum.IMAGE.name,
+                feature = "initBuildPipeline",
+                businessValue = "PIPELINE_MODEL"
+            )
+            pipelineModelConfig?.let {
+                val pipelineModelStr = pipelineModelConfig.configValue.replace(DEFAULT_IMAGE_CODE, imageCode)
+                businessConfigDao.update(
+                    dslContext = dslContext,
+                    request = BusinessConfigRequest(
+                        business = BusinessEnum.IMAGE,
+                        feature = pipelineModelConfig.feature,
+                        businessValue = pipelineModelConfig.businessValue,
+                        configValue = pipelineModelStr,
+                        description = pipelineModelConfig.description
+                    )
+                )
+            }
+        }
         return Result(true)
     }
 }

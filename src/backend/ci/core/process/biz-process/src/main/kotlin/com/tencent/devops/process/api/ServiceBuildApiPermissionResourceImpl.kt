@@ -25,23 +25,37 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.metrics.service
+package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.pojo.Page
-import com.tencent.devops.metrics.pojo.`do`.ErrorCodeInfoDO
-import com.tencent.devops.metrics.pojo.dto.QueryErrorCodeInfoDTO
+import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.auth.api.AuthPermission
+import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.service.ServiceBuildApiPermissionResource
+import com.tencent.devops.process.engine.service.PipelineRuntimeService
+import com.tencent.devops.process.permission.PipelinePermissionService
+import org.springframework.beans.factory.annotation.Autowired
 
-interface ErrorCodeInfoManageService {
+@RestResource
+class ServiceBuildApiPermissionResourceImpl @Autowired constructor(
+    private val pipelineRuntimeService: PipelineRuntimeService,
+    private val pipelinePermissionService: PipelinePermissionService
+) : ServiceBuildApiPermissionResource {
+    override fun getStartUser(projectId: String, buildId: String): Result<String?> {
+        return Result(pipelineRuntimeService.getStartUser(projectId, buildId))
+    }
 
-    /**
-     * 获取错误码列表
-     *@param queryErrorCodeInfoDTO 查询错误码信息传输对象
-     * @return 错误码信息列表视图
-     */
-    fun getErrorCodeInfo(queryErrorCodeInfoDTO: QueryErrorCodeInfoDTO): Page<ErrorCodeInfoDO>
-
-    /**
-     * 同步插件错误信息关联数据
-     */
-    fun syncAtomErrorCodeRel(userId: String): Boolean
+    override fun verifyApi(
+        userId: String,
+        projectId: String,
+        pipelineId: String
+    ): Result<Boolean> {
+        return Result(
+            pipelinePermissionService.checkPipelinePermission(
+                userId = userId,
+                projectId = projectId,
+                pipelineId = pipelineId,
+                permission = AuthPermission.VIEW
+            )
+        )
+    }
 }
