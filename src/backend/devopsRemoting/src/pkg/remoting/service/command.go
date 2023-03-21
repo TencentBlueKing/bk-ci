@@ -79,7 +79,7 @@ func (cm *CommandManager) Run(ctx context.Context, wg *sync.WaitGroup) {
 	defer logs.Debug("postCreateCommand shutdown")
 
 	cm.init(ctx)
-	logs.Debugf("commands: %v",cm.commands)
+	logs.Debugf("commands: %v", cm.commands)
 
 	for _, c := range cm.commands {
 		log := logs.WithField("command", c.command)
@@ -138,12 +138,12 @@ func (cm *CommandManager) init(ctx context.Context) {
 
 	devfile := <-cm.devfileSrv.Observe(ctx)
 	if devfile == nil {
-		logs.Debug("commands devfile is null")
+		logs.Warn("commands devfile is null")
 		return
 	}
 	commands := devfile.Commands
 	if commands == nil {
-		logs.Debug("commands is null")
+		logs.Warn("commands is null")
 		return
 	}
 

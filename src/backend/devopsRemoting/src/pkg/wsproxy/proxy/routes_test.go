@@ -136,7 +136,7 @@ func addHeader(name string, val string) requestModifier {
 
 func addAuthHeader(r *http.Request) {
 	r.AddCookie(&http.Cookie{
-		Name: "X-DEVOPS-BK-TICKET",
+		Name:  "X-DEVOPS-BK-TICKET",
 		Value: "123",
 	})
 }

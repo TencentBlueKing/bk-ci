@@ -5,6 +5,9 @@ VERSION=$(shell cd . && git log -1 --pretty=format:"%H")
 # 和后台通信的秘钥，每次编译不同
 SHA1KEY=2dE7xmMb86w1cxgV0=br
 
+format: 
+	find ./ -name "*.go" | xargs gofmt -w
+
 test: test-unit
 
 .PHONY: test-unit

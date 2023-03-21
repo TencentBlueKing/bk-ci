@@ -100,7 +100,6 @@ func (b *BackendClient) GetWorkspaceDetail(ctx context.Context, workspaceId stri
 	return result, nil
 }
 
-
 // CheckAuth 请求蓝盾后台校验用户是否具有工作空间权限
 func CheckAuthBackend(ctx context.Context, host, wsid, ticket string) (bool, error) {
 	url := fmt.Sprintf("%s/remotedev/api/user/workspaces/checkPermission?workspaceName=%s", host, wsid)
@@ -128,7 +127,6 @@ func CheckAuthBackend(ctx context.Context, host, wsid, ticket string) (bool, err
 
 	return *result, nil
 }
-
 
 func hmacsha1Encrypt(keyStr, content string) string {
 	key := []byte(keyStr)

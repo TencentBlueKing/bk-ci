@@ -21,7 +21,7 @@ func InitTokenService() *TokenService {
 		bkticket: Bkticket{
 			cond:        sync.NewCond(&sync.Mutex{}),
 			ticketReady: make(chan struct{}),
-			ticket:      &BkticktContent{
+			ticket: &BkticktContent{
 				Ticket:      "",
 				User:        "",
 				AccessToken: "",

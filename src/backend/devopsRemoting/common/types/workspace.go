@@ -2,9 +2,10 @@ package types
 
 // 工作空间的Yaml配置文件
 type Devfile struct {
-	Vscode   *Vscode   `json:"vscode" yaml:"vscode"`
-	Commands *Commands `json:"commands" yaml:"commands"`
-	Ports    []*Port   `json:"ports" yaml:"ports"`
+	Vscode          *Vscode   `json:"vscode" yaml:"vscode"`
+	Commands        *Commands `json:"commands" yaml:"commands"`
+	Ports           []*Port   `json:"ports" yaml:"ports"`
+	WorkspaceFolder string    `json:"workspaceFolder" yaml:"workspaceFolder"`
 }
 
 // vscode相关配置

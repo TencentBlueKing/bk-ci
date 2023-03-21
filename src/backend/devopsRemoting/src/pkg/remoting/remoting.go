@@ -142,10 +142,10 @@ func Run() {
 	var ideWG sync.WaitGroup
 	ideWG.Add(1)
 	// 启动并监管IDE DESKTOP进程
-	go ide.StartAndWatchIDE(ctx, remotingConfig, &remotingConfig.DesktopIDE, childProcEnvvars, &ideWG, cstate, desktopIdeReady, ide.DesktopIDE)
+	go ide.StartAndWatchIDE(ctx, remotingConfig, &remotingConfig.DesktopIDE, childProcEnvvars, &ideWG, cstate, desktopIdeReady, ide.DesktopIDE, devfileService)
 	if remotingConfig.IDE != nil {
 		ideWG.Add(1)
-		go ide.StartAndWatchIDE(ctx, remotingConfig, remotingConfig.IDE, childProcEnvvars, &ideWG, cstate, ideReady, ide.WebIDE)
+		go ide.StartAndWatchIDE(ctx, remotingConfig, remotingConfig.IDE, childProcEnvvars, &ideWG, cstate, ideReady, ide.WebIDE, devfileService)
 	}
 
 	var (

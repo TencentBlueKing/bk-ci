@@ -10,7 +10,7 @@
         "--server-data-dir",
         "/data/landun/workspace/.vscode-remote",
         "--default-folder",
-        "{GITREPOPATH}"
+        "{DEFAULT_OPEN_FOLDER}"
     ],
     "readinessProbe": {
         "type": "http",

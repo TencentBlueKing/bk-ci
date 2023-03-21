@@ -3,6 +3,7 @@ package ide
 import (
 	"context"
 	"devopsRemoting/common/logs"
+	commonTypes "devopsRemoting/common/types"
 	"devopsRemoting/src/pkg/remoting/config"
 	"devopsRemoting/src/pkg/remoting/dropwriter"
 	"devopsRemoting/src/pkg/remoting/service"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"runtime"
 	"strconv"
 	"strings"
@@ -55,12 +57,34 @@ const (
 	timeBudgetIDEShutdown = 15 * time.Second
 )
 
-func StartAndWatchIDE(ctx context.Context, cfg *config.Config, ideConfig *config.IDEConfig, childProcEnvvars []string, wg *sync.WaitGroup, cstate *service.InMemoryContentState, ideReady *service.IdeReadyState, ide IDEKind) {
+func StartAndWatchIDE(
+	ctx context.Context,
+	cfg *config.Config,
+	ideConfig *config.IDEConfig,
+	childProcEnvvars []string,
+	wg *sync.WaitGroup,
+	cstate *service.InMemoryContentState,
+	ideReady *service.IdeReadyState,
+	ide IDEKind,
+	devfileSrv *config.DevfileConfigService,
+) {
 	defer wg.Done()
 	defer logs.WithField("ide", ide.String()).Debug("startAndWatchIDE shutdown")
 
 	// 等到工作空间准备好
 	<-cstate.ContentReady()
+
+	// 等待devfile就绪，目前只需要workspaceFolder 这个字段，内置ide需要，ssh不需要
+	var devfile *commonTypes.Devfile
+	if ide == WebIDE {
+		devfile = <-devfileSrv.Observe(ctx)
+	} else {
+		devfile = nil
+	}
+	if devfile == nil && ide == WebIDE {
+		// devfile 不存在目前不能影响ide正常打开
+		logs.Warn("webide devfile is null")
+	}
 
 	ideStatus := statusNeverRan
 
@@ -75,7 +99,7 @@ loop:
 		}
 
 		ideStopped = make(chan struct{}, 1)
-		cmd = prepareIDELaunch(cfg, ideConfig, childProcEnvvars)
+		cmd = prepareIDELaunch(cfg, ideConfig, childProcEnvvars, devfile)
 		launchIDE(cfg, ideConfig, cmd, ideStopped, ideReady, &ideStatus, ide)
 
 		select {
@@ -114,12 +138,17 @@ loop:
 	}
 }
 
-func prepareIDELaunch(cfg *config.Config, ideConfig *config.IDEConfig, childProcEnvvars []string) *exec.Cmd {
+func prepareIDELaunch(cfg *config.Config, ideConfig *config.IDEConfig, childProcEnvvars []string, devfile *commonTypes.Devfile) *exec.Cmd {
 	args := ideConfig.EntrypointArgs
 
+	defaultOpen := cfg.WorkSpace.GitRepoRootPath
+	if devfile != nil && devfile.WorkspaceFolder != "" {
+		defaultOpen = filepath.Join(cfg.WorkSpace.GitRepoRootPath, devfile.WorkspaceFolder)
+	}
+
 	for i := range args {
-		// web版默认打开的位置，看后续是否可以使用插件代替
-		args[i] = strings.ReplaceAll(args[i], "{GITREPOPATH}", cfg.WorkSpace.GitRepoRootPath)
+		// TODO: web版默认打开的位置，看后续是否可以使用插件代替
+		args[i] = strings.ReplaceAll(args[i], "{DEFAULT_OPEN_FOLDER}", defaultOpen)
 		args[i] = strings.ReplaceAll(args[i], "{IDEPORT}", strconv.Itoa(cfg.WorkSpace.IDEPort))
 		args[i] = strings.ReplaceAll(args[i], "{DESKTOPIDEPORT}", strconv.Itoa(DesktopIDEPort))
 	}

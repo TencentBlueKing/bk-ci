@@ -56,7 +56,7 @@ type ConfigService struct {
 	devfileService config.DevfileConfigInterface
 }
 
-func NewConfigService( devfileService config.DevfileConfigInterface) *ConfigService {
+func NewConfigService(devfileService config.DevfileConfigInterface) *ConfigService {
 	return &ConfigService{
 		devfileService: devfileService,
 	}
