@@ -1,0 +1,35 @@
+{
+    "folders": [
+        { "path": "." },
+        { "path": "src/common" },
+        { "path": "src/remoting" },
+        { "path": "src/remoting-api" },
+        { "path": "src/ide" },
+        { "path": "src/wsproxy" },
+        { "path": "src/registry-facade" },
+    ],
+    "settings": {
+        "[json]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "[yaml]": {
+            "editor.insertSpaces": true,
+            "editor.tabSize": 2
+        },
+        "[go]": {
+            "editor.formatOnSave": true
+        },
+        "go.formatTool": "goimports",
+        "go.useLanguageServer": true,
+        "workspace.supportMultiRootWorkspace": true,
+        "launch": {},
+        "files.exclude": {
+            "**/.git": true
+        },
+        "go.lintTool": "golangci-lint",
+        "gopls": {
+            "allowModfileModifications": true
+        },
+    }
+}
