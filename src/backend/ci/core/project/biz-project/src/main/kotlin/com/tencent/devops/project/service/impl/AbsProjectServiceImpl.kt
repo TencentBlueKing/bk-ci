@@ -53,6 +53,7 @@ import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -319,8 +320,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectInfo = ProjectUtils.packagingBean(record)
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
-        // 项目没有创建成功或者不是创建人,必须校验权限
-        if (approvalStatus.isSuccess() || record.creator != userId) {
+        if (approvalStatus.isCreatePending() && record.creator != userId) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_PROJECT,
+                params = arrayOf(englishName),
+                defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+            )
+        }
+        if (approvalStatus.isSuccess()) {
             val verify = validatePermission(
                 userId = userId,
                 projectCode = englishName,

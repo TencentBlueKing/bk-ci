@@ -57,7 +57,11 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
+import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.pojo.enums.ProjectApproveStatus
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -71,7 +75,8 @@ class RbacPermissionResourceGroupService @Autowired constructor(
     private val permissionResourceService: PermissionResourceService,
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val dslContext: DSLContext,
-    private val authResourceGroupDao: AuthResourceGroupDao
+    private val authResourceGroupDao: AuthResourceGroupDao,
+    private val client: Client
 ) : PermissionResourceGroupService {
 
     companion object {
@@ -87,6 +92,7 @@ class RbacPermissionResourceGroupService @Autowired constructor(
         page: Int,
         pageSize: Int
     ): Pagination<IamGroupInfoVo> {
+        checkProjectApprovalStatus(resourceType, resourceCode)
         val resourceInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = resourceType,
@@ -133,6 +139,24 @@ class RbacPermissionResourceGroupService @Autowired constructor(
             hasNext = iamGroupInfoVoList.size == pageSize,
             records = iamGroupInfoVoList
         )
+    }
+
+    private fun checkProjectApprovalStatus(resourceType: String, resourceCode: String) {
+        if (resourceType == AuthResourceType.PROJECT.value) {
+            val projectInfo =
+                client.get(ServiceProjectResource::class).get(resourceCode).data ?: throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
+                    params = arrayOf(resourceCode)
+                )
+            val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
+            if (approvalStatus.isCreatePending()) {
+                throw ErrorCodeException(
+                    errorCode = ProjectMessageCode.UNDER_APPROVAL_PROJECT,
+                    params = arrayOf(resourceCode),
+                    defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+                )
+            }
+        }
     }
 
     override fun listUserBelongGroup(
