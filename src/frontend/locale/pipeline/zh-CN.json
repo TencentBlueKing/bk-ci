@@ -1100,7 +1100,7 @@
   "staticGroupTips": "手动指定组内所包含的流水线",
   "dynamicGroupTips": "组内所包含的流水线根据设置的流水线名称\\标签等属性去动态匹配",
   "lastModify": "最近修改",
-  "projectedGroupDisableTips": "只有管理员\\CI管理员可以创建项目可见的流水线组",
+  "projectedGroupDisableTips": "仅项目管理员可以创建项目可见的流水线组",
   "groupEditDisableTips": "只有管理员\\CI管理员可以对项目流水线组添加\\移出流水线",
   "noDeletePipelines": "删除流水线列表为空",
   "deleted": "已删除",

@@ -19,6 +19,7 @@ const route = useRoute();
 const props = defineProps({
   groupList: Array,
   projectCode: String,
+  isDisabled: Boolean,
 });
 
 const { t } = useI18n();
@@ -317,6 +318,7 @@ const columns = [
       class="group-search-filter"
       v-model="filter"
       :search-list="searchList"
+      :is-disabled="isDisabled"
       :project-code="projectCode"
       @change="handleChangeSearch">
     </search-select>

@@ -8,8 +8,8 @@ export default {
   getUser() {
     return fetch.get(`${projectPerfix}/users`);
   },
-  getAllProjectList() {
-    return fetch.get(`${projectPerfix}/projects?enabled=true`)
+  getAllProjectList(params) {
+    return fetch.get(`${projectPerfix}/projects/listProjectsForApply`, params)
   },
   // 获取资源类型列表
   getResourceTypesList() {

@@ -64,7 +64,7 @@
     import Header from '../components/Header/index.vue'
     import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
-    import { Component } from 'vue-property-decorator'
+    import { Component, Watch } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
     import eventBus from '../utils/eventBus'
 
@@ -119,8 +119,28 @@
             this.iframeUtil.toggleProjectMenu(true)
         }
 
+        @Watch('projectList', {
+            immediate: true
+        })
+        wacthProjectList (val: Array) {
+            const index = val.findIndex(i => i.englishName === this.curProjectCode)
+            if (index === -1) {
+                this.handleApplyJoin()
+            }
+        }
+
         handleApplyJoin () {
-            this.$refs.applyProjectDialog.isShow = true
+            // this.$refs.applyProjectDialog.isShow = true
+            const hasPipelineId = this.$route.params.restPath.startsWith('p-')
+            const pipelineId = this.$route.params.restPath.split('/')[0]
+            const resourceType = hasPipelineId ? 'pipeline' : 'project'
+            const resourceCode = hasPipelineId ? pipelineId : this.curProjectCode
+
+            this.handleNoPermission({
+                projectId: this.curProjectCode,
+                resourceType,
+                resourceCode
+            })
         }
 
         created () {
@@ -131,7 +151,6 @@
                     }
                 })
             })
-            console.log(this.curProjectCode, '123')
         }
     }
 </script>

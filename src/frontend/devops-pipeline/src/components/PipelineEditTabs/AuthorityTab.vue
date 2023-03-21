@@ -174,92 +174,25 @@
              * 关闭权限管理
              */
             handleCloseManage () {
-                const { name } = this.pipeline
                 const {
                     resourceType,
                     resourceCode,
                     projectCode
                 } = this
-                const confirmFn = () => {
-                    this
-                        .disableGroupPermission({
-                            resourceType,
-                            resourceCode,
-                            projectCode
-                        })
-                        .then((res) => {
-                            if (res?.data) {
-                                this.isEnablePermission = false
-                                this.$bkMessage({
-                                    theme: 'success',
-                                    message: this.$t('关闭成功')
-                                })
-                            }
-                        })
-                        .catch((err) => {
-                            this.$bkMessage({
-                                theme: 'error',
-                                message: err.message || err
-                            })
-                        })
-                }
-                this.$bkInfo({
-                    extCls: 'close-manage-dialog',
-                    title: this.$t('closeManageTitle', [name]),
-                    subTitle: this.$t('closeManageTips'),
-                    confirmFn
-                })
-            },
-
-            /**
-             * 获取用户组列表 (管理员、创建者)
-             */
-            fetchGroupList () {
-                const {
-                    resourceType,
-                    resourceCode,
-                    projectCode
-                } = this
-
-                return this
-                    .fetchUserGroupList({
+                this
+                    .disableGroupPermission({
                         resourceType,
                         resourceCode,
                         projectCode
                     })
                     .then((res) => {
-                        this.groupList = res.data
-                        this.iamIframePath = `user-group-detail/${res[0]?.groupId}?role_id=${res[0]?.managerId}`
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-            },
-            
-            /**
-             * 删除用户组
-             */
-            handleDeleteGroup (group) {
-                const {
-                    resourceType,
-                    projectCode
-                } = this
-
-                return this
-                    .deleteGroup({
-                        resourceType,
-                        projectCode,
-                        groupId: group.id
-                    })
-                    .then(() => {
-                        this.$bkMessage({
-                            theme: 'success',
-                            message: this.$t('删除成功')
-                        })
-                        this.fetchGroupList()
+                        if (res?.data) {
+                            this.isEnablePermission = false
+                            this.$bkMessage({
+                                theme: 'success',
+                                message: this.$t('关闭成功')
+                            })
+                        }
                     })
                     .catch((err) => {
                         this.$bkMessage({

@@ -6,6 +6,7 @@ import {
   ref,
   onMounted,
   nextTick,
+  watch,
 } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
@@ -33,6 +34,16 @@ const timeFilters = ref({
 });
 const formRef = ref();
 const isLoading = ref(false);
+const scrollLoading = ref(false);
+const pageInfo = ref({
+  page: 1,
+  pageSize: 10,
+  loadEnd: false
+})
+
+const projectName = ref(route?.query.projectName);
+const curProject = ref(null);
+const isDisabled = ref(false);
 
 const rules = {
   projectCode: [
@@ -50,6 +61,14 @@ const rules = {
     },
   ],
 };
+
+watch(() => curProject.value, (val) => {
+  if (curProject.value) {
+    isDisabled.value = !val.permission
+  }
+}, {
+  deep: true,
+})
 
 const handleChangeTime = (value) => {
   currentActive.value = Number(value)
@@ -123,15 +142,38 @@ const getUserInfo = () => {
 };
 
 const getAllProjectList = () => {
-  http.getAllProjectList().then(res => {
-    projectList.value = res;
+  if (pageInfo.value.loadEnd || scrollLoading.value) {
+    return
+  }
+  scrollLoading.value = true;
+  http.getAllProjectList({
+    page: pageInfo.value.page,
+    pageSize: pageInfo.value.pageSize,
+  }).then(res => {
+    pageInfo.value.loadEnd = !res.hasNext;
+    pageInfo.value.page += 1;
+    projectList.value.push(...res.records);
+  }).finally(() => {
+    scrollLoading.value = false;
   });
 };
+
+const getProjectByName = () => {
+  const params = {
+    projectName: projectName.value
+  }
+  http.getAllProjectList(params).then(res => {
+    curProject.value = res.records[0];
+  })
+}
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
   formData.value.projectCode = route?.query.project_code || '';
   getUserInfo();
   getAllProjectList();
+  if (projectName.value) {
+    getProjectByName();
+  }
 });
 
 </script>
@@ -152,11 +194,13 @@ onMounted(() => {
               filterable
               :input-search="false"
               class="project-select"
+              :scroll-loading="scrollLoading"
+              @scroll-end="getAllProjectList"
             >
               <bk-option
                 v-for="(project, index) in projectList"
                 :key="index"
-                :value="project.projectCode"
+                :value="project.englishName"
                 :label="project.projectName"
               />
             </bk-select>
@@ -164,6 +208,7 @@ onMounted(() => {
           <bk-form-item :label="t('选择用户组')" required>
             <group-search
               :groupList="groupList"
+              :is-disabled="isDisabled"
               :project-code="formData.projectCode"
               @handle-change-select-group="handleChangeGroup"
             ></group-search>

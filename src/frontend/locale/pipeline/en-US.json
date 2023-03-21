@@ -1097,7 +1097,7 @@
   "staticGroupTips": "Manually add pipeline to group",
   "dynamicGroupTips": "Dynamic matching based on the name, tag and other attributes",
   "lastModify": "Last modified on ",
-  "projectedGroupDisableTips": "Only administrators or CI administrators can create pipeline groups that are visible to the project",
+  "projectedGroupDisableTips": "Only project administrators can create pipeline groups that are visible to the project",
   "groupEditDisableTips": "Only administrators or CI administrators can add or remove pipelines to or from project pipeline groups",
   "noDeletePipelines": "No pipeline to delete",
   "deleted": "Deleted",
