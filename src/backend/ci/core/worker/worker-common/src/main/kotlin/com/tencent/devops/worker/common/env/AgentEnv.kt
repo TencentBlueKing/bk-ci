@@ -56,6 +56,7 @@ object AgentEnv {
     private const val AGENT_ENV = "landun.env"
     private const val AGENT_LOG_SAVE_MODE = "devops_log_save_mode"
     private const val AGENT_PROPERTIES_FILE_NAME = ".agent.properties"
+    private const val BK_TAG = "devops_bk_tag"
 
     private var projectId: String? = null
     private var agentId: String? = null
@@ -64,6 +65,7 @@ object AgentEnv {
     private var os: OSType? = null
     private var env: Env? = null
     private var logStorageMode: LogStorageMode? = null
+    private var bkTag: String? = null
 
     private var property: Properties? = null
 
@@ -184,6 +186,20 @@ object AgentEnv {
             }
         }
         return os!!
+    }
+
+    fun getBkTag(): String? {
+
+        if (bkTag.isNullOrBlank()) {
+            synchronized(this) {
+                if (bkTag.isNullOrBlank()) {
+                    bkTag = getProperty(BK_TAG)
+                    logger.info("Get the bkTag($bkTag)")
+                    return bkTag
+                }
+            }
+        }
+        return bkTag!!
     }
 
     @Suppress("UNUSED")

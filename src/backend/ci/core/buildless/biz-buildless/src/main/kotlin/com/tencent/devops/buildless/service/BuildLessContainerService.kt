@@ -52,13 +52,13 @@ import com.tencent.devops.buildless.utils.ENV_DEVOPS_GATEWAY
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_IP
 import com.tencent.devops.buildless.utils.ENV_DOCKER_HOST_PORT
 import com.tencent.devops.buildless.utils.ENV_JOB_BUILD_TYPE
+import com.tencent.devops.buildless.utils.ENV_KEY_BK_TAG
 import com.tencent.devops.buildless.utils.ENV_KEY_GATEWAY
-import com.tencent.devops.buildless.utils.ENV_KEY_PROJECT_ID
 import com.tencent.devops.buildless.utils.RandomUtil
 import com.tencent.devops.buildless.utils.RedisUtils
 import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.common.service.gray.Gray
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
 import java.io.File
@@ -74,7 +74,7 @@ import kotlin.streams.toList
 
 @Service
 class BuildLessContainerService(
-    private val gray: Gray,
+    private val bkTag: BkTag,
     private val redisUtils: RedisUtils,
     private val commonConfig: CommonConfig,
     private val buildLessConfig: BuildLessConfig
@@ -245,13 +245,7 @@ class BuildLessContainerService(
         envList.addAll(listOf(
             "$ENV_KEY_GATEWAY=${buildLessConfig.gateway}",
             "TERM=xterm-256color",
-            "$ENV_KEY_PROJECT_ID=${
-                if (gray.isGray()) {
-                    "grayproject"
-                } else {
-                    ""
-                }
-            }",
+            "$ENV_KEY_BK_TAG=${bkTag.getFinalTag()}",
             "$ENV_DOCKER_HOST_IP=${CommonUtils.getHostIp()}",
             "$ENV_DOCKER_HOST_PORT=${commonConfig.serverPort}",
             "$BK_DISTCC_LOCAL_IP=${CommonUtils.getHostIp()}",
