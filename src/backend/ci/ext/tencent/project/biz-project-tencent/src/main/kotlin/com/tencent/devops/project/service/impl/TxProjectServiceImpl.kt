@@ -306,7 +306,7 @@ class TxProjectServiceImpl @Autowired constructor(
             if (!response.isSuccessful) {
                 logger.warn(
                     "Fail to request($request) with code ${response.code}, " +
-                            "message ${response.message} and response $responseContent"
+                        "message ${response.message} and response $responseContent"
                 )
                 throw OperationException(errorMessage)
             }
@@ -412,6 +412,18 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
+    override fun getRouterTag(routerTag: String?): String {
+        return if (routerTag == null) {
+            V0_PERMISSION_CENTER
+        } else if (routerTag.contains(V3_PERMISSION_CENTER)) {
+            V3_PERMISSION_CENTER
+        } else if (routerTag.contains(RBAC_PERMISSION_CENTER)) {
+            RBAC_PERMISSION_CENTER
+        } else {
+            V0_PERMISSION_CENTER
+        }
+    }
+
     private fun getV0UserProject(userId: String?, accessToken: String?): List<String> {
         val token = if (accessToken.isNullOrEmpty()) {
             bsAuthTokenApi.getAccessToken(bsPipelineAuthServiceCode)
@@ -496,5 +508,8 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
+        private const val V0_PERMISSION_CENTER = "VO"
+        private const val V3_PERMISSION_CENTER = "V3"
+        private const val RBAC_PERMISSION_CENTER = "RBAC"
     }
 }
