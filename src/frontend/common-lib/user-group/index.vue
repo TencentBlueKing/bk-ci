@@ -11,7 +11,6 @@
                         v-bind="$props"
                         :active-index="activeIndex"
                         :show-create-group="showCreateGroup"
-                        :delete-group="handleDeleteGroup"
                         :close-manage="handleCloseManage"
                         @choose-group="handleChooseGroup"
                         @create-group="handleCreateGroup"
@@ -101,10 +100,6 @@
                 type: Function,
                 default: () => {}
             },
-            deleteGroup: {
-                type: Function,
-                default: () => {}
-            },
             isLoading: {
                 type: Boolean,
                 default: false
@@ -186,10 +181,6 @@
                             break
                     }
                 }
-            },
-
-            handleDeleteGroup (group) {
-                return this.deleteGroup(group)
             },
 
             handelUpdateEnable () {

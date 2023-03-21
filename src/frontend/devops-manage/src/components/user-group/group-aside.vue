@@ -2,70 +2,70 @@
   <article class="group-aside">
     <section class="group-list">
       <span class="group-title">{{ $t('权限角色') }}</span>
-      <bk-loading
+      <scroll-load-list
         class="loading-content"
-        :loading="!groupList.length"
+        ref="loadList"
+        :list="groupList"
+        :hasLoadEnd="hasLoadEnd"
+        :getDataMethod="handleGetData"
       >
-        <div
-          :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
-          v-for="(group, index) in groupList"
-          :key="index"
-          @click="handleChangeTab(group)">
-          <bk-input
-            ref="renameInput"
-            v-show="group.groupId === activeGroupId && isRename"
-            v-model="displayGroupName"
-            class="rename-input"
-            @enter="handleRename"
-            @blur="handleRename"
-          >
-          </bk-input>
-          <div class="item-content" v-show="group.groupId !== activeGroupId">
-            <span class="group-name" :title="group.name">{{ group.name }}</span>
-            <span class="user-num">
-              <i class="manage-icon small-size manage-icon-user-shape"></i>
-              {{ group.userCount }}
-            </span>
-            <span class="group-num">
-              <i class="manage-icon small-size manage-icon-organization"></i>
-              {{ group.departmentCount }}
-            </span>
-            <bk-popover
-              v-if="resourceType === 'project'"
-              class="group-more-option"
-              placement="bottom"
-              trigger="click"
-              theme="dot-menu light"
-              :arrow="false"
-              offset="15"
-              :distance="0">
-              <i class="more-icon manage-icon manage-icon-more-fill"></i>
-              <template #content>
-                <div class="menu-content">
-                  <bk-button
-                    v-if="!group.defaultGroup"
-                    class="btn"
-                    text
-                    @click="handleShowRename(group, index)"
-                  >
-                    {{ $t('重命名') }}
-                  </bk-button>
-                  <bk-button
-                    :class="{
-                      'btn': true,
-                      'is-disable': group.defaultGroup
-                    }"
-                    :disabled="group.defaultGroup"
-                    text
-                    @click="handleShowDeleteGroup(group)">
-                    {{ $t('删除') }}
-                  </bk-button>
-                </div>
-              </template>
-            </bk-popover>
+        <template v-slot="{ data: group }">
+          <div
+            :class="{ 'group-item': true, 'group-active': activeTab === group.groupId }"
+            @click="handleChangeTab(group)">
+            <bk-input
+              ref="renameInput"
+              v-show="group.groupId === activeGroupId && isRename"
+              v-model="displayGroupName"
+              class="rename-input"
+              @enter="handleRename"
+              @blur="handleRename"
+            >
+            </bk-input>
+            <div class="item-content" v-show="group.groupId !== activeGroupId">
+              <span class="group-name" :title="group.name">{{ group.name }}</span>
+              <span class="user-num">
+                <i class="manage-icon small-size manage-icon-user-shape"></i>
+                {{ group.userCount }}
+              </span>
+              <span class="group-num">
+                <i class="manage-icon small-size manage-icon-organization"></i>
+                {{ group.departmentCount }}
+              </span>
+              <bk-popover
+                v-if="resourceType === 'project'"
+                class="group-more-option"
+                placement="bottom"
+                trigger="click"
+                theme="dot-menu light"
+                :arrow="false"
+                offset="15"
+                :distance="0">
+                <i class="more-icon manage-icon manage-icon-more-fill"></i>
+                <template #content>
+                  <div class="menu-content">
+                    <bk-button
+                      v-if="!group.defaultGroup"
+                      class="btn"
+                      text
+                      @click="handleShowRename(group, index)"
+                    >
+                      {{ $t('重命名') }}
+                    </bk-button>
+                    <bk-button
+                      class="btn"
+                      :disabled="group.defaultGroup"
+                      text
+                      @click="handleShowDeleteGroup(group)">
+                      {{ $t('删除') }}
+                    </bk-button>
+                  </div>
+                </template>
+              </bk-popover>
+            </div>
           </div>
-        </div>
-      </bk-loading>
+        </template>
+      </scroll-load-list>
       <div class="line-split" />
       <div
         :class="{ 'group-item create-group-btn': true, 'group-active': activeTab === '' }"
@@ -136,8 +136,14 @@
 
 <script>
 import { InfoBox } from 'bkui-vue'
+import ScrollLoadList from './scroll-load-list'
+import http from '@/http/api';
+
 export default {
   name: 'GroupAside',
+  components: {
+    ScrollLoadList
+  },
   props: {
     // 资源类型
     resourceType: {
@@ -153,10 +159,6 @@ export default {
     projectCode: {
       type: String,
       default: '',
-    },
-    groupList: {
-      type: Array,
-      default: () => [],
     },
     closeManage: {
       type: Function,
@@ -187,7 +189,9 @@ export default {
       keyWords: '',
       isRename: false,
       activeGroupId: 0,
-      displayGroupName: ''
+      displayGroupName: '',
+      groupList: [],
+      hasLoadEnd: false,
     };
   },
   computed: {
@@ -196,19 +200,33 @@ export default {
     },
   },
   watch: {
-    groupList: {
-      handler() {
-        if (this.groupList.length) {
-          this.handleChangeTab(this.groupList[0]);
-        }
-      },
-      immediate: true,
-    },
     activeIndex(newVal) {
       this.activeTab = this.groupList[newVal]?.groupId || '';
     },
   },
   methods: {
+    handleGetData (page, pageSize) {
+      return http
+        .fetchUserGroupList(
+          {
+            resourceType: this.resourceType,
+            resourceCode: this.resourceCode,
+            projectCode: this.projectCode,
+          },
+          {
+            page,
+            pageSize
+          }
+        )
+        .then((data) => {
+          this.hasLoadEnd = !data.hasNext;
+          this.groupList.push(...data.records);
+          // 首页需要加载
+          if (page === 1) {
+            this.handleChangeTab(this.groupList[0])
+          }
+        });
+    },
     handleShowRename (group, index) {
       this.isRename = true;
       this.activeGroupId = group.groupId;
@@ -250,11 +268,14 @@ export default {
     },
     handleDeleteGroup() {
       this.deleteObj.isLoading = true;
-      return this
+      return http
         .deleteGroup(this.deleteObj.group)
         .then(() => {
           this.deleteObj.isLoading = false;
           this.handleHiddenDeleteGroup();
+          this.groupList = [];
+          this.hasLoadEnd = false;
+          this.$refs.loadList.resetList()
         });
     },
     handleChangeTab(group) {
@@ -279,7 +300,7 @@ export default {
   .loading-content {
     min-height: 100px;
     max-height: calc(100% - 160px);
-    overflow: auto;
+    height: auto;
     &::-webkit-scrollbar-thumb {
       background-color: #c4c6cc !important;
       border-radius: 5px !important;

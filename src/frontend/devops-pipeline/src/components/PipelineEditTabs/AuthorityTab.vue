@@ -11,8 +11,6 @@
         :is-enable-permission="isEnablePermission"
         :open-manage="handleOpenManage"
         :close-manage="handleCloseManage"
-        :delete-group="handleDeleteGroup"
-        :fetch-group-list="fetchGroupList"
         :show-create-group="false"
         :project-name="projectName"
     />
@@ -66,12 +64,6 @@
                 'fetchUserGroupList',
                 'deleteGroup'
             ]),
-            async getUserList () {
-                // 管理员获取用户组数据
-                if (this.isEnablePermission && this.hasPermission) {
-                    await this.fetchGroupList()
-                }
-            },
             /**
              * 是否为资源的管理员
              */
@@ -179,27 +171,35 @@
                     resourceCode,
                     projectCode
                 } = this
-                this
-                    .disableGroupPermission({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        if (res?.data) {
-                            this.isEnablePermission = false
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('关闭成功')
-                            })
-                        }
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
+                const confirmFn = () => {
+                    this
+                        .disableGroupPermission({
+                            resourceType,
+                            resourceCode,
+                            projectCode
                         })
-                    })
+                        .then((res) => {
+                            if (res?.data) {
+                                this.isEnablePermission = false
+                                this.$bkMessage({
+                                    theme: 'success',
+                                    message: this.$t('关闭成功')
+                                })
+                            }
+                        })
+                        .catch((err) => {
+                            this.$bkMessage({
+                                theme: 'error',
+                                message: err.message || err
+                            })
+                        })
+                }
+                this.$bkInfo({
+                    extCls: 'close-manage-dialog',
+                    title: this.$t('closeManageTitle', [name]),
+                    subTitle: this.$t('closeManageTips'),
+                    confirmFn
+                })
             }
         }
     }
