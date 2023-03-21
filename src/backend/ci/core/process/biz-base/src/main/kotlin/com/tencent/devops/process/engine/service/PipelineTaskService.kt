@@ -347,14 +347,14 @@ class PipelineTaskService @Autowired constructor(
         val buildId = updateTaskInfo.buildId
         val taskId = updateTaskInfo.taskId
         val taskStatus = updateTaskInfo.taskStatus
-        val taskRecord = pipelineBuildTaskDao.get(
+        val buildTask = pipelineBuildTaskDao.get(
             dslContext = dslContext,
             projectId = projectId,
             buildId = buildId,
             taskId = taskId
         )
-        val dbStartTime = taskRecord?.startTime
-        val executeCount = taskRecord?.executeCount
+        val dbStartTime = buildTask?.startTime
+        val executeCount = buildTask?.executeCount
         if (taskStatus.isFinish()) {
             endTime = LocalDateTime.now()
             totalTime = if (dbStartTime == null || endTime == null) {
@@ -369,7 +369,7 @@ class PipelineTaskService @Autowired constructor(
         if (taskStatus.isRunning() && TaskUtils.isRefreshTaskTime(
                 buildId = buildId,
                 taskId = taskId,
-                additionalOptions = taskRecord?.additionalOptions,
+                additionalOptions = buildTask?.additionalOptions,
                 executeCount = executeCount
             )
         ) {

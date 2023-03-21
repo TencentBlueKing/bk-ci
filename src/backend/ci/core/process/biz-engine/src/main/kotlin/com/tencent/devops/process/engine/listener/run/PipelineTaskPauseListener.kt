@@ -59,7 +59,6 @@ import org.springframework.stereotype.Component
 class PipelineTaskPauseListener @Autowired constructor(
     pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
-    private val taskBuildDetailService: TaskBuildDetailService,
     private val taskBuildRecordService: TaskBuildRecordService,
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineContainerService: PipelineContainerService,
