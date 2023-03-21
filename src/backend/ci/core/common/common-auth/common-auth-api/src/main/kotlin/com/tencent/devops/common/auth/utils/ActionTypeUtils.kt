@@ -27,7 +27,7 @@
 
 package com.tencent.devops.common.auth.utils
 
-import com.tencent.devops.common.api.constant.BK_NOT_MEMBER_AND_NOT_OPEN_SOURCE
+import com.tencent.devops.common.api.constant.CommonMessageCode.NOT_MEMBER_AND_NOT_OPEN_SOURCE
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
@@ -168,7 +168,7 @@ object ActionTypeUtils {
                 return false
             } else {
                 throw PermissionForbiddenException(
-                    MessageUtil.getMessageByLocale(BK_NOT_MEMBER_AND_NOT_OPEN_SOURCE, I18nUtil.getLanguage())
+                    MessageUtil.getMessageByLocale(NOT_MEMBER_AND_NOT_OPEN_SOURCE, I18nUtil.getLanguage())
                 )
             }
             return false

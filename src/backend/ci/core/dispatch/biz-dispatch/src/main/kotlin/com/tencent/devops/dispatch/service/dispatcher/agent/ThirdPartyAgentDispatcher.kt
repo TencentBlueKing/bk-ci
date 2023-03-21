@@ -50,7 +50,6 @@ import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_BUSY
 import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS
 import com.tencent.devops.dispatch.pojo.BK_BUILD_NODE_EMPTY_ERROR
 import com.tencent.devops.dispatch.pojo.BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
-import com.tencent.devops.dispatch.pojo.BK_GET_THIRD_PARTY_AGENT_FAIL
 import com.tencent.devops.dispatch.pojo.BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
@@ -163,7 +162,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.GET_BUILD_AGENT_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                errorMsg = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
+                )
                         + "(System Error) - ${agentResult.message}"
             )
             return
@@ -187,7 +188,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                errorMsg = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
+                )
                         + "(System Error) - $dispatchType agent is null"
             )
             return
@@ -406,7 +409,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                errorMessage = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
+                )
                         + "(System Error) - ${dispatchType.envName}: ${agentsResult.message}"
             )
             return
@@ -422,7 +427,9 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.FOUND_AGENT_ERROR,
-                errorMessage = MessageUtil.getMessageByLocale(BK_GET_THIRD_PARTY_AGENT_FAIL, I18nUtil.getLanguage())
+                errorMessage = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.GET_BUILD_AGENT_ERROR.errorCode}", I18nUtil.getLanguage()
+                )
                         + "System Error) - ${dispatchType.envName}: agent is null"
             )
             return

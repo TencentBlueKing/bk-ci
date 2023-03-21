@@ -29,9 +29,9 @@ package com.tencent.devops.scm.code.svn.api
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.BK_ENGINEERING_REPO_CALL_ERROR
-import com.tencent.devops.common.api.constant.BK_ENGINEERING_REPO_NOT_EXIST
-import com.tencent.devops.common.api.constant.BK_ENGINEERING_REPO_UNAUTHORIZED
+import com.tencent.devops.common.api.constant.CommonMessageCode.ENGINEERING_REPO_CALL_ERROR
+import com.tencent.devops.common.api.constant.CommonMessageCode.ENGINEERING_REPO_NOT_EXIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.ENGINEERING_REPO_UNAUTHORIZED
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
@@ -151,21 +151,21 @@ object SVNApi {
                 when {
                     response.code() == 401 -> throw ScmException(
                         MessageUtil.getMessageByLocale(
-                            BK_ENGINEERING_REPO_UNAUTHORIZED,
+                            ENGINEERING_REPO_UNAUTHORIZED,
                             I18nUtil.getDefaultLocaleLanguage()
                         ),
                         ScmType.CODE_SVN.name
                     )
                     response.code() == 404 -> throw ScmException(
                         MessageUtil.getMessageByLocale(
-                            BK_ENGINEERING_REPO_NOT_EXIST,
+                            ENGINEERING_REPO_NOT_EXIST,
                             I18nUtil.getDefaultLocaleLanguage()
                         ),
                         ScmType.CODE_SVN.name
                     )
                     else -> throw ScmException(
                         MessageUtil.getMessageByLocale(
-                            BK_ENGINEERING_REPO_CALL_ERROR,
+                            ENGINEERING_REPO_CALL_ERROR,
                             I18nUtil.getDefaultLocaleLanguage()
                         ),
                         ScmType.CODE_SVN.name

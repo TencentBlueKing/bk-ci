@@ -337,10 +337,10 @@ abstract class AbstractDockerHostBuildService constructor(
                     dockerHostBuildApi.postLog(
                         buildId = buildId,
                         red = false,
-                        message = MessageFormat.format(
-                            MessageUtil.getMessageByLocale(BK_PULLING_IMAGE, I18nUtil.getLanguage()),
-                            lays,
-                            currentProgress
+                        message = MessageUtil.getMessageByLocale(
+                            BK_PULLING_IMAGE,
+                            I18nUtil.getLanguage(),
+                            arrayOf("$lays", "$currentProgress")
                         ),
                         tag = startTaskId,
                         jobId = containerHashId

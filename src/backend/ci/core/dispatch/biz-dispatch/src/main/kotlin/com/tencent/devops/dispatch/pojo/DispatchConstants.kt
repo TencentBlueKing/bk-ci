@@ -27,10 +27,9 @@
 
 package com.tencent.devops.dispatch.pojo
 
-const val BK_GET_THIRD_PARTY_AGENT_FAIL = "BkGetThirdPartyAgentFail"
-const val BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "BkConstantAgentsUpgradingOrTimedOut"
-const val BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "BkThirdPartyBuildMachineStatusError"
-const val BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "BkBuildMachineUpgradeInProgress"
-const val BK_BUILD_MACHINE_BUSY = "BkBuildMachineBusy"
+const val BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT = "BkConstantAgentsUpgradingOrTimedOut"// 第三方构建机Agent正在升级中 或 排队重试超时，请检查agent（${dispatchType.displayName}）并发任务数设置并稍后重试.
+const val BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR = "BkThirdPartyBuildMachineStatusError"// 第三方构建机状态异常，请在环境管理中检查第三方构建机状态(Agent offline)
+const val BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS  = "BkBuildMachineUpgradeInProgress"// 构建机升级中，重新调度(Agent is upgrading)
+const val BK_BUILD_MACHINE_BUSY = "BkBuildMachineBusy"// 构建机正忙,重新调度(Agent is busy) - ${agent.hostname}/${agent.ip}
 const val BK_BUILD_NODE_EMPTY_ERROR = "BkBuildNodeEmptyError"
 const val BK_BUILD_ENV_PREPARATION = "BkBuildEnvPreparation"

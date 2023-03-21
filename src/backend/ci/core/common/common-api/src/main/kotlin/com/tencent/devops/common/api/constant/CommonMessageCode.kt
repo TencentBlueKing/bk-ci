@@ -87,6 +87,9 @@ object CommonMessageCode {
     const val WEBHOOK_ADD_FAIL = "2100035"// Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限
     const val WEBHOOK_UPDATE_FAIL = "2100036"// Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
     const val WEBHOOK_LOCK_UNLOCK_FAIL = "2100037"//unlock webhooklock失败,请确认token是否已经配置
-    const val BK_ENGINEERING_REPO_UNAUTHORIZED = "BkEngineeringRepoUnauthorized"// 工程仓库访问未授权
+    const val ENGINEERING_REPO_UNAUTHORIZED = "2100038"// 工程仓库访问未授权
+    const val ENGINEERING_REPO_NOT_EXIST = "2100039"// 工程仓库不存在
+    const val ENGINEERING_REPO_CALL_ERROR = "2100039"// 工程仓库访问异常
+    const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100040"// 非项目成员且项目为非开源项目
 
 }

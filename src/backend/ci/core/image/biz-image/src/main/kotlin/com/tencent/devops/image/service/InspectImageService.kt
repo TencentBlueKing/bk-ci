@@ -43,7 +43,6 @@ import com.tencent.devops.image.utils.CommonUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 
 @Service
 class InspectImageService @Autowired constructor(
@@ -160,11 +159,11 @@ class InspectImageService @Autowired constructor(
 
                 if (currentProgress >= step[lays]?.plus(25) ?: 5) {
                     logger.info(
-                        userId + MessageFormat.format(
-                            MessageUtil.getMessageByLocale(BK_PULLING_IMAGE, I18nUtil.getLanguage(userId)),
-                            lays,
-                            currentProgress
-                        )
+                        userId + MessageUtil.getMessageByLocale(
+                            BK_PULLING_IMAGE,
+                            I18nUtil.getLanguage(userId),
+                            arrayOf("$lays", "$currentProgress")
+                        ),
                     )
                     step[lays] = currentProgress
                 }
