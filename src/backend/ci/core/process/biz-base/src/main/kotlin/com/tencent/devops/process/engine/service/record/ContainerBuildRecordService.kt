@@ -239,7 +239,10 @@ class ContainerBuildRecordService(
                     // 矩阵直接以类似stage的方式计算耗时
                     if (recordContainer.matrixGroupFlag == true) {
                         val groupContainers = recordContainerDao.getRecords(
-                            context, projectId, pipelineId, buildId, executeCount, null, containerId
+                            dslContext = context, projectId = projectId,
+                            pipelineId = pipelineId, buildId = buildId,
+                            executeCount = executeCount, stageId = null,
+                            matrixGroupId = containerId
                         )
                         val (cost, timeLine) = recordContainer.generateMatrixTimeCost(groupContainers)
                         containerVar[Container::timeCost.name] = cost

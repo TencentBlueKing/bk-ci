@@ -388,7 +388,9 @@ class StageBuildRecordService(
                     endTime = now
                 }
                 val recordContainers = recordContainerDao.getRecords(
-                    context, projectId, pipelineId, buildId, executeCount, stageId
+                    dslContext = context, projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId,
+                    executeCount = executeCount, stageId = stageId
                 )
                 timeCost = recordStage.generateStageTimeCost(recordContainers)
                 stageVar[Stage::timeCost.name] = timeCost

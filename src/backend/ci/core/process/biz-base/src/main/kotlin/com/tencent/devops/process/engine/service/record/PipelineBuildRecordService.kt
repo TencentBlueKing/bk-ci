@@ -386,8 +386,10 @@ class PipelineBuildRecordService @Autowired constructor(
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态
                 val recordContainers = recordContainerDao.getRecords(
-                    context, projectId, pipelineId, buildId, executeCount,
-                    stage.stageId, BuildStatus.RUNNING
+                    dslContext = context, projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId,
+                    executeCount = executeCount, stageId = stage.stageId,
+                    matrixGroupId = null, buildStatus = BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     val status = BuildStatus.parse(container.status)
@@ -461,8 +463,10 @@ class PipelineBuildRecordService @Autowired constructor(
                 stage.status = buildStatus.name
                 // 第2层循环：刷新stage下运行中的container状态
                 val recordContainers = recordContainerDao.getRecords(
-                    context, projectId, pipelineId, buildId, executeCount,
-                    stage.stageId, BuildStatus.RUNNING
+                    dslContext = context, projectId = projectId,
+                    pipelineId = pipelineId, buildId = buildId,
+                    executeCount = executeCount, stageId = stage.stageId,
+                    matrixGroupId = null, buildStatus = BuildStatus.RUNNING
                 )
                 recordContainers.forEach nextContainer@{ container ->
                     if (!BuildStatus.parse(container.status).isRunning()) {
