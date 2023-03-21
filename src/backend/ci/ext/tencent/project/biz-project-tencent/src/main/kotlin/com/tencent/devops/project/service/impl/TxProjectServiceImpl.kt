@@ -508,8 +508,8 @@ class TxProjectServiceImpl @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
-        private const val V0_PERMISSION_CENTER = "VO"
-        private const val V3_PERMISSION_CENTER = "V3"
-        private const val RBAC_PERMISSION_CENTER = "RBAC"
+        private const val V0_PERMISSION_CENTER = "vO"
+        private const val V3_PERMISSION_CENTER = "v3"
+        private const val RBAC_PERMISSION_CENTER = "rbac"
     }
 }
