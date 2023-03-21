@@ -1,25 +1,25 @@
 <template>
-  <div class="biz-container bkdevops-history-subpage pipeline-subpages">
-    <div class="pipeline-subpages-header">
-      <router-view name="header"></router-view>
+    <div class="biz-container bkdevops-history-subpage pipeline-subpages">
+        <div class="pipeline-subpages-header">
+            <router-view name="header"></router-view>
+        </div>
+        <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
+        <portal-target name="artifactory-popup"></portal-target>
     </div>
-    <router-view class="biz-content" v-bkloading="{ isLoading }"></router-view>
-    <portal-target name="artifactory-popup"></portal-target>
-  </div>
 </template>
 
 <script>
-export default {
-  created() {
-    this.$store.dispatch("requestProjectDetail", {
-      projectId: this.$route.params.projectId,
-    });
-  },
-  beforeDestroy() {
-    this.$store.commit("pipelines/updateCurPipeline", {});
-    this.$store.commit("pipelines/updatePipelineList", []);
-  },
-};
+    export default {
+        created () {
+            this.$store.dispatch('requestProjectDetail', {
+                projectId: this.$route.params.projectId
+            })
+        },
+        beforeDestroy () {
+            this.$store.commit('pipelines/updateCurPipeline', {})
+            this.$store.commit('pipelines/updatePipelineList', [])
+        }
+    }
 </script>
 
 <style lang="scss">

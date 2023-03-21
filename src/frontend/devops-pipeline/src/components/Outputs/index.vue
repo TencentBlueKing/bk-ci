@@ -20,7 +20,7 @@
             </div> -->
             <ul v-if="outputs.length > 0" class="pipeline-exec-outputs-list">
                 <li
-                    v-for="output in outputs"
+                    v-for="output in visibleOutputs"
                     :key="output.id"
                     :class="{
                         active: output.id === activeOutput.id
@@ -42,7 +42,10 @@
                 v-if="isCustomizeReport"
                 :index-file-url="activeOutput.indexFileUrl"
             />
-            <third-party-report v-else-if="isThirdReport" :report-list="thirdPartyReportList" />
+            <third-party-report
+                v-else-if="isActiveThirdReport"
+                :report-list="thirdPartyReportList"
+            />
             <template v-else-if="activeOutputDetail">
                 <div class="pipeline-exec-output-header">
                     <span class="pipeline-exec-output-header-name">
@@ -127,8 +130,7 @@
                 isCopyDialogShow: false,
                 isCopying: false,
                 currentTab: 'all',
-                reports: [],
-                artifacts: [],
+                outputs: [],
                 activeOutput: '',
                 activeOutputDetail: null,
                 hasPermission: false,
@@ -152,40 +154,48 @@
                     }
                 ]
             },
-            outputs () {
+            reports () {
+                return this.outputs.filter(
+                    (item) =>
+                        item.artifactoryType === 'REPORT' && !this.isThirdReport(item.reportType)
+                )
+            },
+            artifacts () {
+                return this.outputs.filter((item) => this.isArtifact(item.artifactoryType))
+            },
+            thirdPartyReportList () {
+                return this.outputs.filter((report) => this.isThirdReport(report.reportType))
+            },
+            visibleOutputs () {
+                const thirdReportList
+                    = this.thirdPartyReportList.length > 0
+                        ? [
+                            {
+                                id: 'THIRDPARTY',
+                                type: 'REPORT',
+                                reportType: 'THIRDPARTY',
+                                name: this.$t('details.thirdReport'),
+                                icon: 'bar-chart'
+                            }
+                        ]
+                        : []
                 switch (this.currentTab) {
                     case 'artifact':
                         return this.artifacts
                     case 'report':
-                        return this.reports
+                        return [...this.reports, ...thirdReportList]
                     default:
                         return [
-                            ...this.artifacts,
-                            ...this.customizeReportList,
-                            ...(this.thirdPartyReportList.length > 0
-                                ? [
-                                    {
-                                        id: 'THIRDPARTY',
-                                        type: 'THIRDPARTY',
-                                        name: this.$t('details.thirdReport'),
-                                        icon: 'bar-chart'
-                                    }
-                                ]
-                                : [])
+                            ...this.outputs.filter((output) => !this.isThirdReport(output.reportType)),
+                            ...thirdReportList
                         ]
                 }
             },
-            isThirdReport () {
-                return this.activeOutput?.type === 'THIRDPARTY'
+            isActiveThirdReport () {
+                return this.isThirdReport(this.activeOutput?.reportType)
             },
             isCustomizeReport () {
-                return this.activeOutput?.type === 'INTERNAL'
-            },
-            thirdPartyReportList () {
-                return this.reports.filter((report) => report.type === 'THIRDPARTY')
-            },
-            customizeReportList () {
-                return this.reports.filter((report) => report.type === 'INTERNAL')
+                return this.activeOutput?.reportType === 'INTERNAL'
             },
             btns () {
                 const defaultBtns = [
@@ -270,7 +280,7 @@
             }
         },
         watch: {
-            outputs (outputs) {
+            visibleOutputs (outputs) {
                 if (outputs.length > 0) {
                     this.setActiveOutput(outputs[0])
                 } else {
@@ -306,22 +316,19 @@
                         })
                     ])
 
-                    this.artifacts = res.artifacts.map((item) => {
-                        const icon = extForFile(item.name)
+                    this.outputs = res.map((item) => {
+                        const isReportOutput = item.artifactoryType === 'REPORT'
+                        const icon = isReportOutput ? 'order' : extForFile(item.name)
+                        const id = isReportOutput ? item.indexFileUrl : item.fullPath
+                        const type = this.isArtifact(item.artifactoryType) ? 'ARTIFACT' : ''
                         return {
+                            type,
                             ...item,
-                            id: item.fullPath,
-                            type: 'ARTIFACT',
+                            id,
                             icon,
                             isApp: ['ipafile', 'apkfile'].includes(icon)
                         }
                     })
-
-                    this.reports = res.reports.map((item) => ({
-                        ...item,
-                        id: item.taskId,
-                        icon: 'order'
-                    }))
                 } catch (err) {
                     this.$showTips({
                         message: err.message ? err.message : err,
@@ -420,6 +427,12 @@
             },
             switchTab (tab) {
                 this.currentTab = tab
+            },
+            isArtifact (artifactoryType) {
+                return ['PIPELINE', 'CUSTOM_DIR', 'IMAGE'].includes(artifactoryType)
+            },
+            isThirdReport (reportType) {
+                return ['THIRDPARTY'].includes(reportType)
             }
         }
     }

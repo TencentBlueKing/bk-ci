@@ -125,10 +125,7 @@
             ].forEach((key) => {
                 Object.defineProperty(reactiveData, key, {
                     enumerable: true,
-                    get: () => {
-                        console.log(key, this[key])
-                        return this[key]
-                    }
+                    get: () => this[key]
                 })
             })
 
