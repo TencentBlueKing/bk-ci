@@ -27,7 +27,7 @@
 
 package com.tencent.devops.process.api
 
-import com.tencent.devops.common.api.constant.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.InvalidParamException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException

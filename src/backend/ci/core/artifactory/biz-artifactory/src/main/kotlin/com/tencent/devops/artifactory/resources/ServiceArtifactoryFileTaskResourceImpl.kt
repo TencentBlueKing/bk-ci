@@ -31,7 +31,7 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryFileTaskReso
 import com.tencent.devops.artifactory.pojo.CreateFileTaskReq
 import com.tencent.devops.artifactory.pojo.FileTaskInfo
 import com.tencent.devops.artifactory.service.FileTaskService
-import com.tencent.devops.common.api.constant.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
+import com.tencent.devops.common.api.constant.CommonMessageCode.BK_USER_NOT_HAVE_PROJECT_PERMISSIONS
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil

@@ -77,4 +77,5 @@ object CommonMessageCode {
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
     const val USER_NOT_PERMISSIONS_OPERATE_PIPELINE = "2100029" // 用户({0})无权限在工程({1})下{2}流水线({3})
+    const val BK_USER_NOT_HAVE_PROJECT_PERMISSIONS = "2100030"// 用户 {0}无项目{1}权限
 }
