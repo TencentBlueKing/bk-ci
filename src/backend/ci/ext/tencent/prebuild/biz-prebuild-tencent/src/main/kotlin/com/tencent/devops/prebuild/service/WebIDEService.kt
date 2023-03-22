@@ -31,6 +31,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -46,12 +47,16 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.type.agent.AgentType
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceNodeResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.prebuild.PreBuildCode
+import com.tencent.devops.prebuild.PreBuildCode.BK_MANUAL_TRIGGER
+import com.tencent.devops.prebuild.PreBuildCode.BK_TBUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
 import com.tencent.devops.prebuild.pojo.DevcloudUserRes
@@ -317,11 +322,18 @@ class WebIDEService @Autowired constructor(
     private fun createAgentPipeline(userId: String, projectId: String, agentId: String, agentIp: String): String {
         val stageList = mutableListOf<Stage>()
 
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ), "T-1-1-1")
         val params: List<BuildFormProperty> = emptyList()
         val triggerContainer = TriggerContainer(
                 "0",
-                "构建触发",
+            MessageUtil.getMessageByLocale(
+                messageCode = PreBuildCode.BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ),
                 listOf(manualTriggerElement),
                 null,
                 null,
@@ -342,14 +354,25 @@ class WebIDEService @Autowired constructor(
         val elementList = mutableListOf<Element>()
         elementList.add(makeScriptElement(userId, agentIp))
 
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
-        val triggerContainer = TriggerContainer("0", "构建触发", listOf(manualTriggerElement))
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+        ), "T-1-1-1")
+        val triggerContainer = TriggerContainer("0",
+            MessageUtil.getMessageByLocale(
+                messageCode = PreBuildCode.BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ), listOf(manualTriggerElement))
         val stage1 = Stage(listOf(triggerContainer), "stage-1")
         stageList.add(stage1)
 
         val vmContainer = VMBuildContainer(
                 id = "1",
-                name = "构建环境-LINUX",
+                name = MessageUtil.getMessageByLocale(
+                    messageCode = BK_TBUILD_ENVIRONMENT_LINUX,
+                    language = I18nUtil.getLanguage(userId)
+                ),
                 elements = elementList,
                 status = null,
                 startEpoch = null,

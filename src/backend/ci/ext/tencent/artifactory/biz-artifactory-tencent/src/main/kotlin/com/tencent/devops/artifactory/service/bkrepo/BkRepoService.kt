@@ -27,8 +27,10 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.CopyToCustomReq
 import com.tencent.devops.artifactory.pojo.Count
@@ -76,7 +78,6 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
-import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import java.util.regex.Pattern
@@ -139,11 +140,11 @@ class BkRepoService @Autowired constructor(
             val fileDetail =
                 bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                     ?: throw NotFoundException(
-                        MessageFormat.format(
                             MessageUtil.getMessageByLocale(
-                                messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                                language = I18nUtil.getLanguage(userId)
-                            ), "path")
+                                messageCode = FILE_NOT_EXIST,
+                                language = I18nUtil.getLanguage(userId),
+                                params = arrayOf("")
+                            )
                     )
             RepoUtils.toFileDetail(fileDetail)
         }
@@ -246,12 +247,11 @@ class BkRepoService @Autowired constructor(
                     channelCode = ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = ArtifactoryCode.BK_BUILD_NOT_EXIST,
-                            language = I18nUtil.getLanguage()
-                        ),crossBuildNo
-                    )
+                            messageCode = BUILD_NOT_EXIST,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(crossBuildNo)
+                        )
                 )).id
             }
         }
@@ -458,12 +458,11 @@ class BkRepoService @Autowired constructor(
             bkRepoClient.listMetadata(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
         if (!metadataMap.containsKey(ARCHIVE_PROPS_PIPELINE_ID) || metadataMap[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
             throw BadRequestException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = ArtifactoryCode.BK_METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ),"pipelineId"
-                )
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("pipelineId")
+                    )
             )
         }
         val pipelineId = metadataMap[ARCHIVE_PROPS_PIPELINE_ID]
@@ -478,11 +477,11 @@ class BkRepoService @Autowired constructor(
         val fileDetail =
             bkRepoClient.getFileDetail("", projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException(
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                            language = I18nUtil.getLanguage()
-                        ), "")
+                            messageCode = FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf("")
+                        )
                 )
 
         return RepoUtils.toFileDetail(fileDetail)

@@ -31,8 +31,11 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.api.service.v1.GitCIPipelineResource
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_OPEN_STREAM
 import com.tencent.devops.stream.v1.pojo.V1GitProjectPipeline
 import com.tencent.devops.stream.v1.service.V1GitCIPipelineService
 import com.tencent.devops.stream.v1.service.V1GitRepositoryConfService
@@ -54,7 +57,11 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     ): Result<Page<V1GitProjectPipeline>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         }
         return Result(
             pipelineService.getPipelineList(
@@ -75,7 +82,11 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     ): Result<V1GitProjectPipeline?> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         }
         return Result(
             pipelineService.getPipelineById(
@@ -95,7 +106,11 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     ): Result<Boolean> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         }
         return Result(
             pipelineService.enablePipeline(
@@ -110,7 +125,11 @@ class GitCIPipelineResourceImpl @Autowired constructor(
     override fun listPipelineNames(userId: String, gitProjectId: Long): Result<List<V1GitProjectPipeline>> {
         checkParam(userId)
         if (!repositoryConfService.initGitCISetting(userId, gitProjectId)) {
-            throw CustomException(Response.Status.FORBIDDEN, "项目无法开启Stream，请联系蓝盾助手")
+            throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         }
         return Result(
             pipelineService.getPipelineListWithoutHistory(

@@ -31,17 +31,23 @@ import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ExperienceElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
+import com.tencent.devops.process.constant.ProcessCode.BK_EXPERIENCE_PATH_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_FILE_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessCode.BK_INCORRECT_NOTIFICATION_METHOD
+import com.tencent.devops.process.constant.ProcessCode.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -73,22 +79,36 @@ class ExperienceTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.path.isBlank()) {
-            buildLogPrinter.addRedLine(buildId, "体验路径为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_EXPERIENCE_PATH_EMPTY,
+                    language = I18nUtil.getLanguage()
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorMsg = "体验路径为空"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_EXPERIENCE_PATH_EMPTY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
         if (param.notifyTypes.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId, "通知方式不正确", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_INCORRECT_NOTIFICATION_METHOD,
+                    language = I18nUtil.getLanguage()
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorMsg = "通知方式不正确"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_INCORRECT_NOTIFICATION_METHOD,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
@@ -132,12 +152,21 @@ class ExperienceTaskAtom @Autowired constructor(
         val artifactoryType = if (customized) com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.CUSTOM_DIR
         else com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.PIPELINE
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, realPath).data!!) {
-            buildLogPrinter.addRedLine(buildId, "文件($path)不存在", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(path)
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
-                errorMsg = "文件($path)不存在"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(path)
+                )
             )
         }
 
@@ -161,7 +190,12 @@ class ExperienceTaskAtom @Autowired constructor(
         )
         client.get(ServiceExperienceResource::class).create(userId, projectId, experience)
 
-        buildLogPrinter.addLine(buildId, "版本体验($fileName)创建成功", taskId, containerId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(fileName)
+            ), taskId, containerId, task.executeCount ?: 1)
 
         return AtomResponse(BuildStatus.SUCCEED)
     }

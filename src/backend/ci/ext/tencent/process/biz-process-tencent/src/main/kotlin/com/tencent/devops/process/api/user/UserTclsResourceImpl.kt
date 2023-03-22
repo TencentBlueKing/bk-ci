@@ -34,9 +34,13 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_TCLS_ENVIRONMENT
+import com.tencent.devops.process.constant.ProcessCode.BK_TCLS_ENVIRONMENT_MESSAGE
 import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -47,7 +51,7 @@ import okhttp3.RequestBody
 import org.jooq.tools.StringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.util.Base64
+import java.util.*
 
 @Suppress("LongParameterList", "LongMethod", "TooGenericExceptionCaught", "MagicNumber")
 @RestResource
@@ -130,7 +134,11 @@ class UserTclsResourceImpl @Autowired constructor(
                 if (responseData["result"] == false) {
                     val msg = responseData["message"]
                     logger.warn("get env list failed: $msg")
-                    throw OperationException("获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：$msg")
+                    throw OperationException(
+                        MessageUtil.getMessageByLocale(
+                        messageCode = BK_TCLS_ENVIRONMENT_MESSAGE,
+                        language = I18nUtil.getLanguage(userId)
+                    ) + "$msg")
                 }
 
                 @Suppress("UNCHECKED_CAST")
@@ -146,7 +154,12 @@ class UserTclsResourceImpl @Autowired constructor(
                 } // 1,2,6是TCLS的正式环境，不能用，参考： https://TAPD站点/TCLS/markdown_wikis/#1010027201006683087
             } catch (e: Exception) {
                 logger.error("get env list failed", e)
-                throw OperationException("获取 TCLS 环境失败，请检查用户名密码是否正确")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_TCLS_ENVIRONMENT,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
         }
     }

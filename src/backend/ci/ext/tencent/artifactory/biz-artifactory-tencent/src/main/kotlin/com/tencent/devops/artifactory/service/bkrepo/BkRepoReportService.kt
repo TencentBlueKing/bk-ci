@@ -27,7 +27,7 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.service.ReportService
 import com.tencent.devops.artifactory.util.PathUtils
 import com.tencent.devops.artifactory.util.RepoUtils
@@ -42,7 +42,6 @@ import org.springframework.stereotype.Service
 import org.springframework.web.context.request.RequestContextHolder
 import org.springframework.web.context.request.ServletRequestAttributes
 import java.net.URLEncoder
-import java.text.MessageFormat
 import javax.ws.rs.NotFoundException
 
 @Service
@@ -64,11 +63,11 @@ class BkRepoReportService @Autowired constructor(
         val realPath = "/$pipelineId/$buildId/$elementId/${normalizedPath.removePrefix("/")}"
         bkRepoClient.getFileDetail(userId, projectId, RepoUtils.REPORT_REPO, realPath)
             ?: throw NotFoundException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-            ), path))
+                        messageCode = FILE_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(path)
+            ))
 
         val host = HomeHostUtil.getHost(commonConfig.devopsHostGateway!!)
         val redirectUrlBuilder = StringBuilder()

@@ -62,4 +62,21 @@ object ExperienceMessageCode {
     const val USER_NEED_EXP_GROUP_X_PERMISSION = "2101010" // 体验：用户没有体验组的{0}权限
     const val EXP_META_DATA_PIPELINE_ID_NOT_EXISTS = "2101011" // 体验：体验未与流水线绑定
     const val USER_NOT_IN_EXP_GROUP = "2101012" // 体验：用户{0}不在体验用户名单中
+
+    const val RECORD_COULD_NOT_FOUND = "2101013" //找不到该记录
+    const val USER_NOT_PERMISSION = "2101014" //用户没有权限
+    const val GRANT_EXPERIENCE_PERMISSION = "2101015" //请联系产品负责人：\n{0} 授予体验权限。
+    const val NO_PERMISSION_QUERY_EXPERIENCE = "2101016" //没有查询该体验的权限
+    const val LOGIN_IP_FREQUENTLY = "2101017" //登录IP频繁,请稍后重试
+    const val LOGIN_ACCOUNT_FREQUENT = "2101018" //登录账号频繁,请稍后重试
+    const val ACCOUNT_HAS_BEEN_BLOCKED = "2101019" //账号已被封禁
+    const val LOGIN_EXPIRED = "2101020" //登录过期,请重新登录
+    const val ACCOUNT_INFORMATION_ABNORMAL = "2101021" //账号信息异常,请重新登录
+    const val UNABLE_GET_IP = "2101022" //无法获取IP , 请联系相关人员排查
+    const val METADATA_NOT_EXIST = "2101023" //元数据{0}不存在
+    const val EXPERIENCE_NOT_EXIST = "2101024" //体验({0})不存在
+    const val FILE_NOT_EXIST = "2101023" //文件({0})不存在
+    const val CONSTRUCTION_NUMBER = "2101023" //构建号#{0}
+    const val USERS_NOT_PERMISSION = "2101023" //用户没有流水线执行权限
+
 }

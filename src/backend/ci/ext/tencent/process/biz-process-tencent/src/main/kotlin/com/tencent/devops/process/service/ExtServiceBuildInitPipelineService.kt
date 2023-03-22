@@ -29,6 +29,7 @@ package com.tencent.devops.process.service
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.Model
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.container.Stage
@@ -50,6 +51,9 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElement
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_BUILD_TRIGGER
+import com.tencent.devops.process.constant.ProcessCode.BK_PULL_GIT_WAREHOUSE_CODE
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO
@@ -138,7 +142,10 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         )
         val stageFirstContainer = TriggerContainer(
             id = containerSeqId.toString(),
-            name = "构建触发",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ),
             elements = stageFirstElements,
             status = null,
             startEpoch = null,
@@ -152,7 +159,10 @@ class ExtServiceBuildInitPipelineService @Autowired constructor(
         val stageFirst = Stage(stageFirstContainers, "stage-1")
         // stage-2
         val stageSecondPullCodeElement = CodeGitElement(
-            name = "拉取Git仓库代码",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_PULL_GIT_WAREHOUSE_CODE,
+                language = I18nUtil.getLanguage(userId)
+            ),
             id = "T-2-1-1",
             status = null,
             repositoryHashId = repositoryHashId,

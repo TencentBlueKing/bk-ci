@@ -29,10 +29,12 @@ package com.tencent.devops.support.services
 
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthProjectApi
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.Constants.PROJECT
 import com.tencent.devops.common.wechatwork.model.Constants.SERVICE_HUMAN
@@ -60,6 +62,33 @@ import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.classify.PipelineViewPipelinePage
 import com.tencent.devops.process.utils.PIPELINE_VIEW_ALL_PIPELINES
 import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.support.constant.SupportCode.BK_APPLICATION_ADDRESS
+import com.tencent.devops.support.constant.SupportCode.BK_AUTOMATICALLY_BIND_RELEVANT_PROJECT
+import com.tencent.devops.support.constant.SupportCode.BK_BLUE_SHIELD_DEVOPS_ROBOT
+import com.tencent.devops.support.constant.SupportCode.BK_CAN_DO_FOLLOWING
+import com.tencent.devops.support.constant.SupportCode.BK_CONSULTING_GROUP
+import com.tencent.devops.support.constant.SupportCode.BK_DOCUMENT_ENTRY
+import com.tencent.devops.support.constant.SupportCode.BK_EXECUTION
+import com.tencent.devops.support.constant.SupportCode.BK_FAILED_START_PIPELINE
+import com.tencent.devops.support.constant.SupportCode.BK_FOLLOWING_PIPELINE_CAN_VIEW
+import com.tencent.devops.support.constant.SupportCode.BK_GROUP_BOUND_PROJECT
+import com.tencent.devops.support.constant.SupportCode.BK_GROUP_ID
+import com.tencent.devops.support.constant.SupportCode.BK_ITEMS_CAN_VIEWED
+import com.tencent.devops.support.constant.SupportCode.BK_MANUAL_CUSTOMER_SERVICE
+import com.tencent.devops.support.constant.SupportCode.BK_MESSAGE_ALLOWS_CLICK
+import com.tencent.devops.support.constant.SupportCode.BK_MODIFY_ROJECT
+import com.tencent.devops.support.constant.SupportCode.BK_NEW_CONSULTING_GROUP_PULLED_UP
+import com.tencent.devops.support.constant.SupportCode.BK_NOT_EXECUTION_PERMISSION
+import com.tencent.devops.support.constant.SupportCode.BK_NO_PIPELINE_VIEW
+import com.tencent.devops.support.constant.SupportCode.BK_PIPELINE_EXECUTION_DETAILS
+import com.tencent.devops.support.constant.SupportCode.BK_PIPELINE_STARTED_SUCCESSFULLY
+import com.tencent.devops.support.constant.SupportCode.BK_PLATFORM_ENTRANCE
+import com.tencent.devops.support.constant.SupportCode.BK_PLEASE_DESCRIBE_YOUR_PROBLEM
+import com.tencent.devops.support.constant.SupportCode.BK_QUERY_PIPELINE_LIST
+import com.tencent.devops.support.constant.SupportCode.BK_SESSION_ID
+import com.tencent.devops.support.constant.SupportCode.BK_THERE_NO_ITEMS_VIEW
+import com.tencent.devops.support.constant.SupportCode.BK_THIS_GROUP_ID
+import com.tencent.devops.support.constant.SupportCode.BK_YOU_CAN_CLICK
 import com.tencent.devops.support.dao.WechatWorkMessageDAO
 import com.tencent.devops.support.dao.WechatWorkProjectDAO
 import com.tencent.devops.support.model.wechatwork.enums.EventKeyType
@@ -169,15 +198,28 @@ class WechatWorkCallbackService @Autowired constructor(
                 }
                 logger.info("content = $content")
                 // 返回群会话ID关键词
-                if (receiverType == ReceiverType.group && (content.contains("会话ID", true) || content.contains(
-                        "群ID",
+                if (receiverType == ReceiverType.group && (content.contains(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_SESSION_ID,
+                            language = I18nUtil.getLanguage(userId)
+                        ), true) || content.contains(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GROUP_ID,
+                            language = I18nUtil.getLanguage(userId)
+                        ),
                         true
                     ))
                 ) {
                     logger.info("chatId = $chatId")
                     val receiver = Receiver(receiverType, chatId)
                     val richtextContentList = mutableListOf<RichtextContent>()
-                    richtextContentList.add(RichtextText(RichtextTextText("本群ID='$chatId'。PS:群ID可用于蓝盾平台上任意企业微信群通知。")))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_THIS_GROUP_ID,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(chatId)
+                        )
+                    )))
                     val richtextMessage = RichtextMessage(receiver, richtextContentList)
                     wechatWorkService.sendRichText(richtextMessage)
                 } else {
@@ -204,28 +246,44 @@ class WechatWorkCallbackService @Autowired constructor(
         sendMetionMessage(receiverType, chatId, userName)
         // 群里回复不用带介绍信息
         if (receiverType == ReceiverType.single) {
-            richtextContentList.add(RichtextText(RichtextTextText("您好，我是蓝盾DevOps机器人，下面是平台相关链接：\n")))
+            richtextContentList.add(RichtextText(RichtextTextText(MessageUtil.getMessageByLocale(
+                messageCode = BK_BLUE_SHIELD_DEVOPS_ROBOT,
+                language = I18nUtil.getLanguage()
+            ) + "：\n")))
             richtextContentList.add(
                 RichtextView(
                     RichtextViewLink(
-                        "  平台入口  ",
+                        "  " + MessageUtil.getMessageByLocale(
+                            messageCode = BK_PLATFORM_ENTRANCE,
+                            language = I18nUtil.getLanguage()
+                        ) + "  ",
                         "${HomeHostUtil.innerServerHost()}",
                         1
                     )
                 )
             )
-            richtextContentList.add(RichtextView(RichtextViewLink("  文档入口  ", "http://docs.devops.oa.com", 1)))
+            richtextContentList.add(RichtextView(RichtextViewLink("  " + MessageUtil.getMessageByLocale(
+                messageCode = BK_DOCUMENT_ENTRY,
+                language = I18nUtil.getLanguage()
+            ) + "  ", "http://docs.devops.oa.com", 1)))
             richtextContentList.add(RichtextText(RichtextTextText("\n")))
         }
 
-        richtextContentList.add(RichtextText(RichtextTextText("${nickName}可以进行以下操作：\n")))
+        richtextContentList.add(RichtextText(RichtextTextText("${nickName}" +
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CAN_DO_FOLLOWING,
+                    language = I18nUtil.getLanguage()
+                ) + "：\n")))
 
         if (receiverType == ReceiverType.single) {
             // 个人会话的时候，每次需要选择项目
             richtextContentList.add(
                 RichtextClick(
                     RichtextClickLink(
-                        "  查询流水线列表\n",
+                        "  " + MessageUtil.getMessageByLocale(
+                            messageCode = BK_QUERY_PIPELINE_LIST,
+                            language = I18nUtil.getLanguage()
+                        ) + "\n",
 //                    "stopPipeline"
                         "$userName:$PROJECT"
                     )
@@ -239,7 +297,10 @@ class WechatWorkCallbackService @Autowired constructor(
                 richtextContentList.add(
                     RichtextClick(
                         RichtextClickLink(
-                            "  查询流水线列表\n",
+                            "  " + MessageUtil.getMessageByLocale(
+                                messageCode = BK_QUERY_PIPELINE_LIST,
+                                language = I18nUtil.getLanguage()
+                            ) + "\n",
 //                        "stopPipeline"
                             "$userName:$PROJECT"
                         )
@@ -251,7 +312,10 @@ class WechatWorkCallbackService @Autowired constructor(
                 richtextContentList.add(
                     RichtextClick(
                         RichtextClickLink(
-                            "  查询流水线列表\n",
+                            "  " + MessageUtil.getMessageByLocale(
+                                messageCode = BK_QUERY_PIPELINE_LIST,
+                                language = I18nUtil.getLanguage()
+                            ) + "\n",
 //                        "stopPipeline"
                             "$userName:project:$projectId:pipeline:list"
                         )
@@ -262,11 +326,19 @@ class WechatWorkCallbackService @Autowired constructor(
 
         // 只有个人会话的时候才会有人工客服
         if (receiverType == ReceiverType.single) {
-            richtextContentList.add(RichtextText(RichtextTextText("如有需要可以点击 ")))
+            richtextContentList.add(RichtextText(RichtextTextText(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_YOU_CAN_CLICK,
+                    language = I18nUtil.getLanguage()
+                )
+            )))
             richtextContentList.add(
                 RichtextClick(
                     RichtextClickLink(
-                        "人工客服\n",
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_MANUAL_CUSTOMER_SERVICE,
+                            language = I18nUtil.getLanguage()
+                        ) + "\n",
                         "$userName:$SERVICE_HUMAN"
 
                     )
@@ -278,11 +350,20 @@ class WechatWorkCallbackService @Autowired constructor(
                 val wechatWorkProjectRecord = wechatWorkProjectDAO.getByGroupId(dslContext, chatId)
                 if (wechatWorkProjectRecord != null) {
                     val projectName = getProjectNameByProjectCode(wechatWorkProjectRecord.projectId)
-                    richtextContentList.add(RichtextText(RichtextTextText("本群已绑定【$projectName】项目，如需修改请点击：")))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GROUP_BOUND_PROJECT,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(projectName)
+                        )
+                    )))
                     richtextContentList.add(
                         RichtextClick(
                             RichtextClickLink(
-                                "修改项目\n",
+                                MessageUtil.getMessageByLocale(
+                                    messageCode = BK_MODIFY_ROJECT,
+                                    language = I18nUtil.getLanguage()
+                                ) + "\n",
                                 "$userName:$PROJECT"
                             )
                         )
@@ -388,8 +469,17 @@ class WechatWorkCallbackService @Autowired constructor(
                 val permissionUrl =
                     "${HomeHostUtil.innerServerHost()}/console/perm/apply-subsystem?project_code=$projectCode&client_id=pipeline&req_id=$pipelineId"
 
-                richtextContentList.add(RichtextText(RichtextTextText("${nickName}暂时还没有【$pipelineName】流水线的执行权限，请点击申请执行权限：")))
-                richtextContentList.add(RichtextView(RichtextViewLink("申请地址", permissionUrl, 1)))
+                richtextContentList.add(RichtextText(RichtextTextText(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NOT_EXECUTION_PERMISSION,
+                        language = I18nUtil.getLanguage(),
+                        params = arrayOf(nickName, pipelineName)
+                    ))))
+                richtextContentList.add(RichtextView(RichtextViewLink(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_APPLICATION_ADDRESS,
+                        language = I18nUtil.getLanguage()
+                    ), permissionUrl, 1)))
             } else {
                 // 组装启动参数
                 val params = mutableMapOf<String, String>()
@@ -406,13 +496,27 @@ class WechatWorkCallbackService @Autowired constructor(
                     params
                 )
                 if (manualStartResult.isOk()) {
-                    richtextContentList.add(RichtextText(RichtextTextText("流水线【$pipelineName】启动成功，${nickName}可以点击查看")))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_PIPELINE_STARTED_SUCCESSFULLY,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(pipelineName, nickName)
+                        ))))
                     val buildId = (manualStartResult.data as BuildId).id
                     val buildUrl =
                         "${HomeHostUtil.innerServerHost()}/console/pipeline/$projectCode/$pipelineId/detail/$buildId"
-                    richtextContentList.add(RichtextView(RichtextViewLink("流水线执行详情\n", buildUrl, 1)))
+                    richtextContentList.add(RichtextView(RichtextViewLink(MessageUtil.getMessageByLocale(
+                        messageCode = BK_PIPELINE_EXECUTION_DETAILS,
+                        language = I18nUtil.getLanguage()
+                    ) + "\n", buildUrl, 1)))
                 } else {
-                    richtextContentList.add(RichtextText(RichtextTextText("${nickName}启动流水线【$pipelineName】失败。")))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_START_PIPELINE,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(nickName, pipelineName)
+                        )
+                    )))
                 }
             }
         } catch (e: RemoteServiceException) {
@@ -421,8 +525,18 @@ class WechatWorkCallbackService @Autowired constructor(
                 403 -> {
                     val permissionUrl =
                         "${HomeHostUtil.innerServerHost()}/backend/api/perm/apply/subsystem/?client_id=pipeline&project_code=$projectCode&service_code=pipeline&role_executor=pipeline:$pipelineId"
-                    richtextContentList.add(RichtextText(RichtextTextText("${nickName}暂时还没有【$pipelineName】流水线的执行权限，请点击申请执行权限：")))
-                    richtextContentList.add(RichtextView(RichtextViewLink("申请地址", permissionUrl, 1)))
+                    richtextContentList.add(RichtextText(RichtextTextText(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_NOT_EXECUTION_PERMISSION,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(nickName, pipelineName)
+                        )
+                    )))
+                    richtextContentList.add(RichtextView(RichtextViewLink(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_APPLICATION_ADDRESS,
+                            language = I18nUtil.getLanguage()
+                        ), permissionUrl, 1)))
                 }
 
                 else -> {
@@ -456,10 +570,18 @@ class WechatWorkCallbackService @Autowired constructor(
 
         if (projectList.isEmpty()) {
             // 没有可以查看的项目
-            richtextContentList.add(RichtextText(RichtextTextText("${nickName}在蓝盾平台DevOps中没有可以查看的项目。\n")))
+            richtextContentList.add(RichtextText(RichtextTextText("${nickName}"+
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_THERE_NO_ITEMS_VIEW,
+                        language = I18nUtil.getLanguage()
+                    ) + "。\n")))
         } else {
             // 有项目的时候
-            richtextContentList.add(RichtextText(RichtextTextText("下面是${nickName}在蓝盾DevOps平台中可以查看的项目:\n")))
+            richtextContentList.add(RichtextText(RichtextTextText(MessageUtil.getMessageByLocale(
+                messageCode = BK_ITEMS_CAN_VIEWED,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(nickName)
+            ) + ":\n")))
             projectList.forEach {
                 richtextContentList.add(
                     RichtextClick(
@@ -473,7 +595,11 @@ class WechatWorkCallbackService @Autowired constructor(
         }
         if (receiverType == ReceiverType.group) {
             // 群选择一次之后会自动绑定项目ID
-            richtextContentList.add(RichtextText(RichtextTextText("PS:选择项目后，本群会自动绑定相关的项目,该消息只允许${userName}点击执行。\n")))
+            richtextContentList.add(RichtextText(RichtextTextText(MessageUtil.getMessageByLocale(
+                messageCode = BK_AUTOMATICALLY_BIND_RELEVANT_PROJECT,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(userName)
+            ) + "。\n")))
         }
         val richtextMessage = RichtextMessage(
             receiver,
@@ -489,9 +615,21 @@ class WechatWorkCallbackService @Autowired constructor(
     fun processClickEventServiceHuman(userName: String) {
         // 逻辑迁移
         val userNameList = listOf("brandonliu", "zanyzhao", userName)
-        val newChatId = wechatWorkService.createChatByUserNames("蓝盾DevOps平台咨询群", userNameList)
-        wechatWorkService.sendTextGroup("请描述您的问题，并带上相关的URL地址 [抱拳]", newChatId)
-        wechatWorkService.sendTextSingle("已为您拉起新的咨询群，请关注会话列表。", userName)
+        val newChatId = wechatWorkService.createChatByUserNames(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_CONSULTING_GROUP,
+                language = I18nUtil.getLanguage()
+            ), userNameList)
+        wechatWorkService.sendTextGroup(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PLEASE_DESCRIBE_YOUR_PROBLEM,
+                language = I18nUtil.getLanguage()
+            ), newChatId)
+        wechatWorkService.sendTextSingle(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_NEW_CONSULTING_GROUP_PULLED_UP,
+                language = I18nUtil.getLanguage()
+            ), userName)
     }
 
     /*
@@ -534,10 +672,18 @@ class WechatWorkCallbackService @Autowired constructor(
         sendMetionMessage(receiverType, chatId, userName)
         if (pipelineList.isEmpty()) {
             // 没有可以查看的流水线
-            richtextContentList.add(RichtextText(RichtextTextText("${nickName}在【$projectName】项目中没有可以查看的流水线。\n")))
+            richtextContentList.add(RichtextText(RichtextTextText(MessageUtil.getMessageByLocale(
+                messageCode = BK_NO_PIPELINE_VIEW,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(nickName, projectName)
+            ) + "。\n")))
         } else {
             // 有流水线的时候
-            richtextContentList.add(RichtextText(RichtextTextText("下面是${nickName}在【$projectName】项目中可以查看的流水线:\n")))
+            richtextContentList.add(RichtextText(RichtextTextText(MessageUtil.getMessageByLocale(
+                messageCode = BK_FOLLOWING_PIPELINE_CAN_VIEW,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(nickName, projectName)
+            ) + ":\n")))
             pipelineList.forEach {
                 val pipelineId = it.pipelineId
                 val pipelineName = it.pipelineName
@@ -550,7 +696,11 @@ class WechatWorkCallbackService @Autowired constructor(
                 if (hasPermission && canManualStartup) {
                     // 拥有权限的可以执行
                     richtextContentList.add(RichtextText(RichtextTextText("  $pipelineName")))
-                    richtextContentList.add(RichtextClick(RichtextClickLink("  执行 ", startKey)))
+                    richtextContentList.add(RichtextClick(RichtextClickLink("  "+
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_EXECUTION,
+                                language = I18nUtil.getLanguage()
+                            ) +" ", startKey)))
                     richtextContentList.add(RichtextText(RichtextTextText("\n")))
                 } else {
                     // 暂时去掉没有执行权限的流水线
@@ -618,7 +768,10 @@ class WechatWorkCallbackService @Autowired constructor(
         userName: String
     ): List<RichtextContent> {
         if (receiverType == ReceiverType.group) {
-            richtextContentList.add(RichtextText(RichtextTextText("\nPS:该消息只允许${userName}点击执行。")))
+            richtextContentList.add(RichtextText(RichtextTextText("\nPS:" + MessageUtil.getMessageByLocale(
+                messageCode = BK_MESSAGE_ALLOWS_CLICK,
+                language = I18nUtil.getLanguage()
+            ))))
         }
         return richtextContentList
     }

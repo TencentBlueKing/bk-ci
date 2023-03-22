@@ -36,8 +36,8 @@ import com.github.fge.jackson.JsonLoader
 import com.github.fge.jsonschema.core.report.LogLevel
 import com.github.fge.jsonschema.core.report.ProcessingMessage
 import com.github.fge.jsonschema.main.JsonSchemaFactory
-import com.tencent.devops.common.api.constant.CommonCode.BK_ILLEGAL_JOB_TYPE
-import com.tencent.devops.common.api.constant.CommonCode.BK_STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE
+import com.tencent.devops.common.api.constant.CommonMessageCode.ILLEGAL_JOB_TYPE
+import com.tencent.devops.common.api.constant.CommonMessageCode.STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
@@ -167,7 +167,7 @@ object CiYamlUtils {
             logger.error("Invalid yaml: steps and stages conflict") // 不能并列存在steps和stages
             throw CustomException(Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE,
+                    messageCode = STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE,
                     language = I18nUtil.getLanguage()
             ))
         }
@@ -198,7 +198,7 @@ object CiYamlUtils {
                     if (type != null && type != "" && type != VM_JOB && type != NORMAL_JOB) {
                         throw CustomException(Response.Status.BAD_REQUEST,
                             MessageUtil.getMessageByLocale(
-                                messageCode = BK_ILLEGAL_JOB_TYPE,
+                                messageCode = ILLEGAL_JOB_TYPE,
                                 language = I18nUtil.getLanguage()
                             )
                             )

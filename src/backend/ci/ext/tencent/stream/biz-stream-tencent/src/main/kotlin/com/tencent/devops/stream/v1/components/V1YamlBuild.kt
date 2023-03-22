@@ -33,6 +33,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.EmojiUtil
 import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.NORMAL_JOB
 import com.tencent.devops.common.ci.VM_JOB
@@ -67,6 +68,7 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventTy
 import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REF
 import com.tencent.devops.common.webhook.pojo.code.BK_CI_REPOSITORY
@@ -93,6 +95,12 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.process.utils.PIPELINE_BUILD_MSG
 import com.tencent.devops.scm.api.ServiceGitResource
+import com.tencent.devops.stream.constant.StreamCode.BK_BUILD_TRIGGER
+import com.tencent.devops.stream.constant.StreamCode.BK_CREATE_SERVICE
+import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamCode.BK_MANUAL_TRIGGER
+import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamCode.BK_PULL_CODE
 import com.tencent.devops.stream.trigger.actions.data.StreamTriggerPipeline
 import com.tencent.devops.stream.v1.client.V1ScmClient
 import com.tencent.devops.stream.v1.config.V1BuildConfig
@@ -182,10 +190,17 @@ class V1YamlBuild @Autowired constructor(
         val stageList = mutableListOf<Stage>()
 
         // 第一个stage，触发类
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage()
+            ), "T-1-1-1")
         val params = createPipelineParams(gitProjectConf, yaml, event)
         val triggerContainer =
-            TriggerContainer("0", "构建触发", listOf(manualTriggerElement), null, null, null, null, params)
+            TriggerContainer("0", MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage()
+            ), listOf(manualTriggerElement), null, null, null, null, params)
         val stage1 = Stage(listOf(triggerContainer), VMUtils.genStageId(1))
         stageList.add(stage1)
 
@@ -420,7 +435,10 @@ class V1YamlBuild @Autowired constructor(
         }
 
         return MarketBuildAtomElement(
-            name = "拉代码",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_PULL_CODE,
+                language = I18nUtil.getLanguage()
+            ),
             id = null,
             status = null,
             atomCode = GitCiCodeRepoTask.atomCode,
@@ -437,15 +455,27 @@ class V1YamlBuild @Autowired constructor(
             // 判断镜像格式是否合法
             val (imageName, imageTag) = it.parseImage()
             val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-                ?: throw RuntimeException("Git CI没有此镜像版本记录. ${it.image}")
+                ?: throw RuntimeException(MessageUtil.getMessageByLocale(
+                    messageCode = BK_GIT_CI_NO_RECOR,
+                    language = I18nUtil.getLanguage()
+                ) + ". ${it.image}")
             if (!record.enable) {
-                throw RuntimeException("镜像版本不可用")
+                throw RuntimeException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             val serviceJobDevCloudInput =
                 it.getServiceInput(record.repoUrl, record.repoUsername, record.repoPwd, record.env)
 
             val servicesElement = MarketBuildAtomElement(
-                name = "创建${it.getType()}服务",
+                name = MessageUtil.getMessageByLocale(
+                    messageCode = BK_CREATE_SERVICE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(it.getType())
+                ),
                 id = null,
                 status = null,
                 atomCode = ServiceJobDevCloudTask.atomCode,
@@ -456,7 +486,11 @@ class V1YamlBuild @Autowired constructor(
             val servicesContainer = NormalContainer(
                 containerId = null,
                 id = null,
-                name = "创建${it.getType()}服务",
+                name = MessageUtil.getMessageByLocale(
+                    messageCode = BK_CREATE_SERVICE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(it.getType())
+                ),
                 elements = listOf(servicesElement),
                 status = null,
                 startEpoch = null,

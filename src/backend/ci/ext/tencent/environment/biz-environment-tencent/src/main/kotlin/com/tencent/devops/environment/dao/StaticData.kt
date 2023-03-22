@@ -27,16 +27,15 @@
 
 package com.tencent.devops.environment.dao
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ESTIMATED_DELIVERY_TIME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_HIGH_END_VERSION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_INTEL_XEON_SKYLAKE_PROCESSOR
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MEMORY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NORMAL_VERSION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SOLID_STATE_DISK
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_ESTIMATED_DELIVERY_TIME
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_HIGH_END_VERSION
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_INTEL_XEON_SKYLAKE_PROCESSOR
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_MEMORY
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_NORMAL_VERSION
-import com.tencent.devops.environment.constant.EnvironmentCode.BK_SOLID_STATE_DISK
 import com.tencent.devops.environment.pojo.DevCloudModel
-import java.text.MessageFormat
 
 object StaticData {
 
@@ -55,19 +54,17 @@ object StaticData {
                     messageCode = BK_MEMORY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_SOLID_STATE_DISK,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ),"100"
-                )
-            ),
-            produceTime = MessageFormat.format(
                 MessageUtil.getMessageByLocale(
+                        messageCode = BK_SOLID_STATE_DISK,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("100")
+                    )
+            ),
+            produceTime = MessageUtil.getMessageByLocale(
                     messageCode = BK_ESTIMATED_DELIVERY_TIME,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),"5"
-            )
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("5")
+                )
         ),
         DevCloudModel(
             moduleId = "system_pro", moduleName = MessageUtil.getMessageByLocale(
@@ -83,19 +80,17 @@ object StaticData {
                     messageCode = BK_MEMORY,
                     language = I18nUtil.getDefaultLocaleLanguage()
                 ),
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_SOLID_STATE_DISK,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ),"500"
-                )
-            ),
-            produceTime = MessageFormat.format(
                 MessageUtil.getMessageByLocale(
+                        messageCode = BK_SOLID_STATE_DISK,
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf("500")
+                    )
+            ),
+            produceTime = MessageUtil.getMessageByLocale(
                     messageCode = BK_ESTIMATED_DELIVERY_TIME,
-                    language = I18nUtil.getDefaultLocaleLanguage()
-                ),"10"
-            )
+                    language = I18nUtil.getDefaultLocaleLanguage(),
+                    params = arrayOf("10")
+                )
         )
     )
 }

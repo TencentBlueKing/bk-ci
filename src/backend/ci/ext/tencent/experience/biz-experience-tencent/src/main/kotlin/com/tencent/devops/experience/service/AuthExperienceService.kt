@@ -31,6 +31,11 @@ package com.tencent.devops.experience.service
 import com.tencent.bk.sdk.iam.dto.callback.response.FetchInstanceInfoResponseDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.InstanceInfoDTO
 import com.tencent.bk.sdk.iam.dto.callback.response.ListInstanceResponseDTO
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_UNDER_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_USER_GROUP
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthTokenApi
@@ -38,11 +43,6 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_UNDER_PROJECT
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_USER_GROUP
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT
 import com.tencent.devops.experience.dao.ExperienceDao
 import com.tencent.devops.experience.dao.GroupDao
 import org.jooq.DSLContext
@@ -75,12 +75,11 @@ class AuthExperienceService @Autowired constructor(
         val result = ListInstanceInfo()
         if (experienceTaskInfos == null) {
             logger.info(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ), projectId
-                )
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(projectId)
+                    )
             )
             return result.buildListInstanceFailResult()
         }
@@ -107,13 +106,11 @@ class AuthExperienceService @Autowired constructor(
         val experienceTaskInfos = experienceDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceTaskInfos == null || experienceTaskInfos.isEmpty()) {
-            logger.info(
-                MessageFormat.format(
+            logger.info("$hashIds" +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ), hashIds
-                )
+                    )
             )
             return result.buildFetchInstanceFailResult()
         }
@@ -146,12 +143,11 @@ class AuthExperienceService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (experienceTaskInfos == null) {
             logger.info(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ), projectId
-                )
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(projectId)
+                    )
             )
             return result.buildSearchInstanceFailResult()
         }
@@ -183,12 +179,11 @@ class AuthExperienceService @Autowired constructor(
         val result = ListInstanceInfo()
         if (experienceGroupInfos == null) {
             logger.info(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ), projectId
-                )
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(projectId)
+                    )
             )
             return result.buildListInstanceFailResult()
         }
@@ -214,13 +209,11 @@ class AuthExperienceService @Autowired constructor(
         val experienceGroupInfos = experienceGroupDao.list(dslContext, ids!!.toSet())
         val result = FetchInstanceInfo()
         if (experienceGroupInfos == null || experienceGroupInfos.isEmpty()) {
-            logger.info(
-                MessageFormat.format(
+            logger.info( "$ids" +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_USER_GROUP,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ), ids
-                )
+                    )
             )
             return result.buildFetchInstanceFailResult()
         }
@@ -253,12 +246,11 @@ class AuthExperienceService @Autowired constructor(
         val result = SearchInstanceInfo()
         if (experienceGroupInfos == null) {
             logger.info(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ), projectId
-                )
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(projectId)
+                    )
             )
             return result.buildSearchInstanceFailResult()
         }

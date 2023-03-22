@@ -30,13 +30,19 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.notify.enums.EnumEmailFormat
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.notify.enums.EnumEmailFormat
+import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.common.pipeline.element.SendEmailNotifyElement
+import com.tencent.devops.process.constant.ProcessCode.BK_EMAIL_NOTIFICATION_CONTENT_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_MESSAGE_SUBJECT_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_RECIPIENT_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -62,30 +68,51 @@ class EmailTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val containerId = task.containerHashId
         if (param.receivers.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId, "收件人为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_RECIPIENT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = USER_INPUT_INVAILD,
-                errorMsg = "收件人为空"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_RECIPIENT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
         if (param.body.isBlank()) {
-            buildLogPrinter.addRedLine(buildId, "邮件通知内容为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_EMAIL_NOTIFICATION_CONTENT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = USER_INPUT_INVAILD,
-                errorMsg = "邮件通知内容为空"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_EMAIL_NOTIFICATION_CONTENT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
         if (param.title.isBlank()) {
-            buildLogPrinter.addRedLine(buildId, "邮件主题为空", taskId, containerId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MESSAGE_SUBJECT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = USER_INPUT_INVAILD,
-                errorMsg = "邮件主题为空"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_MESSAGE_SUBJECT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 
@@ -96,7 +123,11 @@ class EmailTaskAtom @Autowired constructor(
         val emailBody = parseVariable(param.body, runVariables)
         val message = EmailNotifyMessage().apply {
             format = EnumEmailFormat.HTML
-            body = "$emailBody<br/><br/><a target='_blank' href=\"$detailUrl\">查看详情</a>"
+            body = "$emailBody<br/><br/><a target='_blank' href=\"$detailUrl\">" +
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_VIEW_DETAILS,
+                        language = I18nUtil.getLanguage()
+                    ) + "</a>"
             title = parseVariable(param.title, runVariables)
         }
 

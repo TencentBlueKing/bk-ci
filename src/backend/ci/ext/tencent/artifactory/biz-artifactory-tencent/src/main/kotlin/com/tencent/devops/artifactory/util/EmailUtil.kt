@@ -27,47 +27,39 @@
 
 package com.tencent.devops.artifactory.util
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_BELONG_TO_THE_PROJECT
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_DOWNLOAD
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_FILE_NAME
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_OPERATING
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_TABLE_CONTENTS
 import com.tencent.devops.artifactory.service.pojo.FileShareInfo
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_THE_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU
+import com.tencent.devops.common.api.constant.I18NConstant.BK_DOWNLOAD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FILE_NAME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATING
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TABLE_CONTENTS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import java.text.MessageFormat
 import java.text.SimpleDateFormat
 import java.util.*
 
 object EmailUtil {
     fun getShareEmailTitle(userId: String, fileName: String, size: Int): String {
         return if (size == 1)
-            MessageFormat.format(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_BLUE_SHIELD_SHARE_FILES_WITH_YOU,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                userId,
-                fileName
-            )
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId, fileName)
+                )
         else
-            MessageFormat.format(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_BLUE_SHIELD_SHARE_AND_OTHER_FILES_WITH_YOU,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                userId,
-                fileName,
-                size
-            )
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId, fileName, size.toString())
+                )
     }
 
     fun getShareEmailBody(projectName: String, title: String, userId: String, days: Int, FileShareInfoList: List<FileShareInfo>): String {
@@ -83,14 +75,11 @@ object EmailUtil {
         return template
                 .replace(HEADER_TITLE_TEMPLATE, title)
                 .replace(BODY_TITLE_TEMPLATE,
-                    MessageFormat.format(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_SHARE_FILES_PLEASE_DOWNLOAD_FILES_IN_TIME,
-                        language = I18nUtil.getLanguage(userId)
-                    ),
-                    userId,
-                    days
-                ))
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, days.toString())
+                    ))
                 .replace(BODY_PROJECT_TEMPLATE, projectName)
                 .replace(BODY_DATE_TEMPLATE, date)
                 .replace(TABLE_COLUMN1_TITLE, MessageUtil.getMessageByLocale(
@@ -209,11 +198,11 @@ object EmailUtil {
             "                                        </td>\n" +
             "                                    </tr>\n" +
             "                                    <tr class=\"email-footer\">\n" +
-            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + MessageFormat.format(
-                MessageUtil.getMessageByLocale(
+            "                                        <td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + MessageUtil.getMessageByLocale(
                     messageCode = BK_RECEIVED_THIS_EMAIL_BECAUSE_YOU_FOLLOWED_PROJECT,
-                    language = I18nUtil.getLanguage()
-                ),BODY_PROJECT_TEMPLATE) + "</td>\n" +
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(BODY_PROJECT_TEMPLATE)
+                )+ "</td>\n" +
             "                                    </tr>\n" +
             "                                </table>\n" +
             "                            </td>\n" +

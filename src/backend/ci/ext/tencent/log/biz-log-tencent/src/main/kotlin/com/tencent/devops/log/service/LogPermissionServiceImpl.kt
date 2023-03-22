@@ -29,10 +29,13 @@ package com.tencent.devops.log.service
 
 import com.tencent.devops.auth.service.ManagerService
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.PipelineAuthServiceCode
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.log.LogCode.BK_USER_NO_RIGHT_VIEW_PIPELINE
 import org.springframework.beans.factory.annotation.Autowired
 
 class LogPermissionServiceImpl @Autowired constructor(
@@ -66,6 +69,12 @@ class LogPermissionServiceImpl @Autowired constructor(
             )) {
             return true
         }
-        throw PermissionForbiddenException("用户($userId)无权限在工程($projectCode)下查看流水线")
+        throw PermissionForbiddenException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_USER_NO_RIGHT_VIEW_PIPELINE,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectCode)
+            )
+        )
     }
 }

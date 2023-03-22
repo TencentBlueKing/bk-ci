@@ -35,11 +35,17 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.image.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
+import com.tencent.devops.image.ImageMessageCode.BK_SOURCE_IMAGE
+import com.tencent.devops.image.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
+import com.tencent.devops.image.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
@@ -53,7 +59,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.time.LocalDateTime
-import java.util.UUID
+import java.util.*
 import java.util.concurrent.Executors
 
 /**
@@ -148,7 +154,11 @@ class TkeService @Autowired constructor(
             "${dockerConfig.imagePrefix}/paas/${pushImageParam.projectId}/${pushImageParam.srcImageName}:${pushImageParam.srcImageTag}"
         buildLogPrinter.addLine(
             buildId = pushImageParam.buildId,
-            message = "源镜像：$fromImage",
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_SOURCE_IMAGE,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(fromImage)
+            ),
             tag = pushImageParam.taskId,
             jobId = pushImageParam.containerId,
             executeCount = pushImageParam.executeCount ?: 1
@@ -165,7 +175,11 @@ class TkeService @Autowired constructor(
             logger.info("[${pushImageParam.buildId}]|Tag image success, image name and tag: $toImageRepo:${pushImageParam.targetImageTag}")
             buildLogPrinter.addLine(
                 buildId = pushImageParam.buildId,
-                message = "目标镜像：$toImageRepo:${pushImageParam.targetImageTag}",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_TARGET_IMAGE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(toImageRepo, pushImageParam.targetImageTag)
+                ),
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1
@@ -258,7 +272,10 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image success")
                     buildLogPrinter.addLine(
                         buildId = pushImageParam.buildId,
-                        message = "注册镜像成功",
+                        message = MessageUtil.getMessageByLocale(
+                            messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE,
+                            language = I18nUtil.getLanguage()
+                        ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
                         executeCount = pushImageParam.executeCount ?: 1
@@ -268,7 +285,11 @@ class TkeService @Autowired constructor(
                     logger.error("[${pushImageParam.buildId}]|Import docker image failed, msg:$msg")
                     buildLogPrinter.addRedLine(
                         buildId = pushImageParam.buildId,
-                        message = "注册镜像失败，错误信息：$msg",
+                        message = MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_REGISTER_IMAGE,
+                            language = I18nUtil.getLanguage(),
+                            params = arrayOf(msg.toString())
+                        ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
                         executeCount = pushImageParam.executeCount ?: 1
@@ -279,7 +300,11 @@ class TkeService @Autowired constructor(
             logger.error("[${pushImageParam.buildId}]|Import docker image failed exception:", e)
             buildLogPrinter.addRedLine(
                 buildId = pushImageParam.buildId,
-                message = "注册镜像失败，错误信息：${e.message}",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_REGISTER_IMAGE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(e.message.toString())
+                ),
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1

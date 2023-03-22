@@ -27,18 +27,22 @@
 
 package com.tencent.devops.stream.trigger.parsers.modelCreate
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.task.DockerRunDevCloudTask
 import com.tencent.devops.common.ci.task.GitCiCodeRepoTask
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudInput
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.matrix.DispatchInfo
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.modelCreate.ModelCommon
 import com.tencent.devops.process.yaml.modelCreate.inner.ModelCreateEvent
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.pojo.StreamDispatchInfo
 import com.tencent.devops.process.yaml.v2.models.Resources
 import com.tencent.devops.process.yaml.v2.models.job.Job
+import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamCode.BK_NO_RECORD_MIRROR_VERSION
 import com.tencent.devops.stream.dao.GitCIServicesConfDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
@@ -63,9 +67,18 @@ class StreamTXInnerModelCreatorImpl @Autowired constructor(
         params: String
     ): ServiceJobDevCloudInput {
         val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
-            ?: throw RuntimeException("没有此镜像版本记录. $image")
+            ?: throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NO_RECORD_MIRROR_VERSION,
+                    language = I18nUtil.getLanguage()
+                ) + ". $image")
         if (!record.enable) {
-            throw RuntimeException("镜像版本不可用")
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         }
 
         return ServiceJobDevCloudInput(

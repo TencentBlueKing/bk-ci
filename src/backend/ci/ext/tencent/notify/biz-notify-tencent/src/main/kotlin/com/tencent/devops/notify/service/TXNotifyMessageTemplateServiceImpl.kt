@@ -30,14 +30,18 @@ import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParam
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
+import com.tencent.devops.notify.constant.NotifyCode.BK_DESIGNATED_APPROVER_APPROVAL
+import com.tencent.devops.notify.constant.NotifyCode.BK_LINE_BREAKS_WILL_ESCAPED
 import com.tencent.devops.notify.dao.CommonNotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.NotifyMessageTemplateDao
 import com.tencent.devops.notify.dao.TNotifyMessageTemplateDao
@@ -142,7 +146,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                         }
                     ).apply {
                         if (param.valueType == ManualReviewParamType.STRING) {
-                            description += "(注意: 换行会被转义为\\n)"
+                            description += MessageUtil.getMessageByLocale(
+                                messageCode = BK_LINE_BREAKS_WILL_ESCAPED,
+                                language = I18nUtil.getLanguage()
+                            )
                         }
                     }
                 }
@@ -170,7 +177,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
                     )
                 ),
                 detailView = detailView,
-                activity = "指定审批人审批",
+                activity = MessageUtil.getMessageByLocale(
+                    messageCode = BK_DESIGNATED_APPROVER_APPROVAL,
+                    language = I18nUtil.getLanguage()
+                ),
                 category = MoaWorkitemCreateCategoryType.IT.id,
                 callbackUrl = moaTplRecord.callbackUrl,
                 form = moaForm,
@@ -208,7 +218,10 @@ class TXNotifyMessageTemplateServiceImpl @Autowired constructor(
         request.receivers.map { receiver ->
             client.get(ServiceMessageApproveResource::class).createMoaWorkItemMessageComplete(
                 CompleteMoaWorkItemRequest(
-                    activity = "指定审批人审批",
+                    activity = MessageUtil.getMessageByLocale(
+                        messageCode = BK_DESIGNATED_APPROVER_APPROVAL,
+                        language = I18nUtil.getLanguage()
+                    ),
                     category = MoaWorkitemCreateCategoryType.IT.id,
                     handler = receiver,
                     processInstId = processInstId,

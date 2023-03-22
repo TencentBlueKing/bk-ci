@@ -50,6 +50,8 @@ import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.GRANT_EXPERIENCE_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -145,13 +147,8 @@ class ExperienceAppService(
         if (!isOldVersion && !isPublic && !isInPrivate) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_GRANT_EXPERIENCE_PERMISSION,
-                        language = I18nUtil.getLanguage(userId)
-                    ), experience.creator
-                ),
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+                errorCode = GRANT_EXPERIENCE_PERMISSION,
+                params = arrayOf(experience.creator)
             )
         }
         val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
@@ -460,11 +457,7 @@ class ExperienceAppService(
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
             throw ErrorCodeException(
                 statusCode = 403,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_PERMISSION_QUERY_EXPERIENCE,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                errorCode = ExperienceMessageCode.EXPERIENCE_NEED_PERMISSION
+                errorCode = NO_PERMISSION_QUERY_EXPERIENCE
             )
         }
         val experience = experienceDao.get(dslContext, experienceId)

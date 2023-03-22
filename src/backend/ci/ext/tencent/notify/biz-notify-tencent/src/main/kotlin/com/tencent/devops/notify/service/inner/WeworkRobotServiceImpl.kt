@@ -31,20 +31,23 @@ import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.notify.enums.WeworkReceiverType
 import com.tencent.devops.common.notify.enums.WeworkTextType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WEWORK
+import com.tencent.devops.notify.constant.NotifyCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyMediaMessage
 import com.tencent.devops.notify.pojo.WeworkNotifyTextMessage
+import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
 import com.tencent.devops.notify.pojo.WeworkRobotMarkdownMessage
 import com.tencent.devops.notify.pojo.WeworkRobotSingleTextMessage
 import com.tencent.devops.notify.pojo.WeworkSendMessageResp
-import com.tencent.devops.notify.pojo.WeworkRobotContentMessage
 import com.tencent.devops.notify.service.WeworkService
 import org.slf4j.LoggerFactory
 import org.springframework.amqp.rabbit.core.RabbitTemplate
@@ -52,7 +55,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty
 import org.springframework.context.annotation.Configuration
-import java.util.Optional
+import java.util.*
 
 @Configuration
 @ConditionalOnProperty(prefix = "notify", name = ["weworkChannel"], havingValue = "weworkRobot")
@@ -81,7 +84,11 @@ class WeworkRobotServiceImpl @Autowired constructor(
             weworkNotifyTextMessage.message.replace("\\n", "\n")
         } else {
             weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
-                "...(消息长度超$WEWORK_MAX_SIZE 已截断,请控制消息长度)"
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_CONTROL_MESSAGE_LENGTH,
+                        language = I18nUtil.getLanguage(),
+                        params = arrayOf(WEWORK_MAX_SIZE.toString())
+                    )
         }
         weworkNotifyTextMessage.message = content
         when (weworkNotifyTextMessage.receiverType) {

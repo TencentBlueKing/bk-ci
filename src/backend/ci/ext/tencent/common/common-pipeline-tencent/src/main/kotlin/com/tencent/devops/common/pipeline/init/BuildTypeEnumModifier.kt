@@ -27,16 +27,16 @@
 
 package com.tencent.devops.common.pipeline.init
 
-import com.tencent.devops.common.api.constant.CommonCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES
-import com.tencent.devops.common.api.constant.CommonCode.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW
-import com.tencent.devops.common.api.constant.CommonCode.BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD
-import com.tencent.devops.common.api.constant.CommonCode.BK_PCG_PUBLIC_BUILD_RESOURCES
-import com.tencent.devops.common.api.constant.CommonCode.BK_PRIVATE_BUILD_A_CLUSTER
-import com.tencent.devops.common.api.constant.CommonCode.BK_PRIVATE_SINGLE_BUIL_MACHINE
-import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_BCS
-import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_DEVCLOUD
-import com.tencent.devops.common.api.constant.CommonCode.BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL
-import com.tencent.devops.common.api.constant.CommonCode.BK_TENCENT_SELF_DEVELOPED_CLOUD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_PUBLIC_BUILD_RESOURCES_NEW
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CLOUD_HOSTING_WINDOWS_ON_DEVCLOUD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PCG_PUBLIC_BUILD_RESOURCES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PRIVATE_BUILD_A_CLUSTER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PRIVATE_SINGLE_BUIL_MACHINE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PUBLIC_DOCKER_ON_BCS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PUBLIC_DOCKER_ON_DEVCLOUD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PUBLIC_DOCKER_ON_DEVNET_PHYSICAL
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TENCENT_SELF_DEVELOPED_CLOUD
 import com.tencent.devops.common.api.enums.EnumModifier
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.EnumUtil

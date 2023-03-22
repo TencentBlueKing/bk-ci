@@ -29,12 +29,16 @@ package com.tencent.devops.stream.v1.components
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.git.GitEvent
 import com.tencent.devops.common.webhook.pojo.code.git.GitMergeRequestEvent
+import com.tencent.devops.stream.constant.StreamCode
+import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
 import com.tencent.devops.stream.pojo.enums.TriggerReason
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
@@ -220,10 +224,16 @@ class V1YamlTrigger @Autowired constructor(
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
-                        "Git CI没有此镜像版本记录. ${it.image}"
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GIT_CI_NO_RECOR,
+                            language = I18nUtil.getLanguage()
+                        ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
+                        messageCode = StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE,
+                        language = I18nUtil.getLanguage()
+                    ) + ". ${it.image}")
                 }
             }
         }

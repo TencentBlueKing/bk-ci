@@ -27,10 +27,10 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_BUILD_NOT_EXIST
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.BUILD_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -63,7 +63,6 @@ import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.text.MessageFormat
 import java.util.regex.Pattern
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
@@ -178,27 +177,25 @@ open class BkRepoDownloadService @Autowired constructor(
         val fileInfo =
             bkRepoClient.getFileDetail(userId, projectId, RepoUtils.getRepoByType(artifactoryType), normalizedPath)
                 ?: throw NotFoundException(
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                            language = I18nUtil.getLanguage(userId)
-                        ),argPath)
+                            messageCode = FILE_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(argPath)
+                        )
                 )
         val properties = fileInfo.metadata
         properties[ARCHIVE_PROPS_PIPELINE_ID] ?: throw BadRequestException(
-            MessageFormat.format(
             MessageUtil.getMessageByLocale(
-                messageCode = BK_METADATA_NOT_EXIST,
-                language = I18nUtil.getLanguage(userId)
-            ),"pipelineId"
-        ))
-        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
-            MessageFormat.format(
-                MessageUtil.getMessageByLocale(
-                    messageCode = BK_METADATA_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId)
-                ),"buildId"
+                messageCode = METADATA_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf("pipelineId")
             ))
+        properties[ARCHIVE_PROPS_BUILD_ID] ?: throw BadRequestException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = METADATA_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("buildId")
+                ))
         val shortUrl = shortUrlService.createShortUrl(
             url = PathUtils.buildDetailLink(
                 projectId = projectId,
@@ -261,11 +258,11 @@ open class BkRepoDownloadService @Autowired constructor(
             RepoUtils.getRepoByType(artifactoryType),
             path
         ) ?: throw BadRequestException(
-            MessageFormat.format(
             MessageUtil.getMessageByLocale(
-                messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                language = I18nUtil.getLanguage(userId)
-            ),path)
+                messageCode = FILE_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(path)
+            )
         )
         val fileName = fileDetail.name
         val projectName = client.get(ServiceProjectResource::class).get(projectId).data!!.projectName
@@ -321,12 +318,11 @@ open class BkRepoDownloadService @Autowired constructor(
                     ChannelCode.BS
                 ).data
                 targetBuildId = (targetBuild ?: throw BadRequestException(
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_BUILD_NOT_EXIST,
-                            language = I18nUtil.getLanguage(userId)
-                        ),crossBuildNo
-                    )
+                            messageCode = BUILD_NOT_EXIST,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(crossBuildNo)
+                        )
                 )).id
             }
         }

@@ -28,7 +28,10 @@
 package com.tencent.devops.worker.common.api.dispatch
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_GET_BUILDER_INFORMATION
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.pojo.VM
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 
@@ -37,7 +40,11 @@ class VMResourceApi : AbstractBuildResourceApi() {
     fun getVmByPipeline(): Result<VM> {
         val path = "/dispatch/api/build/vms/getVmByPipeLine"
         val request = buildGet(path)
-        val response = request(request, "获取构建机基本信息失败")
+        val response = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_GET_BUILDER_INFORMATION,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(response)
     }
 }

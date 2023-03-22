@@ -45,6 +45,7 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -53,6 +54,8 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_GET_USER_INFORMATION
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
@@ -148,7 +151,11 @@ class IamV3Service @Autowired constructor(
                 errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
                 defaultMessage = MessageCodeUtil.getCodeLanMessage(
                     messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = "获取用户$userId 信息失败",
+                    defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_GET_USER_INFORMATION,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId)
+                    ),
                     params = arrayOf(userId)
                 )
             )

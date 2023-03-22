@@ -30,7 +30,11 @@ package com.tencent.devops.sign.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.model.SQLPage
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.sign.SignCode.BK_FAILED_ENCODE_SIGNATURE_INFORMATION
+import com.tencent.devops.sign.SignCode.BK_FAILED_PARSE_SIGNATURE_INFORMATION
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.enums.EnumResignStatus
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
@@ -215,7 +219,11 @@ class SignInfoService(
             val ipaSignInfoHeaderDecode = String(Base64Util.decode(ipaSignInfoHeader))
             return objectMapper.readValue(ipaSignInfoHeaderDecode, IpaSignInfo::class.java)
         } catch (ignore: Throwable) {
-            logger.warn("解析签名信息失败：$ignore")
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_PARSE_SIGNATURE_INFORMATION,
+                    language = I18nUtil.getLanguage()
+                ) + "：$ignore")
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_PARSE_SIGN_INFO_HEADER,
                 defaultMessage = "解析签名信息失败"
@@ -229,7 +237,11 @@ class SignInfoService(
             val ipaSignInfoJson = objectMapper.writeValueAsString(ipaSignInfo)
             return Base64Util.encode(ipaSignInfoJson.toByteArray())
         } catch (ignored: Throwable) {
-            logger.warn("编码签名信息失败：$ignored")
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_ENCODE_SIGNATURE_INFORMATION,
+                    language = I18nUtil.getLanguage()
+                ) + "：$ignored")
             throw ErrorCodeException(errorCode = SignMessageCode.ERROR_ENCODE_SIGN_INFO, defaultMessage = "编码签名信息失败")
         }
     }

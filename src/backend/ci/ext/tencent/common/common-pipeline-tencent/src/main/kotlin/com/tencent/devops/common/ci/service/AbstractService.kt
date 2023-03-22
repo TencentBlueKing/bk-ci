@@ -29,7 +29,7 @@ package com.tencent.devops.common.ci.service
 
 import com.fasterxml.jackson.annotation.JsonSubTypes
 import com.fasterxml.jackson.annotation.JsonTypeInfo
-import com.tencent.devops.common.api.constant.CommonCode.BK_ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
+import com.tencent.devops.common.api.constant.CommonMessageCode.ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.SERVICE_TYPE
@@ -59,7 +59,7 @@ abstract class AbstractService(
         if (list.size != 2) {
             throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT,
+                messageCode = ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT,
                 language = I18nUtil.getLanguage()
             )
                 )

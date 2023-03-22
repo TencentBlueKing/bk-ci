@@ -31,10 +31,18 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.api.util.OkhttpUtils
+import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.plugin.constant.PluginCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
+import com.tencent.devops.plugin.constant.PluginCode.BK_FAILED_GET_NETWORK_CARD
+import com.tencent.devops.plugin.constant.PluginCode.BK_GET_SIGNATURE_ERROR
+import com.tencent.devops.plugin.constant.PluginCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
+import com.tencent.devops.plugin.constant.PluginCode.BK_URL_CODING_ERROR
+import com.tencent.devops.plugin.constant.PluginCode.BK_WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import com.tencent.devops.ticket.pojo.enums.CredentialType
-import com.tencent.devops.common.client.Client
-import com.tencent.devops.common.api.util.OkhttpUtils
 import okhttp3.Request
 import org.apache.commons.lang3.StringUtils
 import org.json.JSONException
@@ -48,9 +56,7 @@ import java.net.InetAddress
 import java.net.NetworkInterface
 import java.net.URLEncoder
 import java.security.NoSuchAlgorithmException
-import java.util.Arrays
-import java.util.Base64
-import java.util.TreeMap
+import java.util.*
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -73,7 +79,12 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.error("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.error(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ETH1_NETWORK_CARD_IP_EMPTY,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                )
+            )
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -102,7 +113,10 @@ object CommonUtils {
                     val netInterface = allNetInterfaces.nextElement()
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) { // 过滤掉127.0.0.1的IP
-                        logger.info("loopback地址或网卡名称为空")
+                        logger.info(MessageUtil.getMessageByLocale(
+                            messageCode = BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY,
+                            language = I18nUtil.getDefaultLocaleLanguage()
+                        ))
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -117,7 +131,10 @@ object CommonUtils {
                 }
             }
         } catch (e: Exception) {
-            logger.error("获取网卡失败", e)
+            logger.error(MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_GET_NETWORK_CARD,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ), e)
         }
 
         return allIp
@@ -211,7 +228,13 @@ object CommonUtils {
         if (ret != 0) {
             val msg = response.optString("msg")
             logger.error("fail to get getApiKey from weTest, retCode: $ret, msg: $msg")
-            throw OperationException("WeTest获取secretId,secretKey失败，返回码: $ret, 错误消息: $msg")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_WETEST_FAILED_GET,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(ret.toString(), msg)
+                )
+            )
         }
 
         val secretId = response.getString("secretid")
@@ -229,7 +252,13 @@ object CommonUtils {
             val hash = mac.doFinal(mk.toByteArray(charset("UTF-8")))
             encodeUrl(String(Base64Coder.encode(hash)))
         } catch (e: NoSuchAlgorithmException) {
-            throw OperationException("获取Signature错误，err:$e")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GET_SIGNATURE_ERROR,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(e.toString())
+                )
+            )
         }
     }
 
@@ -253,7 +282,13 @@ object CommonUtils {
         try {
             return URLEncoder.encode(input, "UTF-8").replace("+", "%20").replace("*", "%2A")
         } catch (e: UnsupportedEncodingException) {
-            throw OperationException("url编码错误, err:$e")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_URL_CODING_ERROR,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(e.toString())
+                )
+            )
         }
     }
 

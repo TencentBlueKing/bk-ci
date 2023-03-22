@@ -27,7 +27,11 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_COPY_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.CANNOT_MOVE_TO_CURRENT_DIRECTORY
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.DESTINATION_PATH_SHOULD_BE_FOLDER
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.artifactory.pojo.CombinationPath
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
@@ -47,7 +51,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.io.InputStream
-import java.text.MessageFormat
 import javax.ws.rs.BadRequestException
 import javax.ws.rs.NotFoundException
 
@@ -83,12 +86,11 @@ class BkRepoCustomDirService @Autowired constructor(
             RepoUtils.CUSTOM_REPO,
             normalizedPath
         ) ?: throw NotFoundException(
-            MessageFormat.format(
                 MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId)
-                ),""
-            )
+                    messageCode = FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("")
+                )
         )
         return RepoUtils.toFileDetail(fileDetail)
     }
@@ -123,7 +125,7 @@ class BkRepoCustomDirService @Autowired constructor(
             val destFileInfo = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizeDestPath)
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
                 throw OperationException(MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_DESTINATION_PATH_SHOULD_BE_FOLDER,
+                    messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }
@@ -133,7 +135,7 @@ class BkRepoCustomDirService @Autowired constructor(
             val normalizedSrcPath = PathUtils.normalize(srcPath)
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
                 throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_CANNOT_COPY_TO_CURRENT_DIRECTORY,
+                    messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }
@@ -160,14 +162,14 @@ class BkRepoCustomDirService @Autowired constructor(
             if (normalizedSrcPath == normalizedDestPath ||
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_CANNOT_MOVE_TO_CURRENT_DIRECTORY,
+                    messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }
 
             if (normalizedDestPath.startsWith(normalizedSrcPath)) {
                 throw BadRequestException(MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
+                    messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }

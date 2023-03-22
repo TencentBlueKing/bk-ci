@@ -38,11 +38,15 @@ import com.tencent.devops.auth.pojo.dto.RoleMemberDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
 import com.tencent.devops.common.auth.api.v3.TxV3AuthPermissionApi
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectCode.BK_ASSOCIATED_SYSTEM_NOT_BOUND
+import com.tencent.devops.project.constant.ProjectCode.BK_NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_USER_INFO_FAIL
 import com.tencent.devops.project.dao.ProjectDao
@@ -89,7 +93,10 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
             logger.warn("create V3 project user, not binding $projectCode iamV3")
             throw ErrorCodeException(
                 errorCode = ProjectMessageCode.PROJECT_NOT_EXIST,
-                defaultMessage = "关联系统未绑定"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_ASSOCIATED_SYSTEM_NOT_BOUND,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
         logger.info("getProject role $projectCode $projectRelationId")
@@ -181,7 +188,11 @@ class V3ProjectExtPermissionServiceImpl @Autowired constructor(
         // 此处做保护,防止用户一次加太多用户
         if (userList.size > TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE) {
             logger.warn("grant instance user too long $projectId|$resourceCode|$resourceType|$userList")
-            throw ParamBlankException("授权用户数越界:${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NUMBER_AUTHORIZED_USERS_EXCEEDS_LIMIT,
+                    language = I18nUtil.getLanguage(userId)
+                ) + ":${TxV3AuthPermissionApi.GRANT_USER_MAX_SIZE}")
         }
         userList.forEach {
             val grantInstanceDTO = GrantInstanceDTO(

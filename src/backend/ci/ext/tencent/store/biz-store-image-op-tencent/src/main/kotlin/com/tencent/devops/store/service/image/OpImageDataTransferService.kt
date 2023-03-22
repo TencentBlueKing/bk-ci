@@ -29,13 +29,23 @@ package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.exception.DataConsistencyException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.ServiceImageResource
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.project.api.service.service.ServiceTxProjectResource
+import com.tencent.devops.store.constant.StoreCode.BK_AFTER_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreCode.BK_AUTOMATICALLY_CONVERTED
+import com.tencent.devops.store.constant.StoreCode.BK_COPY_FOR_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreCode.BK_IMAGE_STORE_ONLINE
+import com.tencent.devops.store.constant.StoreCode.BK_OLD_VERSION_BUILD_IMAGE
+import com.tencent.devops.store.constant.StoreCode.BK_OTHER
+import com.tencent.devops.store.constant.StoreCode.BK_PIPELINED_JOB
+import com.tencent.devops.store.constant.StoreCode.BK_PROJECT_MANAGER_CAN_OPERATION
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.CategoryDao
 import com.tencent.devops.store.dao.common.ClassifyDao
@@ -154,9 +164,17 @@ class OpImageDataTransferService @Autowired constructor(
         interfaceName: String? = "Anon interface"
     ): Int {
         logger.info("$interfaceName:initClassifyAndCategory:Input($classifyCode,$classifyName,$categoryCode,$categoryName)")
-        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName ?: "其它")
+        createSystemInitClassify(classifyCode ?: CLASSIFYCODE_OTHER, classifyName ?:
+        MessageUtil.getMessageByLocale(
+            messageCode = BK_OTHER,
+            language = I18nUtil.getLanguage(userId)
+        ))
         logger.info("$interfaceName:initClassifyAndCategory:Inner:createSystemInitClassify end,begin to createSystemInitCategory")
-        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName ?: "流水线Job")
+        createSystemInitCategory(categoryCode ?: CATEGORY_PIPELINE_JOB, categoryName ?:
+        MessageUtil.getMessageByLocale(
+            messageCode = BK_PIPELINED_JOB,
+            language = I18nUtil.getLanguage(userId)
+        ))
         logger.info("$interfaceName:initClassifyAndCategory:Output:createSystemInitCategory end")
         return 0
     }
@@ -388,7 +406,10 @@ class OpImageDataTransferService @Autowired constructor(
                     } else {
                         ReleaseTypeEnum.COMPATIBILITY_FIX
                     },
-                    versionContent = "容器镜像商店上线，历史镜像数据自动生成",
+                    versionContent = MessageUtil.getMessageByLocale(
+                        messageCode = BK_IMAGE_STORE_ONLINE,
+                        language = I18nUtil.getLanguage()
+                    ),
                     imageSourceType = ImageType.BKDEVOPS,
                     imageRepoUrl = imageRepoUrl,
                     imageRepoName = imageRepoName,
@@ -398,11 +419,24 @@ class OpImageDataTransferService @Autowired constructor(
                     dockerFileContent = null,
                     logoUrl = "http://radosgw.open.oa.com/paas_backend/ieod/prod/file/png/random_15755397330026456632033301754111.png?v=1575539733",
                     iconData = null,
-                    summary = "旧版的构建镜像，通过拷贝为构建镜像入口生成。\n" +
-                        "已自动转换为容器镜像商店数据，请项目管理员在研发商店工作台进行管理。",
-                    description = "旧版的构建镜像，通过蓝盾版本仓库“拷贝为构建镜像”入口生成。\n" +
-                        "容器镜像商店上线后，旧版入口已下线。因历史原因，此类镜像没有办法对应到实际的镜像推送人，暂时先挂到项目管理员名下。\n" +
-                        "项目管理员可在研发商店工作台进行上架/升级/下架等操作，或者交接给实际负责人进行管理。",
+                    summary = MessageUtil.getMessageByLocale(
+                        messageCode = BK_OLD_VERSION_BUILD_IMAGE,
+                        language = I18nUtil.getLanguage()
+                    ) + "。\n" +
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_AUTOMATICALLY_CONVERTED,
+                                language = I18nUtil.getLanguage()
+                            ),
+                    description = MessageUtil.getMessageByLocale(
+                        messageCode = BK_COPY_FOR_BUILD_IMAGE,
+                        language = I18nUtil.getLanguage()
+                    ) + "\n" + MessageUtil.getMessageByLocale(
+                                messageCode = BK_AFTER_IMAGE_STORE_ONLINE,
+                                language = I18nUtil.getLanguage()
+                            ) + "\n" + MessageUtil.getMessageByLocale(
+                        messageCode = BK_PROJECT_MANAGER_CAN_OPERATION,
+                        language = I18nUtil.getLanguage()
+                    ),
                     publisher = creator,
                     labelIdList = null
                 ),

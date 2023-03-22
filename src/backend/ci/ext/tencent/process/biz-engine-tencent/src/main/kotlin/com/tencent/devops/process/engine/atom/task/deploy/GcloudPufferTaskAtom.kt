@@ -30,6 +30,7 @@ package com.tencent.devops.process.engine.atom.task.deploy
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.client.BkRepoClient
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.gcloud.DynamicGcloudClient
@@ -40,7 +41,21 @@ import com.tencent.devops.common.gcloud.api.pojo.dyn.DynNewResourceParam
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.GcloudPufferElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
+import com.tencent.devops.process.constant.ProcessCode.BK_CREATE_RESOURCES_OPERATION_PARAMETERS
+import com.tencent.devops.process.constant.ProcessCode.BK_CREATE_RESOURCE_OPERATION
+import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_UPLOAD_FILE
+import com.tencent.devops.process.constant.ProcessCode.BK_NO_MATCH_FILE_DISTRIBUTE
+import com.tencent.devops.process.constant.ProcessCode.BK_OPERATION_COMPLETED_SUCCESSFULLY
+import com.tencent.devops.process.constant.ProcessCode.BK_OPERATION_PARAMETERS
+import com.tencent.devops.process.constant.ProcessCode.BK_QUERY_VERSION_UPLOAD
+import com.tencent.devops.process.constant.ProcessCode.BK_RESPONSE_RESULT
+import com.tencent.devops.process.constant.ProcessCode.BK_START_PERFORMING_GCLOUD_OPERATION
+import com.tencent.devops.process.constant.ProcessCode.BK_START_RELEASE_OPERATION
+import com.tencent.devops.process.constant.ProcessCode.BK_START_UPLOAD_OPERATION
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
+import com.tencent.devops.process.constant.ProcessCode.BK_WAIT_QUERY_VERSION
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -92,7 +107,12 @@ class GcloudPufferTaskAtom @Autowired constructor(
             )
 
             if (downloadFileList.isEmpty()) {
-                buildLogPrinter.addRedLine(buildId, "匹配不到待分发的文件: $filePath", taskId, task.containerHashId,
+                buildLogPrinter.addRedLine(buildId,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_NO_MATCH_FILE_DISTRIBUTE,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(filePath)
+                    ), taskId, task.containerHashId,
                     task.executeCount ?: 1)
                 return AtomResponse(BuildStatus.FAILED)
             }
@@ -118,23 +138,41 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     // step 1
                     buildLogPrinter.addLine(
                         buildId,
-                        "开始对文件（${downloadFile.path}）执行Gcloud相关操作，详情请去gcloud官方地址查看：" +
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_START_PERFORMING_GCLOUD_OPERATION,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(downloadFile.path)
+                        ) +
                             "<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>" +
-                            "查看详情</a>\n",
+                                MessageUtil.getMessageByLocale(
+                                    messageCode = BK_VIEW_DETAILS,
+                                    language = I18nUtil.getLanguage(userId)
+                                ) + "</a>\n",
                         taskId,
                         task.containerHashId,
                         task.executeCount ?: 1)
                     val gcloudClient = DynamicGcloudClient(objectMapper, host.address, host.fileAddress)
-                    buildLogPrinter.addLine(buildId, "开始执行 \"上传动态资源版本\" 操作\n", taskId, task.containerHashId,
+                    buildLogPrinter.addLine(buildId,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_START_UPLOAD_OPERATION,
+                            language = I18nUtil.getLanguage(userId)
+                        ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val uploadResParam = UploadResParam(productId.toInt(), resourceVersion,
                         FileUtil.getMD5(downloadFile), null, null, https)
-                    buildLogPrinter.addLine(buildId, "\"上传动态资源版本\" 操作参数：$uploadResParam\n", taskId,
+                    buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
+                        messageCode = BK_OPERATION_PARAMETERS,
+                        language = I18nUtil.getLanguage(userId)
+                    ) + "$uploadResParam\n", taskId,
                         task.containerHashId, task.executeCount ?: 1)
                     val uploadResult = gcloudClient.uploadDynamicRes(downloadFile, uploadResParam, commonParam)
 
                     // step 2
-                    buildLogPrinter.addLine(buildId, "开始执行 \"查询版本上传 CDN 任务状态\" 操作\n", taskId,
+                    buildLogPrinter.addLine(buildId,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_QUERY_VERSION_UPLOAD,
+                            language = I18nUtil.getLanguage(userId)
+                        ), taskId,
                         task.containerHashId, task.executeCount ?: 1)
                     val gCloudTaskId = uploadResult.first
                     val versionInfo: String
@@ -144,20 +182,32 @@ class GcloudPufferTaskAtom @Autowired constructor(
                         val message = getTaskResult["message"] ?: ""
                         when (state) {
                             "waiting", "processing" -> {
-                                buildLogPrinter.addLine(buildId, "\"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n",
+                                buildLogPrinter.addLine(buildId,
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_WAIT_QUERY_VERSION,
+                                        language = I18nUtil.getLanguage(userId)
+                                    ),
                                     taskId, task.containerHashId, task.executeCount ?: 1)
                                 buildLogPrinter.addLine(buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId,
                                     task.executeCount ?: 1)
                                 Thread.sleep(1000 * 6)
                             }
                             "finished" -> {
-                                buildLogPrinter.addLine(buildId, "\"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n", taskId,
+                                buildLogPrinter.addLine(buildId,
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_OPERATION_COMPLETED_SUCCESSFULLY,
+                                        language = I18nUtil.getLanguage(userId)
+                                    ), taskId,
                                     task.containerHashId, task.executeCount ?: 1)
                                 versionInfo = getTaskResult["versionInfo"]!!
                                 break@loop
                             }
                             else -> {
-                                buildLogPrinter.addRedLine(buildId, "上传文件失败: $message($state)", taskId,
+                                buildLogPrinter.addRedLine(buildId,
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_FAILED_UPLOAD_FILE,
+                                        language = I18nUtil.getLanguage(userId)
+                                    ) + "$message($state)", taskId,
                                     task.containerHashId, task.executeCount ?: 1)
                                 return AtomResponse(BuildStatus.FAILED)
                             }
@@ -165,20 +215,34 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     }
 
                     // step 3
-                    buildLogPrinter.addLine(buildId, "开始执行 \"创建资源\" 操作\n", taskId, task.containerHashId,
+                    buildLogPrinter.addLine(buildId,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_CREATE_RESOURCE_OPERATION,
+                            language = I18nUtil.getLanguage(userId)
+                        ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val newResParam = DynNewResourceParam(task.starter, productId.toInt(), resourceVersion,
                         resourceName, versionInfo, versionType.toInt(), versionDes, customStr)
-                    buildLogPrinter.addLine(buildId, "\"创建资源\" 操作参数：$newResParam\n", taskId, task.containerHashId,
+                    buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
+                        messageCode = BK_CREATE_RESOURCES_OPERATION_PARAMETERS,
+                        language = I18nUtil.getLanguage(userId)
+                    ) + "$newResParam\n", taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     gcloudClient.newResource(newResParam, commonParam)
                     val prePublishParam = PrePublishParam(task.starter, productId.toInt())
 
                     // step 4
-                    buildLogPrinter.addLine(buildId, "开始执行 \"预发布\" 操作\n", taskId, task.containerHashId,
+                    buildLogPrinter.addLine(buildId,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_START_RELEASE_OPERATION,
+                            language = I18nUtil.getLanguage(userId)
+                        ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val prePubResult = gcloudClient.prePublish(prePublishParam, commonParam)
-                    buildLogPrinter.addLine(buildId, "预发布单个或多个渠道响应结果: $prePubResult\n", taskId,
+                    buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
+                        messageCode = BK_RESPONSE_RESULT,
+                        language = I18nUtil.getLanguage(userId)
+                    ) + "$prePubResult\n", taskId,
                         task.containerHashId, task.executeCount ?: 1)
                 } finally {
                     downloadFile.delete()

@@ -27,10 +27,13 @@
 
 package com.tencent.devops.process.yaml.modelCreate
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.ci.task.ServiceJobDevCloudTask
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.pojo.element.Element
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_CREATE_SERVICE
 import com.tencent.devops.process.yaml.modelCreate.inner.TXInnerModelCreator
 import com.tencent.devops.process.yaml.v2.models.job.Job
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
@@ -69,7 +72,11 @@ class TXModelElement @Autowired(required = false) constructor(
                 )
 
                 val servicesElement = MarketBuildAtomElement(
-                    name = "创建${it.image}服务",
+                    name = MessageUtil.getMessageByLocale(
+                        messageCode = BK_CREATE_SERVICE,
+                        language = I18nUtil.getLanguage(),
+                        params = arrayOf(it.image)
+                    ),
                     status = null,
                     atomCode = ServiceJobDevCloudTask.atomCode,
                     version = "1.*",

@@ -32,11 +32,15 @@ import com.dd.plist.NSDictionary
 import com.dd.plist.NSString
 import com.dd.plist.PropertyListParser
 import com.tencent.devops.common.api.exception.ErrorCodeException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.script.CommandLineUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.sign.Constants.KEYSTORE_CATEGORY_PROVISION
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_AUTH
 import com.tencent.devops.sign.Constants.KEYSTORE_HTTP_HEADER_IP
+import com.tencent.devops.sign.SignCode.BK_DESCRIPTION_FILE_FOR_CERTIFICATE
+import com.tencent.devops.sign.SignCode.BK_FAILED_INSERT
 import com.tencent.devops.sign.api.constant.SignMessageCode
 import com.tencent.devops.sign.api.pojo.IpaSignInfo
 import com.tencent.devops.sign.service.MobileProvisionService
@@ -164,7 +168,12 @@ KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionSer
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn("插入entitlement文件(${entitlementFile.canonicalPath})的keychain-access-groups失败。", ignore)
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_INSERT,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(entitlementFile.canonicalPath)
+                ), ignore)
             throw ErrorCodeException(
                 errorCode = SignMessageCode.ERROR_INSERT_KEYCHAIN_GROUPS,
                 defaultMessage = "entitlement插入keychain失败"
@@ -184,7 +193,13 @@ KeyStoreMobileProvisionServiceImpl @Autowired constructor() : MobileProvisionSer
         }
         val wildcardMobileProvisionId = wildcardMobileProvisionMap[ipaSignInfo.certId.toUpperCase()]
         if (wildcardMobileProvisionId.isNullOrBlank()) {
-            logger.warn("未找到证书[${ipaSignInfo.certId}]对应的描述文件，返回空值")
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_DESCRIPTION_FILE_FOR_CERTIFICATE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(ipaSignInfo.certId)
+                )
+            )
             return null
         }
         return downloadMobileProvision(

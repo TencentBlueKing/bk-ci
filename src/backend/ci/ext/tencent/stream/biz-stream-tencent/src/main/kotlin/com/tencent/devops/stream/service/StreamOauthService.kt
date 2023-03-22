@@ -28,14 +28,17 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.OauthForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.repository.pojo.oauth.GitToken
+import com.tencent.devops.stream.constant.StreamCode.BK_NOT_AUTHORIZED_BY_OAUTH
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_STREAM_NOT_ENABLED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.lang.RuntimeException
 
 @Service
 class StreamOauthService @Autowired constructor(
@@ -48,7 +51,11 @@ class StreamOauthService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = "用户[$userId]尚未进行OAUTH授权，请先授权。"
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId)
+            )
         )
     }
 
@@ -62,18 +69,36 @@ class StreamOauthService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data
-            ?: throw RuntimeException("用户${userId}未进行OAuth授权")
+            ?: throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId)
+                )
+            )
     }
 
     fun getGitCIEnableToken(
         gitProjectId: Long
     ): GitToken {
         val userId = streamBasicSettingDao.getSetting(dslContext, gitProjectId)?.enableUserId
-            ?: throw RuntimeException("工蜂项目${gitProjectId}未开启Stream")
+            ?: throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_STREAM_NOT_ENABLED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(gitProjectId.toString())
+                )
+            )
         return try {
             client.get(ServiceOauthResource::class).gitGet(userId).data!!
         } catch (e: Exception) {
-            throw RuntimeException("用户${userId}未进行OAuth授权")
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_NOT_AUTHORIZED_BY_OAUTH,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId)
+                )
+            )
         }
     }
 }

@@ -28,10 +28,13 @@
 package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_BK_TOKEN
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.gray.Gray
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.project.tables.records.TServiceRecord
+import com.tencent.devops.project.constant.ProjectCode.BK_CONTAINER_SERVICE
 import com.tencent.devops.project.dao.FavoriteDao
 import com.tencent.devops.project.dao.ServiceDao
 import com.tencent.devops.project.dao.ServiceTypeDao
@@ -167,7 +170,12 @@ class UserProjectServiceImpl @Autowired constructor(
     ): Pair<Boolean, String> {
         var newWindow = tServiceRecord.newWindow
         var newWindowUrl = tServiceRecord.newWindowurl
-        if (tServiceRecord.name.contains("容器服务") &&
+        if (tServiceRecord.name.contains(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CONTAINER_SERVICE,
+                    language = I18nUtil.getLanguage(userId)
+                )
+        ) &&
             tServiceRecord.injectType.toLowerCase().trim() == "iframe" &&
             request != null &&
             bkToken != null &&

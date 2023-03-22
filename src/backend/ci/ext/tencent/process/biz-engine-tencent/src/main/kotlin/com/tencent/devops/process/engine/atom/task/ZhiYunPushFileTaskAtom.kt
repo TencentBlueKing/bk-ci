@@ -31,13 +31,18 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.ZhiyunPushFileElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceZhiyunResource
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
+import com.tencent.devops.process.constant.ProcessCode.BK_MATCHING_FILE
+import com.tencent.devops.process.constant.ProcessCode.BK_START_UPLOADING_CORRESPONDING_FILES
+import com.tencent.devops.process.constant.ProcessCode.BK_UPLOAD_CORRESPONDING_FILE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -103,7 +108,10 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
 
         buildLogPrinter.addLine(
             buildId = buildId,
-            message = "开始上传对应文件到织云...【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode(
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_START_UPLOADING_CORRESPONDING_FILES,
+                language = I18nUtil.getLanguage(userId)
+            ) + "【<a target='_blank' href='http://ccc.oa.com/package/versions?innerurl=${URLEncoder.encode(
                 "http://yun.ccc.oa.com/index.php/package/versions?product=$product&package=$packageName",
                 "UTF-8"
             )}'>查看详情</a>】",
@@ -113,7 +121,10 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
         )
         buildLogPrinter.addLine(
             buildId = buildId,
-            message = "匹配文件中: ${uploadParams.fileParams.regexPath}($fileSource)",
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_MATCHING_FILE,
+                language = I18nUtil.getLanguage(userId)
+            ) + "${uploadParams.fileParams.regexPath}($fileSource)",
             tag = task.taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1
@@ -131,7 +142,10 @@ class ZhiYunPushFileTaskAtom @Autowired constructor(
         )
         buildLogPrinter.addLine(
             buildId = buildId,
-            message = "上传对应文件到织云成功!",
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_UPLOAD_CORRESPONDING_FILE,
+                language = I18nUtil.getLanguage(userId)
+            ),
             tag = task.taskId,
             jobId = task.containerHashId,
             executeCount = task.executeCount ?: 1

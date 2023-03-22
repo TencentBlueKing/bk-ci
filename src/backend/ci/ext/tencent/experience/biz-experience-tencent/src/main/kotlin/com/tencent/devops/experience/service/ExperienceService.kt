@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.I18NConstant.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
@@ -60,15 +61,18 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
-import com.tencent.devops.experience.constant.ExperienceCode.BK_CONSTRUCTION_NUMBER
-import com.tencent.devops.experience.constant.ExperienceCode.BK_EXPERIENCE_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceCode.BK_FILE_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceCode.BK_METADATA_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceCode.BK_USERS_NOT_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_NOT_EDIT_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceCode.BK_USER_NOT_EXPERIENCE_USERS
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_FILE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_METADATA_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USERS_NOT_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
+import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EXPERIENCE_USERS
+import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
 import com.tencent.devops.experience.constant.GroupScopeEnum
 import com.tencent.devops.experience.constant.ProductCategoryEnum
@@ -336,21 +340,19 @@ class ExperienceService @Autowired constructor(
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER)) {
             throw RuntimeException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ),"bundleIdentifier"
-                ))
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("bundleIdentifier")
+                    ))
         }
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_VERSION)) {
             throw RuntimeException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ),"appVersion"
-                ))
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("appVersion")
+                    ))
         }
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_APP_ICON)) {
@@ -655,23 +657,16 @@ class ExperienceService @Autowired constructor(
             projectId = projectId,
             experienceId = experienceId,
             authPermission = AuthPermission.EDIT,
-            message = MessageFormat.format(
-                MessageUtil.getMessageByLocale(
+            message = MessageUtil.getMessageByLocale(
                     messageCode = BK_USER_NOT_EDIT_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                ), projectId, experienceHashId
-            )
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(projectId, experienceHashId)
+                )
         )
         return experienceDao.getOrNull(dslContext, experienceId)
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_EXPERIENCE_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ), experienceHashId
-                ),
-                errorCode = ExperienceMessageCode.EXP_NOT_EXISTS,
+                errorCode = EXPERIENCE_NOT_EXIST,
                 params = arrayOf(experienceHashId)
             )
     }
@@ -692,12 +687,6 @@ class ExperienceService @Autowired constructor(
         if (!experienceBaseService.userCanExperience(userId, experienceId)) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
-                defaultMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        messageCode = BK_USER_NOT_EXPERIENCE_USERS,
-                        language = I18nUtil.getLanguage(userId)
-                    ), userId
-                ),
                 errorCode = ExperienceMessageCode.USER_NOT_IN_EXP_GROUP,
                 params = arrayOf(userId)
             )
@@ -720,12 +709,11 @@ class ExperienceService @Autowired constructor(
             com.tencent.devops.artifactory.pojo.enums.ArtifactoryType.valueOf(experience.artifactoryType.name)
         if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, artifactoryType, path).data!!) {
             throw RuntimeException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_FILE_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ), path
-                )
+                        messageCode = FILE_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(path)
+                    )
             )
         }
 

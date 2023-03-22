@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_INCORRECT_EXCEL_FORMAT
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Workbook
@@ -71,7 +74,12 @@ object ExcelUtils {
             return result
         } catch (e: Exception) {
             logger.error("Excel format error!", e)
-            throw RuntimeException("Excel格式错误，或文件不存在")
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_INCORRECT_EXCEL_FORMAT,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         } finally {
             if (null != workBook) {
                 IOUtils.closeQuietly(workBook)

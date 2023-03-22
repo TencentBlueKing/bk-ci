@@ -29,10 +29,13 @@ package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.pojo.Page
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_OPEN_STREAM
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -71,7 +74,11 @@ class V1GitCIMergeService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 10
         logger.info("get merge build list, gitProjectId: $gitProjectId")
         val conf = streamBasicSettingService.getGitCIConf(gitProjectId)
-            ?: throw CustomException(Response.Status.FORBIDDEN, "项目未开启Stream，无法查询")
+            ?: throw CustomException(Response.Status.FORBIDDEN,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_CANNOT_OPEN_STREAM,
+                    language = I18nUtil.getLanguage(userId)
+                ))
         val mergeList = gitRequestEventDao.getMergeRequestList(
             dslContext = dslContext,
             gitProjectId = gitProjectId,

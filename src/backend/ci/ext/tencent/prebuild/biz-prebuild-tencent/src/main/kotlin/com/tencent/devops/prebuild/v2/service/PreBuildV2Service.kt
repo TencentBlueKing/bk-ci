@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.pojo.PipelineAsCodeSettings
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -39,7 +40,10 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
+import com.tencent.devops.prebuild.PreBuildCode.BK_PRECI_SUPPORTS_REMOTE_TEMPLATES
+import com.tencent.devops.prebuild.PreBuildCode.BK_REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.StreamCommonVariables
@@ -224,14 +228,22 @@ class PreBuildV2Service @Autowired constructor(
         param: GetTemplateParam<Any?>
     ): String {
         if (param.targetRepo == null) {
-            throw CustomException(Response.Status.BAD_REQUEST, "PreCI仅支持远程模板")
+            throw CustomException(Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PRECI_SUPPORTS_REMOTE_TEMPLATES,
+                    language = I18nUtil.getLanguage()
+                )
+                )
         }
 
         if (param.targetRepo?.repository.isNullOrBlank() || param.targetRepo?.name.isNullOrBlank()
         ) {
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
-                message = "远程仓关键字不能为空: repository, name"
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY,
+                    language = I18nUtil.getLanguage()
+                )
             )
         }
 

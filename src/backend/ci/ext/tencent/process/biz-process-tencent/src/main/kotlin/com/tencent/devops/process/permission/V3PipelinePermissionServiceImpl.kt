@@ -30,6 +30,7 @@ package com.tencent.devops.process.permission
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthProjectApi
@@ -37,6 +38,9 @@ import com.tencent.devops.common.auth.api.AuthResourceApiStr
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_CHOREOGRAPHY_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
@@ -114,7 +118,12 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
 
         val iamId = findInstanceId(projectId, pipelineId)
         if (iamId.isNullOrEmpty()) {
-            throw PermissionForbiddenException("流水线不存在")
+            throw PermissionForbiddenException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PIPELINE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
         val permissionCheck = authPermissionApi.validateUserResourcePermission(
             user = userId,
@@ -193,7 +202,10 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = "流水线编排不存在"
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_PIPELINE_CHOREOGRAPHY_NOT_EXIST,
+                    language = I18nUtil.getLanguage()
+                )
             )
         return pipelineInfo.id.toString()
     }

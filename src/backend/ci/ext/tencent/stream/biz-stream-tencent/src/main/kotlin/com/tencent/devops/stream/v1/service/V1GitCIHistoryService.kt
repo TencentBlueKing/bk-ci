@@ -32,13 +32,16 @@ import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.pipeline.enums.ChannelCode
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.enums.code.StreamGitObjectKind
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildHistory
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_QUERIED
 import com.tencent.devops.stream.service.StreamScmService
 import com.tencent.devops.stream.v1.components.V1StreamGitProjectInfoCache
 import com.tencent.devops.stream.v1.dao.V1GitPipelineResourceDao
@@ -203,7 +206,10 @@ class V1GitCIHistoryService @Autowired constructor(
         val pageSizeNotNull = pageSize ?: 20
         streamBasicSettingService.getGitCIConf(gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage(userId)
+            )
         )
         val buildBranchList = gitRequestEventBuildDao.getAllBuildBranchList(
             dslContext = dslContext,

@@ -27,8 +27,13 @@
 
 package com.tencent.devops.log.configuration
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.WebAutoConfiguration
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.log.LogCode.BK_ES_CLUSTER_ADDRESS_NOT_CONFIGURED
+import com.tencent.devops.log.LogCode.BK_ES_CLUSTER_NAME_NOT_CONFIGURED
+import com.tencent.devops.log.LogCode.BK_ES_UNIQUE_NAME_NOT_CONFIGURED
 import com.tencent.devops.log.client.impl.MultiESLogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
@@ -123,13 +128,31 @@ class LogESAutoConfiguration {
 
     fun client(): ESClient {
         if (e1IP.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群地址尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_CLUSTER_ADDRESS_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("")
+                )
+            )
         }
         if (e1Cluster.isNullOrBlank()) {
-            throw IllegalArgumentException("ES集群名称尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_CLUSTER_NAME_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("")
+                )
+            )
         }
         if (e1Name.isNullOrBlank()) {
-            throw IllegalArgumentException("ES唯一名称尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_UNIQUE_NAME_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("")
+                )
+            )
         }
 
         val httpPort = e1Port ?: 9200
@@ -172,13 +195,31 @@ class LogESAutoConfiguration {
 
     fun client2(): ESClient {
         if (e2IP.isNullOrBlank()) {
-            throw IllegalArgumentException("ES2集群地址尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_CLUSTER_ADDRESS_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("2")
+                )
+            )
         }
         if (e2Cluster.isNullOrBlank()) {
-            throw IllegalArgumentException("ES2集群名称尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_CLUSTER_NAME_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("2")
+                )
+            )
         }
         if (e2Name.isNullOrBlank()) {
-            throw IllegalArgumentException("ES2唯一名称尚未配置")
+            throw IllegalArgumentException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ES_UNIQUE_NAME_NOT_CONFIGURED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf("2")
+                )
+            )
         }
 
         val httpPort = e2Port ?: 9200

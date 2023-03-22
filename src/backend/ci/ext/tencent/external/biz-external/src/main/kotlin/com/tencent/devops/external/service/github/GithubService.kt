@@ -29,11 +29,25 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
+import com.tencent.devops.external.constant.ExternalCode.BK_ACCOUNT_NOT_PERMISSIO
+import com.tencent.devops.external.constant.ExternalCode.BK_ADD_DETECTION_TASK
+import com.tencent.devops.external.constant.ExternalCode.BK_GET_LIST_OF_BRANCHES
+import com.tencent.devops.external.constant.ExternalCode.BK_GET_SPECIFIED_BRANCH
+import com.tencent.devops.external.constant.ExternalCode.BK_GET_SPECIFIED_TAG
+import com.tencent.devops.external.constant.ExternalCode.BK_GET_TAG_LIST
+import com.tencent.devops.external.constant.ExternalCode.BK_GET_WAREHOUSE_LIST
+import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_AUTHENTICATION_FAILED
+import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_PLATFORM_FAILED
+import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_WAREHOUSE_NOT_EXIST
+import com.tencent.devops.external.constant.ExternalCode.BK_PARAMETER_ERROR
+import com.tencent.devops.external.constant.ExternalCode.BK_UPDATE_DETECTION_TASK
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.pojo.GithubCheckRuns
@@ -289,21 +303,70 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         when (code) {
-            400 -> throw GithubApiException(code, "参数错误")
-            401 -> throw GithubApiException(code, "GitHub认证失败")
-            403 -> throw GithubApiException(code, "账户没有${operation}的权限")
-            404 -> throw GithubApiException(code, "GitHub仓库不存在或者是账户没有该项目${operation}的权限")
-            else -> throw GithubApiException(code, "GitHub平台${operation}失败")
+            400 -> throw GithubApiException(code,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PARAMETER_ERROR,
+                language = I18nUtil.getLanguage()
+            )
+                )
+            401 -> throw GithubApiException(code,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GITHUB_AUTHENTICATION_FAILED,
+                    language = I18nUtil.getLanguage()
+                )
+                )
+            403 -> throw GithubApiException(code,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ACCOUNT_NOT_PERMISSIO,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(operation)
+                )
+                )
+            404 -> throw GithubApiException(code,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GITHUB_WAREHOUSE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(operation)
+                )
+                )
+            else -> throw GithubApiException(code,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_GITHUB_PLATFORM_FAILED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(operation)
+                )
+                )
         }
     }
 
-    private val OPERATION_ADD_CHECK_RUNS = "添加检测任务"
-    private val OPERATION_UPDATE_CHECK_RUNS = "更新检测任务"
-    private val OPERATION_GET_REPOS = "获取仓库列表"
-    private val OPERATION_GET_BRANCH = "获取指定分支"
-    private val OPERATION_GET_TAG = "获取指定Tag"
-    private val OPERATION_LIST_BRANCHS = "获取分支列表"
-    private val OPERATION_LIST_TAGS = "获取Tag列表"
+    private val OPERATION_ADD_CHECK_RUNS = MessageUtil.getMessageByLocale(
+        messageCode = BK_ADD_DETECTION_TASK,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_UPDATE_CHECK_RUNS = MessageUtil.getMessageByLocale(
+        messageCode = BK_UPDATE_DETECTION_TASK,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_GET_REPOS =  MessageUtil.getMessageByLocale(
+        messageCode = BK_GET_WAREHOUSE_LIST,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_GET_BRANCH =  MessageUtil.getMessageByLocale(
+        messageCode = BK_GET_SPECIFIED_BRANCH,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_GET_TAG =  MessageUtil.getMessageByLocale(
+        messageCode = BK_GET_SPECIFIED_TAG,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_LIST_BRANCHS =  MessageUtil.getMessageByLocale(
+        messageCode = BK_GET_LIST_OF_BRANCHES,
+        language = I18nUtil.getLanguage(),
+    )
+    private val OPERATION_LIST_TAGS =  MessageUtil.getMessageByLocale(
+        messageCode = BK_GET_TAG_LIST,
+        language = I18nUtil.getLanguage(),
+    )
 
     companion object {
         private val logger = LoggerFactory.getLogger(GithubService::class.java)

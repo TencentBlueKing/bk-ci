@@ -28,9 +28,14 @@
 package com.tencent.devops.stream.v1.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiYamlUtils
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.stream.constant.StreamCode.BK_GIT_CI_NO_RECOR
+import com.tencent.devops.stream.constant.StreamCode.BK_MIRROR_VERSION_NOT_AVAILABLE
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_CANNOT_QUERIED
 import com.tencent.devops.stream.v1.dao.V1GitCIServicesConfDao
 import com.tencent.devops.stream.v1.dao.V1GitCISettingDao
 import com.tencent.devops.stream.v1.dao.V1GitRequestEventBuildDao
@@ -76,10 +81,16 @@ class V1StreamYamlService @Autowired constructor(
                 val record = gitServicesConfDao.get(dslContext, imageName, imageTag)
                     ?: throw CustomException(
                         Response.Status.INTERNAL_SERVER_ERROR,
-                        "Git CI没有此镜像版本记录. ${it.image}"
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GIT_CI_NO_RECOR,
+                            language = I18nUtil.getLanguage()
+                        ) + ". ${it.image}"
                     )
                 if (!record.enable) {
-                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "镜像版本不可用. ${it.image}")
+                    throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
+                        messageCode = BK_MIRROR_VERSION_NOT_AVAILABLE,
+                        language = I18nUtil.getLanguage()
+                    ) + ". ${it.image}")
                 }
             }
         }
@@ -137,7 +148,10 @@ class V1StreamYamlService @Autowired constructor(
         logger.info("get yaml by buildId:($buildId), gitProjectId: $gitProjectId")
         gitCISettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            "项目未开启Stream，无法查询"
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PROJECT_CANNOT_QUERIED,
+                language = I18nUtil.getLanguage()
+            )
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
         return (eventBuild?.originYaml) ?: ""

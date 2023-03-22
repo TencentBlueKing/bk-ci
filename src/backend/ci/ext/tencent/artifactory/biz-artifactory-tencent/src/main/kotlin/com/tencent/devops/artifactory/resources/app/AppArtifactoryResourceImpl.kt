@@ -28,8 +28,8 @@
 package com.tencent.devops.artifactory.resources.app
 
 import com.tencent.devops.artifactory.api.app.AppArtifactoryResource
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_GRANT_DOWNLOAD_PERMISSION
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_GRANT_PIPELINE_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_DOWNLOAD_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GRANT_PIPELINE_PERMISSION
 import com.tencent.devops.artifactory.pojo.AppFileInfo
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileDetailForApp
@@ -44,12 +44,10 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoAppService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoSearchService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.util.UrlUtil
-import com.tencent.devops.common.api.constant.CommonMessageCode
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_APP_BUNDLE_IDENTIFIER
@@ -59,14 +57,12 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
 import org.apache.commons.lang3.math.NumberUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.text.MessageFormat
 import javax.ws.rs.BadRequestException
 
 @RestResource
@@ -210,11 +206,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , path:$path , artifactoryType:$artifactoryType")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                params = arrayOf(MessageUtil.getMessageByLocale(
-                    messageCode = BK_GRANT_DOWNLOAD_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                ))
+                errorCode = GRANT_DOWNLOAD_PERMISSION,
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
@@ -229,14 +221,10 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             logger.info("no permission , user:$userId , project:$projectId , pipeline:$pipelineId")
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = CommonMessageCode.PERMISSION_DENIED_FOR_APP,
-                params = arrayOf(MessageFormat.format(MessageUtil.getMessageByLocale(
-                    messageCode = BK_GRANT_PIPELINE_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                    pipelineInfo?.creator ?: "")
+                errorCode = GRANT_PIPELINE_PERMISSION,
+                params = arrayOf(pipelineInfo?.creator ?: "")
 
-                ))
+                )
         }
 
         val backUpIcon = lazy { client.get(ServiceProjectResource::class).get(projectId).data!!.logoAddr!! }

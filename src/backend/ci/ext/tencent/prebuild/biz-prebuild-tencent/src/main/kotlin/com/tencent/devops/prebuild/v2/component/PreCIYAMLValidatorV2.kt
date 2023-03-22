@@ -5,7 +5,11 @@ import com.fasterxml.jackson.databind.node.ObjectNode
 import com.networknt.schema.JsonSchema
 import com.networknt.schema.JsonSchemaFactory
 import com.networknt.schema.SpecVersion
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.prebuild.PreBuildCode.BK_ALPHABET_NUMBER_UNDERSCORE
+import com.tencent.devops.prebuild.PreBuildCode.BK_STAGES_JOBS_STEPS
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import org.slf4j.LoggerFactory
@@ -130,7 +134,12 @@ private fun JsonNode.checkVariablesFormat() {
     val keyRegex = Regex("^[0-9a-zA-Z_]+$")
     vars.fields().forEach {
         if (!keyRegex.matches(it.key)) {
-            throw YamlFormatException("变量名称必须是英文字母、数字或下划线(_)")
+            throw YamlFormatException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ALPHABET_NUMBER_UNDERSCORE,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         }
     }
 }
@@ -142,11 +151,20 @@ private fun JsonNode.checkCiRequired() {
             return
         }
     }
-    throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
+    throw YamlFormatException(
+        MessageUtil.getMessageByLocale(
+        messageCode = BK_STAGES_JOBS_STEPS,
+        language = I18nUtil.getLanguage()
+    ))
 }
 
 private fun JsonNode.checkExtendsRequired() {
     if (get("stages") == null && get("jobs") == null && get("steps") == null) {
-        throw YamlFormatException("stages, jobs, steps, extends 必须存在一个")
+        throw YamlFormatException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_STAGES_JOBS_STEPS,
+                language = I18nUtil.getLanguage()
+            )
+        )
     }
 }

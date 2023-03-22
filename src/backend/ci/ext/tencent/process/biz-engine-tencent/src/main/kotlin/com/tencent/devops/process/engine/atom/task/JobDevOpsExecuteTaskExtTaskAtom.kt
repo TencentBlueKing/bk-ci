@@ -34,12 +34,15 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.job.JobClient
 import com.tencent.devops.common.job.api.pojo.ExecuteTaskRequest
 import com.tencent.devops.common.job.api.pojo.GlobalVar
-import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.JobDevOpsExecuteTaskExtElement
+import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_RESULT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -153,7 +156,10 @@ class JobDevOpsExecuteTaskExtTaskAtom @Autowired constructor(
 
         val executeTaskReq = ExecuteTaskRequest(operator, arrayListOf(), globalVars, jobTaskTemplateId, timeout)
         val taskInstanceId = jobClient.executeTaskDevops(executeTaskReq, projectId)
-        buildLogPrinter.addLine(buildId, "查看结果: ${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
+        buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
+            messageCode = BK_VIEW_RESULT,
+            language = I18nUtil.getLanguage()
+        ) + "${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
         val buildStatus = checkStatus(

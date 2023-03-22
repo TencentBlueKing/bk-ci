@@ -28,9 +28,8 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
-import java.util.Locale
-import java.util.Properties
-import java.util.ResourceBundle
+import java.text.MessageFormat
+import java.util.*
 
 object MessageUtil {
 
@@ -40,19 +39,27 @@ object MessageUtil {
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
      * @param language 语言信息
+     * @param params 替换描述信息占位符的参数数组
      * @param baseName 基础资源名称
      * @return 描述信息
      */
     fun getMessageByLocale(
         messageCode: String,
         language: String,
+        params: Array<String>? = null,
         baseName: String = DEFAULT_BASE_NAME
     ): String {
         val localeObj = Locale(language)
         // 根据locale和baseName生成resourceBundle对象
         val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
         // 通过resourceBundle获取对应语言的描述信息
-        return String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        var message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        if (null != params) {
+            val mf = MessageFormat(message)
+            // 根据参数动态替换状态码描述里的占位符
+            message = mf.format(params)
+        }
+        return message
     }
 
     /**

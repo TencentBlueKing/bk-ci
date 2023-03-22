@@ -27,6 +27,11 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_GET_NETWORK_CARD
+import com.tencent.devops.process.constant.ProcessCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.net.Inet4Address
@@ -42,7 +47,11 @@ object CommonUtils {
         val ipMap = getMachineIP()
         var innerIp = ipMap["eth1"]
         if (StringUtils.isBlank(innerIp)) {
-            logger.info("eth1 网卡Ip为空，因此，获取eth0的网卡ip")
+            logger.info(
+                MessageUtil.getMessageByLocale(
+                messageCode = BK_ETH1_NETWORK_CARD_IP_EMPTY,
+                language = I18nUtil.getDefaultLocaleLanguage()
+            ))
             innerIp = ipMap["eth0"]
         }
         if (StringUtils.isBlank(innerIp)) {
@@ -72,7 +81,12 @@ object CommonUtils {
                     val netInterfaceName = netInterface.name
                     if (StringUtils.isBlank(netInterfaceName) || "lo".equals(netInterfaceName, ignoreCase = true)) {
                         // 过滤掉127.0.0.1的IP
-                        logger.info("loopback地址或网卡名称为空")
+                        logger.info(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY,
+                                language = I18nUtil.getDefaultLocaleLanguage()
+                            )
+                        )
                     } else {
                         val addresses = netInterface.inetAddresses
                         while (addresses.hasMoreElements()) {
@@ -89,7 +103,11 @@ object CommonUtils {
                 }
             }
         } catch (ignore: Exception) {
-            logger.warn("获取网卡失败", ignore)
+            logger.warn(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_GET_NETWORK_CARD,
+                    language = I18nUtil.getDefaultLocaleLanguage()
+                ), ignore)
         }
 
         return allIp

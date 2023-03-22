@@ -28,12 +28,14 @@
 package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
-import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
 import com.tencent.devops.common.wechatwork.model.robot.MsgInfo
 import com.tencent.devops.common.wechatwork.model.robot.RobotMarkdownSendMsg
+import com.tencent.devops.common.wechatwork.model.robot.RobotTextSendMsg
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextContent
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextMessage
@@ -41,6 +43,7 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.NotifyCmd
 import org.slf4j.LoggerFactory
@@ -128,7 +131,10 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             if (detailFlag) {
                 richtextContentList.add(
                     RichtextView(
-                        RichtextViewLink(text = "查看详情", key = detailUrl, browser = 1)
+                        RichtextViewLink(text = MessageUtil.getMessageByLocale(
+                            messageCode = BK_VIEW_DETAILS,
+                            language = I18nUtil.getLanguage()
+                        ), key = detailUrl, browser = 1)
                     )
                 )
             }
@@ -147,7 +153,10 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
         logger.info("send group msg by robot: $chatId, $content")
         if (markerDownFlag) {
             val textContent = if (detailFlag) {
-                "$content\n[查看详情]($detailUrl)"
+                "$content\n[" + MessageUtil.getMessageByLocale(
+                    messageCode = BK_VIEW_DETAILS,
+                    language = I18nUtil.getLanguage()
+                ) + "]($detailUrl)"
             } else content
             val msg = RobotMarkdownSendMsg(
                 chatId = chatId,
@@ -158,7 +167,10 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             wechatWorkRobotService.send(msg.toJsonString())
         } else {
             val textContent = if (detailFlag) {
-                "$content\n\n查看详情: $detailUrl"
+                "$content\n\n" + MessageUtil.getMessageByLocale(
+                        messageCode = BK_VIEW_DETAILS,
+                language = I18nUtil.getLanguage()
+                ) + ": $detailUrl"
             } else content
             val msg = RobotTextSendMsg(
                 chatId = chatId,

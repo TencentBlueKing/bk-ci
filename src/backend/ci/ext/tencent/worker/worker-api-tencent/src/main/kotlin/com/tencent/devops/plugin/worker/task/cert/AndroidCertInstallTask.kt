@@ -27,12 +27,16 @@
 
 package com.tencent.devops.plugin.worker.task.cert
 
+import com.tencent.devops.worker.common.WorkerCode.BK_KEYSTORE_INSTALLED_SUCCESSFULLY
+import com.tencent.devops.worker.common.WorkerCode.BK_RELATIVE_PATH_KEYSTORE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.DHUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.pipeline.element.AndroidCertInstallElement
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildTask
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.ticket.CertResourceApi
@@ -40,7 +44,7 @@ import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.task.ITask
 import com.tencent.devops.worker.common.task.TaskClassType
 import java.io.File
-import java.util.Base64
+import java.util.*
 
 @TaskClassType(classTypes = [AndroidCertInstallElement.classType])
 class AndroidCertInstallTask : ITask() {
@@ -64,7 +68,11 @@ class AndroidCertInstallTask : ITask() {
         }
 
         val filename = "${destPath.removeSuffix("/")}/$certId.keystore"
-        LoggerService.addNormalLine("keystore安装相对路径：$filename")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+            messageCode = BK_RELATIVE_PATH_KEYSTORE,
+            language = I18nUtil.getLanguage()
+        ) + "：$filename")
 
         val pairKey = DHUtil.initKey()
         val privateKey = pairKey.privateKey
@@ -77,6 +85,11 @@ class AndroidCertInstallTask : ITask() {
         LoggerService.addNormalLine("Keystore sha1: ${ShaUtils.sha1(keystoreContent)}")
 
         File(workspace, filename).writeBytes(keystoreContent)
-        LoggerService.addNormalLine("Keystore安装成功")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_KEYSTORE_INSTALLED_SUCCESSFULLY,
+                language = I18nUtil.getLanguage()
+            )
+        )
     }
 }

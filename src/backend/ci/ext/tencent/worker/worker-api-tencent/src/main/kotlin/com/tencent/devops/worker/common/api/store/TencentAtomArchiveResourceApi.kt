@@ -28,6 +28,12 @@
 package com.tencent.devops.worker.common.api.store
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.worker.common.WorkerCode.BK_ARCHIVE_PLUG_FILES
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_ADD_INFORMATION
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_GET_PLUG
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_SENSITIVE_INFORMATION
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_UPDATE_PLUG
 import com.tencent.devops.artifactory.pojo.enums.BkRepoEnum
 import com.tencent.devops.common.api.auth.AUTH_HEADER_PROJECT_ID
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
@@ -35,9 +41,11 @@ import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PropertyUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
 import com.tencent.devops.store.pojo.atom.AtomDevLanguageEnvVar
@@ -88,7 +96,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             path = "$path?${queryParamSb.removeSuffix("&")}"
         }
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件执行环境信息失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_GET_PLUG,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(responseContent)
     }
 
@@ -107,7 +119,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             objectMapper.writeValueAsString(atomEnvRequest)
         )
         val request = buildPut(path, body)
-        val responseContent = request(request, "更新插件执行环境信息失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_UPDATE_PLUG,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(responseContent)
     }
 
@@ -117,7 +133,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     override fun getAtomSensitiveConf(atomCode: String): Result<List<SensitiveConfResp>?> {
         val path = "/store/api/build/store/sensitiveConf/types/ATOM/codes/$atomCode"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件敏感信息失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_SENSITIVE_INFORMATION,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(responseContent)
     }
 
@@ -131,7 +151,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
     ): Result<List<AtomDevLanguageEnvVar>?> {
         val path = "/store/api/build/market/atom/dev/language/env/var/languages/$language/types/$buildHostType/oss/$buildHostOs"
         val request = buildGet(path)
-        val responseContent = request(request, "获取插件开发语言相关的环境变量信息失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_ENVIRONMENT_VARIABLE_INFORMATION,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(responseContent)
     }
 
@@ -145,7 +169,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             objectMapper.writeValueAsString(platformCodes)
         )
         val request = buildPost(path, body)
-        val responseContent = request(request, "添加插件对接平台信息失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_ADD_INFORMATION,
+                language = I18nUtil.getLanguage()
+            ))
         return objectMapper.readValue(responseContent)
     }
 
@@ -173,7 +201,11 @@ class TencentAtomArchiveResourceApi : AbstractBuildResourceApi(),
             destPath.trim().removePrefix("/") + "/" + file.name
         }
         val userId = buildVariables.variables[PIPELINE_START_USER_ID] ?: ""
-        LoggerService.addNormalLine("归档插件文件 >>> ${file.name}")
+        LoggerService.addNormalLine(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_ARCHIVE_PLUG_FILES,
+                language = I18nUtil.getLanguage(userId)
+            ) + " >>> ${file.name}")
         // 上传至bkrepo
         val uploadFileUrl = ApiUrlUtils.generateStoreUploadFileUrl(
             repoName = BkRepoEnum.PLUGIN.repoName,

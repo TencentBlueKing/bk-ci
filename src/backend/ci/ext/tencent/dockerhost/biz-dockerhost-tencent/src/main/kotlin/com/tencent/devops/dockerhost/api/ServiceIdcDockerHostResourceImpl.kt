@@ -27,15 +27,15 @@
 
 package com.tencent.devops.dockerhost.api
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_DOCKER_BUILDER_RUNS_TOO_MANY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_TO_START_ERROR_MESSAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_TO_START_IMAGE_NOT_EXIST
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.docker.pojo.DockerHostBuildInfo
-import com.tencent.devops.dockerhost.common.DockerHostCode.BK_BUILD_ENVIRONMENT_STARTS_SUCCESSFULLY
-import com.tencent.devops.dockerhost.common.DockerHostCode.BK_DOCKER_BUILDER_RUNS_TOO_MANY
-import com.tencent.devops.dockerhost.common.DockerHostCode.BK_FAILED_TO_START_ERROR_MESSAGE
-import com.tencent.devops.dockerhost.common.DockerHostCode.BK_FAILED_TO_START_IMAGE_NOT_EXIST
 import com.tencent.devops.dockerhost.exception.ContainerException
 import com.tencent.devops.dockerhost.exception.NoSuchImageException
 import com.tencent.devops.dockerhost.services.DockerHostBuildService
@@ -43,7 +43,6 @@ import com.tencent.devops.dockerhost.utils.CommonUtils
 import com.tencent.devops.dockerhost.utils.MAX_CONTAINER_NUM
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import java.text.MessageFormat
 
 @RestResource
 class ServiceIdcDockerHostResourceImpl @Autowired constructor(
@@ -56,12 +55,11 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(
             if (containerNum >= MAX_CONTAINER_NUM) {
                 logger.warn("Too many containers in this host, break to start build.")
                 return Result(1,
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_DOCKER_BUILDER_RUNS_TOO_MANY,
-                            language = I18nUtil.getDefaultLocaleLanguage()
-                        ), CommonUtils.getInnerIP(), containerNum
-                    )
+                            language = I18nUtil.getDefaultLocaleLanguage(),
+                            params = arrayOf(CommonUtils.getInnerIP(), containerNum.toString())
+                        )
                 )
             }
             logger.warn("Create container, dockerStartBuildInfo: $dockerHostBuildInfo")
@@ -85,12 +83,11 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(
             )
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
-                message = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
+                message = MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_TO_START_IMAGE_NOT_EXIST,
-                        language = I18nUtil.getDefaultLocaleLanguage()
-                    ), dockerHostBuildInfo.imageName
-                ),
+                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        params = arrayOf(dockerHostBuildInfo.imageName)
+                    ),
                 tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )
@@ -102,12 +99,10 @@ class ServiceIdcDockerHostResourceImpl @Autowired constructor(
             )
             dockerHostBuildService.log(
                 buildId = dockerHostBuildInfo.buildId,
-                message = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
+                message = MessageUtil.getMessageByLocale(
                         messageCode = BK_FAILED_TO_START_ERROR_MESSAGE,
                         language = I18nUtil.getDefaultLocaleLanguage()
-                    ), e.message
-                ),
+                    ) + "：${e.message}",
                 tag = dockerHostBuildInfo.containerId,
                 containerHashId = dockerHostBuildInfo.containerHashId
             )

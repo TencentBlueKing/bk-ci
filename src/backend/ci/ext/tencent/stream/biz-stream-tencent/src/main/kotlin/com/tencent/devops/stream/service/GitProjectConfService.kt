@@ -28,7 +28,11 @@
 package com.tencent.devops.stream.service
 
 import com.tencent.devops.common.api.exception.CustomException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.timestamp
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_ALREADY_EXISTS
+import com.tencent.devops.stream.constant.StreamCode.BK_PROJECT_NOT_EXIST
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitProjectConfDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
@@ -56,7 +60,11 @@ class GitProjectConfService @Autowired constructor(
         logger.info("GitProjectConfService|Create|id|$gitProjectId|name|$name|url|$url|enable|$enable")
         val record = gitProjectConfDao.get(dslContext, gitProjectId)
         if (null != record) {
-            throw CustomException(Response.Status.BAD_REQUEST, "项目已存在")
+            throw CustomException(Response.Status.BAD_REQUEST,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_ALREADY_EXISTS,
+                    language = I18nUtil.getLanguage()
+                ))
         }
         gitProjectConfDao.create(dslContext, gitProjectId, name, url, enable)
         return true
@@ -64,7 +72,11 @@ class GitProjectConfService @Autowired constructor(
 
     fun update(gitProjectId: Long, name: String?, url: String?, enable: Boolean?): Boolean {
         logger.info("GitProjectConfService|update|id|$gitProjectId|name|$name|url|$url|enable|$enable")
-        gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST, "项目不存在")
+        gitProjectConfDao.get(dslContext, gitProjectId) ?: throw CustomException(Response.Status.BAD_REQUEST,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage()
+            ))
         gitProjectConfDao.update(dslContext, gitProjectId, name, url, enable)
         return true
     }

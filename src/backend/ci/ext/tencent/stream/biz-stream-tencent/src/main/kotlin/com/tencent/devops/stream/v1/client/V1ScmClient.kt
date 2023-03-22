@@ -29,9 +29,12 @@ package com.tencent.devops.stream.v1.client
 
 import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.scm.api.ServiceGitResource
 import com.tencent.devops.scm.pojo.CommitCheckRequest
+import com.tencent.devops.stream.constant.StreamCode.BK_STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.stream.v1.pojo.V1GitCIBasicSetting
 import com.tencent.devops.stream.v1.pojo.V1GitRepositoryConf
 import com.tencent.devops.stream.v1.pojo.enums.V1GitCICommitCheckState
@@ -77,7 +80,12 @@ class V1ScmClient @Autowired constructor(
             commitId = commitId,
             state = status.value,
             targetUrl = V1GitCIPipelineUtils.genGitCIV2BuildUrl(
-                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                homePage = v2GitUrl ?: throw ParamBlankException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                ),
                 gitProjectId = gitProjectConf.gitProjectId,
                 pipelineId = pipelineId,
                 buildId = buildId
@@ -122,7 +130,12 @@ class V1ScmClient @Autowired constructor(
             state = state.value,
             targetUrl = if (jumpNotification) {
                 V1GitCIPipelineUtils.genGitCIV2NotificationsUrl(
-                    streamUrl = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                    streamUrl = v2GitUrl ?: throw ParamBlankException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                            language = I18nUtil.getLanguage(userId)
+                        )
+                    ),
                     gitProjectId = gitCIBasicSetting.gitProjectId.toString()
                 )
             } else {

@@ -32,11 +32,15 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.common.cache.CacheBuilder
 import com.tencent.devops.common.api.constant.CommonMessageCode.SUCCESS
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.StatusReportResource
 import com.tencent.devops.monitoring.pojo.UsersStatus
+import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_USER_INFORMATION
+import com.tencent.devops.project.constant.ProjectCode.BK_USER_RESIGNED
 import com.tencent.devops.project.constant.ProjectMessageCode
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_ORG_FAIL
 import com.tencent.devops.project.constant.ProjectMessageCode.QUERY_SUB_DEPARTMENT_FAIL
@@ -108,7 +112,11 @@ class TOFService @Autowired constructor(
                 logger.info("user $userId is level office")
                 throw OperationException(MessageCodeUtil.getCodeLanMessage(
                     messageCode = QUERY_USER_INFO_FAIL,
-                    defaultMessage = "用户$userId 已离职",
+                    defaultMessage = MessageUtil.getMessageByLocale(
+                        messageCode = BK_USER_RESIGNED,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId)
+                    ),
                     params = arrayOf(userId)
                 ))
             }
@@ -249,7 +257,12 @@ class TOFService @Autowired constructor(
                     path, StaffInfoRequest(
                     tofAppCode!!,
                     tofAppSecret!!, operator, userId, bkTicket
-                    ), MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL, "获取用户信息$userId 失败", arrayOf(userId))
+                    ), MessageCodeUtil.getCodeLanMessage(QUERY_USER_INFO_FAIL,
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_USER_INFORMATION,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId)
+                        ), arrayOf(userId))
                 )
                 val response: Response<StaffInfoResponse> = objectMapper.readValue(responseContent)
                 if (response.data == null) {
@@ -260,14 +273,22 @@ class TOFService @Autowired constructor(
                         errorCode = QUERY_USER_INFO_FAIL,
                         errorMessage = MessageCodeUtil.getCodeLanMessage(
                             messageCode = QUERY_USER_INFO_FAIL,
-                            defaultMessage = "获取用户$userId 信息失败",
+                            defaultMessage = MessageUtil.getMessageByLocale(
+                                messageCode = BK_FAILED_USER_INFORMATION,
+                                language = I18nUtil.getLanguage(userId),
+                                params = arrayOf(userId)
+                            ),
                             params = arrayOf(userId)
                         )
                     )
                     logger.warn("Fail to get the staff info|$userId|$bkTicket|$responseContent")
                     throw OperationException(MessageCodeUtil.getCodeLanMessage(
                         messageCode = QUERY_USER_INFO_FAIL,
-                        defaultMessage = "获取用户$userId 信息失败",
+                        defaultMessage = MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_USER_INFORMATION,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId)
+                        ),
                         params = arrayOf(userId)
                     ))
                 }
@@ -286,7 +307,11 @@ class TOFService @Autowired constructor(
             logger.warn("Fail to get the staff info of userId $userId with ticket $bkTicket", t)
             throw OperationException(MessageCodeUtil.getCodeLanMessage(
                 messageCode = QUERY_USER_INFO_FAIL,
-                defaultMessage = "获取用户$userId 信息失败",
+                defaultMessage = MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_USER_INFORMATION,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId)
+                ),
                 params = arrayOf(userId)
             ))
         }

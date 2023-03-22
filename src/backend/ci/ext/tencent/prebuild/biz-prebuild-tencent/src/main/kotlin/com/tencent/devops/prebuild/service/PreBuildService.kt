@@ -32,6 +32,7 @@ import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.CiBuildConfig
 import com.tencent.devops.common.ci.CiYamlUtils
@@ -69,10 +70,18 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentResource
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
+import com.tencent.devops.prebuild.PreBuildCode.BK_BUILD_TRIGGER
+import com.tencent.devops.prebuild.PreBuildCode.BK_CURRENT_PROJECT_NOT_INITIALIZED
+import com.tencent.devops.prebuild.PreBuildCode.BK_MANUAL_TRIGGER
+import com.tencent.devops.prebuild.PreBuildCode.BK_NO_COMPILATION_ENVIRONMENT
+import com.tencent.devops.prebuild.PreBuildCode.BK_POOL_PARAMETER_CANNOT_EMPTY
+import com.tencent.devops.prebuild.PreBuildCode.BK_TYPE_ALREADY_EXISTS_CANNOT_ADD
+import com.tencent.devops.prebuild.PreBuildCode.BK_USER_NOT_PERMISSION_OPERATE
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
@@ -178,10 +187,17 @@ class PreBuildService @Autowired constructor(
         }
 
         // 第一个stage，触发类
-        val manualTriggerElement = ManualTriggerElement("手动触发", "T-1-1-1")
+        val manualTriggerElement = ManualTriggerElement(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_MANUAL_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+        ), "T-1-1-1")
         val triggerContainer = TriggerContainer(
             id = "0",
-            name = "构建触发",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_BUILD_TRIGGER,
+                language = I18nUtil.getLanguage(userId)
+            ),
             elements = listOf(manualTriggerElement),
             params = buildFormProperties
         )
@@ -222,7 +238,10 @@ class PreBuildService @Autowired constructor(
         return NormalContainer(
             containerId = null,
             id = null,
-            name = "无编译环境",
+            name = MessageUtil.getMessageByLocale(
+                messageCode = BK_NO_COMPILATION_ENVIRONMENT,
+                language = I18nUtil.getLanguage(userId)
+            ),
             elements = elementList,
             status = null,
             startEpoch = null,
@@ -361,7 +380,12 @@ class PreBuildService @Autowired constructor(
                 with(job.job.pool) {
                     if (this == null) {
                         logger.error("getDispatchType , remote , pool is null")
-                        throw OperationException("当 resourceType = REMOTE, pool参数不能为空")
+                        throw OperationException(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_POOL_PARAMETER_CANNOT_EMPTY,
+                                language = I18nUtil.getLanguage()
+                            )
+                        )
                     }
 
                     (this.type ?: PoolType.DockerOnVm).toDispatchType(this)
@@ -453,9 +477,21 @@ class PreBuildService @Autowired constructor(
 
     private fun getPreProjectInfo(preProjectId: String, userId: String): TPrebuildProjectRecord {
         val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId)
-            ?: throw NotFoundException("当前工程未初始化，请初始化工程，工程名： $preProjectId")
+            ?: throw NotFoundException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_CURRENT_PROJECT_NOT_INITIALIZED,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(preProjectId)
+                )
+            )
         if (userId != preProjectRecord.owner) {
-            throw NotFoundException("用户${userId}没有操作权限")
+            throw NotFoundException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_PERMISSION_OPERATE,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(userId)
+                )
+            )
         }
         return preProjectRecord
     }
@@ -647,7 +683,12 @@ class PreBuildService @Autowired constructor(
         )
 
         if (record != null) {
-            throw RuntimeException("已存在当前插件类型的版本信息，无法新增")
+            throw RuntimeException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_TYPE_ALREADY_EXISTS_CANNOT_ADD,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         }
 
         return with(prePluginVersion) {

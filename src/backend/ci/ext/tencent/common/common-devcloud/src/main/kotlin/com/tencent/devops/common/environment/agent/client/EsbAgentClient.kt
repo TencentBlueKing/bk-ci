@@ -30,10 +30,10 @@ package com.tencent.devops.common.environment.agent.client
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_AGENT_STATUS
-import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_CMDB_LIST
-import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_GET_CMDB_NODE
-import com.tencent.devops.common.api.constant.CommonCode.BK_FAILED_TO_QUERY_GSE_AGENT_STATUS
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_AGENT_STATUS
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_LIST
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_GET_CMDB_NODE
+import com.tencent.devops.common.api.constant.CommonMessageCode.FAILED_TO_QUERY_GSE_AGENT_STATUS
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
@@ -94,7 +94,7 @@ class EsbAgentClient {
                     val msg = responseData["msg"]
                     logger.error("get user cmdb nodes failed: $msg")
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
-                        messageCode = BK_FAILED_TO_QUERY_GSE_AGENT_STATUS,
+                        messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS,
                         language = I18nUtil.getLanguage(userId)
                     ))
                 }
@@ -122,7 +122,7 @@ class EsbAgentClient {
                 logger.error("get agent status failed", e)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_FAILED_TO_GET_AGENT_STATUS,
+                        messageCode = FAILED_TO_GET_AGENT_STATUS,
                         language = I18nUtil.getLanguage(userId)
                     )
                 )
@@ -162,7 +162,7 @@ class EsbAgentClient {
                     logger.error("get cmdb nodes failed: $msg")
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_FAILED_TO_GET_CMDB_NODE,
+                            messageCode = FAILED_TO_GET_CMDB_NODE,
                             language = I18nUtil.getLanguage()
                         ))
                 }
@@ -206,7 +206,7 @@ class EsbAgentClient {
                 logger.error("get cmdb nodes error", e)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_FAILED_TO_GET_CMDB_LIST,
+                        messageCode = FAILED_TO_GET_CMDB_LIST,
                         language = I18nUtil.getLanguage()
                     )
                 )

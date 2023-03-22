@@ -28,7 +28,10 @@ package com.tencent.devops.lambda.service.project
 
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.kafka.KafkaClient
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.lambda.LambdaCode
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.project.LambdaProjectDao
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
@@ -145,7 +148,12 @@ class LambdaProjectService @Autowired constructor(
 
     private fun checkParamBlank(param: String?, message: String): String {
         if (param.isNullOrBlank()) {
-            throw ParamBlankException("启动配置缺少 $message")
+            throw ParamBlankException(
+                MessageUtil.getMessageByLocale(
+                messageCode = LambdaCode.BK_STARTUP_CONFIGURATION_MISSING,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(message)
+            ))
         }
         return param
     }

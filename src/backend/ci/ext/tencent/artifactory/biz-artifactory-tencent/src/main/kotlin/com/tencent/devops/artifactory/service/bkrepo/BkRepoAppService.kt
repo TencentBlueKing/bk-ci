@@ -27,9 +27,10 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_NO_EXPERIENCE_PERMISSION
-import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.NO_EXPERIENCE_PERMISSION
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN
 import com.tencent.devops.artifactory.pojo.Url
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
 import com.tencent.devops.artifactory.service.AppService
@@ -57,7 +58,6 @@ import com.tencent.devops.experience.api.service.ServiceExperienceResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Service
@@ -132,14 +132,12 @@ class BkRepoAppService @Autowired constructor(
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(argPath)
         when (artifactoryType) {
             ArtifactoryType.CUSTOM_DIR -> {
-                pipelineService.validatePermission(userId, projectId, message = MessageFormat.format(
+                pipelineService.validatePermission(userId, projectId, message =
                     MessageUtil.getMessageByLocale(
-                        messageCode = ArtifactoryMessageCode.USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
-                        language = I18nUtil.getLanguage(userId)
-                    ),
-                    userId,
-                    projectId
-                ))
+                        messageCode = USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf(userId, projectId)
+                    ))
             }
             ArtifactoryType.PIPELINE -> {
                 val properties = bkRepoClient.listMetadata(
@@ -150,12 +148,11 @@ class BkRepoAppService @Autowired constructor(
                 )
                 if (properties[ARCHIVE_PROPS_PIPELINE_ID].isNullOrBlank()) {
                     throw CustomException(Response.Status.BAD_REQUEST,
-                        MessageFormat.format(
                             MessageUtil.getMessageByLocale(
-                                messageCode = BK_METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
-                                language = I18nUtil.getLanguage(userId)
-                            ),"pipelineId"
-                        )
+                                messageCode = METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING,
+                                language = I18nUtil.getLanguage(userId),
+                                params = arrayOf("pipelineId")
+                            )
                         )
                 }
                 val pipelineId = properties[ARCHIVE_PROPS_PIPELINE_ID]
@@ -164,15 +161,11 @@ class BkRepoAppService @Autowired constructor(
                     projectId,
                     pipelineId!!,
                     AuthPermission.DOWNLOAD,
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = ArtifactoryMessageCode.USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
-                            language = I18nUtil.getLanguage(userId)
-                        ),
-                        userId,
-                        projectId,
-                        pipelineId
-                    )
+                            messageCode = USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId, projectId, pipelineId)
+                        )
                 )
             }
             // 镜像不支持下载
@@ -203,7 +196,7 @@ class BkRepoAppService @Autowired constructor(
             val check = client.get(ServiceExperienceResource::class).check(userId, experienceHashId, organization)
             if (!check.isOk() || !check.data!!) {
                 throw CustomException(Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
-                    messageCode = BK_NO_EXPERIENCE_PERMISSION,
+                    messageCode = NO_EXPERIENCE_PERMISSION,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }

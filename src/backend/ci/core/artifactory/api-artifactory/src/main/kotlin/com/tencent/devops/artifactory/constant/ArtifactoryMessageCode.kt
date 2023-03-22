@@ -54,4 +54,19 @@ object ArtifactoryMessageCode {
     const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
     const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
     const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
+
+    const val GRANT_DOWNLOAD_PERMISSION = "2102011" //请联系流水线负责人授予下载构件权限
+    const val GRANT_PIPELINE_PERMISSION = "2102012"//访问件构请联系流水线负责人：\n{0} 授予流水线权限。
+    const val METADATA_NOT_EXIST_DOWNLOAD_FILE_BY_SHARING = "2102013"//元数据({0})不存在，请通过共享下载文件
+    const val NO_EXPERIENCE_PERMISSION = "2102014"//您没有该体验的权限
+    const val FILE_NOT_EXIST = "2102015"//文件{0}不存在
+    const val DESTINATION_PATH_SHOULD_BE_FOLDER = "2102016"//目标路径应为文件夹
+    const val CANNOT_COPY_TO_CURRENT_DIRECTORY = "2102017"//不能在拷贝到当前目录
+    const val CANNOT_MOVE_TO_CURRENT_DIRECTORY = "2102018"//不能移动到当前目录
+    const val CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY = "2102019"//不能将父目录移动到子目录
+    const val METADATA_NOT_EXIST = "2102020"//元数据({0})不存在
+    const val BUILD_NOT_EXIST = "2102021"//构建不存在({0})
+    const val USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT = "2102022"//用户({0})在工程({1})下没有流水线{2}权限
+
+
 }

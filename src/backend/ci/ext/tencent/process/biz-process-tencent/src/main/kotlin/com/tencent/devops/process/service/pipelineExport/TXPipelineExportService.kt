@@ -37,6 +37,7 @@ import com.fasterxml.jackson.module.kotlin.registerKotlinModule
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.Model
@@ -47,6 +48,20 @@ import com.tencent.devops.common.pipeline.container.VMBuildContainer
 import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE
+import com.tencent.devops.process.constant.ProcessCode.BK_ENTER_URL_ADDRESS_IMAGE
+import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_SYSTEM_CREDENTIALS
+import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_TIME
+import com.tencent.devops.process.constant.ProcessCode.BK_IDENTIFIED_SENSITIVE_INFORMATION
+import com.tencent.devops.process.constant.ProcessCode.BK_NO_RIGHT_EXPORT_PIPELINE
+import com.tencent.devops.process.constant.ProcessCode.BK_PARAMETERS_BE_EXPORTED
+import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINED_ID
+import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_NAME
+import com.tencent.devops.process.constant.ProcessCode.BK_PROJECT_ID
+import com.tencent.devops.process.constant.ProcessCode.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
+import com.tencent.devops.process.constant.ProcessCode.BK_STREAM_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessCode.BK_UNKNOWN_CONTEXT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -136,7 +151,11 @@ class TXPipelineExportService @Autowired constructor(
             projectId = projectId,
             pipelineId = pipelineId,
             permission = AuthPermission.EDIT,
-            message = "用户($userId)无权限在工程($projectId)下导出流水线"
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_NO_RIGHT_EXPORT_PIPELINE,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectId)
+            )
         )
         val pipelineInfo = pipelineRepositoryService.getPipelineInfo(projectId, pipelineId)
             ?: throw ErrorCodeException(
@@ -304,19 +323,65 @@ class TXPipelineExportService @Autowired constructor(
             "############################################################################" +
                 "#########################################\n"
         )
-        yamlSb.append("# 项目ID: $projectId \n")
-        yamlSb.append("# 流水线ID: $pipelineId \n")
-        yamlSb.append("# 流水线名称: ${model.name} \n")
-        yamlSb.append("# 导出时间: ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+            messageCode = BK_PROJECT_ID,
+            language = I18nUtil.getLanguage()
+        ) + " $projectId \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+            messageCode = BK_PIPELINED_ID,
+            language = I18nUtil.getLanguage()
+        ) + " $pipelineId \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PIPELINE_NAME,
+                language = I18nUtil.getLanguage()
+            ) + " ${model.name} \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_EXPORT_TIME,
+                language = I18nUtil.getLanguage()
+            ) + " ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
-        yamlSb.append("# 注意：不支持系统凭证(用户名、密码)的导出，请在stream项目设置下重新添加凭据：https://iwiki.woa.com/p/800638064 ！ \n")
-        yamlSb.append("# 注意：[插件]输入参数可能存在敏感信息，请仔细检查，谨慎分享！！！ \n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_EXPORT_SYSTEM_CREDENTIALS,
+                language = I18nUtil.getLanguage()
+            )
+        )
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS,
+                language = I18nUtil.getLanguage()
+            )
+        )
         if (isGitCI) {
-            yamlSb.append("# 注意：[插件]Stream不支持蓝盾老版本的插件，请在研发商店搜索新插件替换 \n")
+            yamlSb.append(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_STREAM_NOT_SUPPORT,
+                    language = I18nUtil.getLanguage()
+                )
+            )
         }
-        yamlSb.append("# \n# tips：部分参数导出会存在\"[该字段限制导出，请手动填写]\",需要手动指定。原因有:\n")
-        yamlSb.append("# ①识别出为敏感信息，不支持导出\n")
-        yamlSb.append("# ②部分字段校验格式时存在未知上下文，不支持导出\n")
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_PARAMETERS_BE_EXPORTED,
+                language = I18nUtil.getLanguage()
+            )
+        )
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_IDENTIFIED_SENSITIVE_INFORMATION,
+                language = I18nUtil.getLanguage()
+            )
+        )
+        yamlSb.append(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_UNKNOWN_CONTEXT_EXISTS,
+                language = I18nUtil.getLanguage()
+            )
+        )
         yamlSb.append(
             "########################################################" +
                 "#############################################################\n\n"
@@ -403,7 +468,11 @@ class TXPipelineExportService @Autowired constructor(
                         dispatchType.dockerBuildVersion = "bkdevops/" + dispatchType.value
                         Pair("bkdevops/" + dispatchType.value, null)
                     } else {
-                        Pair("### 该镜像暂不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###", null)
+                        Pair(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE,
+                                language = I18nUtil.getLanguage(userId)
+                            ), null)
                     }
                 }
                 else -> {
@@ -415,7 +484,11 @@ class TXPipelineExportService @Autowired constructor(
                 }
             }
         } catch (e: Exception) {
-            return Pair("###请直接填入镜像(TLinux2.2公共镜像)的URL地址，若存在鉴权请增加 credentials 字段###", null)
+            return Pair(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_ENTER_URL_ADDRESS_IMAGE,
+                    language = I18nUtil.getLanguage(userId)
+                ), null)
         }
     }
 }

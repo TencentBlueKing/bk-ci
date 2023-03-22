@@ -28,12 +28,15 @@
 package com.tencent.devops.stream.resources
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.api.ServiceOauthResource
 import com.tencent.devops.stream.api.TXExternalStreamResource
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamCode.BK_FAILED_VERIFY_AUTHORITY
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.service.StreamBasicSettingService
 import com.tencent.devops.stream.service.StreamGitTransferService
@@ -79,7 +82,11 @@ class TXExternalStreamResourceImpl(
                     )
                 } catch (exception: Exception) {
                     return Response.status(Response.Status.FORBIDDEN).type(MediaType.APPLICATION_JSON_TYPE)
-                        .entity(Result(status = 403, message = "授权人权限校验失败", data = exception.message)).build()
+                        .entity(Result(status = 403, message =
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_FAILED_VERIFY_AUTHORITY,
+                            language = I18nUtil.getLanguage(userId)
+                        ), data = exception.message)).build()
                 }
 
                 val setting = streamBasicSettingService.getStreamConf(gitProjectId)

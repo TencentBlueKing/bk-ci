@@ -27,6 +27,10 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.experience.constant.ExperienceCode.BK_HAS_BEEN_UPDATED
+import com.tencent.devops.experience.constant.ExperienceCode.BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW
 import com.tencent.devops.experience.pojo.AppNotifyMessage
 
 @SuppressWarnings("LongParameterList")
@@ -44,8 +48,16 @@ object AppNotifyUtil {
     ): AppNotifyMessage {
         val message = AppNotifyMessage()
         message.receiver = receiver
-        message.title = "【$experienceName】 $appVersion 更新啦"
-        message.body = "【$experienceName】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>"
+        message.title =  MessageUtil.getMessageByLocale(
+                messageCode = BK_HAS_BEEN_UPDATED,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(experienceName, appVersion)
+            )
+        message.body = MessageUtil.getMessageByLocale(
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW,
+            language = I18nUtil.getLanguage(),
+            params = arrayOf(experienceName)
+        )
         message.url = "bkdevopsapp://bkdevopsapp/app/experience/expDetail/$experienceHashId"
         message.experienceHashId = experienceHashId
         message.platform = platform

@@ -30,14 +30,22 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.JobWrapper
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.SendWechatNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
+import com.tencent.devops.process.constant.ProcessCode.BK_INVALID_NOTIFICATION_RECIPIENT
+import com.tencent.devops.process.constant.ProcessCode.BK_MOBILE_VIEW_DETAILS
+import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT
+import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT_FAILED
+import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT_SUCCESSFULLY
+import com.tencent.devops.process.constant.ProcessCode.BK_WECOM_NOTICE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -64,21 +72,33 @@ class WechatTaskAtom @Autowired constructor(
         val taskId = task.taskId
         val buildId = task.buildId
         if (param.receivers.isEmpty()) {
-            buildLogPrinter.addRedLine(buildId, "通知接收者不合法:[${param.receivers}]", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
+                messageCode = BK_INVALID_NOTIFICATION_RECIPIENT,
+                language = I18nUtil.getLanguage()
+            ) + "[${param.receivers}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorMsg = "通知接收者不合法:[${param.receivers}]"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_INVALID_NOTIFICATION_RECIPIENT,
+                    language = I18nUtil.getLanguage()
+                ) + "[${param.receivers}]"
             )
         }
         if (param.body.isBlank()) {
-            buildLogPrinter.addRedLine(buildId, "企业微信通知内容:[${param.body}]", taskId, task.containerHashId, task.executeCount ?: 1)
+            buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
+                messageCode = BK_WECOM_NOTICE,
+                language = I18nUtil.getLanguage()
+            ) + "[${param.body}]", taskId, task.containerHashId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
-                errorMsg = "企业微信通知内容:[${param.body}]"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    messageCode = BK_WECOM_NOTICE,
+                    language = I18nUtil.getLanguage()
+                ) + "[${param.body}]"
             )
         }
         val sendDetailFlag = param.detailFlag ?: false
@@ -92,13 +112,22 @@ class WechatTaskAtom @Autowired constructor(
                     "pipelineId=${runVariables[PIPELINE_ID]}&" +
                     "buildId=$buildId"
             val innerUrl = "${HomeHostUtil.innerServerHost()}/console/pipeline/${runVariables[PROJECT_NAME]}/${runVariables[PIPELINE_ID]}/detail/$buildId"
-            bodyStr = "$bodyStr\n\n 手机查看详情：$outerUrl \n 电脑查看详情：$innerUrl"
+            bodyStr = MessageUtil.getMessageByLocale(
+                messageCode = BK_MOBILE_VIEW_DETAILS,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(bodyStr, outerUrl, innerUrl)
+            )
         }
         val message = WechatNotifyMessage().apply {
             body = bodyStr
         }
         val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
-        buildLogPrinter.addLine(buildId, "发送企业微信内容: (${message.body}) 到 $receiversStr", taskId, task.containerHashId, task.executeCount ?: 1)
+        buildLogPrinter.addLine(buildId,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_SEND_WECOM_CONTENT,
+                language = I18nUtil.getLanguage(),
+                params = arrayOf(message.body, receiversStr)
+            ), taskId, task.containerHashId, task.executeCount ?: 1)
 
         message.addAllReceivers(receiversStr.split(",").toSet())
 
@@ -107,11 +136,20 @@ class WechatTaskAtom @Autowired constructor(
                 val resp = client.get(ServiceNotifyResource::class).sendWechatNotify(message)
                 if (resp.isOk()) {
                     if (resp.data!!) {
-                        buildLogPrinter.addLine(buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]成功", taskId, task.containerHashId, task.executeCount ?: 1)
+                        buildLogPrinter.addLine(buildId,
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_SEND_WECOM_CONTENT_SUCCESSFULLY,
+                                language = I18nUtil.getLanguage(),
+                                params = arrayOf(message.body, receiversStr)
+                            ), taskId, task.containerHashId, task.executeCount ?: 1)
                         return true
                     }
                 }
-                buildLogPrinter.addRedLine(buildId, "发送企业微信内容: (${message.body}) 到 [$receiversStr]失败: ${resp.message}", taskId, task.containerHashId, task.executeCount ?: 1)
+                buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
+                    messageCode = BK_SEND_WECOM_CONTENT_FAILED,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(message.body, receiversStr, resp.message.toString())
+                ), taskId, task.containerHashId, task.executeCount ?: 1)
                 return false
             }
         }).tryDoIt()

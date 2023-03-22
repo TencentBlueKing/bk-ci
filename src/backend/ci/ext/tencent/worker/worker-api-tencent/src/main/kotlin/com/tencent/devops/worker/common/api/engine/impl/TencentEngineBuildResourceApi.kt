@@ -28,7 +28,10 @@
 package com.tencent.devops.worker.common.api.engine.impl
 
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_GET_WORKER_BEE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.worker.common.CI_TOKEN_CONTEXT
 import com.tencent.devops.worker.common.api.ApiPriority
@@ -52,7 +55,11 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
                 val gitProjectId = projectId.removePrefix("git_")
                 val url = "/ms/repository/api/build/gitci/getToken?gitProjectId=$gitProjectId"
                 val request = buildGet(url)
-                val responseContent = request(request, "获取工蜂CI项目Token失败！")
+                val responseContent = request(request,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_GET_WORKER_BEE,
+                        language = I18nUtil.getLanguage()
+                    ))
                 val gitToken = objectMapper.readValue<Result<GitToken>>(responseContent)
                 context[CI_TOKEN_CONTEXT] = gitToken.data?.accessToken ?: ""
             }
@@ -70,7 +77,11 @@ class TencentEngineBuildResourceApi : EngineBuildResourceApi(), EngineBuildSDKAp
             if (projectId.startsWith("git_") && !gitToken.isNullOrBlank()) {
                 val url = "/ms/repository/api/build/gitci/clearToken?token=$gitToken"
                 val request = buildDelete(url)
-                val responseContent = request(request, "获取工蜂CI项目Token失败！")
+                val responseContent = request(request,
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_FAILED_GET_WORKER_BEE,
+                        language = I18nUtil.getLanguage()
+                    ))
                 val result = objectMapper.readValue<Result<Boolean>>(responseContent)
                 if (result.data == true) {
                     logger.info("ci token for project[$projectId] is cleared.")

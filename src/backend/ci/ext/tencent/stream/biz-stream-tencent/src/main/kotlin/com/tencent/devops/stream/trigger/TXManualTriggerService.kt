@@ -30,12 +30,15 @@ package com.tencent.devops.stream.trigger
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.ci.yaml.CIBuildYaml
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.enums.BuildStatus
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
 import com.tencent.devops.stream.config.StreamGitConfig
+import com.tencent.devops.stream.constant.StreamCode.BK_STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -306,7 +309,12 @@ class TXManualTriggerService @Autowired constructor(
             commitId = v1TriggerBuildReq.commitId,
             buildId = result.id,
             buildUrl = GitCIPipelineUtils.genGitCIV2BuildUrl(
-                homePage = v2GitUrl ?: throw ParamBlankException("启动配置缺少 rtx.v2GitUrl"),
+                homePage = v2GitUrl ?: throw ParamBlankException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_STARTUP_CONFIGURATION_MISSING,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                ),
                 gitProjectId = buildPipeline.gitProjectId,
                 pipelineId = pipelineId,
                 buildId = result.id

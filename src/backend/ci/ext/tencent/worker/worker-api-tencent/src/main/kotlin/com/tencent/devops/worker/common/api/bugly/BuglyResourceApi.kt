@@ -28,7 +28,10 @@
 package com.tencent.devops.worker.common.api.bugly
 
 import com.google.gson.JsonParser
+import com.tencent.devops.worker.common.WorkerCode.BK_FAILED_UPLOAD_BUGLY_FILE
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -65,7 +68,11 @@ class BuglyResourceApi : AbstractBuildResourceApi() {
             .addFormDataPart("file", file.name, file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
             .build()
         val request = buildPost(path, body)
-        val responseContent = request(request, "上传bugly文件失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_UPLOAD_BUGLY_FILE,
+                language = I18nUtil.getLanguage()
+            ))
 
         val obj = parser.parse(responseContent).asJsonObject
         return if (obj["rtcode"].asString != "0") {

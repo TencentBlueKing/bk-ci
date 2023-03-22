@@ -30,11 +30,14 @@ package com.tencent.devops.process.service.ipt
 import com.tencent.devops.artifactory.api.service.ServiceIptResource
 import com.tencent.devops.artifactory.pojo.SearchProps
 import com.tencent.devops.common.api.exception.PermissionForbiddenException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthPermissionApi
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_USER_NOT_PERMISSION_DOWNLOAD
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.repository.api.ServiceGitCommitResource
 import org.slf4j.LoggerFactory
@@ -85,7 +88,13 @@ class IptRepoService @Autowired constructor(
             permission = AuthPermission.DOWNLOAD,
             resourceCode = pipelineId
         )
-        if (!result) throw PermissionForbiddenException("用户($userId)在工程($projectId)下没有流水线${pipelineId}下载构建权限")
+        if (!result) throw PermissionForbiddenException(
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_USER_NOT_PERMISSION_DOWNLOAD,
+                language = I18nUtil.getLanguage(userId),
+                params = arrayOf(userId, projectId, pipelineId)
+            )
+        )
     }
 
     companion object {

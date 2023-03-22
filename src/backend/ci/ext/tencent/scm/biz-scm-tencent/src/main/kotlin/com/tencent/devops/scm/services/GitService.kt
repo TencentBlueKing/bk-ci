@@ -40,11 +40,13 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.OkhttpUtils.stringLimit
 import com.tencent.devops.common.api.util.script.CommonScriptUtils
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.repository.pojo.enums.GitCodeBranchesSort
 import com.tencent.devops.repository.pojo.enums.GitCodeProjectsOrder
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
@@ -68,32 +70,15 @@ import com.tencent.devops.scm.code.git.api.GitOauthApi
 import com.tencent.devops.scm.code.git.api.GitTag
 import com.tencent.devops.scm.code.git.api.GitTagCommit
 import com.tencent.devops.scm.config.GitConfig
+import com.tencent.devops.scm.constant.ScmCode.BK_FILE_CANNOT_EXCEED
+import com.tencent.devops.scm.constant.ScmCode.BK_GIT_TOKEN_EMPTY
+import com.tencent.devops.scm.constant.ScmCode.BK_INCORRECT_GIT_TOKEN
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.scm.enums.GitProjectsOrderBy
 import com.tencent.devops.scm.enums.GitSortAscOrDesc
 import com.tencent.devops.scm.exception.GitApiException
 import com.tencent.devops.scm.exception.ScmException
-import com.tencent.devops.scm.pojo.ChangeFileInfo
-import com.tencent.devops.scm.pojo.Commit
-import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitCICommitRef
-import com.tencent.devops.scm.pojo.GitCICreateFile
-import com.tencent.devops.scm.pojo.GitCIFileCommit
-import com.tencent.devops.scm.pojo.GitCIMrInfo
-import com.tencent.devops.scm.pojo.GitCIProjectInfo
-import com.tencent.devops.scm.pojo.GitCodeGroup
-import com.tencent.devops.scm.pojo.GitCommit
-import com.tencent.devops.scm.pojo.GitFileInfo
-import com.tencent.devops.scm.pojo.GitMember
-import com.tencent.devops.scm.pojo.GitMrInfo
-import com.tencent.devops.scm.pojo.GitMrReviewInfo
-import com.tencent.devops.scm.pojo.GitProjectGroupInfo
-import com.tencent.devops.scm.pojo.GitProjectInfo
-import com.tencent.devops.scm.pojo.GitRepositoryDirItem
-import com.tencent.devops.scm.pojo.GitRepositoryResp
-import com.tencent.devops.scm.pojo.OwnerInfo
-import com.tencent.devops.scm.pojo.Project
-import com.tencent.devops.scm.pojo.TapdWorkItem
+import com.tencent.devops.scm.pojo.*
 import com.tencent.devops.scm.utils.GitCodeUtils
 import com.tencent.devops.scm.utils.RetryUtils
 import com.tencent.devops.scm.utils.code.git.GitUtils
@@ -112,7 +97,7 @@ import java.net.URLDecoder
 import java.net.URLEncoder
 import java.nio.file.Files
 import java.time.LocalDateTime
-import java.util.Base64
+import java.util.*
 import java.util.concurrent.Executors
 import javax.servlet.http.HttpServletResponse
 import javax.ws.rs.core.Response
@@ -931,7 +916,11 @@ class GitService @Autowired constructor(
                         message = "fail to get git file content with: ${it.code}): ${it.message}"
                     )
                 }
-                return it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
+                return it.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg =
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FILE_CANNOT_EXCEED,
+                    language = I18nUtil.getLanguage()
+                ))
             }
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to get the git file content")
@@ -969,7 +958,11 @@ class GitService @Autowired constructor(
                             "$projectFileUrl(${response.code}): ${response.message}"
                     )
                 }
-                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg = "请求文件不能超过1M")
+                val body = response.stringLimit(readLimit = MAX_FILE_SIZE, errorMsg =
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FILE_CANNOT_EXCEED,
+                    language = I18nUtil.getLanguage()
+                ))
                 val fileInfo = objectMapper.readValue(body, GitlabFileInfo::class.java)
                 return String(Base64.getDecoder().decode(fileInfo.content))
             }
@@ -1688,7 +1681,12 @@ class GitService @Autowired constructor(
         try {
             with(request) {
                 if (token == null || token == "") {
-                    throw IllegalArgumentException("Git Token为空")
+                    throw IllegalArgumentException(
+                        MessageUtil.getMessageByLocale(
+                            messageCode = BK_GIT_TOKEN_EMPTY,
+                            language = I18nUtil.getLanguage()
+                        )
+                    )
                 }
                 gitOauthApi.addCommitCheck(
                     "$gitCIUrl/api/v3",
@@ -1696,7 +1694,11 @@ class GitService @Autowired constructor(
                 )
             }
         } catch (e: ScmException) {
-            throw ScmException(message = "Git Token不正确", scmType = ScmType.CODE_GIT.name)
+            throw ScmException(message =
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_INCORRECT_GIT_TOKEN,
+                language = I18nUtil.getLanguage()
+            ), scmType = ScmType.CODE_GIT.name)
         } finally {
             logger.info("It took ${System.currentTimeMillis() - startEpoch}ms to add commit check")
         }

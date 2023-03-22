@@ -1,5 +1,6 @@
 package com.tencent.devops.process.service.pipelineExport
 
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.NormalContainer
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.VMBuildContainer
@@ -13,6 +14,10 @@ import com.tencent.devops.common.pipeline.type.devcloud.PublicDevCloudDispathcTy
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.pipeline.type.exsi.ESXiDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.process.constant.ProcessCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED
+import com.tencent.devops.process.constant.ProcessCode.BK_BUILD_CLUSTERS_THROUGH
+import com.tencent.devops.process.constant.ProcessCode.BK_NOTE_DEFAULT_XCODE_VERSION
 import com.tencent.devops.process.pojo.JobPipelineExportV2YamlConflictMapBaseItem
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
@@ -112,7 +117,10 @@ object ExportJob {
                         is ThirdPartyAgentEnvDispatchType -> {
                             RunsOn(
                                 selfHosted = true,
-                                poolName = "### 该环境不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###",
+                                poolName = MessageUtil.getMessageByLocale(
+                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED,
+                                    language = I18nUtil.getLanguage()
+                                ),
                                 container = null,
                                 agentSelector = listOf(job.baseOS.name.toLowerCase()),
                                 needs = job.buildEnv
@@ -157,8 +165,13 @@ object ExportJob {
                         is MacOSDispatchType -> {
                             RunsOn(
                                 selfHosted = null,
-                                poolName = "### 可以通过 runs-on: macos-10.15 使用macOS公共构建集群。" +
-                                    "注意默认的Xcode版本为12.2，若需自定义，请在JOB下自行执行 xcode-select 命令切换 ###",
+                                poolName = MessageUtil.getMessageByLocale(
+                                    messageCode = BK_BUILD_CLUSTERS_THROUGH,
+                                    language = I18nUtil.getLanguage()
+                                ) + MessageUtil.getMessageByLocale(
+                                            messageCode = BK_NOTE_DEFAULT_XCODE_VERSION,
+                                            language = I18nUtil.getLanguage()
+                                        ),
                                 container = null,
                                 agentSelector = null
                             )
@@ -166,7 +179,10 @@ object ExportJob {
                         else -> {
                             RunsOn(
                                 selfHosted = null,
-                                poolName = "### 该环境不支持自动导出，请参考 https://iwiki.woa.com/x/2ebDKw 手动配置 ###",
+                                poolName = MessageUtil.getMessageByLocale(
+                                    messageCode = BK_AUTOMATIC_EXPORT_NOT_SUPPORTED,
+                                    language = I18nUtil.getLanguage()
+                                ),
                                 container = null,
                                 agentSelector = null
                             )

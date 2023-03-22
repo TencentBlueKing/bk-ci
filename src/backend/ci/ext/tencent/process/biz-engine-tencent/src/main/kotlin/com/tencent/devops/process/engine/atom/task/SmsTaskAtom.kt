@@ -32,13 +32,16 @@ import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.SendSmsNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
-import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.SmsNotifyMessage
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -93,7 +96,10 @@ class SmsTaskAtom @Autowired constructor(
                 "&pipelineId=${runVariables[PIPELINE_ID]}&buildId=$buildId"
             val shortUrl = client.get(ServiceShortUrlResource::class)
                 .createShortUrl(CreateShortUrlRequest(url, 24 * 3600 * 30)).data!!
-            bodyStr = "$bodyStr\n\n 查看详情：$shortUrl"
+            bodyStr = "$bodyStr\n\n " + MessageUtil.getMessageByLocale(
+                messageCode = BK_VIEW_DETAILS,
+                language = I18nUtil.getLanguage()
+            ) + "：$shortUrl"
         }
         val message = SmsNotifyMessage().apply {
             body = bodyStr

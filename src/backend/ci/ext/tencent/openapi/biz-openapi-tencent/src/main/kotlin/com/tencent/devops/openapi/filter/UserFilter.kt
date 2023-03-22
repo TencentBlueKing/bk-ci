@@ -29,9 +29,12 @@ package com.tencent.devops.openapi.filter
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_APP_CODE
 import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.exception.ParamBlankException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RequestFilter
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.openapi.constant.OpenAPICode.BK_ILLEGAL_USER
 import com.tencent.devops.openapi.service.op.AppUserInfoService
 import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory
@@ -73,7 +76,12 @@ class UserFilter @Autowired constructor(
                 if (appManagerUser.isNullOrEmpty()) {
                     logger.warn("$userId is not rtx user, appCode: $appCode not has manager")
                     if (redisOperation.get("$FILTER_RUN_FLAG_PREFIX${bkTag.getLocalTag()}") != null) {
-                        throw ParamBlankException("非法用户")
+                        throw ParamBlankException(
+                            MessageUtil.getMessageByLocale(
+                                messageCode = BK_ILLEGAL_USER,
+                                language = I18nUtil.getLanguage(userId)
+                            )
+                        )
                     }
                 } else {
                     requestContext.headers.putSingle(AUTH_HEADER_USER_ID, appManagerUser)

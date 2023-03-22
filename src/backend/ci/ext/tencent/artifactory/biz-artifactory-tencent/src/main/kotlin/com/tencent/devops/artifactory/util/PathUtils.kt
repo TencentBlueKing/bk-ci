@@ -27,8 +27,8 @@
 
 package com.tencent.devops.artifactory.util
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_ILLEGAL_PATH
 import com.tencent.devops.artifactory.pojo.FileInfo
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_PATH
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil

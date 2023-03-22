@@ -30,11 +30,13 @@ package com.tencent.devops.stream.resources.service
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatcher
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.engine.pojo.event.PipelineStreamEnabledEvent
 import com.tencent.devops.project.api.service.service.ServiceTxUserResource
 import com.tencent.devops.repository.api.ServiceOauthResource
@@ -42,6 +44,8 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.scm.pojo.GitCIProjectInfo
 import com.tencent.devops.scm.utils.code.git.GitUtils
+import com.tencent.devops.store.constant.StoreCode.BK_WORKER_BEE_PROJECT_NOT_EXIST
+import com.tencent.devops.store.constant.StoreCode.BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED
 import com.tencent.devops.stream.api.service.ServiceGitBasicSettingResource
 import com.tencent.devops.stream.common.exception.ErrorCodeEnum
 import com.tencent.devops.stream.config.StreamGitConfig
@@ -152,7 +156,10 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
             useAccessToken = true
         ) ?: return Result(
             status = Response.Status.NOT_FOUND.statusCode,
-            message = "工蜂项目信息不存在，请检查链接",
+            message = MessageUtil.getMessageByLocale(
+                messageCode = BK_WORKER_BEE_PROJECT_NOT_EXIST,
+                language = I18nUtil.getLanguage(userId)
+            ),
             data = null
         )
         logger.info("STREAM|validateGitProjectInfo|projectInfo=$projectInfo")
@@ -164,7 +171,10 @@ class ServiceGitBasicSettingResourceImpl @Autowired constructor(
         val setting = txStreamBasicSettingService.getStreamConf(gitProjectId)
             ?: return Result(
                 status = Response.Status.NOT_FOUND.statusCode,
-                message = "工蜂项目未开启Stream，请前往仓库的CI/CD进行配置",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_WORKER_BEE_PROJECT_NOT_STREAM_ENABLED,
+                    language = I18nUtil.getLanguage(userId)
+                ),
                 data = null
             )
         logger.info("STREAM|validateGitProjectSetting|setting=$setting")

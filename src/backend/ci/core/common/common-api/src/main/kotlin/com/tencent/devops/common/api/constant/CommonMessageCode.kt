@@ -76,4 +76,14 @@ object CommonMessageCode {
     const val PARAMETER_SECRET_ERROR = "2100026" // {0}密钥配置错误: {1}
     const val PARAMETER_IS_EMPTY = "2100027" // 参数不能为空
     const val ERROR_QUERY_TIME_RANGE_ERROR = "2100028" // 查询的时间范围跨度错误
+
+    const val USERS_EXCEEDS_THE_LIMIT = "2100029"//授权用户数越界:{0}
+    const val FAILED_TO_QUERY_GSE_AGENT_STATUS = "2100030"//查询 Gse Agent 状态失败
+    const val FAILED_TO_GET_AGENT_STATUS = "2100031"//获取agent状态失败
+    const val FAILED_TO_GET_CMDB_NODE = "2100032"//获取 CMDB 节点失败
+    const val FAILED_TO_GET_CMDB_LIST = "2100033"//获取CMDB列表失败
+    const val STAGES_AND_STEPS_CANNOT_EXIST_BY_SIDE = "2100034"//stages和steps不能并列存在!
+    const val ILLEGAL_JOB_TYPE = "2100035"//非法的job类型!
+    const val ILLEGAL_GITCI_SERVICE_IMAGE_FORMAT = "2100036"//GITCI Service镜像格式非法
+
 }

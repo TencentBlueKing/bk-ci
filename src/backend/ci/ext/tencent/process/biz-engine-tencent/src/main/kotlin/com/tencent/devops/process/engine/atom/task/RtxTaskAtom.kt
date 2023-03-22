@@ -30,10 +30,13 @@ package com.tencent.devops.process.engine.atom.task
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.SendRTXNotifyElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
 import com.tencent.devops.common.wechatwork.model.sendmessage.Receiver
@@ -43,9 +46,14 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
+import com.tencent.devops.process.constant.ProcessCode.BK_COMPUTER_VIEW_DETAILS
+import com.tencent.devops.process.constant.ProcessCode.BK_EMPTY_TITLE
+import com.tencent.devops.process.constant.ProcessCode.BK_MESSAGE_CONTENT_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_RECEIVER_EMPTY
+import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_MESSAGE
+import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -82,7 +90,10 @@ class RtxTaskAtom @Autowired constructor(
             if (param.receivers.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "Message Receivers is empty(接收人为空)",
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_RECEIVER_EMPTY,
+                        language = I18nUtil.getLanguage()
+                    ),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -91,13 +102,19 @@ class RtxTaskAtom @Autowired constructor(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
-                    errorMsg = "Message Receivers is empty(接收人为空)"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = BK_RECEIVER_EMPTY,
+                        language = I18nUtil.getLanguage()
+                    )
                 )
             }
             if (param.body.isBlank()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "Message Body is empty(消息内容为空)",
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_MESSAGE_CONTENT_EMPTY,
+                        language = I18nUtil.getLanguage()
+                    ),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -106,13 +123,19 @@ class RtxTaskAtom @Autowired constructor(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
-                    errorMsg = "Message Body is empty(消息内容为空)"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = BK_MESSAGE_CONTENT_EMPTY,
+                        language = I18nUtil.getLanguage()
+                    )
                 )
             }
             if (param.title.isEmpty()) {
                 buildLogPrinter.addRedLine(
                     buildId = buildId,
-                    message = "Message Title is empty(标题为空)",
+                    message = MessageUtil.getMessageByLocale(
+                        messageCode = BK_EMPTY_TITLE,
+                        language = I18nUtil.getLanguage()
+                    ),
                     tag = taskId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -121,7 +144,10 @@ class RtxTaskAtom @Autowired constructor(
                     buildStatus = BuildStatus.FAILED,
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
-                    errorMsg = "Message Title is empty(标题为空)"
+                    errorMsg = MessageUtil.getMessageByLocale(
+                        messageCode = BK_EMPTY_TITLE,
+                        language = I18nUtil.getLanguage()
+                    )
                 )
             }
 
@@ -134,7 +160,11 @@ class RtxTaskAtom @Autowired constructor(
             val bodyStrOrigin = parseVariable(param.body, runVariables)
             // 企业微信通知是否加上详情
             val bodyStr = if (sendDetailFlag) {
-                "$bodyStrOrigin\n\n电脑查看详情：$detailUrl\n手机查看详情：$detailOuterUrl"
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_COMPUTER_VIEW_DETAILS,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(bodyStrOrigin, detailUrl, detailOuterUrl)
+                )
             } else {
                 bodyStrOrigin
             }
@@ -148,7 +178,11 @@ class RtxTaskAtom @Autowired constructor(
             val receiversStr = parseVariable(param.receivers.joinToString(","), runVariables)
             buildLogPrinter.addLine(
                 buildId = buildId,
-                message = "send enterprise wechat message(发送企业微信消息):\n${message.body}\nto\n$receiversStr",
+                message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_SEND_WECOM_MESSAGE,
+                    language = I18nUtil.getLanguage(),
+                    params = arrayOf(message.body, receiversStr)
+                ),
                 tag = taskId,
                 jobId = task.containerHashId,
                 executeCount = task.executeCount ?: 1
@@ -178,7 +212,10 @@ class RtxTaskAtom @Autowired constructor(
                         richtextContentList.add(
                             RichtextView(
                                 RichtextViewLink(
-                                "查看详情",
+                                    MessageUtil.getMessageByLocale(
+                                        messageCode = BK_VIEW_DETAILS,
+                                        language = I18nUtil.getLanguage()
+                                    ),
                                 detailUrl,
                                 1
                         )

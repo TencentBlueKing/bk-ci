@@ -33,6 +33,7 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.auth.api.service.ServicePermissionAuthResource
 import com.tencent.devops.auth.api.service.ServiceProjectAuthResource
 import com.tencent.devops.common.api.exception.OperationException
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.auth.api.AuthResourceType
@@ -40,6 +41,10 @@ import com.tencent.devops.common.auth.api.BkAuthProperties
 import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.client.ClientTokenService
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_CREATE_PROJECT
+import com.tencent.devops.project.constant.ProjectCode.BK_FAILED_CREATE_PROJECT_V0
+import com.tencent.devops.project.constant.ProjectCode.BK_PROJECT_ID_INVALID_V0
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.listener.TxIamV3CreateEvent
 import com.tencent.devops.project.pojo.AuthProjectForCreateResult
@@ -156,21 +161,39 @@ class TxV3ProjectPermissionServiceImpl @Autowired constructor(
         val json = objectMapper.writeValueAsString(param)
         val requestBody = RequestBody.create(mediaType, json)
         val request = Request.Builder().url(authUrl).post(requestBody).build()
-        val responseContent = request(request, "调用权限中心创建项目失败")
+        val responseContent = request(request,
+            MessageUtil.getMessageByLocale(
+                messageCode = BK_FAILED_CREATE_PROJECT,
+                language = I18nUtil.getLanguage(userId)
+            ) )
         val result = objectMapper.readValue<Result<AuthProjectForCreateResult>>(responseContent)
         if (result.isNotOk()) {
             logger.warn("Fail to create the project of response $responseContent")
-            throw OperationException("调用权限中心V0创建项目失败: ${result.message}")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_CREATE_PROJECT_V0,
+                    language = I18nUtil.getLanguage(userId)
+                ) + ": ${result.message}")
         }
         val authProjectForCreateResult = result.data
         return if (authProjectForCreateResult != null) {
             if (authProjectForCreateResult.project_id.isBlank()) {
-                throw OperationException("权限中心创建V0的项目ID无效")
+                throw OperationException(
+                    MessageUtil.getMessageByLocale(
+                        messageCode = BK_PROJECT_ID_INVALID_V0,
+                        language = I18nUtil.getLanguage(userId)
+                    )
+                )
             }
             authProjectForCreateResult.project_id
         } else {
             logger.warn("Fail to get the project id from response $responseContent")
-            throw OperationException("权限中心V0创建的项目ID无效")
+            throw OperationException(
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_PROJECT_ID_INVALID_V0,
+                    language = I18nUtil.getLanguage(userId)
+                )
+            )
         }
     }
 

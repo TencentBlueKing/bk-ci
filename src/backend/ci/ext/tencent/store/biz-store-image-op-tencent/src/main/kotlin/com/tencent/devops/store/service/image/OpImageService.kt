@@ -28,9 +28,12 @@
 package com.tencent.devops.store.service.image
 
 import com.tencent.devops.common.api.pojo.Result
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.pipeline.type.docker.ImageType
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.store.constant.StoreCode.BK_HISTORYDATA_DATA
 import com.tencent.devops.store.dao.OpImageDao
 import com.tencent.devops.store.dao.common.StoreProjectRelDao
 import com.tencent.devops.store.dao.common.StoreReleaseDao
@@ -418,7 +421,11 @@ class OpImageService @Autowired constructor(
                 rdType = ImageRDTypeEnum.THIRD_PARTY,
                 weight = 1,
                 result = PASS,
-                message = "historyData数据迁移自动通过"
+                message =
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_HISTORYDATA_DATA,
+                    language = I18nUtil.getLanguage(userId)
+                )
             ),
             checkCurrentStatus = false
         )

@@ -27,8 +27,8 @@
 
 package com.tencent.devops.artifactory.service.bkrepo
 
-import com.tencent.devops.artifactory.constant.ArtifactoryCode
-import com.tencent.devops.artifactory.constant.ArtifactoryCode.BK_USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.FILE_NOT_EXIST
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT
 import com.tencent.devops.artifactory.pojo.FileDetail
 import com.tencent.devops.artifactory.pojo.FileInfo
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
@@ -44,7 +44,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
 import javax.ws.rs.NotFoundException
@@ -83,24 +82,22 @@ class BkRepoPipelineDirService @Autowired constructor(
             isPipelineDir -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
                 pipelineService.validatePermission(userId, projectId, pipelineId, authPermission,
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                            language = I18nUtil.getLanguage(userId)
-                        ),userId,projectId,authPermission.alias
-                    )
+                            messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId, projectId, authPermission.alias)
+                        )
                    )
                 getPipelinePathList(projectId, normalizedPath, fileList)
             }
             else -> {
                 val pipelineId = pipelineService.getPipelineId(normalizedPath)
                 pipelineService.validatePermission(userId, projectId, pipelineId, authPermission,
-                    MessageFormat.format(
                         MessageUtil.getMessageByLocale(
-                            messageCode = BK_USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
-                            language = I18nUtil.getLanguage(userId)
-                        ),userId,projectId,authPermission.alias
-                    ))
+                            messageCode = USER_NO_PIPELINE_PERMISSION_UNDER_PROJECT,
+                            language = I18nUtil.getLanguage(userId),
+                            params = arrayOf(userId, projectId, authPermission.alias)
+                        ))
                 getBuildPathList(projectId, normalizedPath, fileList)
             }
         }
@@ -194,11 +191,11 @@ class BkRepoPipelineDirService @Autowired constructor(
         logger.info("show, userId: $userId, projectId: $projectId, path: $path")
         val normalizedPath = PathUtils.checkAndNormalizeAbsPath(path)
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.PIPELINE_REPO, normalizedPath)
-            ?: throw NotFoundException(
-                MessageFormat.format(MessageUtil.getMessageByLocale(
-                    messageCode = ArtifactoryCode.BK_FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId)
-                ), "")
+            ?: throw NotFoundException( MessageUtil.getMessageByLocale(
+                    messageCode = FILE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf("")
+                )
             )
         return RepoUtils.toFileDetail(fileDetail)
     }

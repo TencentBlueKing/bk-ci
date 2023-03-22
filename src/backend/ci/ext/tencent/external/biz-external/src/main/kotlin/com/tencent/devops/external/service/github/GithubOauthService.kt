@@ -32,8 +32,11 @@ import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.HashUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.web.utils.I18nUtil
+import com.tencent.devops.external.constant.ExternalCode.BK_FAILED_GET_GITHUB_ACCESS_TOKEN
 import com.tencent.devops.repository.api.ServiceGithubResource
 import com.tencent.devops.repository.pojo.github.GithubOauth
 import com.tencent.devops.repository.pojo.github.GithubToken
@@ -107,7 +110,12 @@ class GithubOauthService @Autowired constructor(
             val data = response.body!!.string()
             if (!response.isSuccessful) {
                 logger.info("Github get code(${response.code}) and response($data)")
-                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, "获取Github access_token失败")
+                throw CustomException(Response.Status.INTERNAL_SERVER_ERROR,
+                MessageUtil.getMessageByLocale(
+                    messageCode = BK_FAILED_GET_GITHUB_ACCESS_TOKEN,
+                    language = I18nUtil.getLanguage()
+                )
+                )
             }
             return objectMapper.readValue(data)
         }
