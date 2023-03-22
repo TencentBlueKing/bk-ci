@@ -52,7 +52,6 @@ import com.tencent.devops.repository.pojo.GithubCheckRunsResponse
 import com.tencent.devops.repository.pojo.GithubRepository
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.scm.pojo.CommitCheckRequest
-import com.tencent.devops.scm.pojo.GitMrInfo
 import com.tencent.devops.ticket.api.ServiceCredentialResource
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -297,34 +296,5 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
         val accessToken = client.get(ServiceGithubResource::class).getAccessToken(userName).data
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
-    }
-
-    private fun getMrInfo(
-        projectName: String,
-        url: String,
-        scmType: ScmType,
-        token: String?,
-        mrId: Long,
-        isOauth: Boolean
-    ): GitMrInfo {
-        val data: GitMrInfo
-        if (isOauth) {
-            data = client.get(ServiceScmOauthResource::class).getMrInfo(
-                projectName = projectName,
-                url = url,
-                type = scmType,
-                token = token,
-                mrId = mrId
-            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId) by oauth")
-        } else {
-            data = client.get(ServiceScmResource::class).getMrInfo(
-                projectName = projectName,
-                url = url,
-                type = scmType,
-                token = token,
-                mrId = mrId
-            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId)")
-        }
-        return data
     }
 }
