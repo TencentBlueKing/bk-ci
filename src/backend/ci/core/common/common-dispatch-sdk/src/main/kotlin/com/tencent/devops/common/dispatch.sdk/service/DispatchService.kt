@@ -39,6 +39,8 @@ import com.tencent.devops.common.dispatch.sdk.DispatchSdkErrorCode
 import com.tencent.devops.common.dispatch.sdk.pojo.DispatchMessage
 import com.tencent.devops.common.dispatch.sdk.pojo.RedisBuild
 import com.tencent.devops.common.dispatch.sdk.pojo.SecretInfo
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_FILE_GATEWAY
+import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_DEVOPS_GATEWAY
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_ID
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_AGENT_SECRET_KEY
 import com.tencent.devops.common.dispatch.sdk.pojo.docker.DockerConstants.ENV_KEY_BUILD_ID
@@ -48,6 +50,7 @@ import com.tencent.devops.common.event.dispatcher.pipeline.PipelineEventDispatch
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.monitoring.api.service.DispatchReportResource
 import com.tencent.devops.monitoring.pojo.DispatchStatus
 import com.tencent.devops.process.api.service.ServiceBuildResource
@@ -66,7 +69,8 @@ class DispatchService constructor(
     private val gateway: String?,
     private val client: Client,
     private val channelUtils: ChannelUtils,
-    private val buildLogPrinter: BuildLogPrinter
+    private val buildLogPrinter: BuildLogPrinter,
+    private val commonConfig: CommonConfig
 ) {
 
     fun log(buildId: String, containerHashId: String?, vmSeqId: String, message: String, executeCount: Int?) {
@@ -98,6 +102,12 @@ class DispatchService constructor(
         customBuildEnv[ENV_KEY_PROJECT_ID] = event.projectId
         customBuildEnv[ENV_KEY_AGENT_ID] = secretInfo.hashId
         customBuildEnv[ENV_KEY_AGENT_SECRET_KEY] = secretInfo.secretKey
+        commonConfig.fileDevnetGateway?.let {
+            customBuildEnv[ENV_DEVOPS_FILE_GATEWAY] = it
+        }
+        commonConfig.devopsDevnetProxyGateway?.let {
+            customBuildEnv[ENV_DEVOPS_GATEWAY] = it
+        }
 
         return DispatchMessage(
             id = secretInfo.hashId,
