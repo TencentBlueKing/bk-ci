@@ -9,7 +9,7 @@
         "name_en": "bkci-rbac",
         "clients": "bkci,bk_ci",
         "provider_config": {
-          "host": "http://devops.oa.com/ms/auth",
+          "host": "http://ci-auth.service.consul:21936",
           "auth": "basic",
           "healthz": "/api/v1/healthz"
         }
@@ -23,7 +23,7 @@
         "name_en": "Project",
         "parents": [],
         "provider_config": {
-          "path": "/api/open/auth/resource/projects?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/projects?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -41,7 +41,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -59,7 +59,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -77,7 +77,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -95,7 +95,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -113,7 +113,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -131,7 +131,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -149,7 +149,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -167,7 +167,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -185,7 +185,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -203,7 +203,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -221,7 +221,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -239,7 +239,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -257,7 +257,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
@@ -275,7 +275,7 @@
           }
         ],
         "provider_config": {
-          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=mht-rbac"
+          "path": "/api/open/auth/resource/instances/list?x-devops-project-id=rbac-project"
         },
         "version": 1
       }
