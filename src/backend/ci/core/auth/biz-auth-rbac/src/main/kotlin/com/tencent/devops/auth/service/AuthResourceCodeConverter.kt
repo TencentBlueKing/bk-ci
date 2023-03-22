@@ -36,7 +36,6 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.project.api.service.ServiceAllocIdResource
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
 /**
  * 资源code转换器
@@ -44,7 +43,6 @@ import org.springframework.stereotype.Service
  * 1. iam 资源ID最大只能36位,蓝盾资源code可能超过36位，如凭证Id是由用户自定义，最长可以支持64位，资源code需要进行转换
  * 2. 太长的资源code会导致返回的权限表达式太大，导致性能下降,如流水线ID，资源code也需要进行转换
  */
-@Service
 class AuthResourceCodeConverter @Autowired constructor(
     private val client: Client,
     private val dslContext: DSLContext,

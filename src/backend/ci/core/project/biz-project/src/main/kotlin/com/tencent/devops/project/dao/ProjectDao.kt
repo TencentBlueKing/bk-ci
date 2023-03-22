@@ -46,7 +46,7 @@ import org.jooq.Condition
 import org.jooq.DSLContext
 import org.jooq.Record
 import org.jooq.Record1
-import org.jooq.Record2
+import org.jooq.Record3
 import org.jooq.Result
 import org.jooq.impl.DSL
 import org.springframework.stereotype.Repository
@@ -517,26 +517,39 @@ class ProjectDao {
     fun listProjectsForApply(
         dslContext: DSLContext,
         projectName: String?,
-        englishNameList: List<String>,
+        projectId: String?,
+        authEnglishNameList: List<String>,
         offset: Int,
         limit: Int
-    ): Result<Record2<String, String>> {
+    ): Result<Record3<String, String, String>> {
         return with(TProject.T_PROJECT) {
-            dslContext.select(PROJECT_NAME, ENGLISH_NAME).from(this).whereExists(
-                dslContext.selectFrom(this).where()
-                    .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
-                    .union(
-                        dslContext.selectFrom(this).where(ENGLISH_NAME.`in`(englishNameList))
+            dslContext.select(PROJECT_NAME, ENGLISH_NAME, ROUTER_TAG).from(this)
+                .where(generateQueryProjectForApplyCondition())
+                .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PUBLIC.value))
+                .or(
+                    ID.`in`(
+                        dslContext.select(ID).from(this)
+                            .where(generateQueryProjectForApplyCondition())
+                            .and(ENGLISH_NAME.`in`(authEnglishNameList))
                             .and(AUTH_SECRECY.eq(ProjectAuthSecrecyStatus.PRIVATE.value))
                     )
-            ).let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
-                .and(IS_OFFLINED.eq(false))
-                .and(ENABLED.eq(true))
+                )
+                .let { if (projectName == null) it else it.and(PROJECT_NAME.like("%${projectName.trim()}%")) }
+                .let { if (projectId == null) it else it.and(ENGLISH_NAME.eq(projectId)) }
                 .orderBy(CREATED_AT.desc())
                 .limit(limit)
                 .offset(offset)
                 .fetch()
         }
+    }
+
+    private fun TProject.generateQueryProjectForApplyCondition(): MutableList<Condition> {
+        val conditions = mutableListOf<Condition>()
+        conditions.add(CHANNEL.eq("BS"))
+        conditions.add(IS_OFFLINED.eq(false))
+        conditions.add(ENABLED.eq(true))
+        conditions.add(APPROVAL_STATUS.notIn(UNSUCCESSFUL_CREATE_STATUS))
+        return conditions
     }
 
     fun updateProjectFromOp(dslContext: DSLContext, projectInfoRequest: OpProjectUpdateInfoRequest) {

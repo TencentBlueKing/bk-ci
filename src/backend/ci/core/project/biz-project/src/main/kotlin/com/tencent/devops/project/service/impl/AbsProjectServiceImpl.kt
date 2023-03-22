@@ -53,6 +53,7 @@ import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.UNDER_APPROVAL_PROJECT
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.jmx.api.ProjectJmxApi
@@ -332,8 +333,14 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         val record = projectDao.getByEnglishName(dslContext, englishName) ?: return null
         val projectInfo = ProjectUtils.packagingBean(record)
         val approvalStatus = ProjectApproveStatus.parse(projectInfo.approvalStatus)
-        // 项目没有创建成功或者不是创建人,必须校验权限
-        if (approvalStatus.isSuccess() || record.creator != userId) {
+        if (approvalStatus.isCreatePending() && record.creator != userId) {
+            throw ErrorCodeException(
+                errorCode = UNDER_APPROVAL_PROJECT,
+                params = arrayOf(englishName),
+                defaultMessage = "project {0} is being approved, please wait patiently, or contact the approver"
+            )
+        }
+        if (approvalStatus.isSuccess()) {
             val verify = validatePermission(
                 userId = userId,
                 projectCode = englishName,
@@ -539,6 +546,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         projectName: String?,
+        projectId: String?,
         page: Int,
         pageSize: Int
     ): Pagination<ProjectWithPermission> {
@@ -549,7 +557,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectDao.listProjectsForApply(
             dslContext = dslContext,
             projectName = projectName,
-            englishNameList = hasVisitPermissionProjectIds,
+            projectId = projectId,
+            authEnglishNameList = hasVisitPermissionProjectIds,
             offset = sqlLimit.offset,
             limit = sqlLimit.limit
         ).forEach {
@@ -557,13 +566,9 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                 ProjectWithPermission(
                     projectName = it.value1(),
                     englishName = it.value2(),
-                    permission = authPermissionApi.validateUserResourcePermission(
-                        user = userId,
-                        serviceCode = projectAuthServiceCode,
-                        resourceType = AuthResourceType.PROJECT,
-                        projectCode = it.value2(),
-                        permission = AuthPermission.VISIT
-                    )
+                    permission = hasVisitPermissionProjectIds.contains(it.value2()),
+                    // todo routerTag 的处理还存在问题，得进一步修正
+                    routerTag = getRouterTag(it.value3())
                 )
             )
         }
@@ -1040,6 +1045,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCode: String
     )
 
+    abstract fun getRouterTag(routerTag: String?): String
+
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
         private val logger = LoggerFactory.getLogger(AbsProjectServiceImpl::class.java)!!
@@ -1047,7 +1054,6 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
         private const val FIRST_PAGE = 1
-
         // 项目tips默认展示时间
         private const val DEFAULT_TIPS_SHOW_TIME = 7
     }

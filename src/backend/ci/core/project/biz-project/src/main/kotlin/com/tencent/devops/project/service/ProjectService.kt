@@ -160,6 +160,7 @@ interface ProjectService {
         userId: String,
         accessToken: String?,
         projectName: String?,
+        projectId: String?,
         page: Int,
         pageSize: Int
     ): Pagination<ProjectWithPermission>

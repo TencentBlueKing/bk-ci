@@ -65,6 +65,7 @@ class UserProjectResourceImpl @Autowired constructor(
         userId: String,
         accessToken: String?,
         projectName: String?,
+        projectId: String?,
         page: Int,
         pageSize: Int
     ): Result<Pagination<ProjectWithPermission>> {
@@ -73,6 +74,7 @@ class UserProjectResourceImpl @Autowired constructor(
                 userId = userId,
                 accessToken = accessToken,
                 projectName = projectName,
+                projectId = projectId,
                 page = page,
                 pageSize = pageSize
             )

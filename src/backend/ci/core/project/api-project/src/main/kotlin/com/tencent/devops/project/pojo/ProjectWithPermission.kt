@@ -10,5 +10,7 @@ data class ProjectWithPermission(
     @ApiModelProperty("项目英文名称")
     val englishName: String,
     @ApiModelProperty("权限")
-    val permission: Boolean
+    val permission: Boolean,
+    @ApiModelProperty("环境路由")
+    val routerTag: String?
 )

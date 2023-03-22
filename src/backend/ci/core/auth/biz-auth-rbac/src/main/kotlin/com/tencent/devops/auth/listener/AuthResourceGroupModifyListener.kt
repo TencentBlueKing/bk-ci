@@ -34,9 +34,7 @@ import com.tencent.devops.auth.service.PermissionSubsetManagerService
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.event.dispatcher.trace.TraceEventDispatcher
 import com.tencent.devops.common.event.listener.trace.BaseTraceListener
-import org.springframework.stereotype.Component
 
-@Component
 class AuthResourceGroupModifyListener(
     private val permissionGradeManagerService: PermissionGradeManagerService,
     private val permissionSubsetManagerService: PermissionSubsetManagerService,

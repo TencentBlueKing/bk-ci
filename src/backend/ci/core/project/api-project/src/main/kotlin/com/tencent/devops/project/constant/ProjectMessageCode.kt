@@ -81,4 +81,5 @@ object ProjectMessageCode {
     const val PROJECT_UPDATE_FAIL = "2119037" // 修改项目错误
     const val CANCEL_CREATION_PROJECT_FAIL = "2119039" // 取消创建中的项目失败
     const val APPROVAL_PROJECT_CANT_UPDATE = "2119041" // 审批下的下项目不能修改
+    const val UNDER_APPROVAL_PROJECT = "2119042" // 项目{0}审批中，请耐心等待，或联系审批人处理
 }

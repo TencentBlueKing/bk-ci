@@ -10,10 +10,8 @@ import com.tencent.devops.auth.service.iam.PermissionCacheService
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 import java.util.concurrent.TimeUnit
 
-@Service
 class RbacPermissionCacheService @Autowired constructor(
     val dslContext: DSLContext,
     val authResourceTypeDao: AuthResourceTypeDao,

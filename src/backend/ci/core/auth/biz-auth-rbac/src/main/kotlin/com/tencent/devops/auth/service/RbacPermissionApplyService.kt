@@ -36,6 +36,7 @@ import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.api.user.UserPipelineViewResource
+import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -75,6 +76,8 @@ class RbacPermissionApplyService @Autowired constructor(
         searchGroupInfo: SearchGroupInfo
     ): ManagerRoleGroupVO {
         logger.info("RbacPermissionApplyService|listGroups: searchGroupInfo=$searchGroupInfo")
+        verifyProjectRouterTag(projectId)
+
         val projectInfo = authResourceService.get(
             projectCode = projectId,
             resourceType = AuthResourceType.PROJECT.value,
@@ -168,6 +171,24 @@ class RbacPermissionApplyService @Autowired constructor(
             }
         }
         return bkIamPath?.toString() ?: return ""
+    }
+
+    private fun verifyProjectRouterTag(projectId: String) {
+        val routerTag = client.get(ServiceProjectResource::class)
+            .get(projectId).data?.routerTag ?: throw ErrorCodeException(
+            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
+            params = arrayOf(projectId),
+            defaultMessage = "the project not exists, projectCode:$projectId"
+        )
+        // 校验项目是否为RBAC,若不是，则抛出异常
+        if (routerTag.isBlank() || !routerTag.contains("rbac")) {
+            throw ErrorCodeException(
+                errorCode = AuthMessageCode.ERROR_PROJECT_NOT_UPGRADE,
+                params = arrayOf(projectId),
+                defaultMessage = "The project has not been upgraded to the new permission system," +
+                    " please return to the old permission center to apply!"
+            )
+        }
     }
 
     private fun getGradeManagerRoleGroup(

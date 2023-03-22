@@ -38,9 +38,7 @@ import org.jooq.DSLContext
 import org.jooq.impl.DSL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class AuthResourceService @Autowired constructor(
     private val dslContext: DSLContext,
     private val authResourceDao: AuthResourceDao,
@@ -126,7 +124,7 @@ class AuthResourceService @Autowired constructor(
         ) ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
             params = arrayOf(resourceCode),
-            defaultMessage = "the resource not exists, resourceCode:$resourceCode"
+            defaultMessage = "the resource $resourceCode not exists"
         )
         return authResourceDao.convert(record)
     }

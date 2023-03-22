@@ -45,9 +45,7 @@ import com.tencent.devops.common.auth.utils.IamGroupUtils
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
-import org.springframework.stereotype.Service
 
-@Service
 class PermissionSubsetManagerService @Autowired constructor(
     private val permissionGroupPoliciesService: PermissionGroupPoliciesService,
     private val iamV2ManagerService: V2ManagerService,

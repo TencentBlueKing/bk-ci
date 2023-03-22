@@ -42,12 +42,10 @@ import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
-import org.springframework.stereotype.Service
 
 /**
  * 权限组策略
  */
-@Service
 @Suppress("LongParameterList", "LongMethod")
 class PermissionGroupPoliciesService(
     private val iamConfiguration: IamConfiguration,

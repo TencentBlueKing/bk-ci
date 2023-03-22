@@ -47,6 +47,7 @@ import com.tencent.devops.common.service.trace.TraceTag
 import org.slf4j.LoggerFactory
 import org.slf4j.MDC
 
+@Suppress("TooManyFunctions")
 class RbacPermissionService constructor(
     private val authHelper: AuthHelper,
     private val authResourceService: AuthResourceService,
