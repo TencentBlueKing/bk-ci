@@ -46,11 +46,11 @@ import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.dispatch.exception.ErrorCodeEnum
-import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_BUSY
-import com.tencent.devops.dispatch.pojo.BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS
-import com.tencent.devops.dispatch.pojo.BK_BUILD_NODE_EMPTY_ERROR
-import com.tencent.devops.dispatch.pojo.BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
-import com.tencent.devops.dispatch.pojo.BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
+import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_MACHINE_BUSY
+import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_MACHINE_UPGRADE_IN_PROGRESS
+import com.tencent.devops.dispatch.pojo.DispatchMassageCode.BUILD_NODE_IS_EMPTY
+import com.tencent.devops.dispatch.pojo.DispatchMassageCode.CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT
+import com.tencent.devops.dispatch.pojo.DispatchMassageCode.THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR
 import com.tencent.devops.dispatch.service.ThirdPartyAgentService
 import com.tencent.devops.dispatch.service.dispatcher.Dispatcher
 import com.tencent.devops.dispatch.utils.ThirdPartyAgentEnvLock
@@ -67,7 +67,6 @@ import com.tencent.devops.process.pojo.mq.PipelineAgentStartupEvent
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.text.MessageFormat
 import javax.ws.rs.core.Response
 
 @Component
@@ -176,8 +175,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 buildLogPrinter = buildLogPrinter,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_STATUS_ERROR,
-                errorMsg = MessageUtil.getMessageByLocale(BK_THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR, I18nUtil.getLanguage()) +
-                        "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
+                errorMsg = MessageUtil.getMessageByLocale(
+                    THIRD_PARTY_BUILD_MACHINE_STATUS_ERROR,
+                    I18nUtil.getLanguage()
+                ) + "- ${dispatchType.displayName}| status: (${agentResult.agentStatus?.name})"
             )
             return
         }
@@ -203,12 +204,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.LOAD_BUILD_AGENT_FAIL,
-                errorMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
-                        I18nUtil.getLanguage()
-                    ),
-                    dispatchType.displayName
+                errorMessage = MessageUtil.getMessageByLocale(
+                    CONSTANT_AGENTS_UPGRADING_OR_TIMED_OUT,
+                    I18nUtil.getLanguage(),
+                    arrayOf(dispatchType.displayName)
                 )
             )
         } else {
@@ -248,8 +247,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                     logger.warn("The agent(${agent.agentId}) of project(${event.projectId}) is upgrading")
                     log(
                         event,
-                        MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_UPGRADE_IN_PROGRESS, I18nUtil.getLanguage())
-                                + " - ${agent.hostname}/${agent.ip}"
+                        MessageUtil.getMessageByLocale(
+                            BUILD_MACHINE_UPGRADE_IN_PROGRESS,
+                            I18nUtil.getLanguage()
+                        ) + " - ${agent.hostname}/${agent.ip}"
                     )
                     return false
                 }
@@ -287,7 +288,7 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
             } else {
                 log(
                     event,
-                    MessageUtil.getMessageByLocale(BK_BUILD_MACHINE_BUSY, I18nUtil.getLanguage())
+                    MessageUtil.getMessageByLocale(BUILD_MACHINE_BUSY, I18nUtil.getLanguage())
                             + "(Agent is busy) - ${agent.hostname}/${agent.ip}")
                 return false
             }
@@ -445,12 +446,10 @@ class ThirdPartyAgentDispatcher @Autowired constructor(
                 pipelineEventDispatcher = pipelineEventDispatcher,
                 event = event,
                 errorCodeEnum = ErrorCodeEnum.VM_NODE_NULL,
-                errorMessage = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_BUILD_NODE_EMPTY_ERROR,
-                        I18nUtil.getLanguage()
-                    ),
-                    dispatchType.envName
+                errorMessage = MessageUtil.getMessageByLocale(
+                    BUILD_NODE_IS_EMPTY,
+                    I18nUtil.getLanguage(),
+                    arrayOf(dispatchType.envName)
                 ) + "build cluster： ${dispatchType.envName} (env(${dispatchType.envName}) is empty)"
             )
             return

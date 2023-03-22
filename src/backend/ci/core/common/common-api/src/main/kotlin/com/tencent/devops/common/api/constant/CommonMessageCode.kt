@@ -92,4 +92,5 @@ object CommonMessageCode {
     const val ENGINEERING_REPO_CALL_ERROR = "2100039"// 工程仓库访问异常
     const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2100040"// 非项目成员且项目为非开源项目
 
+
 }

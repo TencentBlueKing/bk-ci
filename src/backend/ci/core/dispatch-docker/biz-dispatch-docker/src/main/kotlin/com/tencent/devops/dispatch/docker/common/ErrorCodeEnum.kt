@@ -51,5 +51,7 @@ enum class ErrorCodeEnum(
     RETRY_START_VM_FAIL(ErrorType.USER, 2127009, "Start build Docker VM failed, retry times."),
     GET_VM_STATUS_FAIL(ErrorType.SYSTEM, 2127010, "Get container status failed"),
     GET_CREDENTIAL_FAIL(ErrorType.USER, 2127011, "Get credential failed"),
-    IMAGE_ILLEGAL_EXCEPTION(ErrorType.USER, 2127012, "User Image illegal, not found or credential error")
+    IMAGE_ILLEGAL_EXCEPTION(ErrorType.USER, 2127012, "User Image illegal, not found or credential error"),
+    IMAGE_CHECK_LEGITIMATE_OR_RETRY(ErrorType.USER, 2127013, "登录调试失败,请检查镜像是否合法或重试。"),
+    DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY(ErrorType.SYSTEM, 2127014, "登录调试失败，调试容器异常关闭，请重试。")
 }

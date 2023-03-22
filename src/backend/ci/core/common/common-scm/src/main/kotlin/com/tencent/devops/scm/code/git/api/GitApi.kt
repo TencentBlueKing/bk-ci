@@ -30,10 +30,10 @@ package com.tencent.devops.scm.code.git.api
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.BK_ACCOUNT_NOT_PERMISSIONS
 import com.tencent.devops.common.api.constant.BK_AUTH_FAIL
+import com.tencent.devops.common.api.constant.BK_GIT_CANNOT_OPERATION
 import com.tencent.devops.common.api.constant.BK_GIT_INTERFACE_NOT_EXIST
-import com.tencent.devops.common.api.constant.BK_GIT_OPERATION_CANNOT
 import com.tencent.devops.common.api.constant.BK_GIT_REPO_NOT_EXIST
-import com.tencent.devops.common.api.constant.BK_PARAME_ERROR
+import com.tencent.devops.common.api.constant.BK_PARAM_ERROR
 import com.tencent.devops.common.api.constant.CommonMessageCode.ADD_MR_COMMENTS_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.COMMIT_CHECK_ADD_FAIL
 import com.tencent.devops.common.api.constant.CommonMessageCode.WEBHOOK_ADD_FAIL
@@ -462,12 +462,12 @@ open class GitApi {
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
         val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(BK_PARAME_ERROR, null)
+            HTTP_400 -> getMessageByLocale(BK_PARAM_ERROR, null)
             HTTP_401 -> "Git token ${getMessageByLocale(BK_AUTH_FAIL, null)}"
             HTTP_403 -> getMessageByLocale(BK_ACCOUNT_NOT_PERMISSIONS, operation)
             HTTP_404 -> getMessageByLocale(BK_GIT_REPO_NOT_EXIST, operation)
             HTTP_405 -> getMessageByLocale(BK_GIT_INTERFACE_NOT_EXIST, operation)
-            HTTP_422 -> getMessageByLocale(BK_GIT_OPERATION_CANNOT, operation)
+            HTTP_422 -> getMessageByLocale(BK_GIT_CANNOT_OPERATION, operation)
             else -> "Git platform $operation fail"
         }
         throw GitApiException(code, msg)

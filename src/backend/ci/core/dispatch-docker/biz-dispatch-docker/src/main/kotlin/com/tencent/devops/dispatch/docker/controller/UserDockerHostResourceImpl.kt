@@ -27,8 +27,8 @@
 
 package com.tencent.devops.dispatch.docker.controller
 
-import com.tencent.devops.common.api.constant.BK_USER_NO_PERMISSIONS_EDIT_PIPELINE
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
@@ -224,18 +224,24 @@ class UserDockerHostResourceImpl @Autowired constructor(
         val consulTag = bkTag.getLocalTag()
 
         if (!consulTag.contains("stream") && !consulTag.contains("gitci")) {
+            val language = I18nUtil.getLanguage(userId)
+            val permission = AuthPermission.EDIT
             validPipelinePermission(
                 userId = userId,
                 authResourceType = AuthResourceType.PIPELINE_DEFAULT,
                 projectId = projectId,
                 pipelineId = pipelineId,
-                permission = AuthPermission.EDIT,
-                message = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_USER_NO_PERMISSIONS_EDIT_PIPELINE, I18nUtil.getLanguage(userId)),
-                    userId,
-                    projectId,
-                    pipelineId
-                )
+                permission = permission,
+                message = MessageUtil.getMessageByLocale(
+                    USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId,
+                        projectId,
+                        if (language == "zh_CN") permission.alias else permission.value,
+                        pipelineId
+                    )
+                ),
             )
         }
     }

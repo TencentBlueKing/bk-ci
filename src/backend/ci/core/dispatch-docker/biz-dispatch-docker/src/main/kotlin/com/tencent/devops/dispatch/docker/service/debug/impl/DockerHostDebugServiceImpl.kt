@@ -30,8 +30,6 @@ package com.tencent.devops.dispatch.docker.service.debug.impl
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN
-import com.tencent.devops.common.api.constant.BK_PLEASE_CHECK_OR_RETRY
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
@@ -255,8 +253,10 @@ class DockerHostDebugServiceImpl @Autowired constructor(
             val msg = redisUtils.getRedisDebugMsg(pipelineId = pipelineId, vmSeqId = vmSeqId)
             return Result(
                 status = 1,
-                message = MessageUtil.getMessageByLocale(BK_PLEASE_CHECK_OR_RETRY, I18nUtil.getLanguage())
-                        + if (!msg.isNullOrBlank()) {
+                message = MessageUtil.getMessageByLocale(
+                    "${ErrorCodeEnum.IMAGE_CHECK_LEGITIMATE_OR_RETRY.errorCode}"
+                    , I18nUtil.getLanguage()
+                ) + if (!msg.isNullOrBlank()) {
                     "errormessage: $msg"
                 } else {
                     ""
@@ -278,7 +278,7 @@ class DockerHostDebugServiceImpl @Autowired constructor(
                 return Result(
                     status = 1,
                     message =  MessageUtil.getMessageByLocale(
-                        BK_DEBUG_CONTAINER_ERROR_SHUT_DOWN,
+                        "${ErrorCodeEnum.DEBUG_CONTAINER_SHUTS_DOWN_ABNORMALLY.errorCode}",
                         I18nUtil.getLanguage()
                     )
                 )
