@@ -73,11 +73,11 @@ init:
   plugin:
     enabled: true
     atoms:
-    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.12/checkout.zip
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
       code: checkout
-    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.2/run-v1.0.2.zip
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.5/run-v1.0.5.zip
       code: run
-    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.4/ci-SubPipelineExec.zip
+    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.6/ci-SubPipelineExec_en.zip
       code: SubPipelineExec
     - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.1/uploadArtifact_en.zip
       code: uploadArtifact
@@ -87,6 +87,10 @@ init:
       code: AcrossProjectDistribution
     - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.2/downloadArtifact_en.zip
       code: downloadArtifact
+    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.13/PerforceSync_en.zip
+      code: PerforceSync
+    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.0.12/CodeCCCheckAtom_en.zip
+      code: CodeCCCheckAtom
 
 # 多集群开关
 multiCluster:
@@ -168,6 +172,10 @@ rabbitmq:
   communityPlugins: "https://github.com/rabbitmq/rabbitmq-delayed-message-exchange/releases/download/3.8.17/rabbitmq_delayed_message_exchange-3.8.17.8f537ac.ez"
   extraPlugins: "rabbitmq_delayed_message_exchange"
   extraConfiguration: |-
+    # ipv6 , 需要开启这些选项
+    # management.tcp.port = 15672
+    # management.tcp.ip  = ::
+    # 默认账户
     default_vhost = default-vhost
     default_permissions.configure = .*
     default_permissions.read = .*
@@ -215,7 +223,8 @@ influxdb:
 mongodb:
   # 是否部署mongodb
   # 如果需要使用外部数据库，设置为false并配置external.mongodb
-  enabled: true
+  enabled: false
+  # enableIPv6: true # ipv6 环境需要开启
   useStatefulSet: true
   auth:
     enabled: true
@@ -234,6 +243,16 @@ mongodb:
       use db_quartz
       db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
       EOF
+  # 如果想在ipv6环境中运行, 则不用上面的脚本 , 注释掉上面的脚本并使用下面
+  #     $MONGODB_BIN_DIR/mongo admin --host localhost --port $MONGODB_PORT_NUMBER -u root -p $MONGODB_ROOT_PASSWORD << EOF
+  #     use db_turbo
+  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_turbo"}]})
+  #     use db_quartz
+  #     db.createUser({ user: "$MONGODB_USERNAME" , pwd: "$MONGODB_PASSWORD" , roles: [{role: "dbOwner" , db:"db_quartz"}]})
+  #     EOF
+  # extraEnvVars:
+  # - name: MONGODB_CLIENT_EXTRA_FLAGS
+  #   value: "--ipv6"
 kubernetes-manager:
   # 是否部署kubernetes-manager
   enabled: true
@@ -1405,9 +1424,9 @@ angetless:
 turbo:
   enabled: false
   image:
-    registry: mirrors.tencent.com/bkce
+    registry: registry-1.docker.io/bkci
     repository: bkci-turbo
-    tag: 0.0.16
+    tag: 0.0.18
     pullPolicy: IfNotPresent
     pullSecrets: []
   replicaCount: 1
