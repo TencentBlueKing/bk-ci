@@ -289,7 +289,10 @@ class TaskBuildRecordService(
         val pipelineId = taskBuildEndParam.pipelineId
         val buildId = taskBuildEndParam.buildId
         val taskId = taskBuildEndParam.taskId
-        val buildStatus = taskBuildEndParam.buildStatus
+        // #7983 将RETRY中间态过滤，不体现在详情页面
+        val buildStatus = taskBuildEndParam.buildStatus.let {
+            if (it == BuildStatus.RETRY) null else it
+        }
         val atomVersion = taskBuildEndParam.atomVersion
         val errorType = taskBuildEndParam.errorType
         val executeCount = buildTaskDao.get(
