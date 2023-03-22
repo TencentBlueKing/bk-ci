@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.environment.BK_PROJECT_NO_NODE
+import com.tencent.devops.environment.constant.BK_PROJECT_NO_NODE
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -318,10 +318,7 @@ class PipelineBuildQualityService(
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorType = ErrorType.USER,
-                errorMsg = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_FAIL, I18nUtil.getLanguage()),
-                    atomDesc
-                )
+                errorMsg = MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_FAIL, I18nUtil.getLanguage(), arrayOf(atomDesc))
             )
         }
     }
@@ -365,10 +362,7 @@ class PipelineBuildQualityService(
             if (checkResult.success) {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_SUCCEED, I18nUtil.getLanguage()),
-                        atomDesc
-                    ),
+                    message = MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_SUCCEED, I18nUtil.getLanguage(), arrayOf(atomDesc)),
                     tag = elementId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1

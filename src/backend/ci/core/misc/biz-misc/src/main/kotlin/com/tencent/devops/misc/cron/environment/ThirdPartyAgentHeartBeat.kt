@@ -33,7 +33,7 @@ import com.tencent.devops.common.environment.agent.ThirdPartyAgentHeartbeatUtils
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
-import com.tencent.devops.environment.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
+import com.tencent.devops.environment.constant.THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL
 import com.tencent.devops.environment.pojo.enums.NodeStatus
 import com.tencent.devops.misc.dao.environment.EnvironmentNodeDao
 import com.tencent.devops.misc.dao.environment.EnvironmentThirdPartyAgentDao

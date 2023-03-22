@@ -31,6 +31,7 @@ import com.fasterxml.jackson.databind.ObjectMapper
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.SecurityUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentDao
 import com.tencent.devops.environment.dao.thirdPartyAgent.ThirdPartyAgentPipelineDao
@@ -125,8 +126,8 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         val seqId = HashUtil.decodeIdToLong(seqIdStr)
         val pipelineRecord = thirdPartyAgentPipelineDao.getPipeline(dslContext, seqId, agentRecord.id)
             ?: throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                defaultMessage = "不存在该管道信息"
+                errorCode = EnvironmentMessageCode.ERROR_PIPE_NOT_FOUND,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         return PipelineResponse(
             seqIdStr,
@@ -141,8 +142,8 @@ class ThirdPartyAgentPipelineService @Autowired constructor(
         if (record == null) {
             logger.warn("The node $nodeId is not third party agent")
             throw ErrorCodeException(
-                errorCode = EnvironmentMessageCode.ERROR_NODE_NOT_EXISTS,
-                defaultMessage = "这个节点不是第三方构建机"
+                errorCode = EnvironmentMessageCode.ERROR_NOT_THIRD_PARTY_BUILD_MACHINE,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         return record

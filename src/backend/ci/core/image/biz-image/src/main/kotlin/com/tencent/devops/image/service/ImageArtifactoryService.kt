@@ -37,7 +37,7 @@ import com.tencent.devops.common.api.util.SecurityUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
-import com.tencent.devops.image.constants.BK_IMAGE_COPYING_IN_PROGRESS
+import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_COPYING_IN_PROGRESS
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageItem
@@ -633,7 +633,10 @@ class ImageArtifactoryService @Autowired constructor(
         val redisKey = "image.copyToBuildImage_$copyFrom"
         if (!redisOperation.get(redisKey).isNullOrBlank()) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_IMAGE_COPYING_IN_PROGRESS, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(
+                    IMAGE_COPYING_IN_PROGRESS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         }
 

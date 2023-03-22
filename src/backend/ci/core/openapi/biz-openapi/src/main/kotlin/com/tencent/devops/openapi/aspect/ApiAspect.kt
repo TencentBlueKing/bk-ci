@@ -37,8 +37,8 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.openapi.IgnoreProjectId
-import com.tencent.devops.openapi.constant.BK_PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.constant.BK_PARAM_VERIFY_FAIL_REQUEST_PARAM_CANNOT_EMPTY
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.PARAM_VERIFY_FAIL
 import com.tencent.devops.openapi.service.op.AppCodeService
 import com.tencent.devops.openapi.utils.ApiGatewayUtil
 import org.aspectj.lang.JoinPoint
@@ -172,7 +172,11 @@ class ApiAspect(
             logger.info("openapi check parameters error| error info:${ignored.message}")
             throw CustomException(
                 Response.Status.BAD_REQUEST,
-                MessageUtil.getMessageByLocale(BK_PARAM_VERIFY_FAIL, I18nUtil.getLanguage())+ " ${ignored.message}"
+                MessageUtil.getMessageByLocale(
+                    PARAM_VERIFY_FAIL,
+                    I18nUtil.getLanguage(),
+                    arrayOf("")
+                )+ " ${ignored.message}"
             )
         } catch (error: NullPointerException) {
             // 如果在openapi层报NPE，一般是必填参数用户未传
@@ -189,12 +193,10 @@ class ApiAspect(
                 ) {
                     throw CustomException(
                         Response.Status.BAD_REQUEST,
-                        MessageFormat.format(
-                            MessageUtil.getMessageByLocale(
-                                BK_PARAM_VERIFY_FAIL_REQUEST_PARAM_CANNOT_EMPTY,
-                                I18nUtil.getLanguage()
-                            ),
-                            kParameter
+                        MessageUtil.getMessageByLocale(
+                            BK_PARAM_VERIFY_FAIL_REQUEST_PARAM_CANNOT_EMPTY,
+                            I18nUtil.getLanguage(),
+                            arrayOf("request param ${kParameter.name} cannot be empty")
                         )
                     )
                 }

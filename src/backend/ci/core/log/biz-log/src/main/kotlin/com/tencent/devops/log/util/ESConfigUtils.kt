@@ -29,7 +29,7 @@ package com.tencent.devops.log.util
 
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.image.constants.BK_FILE_NOT_FOUND_CHECK_PATH
+import com.tencent.devops.image.constants.ImageMessageCode.FILE_NOT_FOUND_CHECK_PATH
 import com.tencent.devops.log.es.NormalX509ExtendedTrustManager
 import org.apache.http.HeaderElementIterator
 import org.apache.http.HttpHost
@@ -46,7 +46,6 @@ import java.io.File
 import java.io.FileInputStream
 import java.security.KeyStore
 import java.security.SecureRandom
-import java.text.MessageFormat
 import javax.net.ssl.SSLContext
 
 @Suppress("LongParameterList", "MagicNumber")
@@ -121,18 +120,17 @@ object ESConfigUtils {
         val keystoreFile = File(keystoreFilePath)
         if (!keystoreFile.exists()) {
             throw IllegalArgumentException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_FILE_NOT_FOUND_CHECK_PATH, I18nUtil.getLanguage()),
-                    "keystore"
-                ) + keystoreFilePath
+                MessageUtil.getMessageByLocale(FILE_NOT_FOUND_CHECK_PATH, I18nUtil.getLanguage(), arrayOf("keystore")) +
+                        keystoreFilePath
             )
         }
         val truststoreFile = File(truststoreFilePath)
         if (!truststoreFile.exists()) {
             throw IllegalArgumentException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_FILE_NOT_FOUND_CHECK_PATH, I18nUtil.getLanguage()),
-                    "truststore"
+                MessageUtil.getMessageByLocale(
+                    FILE_NOT_FOUND_CHECK_PATH,
+                    I18nUtil.getLanguage(),
+                    arrayOf("truststore")
                 ) + truststoreFilePath
             )
         }

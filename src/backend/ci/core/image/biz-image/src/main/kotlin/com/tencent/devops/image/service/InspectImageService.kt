@@ -36,7 +36,7 @@ import com.tencent.devops.common.api.constant.BK_START_PULL_IMAGE
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.config.DockerConfig
-import com.tencent.devops.image.constants.BK_PULL_IMAGE_SUCCESS
+import com.tencent.devops.image.constants.ImageMessageCode.PULL_IMAGE_SUCCESS
 import com.tencent.devops.image.pojo.CheckDockerImageRequest
 import com.tencent.devops.image.pojo.CheckDockerImageResponse
 import com.tencent.devops.image.utils.CommonUtils
@@ -82,7 +82,7 @@ class InspectImageService @Autowired constructor(
                 dockerCli.pullImageCmd(imageName).withAuthConfig(authConfig)
                     .exec(MyPullImageResultCallback(userId)).awaitCompletion()
                 logger.info(
-                    MessageUtil.getMessageByLocale(BK_PULL_IMAGE_SUCCESS, I18nUtil.getLanguage(userId)) + imageName
+                    MessageUtil.getMessageByLocale(PULL_IMAGE_SUCCESS, I18nUtil.getLanguage(userId)) + imageName
                 )
             } catch (t: Throwable) {
                 logger.warn("Fail to pull the image $imageName of userId $userId", t)

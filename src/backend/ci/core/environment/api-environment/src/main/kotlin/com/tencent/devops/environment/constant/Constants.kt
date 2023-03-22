@@ -25,12 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.image.constants
+package com.tencent.devops.environment.constant
 
-const val BK_USER_NOT_UPLOAD_IMAGE_PERMISSION = "BkUserNotUploadImagePermission"// 用户({0})没有上传镜像权限
-const val BK_IMAGE_FILE_VALID_IMAGE_COUNT_ZERO = "BkImageFileValidImageCountZero"// 镜像文件有效镜像个数为零
-const val BK_IMAGE_COPYING_IN_PROGRESS = "BkImageCopyingInProgress"// 镜像正在拷贝中
-const val BK_PULL_IMAGE_SUCCESS = "BkPullImageSuccess"// 拉取镜像成功，镜像名称：
-const val BK_MIRROR_FILE_SAVE_FAILED = "BkMirrorFileSaveFailed"// 镜像文件保存失败
-const val BK_PARSE_MIRROR_FILE_FAILED = "BkParseMirrorFileFailed"// 解析镜像文件失败
-const val BK_FILE_NOT_FOUND_CHECK_PATH = "BkFileNotFoundCheckPath"// 未找到 {0} 文件，请检查路径是否正确:
+const val THIRD_PARTY_AGENT_HEARTBEAT_INTERVAL = 5L
+const val DEFAULT_SYTEM_USER = "devops"
+const val BK_PROJECT_NO_ENVIRONMENT = "bkProjectNoEnvironment"// 项目下无环境
+const val BK_PROJECT_NO_NODE = "BkProjectNoNode"// 项目下无节点

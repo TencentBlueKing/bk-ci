@@ -90,9 +90,19 @@ object RepositoryMessageCode {
     const val P4_USERNAME_PASSWORD_FAIL = "2115045" // p4用户名密码错误
     const val GIT_NOT_FOUND = "2115046"// 代码库{0}不存在
     const val PARAM_ERROR= "2115047"// 参数错误
-    const val GITHUB_AUTH_FAIL = "2115048"// GitHub认证失败
+    const val AUTH_FAIL = "2115048"// {0}认证失败
     const val ACCOUNT_NO_OPERATION_PERMISSIONS = "2115049"// 账户没有{0}的权限
-    const val GITHUB_REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION = "2115050"// GitHub仓库不存在或者是账户没有该项目{0}的权限
-    const val GITHUB_PLATFORM_OPERATION_FAIL = "2115051"// GitHub平台{0}失败
-    const val USER_CREATE_PEM_ERROR = "2115039" // 用户{0}在工程{1}下没有代码库创建权限
+    const val REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION = "2115050"// {0}仓库不存在或者是账户没有该项目{1}的权限
+    const val USER_CREATE_PEM_ERROR = "2115052" // 用户{0}在工程{1}下没有代码库创建权限
+    const val GIT_INTERFACE_NOT_EXIST = "2115053"// {0}平台没有{1}的接口
+    const val GIT_CANNOT_OPERATION = "2115054"// {0}平台{1}操作不能进行
+    const val WEBHOOK_LOCK_UNLOCK_FAIL = "2115055"//unlock webhooklock失败,请确认token是否已经配置
+    const val COMMIT_CHECK_ADD_FAIL = "2115056"// Commit Check添加失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ADD_MR_COMMENTS_FAIL = "2115057"// 添加MR的评论失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val WEBHOOK_ADD_FAIL = "2115058"// Webhook添加失败，请确保该代码库的凭据关联的用户对代码库有{0}权限
+    const val WEBHOOK_UPDATE_FAIL = "2115059"// Webhook更新失败，请确保该代码库的凭据关联的用户对代码库有Developer权限
+    const val ENGINEERING_REPO_UNAUTHORIZED = "2115060"// 工程仓库访问未授权
+    const val ENGINEERING_REPO_NOT_EXIST = "2115061"// 工程仓库不存在
+    const val ENGINEERING_REPO_CALL_ERROR = "2115062"// 工程仓库访问异常
+    const val NOT_MEMBER_AND_NOT_OPEN_SOURCE = "2115063"// 非项目成员且项目为非开源项目
 }

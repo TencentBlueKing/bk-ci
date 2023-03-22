@@ -34,8 +34,8 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.image.api.UserImageResource
-import com.tencent.devops.image.constants.BK_IMAGE_FILE_VALID_IMAGE_COUNT_ZERO
-import com.tencent.devops.image.constants.BK_USER_NOT_UPLOAD_IMAGE_PERMISSION
+import com.tencent.devops.image.constants.ImageMessageCode.IMAGE_FILE_VALID_IMAGE_COUNT_ZERO
+import com.tencent.devops.image.constants.ImageMessageCode.USER_NOT_UPLOAD_IMAGE_PERMISSION
 import com.tencent.devops.image.pojo.DockerRepo
 import com.tencent.devops.image.pojo.DockerTag
 import com.tencent.devops.image.pojo.ImageListResp
@@ -49,7 +49,6 @@ import org.glassfish.jersey.media.multipart.FormDataContentDisposition
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import java.io.InputStream
-import java.text.MessageFormat
 
 @RestResource
 @Suppress("ALL")
@@ -71,9 +70,7 @@ class UserImageResourceImpl @Autowired constructor(
         checkUserAndProject(userId, projectId)
         if (!importImageService.checkDeployPermission(projectId, userId)) {
             throw OperationException(
-                MessageFormat.format(
-                    MessageUtil.getMessageByLocale(BK_USER_NOT_UPLOAD_IMAGE_PERMISSION, I18nUtil.getLanguage(userId))
-                )
+                MessageUtil.getMessageByLocale(USER_NOT_UPLOAD_IMAGE_PERMISSION, I18nUtil.getLanguage(userId))
             )
         }
 
@@ -90,7 +87,7 @@ class UserImageResourceImpl @Autowired constructor(
             val images = ImageFileUtils.parseImageMeta(imageFilePath)
             if (images.isEmpty()) {
                 throw OperationException(
-                    MessageUtil.getMessageByLocale(BK_IMAGE_FILE_VALID_IMAGE_COUNT_ZERO, I18nUtil.getLanguage(userId))
+                    MessageUtil.getMessageByLocale(IMAGE_FILE_VALID_IMAGE_COUNT_ZERO, I18nUtil.getLanguage(userId))
                 )
             }
 

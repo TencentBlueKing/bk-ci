@@ -55,13 +55,13 @@ import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.websocket.dispatch.WebSocketDispatcher
 import com.tencent.devops.dispatch.api.ServiceAgentResource
-import com.tencent.devops.environment.BK_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV
-import com.tencent.devops.environment.BK_THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
-import com.tencent.devops.environment.BK_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST
 import com.tencent.devops.environment.client.InfluxdbClient
 import com.tencent.devops.environment.client.UsageMetrics
 import com.tencent.devops.environment.constant.EnvironmentMessageCode
 import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NODE_NO_EDIT_PERMISSSION
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST
+import com.tencent.devops.environment.constant.EnvironmentMessageCode.THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST
 import com.tencent.devops.environment.dao.EnvDao
 import com.tencent.devops.environment.dao.EnvNodeDao
 import com.tencent.devops.environment.dao.EnvShareProjectDao
@@ -720,8 +720,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$realEnvName] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST, I18nUtil.getLanguage()) +
-                        "($projectId:$realEnvName)"
+                MessageUtil.getMessageByLocale(
+                    THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "($projectId:$realEnvName)"
             )
         }
         thirdPartyAgentList.addAll(
@@ -753,8 +755,8 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                     ) ?: throw CustomException(
                         Response.Status.FORBIDDEN,
                         MessageUtil.getMessageByLocale(
-                            BK_THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
-                            I18nUtil.getLanguage()
+                            THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ) + "($sharedProjectId:$sharedEnvId)"
                     )
                     envShareProjectDao.list(
@@ -785,8 +787,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
                 envId = it.envId
             ) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST, I18nUtil.getLanguage()) +
-                "($sharedProjectId:$sharedEnvId)"
+                MessageUtil.getMessageByLocale(
+                    THIRD_PARTY_BUILD_ENVIRONMENT_NOT_EXIST,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "($sharedProjectId:$sharedEnvId)"
             )
             if (env.envName != it.envName) {
                 envShareProjectDao.batchUpdateEnvName(dslContext, it.envId, env.envName)
@@ -799,8 +803,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             )
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV, I18nUtil.getLanguage()) +
-                "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
+                MessageUtil.getMessageByLocale(
+                    ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "($sharedProjectId:${sharedEnvName ?: sharedEnvId})"
             )
         }
         logger.info("sharedEnvRecord size: ${sharedEnvRecord.size}")
@@ -845,8 +851,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
         if (sharedThirdPartyAgents.isEmpty()) {
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV, I18nUtil.getLanguage()) +
-                "($sharedProjectId:$sharedEnvName)"
+                MessageUtil.getMessageByLocale(
+                    ERROR_NO_PERMISSION_TO_USE_THIRD_PARTY_BUILD_ENV,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "($sharedProjectId:$sharedEnvName)"
             )
         }
         logger.info("sharedThirdPartyAgents size: ${sharedThirdPartyAgents.size}")
@@ -873,8 +881,10 @@ class ThirdPartyAgentMgrService @Autowired(required = false) constructor(
             logger.warn("[$projectId|$envHashId] The env is not exist")
             throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST, I18nUtil.getLanguage()) +
-                "($projectId:$envHashId)"
+                MessageUtil.getMessageByLocale(
+                    ERROR_THIRD_PARTY_BUILD_ENV_NODE_NOT_EXIST,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "($projectId:$envHashId)"
             )
         }
         val nodeIds = nodes.map {

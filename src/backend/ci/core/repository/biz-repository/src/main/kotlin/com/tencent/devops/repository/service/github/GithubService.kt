@@ -35,10 +35,9 @@ import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.GITHUB_AUTH_FAIL
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.GITHUB_PLATFORM_OPERATION_FAIL
-import com.tencent.devops.common.api.constant.RepositoryMessageCode.GITHUB_REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
 import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -113,7 +112,7 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPost(token, "repos/$projectName/check-runs", body)
-        val operation = MessageUtil.getMessageByLocale(OPERATION_ADD_CHECK_RUNS, I18nUtil.getLanguage())
+        val operation = getMessageByLocale(OPERATION_ADD_CHECK_RUNS)
         return callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
@@ -133,7 +132,7 @@ class GithubService @Autowired constructor(
 
         val body = objectMapper.writeValueAsString(checkRuns)
         val request = buildPatch(token, "repos/$projectName/check-runs/$checkRunId", body)
-        val operation = MessageUtil.getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS, I18nUtil.getLanguage())
+        val operation = getMessageByLocale(OPERATION_UPDATE_CHECK_RUNS)
         callMethod(operation, request, GithubCheckRunsResponse::class.java)
     }
 
@@ -169,7 +168,7 @@ class GithubService @Autowired constructor(
     fun getRepositories(token: String): List<GithubRepo> {
         val githubRepos = mutableListOf<GithubRepo>()
         var page = 0
-        val operation = MessageUtil.getMessageByLocale(OPERATION_GET_REPOS, I18nUtil.getLanguage())
+        val operation = getMessageByLocale(OPERATION_GET_REPOS)
         run outside@{
             while (page < PAGE_SIZE) {
                 page++
@@ -202,7 +201,7 @@ class GithubService @Autowired constructor(
                     val sBranch = branch ?: "master"
                     val path = "repos/$projectName/branches/$sBranch"
                     val request = buildGet(token, path)
-                    val operation = MessageUtil.getMessageByLocale(OPERATION_GET_BRANCH, I18nUtil.getLanguage())
+                    val operation = getMessageByLocale(OPERATION_GET_BRANCH)
                     val body = getBody(operation, request)
                     return objectMapper.readValue(body)
                 }
@@ -223,7 +222,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): GithubTag? {
                     val path = "repos/$projectName/git/refs/tags/$tag"
                     val request = buildGet(token, path)
-                    val operation = MessageUtil.getMessageByLocale(OPERATION_GET_TAG, I18nUtil.getLanguage())
+                    val operation = getMessageByLocale(OPERATION_GET_TAG)
                     val body = getBody(operation, request)
                     return objectMapper.readValue(body)
                 }
@@ -259,7 +258,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/branches?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = MessageUtil.getMessageByLocale(OPERATION_LIST_BRANCHS, I18nUtil.getLanguage())
+                    val operation = getMessageByLocale(OPERATION_LIST_BRANCHS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoBranch>>(body).map { it.name }
                 }
@@ -280,7 +279,7 @@ class GithubService @Autowired constructor(
                 override fun execute(): List<String> {
                     val path = "repos/$projectName/tags?page=1&per_page=100"
                     val request = buildGet(token, path)
-                    val operation = MessageUtil.getMessageByLocale(OPERATION_LIST_TAGS, I18nUtil.getLanguage())
+                    val operation = getMessageByLocale(OPERATION_LIST_TAGS)
                     val body = getBody(operation, request)
                     return objectMapper.readValue<List<GithubRepoTag>>(body).map { it.name }
                 }
@@ -346,13 +345,21 @@ class GithubService @Autowired constructor(
 
     private fun handException(operation: String, code: Int) {
         val msg = when (code) {
-            HTTP_400 -> PARAM_ERROR
-            HTTP_401 -> GITHUB_AUTH_FAIL
-            HTTP_403 -> ACCOUNT_NO_OPERATION_PERMISSIONS
-            HTTP_404 -> GITHUB_REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
-            else -> GITHUB_PLATFORM_OPERATION_FAIL
+            HTTP_400 -> getMessageByLocale(PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(AUTH_FAIL, arrayOf("GitHub token"))
+            HTTP_403 -> getMessageByLocale(ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GitHub", operation))
+            else -> "GitHub platform $operation fail"
         }
         throw GithubApiException(code, MessageUtil.getMessageByLocale(msg, I18nUtil.getLanguage(), arrayOf(operation)))
+    }
+
+    private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = messageCode,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            params = params
+        )
     }
 
     // TODO:脱敏

@@ -28,23 +28,23 @@
 package com.tencent.devops.scm.code.git.api
 
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.tencent.devops.common.api.constant.BK_ACCOUNT_NOT_PERMISSIONS
-import com.tencent.devops.common.api.constant.BK_AUTH_FAIL
-import com.tencent.devops.common.api.constant.BK_GIT_CANNOT_OPERATION
-import com.tencent.devops.common.api.constant.BK_GIT_INTERFACE_NOT_EXIST
-import com.tencent.devops.common.api.constant.BK_GIT_REPO_NOT_EXIST
-import com.tencent.devops.common.api.constant.BK_PARAM_ERROR
-import com.tencent.devops.common.api.constant.CommonMessageCode.ADD_MR_COMMENTS_FAIL
-import com.tencent.devops.common.api.constant.CommonMessageCode.COMMIT_CHECK_ADD_FAIL
-import com.tencent.devops.common.api.constant.CommonMessageCode.WEBHOOK_ADD_FAIL
-import com.tencent.devops.common.api.constant.CommonMessageCode.WEBHOOK_LOCK_UNLOCK_FAIL
-import com.tencent.devops.common.api.constant.CommonMessageCode.WEBHOOK_UPDATE_FAIL
 import com.tencent.devops.common.api.constant.HTTP_400
 import com.tencent.devops.common.api.constant.HTTP_401
 import com.tencent.devops.common.api.constant.HTTP_403
 import com.tencent.devops.common.api.constant.HTTP_404
 import com.tencent.devops.common.api.constant.HTTP_405
 import com.tencent.devops.common.api.constant.HTTP_422
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ACCOUNT_NO_OPERATION_PERMISSIONS
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.ADD_MR_COMMENTS_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.AUTH_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.COMMIT_CHECK_ADD_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_CANNOT_OPERATION
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.GIT_INTERFACE_NOT_EXIST
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.PARAM_ERROR
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_ADD_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_LOCK_UNLOCK_FAIL
+import com.tencent.devops.common.api.constant.RepositoryMessageCode.WEBHOOK_UPDATE_FAIL
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
@@ -82,29 +82,34 @@ open class GitApi {
         private const val BRANCH_LIMIT = 200
         private const val TAG_LIMIT = 200
         private const val HOOK_LIMIT = 200
-        private const val OPERATION_BRANCH = "BkOperationBranch"
-        private const val OPERATION_TAG = "BkOperationTag"
-        private const val OPERATION_ADD_WEBHOOK = "BkOperationAddWebhook"
-        private const val OPERATION_UPDATE_WEBHOOK = "BkOperationUpdateWebhook"
-        private const val OPERATION_LIST_WEBHOOK = "BkOperationListWebhook"
-        private const val OPERATION_ADD_COMMIT_CHECK = "OBkperationAddCommitCheck"
-        private const val OPERATION_ADD_MR_COMMENT = "BkOperationAddMrComment"
-        private const val CREATE_BRANCH = "BkCreateBranch"
-        private const val DELETE_BRANCH = "BkDeleteBranch"
-        private const val OPERATION_COMMIT = "BkOperationCommit"
-        private const val OPERATION_COMMIT_DIFF = "BkOperationCommitDiff"
-        private const val OPERATION_UNLOCK_HOOK_LOCK = "BkOperationUnlockHookLock"
-        private const val OPERATION_MR_CHANGE = "BkOperationMrChange"
-        private const val OPERATION_MR_INFO = "BkOperationMrInfo"
-        private const val OPERATION_MR_REVIEW = "BkOperationMrReview"
-        private const val OPERATION_GET_CHANGE_FILE_LIST = "BkOperationGetChangeFileList"
-        private const val OPERATION_GET_MR_COMMIT_LIST = "BkOperationGetMrCommitList"
-        private const val OPERATION_PROJECT_USER_INFO = "BkOperationProjectUserInfo"
-        private const val OPERATION_TAPD_WORKITEMS = "BkOperationTapdWorkitems"
+        private const val OPERATION_BRANCH = "bkOperationBranch"
+        private const val OPERATION_TAG = "bkOperationTag"
+        private const val OPERATION_ADD_WEBHOOK = "bkOperationAddWebhook"
+        private const val OPERATION_UPDATE_WEBHOOK = "bkOperationUpdateWebhook"
+        private const val OPERATION_LIST_WEBHOOK = "bkOperationListWebhook"
+        private const val OPERATION_ADD_COMMIT_CHECK = "oBkperationAddCommitCheck"
+        private const val OPERATION_ADD_MR_COMMENT = "bkOperationAddMrComment"
+        private const val CREATE_BRANCH = "bkCreateBranch"
+        private const val DELETE_BRANCH = "bkDeleteBranch"
+        private const val OPERATION_COMMIT = "bkOperationCommit"
+        private const val OPERATION_COMMIT_DIFF = "bkOperationCommitDiff"
+        private const val OPERATION_UNLOCK_HOOK_LOCK = "bkOperationUnlockHookLock"
+        private const val OPERATION_MR_CHANGE = "bkOperationMrChange"
+        private const val OPERATION_MR_INFO = "bkOperationMrInfo"
+        private const val OPERATION_MR_REVIEW = "bkOperationMrReview"
+        private const val OPERATION_GET_CHANGE_FILE_LIST = "bkOperationGetChangeFileList"
+        private const val OPERATION_GET_MR_COMMIT_LIST = "bkOperationGetMrCommitList"
+        private const val OPERATION_PROJECT_USER_INFO = "bkOperationProjectUserInfo"
+        private const val OPERATION_TAPD_WORKITEMS = "bkOperationTapdWorkitems"
     }
 
-    private fun getMessageByLocale(kye: String, message: String?)
-    = MessageUtil.getMessageByLocale(kye, I18nUtil.getDefaultLocaleLanguage(), arrayOf(message ?: ""))
+    private fun getMessageByLocale(messageCode: String, params: Array<String>? = null): String {
+        return MessageUtil.getMessageByLocale(
+            messageCode = messageCode,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+            params = params
+        )
+    }
 
     fun listBranches(
         host: String,
@@ -122,7 +127,7 @@ open class GitApi {
         val request =
             get(host, token, "projects/${urlEncode(projectName)}/repository/branches", searchReq)
         val result = JsonUtil.getObjectMapper().readValue<List<GitBranch>>(
-            getBody(getMessageByLocale(OPERATION_BRANCH, null), request)
+            getBody(getMessageByLocale(OPERATION_BRANCH), request)
         )
         return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
@@ -140,7 +145,7 @@ open class GitApi {
         val request =
             get(host, token, "projects/${urlEncode(projectName)}/repository/tags", searchReq)
         val result: List<GitTag> = JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_TAG, null), request)
+            getBody(getMessageByLocale(OPERATION_TAG), request)
         )
         return result.sortedByDescending { it.commit.authoredDate }.map { it.name }
     }
@@ -152,7 +157,7 @@ open class GitApi {
             url = "projects/${urlEncode(projectName)}/repository/branches/${urlEncode(branchName)}",
             page = ""
         )
-        return callMethod(getMessageByLocale(OPERATION_BRANCH, null), request, GitBranch::class.java)
+        return callMethod(getMessageByLocale(OPERATION_BRANCH), request, GitBranch::class.java)
     }
 
     fun addWebhook(
@@ -238,10 +243,10 @@ open class GitApi {
         val body = JsonUtil.getObjectMapper().writeValueAsString(params)
         val request = post(host, token, "projects/${urlEncode(projectName)}/commit/$commitId/statuses", body)
         try {
-            callMethod(getMessageByLocale(OPERATION_ADD_COMMIT_CHECK, null), request, GitCommitCheck::class.java)
+            callMethod(getMessageByLocale(OPERATION_ADD_COMMIT_CHECK), request, GitCommitCheck::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, getMessageByLocale(COMMIT_CHECK_ADD_FAIL, null))
+                throw GitApiException(t.code, getMessageByLocale(COMMIT_CHECK_ADD_FAIL))
             }
             throw t
         }
@@ -257,10 +262,10 @@ open class GitApi {
         logger.info("add mr comment for project($projectName): url($url), $params")
         val request = post(host, token, url, body)
         try {
-            callMethod(getMessageByLocale(OPERATION_ADD_MR_COMMENT, null), request, GitMRComment::class.java)
+            callMethod(getMessageByLocale(OPERATION_ADD_MR_COMMENT), request, GitMRComment::class.java)
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, getMessageByLocale(ADD_MR_COMMENTS_FAIL, null))
+                throw GitApiException(t.code, getMessageByLocale(ADD_MR_COMMENTS_FAIL))
             }
             throw t
         }
@@ -275,14 +280,14 @@ open class GitApi {
             )
         )
         val request = post(host, token, "projects/${urlEncode(projectName)}/repository/branches", body)
-        return callMethod(getMessageByLocale(CREATE_BRANCH, null), request, GitBranch::class.java)
+        return callMethod(getMessageByLocale(CREATE_BRANCH), request, GitBranch::class.java)
     }
 
     fun deleteBranch(host: String, token: String, projectName: String, branch: String) {
         logger.info("Start to create branches of host $host by project $projectName")
         val body = JsonUtil.getObjectMapper().writeValueAsString(emptyMap<String, String>())
         val request = delete(host, token, "projects/${urlEncode(projectName)}/repository/branches/$branch", body)
-        callMethod(getMessageByLocale(DELETE_BRANCH, null), request, String::class.java)
+        callMethod(getMessageByLocale(DELETE_BRANCH), request, String::class.java)
     }
 
     private fun addHook(
@@ -296,12 +301,12 @@ open class GitApi {
         val body = webhookBody(hookUrl, event, secret)
         val request = post(host, token, "projects/${urlEncode(projectName)}/hooks", body)
         try {
-            return callMethod(getMessageByLocale(OPERATION_ADD_WEBHOOK, null), request, GitHook::class.java)
+            return callMethod(getMessageByLocale(OPERATION_ADD_WEBHOOK), request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
                 throw GitApiException(
                     t.code,
-                    getMessageByLocale(WEBHOOK_ADD_FAIL, "Developer")
+                    getMessageByLocale(WEBHOOK_ADD_FAIL, arrayOf("Developer"))
                 )
             }
             throw t
@@ -341,10 +346,10 @@ open class GitApi {
         val body = webhookBody(hookUrl, event, secret)
         val request = put(host, token, "projects/${urlEncode(projectName)}/hooks/$hookId", body)
         try {
-            return callMethod(getMessageByLocale(OPERATION_UPDATE_WEBHOOK, null), request, GitHook::class.java)
+            return callMethod(getMessageByLocale(OPERATION_UPDATE_WEBHOOK), request, GitHook::class.java)
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(t.code, getMessageByLocale(WEBHOOK_UPDATE_FAIL, null))
+                throw GitApiException(t.code, getMessageByLocale(WEBHOOK_UPDATE_FAIL))
             }
             throw t
         }
@@ -354,15 +359,12 @@ open class GitApi {
         try {
             val request = get(host, token, "projects/${urlEncode(projectName)}/hooks", "")
             val result = JsonUtil.getObjectMapper().readValue<List<GitHook>>(
-                getBody(getMessageByLocale(OPERATION_LIST_WEBHOOK, null), request)
+                getBody(getMessageByLocale(OPERATION_LIST_WEBHOOK), request)
             )
             return result.sortedBy { it.createdAt }.reversed()
         } catch (t: GitApiException) {
             if (t.code == HTTP_403) {
-                throw GitApiException(
-                    t.code,
-                    getMessageByLocale(WEBHOOK_ADD_FAIL, "master")
-                )
+                throw GitApiException(t.code, getMessageByLocale(WEBHOOK_ADD_FAIL, arrayOf("master")))
             }
             throw t
         }
@@ -462,12 +464,12 @@ open class GitApi {
     private fun handleApiException(operation: String, code: Int, body: String) {
         logger.warn("Fail to call git api because of code $code and message $body")
         val msg = when (code) {
-            HTTP_400 -> getMessageByLocale(BK_PARAM_ERROR, null)
-            HTTP_401 -> "Git token ${getMessageByLocale(BK_AUTH_FAIL, null)}"
-            HTTP_403 -> getMessageByLocale(BK_ACCOUNT_NOT_PERMISSIONS, operation)
-            HTTP_404 -> getMessageByLocale(BK_GIT_REPO_NOT_EXIST, operation)
-            HTTP_405 -> getMessageByLocale(BK_GIT_INTERFACE_NOT_EXIST, operation)
-            HTTP_422 -> getMessageByLocale(BK_GIT_CANNOT_OPERATION, operation)
+            HTTP_400 -> getMessageByLocale(PARAM_ERROR)
+            HTTP_401 -> getMessageByLocale(AUTH_FAIL, arrayOf("Git token"))
+            HTTP_403 -> getMessageByLocale(ACCOUNT_NO_OPERATION_PERMISSIONS, arrayOf(operation))
+            HTTP_404 -> getMessageByLocale(REPO_NOT_EXIST_OR_NO_OPERATION_PERMISSION, arrayOf("GIT", operation))
+            HTTP_405 -> getMessageByLocale(GIT_INTERFACE_NOT_EXIST, arrayOf("GIT", operation))
+            HTTP_422 -> getMessageByLocale(GIT_CANNOT_OPERATION, arrayOf("GIT", operation))
             else -> "Git platform $operation fail"
         }
         throw GitApiException(code, msg)
@@ -487,7 +489,7 @@ open class GitApi {
                 .plus(if (branch.isNullOrBlank()) "" else "&ref_name=$branch").plus(if (all) "&all=true" else ""), ""
         )
         val result: List<GitCommit> = JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_COMMIT, null), request)
+            getBody(getMessageByLocale(OPERATION_COMMIT), request)
         )
         logger.info(
             "The url to listCommits is($host/projects/${urlEncode(projectName)}/repository/commits)"
@@ -498,7 +500,7 @@ open class GitApi {
     fun getCommitDiff(host: String, sha: String, token: String, projectName: String): List<GitDiff> {
         val request = get(host, token, "projects/${urlEncode(projectName)}/repository/commits/$sha/diff", "")
         val result: List<GitDiff> = JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_COMMIT_DIFF, null), request)
+            getBody(getMessageByLocale(OPERATION_COMMIT_DIFF), request)
         )
         logger.info(
             "The url to listCommits is($host/projects/${urlEncode(projectName)}/repository/commits/$sha/diff)"
@@ -512,7 +514,7 @@ open class GitApi {
         logger.info("unlock hook lock for project($projectName): url($url)")
         val request = put(host, token, url, "")
         try {
-            val result = callMethod(getMessageByLocale(OPERATION_UNLOCK_HOOK_LOCK, null), request, String::class.java)
+            val result = callMethod(getMessageByLocale(OPERATION_UNLOCK_HOOK_LOCK), request, String::class.java)
             // 工蜂解锁可能会失败,增加重试
             if (result == "false" && retryTimes > 0) {
                 Thread.sleep(500)
@@ -520,7 +522,7 @@ open class GitApi {
             }
         } catch (t: GitApiException) {
             if (t.code == 403) {
-                throw GitApiException(t.code, getMessageByLocale(WEBHOOK_LOCK_UNLOCK_FAIL, null))
+                throw GitApiException(t.code, getMessageByLocale(WEBHOOK_LOCK_UNLOCK_FAIL))
             }
             throw t
         }
@@ -529,13 +531,13 @@ open class GitApi {
     fun getMergeRequestChangeInfo(host: String, token: String, url: String): GitMrChangeInfo {
         logger.info("get mr changes info url: $url")
         val request = get(host, token, url, "")
-        return callMethod(getMessageByLocale(OPERATION_MR_CHANGE, null), request, GitMrChangeInfo::class.java)
+        return callMethod(getMessageByLocale(OPERATION_MR_CHANGE), request, GitMrChangeInfo::class.java)
     }
 
     fun getMrInfo(host: String, token: String, url: String): GitMrInfo {
         logger.info("get mr info url: $url")
         val request = get(host, token, url, "")
-        return callMethod(getMessageByLocale(OPERATION_MR_INFO, null), request, GitMrInfo::class.java)
+        return callMethod(getMessageByLocale(OPERATION_MR_INFO), request, GitMrInfo::class.java)
     }
 
     fun getMrCommitList(host: String, token: String, url: String, page: Int, size: Int): List<GitCommit> {
@@ -544,7 +546,7 @@ open class GitApi {
         val request = get(host, token, url, searchReq)
         val result: List<GitCommit> =
             JsonUtil.getObjectMapper().readValue(
-                getBody(getMessageByLocale(OPERATION_GET_MR_COMMIT_LIST, null), request)
+                getBody(getMessageByLocale(OPERATION_GET_MR_COMMIT_LIST), request)
             )
         return result
     }
@@ -552,7 +554,7 @@ open class GitApi {
     fun getMrReviewInfo(host: String, token: String, url: String): GitMrReviewInfo {
         logger.info("get mr review url: $url")
         val request = get(host, token, url, "")
-        return callMethod(getMessageByLocale(OPERATION_MR_INFO, null), request, GitMrReviewInfo::class.java)
+        return callMethod(getMessageByLocale(OPERATION_MR_INFO), request, GitMrReviewInfo::class.java)
     }
 
     fun getChangeFileList(
@@ -569,7 +571,7 @@ open class GitApi {
         val queryParam = "from=$from&to=$to&straight=$straight&page=$page&pageSize=$pageSize"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_GET_CHANGE_FILE_LIST, null), request)
+            getBody(getMessageByLocale(OPERATION_GET_CHANGE_FILE_LIST), request)
         )
     }
 
@@ -582,7 +584,7 @@ open class GitApi {
         val url = "projects/${urlEncode(gitProjectId)}/members/all/$userId"
         val request = get(host, token, url, "")
         return JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO, null), request)
+            getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO), request)
         )
     }
 //    private val OPERATION_BRANCH = "拉分支"
@@ -612,7 +614,7 @@ open class GitApi {
             )
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO, null), request)
+            getBody(getMessageByLocale(OPERATION_PROJECT_USER_INFO), request)
         )
     }
 
@@ -627,7 +629,7 @@ open class GitApi {
         val queryParam = "type=$type&iid=$iid"
         val request = get(host, token, url, queryParam)
         return JsonUtil.getObjectMapper().readValue(
-            getBody(getMessageByLocale(OPERATION_TAPD_WORKITEMS, null), request)
+            getBody(getMessageByLocale(OPERATION_TAPD_WORKITEMS), request)
         )
     }
 
