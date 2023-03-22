@@ -326,17 +326,6 @@ class ContainerBuildRecordService(
                     Container::startVMStatus.name to BuildStatus.SKIP.name
                 )
             )
-            recordTaskDao.getRecords(
-                dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
-                buildId = buildId, containerId = containerId, executeCount = executeCount
-            ).forEach { task ->
-                recordTaskDao.updateRecord(
-                    dslContext = dslContext, projectId = projectId, pipelineId = pipelineId,
-                    buildId = buildId, taskId = task.taskId, executeCount = executeCount,
-                    taskVar = task.taskVar, buildStatus = BuildStatus.SKIP,
-                    startTime = null, endTime = null, timestamps = null
-                )
-            }
         }
     }
 
