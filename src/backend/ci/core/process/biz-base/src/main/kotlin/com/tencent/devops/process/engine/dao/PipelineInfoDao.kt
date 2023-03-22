@@ -345,9 +345,7 @@ class PipelineInfoDao {
                         )
                         PipelineSortType.NAME -> transferOrder(
                             PIPELINE_NAME,
-                            collation,
-                            { field -> DSL.field("convert({0} USING gbk)", String::class.java, field).desc() },
-                            { field -> DSL.field("convert({0} USING gbk)", String::class.java, field).asc() }
+                            collation
                         )
                         else -> transferOrder(
                             CREATE_TIME,

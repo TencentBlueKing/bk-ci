@@ -401,9 +401,9 @@ class PipelineBuildSummaryDao {
                 PipelineSortType.NAME -> {
                     T_PIPELINE_INFO.PIPELINE_NAME.let {
                         if (collation == PipelineCollation.DEFAULT || collation == PipelineCollation.ASC) {
-                            DSL.field("convert({0} USING gbk)", it).asc()
+                            it.asc()
                         } else {
-                            DSL.field("convert({0} USING gbk)", it).desc()
+                            it.desc()
                         }
                     }
                 }
