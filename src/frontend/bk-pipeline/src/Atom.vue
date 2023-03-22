@@ -359,7 +359,7 @@
                 )
             },
             isExecuting () {
-                return [STATUS_MAP.RUNNING].this.atomStatus && this.atom.startEpoch
+                return [STATUS_MAP.RUNNING].includes(this.atomStatus) && this.atom.startEpoch
             },
             isUnExecThisTime () {
                 return this.atom?.executeCount < this.reactiveData.currentExecCount
