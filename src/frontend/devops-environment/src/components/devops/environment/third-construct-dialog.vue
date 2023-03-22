@@ -22,7 +22,7 @@
                     <label class="bk-label env-item-label">
                         <!-- 地点： -->
                         <bk-popover placement="right">
-                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.model') }}</span>：
+                            <span style="padding-bottom: 3px; border-bottom: dashed 1px #c3cdd7;">{{ $t('environment.nodeInfo.location') }}</span>：
                             <template slot="content">
                                 <p style="width: 300px; text-align: left; white-space: normal;word-break: break-all;font-weight: 400;">
                                     {{ $t('environment.nodeInfo.buildMachineLocationTips') }}
@@ -43,19 +43,22 @@
                 <p class="handler-prompt">{{ constructImportForm.model === 'WINDOWS' ? $t('environment.nodeInfo.referenceStep') : $t('environment.nodeInfo.executeCommandPrompt')}}:</p>
                 <div class="construct-card-item command-tool-card" v-if="constructImportForm.model !== 'WINDOWS'">
                     <div class="command-line">
-                        {{ constructImportForm.link }}
+                        {{ constructImportForm.link || $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
-                    <div class="copy-button">
+                    <div class="copy-button" v-if="constructImportForm.link">
                         <a class="text-link copy-command"
                             @click="copyCommand">
                             {{ $t('environment.clickToCopy') }}</a>
                     </div>
                 </div>
                 <div class="construct-card-item command-tool-card windows-node-card" v-if="constructImportForm.model === 'WINDOWS'">
-                    <div class="command-line">
+                    <div class="command-line" v-if="constructImportForm.link">
                         1.<a class="refresh-detail" :href="constructImportForm.link">{{ $t('environment.click') }}</a>{{ $t('environment.download') }}Agent
                         <br>
                         2.{{ $t('environment.check') }}【<a class="refresh-detail" target="_blank" :href="installDocsLink">{{ $t('environment.nodeInfo.installBuildMachineTips') }}</a>】
+                    </div>
+                    <div class="command-line" v-else>
+                        {{ $t('environment.nodeInfo.fetchInstallCommandTips') }}
                     </div>
                 </div>
                 <p class="handler-prompt">{{ $t('environment.nodeInfo.connectedNodes') }}</p>
@@ -207,7 +210,7 @@
 
         .windows-node-card {
             display: inline-block;
-            height: 85px;
+            height: 100%;
             .command-line {
                 line-height: 40px
             }

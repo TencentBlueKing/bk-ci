@@ -211,6 +211,7 @@
         "location": "Location",
         "buildMachineLocationTips": "Please select the point nearby based on build machine location, this can increase the speed of archiving files and pulling artifact of the build machine, also the stability of build machine can be enhanced.  PS: if you are in Beijing, please select Tianjin. ",
         "referenceStep": "Please refer to the following steps",
+        "fetchInstallCommandTips": "Please select a location first to get the installation commands",
         "executeCommandPrompt": "Create a working directory for the Agent and run the following installation commands in the directory",
         "installBuildMachineTips": "How to install Agent on Windows",
         "connectedNodes": "Connected Agents",
