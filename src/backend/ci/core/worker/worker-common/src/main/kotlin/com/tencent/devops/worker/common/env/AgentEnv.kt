@@ -171,7 +171,7 @@ object AgentEnv {
         if (fileGateway.isNullOrBlank()) {
             synchronized(this) {
                 if (fileGateway.isNullOrBlank()) {
-                    fileGateway = getProperty(AGENT_FILE_GATEWAY)
+                    fileGateway = getEnvProp(AGENT_FILE_GATEWAY)
                     logger.info("file gateway: $fileGateway")
                 }
             }
