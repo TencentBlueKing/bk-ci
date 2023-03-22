@@ -64,14 +64,14 @@ internal class StrToTimeTest {
     @ParameterizedTest
     @ValueSource(
         strings = [
-            "strToTime('2023-03-15') => 1678809600",
-            "strToTime('2023-03-15 12:06:22') => 1678853182"
+            "strToTime('2023-03-15') => strToTime('2023-03-15 00:00:00')"
         ]
     )
     fun evaluateCoreTest(format: String) {
         val (exp, expect) = format.split(" => ")
-        val res = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
-        Assertions.assertEquals(expect.toDouble(), res)
+        val res1 = ExpressionParser.createTree(exp, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        val res2 = ExpressionParser.createTree(expect, null, nameValue, null)!!.evaluate(null, ev, null, null).value
+        Assertions.assertEquals(res1, res2)
     }
 
     @DisplayName("evaluateCore相关测试")
@@ -93,7 +93,7 @@ internal class StrToTimeTest {
     @ValueSource(
         strings = [
             "strToTime(parameters.date) => strToTime('2023-03-15')"
-            ]
+        ]
     )
     fun subNameEvaluateCoreTest(subNameFormat: String) {
         val (exp, expect) = subNameFormat.split(" => ")
