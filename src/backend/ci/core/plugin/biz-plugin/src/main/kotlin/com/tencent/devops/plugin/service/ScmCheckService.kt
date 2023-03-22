@@ -298,33 +298,4 @@ class ScmCheckService @Autowired constructor(private val client: Client) {
             ?: throw NotFoundException("cannot find github oauth accessToekn for user($userName)")
         return accessToken.accessToken
     }
-
-    private fun getMrInfo(
-        projectName: String,
-        url: String,
-        scmType: ScmType,
-        token: String?,
-        mrId: Long,
-        isOauth: Boolean
-    ): GitMrInfo {
-        val data: GitMrInfo
-        if (isOauth) {
-            data = client.get(ServiceScmOauthResource::class).getMrInfo(
-                projectName = projectName,
-                url = url,
-                type = scmType,
-                token = token,
-                mrId = mrId
-            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId) by oauth")
-        } else {
-            data = client.get(ServiceScmResource::class).getMrInfo(
-                projectName = projectName,
-                url = url,
-                type = scmType,
-                token = token,
-                mrId = mrId
-            ).data ?: throw NotFoundException("cannot find $scmType MrInfo for MrId($mrId)")
-        }
-        return data
-    }
 }
