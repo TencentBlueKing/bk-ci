@@ -244,9 +244,8 @@ class ContainerBuildRecordService(
                             executeCount = executeCount, stageId = null,
                             matrixGroupId = containerId
                         )
-                        val (cost, timeLine) = recordContainer.generateMatrixTimeCost(groupContainers)
-                        containerVar[Container::timeCost.name] = cost
-                        containerVar[BuildRecordTimeLine::class.java.simpleName] = timeLine
+                        containerVar[Container::timeCost.name] =
+                            recordContainer.generateMatrixTimeCost(groupContainers)
                     } else {
                         val recordTasks = recordTaskDao.getRecords(
                             context, projectId, pipelineId, buildId, executeCount, containerId
