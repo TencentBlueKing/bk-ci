@@ -381,7 +381,9 @@ abstract class AbstractBuildResourceApi : WorkerRestApiSDK {
         return if (path.startsWith("http://") || path.startsWith("https://")) {
             path
         } else if (useFileDevnetGateway != null) {
-            if (useFileDevnetGateway) {
+            if (!AgentEnv.getFileGateway().isNullOrBlank()) {
+                fixUrl(AgentEnv.getFileGateway()!!, path)
+            } else if (useFileDevnetGateway) {
                 val fileDevnetGateway = CommonEnv.fileDevnetGateway
                 fixUrl(if (fileDevnetGateway.isNullOrBlank()) gateway else fileDevnetGateway, path)
             } else {

@@ -40,7 +40,6 @@ import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
-import com.tencent.devops.worker.common.utils.TaskUtil
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
 import okhttp3.RequestBody
@@ -103,8 +102,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val response = request(request, "上传自定义文件失败")
         try {
@@ -163,8 +161,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildPut(
             url,
             RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file),
-            bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
-            useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
+            bkrepoResourceApi.getUploadHeader(file, buildVariables, true)
         )
         val response = request(request, "上传流水线文件失败")
         try {
