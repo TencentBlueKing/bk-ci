@@ -2,10 +2,12 @@ package com.tencent.devops.repository.api.github
 
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.repository.pojo.github.GithubOauthCallback
+import com.tencent.devops.repository.pojo.oauth.GithubTokenType
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam
 import javax.ws.rs.Consumes
+import javax.ws.rs.DefaultValue
 import javax.ws.rs.GET
 import javax.ws.rs.Path
 import javax.ws.rs.Produces
@@ -39,6 +41,13 @@ interface ServiceGithubOauthResource {
     fun oauthUrl(
         @ApiParam(value = "redirectUrl")
         @QueryParam("redirectUrl")
-        redirectUrl: String
+        redirectUrl: String,
+        @ApiParam(value = "userId, 如果指定将以该userId入库，否则会以github login name 入库")
+        @QueryParam("userId")
+        userId: String?,
+        @ApiParam("token 类型", required = false)
+        @QueryParam("tokenType")
+        @DefaultValue("GITHUB_APP")
+        tokenType: GithubTokenType? = GithubTokenType.GITHUB_APP
     ): Result<String>
 }

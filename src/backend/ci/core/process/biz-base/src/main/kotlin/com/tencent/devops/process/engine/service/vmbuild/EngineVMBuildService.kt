@@ -72,8 +72,9 @@ import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.engine.service.detail.ContainerBuildDetailService
-import com.tencent.devops.process.engine.service.detail.TaskBuildDetailService
 import com.tencent.devops.process.engine.service.measure.MeasureService
+import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.engine.service.record.TaskBuildRecordService
 import com.tencent.devops.process.engine.utils.ContainerUtils
 import com.tencent.devops.process.jmx.elements.JmxElements
 import com.tencent.devops.process.pojo.BuildTask
@@ -110,7 +111,8 @@ import javax.ws.rs.NotFoundException
 class EngineVMBuildService @Autowired(required = false) constructor(
     private val pipelineRuntimeService: PipelineRuntimeService,
     private val containerBuildDetailService: ContainerBuildDetailService,
-    private val taskBuildDetailService: TaskBuildDetailService,
+    private val containerBuildRecordService: ContainerBuildRecordService,
+    private val taskBuildRecordService: TaskBuildRecordService,
     private val buildVariableService: BuildVariableService,
     private val pipelineContextService: PipelineContextService,
     @Autowired(required = false)
@@ -363,10 +365,12 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     endTime = null,
                     buildStatus = BuildStatus.RUNNING
                 )
-                containerBuildDetailService.containerStarted(
+                containerBuildRecordService.containerStarted(
                     projectId = projectId,
+                    pipelineId = pipelineId,
                     buildId = buildId,
                     containerId = vmSeqId,
+                    executeCount = startUpVMTask.executeCount ?: 1,
                     containerBuildStatus = buildStatus
                 )
             }
@@ -520,7 +524,14 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                 // 如果状态未改变，则做认领任务动作
                 if (!task.status.isRunning()) {
                     pipelineRuntimeService.claimBuildTask(task, userId)
-                    taskBuildDetailService.taskStart(task.projectId, buildId, task.taskId)
+                    taskBuildRecordService.taskStart(
+                        projectId = task.projectId,
+                        pipelineId = task.pipelineId,
+                        buildId = buildId,
+                        containerId = task.containerId,
+                        taskId = task.taskId,
+                        executeCount = task.executeCount ?: 1
+                    )
                     jmxElements.execute(task.taskType)
                 }
                 pipelineEventDispatcher.dispatch(
@@ -657,18 +668,19 @@ class EngineVMBuildService @Autowired(required = false) constructor(
             vmSeqId = vmSeqId,
             runCondition = runCondition
         )
-        val updateTaskStatusInfos = taskBuildDetailService.taskEnd(
-            TaskBuildEndParam(
-                projectId = buildInfo.projectId,
-                buildId = buildId,
-                taskId = result.elementId,
-                buildStatus = buildStatus,
-                errorType = errorType,
-                errorCode = result.errorCode,
-                errorMsg = result.message,
-                atomVersion = result.elementVersion
-            )
+        val endParam = TaskBuildEndParam(
+            projectId = buildInfo.projectId,
+            pipelineId = buildInfo.pipelineId,
+            buildId = buildId,
+            containerId = vmSeqId,
+            taskId = result.elementId,
+            buildStatus = buildStatus,
+            errorType = errorType,
+            errorCode = result.errorCode,
+            errorMsg = result.message,
+            atomVersion = result.elementVersion
         )
+        val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
                 updateTaskInfo = UpdateTaskInfo(

@@ -8,7 +8,7 @@ import com.tencent.devops.common.websocket.dispatch.message.SendMessage
 import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 
 @Suppress("LongParameterList")
 @Event(exchange = MQ.EXCHANGE_WEBSOCKET_TMP_FANOUT, routeKey = MQ.ROUTE_WEBSOCKET_TMP_EVENT)
@@ -28,27 +28,21 @@ class StreamNotifyWebsocketPush(
     notifyPost = notifyPost
 ) {
 
-    override fun findSession(page: String): List<String>? {
-        val userSessionList = RedisUtlis.getSessionIdByUserId(redisOperation, userId)
-        if (userSessionList.isNullOrEmpty()) {
-            return emptyList()
-        }
-        return userSessionList.split(",")
+    override fun findSession(page: String): Set<String> {
+        return WsRedisUtils.getSessionIdByUserId(redisOperation, userId) ?: emptySet()
     }
 
-    override fun buildMqMessage(): SendMessage? {
+    override fun buildMqMessage(): SendMessage {
         return NotifyMessage(
             buildId = null,
             pipelineId = "",
             projectId = projectId ?: "",
             userId = userId,
-            sessionList = findSession(page ?: "") ?: emptyList(),
+            sessionList = findSession(page ?: ""),
             page = page,
             notifyPost = notifyPost
         )
     }
 
-    override fun buildNotifyMessage(message: SendMessage) {
-        return
-    }
+    override fun buildNotifyMessage(message: SendMessage) = Unit
 }

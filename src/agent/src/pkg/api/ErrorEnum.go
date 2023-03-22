@@ -22,6 +22,7 @@ const (
 	DockerContainerRunError
 	DockerContainerDoneStatusError
 	DockerChmodInitshError
+	DockerCredGetError
 )
 
 type ErrorTypes string
@@ -57,6 +58,11 @@ var (
 		Type:    User,
 		Code:    DockerRunShStatError,
 		Message: "获取Docker构建机初始化脚本状态失败",
+	}
+	DockerCredGetErrorEnum = &ErrorEnum{
+		Type:    User,
+		Code:    DockerCredGetError,
+		Message: "获取docker凭据错误",
 	}
 	DockerClientCreateErrorEnum = &ErrorEnum{
 		Type:    User,

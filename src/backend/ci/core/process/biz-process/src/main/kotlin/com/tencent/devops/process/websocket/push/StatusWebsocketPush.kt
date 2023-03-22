@@ -38,7 +38,7 @@ import com.tencent.devops.common.websocket.dispatch.push.WebsocketPush
 import com.tencent.devops.common.websocket.pojo.NotifyPost
 import com.tencent.devops.common.websocket.pojo.WebSocketType
 import com.tencent.devops.common.websocket.utils.PageUtils
-import com.tencent.devops.common.websocket.utils.RedisUtlis
+import com.tencent.devops.common.websocket.utils.WsRedisUtils
 import com.tencent.devops.process.pojo.PipelineStatus
 import com.tencent.devops.process.service.pipeline.PipelineStatusService
 import org.slf4j.LoggerFactory
@@ -65,16 +65,16 @@ data class StatusWebsocketPush(
         private val pipelineStatusService = SpringContextUtil.getBean(PipelineStatusService::class.java)
     }
 
-    override fun findSession(page: String): List<String>? {
+    override fun findSession(page: String): Set<String> {
         if (page.isBlank()) {
             logger.warn("page empty: buildId[$buildId],projectId:[$projectId],pipelineId:[$pipelineId],page:[$page]")
         }
 
         val pageList = PageUtils.createAllTagPage(page)
 
-        val sessionList = mutableListOf<String>()
+        val sessionList = mutableSetOf<String>()
         pageList.forEach {
-            val redisSession = RedisUtlis.getSessionListFormPageSessionByPage(redisOperation, it)
+            val redisSession = WsRedisUtils.getSessionListFormPageSessionByPage(redisOperation, it)
             if (redisSession != null) {
                 sessionList.addAll(redisSession)
             }

@@ -51,6 +51,7 @@ import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.lock.BuildIdLock
 import com.tencent.devops.process.engine.control.lock.ConcurrencyGroupLock
 import com.tencent.devops.process.engine.control.lock.PipelineBuildNoLock
@@ -62,6 +63,7 @@ import com.tencent.devops.process.engine.pojo.event.PipelineBuildFinishEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildStartEvent
 import com.tencent.devops.process.engine.pojo.event.PipelineBuildWebSocketPushEvent
 import com.tencent.devops.process.engine.service.PipelineBuildDetailService
+import com.tencent.devops.process.engine.service.record.PipelineBuildRecordService
 import com.tencent.devops.process.engine.service.PipelineRedisService
 import com.tencent.devops.process.engine.service.PipelineRuntimeExtService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
@@ -94,6 +96,7 @@ class BuildEndControl @Autowired constructor(
     private val pipelineTaskService: PipelineTaskService,
     private val pipelineStageService: PipelineStageService,
     private val pipelineBuildDetailService: PipelineBuildDetailService,
+    private val pipelineBuildRecordService: PipelineBuildRecordService,
     private val pipelineRuntimeExtService: PipelineRuntimeExtService,
     private val buildLogPrinter: BuildLogPrinter,
     private val pipelineRedisService: PipelineRedisService,
@@ -174,15 +177,23 @@ class BuildEndControl @Autowired constructor(
 
         // 更新buildNo
         if (!buildStatus.isCancel() && !buildStatus.isFailure()) {
-            setBuildNoWhenBuildSuccess(projectId = projectId, pipelineId = pipelineId, buildId = buildId)
+            setBuildNoWhenBuildSuccess(
+                projectId = projectId,
+                pipelineId = pipelineId,
+                buildId = buildId,
+                retryFlag = buildInfo.executeCount?.let { it > 1 } == true || buildInfo.retryFlag == true
+            )
         }
 
         // 设置状态
-        val (model, allStageStatus) = pipelineBuildDetailService.buildEnd(
+        val (model, allStageStatus) = pipelineBuildRecordService.buildEnd(
             projectId = projectId,
+            pipelineId = pipelineId,
             buildId = buildId,
             buildStatus = buildStatus,
-            errorMsg = errorMsg
+            errorInfoList = buildInfo.errorInfoList,
+            errorMsg = errorMsg,
+            executeCount = buildInfo.executeCount ?: 1
         )
 
         pipelineRuntimeService.updateBuildHistoryStageState(projectId, buildId, allStageStatus)
@@ -234,7 +245,12 @@ class BuildEndControl @Autowired constructor(
         return buildInfo
     }
 
-    private fun setBuildNoWhenBuildSuccess(projectId: String, pipelineId: String, buildId: String) {
+    private fun setBuildNoWhenBuildSuccess(
+        projectId: String,
+        pipelineId: String,
+        buildId: String,
+        retryFlag: Boolean
+    ) {
         val model = pipelineBuildDetailService.getBuildModel(projectId, buildId) ?: return
         val triggerContainer = model.stages[0].containers[0] as TriggerContainer
         val buildNoObj = triggerContainer.buildNo ?: return
@@ -244,28 +260,19 @@ class BuildEndControl @Autowired constructor(
             val buildNoLock = PipelineBuildNoLock(redisOperation = redisOperation, pipelineId = pipelineId)
             try {
                 buildNoLock.lock()
-                updateBuildNoInfo(projectId, pipelineId, buildId)
+                updateBuildNoInfo(projectId, pipelineId, retryFlag)
             } finally {
                 buildNoLock.unlock()
             }
         }
     }
 
-    private fun updateBuildNoInfo(projectId: String, pipelineId: String, buildId: String) {
+    private fun updateBuildNoInfo(projectId: String, pipelineId: String, retryFlag: Boolean) {
         val buildSummary = pipelineRuntimeService.getBuildSummaryRecord(projectId = projectId, pipelineId = pipelineId)
         val buildNo = buildSummary?.buildNo
-        if (buildNo != null && pipelineRuntimeService.getBuildInfo(projectId, buildId)?.retryFlag != true) {
+        if (buildNo != null && !retryFlag) {
             pipelineRuntimeService.updateBuildNo(projectId = projectId, pipelineId = pipelineId, buildNo = buildNo + 1)
-            // 更新历史表的推荐版本号
-            val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
-            val recommendVersionPrefix = pipelineRuntimeService.getRecommendVersionPrefix(buildParameters)
-            if (recommendVersionPrefix != null) {
-                pipelineRuntimeService.updateRecommendVersion(
-                    projectId = projectId,
-                    buildId = buildId,
-                    recommendVersion = "$recommendVersionPrefix.$buildNo"
-                )
-            }
+            // 更新历史表的推荐版本号 BuildNo在开始就已经存入构建历史，构建结束后+1并不会影响本次构建开始的值
         }
     }
 
@@ -298,7 +305,8 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = task.stageId,
-                        jobId = task.containerId,
+                        containerId = task.containerId,
+                        matrixFlag = VMUtils.isMatrixContainerId(task.containerId),
                         taskId = task.taskId,
                         taskName = task.taskName,
                         atomCode = task.atomCode ?: task.taskParams["atomCode"] as String? ?: task.taskType,
@@ -322,7 +330,7 @@ class BuildEndControl @Autowired constructor(
                 errorInfoList.add(
                     ErrorInfo(
                         stageId = stage.stageId,
-                        jobId = "",
+                        containerId = "",
                         taskId = "",
                         taskName = "",
                         atomCode = "",
