@@ -239,9 +239,6 @@ class ContainerBuildDetailService(
                         update = true
                         targetContainer.status = BuildStatus.SKIP.name
                         targetContainer.startVMStatus = BuildStatus.SKIP.name
-                        targetContainer.elements.forEach {
-                            it.status = BuildStatus.SKIP.name
-                        }
                         return Traverse.BREAK
                     }
                     return Traverse.CONTINUE
