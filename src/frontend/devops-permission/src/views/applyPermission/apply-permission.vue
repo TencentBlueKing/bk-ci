@@ -38,7 +38,8 @@ const scrollLoading = ref(false);
 const pageInfo = ref({
   page: 1,
   pageSize: 10,
-  loadEnd: false
+  projectName: '',
+  loadEnd: false,
 })
 
 const projectName = ref(route?.query.projectName);
@@ -152,14 +153,24 @@ const getUserInfo = () => {
   });
 };
 
-const getAllProjectList = () => {
+const handleSearchProject = (val) => {
+  pageInfo.value.loadEnd = false;
+  pageInfo.value.page = 1;
+  pageInfo.value.projectName = val;
+  projectList.value = [];
+  getAllProjectList(val);
+}
+
+const getAllProjectList = (name = '') => {
   if (pageInfo.value.loadEnd || scrollLoading.value) {
     return
   }
+  const { page, pageSize, projectName } = pageInfo.value;
   scrollLoading.value = true;
   http.getAllProjectList({
-    page: pageInfo.value.page,
-    pageSize: pageInfo.value.pageSize,
+    page: page,
+    pageSize: pageSize,
+    projectName: projectName ? projectName : undefined,
   }).then(res => {
     pageInfo.value.loadEnd = !res.hasNext;
     pageInfo.value.page += 1;
@@ -210,6 +221,7 @@ onMounted(() => {
               class="project-select"
               :scroll-loading="scrollLoading"
               @scroll-end="getAllProjectList"
+              :remote-method="handleSearchProject"
             >
               <bk-option
                 v-for="(project, index) in projectList"

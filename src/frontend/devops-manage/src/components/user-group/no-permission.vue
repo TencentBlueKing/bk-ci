@@ -46,7 +46,7 @@ export default {
     handleApply () {
       const { resourceAction, projectCode } = this;
       handleProjectManageNoPermission({
-        action: resourceAction,
+        // action: resourceAction,
         projectId: projectCode,
         resourceCode: projectCode,
       });

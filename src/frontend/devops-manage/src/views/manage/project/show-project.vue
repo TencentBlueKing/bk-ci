@@ -223,7 +223,6 @@ const handleCancelCreation = () => {
 
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
-    action: RESOURCE_ACTION.VIEW,
     projectId: projectCode,
     resourceCode: projectCode,
   })
