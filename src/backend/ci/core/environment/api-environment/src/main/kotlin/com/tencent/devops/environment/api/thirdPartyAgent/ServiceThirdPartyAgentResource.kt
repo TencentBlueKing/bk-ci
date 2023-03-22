@@ -306,7 +306,6 @@ interface ServiceThirdPartyAgentResource {
         projectId: String,
         @ApiParam("Node Hash ID", required = false)
         @QueryParam("nodeHashId")
-        @BkField(minLength = 3, maxLength = 32)
         nodeHashId: String?,
         @ApiParam("Node 别名", required = false)
         @QueryParam("nodeName")
