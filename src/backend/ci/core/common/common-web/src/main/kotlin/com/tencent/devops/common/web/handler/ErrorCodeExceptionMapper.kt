@@ -28,7 +28,7 @@
 package com.tencent.devops.common.web.handler
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.annotation.BkExceptionMapper
 import org.slf4j.LoggerFactory
 import javax.ws.rs.core.MediaType
@@ -43,11 +43,11 @@ class ErrorCodeExceptionMapper : ExceptionMapper<ErrorCodeException> {
 
     override fun toResponse(exception: ErrorCodeException): Response {
         logger.warn("Failed with errorCode client exception:$exception")
-        val errorResult = MessageCodeUtil.generateResponseDataObject(
+        val errorResult = MessageUtil.generateResponseDataObject(
             messageCode = exception.errorCode,
             params = exception.params,
             data = null,
-            defaultMessage = exception.defaultMessage
+            language = exception.language
         )
 
         return Response.status(exception.statusCode).type(MediaType.APPLICATION_JSON_TYPE)

@@ -28,6 +28,7 @@
 package com.tencent.devops.common.api.util
 
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
+import com.tencent.devops.common.api.pojo.Result
 import java.text.MessageFormat
 import java.util.Locale
 import java.util.Properties
@@ -191,5 +192,24 @@ object MessageUtil {
             }
         }
         return fieldLocaleInfos
+    }
+
+    /**
+     * 生成请求响应对象
+     * @param messageCode 状态码
+     * @param params 替换状态码描述信息占位符的参数数组
+     * @param data 数据对象
+     * @return Result响应结果对象
+     */
+    @Suppress("UNCHECKED_CAST")
+    fun <T> generateResponseDataObject(
+        messageCode: String,
+        params: Array<String>?,
+        data: T?,
+        language: String
+    ): Result<T> {
+        val message = getMessageByLocale(messageCode, language, params)
+        // 生成Result对象
+        return Result(messageCode.toInt(), message, data)
     }
 }
