@@ -9,9 +9,9 @@
         <aside class="pipeline-detail-right-aside">
             <bk-button
                 :disabled="loading || !canManualStartup"
-                :loading="loading"
+                :icon="loading ? 'loading' : ''"
                 outline
-                :hover-theme="isRunning ? 'warning' : ''"
+                :hover-theme="isRunning ? 'warning' : 'default'"
                 @click="handleClick"
             >
                 {{ isRunning ? $t("终止构建") : $t("重新构建") }}

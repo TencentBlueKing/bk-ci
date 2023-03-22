@@ -325,7 +325,6 @@
                 return this.execDetail?.cancelUserId ?? '--'
             },
             executeCount () {
-                console.log(this.execDetail?.executeCount ?? 1)
                 return this.execDetail?.executeCount ?? 1
             },
             pipelineModes () {
@@ -548,6 +547,7 @@
                     if (res.id) {
                         message = this.$t('subpage.retrySuc')
                         theme = 'success'
+                        this.handleExecuteCountChange(this.executeCounts.length + 1)
                     } else {
                         message = this.$t('subpage.retryFail')
                         theme = 'error'

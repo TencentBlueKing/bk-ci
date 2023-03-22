@@ -798,7 +798,7 @@
     "atomOption": "流程控制选项",
     "customTriggerControl": "自定义触发控制",
     "customTriggerControlTips": "满足基础过滤条件后，根据第三方接口返回判断是否能够触发",
-    "customTriggerLinkDesc": "查看指用指引和示例",
+    "customTriggerLinkDesc": "查看使用指引和示例",
     "paramsTips": "可以在插件中引用该变量",
     "addParams": "新增变量",
     "paramsType": "变量类型",

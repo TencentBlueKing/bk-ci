@@ -348,7 +348,6 @@ export default {
                             const subElements = groupContainer.elements.filter(
                                 (element, index) => !isSkip(element.status ?? container.elements?.[index]?.status)
                             )
-                            console.log(subElements, elements, 123)
                             return {
                                 ...groupContainer,
                                 elements: subElements
@@ -356,7 +355,6 @@ export default {
                         })
                     }
                 }
-                console.log(container)
                 return {
                     ...container,
                     elements
