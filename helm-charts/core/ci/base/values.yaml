@@ -77,11 +77,11 @@ init:
   plugin:
     enabled: true
     atoms:
-    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.12/checkout.zip
+    - url: https://github.com/TencentBlueKing/ci-checkout/releases/download/v2.0.13/checkout_en.zip
       code: checkout
-    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.2/run-v1.0.2.zip
+    - url: https://github.com/TencentBlueKing/ci-run/releases/download/v1.0.5/run-v1.0.5.zip
       code: run
-    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.4/ci-SubPipelineExec.zip
+    - url: https://github.com/TencentBlueKing/ci-SubPipelineExec/releases/download/v1.0.6/ci-SubPipelineExec_en.zip
       code: SubPipelineExec
     - url: https://github.com/TencentBlueKing/ci-uploadArtifact/releases/download/v2.0.1/uploadArtifact_en.zip
       code: uploadArtifact
@@ -91,6 +91,10 @@ init:
       code: AcrossProjectDistribution
     - url: https://github.com/TencentBlueKing/ci-downloadArtifact/releases/download/v1.0.2/downloadArtifact_en.zip
       code: downloadArtifact
+    - url: https://github.com/TencentBlueKing/ci-plugin-perforce-sync/releases/download/v1.0.13/PerforceSync_en.zip
+      code: PerforceSync
+    - url: https://github.com/TencentBlueKing/ci-CodeCCCheckAtom/releases/download/v0.0.12/CodeCCCheckAtom_en.zip
+      code: CodeCCCheckAtom
 
 # 多集群开关
 multiCluster:

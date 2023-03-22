@@ -431,7 +431,7 @@
                 :label-width="0"
                 :model="deleteObj.formData"
             >
-                <p class="dialog-tip">{{$t('store.删除时将清理数据，包括工蜂代码库。删除后不可恢复！')}}</p>
+                <p class="dialog-tip">{{$t('store.删除时将清理数据。删除后不可恢复！')}}</p>
                 <p class="dialog-tip">{{$t('store.deleteAtomTip', [deleteObj.atomCode])}}</p>
                 <bk-form-item property="projectName">
                     <bk-input
