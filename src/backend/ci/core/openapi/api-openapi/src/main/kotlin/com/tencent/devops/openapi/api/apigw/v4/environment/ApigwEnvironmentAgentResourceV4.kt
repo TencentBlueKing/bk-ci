@@ -109,8 +109,11 @@ interface ApigwEnvironmentAgentResourceV4 {
         @ApiParam(value = "projectId", required = true)
         @PathParam("projectId")
         projectId: String,
-        @ApiParam("节点 hashId", required = true)
+        @ApiParam("节点 hashId", required = false)
         @QueryParam("nodeHashId")
-        nodeHashId: String
+        nodeHashId: String?,
+        @ApiParam("节点 别名", required = false)
+        @QueryParam("nodeName")
+        nodeName: String?
     ): Result<ThirdPartyAgentDetail?>
 }
