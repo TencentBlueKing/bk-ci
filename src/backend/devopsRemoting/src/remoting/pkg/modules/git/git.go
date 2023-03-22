@@ -27,6 +27,11 @@ func ConfigGit(cfg *config.Config, childProcEnvvars []string) {
 		{"alias.lg", "log --color --graph --pretty=format:'%Cred%h%Creset -%C(yellow)%d%Creset %s %Cgreen(%cr) %C(bold blue)<%an>%Creset' --abbrev-commit"},
 		{"credential.helper", gitcache},
 		{"safe.directory", "*"},
+		// 工蜂域名更改
+		{"--add", "url.http://git.woa.com/.insteadOf", "http://git.code.oa.com/"},
+		{"--add", "url.http://git.woa.com/.insteadOf", "https://git.code.oa.com/"},
+		{"--add", "url.http://git.woa.com/.insteadOf", "git@git.woa.com:"},
+		{"--add", "url.http://git.woa.com/.insteadOf", "git@git.code.oa.com:"},
 	}
 	if cfg.WorkSpace.GitUsername != "" {
 		settings = append(settings, []string{"user.name", cfg.WorkSpace.GitUsername})
