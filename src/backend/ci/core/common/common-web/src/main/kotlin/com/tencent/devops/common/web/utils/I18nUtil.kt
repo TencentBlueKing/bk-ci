@@ -27,6 +27,7 @@
 
 package com.tencent.devops.common.web.utils
 
+import com.tencent.devops.common.api.auth.AUTH_HEADER_USER_ID
 import com.tencent.devops.common.api.constant.REQUEST_CHANNEL
 import com.tencent.devops.common.api.enums.RequestChannelTypeEnum
 import com.tencent.devops.common.api.util.LocaleUtil
@@ -71,6 +72,20 @@ object I18nUtil {
             (request.getAttribute(REQUEST_CHANNEL) ?: request.getHeader(REQUEST_CHANNEL))?.toString()
         } else {
             null // 不是接口请求来源则返回null
+        }
+    }
+
+    /**
+     * 获取接口请求用户信息
+     * @return 用户ID
+     */
+    fun getRequestUserId(): String? {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        return if (null != attributes) {
+            val request = attributes.request
+            request.getHeader(AUTH_HEADER_USER_ID)?.toString()
+        } else {
+            null
         }
     }
 
