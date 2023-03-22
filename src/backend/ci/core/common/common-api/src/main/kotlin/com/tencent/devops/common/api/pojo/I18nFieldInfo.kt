@@ -25,31 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-dependencies {
-    api("javax.ws.rs:javax.ws.rs-api")
-    api("io.swagger:swagger-annotations")
-    api("org.hashids:hashids")
-    api("com.fasterxml.jackson.module:jackson-module-kotlin")
-    api("com.fasterxml.jackson.core:jackson-databind")
-    api("com.fasterxml.jackson.core:jackson-core")
-    api("com.fasterxml.jackson.core:jackson-annotations")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-json-provider")
-    api("com.fasterxml.jackson.dataformat:jackson-dataformat-yaml")
-    api("com.fasterxml.jackson.jaxrs:jackson-jaxrs-base")
-    api("org.bouncycastle:bcprov-jdk15on")
-    api("com.github.fge:json-schema-validator")
-    api("com.google.guava:guava")
-    api("com.squareup.okhttp3:okhttp")
-    api("commons-codec:commons-codec")
-    api("org.springframework.boot:spring-boot-starter-data-redis")
-    api("org.apache.commons:commons-compress")
-    api("org.apache.commons:commons-exec")
-    api("org.apache.commons:commons-collections4")
-    api("javax.servlet:javax.servlet-api")
-    api("javax.validation:validation-api")
-    api("com.vdurmont:emoji-java")
-    api("org.apache.lucene:lucene-core")
-    api("org.apache.commons:commons-csv")
-    api("com.github.ben-manes.caffeine:caffeine")
-    api("com.fasterxml.jackson.datatype:jackson-datatype-jsr310")
-}
+package com.tencent.devops.common.api.pojo
+
+import io.swagger.annotations.ApiModelProperty
+import java.lang.reflect.Field
+
+data class I18nFieldInfo(
+    @ApiModelProperty("字段")
+    val field: Field,
+    @ApiModelProperty("字段所属对象")
+    val entity: Any
+)

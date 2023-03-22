@@ -35,7 +35,7 @@ import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
-import com.tencent.devops.project.api.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.store.constant.StoreMessageCode
 import com.tencent.devops.store.service.common.StoreI18nMessageService
 import org.apache.commons.collections4.ListUtils

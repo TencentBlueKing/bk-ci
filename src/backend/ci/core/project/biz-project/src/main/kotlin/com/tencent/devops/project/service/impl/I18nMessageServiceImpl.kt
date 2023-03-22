@@ -29,6 +29,7 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
+import com.tencent.devops.model.project.tables.TI18nMessage
 import com.tencent.devops.project.dao.I18nMessageDao
 import com.tencent.devops.project.service.I18nMessageService
 import com.tencent.devops.project.util.BkI18nMessageCacheUtil
@@ -41,11 +42,26 @@ class I18nMessageServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val i18nMessageDao: I18nMessageDao
 ) : I18nMessageService {
+
+    /**
+     * 批量添加国际化信息
+     * @param userId 用户ID
+     * @param i18nMessages 国际化信息集合
+     * @return 布尔值
+     */
     override fun batchAddI18nMessage(userId: String, i18nMessages: List<I18nMessage>): Boolean {
         i18nMessageDao.batchAdd(dslContext = dslContext, userId = userId, i18nMessages = i18nMessages)
         return true
     }
 
+    /**
+     * 删除用户国际化信息
+     * @param userId 用户ID
+     * @param moduleCode 模块标识
+     * @param key 国际化变量名
+     * @param language 国际化语言信息
+     * @return 布尔值
+     */
     override fun deleteI18nMessage(
         userId: String,
         moduleCode: SystemModuleEnum,
@@ -61,6 +77,14 @@ class I18nMessageServiceImpl @Autowired constructor(
         return true
     }
 
+    /**
+     * 查询国际化信息
+     * @param userId 用户ID
+     * @param moduleCode 模块标识
+     * @param key 国际化变量名
+     * @param language 国际化语言信息
+     * @return 国际化信息
+     */
     override fun getI18nMessage(
         userId: String,
         moduleCode: SystemModuleEnum,
@@ -92,6 +116,14 @@ class I18nMessageServiceImpl @Autowired constructor(
         return I18nMessage(moduleCode = moduleCode, language = language, key = key, value = value)
     }
 
+    /**
+     * 查询国际化信息集合
+     * @param userId 用户ID
+     * @param moduleCode 模块标识
+     * @param keys 国际化变量名列表
+     * @param language 国际化语言信息
+     * @return 国际化信息
+     */
     override fun getI18nMessages(
         userId: String,
         moduleCode: SystemModuleEnum,
@@ -102,56 +134,121 @@ class I18nMessageServiceImpl @Autowired constructor(
         var noCacheKeys: MutableList<String>? = null
         // 1、从缓存中获取缓存的国际化信息
         keys.forEach { key ->
-            val i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
+            var i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
                 moduleCode = moduleCode.name,
                 key = key,
                 language = language
             )
-            val value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
+            var value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
+            var keyCommonFlag = false
+            val commonModuleCode = SystemModuleEnum.COMMON
+            if (value == null && moduleCode != commonModuleCode) {
+                // 如果key不存在业务模块中，则从公共模块中找
+                i18nMessageCacheKey = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
+                    moduleCode = commonModuleCode.name,
+                    key = key,
+                    language = language
+                )
+                value = BkI18nMessageCacheUtil.getIfPresent(i18nMessageCacheKey)
+                keyCommonFlag = true
+            }
             if (value.isNullOrBlank()) {
                 if (noCacheKeys == null) {
                     noCacheKeys = mutableListOf()
                 }
                 // 加入未放入缓存key集合
-                noCacheKeys!!.add(key)
+                noCacheKeys?.add(key)
             } else {
                 if (i18nMessages == null) {
                     i18nMessages = mutableListOf()
                 }
-                i18nMessages!!.add(I18nMessage(moduleCode = moduleCode, language = language, key = key, value = value))
+                i18nMessages?.add(
+                    I18nMessage(
+                        moduleCode = if (keyCommonFlag) commonModuleCode else moduleCode,
+                        language = language,
+                        key = key,
+                        value = value
+                    )
+                )
             }
         }
         // 2、未在缓存中的key，则批量去db中查询
         noCacheKeys?.let {
-            val i18nMessageRecords = i18nMessageDao.list(
-                dslContext = dslContext,
+            handleNoCacheKey(
                 moduleCode = moduleCode,
-                keys = it,
-                language = language
+                noCacheKeys = it,
+                language = language,
+                i18nMessages = i18nMessages
             )
-            i18nMessageRecords?.forEach { i18nMessageRecord ->
-                if (i18nMessages == null) {
-                    i18nMessages = mutableListOf()
-                }
-                i18nMessages!!.add(
-                    I18nMessage(
-                        moduleCode = moduleCode,
-                        language = language,
-                        key = i18nMessageRecord.key,
-                        value = i18nMessageRecord.value
-                    )
-                )
-                // 把db中查出来的国际化信息放入缓存
-                BkI18nMessageCacheUtil.put(
-                    key = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
-                        moduleCode = moduleCode.name,
-                        key = i18nMessageRecord.key,
-                        language = language
-                    ),
-                    value = i18nMessageRecord.value
-                )
-            }
         }
         return i18nMessages
+    }
+
+    /**
+     * 处理未在缓存中的key的国际化信息
+     * @param moduleCode 模块标识
+     * @param noCacheKeys 未在缓存中的key集合
+     * @param language 国际化语言信息
+     * @param i18nMessages 国际化信息集合
+     */
+    private fun handleNoCacheKey(
+        moduleCode: SystemModuleEnum,
+        noCacheKeys: MutableList<String>,
+        language: String,
+        i18nMessages: MutableList<I18nMessage>?
+    ) {
+        var tmpI18nMessages = i18nMessages
+        // 从db查找未缓存key的信息
+        val busModuleCodeName = moduleCode.name
+        val commonModuleCodeName = SystemModuleEnum.COMMON.name
+        val moduleCodes = setOf(busModuleCodeName, commonModuleCodeName)
+        val i18nMessageRecords = i18nMessageDao.list(
+            dslContext = dslContext,
+            moduleCodes = moduleCodes,
+            keys = noCacheKeys,
+            language = language
+        )
+        if (moduleCodes.size > 1) {
+            // 如果要从业务模块和公共模块获取key的国际化信息，需要把业务模块的记录排在前面以便key的国际化信息优先以业务模块的为准
+            val compareResult = busModuleCodeName.compareTo(commonModuleCodeName)
+            val tI18nMessage = TI18nMessage.T_I18N_MESSAGE
+            // 通过比较模块标识，根据比较结果排序让业务模块的记录排在前面（key同时存在业务模块和公共模块则以业务模块的记录为准）
+            if (compareResult > 0) {
+                i18nMessageRecords?.sortDesc(tI18nMessage.MODULE_CODE)
+            } else {
+                i18nMessageRecords?.sortAsc(tI18nMessage.MODULE_CODE)
+            }
+        }
+        var handleKeys: MutableSet<String>? = null
+        i18nMessageRecords?.forEach { i18nMessageRecord ->
+            if (tmpI18nMessages == null) {
+                tmpI18nMessages = mutableListOf()
+            }
+            if (handleKeys == null) {
+                handleKeys = mutableSetOf()
+            }
+            if (handleKeys?.contains(i18nMessageRecord.key) == true) {
+                // 如处理过的key集合中包括该key，说明业务模块也有该key的记录，无需再处理公共模块的记录
+                return@forEach
+            }
+            tmpI18nMessages?.add(
+                I18nMessage(
+                    moduleCode = SystemModuleEnum.valueOf(i18nMessageRecord.moduleCode),
+                    language = language,
+                    key = i18nMessageRecord.key,
+                    value = i18nMessageRecord.value
+                )
+            )
+            handleKeys?.add(i18nMessageRecord.key)
+            // 把db中查出来的国际化信息放入缓存
+            BkI18nMessageCacheUtil.put(
+                key = BkI18nMessageCacheUtil.getI18nMessageCacheKey(
+                    moduleCode = i18nMessageRecord.moduleCode,
+                    key = i18nMessageRecord.key,
+                    language = language
+                ),
+                value = i18nMessageRecord.value
+            )
+        }
     }
 }

@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.project.service.I18nMessageService
 import org.springframework.beans.factory.annotation.Autowired
 
