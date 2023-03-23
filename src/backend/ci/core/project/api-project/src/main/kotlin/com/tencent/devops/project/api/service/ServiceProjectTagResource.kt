@@ -51,4 +51,13 @@ interface ServiceProjectTagResource {
         @PathParam("projectId")
         projectId: String
     ): Result<Boolean>
+
+    @GET
+    @Path("/{projectId}/getRouterTag")
+    @ApiOperation("获取项目网关路由Tag")
+    fun getProjectRouterTag(
+        @ApiParam("项目id", required = true)
+        @PathParam("projectId")
+        projectId: String
+    ): Result<String?>
 }

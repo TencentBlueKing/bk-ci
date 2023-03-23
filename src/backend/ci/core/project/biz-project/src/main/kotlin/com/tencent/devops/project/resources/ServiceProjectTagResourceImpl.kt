@@ -30,14 +30,20 @@ package com.tencent.devops.project.resources
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import com.tencent.devops.project.pojo.Result
+import com.tencent.devops.project.service.ProjectService
 import com.tencent.devops.project.service.ProjectTagService
 import org.springframework.beans.factory.annotation.Autowired
 
 @RestResource
 class ServiceProjectTagResourceImpl @Autowired constructor(
-    val projectTagService: ProjectTagService
+    val projectTagService: ProjectTagService,
+    val projectService: ProjectService
 ) : ServiceProjectTagResource {
     override fun checkProjectRouter(projectId: String): Result<Boolean> {
         return Result(projectTagService.checkProjectTag(projectId))
+    }
+
+    override fun getProjectRouterTag(projectId: String): Result<String?> {
+        return Result(projectService.getProjectRouterTag(projectId))
     }
 }
