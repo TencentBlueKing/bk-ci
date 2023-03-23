@@ -228,7 +228,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("DevCloudWindowsService|deleteWindowsMachine|deleteVM|$url|$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, smartProxyToken, creator).toHeaders())
+            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
@@ -255,7 +255,7 @@ class DevCloudWindowsService @Autowired constructor() {
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 
-    fun makeHeaders(appId: String, token: String, proxyToken: String, staffname: String): Map<String, String> {
+    fun makeHeaders(appId: String, token: String, staffname: String, proxyToken: String): Map<String, String> {
         val headerBuilder = mutableMapOf<String, String>()
         headerBuilder["APPID"] = appId
         val random = RandomStringUtils.randomAlphabetic(8)
