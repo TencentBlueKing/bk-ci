@@ -5,7 +5,7 @@
       "operation": "upsert_system",
       "data": {
         "id": "bk_ci_rbac",
-        "name": "持续集成平台(RBAC)",
+        "name": "持续集成平台",
         "name_en": "bkci-rbac",
         "clients": "bkci,bk_ci",
         "provider_config": {
