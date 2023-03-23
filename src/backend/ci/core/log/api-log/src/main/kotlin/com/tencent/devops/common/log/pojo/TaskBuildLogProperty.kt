@@ -37,7 +37,7 @@ data class TaskBuildLogProperty(
     @ApiModelProperty("日志文件子路径", required = true)
     val childPath: String,
     @ApiModelProperty("日志zip文件子路径", required = true)
-    val childZipPath: String,
+    val childZipPath: String?,
     @ApiModelProperty("日志文件句柄", required = true)
     val logFile: File,
     @ApiModelProperty("日志的存储模式", required = false)
