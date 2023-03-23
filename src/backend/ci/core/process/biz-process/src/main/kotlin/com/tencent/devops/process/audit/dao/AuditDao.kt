@@ -110,6 +110,10 @@ class AuditDao {
             query.add(RESOURCE_TYPE.eq(queryAudit.resourceType))
             query.add(PROJECT_ID.eq(queryAudit.projectId))
 
+            if (!queryAudit.resourceId.isNullOrBlank()) {
+                query.add(RESOURCE_ID.eq(queryAudit.resourceId))
+            }
+
             if (!queryAudit.userId.isNullOrBlank()) {
                 query.add(USER_ID.eq(queryAudit.userId))
             }
