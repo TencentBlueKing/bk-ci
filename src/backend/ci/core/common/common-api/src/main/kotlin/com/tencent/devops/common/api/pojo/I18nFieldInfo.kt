@@ -25,34 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.service
+package com.tencent.devops.common.api.pojo
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.pojo.LocaleInfo
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import io.swagger.annotations.ApiModelProperty
+import java.lang.reflect.Field
 
-@Api(tags = ["SERVICE_LOCALE"], description = "SERVICE-国际化")
-@Path("/service/locales")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("project")
-interface ServiceLocaleResource {
-
-    @GET
-    @Path("/users/{userId}/get")
-    @ApiOperation("获取用户国际化信息")
-    fun getUserLocale(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<LocaleInfo>
-}
+data class I18nFieldInfo(
+    @ApiModelProperty("字段")
+    val field: Field,
+    @ApiModelProperty("字段所属对象")
+    val entity: Any
+)

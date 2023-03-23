@@ -24,14 +24,12 @@
  * WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
-package com.tencent.devops.project.pojo
-import com.tencent.devops.common.web.annotation.BkField
+package com.tencent.devops.common.api.pojo
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("语言环境信息")
 data class LocaleInfo(
     @ApiModelProperty("语言环境信息")
-    @field:BkField(minLength = 1, maxLength = 64)
     val language: String
 )

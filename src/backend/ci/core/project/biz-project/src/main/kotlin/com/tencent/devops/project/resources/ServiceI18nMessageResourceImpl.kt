@@ -30,7 +30,7 @@ import com.tencent.devops.common.api.enums.SystemModuleEnum
 import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.web.RestResource
-import com.tencent.devops.project.api.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.service.ServiceI18nMessageResource
 import com.tencent.devops.project.service.I18nMessageService
 import org.springframework.beans.factory.annotation.Autowired
 
@@ -47,9 +47,9 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
         userId: String,
         key: String,
         moduleCode: SystemModuleEnum,
-        locale: String?
+        language: String?
     ): Result<Boolean> {
-        i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, language = locale)
+        i18nMessageService.deleteI18nMessage(userId = userId, moduleCode = moduleCode, key = key, language = language)
         return Result(true)
     }
 
@@ -57,13 +57,13 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
         userId: String,
         key: String,
         moduleCode: SystemModuleEnum,
-        locale: String
+        language: String
     ): Result<I18nMessage?> {
         val i18nMessage = i18nMessageService.getI18nMessage(
             userId = userId,
             moduleCode = moduleCode,
             key = key,
-            language = locale
+            language = language
         )
         return Result(i18nMessage)
     }
@@ -72,13 +72,13 @@ class ServiceI18nMessageResourceImpl @Autowired constructor(
         userId: String,
         keys: List<String>,
         moduleCode: SystemModuleEnum,
-        locale: String
+        language: String
     ): Result<List<I18nMessage>?> {
         val i18nMessages = i18nMessageService.getI18nMessages(
             userId = userId,
             moduleCode = moduleCode,
             keys = keys,
-            language = locale
+            language = language
         )
         return Result(i18nMessages)
     }

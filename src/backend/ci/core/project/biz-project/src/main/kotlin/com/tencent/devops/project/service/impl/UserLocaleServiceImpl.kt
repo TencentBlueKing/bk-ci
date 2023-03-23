@@ -32,7 +32,7 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.project.dao.UserLocaleDao
-import com.tencent.devops.project.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import com.tencent.devops.project.service.UserLocaleService
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired

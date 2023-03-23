@@ -25,34 +25,14 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.common.web.service
+package com.tencent.devops.common.api.annotation
 
-import com.tencent.devops.common.api.annotation.ServiceInterface
-import com.tencent.devops.common.api.pojo.LocaleInfo
-import com.tencent.devops.common.api.pojo.Result
-import io.swagger.annotations.Api
-import io.swagger.annotations.ApiOperation
-import io.swagger.annotations.ApiParam
-import javax.ws.rs.Consumes
-import javax.ws.rs.GET
-import javax.ws.rs.Path
-import javax.ws.rs.PathParam
-import javax.ws.rs.Produces
-import javax.ws.rs.core.MediaType
+import javax.ws.rs.NameBinding
 
-@Api(tags = ["SERVICE_LOCALE"], description = "SERVICE-国际化")
-@Path("/service/locales")
-@Produces(MediaType.APPLICATION_JSON)
-@Consumes(MediaType.APPLICATION_JSON)
-@ServiceInterface("project")
-interface ServiceLocaleResource {
-
-    @GET
-    @Path("/users/{userId}/get")
-    @ApiOperation("获取用户国际化信息")
-    fun getUserLocale(
-        @ApiParam("用户ID", required = true)
-        @PathParam("userId")
-        userId: String
-    ): Result<LocaleInfo>
-}
+@Target(AnnotationTarget.FUNCTION, AnnotationTarget.CLASS, AnnotationTarget.FIELD)
+@Retention(AnnotationRetention.RUNTIME)
+@NameBinding
+annotation class BkI18n(
+    val fixKeyPrefixName: String = "", // 固定字段前缀名称
+    val keyPrefixNames: Array<String> = [] // 字段前缀名称数组
+)

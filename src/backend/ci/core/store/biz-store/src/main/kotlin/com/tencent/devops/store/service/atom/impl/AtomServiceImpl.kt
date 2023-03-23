@@ -43,6 +43,7 @@ import com.tencent.devops.common.api.pojo.Page
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
+import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.PageUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.api.util.timestampmilli
@@ -52,6 +53,7 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.MessageCodeUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceMeasurePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
@@ -331,8 +333,9 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
                 JsonUtil.getObjectMapper().readValue(it[KEY_OS] as String, ArrayList::class.java) as ArrayList<String>
             val classifyCode = it[KEY_CLASSIFY_CODE] as String
             val classifyName = it[KEY_CLASSIFY_NAME] as String
-            val classifyLanName = MessageCodeUtil.getCodeLanMessage(
-                messageCode = "${StoreMessageCode.MSG_CODE_STORE_CLASSIFY_PREFIX}$classifyCode",
+            val classifyLanName = MessageUtil.getMessageByLocale(
+                messageCode = "${StoreTypeEnum.ATOM.name}.classify.$classifyCode",
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 defaultMessage = classifyName
             )
             // 社区版插件归档bkrepo后删除local参数
@@ -355,6 +358,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             val pipelineAtomRespItem = AtomRespItem(
                 name = name,
                 atomCode = atomCode,
+                version = version,
                 defaultVersion = defaultVersion,
                 classType = classType,
                 serviceScope = serviceScopeList,
