@@ -31,6 +31,7 @@ import com.fasterxml.jackson.core.JacksonException
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.bkrepo.common.api.constant.MediaTypes
 import com.tencent.bkrepo.common.api.pojo.Page
 import com.tencent.bkrepo.common.api.pojo.Response
 import com.tencent.bkrepo.common.artifact.pojo.RepositoryCategory
@@ -50,7 +51,6 @@ import com.tencent.bkrepo.repository.pojo.node.NodeSizeInfo
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeMoveCopyRequest
 import com.tencent.bkrepo.repository.pojo.node.user.UserNodeRenameRequest
 import com.tencent.bkrepo.repository.pojo.project.UserProjectCreateRequest
-import com.tencent.bkrepo.repository.pojo.repo.RepoCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordCreateRequest
 import com.tencent.bkrepo.repository.pojo.share.ShareRecordInfo
 import com.tencent.bkrepo.repository.pojo.token.TemporaryTokenCreateRequest
@@ -68,6 +68,7 @@ import com.tencent.devops.common.archive.pojo.ArtifactorySearchParam
 import com.tencent.devops.common.archive.pojo.BkRepoFile
 import com.tencent.devops.common.archive.pojo.PackageVersionInfo
 import com.tencent.devops.common.archive.pojo.QueryData
+import com.tencent.devops.common.archive.pojo.RepoCreateRequest
 import com.tencent.devops.common.archive.util.PathUtil
 import com.tencent.devops.common.archive.util.STREAM_BUFFER_SIZE
 import com.tencent.devops.common.archive.util.closeQuietly
@@ -80,6 +81,8 @@ import okhttp3.MediaType
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
+import okhttp3.RequestBody.Companion.asRequestBody
+import okhttp3.RequestBody.Companion.toRequestBody
 import okio.BufferedSink
 import org.slf4j.LoggerFactory
 import org.springframework.data.domain.Sort.Direction
@@ -118,8 +121,8 @@ class BkRepoClient constructor(
             createProject(userId, projectId)
             createGenericRepo(userId, projectId, REPO_PIPELINE)
             createGenericRepo(userId, projectId, REPO_CUSTOM)
-            createGenericRepo(userId, projectId, REPO_REPORT)
-            createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey)
+            createGenericRepo(userId, projectId, REPO_REPORT, display = false)
+            createGenericRepo(userId, projectId, REPO_LOG, logRepoCredentialsKey, display = false)
             true
         } catch (e: Exception) {
             logger.error("BKSystemErrorMonitor|BK_REPO|create repo resource error", e)
@@ -139,12 +142,7 @@ class BkRepoClient constructor(
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/project")
             .header(BK_REPO_UID, userId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            )
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_PROJECT_EXISTED)
     }
@@ -153,7 +151,8 @@ class BkRepoClient constructor(
         userId: String,
         projectId: String,
         repoName: String,
-        storageCredentialsKey: String? = null
+        storageCredentialsKey: String? = null,
+        display: Boolean = true
     ) {
         logger.info("createRepo, userId: $userId, projectId: $projectId, repoName: $repoName")
         val requestData = RepoCreateRequest(
@@ -163,19 +162,15 @@ class BkRepoClient constructor(
             type = RepositoryType.GENERIC,
             public = false,
             description = "storage for devops ci $repoName",
-            storageCredentialsKey = storageCredentialsKey
+            storageCredentialsKey = storageCredentialsKey,
+            display = display
         )
         val devopsToken = EnvironmentUtil.gatewayDevopsToken()
         val request = Request.Builder()
             .url("${getGatewayUrl()}/bkrepo/api/service/repository/api/repo")
             .header(BK_REPO_UID, userId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            )
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
             .build()
         doRequest(request).resolveResponse<Response<Void>>(ERROR_REPO_EXISTED)
     }
@@ -209,12 +204,7 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            ).build()
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
@@ -409,7 +399,7 @@ class BkRepoClient constructor(
             header["$METADATA_PREFIX${it.key}"] = tryEncode(it.value)
         }
         requestBuilder.headers(header.toHeaders())
-            .put(RequestBody.create("application/octet-stream".toMediaTypeOrNull(), file))
+            .put(file.asRequestBody("application/octet-stream".toMediaTypeOrNull()))
         val request = requestBuilder.build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -473,10 +463,7 @@ class BkRepoClient constructor(
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
+                objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)
             ).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
@@ -510,12 +497,7 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, fromProject)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            ).build()
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE)).build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
@@ -532,12 +514,8 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(requestData)
-                )
-            ).build()
+            .post(objectMapper.writeValueAsString(requestData).toRequestBody(JSON_MEDIA_TYPE))
+            .build()
         doRequest(request).resolveResponse<Response<Void>>()
     }
 
@@ -789,12 +767,8 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, creatorId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    requestBody
-                )
-            ).build()
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
         return doRequest(request).resolveResponse<Response<ShareRecordInfo>>()!!.data!!.shareUrl
     }
 
@@ -820,12 +794,8 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    requestBody
-                )
-            ).build()
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
         return doRequest(request).resolveResponse<Response<List<TemporaryAccessToken>>>()!!.data!!.first().token
     }
 
@@ -862,12 +832,7 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    requestBody
-                )
-            ).build()
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE)).build()
         return doRequest(request).resolveResponse<Response<List<TemporaryAccessUrl>>>()!!.data!!
             .map { "${it.url}&download=true" }
     }
@@ -1071,10 +1036,8 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
             .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    objectMapper.writeValueAsString(mapOf("expires" to expires))
-                )
+                objectMapper.writeValueAsString(mapOf("expires" to expires))
+                    .toRequestBody(JSON_MEDIA_TYPE)
             )
             .build()
         doRequest(request)
@@ -1118,12 +1081,8 @@ class BkRepoClient constructor(
             .header(BK_REPO_UID, userId)
             .header(AUTH_HEADER_DEVOPS_PROJECT_ID, projectId)
             .let { if (null == devopsToken) it else it.header("X-DEVOPS-TOKEN", devopsToken) }
-            .post(
-                RequestBody.create(
-                    "application/json; charset=utf-8".toMediaTypeOrNull(),
-                    requestBody
-                )
-            ).build()
+            .post(requestBody.toRequestBody(JSON_MEDIA_TYPE))
+            .build()
         return doRequest(request).resolveResponse<Response<QueryData>>()!!.data!!
     }
 
@@ -1157,6 +1116,7 @@ class BkRepoClient constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(BkRepoClient::class.java)
+        private val JSON_MEDIA_TYPE = MediaTypes.APPLICATION_JSON.toMediaTypeOrNull()
         private const val METADATA_PREFIX = "X-BKREPO-META-"
 
         private const val BK_REPO_UID = "X-BKREPO-UID"
