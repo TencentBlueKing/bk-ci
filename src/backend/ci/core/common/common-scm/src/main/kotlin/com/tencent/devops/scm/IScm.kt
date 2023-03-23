@@ -67,7 +67,7 @@ interface IScm {
         context: String,
         description: String,
         block: Boolean,
-        targetBranch: List<String>? = mutableListOf()
+        targetBranch: List<String>?
     )
 
     fun addMRComment(mrId: Long, comment: String)

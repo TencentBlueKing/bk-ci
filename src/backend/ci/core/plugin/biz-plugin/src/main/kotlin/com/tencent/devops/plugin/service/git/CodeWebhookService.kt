@@ -39,6 +39,7 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.StartType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeEventType
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_NONE_TARGET_BRANCH
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
@@ -129,7 +130,7 @@ class CodeWebhookService @Autowired constructor(
                                     targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
                                         targetBranch
                                     } else {
-                                        "~NONE"
+                                        PIPELINE_GIT_NONE_TARGET_BRANCH
                                     }
                                 )
                             )
@@ -206,7 +207,7 @@ class CodeWebhookService @Autowired constructor(
                                     targetBranch = if (webhookEventType == CodeEventType.MERGE_REQUEST) {
                                         targetBranch
                                     } else {
-                                        "~NONE"
+                                        PIPELINE_GIT_NONE_TARGET_BRANCH
                                     }
                                 )
                             )
