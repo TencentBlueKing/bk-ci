@@ -29,6 +29,11 @@ package com.tencent.devops.worker.common.api.atom
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.ARCHIVE_PLUGIN_FILE_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_ENV_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_PLUGIN_SENSITIVE_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.artifactory.constant.BK_CI_ATOM_DIR
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
@@ -46,13 +51,7 @@ import com.tencent.devops.store.pojo.atom.AtomEnv
 import com.tencent.devops.store.pojo.atom.AtomEnvRequest
 import com.tencent.devops.store.pojo.common.SensitiveConfResp
 import com.tencent.devops.store.pojo.common.StorePkgRunEnvInfo
-import com.tencent.devops.worker.common.BK_ADD_PLUGIN_PLATFORM_INFO_FAILED
 import com.tencent.devops.worker.common.BK_ARCHIVE_PLUGIN_FILE
-import com.tencent.devops.worker.common.BK_ARCHIVE_PLUGIN_FILE_FAILED
-import com.tencent.devops.worker.common.BK_GET_PLUGIN_ENV_INFO_FAILED
-import com.tencent.devops.worker.common.BK_GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED
-import com.tencent.devops.worker.common.BK_GET_PLUGIN_SENSITIVE_INFO_FAILED
-import com.tencent.devops.worker.common.BK_UPDATE_PLUGIN_ENV_INFO_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_ID
 import com.tencent.devops.worker.common.api.archive.ARCHIVE_PROPS_BUILD_NO
@@ -96,7 +95,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -118,7 +117,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPut(path, body)
             val responseContent = request(
                 request,
-                MessageUtil.getMessageByLocale(BK_UPDATE_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(UPDATE_PLUGIN_ENV_INFO_FAILED, I18nUtil.getLanguage())
             )
         return objectMapper.readValue(responseContent)
     }
@@ -131,7 +130,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_PLUGIN_SENSITIVE_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_PLUGIN_SENSITIVE_INFO_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -167,7 +166,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         }
 
         LoggerService.addNormalLine("${
-            MessageUtil.getMessageByLocale(BK_ARCHIVE_PLUGIN_FILE, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(BK_ARCHIVE_PLUGIN_FILE, I18nUtil.getLanguage(I18nUtil.getRequestUserId()))
         }>>> ${file.name}")
 
         val url = StringBuilder("/ms/artifactory/build/atom/result/$path")
@@ -183,7 +182,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPut(url.toString(), RequestBody.create(MediaType.parse("application/octet-stream"), file))
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_ARCHIVE_PLUGIN_FILE_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(ARCHIVE_PLUGIN_FILE_FAILED, I18nUtil.getLanguage())
         )
         try {
             val obj = JsonParser().parse(responseContent).asJsonObject
@@ -263,7 +262,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }
@@ -280,7 +279,7 @@ class AtomArchiveResourceApi : AbstractBuildResourceApi(), AtomArchiveSDKApi {
         val request = buildPost(path, body)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_ADD_PLUGIN_PLATFORM_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED, I18nUtil.getLanguage())
         )
         return objectMapper.readValue(responseContent)
     }

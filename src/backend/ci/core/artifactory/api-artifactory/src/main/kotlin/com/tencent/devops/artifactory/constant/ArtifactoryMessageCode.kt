@@ -54,4 +54,18 @@ object ArtifactoryMessageCode {
     const val LAST_MODIFY_USER_PROJECT_DOWNLOAD_PERMISSION_FORBIDDEN = "2102008" // 流水线最后修改人{0}没有项目{1}下载权限
     const val LAST_MODIFY_USER_PIPELINE_DOWNLOAD_PERMISSION_FORBIDDEN = "2102009" // 流水线最后修改人{0}在项目{1}下没有流水线{2}下载构件权限
     const val USER_PIPELINE_SHARE_PERMISSION_FORBIDDEN = "2102010" // 用户{0}在项目{1}下没有流水线{2}分享构件权限
+    const val GET_DOWNLOAD_LINK_REQUEST_ERROR = "2102011"// 获取下载链接请求出错
+    const val UPLOAD_CUSTOM_FILE_FAILED = "2102012"// 上传自定义文件失败
+    const val UPLOAD_PIPELINE_FILE_FAILED = "2102013"// 上传流水线文件失败
+    const val UPLOAD_FILE_FAILED = "2102014"// 上传文件失败
+
+    const val GET_CREDENTIAL_INFO_FAILED = "2102015"// 获取凭证信息失败
+    const val GET_BUILD_BASE_INFO_FAIL = "2102016"// 获取构建机基本信息失败
+    const val GET_PLUGIN_ENV_INFO_FAILED = "2102017"// 获取插件执行环境信息失败
+    const val UPDATE_PLUGIN_ENV_INFO_FAILED = "2102018"// 更新插件执行环境信息失败
+    const val GET_PLUGIN_SENSITIVE_INFO_FAILED = "2102019" // 获取插件敏感信息失败
+    const val ARCHIVE_PLUGIN_FILE_FAILED = "2102020"// 归档插件文件失败
+    const val GET_PLUGIN_LANGUAGE_ENV_INFO_FAILED = "2102021"// 获取插件开发语言相关的环境变量信息失败
+    const val ADD_PLUGIN_PLATFORM_INFO_FAILED = "2102022"// 添加插件对接平台信息失败
+
 }

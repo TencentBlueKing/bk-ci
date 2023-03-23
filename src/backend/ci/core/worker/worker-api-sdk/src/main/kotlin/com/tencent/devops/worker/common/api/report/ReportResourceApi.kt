@@ -29,6 +29,7 @@ package com.tencent.devops.worker.common.api.report
 
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.google.gson.JsonParser
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
 import com.tencent.devops.artifactory.constant.REALM_LOCAL
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -40,7 +41,6 @@ import com.tencent.devops.process.pojo.report.ReportEmail
 import com.tencent.devops.worker.common.BK_CREATE_REPORT_FAIL
 import com.tencent.devops.worker.common.BK_GET_REPORT_ROOT_PATH_FAILURE
 import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_REPORT_FAILURE
-import com.tencent.devops.worker.common.BK_UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.logger.LoggerService
 import com.tencent.devops.worker.common.utils.TaskUtil
@@ -90,7 +90,10 @@ class ReportResourceApi : AbstractBuildResourceApi(), ReportSDKApi {
             val obj = JsonParser().parse(response).asJsonObject
             if (obj.has("code") && obj["code"].asString != "200") {
                 throw RemoteServiceException(
-                    MessageUtil.getMessageByLocale(BK_UPLOAD_PIPELINE_FILE_FAILED, I18nUtil.getLanguage())
+                    MessageUtil.getMessageByLocale(
+                        ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                    )
                 )
             }
         } catch (ignored: Exception) {

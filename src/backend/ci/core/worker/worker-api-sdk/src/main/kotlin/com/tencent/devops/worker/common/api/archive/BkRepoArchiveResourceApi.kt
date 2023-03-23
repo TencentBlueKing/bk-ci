@@ -29,6 +29,9 @@ package com.tencent.devops.worker.common.api.archive
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.GET_CREDENTIAL_INFO_FAILED
+import com.tencent.devops.artifactory.constant.ArtifactoryMessageCode.UPLOAD_CUSTOM_FILE_FAILED
 import com.tencent.devops.artifactory.constant.REALM_BK_REPO
 import com.tencent.devops.artifactory.pojo.enums.FileTypeEnum
 import com.tencent.devops.common.api.exception.RemoteServiceException
@@ -39,9 +42,6 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.pojo.BuildVariables
-import com.tencent.devops.worker.common.BK_GET_CREDENTIAL_INFO_FAILED
-import com.tencent.devops.worker.common.BK_UPLOAD_CUSTOM_FILE_FAILED
-import com.tencent.devops.worker.common.BK_UPLOAD_PIPELINE_FILE_FAILED
 import com.tencent.devops.worker.common.api.AbstractBuildResourceApi
 import com.tencent.devops.worker.common.api.ApiPriority
 import com.tencent.devops.worker.common.logger.LoggerService
@@ -111,7 +111,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(UPLOAD_CUSTOM_FILE_FAILED, I18nUtil.getLanguage())
         val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
@@ -172,7 +172,10 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
             bkrepoResourceApi.getUploadHeader(file, buildVariables, true),
             useFileDevnetGateway = TaskUtil.isVmBuildEnv(buildVariables.containerType)
         )
-        val message = MessageUtil.getMessageByLocale(BK_UPLOAD_PIPELINE_FILE_FAILED, I18nUtil.getLanguage())
+        val message = MessageUtil.getMessageByLocale(
+            ArtifactoryMessageCode.UPLOAD_PIPELINE_FILE_FAILED,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         val response = request(request, message)
         try {
             val obj = objectMapper.readTree(response)
@@ -278,7 +281,7 @@ class BkRepoArchiveResourceApi : AbstractBuildResourceApi(), ArchiveSDKApi {
         val request = buildGet(path)
         val responseContent = request(
             request,
-            MessageUtil.getMessageByLocale(BK_GET_CREDENTIAL_INFO_FAILED, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(GET_CREDENTIAL_INFO_FAILED, I18nUtil.getLanguage())
         )
         return jacksonObjectMapper().readValue(responseContent)
     }
