@@ -4,37 +4,19 @@ object ProcessCode {
     const val BK_ETH1_NETWORK_CARD_IP_EMPTY = "BkEth1NetworkCardIpEmpty" // eth1 网卡Ip为空，因此，获取eth0的网卡ip
     const val BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY = "BkLoopbackAddressOrNicEmpty" // loopback地址或网卡名称为空
     const val BK_FAILED_GET_NETWORK_CARD = "BkFailedGetNetworkCard" // 获取网卡失败
-    const val BK_SUCCESSFULLY_DISTRIBUTED = "BkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
-    const val BK_SUCCESSFULLY_FAILED = "BkSuccessfullyFailed" // 跨项目构件分发失败，
-    const val BK_NO_MATCH_FILE_DISTRIBUTE = "BkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
-    const val BK_START_PERFORMING_GCLOUD_OPERATION = "BkStartPerformingGcloudOperation" // 开始对文件（{0}）执行Gcloud相关操作，详情请去gcloud官方地址查看：
-    const val BK_VIEW_DETAILS = "BkViewDetails" // 查看详情
-    const val BK_START_UPLOAD_OPERATION = "BkStartUploadOperation" // 开始执行 \"上传动态资源版本\" 操作
-    const val BK_OPERATION_PARAMETERS = "BkOperationParameters" // \"上传动态资源版本\" 操作参数：
-    const val BK_QUERY_VERSION_UPLOAD  = "BkQueryVersionUpload" // 开始执行 \"查询版本上传 CDN 任务状态\" 操作\n
-    const val BK_WAIT_QUERY_VERSION  = "BkWaitQueryVersion" // \"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n
-    const val BK_OPERATION_COMPLETED_SUCCESSFULLY  = "BkOperationCompletedSuccessfully" // \"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n
-    const val BK_FAILED_UPLOAD_FILE  = "BkFailedUploadFile" // 上传文件失败:
-    const val BK_CREATE_RESOURCE_OPERATION  = "BkCreateResourceOperation" // 开始执行 \"创建资源\" 操作\n
-    const val BK_CREATE_RESOURCES_OPERATION_PARAMETERS  = "BkCreateResourcesOperationParameters" // \"创建资源\" 操作参数：
-    const val BK_START_RELEASE_OPERATION = "BkStartReleaseOperation" // 开始执行 \"预发布\" 操作\n
-    const val BK_RESPONSE_RESULT = "BkResponseResult" // 预发布单个或多个渠道响应结果:
-    const val BK_RECIPIENT_EMPTY = "BkRecipientEmpty" // 收件人为空
-    const val BK_EMAIL_NOTIFICATION_CONTENT_EMPTY = "BkEmailNotificationContentEmpty" // 邮件通知内容为空
-    const val BK_MESSAGE_SUBJECT_EMPTY = "BkMessageSubjectEmpty" // 邮件主题为空
-    const val BK_EXPERIENCE_PATH_EMPTY = "BkExperiencePathEmpty" // 体验路径为空
-    const val BK_INCORRECT_NOTIFICATION_METHOD = "BkIncorrectNotificationMethod" // 通知方式不正确
-    const val BK_FILE_NOT_EXIST = "BkFileNotExist" // 文件({0})不存在
-    const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "BkVersionExperienceCreatedSuccessfully" // 版本体验({0})创建成功
-    const val BK_VIEW_RESULT = "BkViewResult" // 查看结果:
-    const val BK_ENVIRONMENT_NAMES_NOT_EXIST = "BkEnvironmentNamesNotExist" // 以下这些环境名称不存在,请重新修改流水线！
-    const val BK_USER_NOT_PERMISSION_OPERATE = "BkUserNotPermissionOperate" // 用户没有操作这些环境的权限！环境ID：
-    const val BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST = "BkFollowingEnvironmentIdNotExist" // 以下这些环境id不存在,请重新修改流水线！id：
-    const val BK_RECEIVER_EMPTY = "BkReceiverEmpty" // Message Receivers is empty(接收人为空)
-    const val BK_MESSAGE_CONTENT_EMPTY = "BkMessageContentEmpty" // Message Body is empty(消息内容为空)
-    const val BK_EMPTY_TITLE = "BkEmptyTitle" // Message Title is empty(标题为空)
-    const val BK_COMPUTER_VIEW_DETAILS = "BkComputerViewDetails" // {0}\n\n电脑查看详情：{1}\n手机查看详情：{2}
-    const val BK_SEND_WECOM_MESSAGE = "BkSendWecomMessage" // send enterprise wechat message(发送企业微信消息):\n{0}\nto\n{1}
+
+
+
+
+
+
+
+
+
+
+
+
+
     const val BK_INVALID_NOTIFICATION_RECIPIENT = "BkInvalidNotificationRecipient" // 通知接收者不合法:
     const val BK_WECOM_NOTICE = "BkWecomNotice" // 企业微信通知内容:
     const val BK_MOBILE_VIEW_DETAILS = "BkMobileViewDetails" // {0}\n\n 手机查看详情：{1} \n 电脑查看详情：{2}

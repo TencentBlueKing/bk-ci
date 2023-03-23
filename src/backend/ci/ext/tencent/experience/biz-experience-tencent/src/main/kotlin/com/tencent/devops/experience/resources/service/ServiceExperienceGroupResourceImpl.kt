@@ -5,6 +5,7 @@ import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.api.service.ServiceExperienceGroupResource
 import com.tencent.devops.experience.constant.ExperienceMessageCode.USER_NOT_PERMISSION
 import com.tencent.devops.experience.pojo.GroupCreate
@@ -53,7 +54,8 @@ class ServiceExperienceGroupResourceImpl @Autowired constructor(
                 .verifyUserProjectPermission(projectCode = projectId, userId = userId).data != true
         ) {
             throw ErrorCodeException(
-                errorCode = USER_NOT_PERMISSION
+                errorCode = USER_NOT_PERMISSION,
+                language = I18nUtil.getLanguage(userId)
             )
         }
     }

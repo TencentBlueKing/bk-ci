@@ -74,7 +74,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
         val fileDetail = bkRepoClient.getFileDetail(userId, projectId, RepoUtils.CUSTOM_REPO, normalizedPath)
             ?: throw NotFoundException(MessageUtil.getMessageByLocale(
                     messageCode = FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId),
+                    language = I18nUtil.getLanguage(),
                     params = arrayOf("")
                 )
                 )
@@ -102,7 +102,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             if (destFileInfo != null && !destFileInfo.nodeInfo.folder) {
                 throw OperationException(MessageUtil.getMessageByLocale(
                     messageCode = DESTINATION_PATH_SHOULD_BE_FOLDER,
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage()
                 ))
             }
         }
@@ -112,7 +112,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
             if (PathUtils.getParentFolder(normalizedSrcPath) == normalizeDestPath) {
                 throw BadRequestException(MessageUtil.getMessageByLocale(
                     messageCode = CANNOT_COPY_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage()
                 ))
             }
 
@@ -139,7 +139,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
                 PathUtils.getParentFolder(normalizedSrcPath) == normalizedDestPath) {
                 throw BadRequestException(MessageUtil.getMessageByLocale(
                     messageCode = CANNOT_MOVE_TO_CURRENT_DIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage()
                 ))
             }
 
@@ -147,7 +147,7 @@ class BkRepoBuildCustomDirService @Autowired constructor(
                 throw BadRequestException(
                     MessageUtil.getMessageByLocale(
                     messageCode = CANNOT_MOVE_PARENT_DIRECTORY_TO_SUBDIRECTORY,
-                    language = I18nUtil.getLanguage(userId)
+                    language = I18nUtil.getLanguage()
                 ))
             }
 

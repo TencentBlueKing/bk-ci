@@ -27,6 +27,10 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_SHARING
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_INVITES_YOU_EXPERIENCE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MOBILE_EXPERIENCE_ADDRESS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PC_EXPERIENCE_ADDRESS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.model.enums.ReceiverType
@@ -37,10 +41,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.experience.constant.ExperienceCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
-import com.tencent.devops.experience.constant.ExperienceCode.BK_LATEST_INVITES_YOU_EXPERIENCE
-import com.tencent.devops.experience.constant.ExperienceCode.BK_MOBILE_EXPERIENCE_ADDRESS
-import com.tencent.devops.experience.constant.ExperienceCode.BK_PC_EXPERIENCE_ADDRESS
 
 object WechatGroupUtil {
     fun makeRichtextMessage(projectName: String, name: String, version: String, innerUrl: String, outerUrl: String, groupId: String): RichtextMessage {
@@ -53,7 +53,7 @@ object WechatGroupUtil {
                 RichtextTextText(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
-                        language = I18nUtil.getLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(projectName)
                     ) + "\n\n"
         )
@@ -63,7 +63,7 @@ object WechatGroupUtil {
         richtextContentList.add(RichtextText(RichtextTextText(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_LATEST_INVITES_YOU_EXPERIENCE,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(projectName, name, version)
             )
         )))
@@ -72,7 +72,7 @@ object WechatGroupUtil {
                 RichtextViewLink(
                     MessageUtil.getMessageByLocale(
                     messageCode = BK_PC_EXPERIENCE_ADDRESS,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 innerUrl,
                 1
@@ -82,7 +82,7 @@ object WechatGroupUtil {
         richtextContentList.add(RichtextView(RichtextViewLink(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_MOBILE_EXPERIENCE_ADDRESS,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 outerUrl,
                 1

@@ -27,6 +27,12 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_COMPUTER_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EMPTY_TITLE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MESSAGE_CONTENT_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RECEIVER_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_WECOM_MESSAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -48,12 +54,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextV
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
-import com.tencent.devops.process.constant.ProcessCode.BK_COMPUTER_VIEW_DETAILS
-import com.tencent.devops.process.constant.ProcessCode.BK_EMPTY_TITLE
-import com.tencent.devops.process.constant.ProcessCode.BK_MESSAGE_CONTENT_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_RECEIVER_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_MESSAGE
-import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -92,7 +92,7 @@ class RtxTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_RECEIVER_EMPTY,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
                     jobId = task.containerHashId,
@@ -104,7 +104,7 @@ class RtxTaskAtom @Autowired constructor(
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = MessageUtil.getMessageByLocale(
                         messageCode = BK_RECEIVER_EMPTY,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
             }
@@ -113,7 +113,7 @@ class RtxTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_MESSAGE_CONTENT_EMPTY,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
                     jobId = task.containerHashId,
@@ -125,7 +125,7 @@ class RtxTaskAtom @Autowired constructor(
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = MessageUtil.getMessageByLocale(
                         messageCode = BK_MESSAGE_CONTENT_EMPTY,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
             }
@@ -134,7 +134,7 @@ class RtxTaskAtom @Autowired constructor(
                     buildId = buildId,
                     message = MessageUtil.getMessageByLocale(
                         messageCode = BK_EMPTY_TITLE,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ),
                     tag = taskId,
                     jobId = task.containerHashId,
@@ -146,7 +146,7 @@ class RtxTaskAtom @Autowired constructor(
                     errorCode = ErrorCode.USER_INPUT_INVAILD,
                     errorMsg = MessageUtil.getMessageByLocale(
                         messageCode = BK_EMPTY_TITLE,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     )
                 )
             }
@@ -162,7 +162,7 @@ class RtxTaskAtom @Autowired constructor(
             val bodyStr = if (sendDetailFlag) {
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_COMPUTER_VIEW_DETAILS,
-                    language = I18nUtil.getLanguage(),
+                    language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(bodyStrOrigin, detailUrl, detailOuterUrl)
                 )
             } else {
@@ -180,7 +180,7 @@ class RtxTaskAtom @Autowired constructor(
                 buildId = buildId,
                 message = MessageUtil.getMessageByLocale(
                     messageCode = BK_SEND_WECOM_MESSAGE,
-                    language = I18nUtil.getLanguage(),
+                    language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(message.body, receiversStr)
                 ),
                 tag = taskId,
@@ -214,7 +214,7 @@ class RtxTaskAtom @Autowired constructor(
                                 RichtextViewLink(
                                     MessageUtil.getMessageByLocale(
                                         messageCode = BK_VIEW_DETAILS,
-                                        language = I18nUtil.getLanguage()
+                                        language = I18nUtil.getDefaultLocaleLanguage()
                                     ),
                                 detailUrl,
                                 1

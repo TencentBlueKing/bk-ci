@@ -28,6 +28,9 @@
 package com.tencent.devops.plugin.utils
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ETH1_NETWORK_CARD_IP_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_NETWORK_CARD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.ParamBlankException
 import com.tencent.devops.common.api.util.DHUtil
@@ -35,10 +38,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.plugin.constant.PluginCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
-import com.tencent.devops.plugin.constant.PluginCode.BK_FAILED_GET_NETWORK_CARD
 import com.tencent.devops.plugin.constant.PluginCode.BK_GET_SIGNATURE_ERROR
-import com.tencent.devops.plugin.constant.PluginCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import com.tencent.devops.plugin.constant.PluginCode.BK_URL_CODING_ERROR
 import com.tencent.devops.plugin.constant.PluginCode.BK_WETEST_FAILED_GET
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -255,9 +255,8 @@ object CommonUtils {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_GET_SIGNATURE_ERROR,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf(e.toString())
-                )
+                    language = I18nUtil.getLanguage()
+                ) + "$e"
             )
         }
     }
@@ -285,9 +284,8 @@ object CommonUtils {
             throw OperationException(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_URL_CODING_ERROR,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf(e.toString())
-                )
+                    language = I18nUtil.getLanguage()
+                ) + "$e"
             )
         }
     }

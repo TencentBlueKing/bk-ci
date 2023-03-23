@@ -109,7 +109,7 @@ class AuthExperienceService @Autowired constructor(
             logger.info("$hashIds" +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
             )
             return result.buildFetchInstanceFailResult()
@@ -145,7 +145,7 @@ class AuthExperienceService @Autowired constructor(
             logger.info(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(projectId)
                     )
             )
@@ -181,7 +181,7 @@ class AuthExperienceService @Autowired constructor(
             logger.info(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_GROUP_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(projectId)
                     )
             )
@@ -212,7 +212,7 @@ class AuthExperienceService @Autowired constructor(
             logger.info( "$ids" +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_USER_GROUP,
-                        language = I18nUtil.getDefaultLocaleLanguage()
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
             )
             return result.buildFetchInstanceFailResult()
@@ -248,7 +248,7 @@ class AuthExperienceService @Autowired constructor(
             logger.info(
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_EXPERIENCE_USER_GROUP_UNDER_PROJECT,
-                        language = I18nUtil.getDefaultLocaleLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(projectId)
                     )
             )

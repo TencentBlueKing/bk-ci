@@ -26,14 +26,14 @@
  */
 package com.tencent.devops.monitoring.services
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MONITORING_OBJEC
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_MONITORING_MESSAGES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_WARNING_MESSAGE_FROM_GRAFANA
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_MONITORING_OBJEC
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_SEND_MONITORING_MESSAGES
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_WARNING_MESSAGE_FROM_GRAFANA
 import com.tencent.devops.monitoring.pojo.GrafanaMessage
 import com.tencent.devops.monitoring.pojo.GrafanaNotification
 import com.tencent.devops.monitoring.pojo.NocNoticeBusData
@@ -90,7 +90,7 @@ class GrafanaWebhookService @Autowired constructor(
                         bodyParams = mapOf("data" to grafanaMessage.notifyMessage, "url" to
                                 MessageUtil.getMessageByLocale(
                                     messageCode = BK_WARNING_MESSAGE_FROM_GRAFANA,
-                                    language = I18nUtil.getLanguage()
+                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                 ))
                     )
                 }
@@ -106,7 +106,7 @@ class GrafanaWebhookService @Autowired constructor(
                     val metricValue = it.value
                     notifyMessage["data"] += MessageUtil.getMessageByLocale(
                         messageCode = BK_MONITORING_OBJEC,
-                        language = I18nUtil.getLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(metricName, metricValue)
                     )
                     busiDataList.add(NocNoticeBusData(metricName, metricValue))
@@ -118,7 +118,7 @@ class GrafanaWebhookService @Autowired constructor(
         }
         return Result(data = false, message = MessageUtil.getMessageByLocale(
             messageCode = BK_SEND_MONITORING_MESSAGES,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ))
     }
 }

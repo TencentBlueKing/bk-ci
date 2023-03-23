@@ -8,8 +8,8 @@ import com.networknt.schema.SpecVersion
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.YamlUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.prebuild.PreBuildCode.BK_ALPHABET_NUMBER_UNDERSCORE
-import com.tencent.devops.prebuild.PreBuildCode.BK_STAGES_JOBS_STEPS
+import com.tencent.devops.prebuild.PreBuildMessageCode.ALPHABET_NUMBER_UNDERSCORE
+import com.tencent.devops.prebuild.PreBuildMessageCode.STAGES_JOBS_STEPS
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.exception.YamlFormatException
 import org.slf4j.LoggerFactory
@@ -136,7 +136,7 @@ private fun JsonNode.checkVariablesFormat() {
         if (!keyRegex.matches(it.key)) {
             throw YamlFormatException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_ALPHABET_NUMBER_UNDERSCORE,
+                    messageCode = ALPHABET_NUMBER_UNDERSCORE,
                     language = I18nUtil.getLanguage()
                 )
             )
@@ -153,7 +153,7 @@ private fun JsonNode.checkCiRequired() {
     }
     throw YamlFormatException(
         MessageUtil.getMessageByLocale(
-        messageCode = BK_STAGES_JOBS_STEPS,
+        messageCode = STAGES_JOBS_STEPS,
         language = I18nUtil.getLanguage()
     ))
 }
@@ -162,7 +162,7 @@ private fun JsonNode.checkExtendsRequired() {
     if (get("stages") == null && get("jobs") == null && get("steps") == null) {
         throw YamlFormatException(
             MessageUtil.getMessageByLocale(
-                messageCode = BK_STAGES_JOBS_STEPS,
+                messageCode = STAGES_JOBS_STEPS,
                 language = I18nUtil.getLanguage()
             )
         )

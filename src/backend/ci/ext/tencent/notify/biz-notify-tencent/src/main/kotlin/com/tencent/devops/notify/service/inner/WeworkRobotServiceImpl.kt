@@ -28,6 +28,7 @@
 package com.tencent.devops.notify.service.inner
 
 import com.fasterxml.jackson.module.kotlin.jacksonTypeRef
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.exception.RemoteServiceException
 import com.tencent.devops.common.api.util.JsonUtil
@@ -38,7 +39,6 @@ import com.tencent.devops.common.notify.enums.WeworkTextType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.EXCHANGE_NOTIFY
 import com.tencent.devops.notify.ROUTE_WEWORK
-import com.tencent.devops.notify.constant.NotifyCode.BK_CONTROL_MESSAGE_LENGTH
 import com.tencent.devops.notify.dao.WeworkNotifyDao
 import com.tencent.devops.notify.model.WeworkNotifyMessageWithOperation
 import com.tencent.devops.notify.pojo.WeweokRobotBaseMessage
@@ -86,7 +86,7 @@ class WeworkRobotServiceImpl @Autowired constructor(
             weworkNotifyTextMessage.message.replace("\\n", "\n").substring(0, WEWORK_MAX_SIZE - 1) +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_CONTROL_MESSAGE_LENGTH,
-                        language = I18nUtil.getLanguage(),
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         params = arrayOf(WEWORK_MAX_SIZE.toString())
                     )
         }

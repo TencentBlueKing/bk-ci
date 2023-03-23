@@ -57,6 +57,7 @@ import com.tencent.devops.common.archive.constant.ARCHIVE_PROPS_USER_ID
 import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineResource
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import org.apache.commons.lang3.StringUtils
@@ -207,6 +208,7 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_DOWNLOAD_PERMISSION,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val pipelineId = fileDetail.meta["pipelineId"] ?: StringUtils.EMPTY
@@ -222,7 +224,8 @@ class AppArtifactoryResourceImpl @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_PIPELINE_PERMISSION,
-                params = arrayOf(pipelineInfo?.creator ?: "")
+                params = arrayOf(pipelineInfo?.creator ?: ""),
+                language = I18nUtil.getLanguage(userId)
 
                 )
         }

@@ -10,6 +10,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.UUIDUtil
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
+import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.ACCOUNT_HAS_BEEN_BLOCKED
 import com.tencent.devops.experience.constant.ExperienceMessageCode.ACCOUNT_INFORMATION_ABNORMAL
@@ -52,7 +53,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("it is black ip : {}", realIp)
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
 
@@ -61,7 +63,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("over limit , ip : {}", realIp)
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = LOGIN_IP_FREQUENTLY
+                errorCode = LOGIN_IP_FREQUENTLY,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
         }
 
@@ -70,7 +73,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("over limit , account : {}", params.username)
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = LOGIN_ACCOUNT_FREQUENT
+                errorCode = LOGIN_ACCOUNT_FREQUENT,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
 
@@ -87,7 +91,8 @@ class ExperienceOuterService @Autowired constructor(
                 logger.warn("profile status is not normal , status : {}", profile.status)
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
+                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
 
@@ -120,13 +125,15 @@ class ExperienceOuterService @Autowired constructor(
             throw ErrorCodeException(
                 statusCode = e.code,
                 errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
-                defaultMessage = e.responseBody
+                defaultMessage = e.responseBody,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         } catch (e: Exception) {
             logger.warn("login bad request", e)
             throw ErrorCodeException(
                 statusCode = Response.Status.BAD_REQUEST.statusCode,
-                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR
+                errorCode = ExperienceMessageCode.OUTER_LOGIN_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
     }
@@ -138,7 +145,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("get profile by token failed , token:{}", token)
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                errorCode = LOGIN_EXPIRED
+                errorCode = LOGIN_EXPIRED,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
 
@@ -154,7 +162,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("decode profile failed , token:{}", token, e)
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                errorCode = ACCOUNT_INFORMATION_ABNORMAL
+                errorCode = ACCOUNT_INFORMATION_ABNORMAL,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
     }
@@ -177,7 +186,8 @@ class ExperienceOuterService @Autowired constructor(
             logger.warn("Can not get client real ip")
             throw ErrorCodeException(
                 statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                errorCode = UNABLE_GET_IP
+                errorCode = UNABLE_GET_IP,
+                language = I18nUtil.getLanguage()
             )
         }
         return redisOperation.isMember("e:out:l:black:ip", realIp)
@@ -213,7 +223,8 @@ class ExperienceOuterService @Autowired constructor(
                 logger.warn("v2ProfilesRead , status is not normal , token:{}", token)
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
+                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         } else {
@@ -222,7 +233,8 @@ class ExperienceOuterService @Autowired constructor(
                 logger.warn("v2ProfilesRead, redis , status is not normal , token:{}", token)
                 throw ErrorCodeException(
                     statusCode = Response.Status.UNAUTHORIZED.statusCode,
-                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED
+                    errorCode = ACCOUNT_HAS_BEEN_BLOCKED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
         }

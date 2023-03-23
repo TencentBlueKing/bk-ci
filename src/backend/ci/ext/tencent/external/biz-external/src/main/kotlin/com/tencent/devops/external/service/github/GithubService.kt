@@ -29,6 +29,13 @@ package com.tencent.devops.external.service.github
 
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ADD_DETECTION_TASK
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_LIST_OF_BRANCHES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_SPECIFIED_BRANCH
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_SPECIFIED_TAG
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_TAG_LIST
+import com.tencent.devops.common.api.constant.I18NConstant.BK_GET_WAREHOUSE_LIST
+import com.tencent.devops.common.api.constant.I18NConstant.BK_UPDATE_DETECTION_TASK
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.ShaUtils
@@ -36,18 +43,11 @@ import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.webhook.pojo.code.github.GithubWebhook
-import com.tencent.devops.external.constant.ExternalCode.BK_ACCOUNT_NOT_PERMISSIO
-import com.tencent.devops.external.constant.ExternalCode.BK_ADD_DETECTION_TASK
-import com.tencent.devops.external.constant.ExternalCode.BK_GET_LIST_OF_BRANCHES
-import com.tencent.devops.external.constant.ExternalCode.BK_GET_SPECIFIED_BRANCH
-import com.tencent.devops.external.constant.ExternalCode.BK_GET_SPECIFIED_TAG
-import com.tencent.devops.external.constant.ExternalCode.BK_GET_TAG_LIST
-import com.tencent.devops.external.constant.ExternalCode.BK_GET_WAREHOUSE_LIST
-import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_AUTHENTICATION_FAILED
-import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_PLATFORM_FAILED
-import com.tencent.devops.external.constant.ExternalCode.BK_GITHUB_WAREHOUSE_NOT_EXIST
-import com.tencent.devops.external.constant.ExternalCode.BK_PARAMETER_ERROR
-import com.tencent.devops.external.constant.ExternalCode.BK_UPDATE_DETECTION_TASK
+import com.tencent.devops.external.constant.ExternalMessageCode.ACCOUNT_NOT_PERMISSIO
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_AUTHENTICATION_FAILED
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_PLATFORM_FAILED
+import com.tencent.devops.external.constant.ExternalMessageCode.GITHUB_WAREHOUSE_NOT_EXIST
+import com.tencent.devops.external.constant.ExternalMessageCode.PARAMETER_ERROR
 import com.tencent.devops.external.pojo.GithubRepository
 import com.tencent.devops.process.api.service.ServiceScmWebhookResource
 import com.tencent.devops.repository.pojo.GithubCheckRuns
@@ -305,34 +305,34 @@ class GithubService @Autowired constructor(
         when (code) {
             400 -> throw GithubApiException(code,
             MessageUtil.getMessageByLocale(
-                messageCode = BK_PARAMETER_ERROR,
-                language = I18nUtil.getLanguage()
+                messageCode = PARAMETER_ERROR,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
                 )
             401 -> throw GithubApiException(code,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_GITHUB_AUTHENTICATION_FAILED,
-                    language = I18nUtil.getLanguage()
+                    messageCode = GITHUB_AUTHENTICATION_FAILED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 )
             403 -> throw GithubApiException(code,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_ACCOUNT_NOT_PERMISSIO,
-                    language = I18nUtil.getLanguage(),
+                    messageCode = ACCOUNT_NOT_PERMISSIO,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
             404 -> throw GithubApiException(code,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_GITHUB_WAREHOUSE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(),
+                    messageCode = GITHUB_WAREHOUSE_NOT_EXIST,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
             else -> throw GithubApiException(code,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_GITHUB_PLATFORM_FAILED,
-                    language = I18nUtil.getLanguage(),
+                    messageCode = GITHUB_PLATFORM_FAILED,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(operation)
                 )
                 )
@@ -341,31 +341,31 @@ class GithubService @Autowired constructor(
 
     private val OPERATION_ADD_CHECK_RUNS = MessageUtil.getMessageByLocale(
         messageCode = BK_ADD_DETECTION_TASK,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_UPDATE_CHECK_RUNS = MessageUtil.getMessageByLocale(
         messageCode = BK_UPDATE_DETECTION_TASK,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_GET_REPOS =  MessageUtil.getMessageByLocale(
         messageCode = BK_GET_WAREHOUSE_LIST,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_GET_BRANCH =  MessageUtil.getMessageByLocale(
         messageCode = BK_GET_SPECIFIED_BRANCH,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_GET_TAG =  MessageUtil.getMessageByLocale(
         messageCode = BK_GET_SPECIFIED_TAG,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_LIST_BRANCHS =  MessageUtil.getMessageByLocale(
         messageCode = BK_GET_LIST_OF_BRANCHES,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
     private val OPERATION_LIST_TAGS =  MessageUtil.getMessageByLocale(
         messageCode = BK_GET_TAG_LIST,
-        language = I18nUtil.getLanguage(),
+        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
     )
 
     companion object {

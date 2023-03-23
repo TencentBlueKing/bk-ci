@@ -27,10 +27,10 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_INFO
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode.BK_LATEST_EXPERIENCE_VERSION_INFO
-import com.tencent.devops.experience.constant.ExperienceCode.BK_LATEST_EXPERIENCE_VERSION_SHARING
 import com.tencent.devops.notify.pojo.RtxNotifyMessage
 
 @SuppressWarnings("LongParameterList")
@@ -47,12 +47,12 @@ object RtxUtil {
         message.addAllReceivers(receivers)
         message.title = MessageUtil.getMessageByLocale(
             messageCode = BK_LATEST_EXPERIENCE_VERSION_SHARING,
-            language = I18nUtil.getLanguage(),
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             params = arrayOf(projectName)
         )
         message.body = MessageUtil.getMessageByLocale(
                 messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(projectName, name, version, pcUrl, appUrl)
             )
         return message

@@ -54,8 +54,8 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.RemoteTriggerElem
 import com.tencent.devops.common.pipeline.pojo.element.trigger.TimerTriggerElement
 import com.tencent.devops.common.pipeline.pojo.element.trigger.enums.CodeType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.lambda.LambdaCode.BK_STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.LambdaMessageCode.ERROR_LAMBDA_PROJECT_NOT_EXIST
+import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.process.LambdaBuildCommitDao
 import com.tencent.devops.lambda.dao.process.LambdaBuildContainerDao
@@ -729,8 +729,8 @@ class LambdaDataService @Autowired constructor(
         if (param.isNullOrBlank()) {
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_STARTUP_CONFIGURATION_MISSING,
-                    language = I18nUtil.getLanguage(),
+                    messageCode = STARTUP_CONFIGURATION_MISSING,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(message)
                 )
             )

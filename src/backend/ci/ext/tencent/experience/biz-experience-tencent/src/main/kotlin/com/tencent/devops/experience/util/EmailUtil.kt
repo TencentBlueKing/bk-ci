@@ -27,18 +27,18 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BELONG_TO_PROJECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_INVITES_YOU_EXPERIENCE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NAME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TABLE_CONTENTS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode.BK_BELONG_TO_PROJECT
-import com.tencent.devops.experience.constant.ExperienceCode.BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION
-import com.tencent.devops.experience.constant.ExperienceCode.BK_INVITES_YOU_EXPERIENCE
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NAME
-import com.tencent.devops.experience.constant.ExperienceCode.BK_OPERATE
-import com.tencent.devops.experience.constant.ExperienceCode.BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT
-import com.tencent.devops.experience.constant.ExperienceCode.BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM
-import com.tencent.devops.experience.constant.ExperienceCode.BK_TABLE_CONTENTS
-import com.tencent.devops.experience.constant.ExperienceCode.BK_VIEW
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
 import java.text.SimpleDateFormat
 import java.util.*
@@ -118,7 +118,7 @@ object EmailUtil {
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">$projectName</td>\n" +
             "                                                                                <td style=\"padding: 16px; border: 1px solid #e6e6e6;text-align: center; font-weight: normal;\"><a href=\"$url\" style=\"color: #3c96ff\">"+MessageUtil.getMessageByLocale(
             messageCode = BK_VIEW,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )+"</a></td>\n" +
             "                                                                            </tr>\n"
     }
@@ -165,12 +165,12 @@ object EmailUtil {
             "                                                <tr>\n" +
             "                                                    <td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">"+MessageUtil.getMessageByLocale(
             messageCode = BK_PUSH_FROM_BLUE_SHIELD_DEVOPS_PLATFORM,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )+"</td>\n" +
             "                                                </tr>\n" +
             "                                                <!-- "+MessageUtil.getMessageByLocale(
             messageCode = BK_TABLE_CONTENTS,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )+" -->\n" +
             "                                                <tr class=\"email-information\">\n" +
             "                                                    <td class=\"table-info\">\n" +
@@ -202,7 +202,7 @@ object EmailUtil {
             "                                                <tr class=\"prompt-tips\">\n" +
             "                                                    <td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">"+MessageUtil.getMessageByLocale(
             messageCode = BK_PLEASE_FEEL_TO_CONTACT_BLUE_SHIELD_ASSISTANT,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )+"</td>\n" +
             "                                                </tr>\n" +
             "                                                <tr class=\"info-remark\">\n" +

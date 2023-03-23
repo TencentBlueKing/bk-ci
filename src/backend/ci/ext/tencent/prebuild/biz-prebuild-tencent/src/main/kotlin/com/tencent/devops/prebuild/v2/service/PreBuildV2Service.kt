@@ -42,8 +42,8 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.prebuild.PreBuildCode.BK_PRECI_SUPPORTS_REMOTE_TEMPLATES
-import com.tencent.devops.prebuild.PreBuildCode.BK_REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
+import com.tencent.devops.prebuild.PreBuildMessageCode.PRECI_SUPPORTS_REMOTE_TEMPLATES
+import com.tencent.devops.prebuild.PreBuildMessageCode.REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.prebuild.pojo.StreamCommonVariables
@@ -230,8 +230,8 @@ class PreBuildV2Service @Autowired constructor(
         if (param.targetRepo == null) {
             throw CustomException(Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PRECI_SUPPORTS_REMOTE_TEMPLATES,
-                    language = I18nUtil.getLanguage()
+                    messageCode = PRECI_SUPPORTS_REMOTE_TEMPLATES,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 )
         }
@@ -241,8 +241,8 @@ class PreBuildV2Service @Autowired constructor(
             throw CustomException(
                 status = Response.Status.BAD_REQUEST,
                 message = MessageUtil.getMessageByLocale(
-                    messageCode = BK_REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    messageCode = REMOTE_WAREHOUSE_KEYWORD_CANNOT_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }

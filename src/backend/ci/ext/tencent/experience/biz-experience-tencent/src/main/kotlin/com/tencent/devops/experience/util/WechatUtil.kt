@@ -27,9 +27,9 @@
 
 package com.tencent.devops.experience.util
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LATEST_EXPERIENCE_VERSION_INFO
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
 
 object WechatUtil {
@@ -37,8 +37,8 @@ object WechatUtil {
         val message = WechatNotifyMessage()
         message.addAllReceivers(receivers)
         message.body = MessageUtil.getMessageByLocale(
-            messageCode = ExperienceCode.BK_LATEST_EXPERIENCE_VERSION_INFO,
-            language = I18nUtil.getLanguage(),
+            messageCode = BK_LATEST_EXPERIENCE_VERSION_INFO,
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             params = arrayOf(projectName, name, version, innerUrl, outerUrl)
         )
         return message

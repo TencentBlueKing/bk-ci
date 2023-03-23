@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.kafka.KafkaClient
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.lambda.LambdaCode
+import com.tencent.devops.lambda.LambdaMessageCode.STARTUP_CONFIGURATION_MISSING
 import com.tencent.devops.lambda.config.LambdaKafkaTopicConfig
 import com.tencent.devops.lambda.dao.project.LambdaProjectDao
 import com.tencent.devops.lambda.pojo.project.DataPlatProjectInfo
@@ -150,8 +150,8 @@ class LambdaProjectService @Autowired constructor(
         if (param.isNullOrBlank()) {
             throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
-                messageCode = LambdaCode.BK_STARTUP_CONFIGURATION_MISSING,
-                language = I18nUtil.getLanguage(),
+                messageCode = STARTUP_CONFIGURATION_MISSING,
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(message)
             ))
         }

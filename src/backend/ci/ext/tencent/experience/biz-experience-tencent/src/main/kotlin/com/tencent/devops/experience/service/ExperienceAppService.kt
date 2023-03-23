@@ -37,19 +37,15 @@ import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.pojo.Pagination
 import com.tencent.devops.common.api.util.HashUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.VersionUtil
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode.BK_GRANT_EXPERIENCE_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceCode.BK_NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.ExperienceConditionEnum
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceConstant.ORGANIZATION_OUTER
-import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.constant.ExperienceMessageCode.GRANT_EXPERIENCE_PERMISSION
 import com.tencent.devops.experience.constant.ExperienceMessageCode.NO_PERMISSION_QUERY_EXPERIENCE
 import com.tencent.devops.experience.constant.GroupIdTypeEnum
@@ -148,7 +144,8 @@ class ExperienceAppService(
             throw ErrorCodeException(
                 statusCode = 403,
                 errorCode = GRANT_EXPERIENCE_PERMISSION,
-                params = arrayOf(experience.creator)
+                params = arrayOf(experience.creator),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val isSubscribe = experienceBaseService.isSubscribe(experienceId, userId, platform, bundleIdentifier, projectId)
@@ -457,7 +454,8 @@ class ExperienceAppService(
         if (!experienceBaseService.userCanExperience(userId, experienceId, organization == ORGANIZATION_OUTER)) {
             throw ErrorCodeException(
                 statusCode = 403,
-                errorCode = NO_PERMISSION_QUERY_EXPERIENCE
+                errorCode = NO_PERMISSION_QUERY_EXPERIENCE,
+                language = I18nUtil.getLanguage(userId)
             )
         }
         val experience = experienceDao.get(dslContext, experienceId)

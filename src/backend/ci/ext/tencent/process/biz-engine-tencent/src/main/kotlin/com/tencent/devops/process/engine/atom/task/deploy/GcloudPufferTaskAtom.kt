@@ -28,6 +28,19 @@
 package com.tencent.devops.process.engine.atom.task.deploy
 
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATE_RESOURCES_OPERATION_PARAMETERS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CREATE_RESOURCE_OPERATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_UPLOAD_FILE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_MATCH_FILE_DISTRIBUTE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATION_COMPLETED_SUCCESSFULLY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OPERATION_PARAMETERS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_QUERY_VERSION_UPLOAD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RESPONSE_RESULT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_START_PERFORMING_GCLOUD_OPERATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_START_RELEASE_OPERATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_START_UPLOAD_OPERATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_WAIT_QUERY_VERSION
 import com.tencent.devops.common.api.util.FileUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -43,19 +56,6 @@ import com.tencent.devops.common.pipeline.element.GcloudPufferElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceGcloudConfResource
-import com.tencent.devops.process.constant.ProcessCode.BK_CREATE_RESOURCES_OPERATION_PARAMETERS
-import com.tencent.devops.process.constant.ProcessCode.BK_CREATE_RESOURCE_OPERATION
-import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_UPLOAD_FILE
-import com.tencent.devops.process.constant.ProcessCode.BK_NO_MATCH_FILE_DISTRIBUTE
-import com.tencent.devops.process.constant.ProcessCode.BK_OPERATION_COMPLETED_SUCCESSFULLY
-import com.tencent.devops.process.constant.ProcessCode.BK_OPERATION_PARAMETERS
-import com.tencent.devops.process.constant.ProcessCode.BK_QUERY_VERSION_UPLOAD
-import com.tencent.devops.process.constant.ProcessCode.BK_RESPONSE_RESULT
-import com.tencent.devops.process.constant.ProcessCode.BK_START_PERFORMING_GCLOUD_OPERATION
-import com.tencent.devops.process.constant.ProcessCode.BK_START_RELEASE_OPERATION
-import com.tencent.devops.process.constant.ProcessCode.BK_START_UPLOAD_OPERATION
-import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
-import com.tencent.devops.process.constant.ProcessCode.BK_WAIT_QUERY_VERSION
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -110,7 +110,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                 buildLogPrinter.addRedLine(buildId,
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_NO_MATCH_FILE_DISTRIBUTE,
-                        language = I18nUtil.getLanguage(userId),
+                        language = I18nUtil.getDefaultLocaleLanguage(),
                         params = arrayOf(filePath)
                     ), taskId, task.containerHashId,
                     task.executeCount ?: 1)
@@ -140,13 +140,13 @@ class GcloudPufferTaskAtom @Autowired constructor(
                         buildId,
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_START_PERFORMING_GCLOUD_OPERATION,
-                            language = I18nUtil.getLanguage(userId),
+                            language = I18nUtil.getDefaultLocaleLanguage(),
                             params = arrayOf(downloadFile.path)
                         ) +
                             "<a target='_blank' href='http://console.gcloud.oa.com/dolphin/channel/$gameId'>" +
                                 MessageUtil.getMessageByLocale(
                                     messageCode = BK_VIEW_DETAILS,
-                                    language = I18nUtil.getLanguage(userId)
+                                    language = I18nUtil.getDefaultLocaleLanguage()
                                 ) + "</a>\n",
                         taskId,
                         task.containerHashId,
@@ -155,14 +155,14 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     buildLogPrinter.addLine(buildId,
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_START_UPLOAD_OPERATION,
-                            language = I18nUtil.getLanguage(userId)
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val uploadResParam = UploadResParam(productId.toInt(), resourceVersion,
                         FileUtil.getMD5(downloadFile), null, null, https)
                     buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
                         messageCode = BK_OPERATION_PARAMETERS,
-                        language = I18nUtil.getLanguage(userId)
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$uploadResParam\n", taskId,
                         task.containerHashId, task.executeCount ?: 1)
                     val uploadResult = gcloudClient.uploadDynamicRes(downloadFile, uploadResParam, commonParam)
@@ -171,7 +171,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     buildLogPrinter.addLine(buildId,
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_QUERY_VERSION_UPLOAD,
-                            language = I18nUtil.getLanguage(userId)
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ), taskId,
                         task.containerHashId, task.executeCount ?: 1)
                     val gCloudTaskId = uploadResult.first
@@ -185,7 +185,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                                 buildLogPrinter.addLine(buildId,
                                     MessageUtil.getMessageByLocale(
                                         messageCode = BK_WAIT_QUERY_VERSION,
-                                        language = I18nUtil.getLanguage(userId)
+                                        language = I18nUtil.getDefaultLocaleLanguage()
                                     ),
                                     taskId, task.containerHashId, task.executeCount ?: 1)
                                 buildLogPrinter.addLine(buildId, "\"$getTaskResult\n\n", taskId, task.containerHashId,
@@ -196,7 +196,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                                 buildLogPrinter.addLine(buildId,
                                     MessageUtil.getMessageByLocale(
                                         messageCode = BK_OPERATION_COMPLETED_SUCCESSFULLY,
-                                        language = I18nUtil.getLanguage(userId)
+                                        language = I18nUtil.getDefaultLocaleLanguage()
                                     ), taskId,
                                     task.containerHashId, task.executeCount ?: 1)
                                 versionInfo = getTaskResult["versionInfo"]!!
@@ -206,7 +206,7 @@ class GcloudPufferTaskAtom @Autowired constructor(
                                 buildLogPrinter.addRedLine(buildId,
                                     MessageUtil.getMessageByLocale(
                                         messageCode = BK_FAILED_UPLOAD_FILE,
-                                        language = I18nUtil.getLanguage(userId)
+                                        language = I18nUtil.getDefaultLocaleLanguage()
                                     ) + "$message($state)", taskId,
                                     task.containerHashId, task.executeCount ?: 1)
                                 return AtomResponse(BuildStatus.FAILED)
@@ -218,14 +218,14 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     buildLogPrinter.addLine(buildId,
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_CREATE_RESOURCE_OPERATION,
-                            language = I18nUtil.getLanguage(userId)
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val newResParam = DynNewResourceParam(task.starter, productId.toInt(), resourceVersion,
                         resourceName, versionInfo, versionType.toInt(), versionDes, customStr)
                     buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
                         messageCode = BK_CREATE_RESOURCES_OPERATION_PARAMETERS,
-                        language = I18nUtil.getLanguage(userId)
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$newResParam\n", taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     gcloudClient.newResource(newResParam, commonParam)
@@ -235,13 +235,13 @@ class GcloudPufferTaskAtom @Autowired constructor(
                     buildLogPrinter.addLine(buildId,
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_START_RELEASE_OPERATION,
-                            language = I18nUtil.getLanguage(userId)
+                            language = I18nUtil.getDefaultLocaleLanguage()
                         ), taskId, task.containerHashId,
                         task.executeCount ?: 1)
                     val prePubResult = gcloudClient.prePublish(prePublishParam, commonParam)
                     buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
                         messageCode = BK_RESPONSE_RESULT,
-                        language = I18nUtil.getLanguage(userId)
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$prePubResult\n", taskId,
                         task.containerHashId, task.executeCount ?: 1)
                 } finally {

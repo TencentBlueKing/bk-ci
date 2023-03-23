@@ -29,6 +29,7 @@ package com.tencent.devops.experience.service
 import com.fasterxml.jackson.databind.ObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.I18NConstant.BK_USER_NOT_EDIT_PERMISSION_GROUP
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.HashUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -40,7 +41,6 @@ import com.tencent.devops.common.auth.code.ExperienceAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.experience.constant.ExperienceCode
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
 import com.tencent.devops.experience.dao.ExperienceDao
@@ -244,24 +244,25 @@ class GroupService @Autowired constructor(
             projectId = projectId,
             groupId = groupId,
             authPermission = AuthPermission.EDIT,
-            message = MessageFormat.format(
-                MessageUtil.getMessageByLocale(
-                    messageCode = ExperienceCode.BK_USER_NOT_EDIT_PERMISSION_GROUP,
-                    language = I18nUtil.getLanguage(userId)
-                ), projectId, groupHashId
-            )
+            message = MessageUtil.getMessageByLocale(
+                    messageCode = BK_USER_NOT_EDIT_PERMISSION_GROUP,
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(projectId, groupHashId)
+                )
         )
         if (groupDao.getOrNull(dslContext, groupId) == null) {
             throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ExperienceMessageCode.EXP_GROUP_NOT_EXISTS,
-                params = arrayOf(groupHashId)
+                params = arrayOf(groupHashId),
+                language = I18nUtil.getLanguage(userId)
             )
         }
         if (groupDao.has(dslContext, projectId, group.name, groupId)) {
             throw ErrorCodeException(
                 errorCode = ExperienceMessageCode.EXP_GROUP_IS_EXISTS,
-                params = arrayOf(group.name)
+                params = arrayOf(group.name),
+                language = I18nUtil.getLanguage(userId)
             )
         }
 

@@ -35,6 +35,7 @@ import com.tencent.devops.artifactory.api.service.ServiceShortUrlResource
 import com.tencent.devops.artifactory.pojo.CreateShortUrlRequest
 import com.tencent.devops.artifactory.pojo.enums.Permission
 import com.tencent.devops.common.api.constant.CommonMessageCode
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONSTRUCTION_NUMBER
 import com.tencent.devops.common.api.constant.I18NConstant.BK_USER_NOT_EDIT_PERMISSION
 import com.tencent.devops.common.api.enums.PlatformEnum
 import com.tencent.devops.common.api.exception.ErrorCodeException
@@ -63,13 +64,6 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkService
 import com.tencent.devops.experience.constant.ExperienceConstant
 import com.tencent.devops.experience.constant.ExperienceMessageCode
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_CONSTRUCTION_NUMBER
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_EXPERIENCE_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_FILE_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_METADATA_NOT_EXIST
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USERS_NOT_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EDIT_PERMISSION
-import com.tencent.devops.experience.constant.ExperienceMessageCode.BK_USER_NOT_EXPERIENCE_USERS
 import com.tencent.devops.experience.constant.ExperienceMessageCode.EXPERIENCE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.FILE_NOT_EXIST
 import com.tencent.devops.experience.constant.ExperienceMessageCode.METADATA_NOT_EXIST
@@ -157,7 +151,8 @@ class ExperienceService @Autowired constructor(
             if (!client.get(ServiceArtifactoryResource::class).check(userId, projectId, type, path).data!!) {
                 throw ErrorCodeException(
                     statusCode = 404,
-                    errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND
+                    errorCode = ExperienceMessageCode.EXP_FILE_NOT_FOUND,
+                    language = I18nUtil.getLanguage(userId)
                 )
             }
 
@@ -667,7 +662,8 @@ class ExperienceService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = EXPERIENCE_NOT_EXIST,
-                params = arrayOf(experienceHashId)
+                params = arrayOf(experienceHashId),
+                language = I18nUtil.getLanguage(userId)
             )
     }
 
@@ -721,21 +717,19 @@ class ExperienceService @Autowired constructor(
 
         if (!propertyMap.containsKey(ARCHIVE_PROPS_BUILD_NO)) {
             throw RuntimeException(
-                MessageFormat.format(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_METADATA_NOT_EXIST,
-                        language = I18nUtil.getLanguage(userId)
-                    ),"buildNo"
-                ))
+                        messageCode = METADATA_NOT_EXIST,
+                        language = I18nUtil.getLanguage(userId),
+                        params = arrayOf("buildNo")
+                    ))
         }
 
         val remark = if (experience.description.isNullOrBlank()) {
-            MessageFormat.format(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_CONSTRUCTION_NUMBER,
-                    language = I18nUtil.getLanguage(userId)
-                ), propertyMap[ARCHIVE_PROPS_BUILD_NO]!!
-            )
+                    language = I18nUtil.getLanguage(userId),
+                    params = arrayOf(propertyMap[ARCHIVE_PROPS_BUILD_NO]!!)
+                )
         } else experience.description
 
         val experienceCreate = ExperienceCreate(
@@ -1053,11 +1047,8 @@ class ExperienceService @Autowired constructor(
                 .checkViewPermission(userId, projectId, pipelineId, buildId).data!!
         ) {
             throw ErrorCodeException(
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USERS_NOT_PERMISSION,
-                    language = I18nUtil.getLanguage(userId)
-                ),
-                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
+                errorCode = ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION,
+                language = I18nUtil.getLanguage(userId)
             )
         }
 

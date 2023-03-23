@@ -29,6 +29,7 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_RESULT
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -43,10 +44,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.ServiceEnvironmentResource
 import com.tencent.devops.environment.api.ServiceNodeResource
-import com.tencent.devops.process.constant.ProcessCode.BK_ENVIRONMENT_NAMES_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessCode.BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessCode.BK_USER_NOT_PERMISSION_OPERATE
-import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_RESULT
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_ID_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_IS_NULL
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS
@@ -314,7 +311,7 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         val taskInstanceId = jobClient.fastExecuteScriptDevops(fastExecuteScriptReq, projectId)
         buildLogPrinter.addLine(buildId, MessageUtil.getMessageByLocale(
             messageCode = BK_VIEW_RESULT,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getDefaultLocaleLanguage()
         ) + "${jobClient.getDetailUrl(projectId, taskInstanceId)}", task.taskId, containerId, executeCount)
         val startTime = System.currentTimeMillis()
 
@@ -404,18 +401,18 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         if (noExistsEnvNames.isNotEmpty()) {
             logger.warn("The envNames not exists, name:$noExistsEnvNames")
             buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
-                messageCode = BK_ENVIRONMENT_NAMES_NOT_EXIST,
-                language = I18nUtil.getLanguage()
+                messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + "$noExistsEnvNames", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode = BK_ENVIRONMENT_NAMES_NOT_EXIST,
-                    language = I18nUtil.getLanguage()
+                    messageCode = ERROR_BUILD_TASK_ENV_NAME_NOT_EXISTS,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "$noExistsEnvNames"
             )
-        }`
+        }
 
         // 校验权限
         val userEnvList = client.get(ServiceEnvironmentResource::class).listUsableServerEnvs(operator, projectId).data
@@ -428,15 +425,15 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
         if (noAuthEnvIds.isNotEmpty()) {
             logger.warn("User does not permit to access the env: $noAuthEnvIds")
             buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
-                messageCode = BK_USER_NOT_PERMISSION_OPERATE,
-                language = I18nUtil.getLanguage()
+                messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                language = I18nUtil.getDefaultLocaleLanguage()
             ) + "$noAuthEnvIds", taskId, containerId, executeCount)
             throw BuildTaskException(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_PERMISSION_OPERATE,
-                    language = I18nUtil.getLanguage()
+                    messageCode = ERROR_BUILD_TASK_USER_ENV_NO_OP_PRI,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ) + "$noAuthEnvIds"
             )
         }
@@ -466,8 +463,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId,
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsEnvIds",
                     taskId,
                     containerId,
@@ -477,8 +474,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     errorType = ErrorType.USER,
                     errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = MessageUtil.getMessageByLocale(
-                        messageCode = BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsEnvIds"
                 )
             }
@@ -496,8 +493,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                 buildLogPrinter.addRedLine(
                     buildId,
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsNodeIds",
                     taskId,
                     containerId,
@@ -507,8 +504,8 @@ class JobDevOpsFastExecuteScriptTaskAtom @Autowired constructor(
                     errorType = ErrorType.USER,
                     errorCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS.toInt(),
                     errorMsg = MessageUtil.getMessageByLocale(
-                        messageCode = BK_FOLLOWING_ENVIRONMENT_ID_NOT_EXIST,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ERROR_BUILD_TASK_USER_ENV_ID_NOT_EXISTS,
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "$noExistsNodeIds"
                 )
             }

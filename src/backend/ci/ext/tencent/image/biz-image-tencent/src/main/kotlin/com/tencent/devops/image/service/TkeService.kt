@@ -35,6 +35,10 @@ import com.github.dockerjava.core.DefaultDockerClientConfig
 import com.github.dockerjava.core.DockerClientBuilder
 import com.github.dockerjava.core.command.PullImageResultCallback
 import com.github.dockerjava.core.command.PushImageResultCallback
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_REGISTER_IMAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SOURCE_IMAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFUL_REGISTRATION_IMAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TARGET_IMAGE
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.SecurityUtil
@@ -42,10 +46,6 @@ import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.image.ImageMessageCode.BK_FAILED_REGISTER_IMAGE
-import com.tencent.devops.image.ImageMessageCode.BK_SOURCE_IMAGE
-import com.tencent.devops.image.ImageMessageCode.BK_SUCCESSFUL_REGISTRATION_IMAGE
-import com.tencent.devops.image.ImageMessageCode.BK_TARGET_IMAGE
 import com.tencent.devops.image.config.DockerConfig
 import com.tencent.devops.image.pojo.PushImageTask
 import com.tencent.devops.image.pojo.enums.TaskStatus
@@ -156,7 +156,7 @@ class TkeService @Autowired constructor(
             buildId = pushImageParam.buildId,
             message = MessageUtil.getMessageByLocale(
                 messageCode = BK_SOURCE_IMAGE,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(fromImage)
             ),
             tag = pushImageParam.taskId,
@@ -177,7 +177,7 @@ class TkeService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = MessageUtil.getMessageByLocale(
                     messageCode = BK_TARGET_IMAGE,
-                    language = I18nUtil.getLanguage(),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(toImageRepo, pushImageParam.targetImageTag)
                 ),
                 tag = pushImageParam.taskId,
@@ -274,7 +274,7 @@ class TkeService @Autowired constructor(
                         buildId = pushImageParam.buildId,
                         message = MessageUtil.getMessageByLocale(
                             messageCode = BK_SUCCESSFUL_REGISTRATION_IMAGE,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ),
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
@@ -287,9 +287,8 @@ class TkeService @Autowired constructor(
                         buildId = pushImageParam.buildId,
                         message = MessageUtil.getMessageByLocale(
                             messageCode = BK_FAILED_REGISTER_IMAGE,
-                            language = I18nUtil.getLanguage(),
-                            params = arrayOf(msg.toString())
-                        ),
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                        ) + "$msg",
                         tag = pushImageParam.taskId,
                         jobId = pushImageParam.containerId,
                         executeCount = pushImageParam.executeCount ?: 1
@@ -302,9 +301,8 @@ class TkeService @Autowired constructor(
                 buildId = pushImageParam.buildId,
                 message = MessageUtil.getMessageByLocale(
                     messageCode = BK_FAILED_REGISTER_IMAGE,
-                    language = I18nUtil.getLanguage(),
-                    params = arrayOf(e.message.toString())
-                ),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ) + "${e.message}",
                 tag = pushImageParam.taskId,
                 jobId = pushImageParam.containerId,
                 executeCount = pushImageParam.executeCount ?: 1

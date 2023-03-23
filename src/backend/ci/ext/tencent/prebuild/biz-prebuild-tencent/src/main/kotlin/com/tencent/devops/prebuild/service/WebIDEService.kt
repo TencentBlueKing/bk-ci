@@ -29,6 +29,9 @@ package com.tencent.devops.prebuild.service
 
 import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_TBUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
 import com.tencent.devops.common.api.util.MessageUtil
@@ -54,9 +57,6 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgent
 import com.tencent.devops.environment.pojo.enums.NodeType
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentInfo
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
-import com.tencent.devops.prebuild.PreBuildCode
-import com.tencent.devops.prebuild.PreBuildCode.BK_MANUAL_TRIGGER
-import com.tencent.devops.prebuild.PreBuildCode.BK_TBUILD_ENVIRONMENT_LINUX
 import com.tencent.devops.prebuild.dao.WebIDEOpenDirDao
 import com.tencent.devops.prebuild.dao.WebIDEStatusDao
 import com.tencent.devops.prebuild.pojo.DevcloudUserRes
@@ -331,7 +331,7 @@ class WebIDEService @Autowired constructor(
         val triggerContainer = TriggerContainer(
                 "0",
             MessageUtil.getMessageByLocale(
-                messageCode = PreBuildCode.BK_BUILD_TRIGGER,
+                messageCode = BK_BUILD_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
             ),
                 listOf(manualTriggerElement),
@@ -361,7 +361,7 @@ class WebIDEService @Autowired constructor(
         ), "T-1-1-1")
         val triggerContainer = TriggerContainer("0",
             MessageUtil.getMessageByLocale(
-                messageCode = PreBuildCode.BK_BUILD_TRIGGER,
+                messageCode = BK_BUILD_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
             ), listOf(manualTriggerElement))
         val stage1 = Stage(listOf(triggerContainer), "stage-1")

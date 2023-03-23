@@ -28,6 +28,18 @@
 package com.tencent.devops.log.client.impl
 
 import com.github.benmanes.caffeine.cache.Caffeine
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CLUSTER_NAME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTACT_BLUE_SHIELD_ASSISTANT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EMPTY_DATA
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ES_CLUSTER_RECOVERY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_INSERT_DATA
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILURE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LOOK_FORWARD_IT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NOTIFICATION_PUSH_FROM_BKDEVOP
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RECOVERY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_STATUS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
@@ -35,18 +47,6 @@ import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.log.LogCode.BK_CLUSTER_NAME
-import com.tencent.devops.log.LogCode.BK_CONTACT_BLUE_SHIELD_ASSISTANT
-import com.tencent.devops.log.LogCode.BK_EMPTY_DATA
-import com.tencent.devops.log.LogCode.BK_ES_CLUSTER_RECOVERY
-import com.tencent.devops.log.LogCode.BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION
-import com.tencent.devops.log.LogCode.BK_FAILED_INSERT_DATA
-import com.tencent.devops.log.LogCode.BK_FAILURE
-import com.tencent.devops.log.LogCode.BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT
-import com.tencent.devops.log.LogCode.BK_LOOK_FORWARD_IT
-import com.tencent.devops.log.LogCode.BK_NOTIFICATION_PUSH_FROM_BKDEVOP
-import com.tencent.devops.log.LogCode.BK_RECOVERY
-import com.tencent.devops.log.LogCode.BK_STATUS
 import com.tencent.devops.log.client.LogClient
 import com.tencent.devops.log.dao.IndexDao
 import com.tencent.devops.log.dao.TencentIndexDao
@@ -277,22 +277,22 @@ class MultiESLogClient constructor(
             val t = if (inactive) {
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_FAILED_INSERT_DATA,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             } else {
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_ES_CLUSTER_RECOVERY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
             val map = mapOf(
                 "esName" to esName,
                 "status" to if (inactive) MessageUtil.getMessageByLocale(
                     messageCode = BK_FAILURE,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) else MessageUtil.getMessageByLocale(
                     messageCode = BK_RECOVERY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
             val message = parseMessageTemplate(getEmailBody(), map)
@@ -340,7 +340,7 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t<tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t<td class=\"email-title\" style=\"padding: 20px 36px; line-height: 1.5; border-bottom: 1px solid #e6e6e6; background: #fff; font-size: 22px;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t<tr>\n" +
@@ -349,7 +349,7 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td class=\"email-source\" style=\"padding: 14px 0; color: #bebebe;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_NOTIFICATION_PUSH_FROM_BKDEVOP,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"email-information\">\n" +
@@ -365,11 +365,11 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<tr style=\"color: #333C48;\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_CLUSTER_NAME,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t<th width=\"50%\" style=\" padding: 16px; border: 1px solid #e6e6e6;text-align: left; font-weight: normal;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_STATUS,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</th>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t\t</thead>\n" +
@@ -388,19 +388,19 @@ class MultiESLogClient constructor(
             "\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<!-- " + MessageUtil.getMessageByLocale(
             messageCode = BK_EMPTY_DATA,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + " -->\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<!-- <tr class=\"no-data\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 40px; color: #707070;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_LOOK_FORWARD_IT,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr> -->\n" +
             "\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"prompt-tips\">\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t\t<td style=\"padding-top: 32px; padding-bottom: 10px; color: #707070;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_CONTACT_BLUE_SHIELD_ASSISTANT,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t\t\t\t\t<tr class=\"info-remark\">\n" +
@@ -414,7 +414,7 @@ class MultiESLogClient constructor(
             "\t\t\t\t\t\t\t\t\t<tr class=\"email-footer\">\n" +
             "\t\t\t\t\t\t\t\t\t\t<td style=\" padding: 20px 0 20px 36px; border-top: 1px solid #e6e6e6; background: #fff; color: #c7c7c7;\">" + MessageUtil.getMessageByLocale(
             messageCode = BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + "</td>\n" +
             "\t\t\t\t\t\t\t\t\t</tr>\n" +
             "\t\t\t\t\t\t\t\t</table>\n" +

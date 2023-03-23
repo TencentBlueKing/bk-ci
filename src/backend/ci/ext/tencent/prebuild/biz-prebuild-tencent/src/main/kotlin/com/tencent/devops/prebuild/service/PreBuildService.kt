@@ -27,6 +27,9 @@
 
 package com.tencent.devops.prebuild.service
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_COMPILATION_ENVIRONMENT
 import com.tencent.devops.common.api.enums.AgentStatus
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.pojo.OS
@@ -75,13 +78,10 @@ import com.tencent.devops.environment.api.thirdPartyAgent.ServicePreBuildAgentRe
 import com.tencent.devops.environment.pojo.thirdPartyAgent.ThirdPartyAgentStaticInfo
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.model.prebuild.tables.records.TPrebuildProjectRecord
-import com.tencent.devops.prebuild.PreBuildCode.BK_BUILD_TRIGGER
-import com.tencent.devops.prebuild.PreBuildCode.BK_CURRENT_PROJECT_NOT_INITIALIZED
-import com.tencent.devops.prebuild.PreBuildCode.BK_MANUAL_TRIGGER
-import com.tencent.devops.prebuild.PreBuildCode.BK_NO_COMPILATION_ENVIRONMENT
-import com.tencent.devops.prebuild.PreBuildCode.BK_POOL_PARAMETER_CANNOT_EMPTY
-import com.tencent.devops.prebuild.PreBuildCode.BK_TYPE_ALREADY_EXISTS_CANNOT_ADD
-import com.tencent.devops.prebuild.PreBuildCode.BK_USER_NOT_PERMISSION_OPERATE
+import com.tencent.devops.prebuild.PreBuildMessageCode.CURRENT_PROJECT_NOT_INITIALIZED
+import com.tencent.devops.prebuild.PreBuildMessageCode.POOL_PARAMETER_CANNOT_EMPTY
+import com.tencent.devops.prebuild.PreBuildMessageCode.TYPE_ALREADY_EXISTS_CANNOT_ADD
+import com.tencent.devops.prebuild.PreBuildMessageCode.USER_NOT_PERMISSION_OPERATE
 import com.tencent.devops.prebuild.dao.PreBuildPluginVersionDao
 import com.tencent.devops.prebuild.dao.PrebuildPersonalMachineDao
 import com.tencent.devops.prebuild.dao.PrebuildProjectDao
@@ -382,7 +382,7 @@ class PreBuildService @Autowired constructor(
                         logger.error("getDispatchType , remote , pool is null")
                         throw OperationException(
                             MessageUtil.getMessageByLocale(
-                                messageCode = BK_POOL_PARAMETER_CANNOT_EMPTY,
+                                messageCode = POOL_PARAMETER_CANNOT_EMPTY,
                                 language = I18nUtil.getLanguage()
                             )
                         )
@@ -479,7 +479,7 @@ class PreBuildService @Autowired constructor(
         val preProjectRecord = prebuildProjectDao.get(dslContext, preProjectId, userId)
             ?: throw NotFoundException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_CURRENT_PROJECT_NOT_INITIALIZED,
+                    messageCode = CURRENT_PROJECT_NOT_INITIALIZED,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(preProjectId)
                 )
@@ -487,7 +487,7 @@ class PreBuildService @Autowired constructor(
         if (userId != preProjectRecord.owner) {
             throw NotFoundException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_USER_NOT_PERMISSION_OPERATE,
+                    messageCode = USER_NOT_PERMISSION_OPERATE,
                     language = I18nUtil.getLanguage(userId),
                     params = arrayOf(userId)
                 )
@@ -685,7 +685,7 @@ class PreBuildService @Autowired constructor(
         if (record != null) {
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_TYPE_ALREADY_EXISTS_CANNOT_ADD,
+                    messageCode = TYPE_ALREADY_EXISTS_CANNOT_ADD,
                     language = I18nUtil.getLanguage()
                 )
             )

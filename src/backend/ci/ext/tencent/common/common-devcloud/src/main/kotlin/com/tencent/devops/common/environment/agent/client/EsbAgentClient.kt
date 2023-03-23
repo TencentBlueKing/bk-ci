@@ -95,7 +95,7 @@ class EsbAgentClient {
                     logger.error("get user cmdb nodes failed: $msg")
                     throw CustomException(Response.Status.INTERNAL_SERVER_ERROR, MessageUtil.getMessageByLocale(
                         messageCode = FAILED_TO_QUERY_GSE_AGENT_STATUS,
-                        language = I18nUtil.getLanguage(userId)
+                        language = I18nUtil.getLanguage()
                     ))
                 }
 
@@ -123,7 +123,7 @@ class EsbAgentClient {
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
                         messageCode = FAILED_TO_GET_AGENT_STATUS,
-                        language = I18nUtil.getLanguage(userId)
+                        language = I18nUtil.getLanguage()
                     )
                 )
             }

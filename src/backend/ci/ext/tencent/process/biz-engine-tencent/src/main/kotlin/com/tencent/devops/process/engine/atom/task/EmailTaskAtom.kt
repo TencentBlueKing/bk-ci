@@ -27,6 +27,10 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EMAIL_NOTIFICATION_CONTENT_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MESSAGE_SUBJECT_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_RECIPIENT_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.pojo.ErrorCode.USER_INPUT_INVAILD
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -39,10 +43,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.EmailNotifyMessage
-import com.tencent.devops.process.constant.ProcessCode.BK_EMAIL_NOTIFICATION_CONTENT_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_MESSAGE_SUBJECT_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_RECIPIENT_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -71,7 +71,7 @@ class EmailTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_RECIPIENT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -79,7 +79,7 @@ class EmailTaskAtom @Autowired constructor(
                 errorCode = USER_INPUT_INVAILD,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_RECIPIENT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -87,7 +87,7 @@ class EmailTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_EMAIL_NOTIFICATION_CONTENT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -95,7 +95,7 @@ class EmailTaskAtom @Autowired constructor(
                 errorCode = USER_INPUT_INVAILD,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_EMAIL_NOTIFICATION_CONTENT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -103,7 +103,7 @@ class EmailTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_MESSAGE_SUBJECT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -111,7 +111,7 @@ class EmailTaskAtom @Autowired constructor(
                 errorCode = USER_INPUT_INVAILD,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_MESSAGE_SUBJECT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -126,7 +126,7 @@ class EmailTaskAtom @Autowired constructor(
             body = "$emailBody<br/><br/><a target='_blank' href=\"$detailUrl\">" +
                     MessageUtil.getMessageByLocale(
                         messageCode = BK_VIEW_DETAILS,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getDefaultLocaleLanguage()
                     ) + "</a>"
             title = parseVariable(param.title, runVariables)
         }

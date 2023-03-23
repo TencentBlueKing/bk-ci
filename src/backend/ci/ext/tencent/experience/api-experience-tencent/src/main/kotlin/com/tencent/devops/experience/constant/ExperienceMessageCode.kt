@@ -75,8 +75,6 @@ object ExperienceMessageCode {
     const val UNABLE_GET_IP = "2101022" //无法获取IP , 请联系相关人员排查
     const val METADATA_NOT_EXIST = "2101023" //元数据{0}不存在
     const val EXPERIENCE_NOT_EXIST = "2101024" //体验({0})不存在
-    const val FILE_NOT_EXIST = "2101023" //文件({0})不存在
-    const val CONSTRUCTION_NUMBER = "2101023" //构建号#{0}
-    const val USERS_NOT_PERMISSION = "2101023" //用户没有流水线执行权限
+    const val FILE_NOT_EXIST = "2101025" //文件({0})不存在
 
 }

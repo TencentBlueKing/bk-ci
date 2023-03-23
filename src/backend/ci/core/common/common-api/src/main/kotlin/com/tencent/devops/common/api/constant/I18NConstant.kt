@@ -63,5 +63,103 @@ object I18NConstant {
     const val BK_USER_NOT_BOUND_DEVICE = "BkUserNotBoundDevice" //该用户未绑定设备
     const val BK_PLATFORM_IS_INCONSISTENT  = "BkPlatformIsInconsistent" //绑定平台与包平台不一致
     const val BK_USER_NOT_EDIT_PERMISSION = "BkUserNotEditPermission" //用户在项目({0})下没有体验({0})的编辑权限
+    const val BK_CONSTRUCTION_NUMBER = "BkConstructionNumber" //构建号#{0}
+    const val BK_USER_NOT_EDIT_PERMISSION_GROUP = "BkUserNotEditPermissionGroup" //用户在项目({0})没有体验组({1})的编辑权限
+    const val BK_HAS_BEEN_UPDATED = "BkHasBeenUpdated" //【{0}】 {1} 更新啦
+    const val BK_LATEST_EXPERIENCE_VERSION_CLICK_VIEW = "BkLatestExperienceVersionClickView" //【{0}】发布了最新体验版本，蓝盾App诚邀您参与体验。点击查看>>
+    const val BK_BLUE_SHIELD_VERSION_EXPERIENCE_NOTIFICATION = "BkBlueShieldVersionExperienceNotification" //【蓝盾版本体验通知】{0}邀您体验【{1}-{2}】
+    const val BK_INVITES_YOU_EXPERIENCE = "BkInvitesYouExperience" //{0}邀您体验【{1}-{2}】
+    const val BK_NAME = "BkName" //名称
+    const val BK_BELONG_TO_PROJECT = "BkBelongToProject" //所属项目
+    const val BK_OPERATE = "BkOperate" //操作
+    const val BK_VIEW = "BkView"//查看
+    const val BK_LATEST_EXPERIENCE_VERSION_SHARING = "BkLatestExperienceVersionSharing"//【{0}】最新体验版本分享
+    const val BK_LATEST_INVITES_YOU_EXPERIENCE = "BkLatestInvitesYouExperience"//【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。
+    const val BK_PC_EXPERIENCE_ADDRESS = "BkPcExperienceAddress"//\nPC体验地址
+    const val BK_MOBILE_EXPERIENCE_ADDRESS = "BkMobileExperienceAddress"//\n手机体验地址
+    const val BK_LATEST_EXPERIENCE_VERSION_INFO = "BkLatestExperienceVersionInfo"//【{0}】发布了最新体验版本，【{1}-{2}】诚邀您参与体验。\nPC体验地址：{3}\n手机体验地址：{4}
+    const val BK_FAILED_GET_GITHUB_ACCESS_TOKEN = "BkFailedGetGithubAccessToken"//获取Github access_token失败
+
+    const val BK_ADD_DETECTION_TASK = "BkAddDetectionTask"//添加检测任务
+    const val BK_UPDATE_DETECTION_TASK = "BkUpdateDetectionTask"//更新检测任务
+    const val BK_GET_WAREHOUSE_LIST = "BkGetWarehouseList"//获取仓库列表
+    const val BK_GET_SPECIFIED_BRANCH = "BkGetSpecifiedBranch"//获取指定分支
+    const val BK_GET_SPECIFIED_TAG = "BkGetSpecifiedTag"//获取指定Tag
+    const val BK_GET_LIST_OF_BRANCHES = "BkGetListOfBranches"//获取分支列表
+    const val BK_GET_TAG_LIST = "BkGetTagList"//获取Tag列表
+
+    const val BK_SOURCE_IMAGE = "BkSourceImage"//源镜像：{0}
+    const val BK_TARGET_IMAGE = "BkTargetImage"//目标镜像：{0}:{1}
+    const val BK_SUCCESSFUL_REGISTRATION_IMAGE = "BkSuccessfulRegistrationImage"//注册镜像成功
+    const val BK_FAILED_REGISTER_IMAGE = "BkFailedRegisterImage"//注册镜像失败，错误信息：
+
+    const val BK_FAILED_INSERT_DATA = "BkFailedInsertData"//蓝盾ES集群插入数据失败
+    const val BK_ES_CLUSTER_RECOVERY = "BkEsClusterRecovery"//蓝盾ES集群恢复
+    const val BK_FAILURE = "BkFailure"//失效
+    const val BK_RECOVERY = "BkRecovery"//恢复
+    const val BK_ES_CLUSTER_STATUS_ALARM_NOTIFICATION = "BkEsClusterStatusAlarmNotification"//【ES集群状态告警通知】
+    const val BK_NOTIFICATION_PUSH_FROM_BKDEVOP = "BkNotificationPushFromBkdevop"//来自BKDevOps/蓝盾DevOps平台的通知推送
+    const val BK_CLUSTER_NAME = "BkClusterName"//集群名称
+    const val BK_STATUS = "BkStatus"//状态
+    const val BK_EMPTY_DATA = "BkEmptyData"//空数据
+    const val BK_LOOK_FORWARD_IT = "BkLookForwardIt"//敬请期待！
+    const val BK_CONTACT_BLUE_SHIELD_ASSISTANT = "BkContactBlueShieldAssistant"//如有任何问题，可随时联系蓝盾助手。
+    const val BK_HEAD_OF_BLUE_SHIELD_LOG_MANAGEMENT  = "BkHeadOfBlueShieldLogManagement"//你收到此邮件，是因为你是蓝盾日志管理负责人
+
+    const val BK_ILLEGAL_TIMESTAMP_RANGE = "BkIllegalTimestampRange" //非法时间戳范围
+    const val BK_ILLEGAL_ENTERPRISE_GROUP_ID = "BkIllegalEnterpriseGroupId" //非法事业群ID
+    const val BK_INCORRECT_PASSWORD = "BkIncorrectPassword" //密码错误
+    const val BK_SENT_SUCCESSFULLY = "BkSentSuccessfully" //发送成功
+    const val BK_WARNING_MESSAGE_FROM_GRAFANA = "BkWarningMessageFromGrafana" //来自Grafana的预警信息
+    const val BK_MONITORING_OBJEC = "BkMonitoringObjec" //监控对象：{0}，当前值为：{1}；
+    const val BK_SEND_MONITORING_MESSAGES = "BkSendMonitoringMessages" //只有处于alerting告警状态的信息才发送监控消息
+
+    const val BK_CONTROL_MESSAGE_LENGTH = "BkControlMessageLength" //...(消息长度超{0} 已截断,请控制消息长度)
+    const val BK_LINE_BREAKS_WILL_ESCAPED = "BkLineBreaksWillEscaped" //(注意: 换行会被转义为\\n)
+    const val BK_DESIGNATED_APPROVER_APPROVAL = "BkDesignatedApproverApproval" //指定审批人审批
+
+    const val BK_BUILDID_NOT_FOUND = "BkBuildidNotFound" // 服务端内部异常，buildId={0}的构建未查到
+    const val BK_PIPELINEID_NOT_FOUND = "BkPipelineidNotFound" // 服务端内部异常，pipelineId={0}的构建未查到
+
+    const val BK_ETH1_NETWORK_CARD_IP_EMPTY = "BkEth1NetworkCardIpEmpty" // eth1 网卡Ip为空，因此，获取eth0的网卡ip
+    const val BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY = "BkLoopbackAddressOrNicEmpty" // loopback地址或网卡名称为空
+    const val BK_FAILED_GET_NETWORK_CARD = "BkFailedGetNetworkCard" // 获取网卡失败
+
+    const val BK_AGENT_NOT_INSTALLED = "BkAgentNotInstalled" // Agent未安装，请安装Agent.
+    const val BK_ILLEGAL_YAML = "BkIllegalYaml" // YAML非法:
+    const val BK_MANUAL_TRIGGER = "BkManualTrigger" // 手动触发
+    const val BK_BUILD_TRIGGER = "BkBuildTrigger" // 构建触发
+    const val BK_NO_COMPILATION_ENVIRONMENT = "BkNoCompilationEnvironment" // 无编译环境
+    const val BK_TBUILD_ENVIRONMENT_LINUX = "BkTbuildEnvironmentLinux" // 构建环境-LINUX
+    const val BK_SYNCHRONIZE_LOCAL_CODE = "BkSynchronizeLocalCode" // 同步本地代码
+
+    const val BK_SUCCESSFULLY_DISTRIBUTED = "BkSuccessfullyDistributed" // 跨项目构件分发成功，共分发了{0}个文件
+    const val BK_SUCCESSFULLY_FAILED = "BkSuccessfullyFailed" // 跨项目构件分发失败，
+    const val BK_NO_MATCH_FILE_DISTRIBUTE = "BkNoMatchFileDistribute" // 匹配不到待分发的文件: {0}
+    const val BK_START_PERFORMING_GCLOUD_OPERATION = "BkStartPerformingGcloudOperation" // 开始对文件（{0}）执行Gcloud相关操作，详情请去gcloud官方地址查看：
+    const val BK_VIEW_DETAILS = "BkViewDetails" // 查看详情
+    const val BK_START_UPLOAD_OPERATION = "BkStartUploadOperation" // 开始执行 \"上传动态资源版本\" 操作
+    const val BK_OPERATION_PARAMETERS = "BkOperationParameters" // \"上传动态资源版本\" 操作参数：
+    const val BK_QUERY_VERSION_UPLOAD  = "BkQueryVersionUpload" // 开始执行 \"查询版本上传 CDN 任务状态\" 操作\n
+    const val BK_WAIT_QUERY_VERSION  = "BkWaitQueryVersion" // \"等待查询版本上传 CDN 任务状态\" 操作执行完毕: \n
+    const val BK_OPERATION_COMPLETED_SUCCESSFULLY  = "BkOperationCompletedSuccessfully" // \"查询版本上传 CDN 任务状态\" 操作 成功执行完毕\n
+    const val BK_FAILED_UPLOAD_FILE  = "BkFailedUploadFile" // 上传文件失败:
+    const val BK_CREATE_RESOURCE_OPERATION  = "BkCreateResourceOperation" // 开始执行 \"创建资源\" 操作\n
+    const val BK_CREATE_RESOURCES_OPERATION_PARAMETERS  = "BkCreateResourcesOperationParameters" // \"创建资源\" 操作参数：
+    const val BK_START_RELEASE_OPERATION = "BkStartReleaseOperation" // 开始执行 \"预发布\" 操作\n
+    const val BK_RESPONSE_RESULT = "BkResponseResult" // 预发布单个或多个渠道响应结果:
+    const val BK_RECIPIENT_EMPTY = "BkRecipientEmpty" // 收件人为空
+    const val BK_EMAIL_NOTIFICATION_CONTENT_EMPTY = "BkEmailNotificationContentEmpty" // 邮件通知内容为空
+    const val BK_MESSAGE_SUBJECT_EMPTY = "BkMessageSubjectEmpty" // 邮件主题为空
+    const val BK_EXPERIENCE_PATH_EMPTY = "BkExperiencePathEmpty" // 体验路径为空
+    const val BK_INCORRECT_NOTIFICATION_METHOD = "BkIncorrectNotificationMethod" // 通知方式不正确
+    const val BK_FILE_NOT_EXIST = "BkFileNotExist" // 文件({0})不存在
+    const val BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY = "BkVersionExperienceCreatedSuccessfully" // 版本体验({0})创建成功
+    const val BK_VIEW_RESULT = "BkViewResult" // 查看结果:
+    const val BK_RECEIVER_EMPTY = "BkReceiverEmpty" // Message Receivers is empty(接收人为空)
+    const val BK_MESSAGE_CONTENT_EMPTY = "BkMessageContentEmpty" // Message Body is empty(消息内容为空)
+    const val BK_EMPTY_TITLE = "BkEmptyTitle" // Message Title is empty(标题为空)
+    const val BK_COMPUTER_VIEW_DETAILS = "BkComputerViewDetails" // {0}\n\n电脑查看详情：{1}\n手机查看详情：{2}
+    const val BK_SEND_WECOM_MESSAGE = "BkSendWecomMessage" // send enterprise wechat message(发送企业微信消息):\n{0}\nto\n{1}
 
 }

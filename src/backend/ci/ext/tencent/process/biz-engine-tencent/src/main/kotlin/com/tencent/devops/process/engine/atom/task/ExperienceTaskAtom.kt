@@ -28,6 +28,10 @@
 package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPERIENCE_PATH_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FILE_NOT_EXIST
+import com.tencent.devops.common.api.constant.I18NConstant.BK_INCORRECT_NOTIFICATION_METHOD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -44,10 +48,6 @@ import com.tencent.devops.experience.pojo.ExperienceServiceCreate
 import com.tencent.devops.experience.pojo.NotifyType
 import com.tencent.devops.experience.pojo.enums.ArtifactoryType
 import com.tencent.devops.experience.pojo.enums.TimeType
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPERIENCE_PATH_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_FILE_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessCode.BK_INCORRECT_NOTIFICATION_METHOD
-import com.tencent.devops.process.constant.ProcessCode.BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -82,7 +82,7 @@ class ExperienceTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_EXPERIENCE_PATH_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -90,7 +90,7 @@ class ExperienceTaskAtom @Autowired constructor(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_EXPERIENCE_PATH_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -99,7 +99,7 @@ class ExperienceTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_INCORRECT_NOTIFICATION_METHOD,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
                 buildStatus = BuildStatus.FAILED,
@@ -107,7 +107,7 @@ class ExperienceTaskAtom @Autowired constructor(
                 errorCode = ErrorCode.USER_INPUT_INVAILD,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_INCORRECT_NOTIFICATION_METHOD,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         }
@@ -155,7 +155,7 @@ class ExperienceTaskAtom @Autowired constructor(
             buildLogPrinter.addRedLine(buildId,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId),
+                    language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(path)
                 ), taskId, containerId, task.executeCount ?: 1)
             return AtomResponse(
@@ -164,7 +164,7 @@ class ExperienceTaskAtom @Autowired constructor(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorMsg = MessageUtil.getMessageByLocale(
                     messageCode = BK_FILE_NOT_EXIST,
-                    language = I18nUtil.getLanguage(userId),
+                    language = I18nUtil.getDefaultLocaleLanguage(),
                     params = arrayOf(path)
                 )
             )
@@ -193,7 +193,7 @@ class ExperienceTaskAtom @Autowired constructor(
         buildLogPrinter.addLine(buildId,
             MessageUtil.getMessageByLocale(
                 messageCode = BK_VERSION_EXPERIENCE_CREATED_SUCCESSFULLY,
-                language = I18nUtil.getLanguage(userId),
+                language = I18nUtil.getDefaultLocaleLanguage(),
                 params = arrayOf(fileName)
             ), taskId, containerId, task.executeCount ?: 1)
 

@@ -27,6 +27,10 @@
 
 package com.tencent.devops.prebuild.v2.component
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MANUAL_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_COMPILATION_ENVIRONMENT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SYNCHRONIZE_LOCAL_CODE
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -67,12 +71,10 @@ import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentEnvDispatchT
 import com.tencent.devops.common.pipeline.type.agent.ThirdPartyAgentIDDispatchType
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.prebuild.PreBuildCode
-import com.tencent.devops.prebuild.PreBuildCode.BK_CHECK_YML_CONFIGURATION
-import com.tencent.devops.prebuild.PreBuildCode.BK_PIPELINE_MUST_AT_LEAST_ONE
-import com.tencent.devops.prebuild.PreBuildCode.BK_PIPELINE_NAME_CREATOR_CANNOT_EMPTY
-import com.tencent.devops.prebuild.PreBuildCode.BK_PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
-import com.tencent.devops.prebuild.PreBuildCode.BK_SYNCHRONIZE_LOCAL_CODE
+import com.tencent.devops.prebuild.PreBuildMessageCode.CHECK_YML_CONFIGURATION
+import com.tencent.devops.prebuild.PreBuildMessageCode.PIPELINE_MUST_AT_LEAST_ONE
+import com.tencent.devops.prebuild.PreBuildMessageCode.PIPELINE_NAME_CREATOR_CANNOT_EMPTY
+import com.tencent.devops.prebuild.PreBuildMessageCode.PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
 import com.tencent.devops.prebuild.pojo.CreateStagesRequest
 import com.tencent.devops.prebuild.pojo.StartUpReq
 import com.tencent.devops.process.yaml.v2.models.IfType
@@ -124,13 +126,13 @@ class PipelineLayout private constructor(
         // 第一个stage，触发类
         val manualTriggerElement = ManualTriggerElement(
             MessageUtil.getMessageByLocale(
-                messageCode = PreBuildCode.BK_MANUAL_TRIGGER,
+                messageCode = BK_MANUAL_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
             ), "T-1-1-1")
         val triggerContainer = TriggerContainer(
             id = "0",
             name = MessageUtil.getMessageByLocale(
-                messageCode = PreBuildCode.BK_BUILD_TRIGGER,
+                messageCode = BK_BUILD_TRIGGER,
                 language = I18nUtil.getLanguage(userId)
             ),
             elements = listOf(manualTriggerElement),
@@ -211,7 +213,7 @@ class PipelineLayout private constructor(
             if (step.run != null && JobRunsOnType.AGENT_LESS.type == job.runsOn.poolName) {
                 throw CustomException(
                     Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                        messageCode = BK_CHECK_YML_CONFIGURATION,
+                        messageCode = CHECK_YML_CONFIGURATION,
                         language = I18nUtil.getLanguage(userId)
                     )
                 )
@@ -271,7 +273,7 @@ class PipelineLayout private constructor(
                     containerId = null,
                     id = job.id,
                     name = MessageUtil.getMessageByLocale(
-                        messageCode = PreBuildCode.BK_NO_COMPILATION_ENVIRONMENT,
+                        messageCode = BK_NO_COMPILATION_ENVIRONMENT,
                         language = I18nUtil.getLanguage(userId)
                     ),
                     elements = elementList,
@@ -582,7 +584,7 @@ class PipelineLayout private constructor(
             }
             else -> {
                 throw CustomException(Response.Status.NOT_FOUND, MessageUtil.getMessageByLocale(
-                    messageCode = BK_PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
+                    messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
                     language = I18nUtil.getLanguage(userId)
                 ))
             }
@@ -767,13 +769,13 @@ class PipelineLayout private constructor(
             val triggerContainer = TriggerContainer(
                 id = "0",
                 name = MessageUtil.getMessageByLocale(
-                    messageCode = PreBuildCode.BK_BUILD_TRIGGER,
-                    language = I18nUtil.getLanguage()
+                    messageCode = BK_BUILD_TRIGGER,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 elements = listOf(ManualTriggerElement(
                     MessageUtil.getMessageByLocale(
-                        messageCode = PreBuildCode.BK_MANUAL_TRIGGER,
-                        language = I18nUtil.getLanguage()
+                        messageCode = BK_MANUAL_TRIGGER,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ), "T-1-1-1")),
                 params = emptyList()
             )
@@ -789,16 +791,16 @@ class PipelineLayout private constructor(
         fun build(): Model {
             if (pipelineName.isBlank() || creator.isBlank()) {
                 throw CustomException(Response.Status.BAD_REQUEST, MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_NAME_CREATOR_CANNOT_EMPTY,
-                    language = I18nUtil.getLanguage()
+                    messageCode = PIPELINE_NAME_CREATOR_CANNOT_EMPTY,
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ))
             }
 
             if (stages.isEmpty()) {
                 throw CustomException(Response.Status.BAD_REQUEST,
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_PIPELINE_MUST_AT_LEAST_ONE,
-                        language = I18nUtil.getLanguage()
+                        messageCode = PIPELINE_MUST_AT_LEAST_ONE,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ))
             }
 

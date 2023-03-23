@@ -29,6 +29,8 @@ package com.tencent.devops.process.engine.atom.task
 
 import com.tencent.devops.artifactory.api.service.ServiceArtifactoryResource
 import com.tencent.devops.artifactory.pojo.enums.ArtifactoryType
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFULLY_DISTRIBUTED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SUCCESSFULLY_FAILED
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -38,8 +40,6 @@ import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.element.AcrossProjectDistributionElement
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_SUCCESSFULLY_DISTRIBUTED
-import com.tencent.devops.process.constant.ProcessCode.BK_SUCCESSFULLY_FAILED
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask

@@ -34,7 +34,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.BkTag
 import com.tencent.devops.common.web.RequestFilter
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.openapi.constant.OpenAPICode.BK_ILLEGAL_USER
+import com.tencent.devops.openapi.constant.OpenAPIMessageCode.ILLEGAL_USER
 import com.tencent.devops.openapi.service.op.AppUserInfoService
 import com.tencent.devops.openapi.service.op.OpAppUserService
 import org.slf4j.LoggerFactory
@@ -78,7 +78,7 @@ class UserFilter @Autowired constructor(
                     if (redisOperation.get("$FILTER_RUN_FLAG_PREFIX${bkTag.getLocalTag()}") != null) {
                         throw ParamBlankException(
                             MessageUtil.getMessageByLocale(
-                                messageCode = BK_ILLEGAL_USER,
+                                messageCode = ILLEGAL_USER,
                                 language = I18nUtil.getLanguage(userId)
                             )
                         )

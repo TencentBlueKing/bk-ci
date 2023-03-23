@@ -27,15 +27,15 @@
 
 package com.tencent.devops.monitoring.resources
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_ENTERPRISE_GROUP_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ILLEGAL_TIMESTAMP_RANGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_INCORRECT_PASSWORD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SENT_SUCCESSFULLY
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.monitoring.api.service.SlaMonitorResource
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_ILLEGAL_ENTERPRISE_GROUP_ID
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_ILLEGAL_TIMESTAMP_RANGE
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_INCORRECT_PASSWORD
-import com.tencent.devops.monitoring.constant.MonitoringCode.BK_SENT_SUCCESSFULLY
 import com.tencent.devops.monitoring.job.MonitorNotifyJob
 import com.tencent.devops.monitoring.pojo.SlaCodeccResponseData
 import com.tencent.devops.monitoring.services.SlaMonitorService
@@ -54,7 +54,7 @@ class SlaMonitorResourceImpl @Autowired constructor(
             return Result(-1,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_ILLEGAL_TIMESTAMP_RANGE,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 )
         }
@@ -64,7 +64,7 @@ class SlaMonitorResourceImpl @Autowired constructor(
             return Result(-2,
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_ILLEGAL_ENTERPRISE_GROUP_ID,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
                 )
         }
@@ -76,14 +76,14 @@ class SlaMonitorResourceImpl @Autowired constructor(
         if (pwd != "234lsd&QWfjno1!") return Result(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_INCORRECT_PASSWORD,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         monitorNotifyJob.notifyDaily()
         return Result(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_SENT_SUCCESSFULLY,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
     }
