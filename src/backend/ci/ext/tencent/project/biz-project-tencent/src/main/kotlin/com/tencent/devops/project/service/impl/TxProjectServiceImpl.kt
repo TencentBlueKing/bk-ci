@@ -84,6 +84,7 @@ import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Service
 import java.io.File
+import javax.ws.rs.NotFoundException
 
 @Suppress("ALL")
 @Service
@@ -412,7 +413,7 @@ class TxProjectServiceImpl @Autowired constructor(
         )
     }
 
-    override fun getRouterTag(routerTag: String?): String {
+    override fun buildRouterTag(routerTag: String?): String {
         return if (routerTag == null) {
             V0_PERMISSION_CENTER
         } else if (routerTag.contains(V3_PERMISSION_CENTER)) {
@@ -506,9 +507,17 @@ class TxProjectServiceImpl @Autowired constructor(
         return true
     }
 
+    override fun getProjectRouterTag(projectId: String): String? {
+        val projectInfo = projectDao.getByEnglishName(
+            dslContext = dslContext,
+            englishName = projectId
+        ) ?: throw NotFoundException("project - $projectId is not exist!")
+        return buildRouterTag(projectInfo.routerTag)
+    }
+
     companion object {
         private val logger = LoggerFactory.getLogger(TxProjectServiceImpl::class.java)!!
-        private const val V0_PERMISSION_CENTER = "vO"
+        private const val V0_PERMISSION_CENTER = "v0"
         private const val V3_PERMISSION_CENTER = "v3"
         private const val RBAC_PERMISSION_CENTER = "rbac"
     }
