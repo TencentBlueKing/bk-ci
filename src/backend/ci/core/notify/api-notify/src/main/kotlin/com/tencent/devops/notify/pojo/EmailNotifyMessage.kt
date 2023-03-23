@@ -26,15 +26,21 @@
  */
 package com.tencent.devops.notify.pojo
 
+import com.tencent.devops.common.event.annotation.Event
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
+import com.tencent.devops.notify.QUEUE_NOTIFY_EMAIL
 import io.swagger.annotations.ApiModel
 import io.swagger.annotations.ApiModelProperty
 
 @ApiModel("email电子邮件消息类型")
-open class EmailNotifyMessage : BaseMessage() {
+@Event(destination = QUEUE_NOTIFY_EMAIL)
+open class EmailNotifyMessage(
+    override var delayMills: Int = 0,
+    override var retryTime: Int = 0
+) : BaseMessage(delayMills, retryTime) {
 
     @ApiModelProperty("邮件格式", allowableValues = "0,1", dataType = "int")
     var format: EnumEmailFormat = EnumEmailFormat.PLAIN_TEXT

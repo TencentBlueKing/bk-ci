@@ -73,7 +73,7 @@ class EmailServiceImpl @Autowired constructor(
             return
         }
 
-        val retryCount = emailNotifyMessageWithOperation.retryCount
+        val retryCount = emailNotifyMessageWithOperation.retryTime
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val tofConfs = configuration.getConfigurations(emailNotifyMessageWithOperation.tofSysId)
         val result = notifyService.post(
@@ -123,7 +123,7 @@ class EmailServiceImpl @Autowired constructor(
         val emailNotifyMessageWithOperation = EmailNotifyMessageWithOperation()
         emailNotifyMessageWithOperation.apply {
             this.id = id
-            this.retryCount = retryCount
+            this.retryTime = retryCount
             this.source = source
             title = post.title
             body = post.content
@@ -256,7 +256,7 @@ class EmailServiceImpl @Autowired constructor(
             title = record.title
             priority = EnumNotifyPriority.parse(record.priority.toString())
             source = EnumNotifySource.parseName(record.source)
-            retryCount = record.retryCount
+            retryTime = record.retryCount
             lastError = record.lastError
             addAllReceivers(receivers)
             addAllCcs(cc)

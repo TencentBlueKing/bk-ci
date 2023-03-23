@@ -33,13 +33,12 @@ import com.tencent.devops.common.api.util.DateTimeUtil
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.api.util.UUIDUtil
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.notify.enums.EnumEmailFormat
 import com.tencent.devops.common.notify.enums.EnumEmailType
 import com.tencent.devops.common.notify.enums.EnumNotifyPriority
 import com.tencent.devops.common.notify.enums.EnumNotifySource
 import com.tencent.devops.model.notify.tables.records.TNotifyEmailRecord
-import com.tencent.devops.notify.EXCHANGE_NOTIFY
-import com.tencent.devops.notify.ROUTE_EMAIL
 import com.tencent.devops.notify.constant.NotifyMessageCode.ERROR_NOTIFY_TENCENT_CLOUD_EMAIL_SEND_FAIL
 import com.tencent.devops.notify.dao.EmailNotifyDao
 import com.tencent.devops.notify.model.EmailNotifyMessageWithOperation
@@ -54,14 +53,13 @@ import com.tencent.devops.notify.tencentcloud.pojo.EmailSignatureConfig
 import com.tencent.devops.notify.tencentcloud.pojo.Template
 import com.tencent.devops.notify.tencentcloud.utils.TencentCloudSignatureUtil
 import org.slf4j.LoggerFactory
-import org.springframework.amqp.rabbit.core.RabbitTemplate
 import org.springframework.beans.factory.annotation.Autowired
 import java.util.stream.Collectors
 
 @Suppress("ALL")
 class TencentCloudEmailServiceImpl @Autowired constructor(
     private val emailNotifyDao: EmailNotifyDao,
-    private val rabbitTemplate: RabbitTemplate,
+    private val eventDispatcher: SampleEventDispatcher,
     private val configuration: TencentCloudConfiguration
 ) : EmailService {
 
@@ -83,7 +81,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             logger.warn("TencentCloudEmailServiceImpl|tencentCloudTemplateId is empty ,return.")
             return
         }
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message)
+        eventDispatcher.dispatch(message)
     }
 
     override fun sendMessage(emailNotifyMessageWithOperation: EmailNotifyMessageWithOperation) {
@@ -94,7 +92,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             return
         }
         val payload = JsonUtil.toJson(emailNotifyPost, false)
-        val retryCount = emailNotifyMessageWithOperation.retryCount
+        val retryCount = emailNotifyMessageWithOperation.retryTime
         val id = emailNotifyMessageWithOperation.id ?: UUIDUtil.generate()
         val emailSignatureConfig = EmailSignatureConfig(
             payload = payload,
@@ -207,21 +205,16 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
     ) {
         message.apply {
             this.id = id
-            this.retryCount = retryCount
+            this.retryTime = retryCount
             this.source = source
-        }
-        rabbitTemplate.convertAndSend(EXCHANGE_NOTIFY, ROUTE_EMAIL, message) { msg ->
-            var delayTime = 0
-            when (retryCount) {
-                1 -> delayTime = 30000
-                2 -> delayTime = 120000
-                3 -> delayTime = 300000
+            this.delayMills = when (retryCount) {
+                1 -> 30000
+                2 -> 120000
+                3 -> 300000
+                else -> 0
             }
-            if (delayTime > 0) {
-                msg.messageProperties.setHeader("x-delay", delayTime)
-            }
-            msg
         }
+        eventDispatcher.dispatch(message)
     }
 
     private fun generateEmailNotifyPost(emailNotifyMessage: EmailNotifyMessage): EmailBody? {
@@ -274,7 +267,7 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             bcc.addAll(record.bcc.split(";"))
         }
 
-        val message = EmailNotifyMessageWithOperation()
+        val message = EmailNotifyMessageWithOperation(0, record.retryCount)
         message.apply {
             frequencyLimit = record.frequencyLimit
             fromSysId = record.fromSysId
@@ -286,7 +279,6 @@ class TencentCloudEmailServiceImpl @Autowired constructor(
             title = record.title
             priority = EnumNotifyPriority.parse(record.priority.toString())
             source = EnumNotifySource.parseName(record.source)
-            retryCount = record.retryCount
             lastError = record.lastError
             addAllReceivers(receivers)
             addAllCcs(cc)
