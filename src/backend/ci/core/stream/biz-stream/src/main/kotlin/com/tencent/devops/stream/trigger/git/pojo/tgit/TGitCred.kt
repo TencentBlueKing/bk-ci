@@ -34,6 +34,9 @@ data class TGitCred(
     val userId: String?,
     // 具体的accessToken有时优先使用
     val accessToken: String? = null,
-    // stream 分为oauth和private key的token，private的请求方式不同
+    /**
+     * stream 分为oauth和private key的token，private的请求方式不同
+     * true 为oauth, false 为private
+     */
     val useAccessToken: Boolean = true
 ) : StreamGitCred
