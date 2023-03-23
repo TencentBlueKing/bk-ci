@@ -595,14 +595,14 @@ class QualityHistoryService @Autowired constructor(
                 if (result == RuleInterceptResult.PASS) {
                     MessageUtil.getMessageByLocale(
                         BK_VALIDATION_PASSED,
-                        I18nUtil.getLanguage(),
-                        arrayOf("$pipelineName", buildName, "${time}")
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("$pipelineName", buildName, "$time")
                     )
                 } else {
                     MessageUtil.getMessageByLocale(
                         BK_VALIDATION_INTERCEPTED,
-                        I18nUtil.getLanguage(),
-                        arrayOf("$pipelineName", buildName, "${time}")
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf("$pipelineName", buildName, "$time")
                     )
                 }
             } else {

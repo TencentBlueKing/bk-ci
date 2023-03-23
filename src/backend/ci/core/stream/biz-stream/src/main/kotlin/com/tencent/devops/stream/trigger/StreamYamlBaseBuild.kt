@@ -54,6 +54,7 @@ import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
@@ -521,7 +522,7 @@ class StreamYamlBaseBuild @Autowired constructor(
                     targetUrl = StreamPipelineUtils.genStreamV2BuildUrl(
                         homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                             MessageUtil.getMessageByLocale(
-                                StreamConstant.BK_STARTUP_CONFIG_MISSING,
+                                STARTUP_CONFIG_MISSING,
                                 I18nUtil.getLanguage(),
                                 arrayOf(" streamUrl")
                             )

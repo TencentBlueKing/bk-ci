@@ -39,7 +39,7 @@ import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.ticket.api.UserCertResource
 import com.tencent.devops.ticket.constant.TicketMessageCode
-import com.tencent.devops.ticket.constant.TicketMessageCode.BK_INVALID_CERT_ID
+import com.tencent.devops.ticket.constant.TicketMessageCode.INVALID_CERT_ID
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_MUST_BE
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_FILE_TYPE_ERROR
 import com.tencent.devops.ticket.constant.TicketMessageCode.DESCRIPTION_FILE_TYPE_ERROR
@@ -356,7 +356,7 @@ class UserCertResourceImpl @Autowired constructor(
         }
         if (certId != null && certId.isBlank()) {
             throw ParamBlankException(
-                MessageUtil.getMessageByLocale(BK_INVALID_CERT_ID, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(INVALID_CERT_ID, I18nUtil.getLanguage(userId))
             )
         }
         if (certId != null && certId!!.length > 128) {

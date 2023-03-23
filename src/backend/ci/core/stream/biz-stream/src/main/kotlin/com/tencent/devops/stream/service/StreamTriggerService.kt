@@ -35,9 +35,8 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.pojo.BuildId
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant
-import com.tencent.devops.stream.constant.StreamConstant.BK_BUILD_TASK_NOT_FOUND_UNRETRYABLE
-import com.tencent.devops.stream.constant.StreamConstant.BK_PIPELINE_NOT_FOUND_OR_DELETED
+import com.tencent.devops.stream.constant.StreamMessageCode.BUILD_TASK_NOT_FOUND_UNRETRYABLE
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.util.GitCommonUtils
@@ -81,12 +80,12 @@ class StreamTriggerService @Autowired constructor(
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_PIPELINE_NOT_FOUND_OR_DELETED, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(PIPELINE_NOT_FOUND_OR_DELETED, I18nUtil.getLanguage(userId))
             )
         val gitEventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId)
             ?: throw CustomException(
                 Response.Status.NOT_FOUND,
-                MessageUtil.getMessageByLocale(BK_BUILD_TASK_NOT_FOUND_UNRETRYABLE, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(BUILD_TASK_NOT_FOUND_UNRETRYABLE, I18nUtil.getLanguage(userId))
             )
         val newBuildId = client.get(ServiceBuildResource::class).retry(
             userId = userId,
@@ -113,7 +112,7 @@ class StreamTriggerService @Autowired constructor(
         val pipeline =
             gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId) ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_PIPELINE_NOT_FOUND_OR_DELETED, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(PIPELINE_NOT_FOUND_OR_DELETED, I18nUtil.getLanguage(userId))
             )
 
         return client.get(ServiceBuildResource::class).manualShutdown(

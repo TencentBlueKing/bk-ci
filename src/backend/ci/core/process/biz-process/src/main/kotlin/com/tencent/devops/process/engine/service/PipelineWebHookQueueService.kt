@@ -168,7 +168,7 @@ class PipelineWebHookQueueService @Autowired constructor(
                                 buildId = queue.buildId,
                                 message =  MessageUtil.getMessageByLocale(
                                     BK_TRIGGERED_BY_GIT_EVENT_PLUGIN,
-                                    I18nUtil.getLanguage()
+                                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                 ) + "[<a target='_blank' href='" + // #4796 日志展示去掉链接上的域名前缀
                                     "/console/pipeline/$projectId/$pipelineId/detail/$buildId'>$buildId</a>]overlay",
                                 tag = "",

@@ -69,8 +69,8 @@ import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.repository.pojo.Repository
 import com.tencent.devops.repository.pojo.enums.TokenTypeEnum
 import com.tencent.devops.repository.pojo.enums.VisibilityLevelEnum
-import com.tencent.devops.store.constant.BK_TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.constant.StoreMessageCode
+import com.tencent.devops.store.constant.StoreMessageCode.TASK_JSON_CONFIGURE_FORMAT_ERROR
 import com.tencent.devops.store.dao.atom.AtomApproveRelDao
 import com.tencent.devops.store.dao.atom.AtomDao
 import com.tencent.devops.store.dao.atom.AtomLabelRelDao
@@ -1342,7 +1342,7 @@ abstract class MarketAtomServiceImpl @Autowired constructor() : MarketAtomServic
                     sb.insert(
                         0,
                         MessageUtil.getMessageByLocale(
-                            BK_TASK_JSON_CONFIGURE_FORMAT_ERROR,
+                            TASK_JSON_CONFIGURE_FORMAT_ERROR,
                             I18nUtil.getLanguage(),
                             arrayOf(paramKey, "${ignored.message}")
                         )

@@ -54,7 +54,7 @@ import com.tencent.devops.process.yaml.v2.models.ScriptBuildYaml
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.YamlTransferData
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant.BK_CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR
+import com.tencent.devops.stream.constant.StreamMessageCode.CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.pojo.StreamDeleteEvent
 import com.tencent.devops.stream.pojo.enums.TriggerReason
@@ -529,7 +529,7 @@ class StreamYamlBuild @Autowired constructor(
                         TriggerReason.PIPELINE_PREPARE_ERROR,
                         listOf(
                             MessageUtil.getMessageByLocale(
-                                BK_CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
+                                CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR,
                                 I18nUtil.getLanguage()
                             )
                         )

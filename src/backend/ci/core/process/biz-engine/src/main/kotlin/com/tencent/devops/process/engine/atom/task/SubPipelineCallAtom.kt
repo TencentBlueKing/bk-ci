@@ -39,12 +39,10 @@ import com.tencent.devops.common.pipeline.pojo.element.SubPipelineCallElement
 import com.tencent.devops.common.pipeline.pojo.element.atom.SubPipelineType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.builds.BuildSubPipelineResource
-import com.tencent.devops.process.constant.BK_NO_CORRESPONDING_SUB_PIPELINE
-import com.tencent.devops.process.constant.BK_NO_CORRESPONDING_SUB_PIPELINE_BUILD_RECORDS
-import com.tencent.devops.process.constant.BK_SUB_PIPELINE_ID_PARAMETER_IS_EMPTY
-import com.tencent.devops.process.constant.BK_SUB_PIPELINE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_SUBPIPELINEID_NULL
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_CORRESPONDING_SUB_PIPELINE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -79,7 +77,10 @@ class SubPipelineCallAtom constructor(
                 buildStatus = BuildStatus.FAILED,
                 errorType = ErrorType.USER,
                 errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
-                errorMsg = MessageUtil.getMessageByLocale(BK_NO_CORRESPONDING_SUB_PIPELINE, I18nUtil.getLanguage())
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_NO_CORRESPONDING_SUB_PIPELINE,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
         } else {
             val subBuildId = task.subBuildId!!
@@ -95,7 +96,8 @@ class SubPipelineCallAtom constructor(
                     errorType = ErrorType.USER,
                     errorCode = ErrorCode.USER_RESOURCE_NOT_FOUND,
                     errorMsg = MessageUtil.getMessageByLocale(
-                        BK_NO_CORRESPONDING_SUB_PIPELINE_BUILD_RECORDS, I18nUtil.getLanguage()
+                        ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             } else { // 此处逻辑与 研发商店上架的BuildSubPipelineResourceImpl.getSubPipelineStatus 不同，
@@ -157,8 +159,8 @@ class SubPipelineCallAtom constructor(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NULL.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    BK_SUB_PIPELINE_ID_PARAMETER_IS_EMPTY,
-                    I18nUtil.getLanguage()
+                    ERROR_BUILD_TASK_SUBPIPELINEID_NULL,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )
@@ -169,9 +171,8 @@ class SubPipelineCallAtom constructor(
                 errorType = ErrorType.USER,
                 errorCode = ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
-                    BK_SUB_PIPELINE_NOT_EXIST,
-                    I18nUtil.getLanguage(),
-                    arrayOf(subPipelineId)
+                    ERROR_BUILD_TASK_SUBPIPELINEID_NOT_EXISTS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ),
                 pipelineId = task.pipelineId, buildId = task.buildId, taskId = task.taskId
             )

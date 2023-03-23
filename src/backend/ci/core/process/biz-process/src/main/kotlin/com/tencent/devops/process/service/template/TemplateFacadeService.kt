@@ -67,8 +67,8 @@ import com.tencent.devops.model.process.tables.records.TPipelineSettingRecord
 import com.tencent.devops.model.process.tables.records.TTemplateInstanceItemRecord
 import com.tencent.devops.model.process.tables.records.TTemplateRecord
 import com.tencent.devops.process.constant.BK_OPERATE_PIPELINE_FAIL
-import com.tencent.devops.process.constant.BK_PIPELINE_IS_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_IS_EXISTS
 import com.tencent.devops.process.dao.PipelineSettingDao
 import com.tencent.devops.process.engine.cfg.ModelContainerIdGenerator
 import com.tencent.devops.process.engine.cfg.ModelTaskIdGenerator
@@ -1325,7 +1325,7 @@ class TemplateFacadeService @Autowired constructor(
                 logger.warn("Fail to update the pipeline $instance of project $projectId by user $userId", ignored)
                 failurePipelines.add(instance.pipelineName)
                 messages[instance.pipelineName] = MessageUtil.getMessageByLocale(
-                    BK_PIPELINE_IS_EXISTS,
+                    ERROR_PIPELINE_IS_EXISTS,
                     I18nUtil.getLanguage(userId)
                 )
             } catch (ignored: Throwable) {
@@ -1403,7 +1403,7 @@ class TemplateFacadeService @Autowired constructor(
                 logger.warn("Fail to update the pipeline $it of project $projectId by user $userId", ignored)
                 failurePipelines.add(it.pipelineName)
                 messages[it.pipelineName] = MessageUtil.getMessageByLocale(
-                    BK_PIPELINE_IS_EXISTS,
+                    ERROR_PIPELINE_IS_EXISTS,
                     I18nUtil.getLanguage(userId)
                 )
             } catch (ignored: Throwable) {

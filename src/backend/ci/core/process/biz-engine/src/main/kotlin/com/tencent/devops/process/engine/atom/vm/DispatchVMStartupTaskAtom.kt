@@ -185,7 +185,10 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
             exception = BuildTaskException(
                 errorType = ErrorType.SYSTEM,
                 errorCode = ERROR_PIPELINE_NOT_EXISTS.toInt(),
-                errorMsg = MessageUtil.getMessageByLocale(ERROR_PIPELINE_NOT_EXISTS, I18nUtil.getLanguage()),
+                errorMsg = MessageUtil.getMessageByLocale(
+                    ERROR_PIPELINE_NOT_EXISTS,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                ),
                 pipelineId = pipelineId,
                 buildId = buildId,
                 taskId = taskId
@@ -200,7 +203,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                 errorCode = ERROR_PIPELINE_NODEL_CONTAINER_NOT_EXISTS.toInt(),
                 errorMsg = MessageUtil.getMessageByLocale(
                     ERROR_PIPELINE_NOT_EXISTS,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(vmNames)
                 ),
                 pipelineId = pipelineId,
@@ -304,7 +307,7 @@ class DispatchVMStartupTaskAtom @Autowired constructor(
                         buildId = task.buildId,
                         message = MessageUtil.getMessageByLocale(
                             BK_ENV_NOT_YET_SUPPORTED,
-                            I18nUtil.getLanguage(),
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf(env.key, version)
                         ),
                         tag = task.taskId,

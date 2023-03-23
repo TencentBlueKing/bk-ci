@@ -33,6 +33,7 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.GitRequestEventNotBuildDao
@@ -115,8 +116,8 @@ class StreamEventService @Autowired constructor(
                     targetUrl = StreamPipelineUtils.genStreamV2NotificationsUrl(
                         streamUrl = streamGitConfig.streamUrl ?: throw ParamBlankException(
                             MessageUtil.getMessageByLocale(
-                                StreamConstant.BK_STARTUP_CONFIG_MISSING,
-                                I18nUtil.getLanguage(),
+                                STARTUP_CONFIG_MISSING,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                                 arrayOf(" streamGitConfig")
                             )
                         ),

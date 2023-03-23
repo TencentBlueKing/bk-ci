@@ -35,7 +35,6 @@ const val BK_BLOCKED= "BkBlocked"// 已拦截：
 const val BK_CURRENT_VALUE = "BkCurrentValue"// {0}当前值({1})，期望${2}\n
 const val BK_VALIDATION_PASSED = "BkValidationPassed"// {0}(#{1})在{2}验证通过
 const val BK_VALIDATION_INTERCEPTED = "BkValidationIntercepted"// {0}(#{1})在{2}验证被拦截
-const val BK_CHANGE_QUALITY_GATE_VALUE = "BkChangeQualityGateValue"// 指标[{0}]值类型为[{1}]，请修改红线阈值[{2}]
 const val BK_INTERCEPTION_RULES = "BkInterceptionRules"// 拦截规则
 const val BK_INTERCEPTION_METRICS = "BkInterceptionMetrics"// 拦截指标
 const val BK_BUILD_INTERCEPTED_TO_BE_REVIEWED = "BkBuildInterceptedToBeReviewed"// {0}({1})被拦截，待审核(审核人{2})

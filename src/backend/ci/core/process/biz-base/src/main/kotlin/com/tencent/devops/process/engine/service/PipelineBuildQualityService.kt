@@ -53,12 +53,13 @@ import com.tencent.devops.common.websocket.enum.RefreshType
 import com.tencent.devops.process.constant.BK_AUDIT_RESULT
 import com.tencent.devops.process.constant.BK_AUDIT_TIMEOUT
 import com.tencent.devops.process.constant.BK_POLLING_WAIT_FOR_QUALITY_RESULT
-import com.tencent.devops.process.constant.BK_QUALITY_CHECK_FAIL
 import com.tencent.devops.process.constant.BK_QUALITY_CHECK_INTERCEPTED
 import com.tencent.devops.process.constant.BK_QUALITY_CHECK_RESULT
 import com.tencent.devops.process.constant.BK_QUALITY_CHECK_SUCCEED
 import com.tencent.devops.process.constant.BK_QUALITY_TO_BE_REVIEW
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_QUALITY_IN
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BUILD_TASK_QUALITY_OUT
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.common.BS_ATOM_STATUS_REFRESH_DELAY_MILLS
 import com.tencent.devops.process.engine.common.BS_MANUAL_ACTION
@@ -74,7 +75,6 @@ import com.tencent.devops.quality.api.v2.pojo.request.BuildCheckParams
 import com.tencent.devops.quality.api.v2.pojo.response.QualityRuleMatchTask
 import org.slf4j.LoggerFactory
 import org.springframework.stereotype.Service
-import java.text.MessageFormat
 import java.time.LocalDateTime
 import javax.ws.rs.core.Response
 
@@ -314,11 +314,15 @@ class PipelineBuildQualityService(
             client.get(ServiceQualityRuleResource::class).check(buildCheckParams).data!!
         } catch (ignore: Exception) {
             logger.error("Quality Gate check in fail", ignore)
-            val atomDesc = if (position == ControlPointPosition.BEFORE_POSITION) "准入" else "准出"
+            val messageCode = if (position == ControlPointPosition.BEFORE_POSITION) {
+                ERROR_BUILD_TASK_QUALITY_IN
+            } else {
+                ERROR_BUILD_TASK_QUALITY_OUT
+            }
             throw TaskExecuteException(
                 errorCode = ErrorCode.USER_TASK_OPERATE_FAIL,
                 errorType = ErrorType.USER,
-                errorMsg = MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_FAIL, I18nUtil.getLanguage(), arrayOf(atomDesc))
+                errorMsg = MessageUtil.getMessageByLocale(messageCode, I18nUtil.getLanguage())
             )
         }
     }
@@ -362,7 +366,11 @@ class PipelineBuildQualityService(
             if (checkResult.success) {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_SUCCEED, I18nUtil.getLanguage(), arrayOf(atomDesc)),
+                    message = MessageUtil.getMessageByLocale(
+                        BK_QUALITY_CHECK_SUCCEED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf(atomDesc)
+                    ),
                     tag = elementId,
                     jobId = task.containerHashId,
                     executeCount = task.executeCount ?: 1
@@ -393,9 +401,10 @@ class PipelineBuildQualityService(
             } else {
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(BK_QUALITY_CHECK_INTERCEPTED, I18nUtil.getLanguage()),
-                        atomDesc
+                    message = MessageUtil.getMessageByLocale(
+                        BK_QUALITY_CHECK_INTERCEPTED,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf(atomDesc)
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -451,10 +460,10 @@ class PipelineBuildQualityService(
                 )
                 buildLogPrinter.addLine(
                     buildId = buildId,
-                    message = MessageFormat.format(
-                        MessageUtil.getMessageByLocale(BK_QUALITY_TO_BE_REVIEW, I18nUtil.getLanguage()),
-                        atomDesc,
-                        auditUsers
+                    message = MessageUtil.getMessageByLocale(
+                        BK_QUALITY_TO_BE_REVIEW,
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                        arrayOf(atomDesc, "$auditUsers")
                     ),
                     tag = elementId,
                     jobId = task.containerHashId,
@@ -525,9 +534,10 @@ class PipelineBuildQualityService(
                     if (hasMetadata) return@loop
                     buildLogPrinter.addLine(
                         buildId = buildId,
-                        message = MessageFormat.format(
-                            MessageUtil.getMessageByLocale(BK_POLLING_WAIT_FOR_QUALITY_RESULT, I18nUtil.getLanguage()),
-                            index
+                        message = MessageUtil.getMessageByLocale(
+                            BK_POLLING_WAIT_FOR_QUALITY_RESULT,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                            arrayOf("$index")
                         ),
                         tag = elementId,
                         jobId = task.containerHashId,
@@ -599,10 +609,10 @@ class PipelineBuildQualityService(
                     ManualReviewAction.PROCESS -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = MessageFormat.format(
-                                MessageUtil.getMessageByLocale(BK_AUDIT_RESULT, I18nUtil.getLanguage()),
-                                "Continue",
-                                actionUser,
+                            message = MessageUtil.getMessageByLocale(
+                                BK_AUDIT_RESULT,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                                arrayOf("Continue", actionUser)
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,
@@ -613,10 +623,10 @@ class PipelineBuildQualityService(
                     ManualReviewAction.ABORT -> {
                         buildLogPrinter.addYellowLine(
                             buildId = buildId,
-                            message = MessageFormat.format(
-                                MessageUtil.getMessageByLocale(BK_AUDIT_RESULT, I18nUtil.getLanguage()),
-                                "Overrule",
-                                actionUser
+                            message = MessageUtil.getMessageByLocale(
+                                BK_AUDIT_RESULT,
+                                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                                arrayOf("Overrule", actionUser)
                             ),
                             tag = taskId,
                             jobId = task.containerHashId,

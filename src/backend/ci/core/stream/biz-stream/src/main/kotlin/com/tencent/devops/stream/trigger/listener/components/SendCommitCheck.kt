@@ -38,6 +38,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.BaseAction
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishStageData
@@ -208,7 +209,7 @@ class SendCommitCheck @Autowired constructor(
         return StreamPipelineUtils.genStreamV2BuildUrl(
             homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                 MessageUtil.getMessageByLocale(
-                    StreamConstant.BK_STARTUP_CONFIG_MISSING,
+                    STARTUP_CONFIG_MISSING,
                     I18nUtil.getLanguage(),
                     arrayOf(" streamUrl")
                 )

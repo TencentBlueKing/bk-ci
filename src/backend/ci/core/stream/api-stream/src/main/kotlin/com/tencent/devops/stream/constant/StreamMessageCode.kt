@@ -25,7 +25,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.plugin.constant
+package com.tencent.devops.stream.constant
 
 /**
  * 流水线微服务模块请求返回状态码
@@ -35,15 +35,25 @@ package com.tencent.devops.plugin.constant
  * 3、第3位和第4位数字代表微服务模块（00：common-公共模块 01：process-流水线 02：artifactory-版本仓库 03:dispatch-分发 04：dockerhost-docker机器
  *    05:environment-蓝盾环境 06：experience-版本体验 07：image-镜像 08：log-蓝盾日志 09：measure-度量 10：monitoring-监控 11：notify-通知
  *    12：openapi-开放api接口 13：plugin-插件 14：quality-质量红线 15：repository-代码库 16：scm-软件配置管理 17：support-蓝盾支撑服务
- *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务）
- * 4、最后4位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如0001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
+ *    18：ticket-证书凭据 19：project-项目管理 20：store-商店 21： auth-权限 22:sign-签名服务 23:metrics-度量服务 24：external-外部
+ *    25：prebuild-预建 26: stream）
+ * 4、最后3位数字代表具体微服务模块下返回给客户端的业务逻辑含义（如001代表系统服务繁忙，建议一个模块一类的返回码按照一定的规则制定）
  * 5、系统公共的返回码写在CommonMessageCode这个类里面，具体微服务模块的返回码写在相应模块的常量类里面
  * @since: 2019-03-05
  * @version: $Revision$ $Date$ $LastChangedBy$
  *
  */
-object PluginMessageCode {
-    const val ERROR_RETRY_3_FAILED = "2113001" // 重试3次仍然失败
-    const val ERROR_CAN_NOT_FIND_TAG = "2113002" // 找不到指定Tag[{0}]
-    const val ERROR_UNKNOWN_REPO = "2113003" // 找不到指定代码库[{0}]
+
+object StreamMessageCode {
+
+    const val BRANCH_INFO_ACCESS_DENIED = "2126001" // 无权限获取分支信息
+    const val PIPELINE_NOT_FOUND_OR_DELETED = "2126002"// 该流水线不存在或已删除，如有疑问请联系蓝盾助手
+    const val BUILD_TASK_NOT_FOUND_UNRETRYABLE = "2126003"// 构建任务不存在，无法重试
+    const val USER_NOT_AUTHORIZED = "2126004"// 用户[{0}]尚未进行OAUTH授权，请先授权。
+    const val STARTUP_CONFIG_MISSING = "2126005"// 启动配置缺少 {0}
+    const val CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS = "2126006"// ci开启人{0} 无当前项目执行权限, 请重新授权
+    const val CROSS_PROJECT_REFERENCE_THIRD_PARTY_BUILD_POOL_ERROR = "2126007"// 跨项目引用第三方构建资源池错误: 获取远程仓库({0})信息失败, 请检查填写是否正确
+    const val TIMER_PARAM_TOO_LONG = "2126008"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
+    const val PARAM_INCORRECT = "2126009"// 蓝盾项目ID {0} 不正确
+    const val PROJECT_NOT_OPEN_STREAM = "2126010"// 项目未开启Stream，无法查询
 }

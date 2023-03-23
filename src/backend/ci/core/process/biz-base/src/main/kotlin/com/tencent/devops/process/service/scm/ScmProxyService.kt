@@ -42,8 +42,8 @@ import com.tencent.devops.common.service.utils.RetryUtils
 import com.tencent.devops.common.web.mq.alert.AlertLevel
 import com.tencent.devops.common.web.mq.alert.AlertUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_PULLING_LATEST_VERSION_NUMBER_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_RETRY_3_FAILED
 import com.tencent.devops.process.utils.Credential
 import com.tencent.devops.process.utils.CredentialUtils
@@ -69,7 +69,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service
 import java.net.URLEncoder
-import java.text.MessageFormat
 import java.util.Base64
 import javax.ws.rs.NotFoundException
 
@@ -100,12 +99,10 @@ class ScmProxyService @Autowired constructor(private val client: Client) {
             }
 
             override fun fail(e: Throwable): Result<RevisionInfo> {
-                val message = MessageFormat.format(
-                    MessageUtil.getMessageByLocale(
-                        BK_PULLING_LATEST_VERSION_NUMBER_EXCEPTION,
-                        I18nUtil.getLanguage()
-                    ),
-                    retry
+                val message = MessageUtil.getMessageByLocale(
+                    ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
+                    arrayOf("$retry")
                 )
                 AlertUtils.doAlert(
                     module = "SCM",

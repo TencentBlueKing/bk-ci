@@ -56,9 +56,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_MAX_PIPELINE_COUNT_PER_PROJECT
-import com.tencent.devops.process.constant.BK_NO_PERMISSION_PLUGIN_IN_TEMPLATE
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_MAX_PIPELINE_COUNT_PER_PROJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE
 import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_PIPELINE_MODEL_JSON
 import com.tencent.devops.process.constant.ProcessMessageCode.USER_NEED_PIPELINE_X_PERMISSION
 import com.tencent.devops.process.engine.compatibility.BuildPropertyCompatibilityTools
@@ -306,7 +306,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (validateRet.isNotOk()) {
                     throw OperationException(
                         validateRet.message ?: MessageUtil.getMessageByLocale(
-                            BK_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
+                            ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE,
                             I18nUtil.getLanguage(userId),
                         )
                     )
@@ -322,7 +322,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (preCount >= projectVO.pipelineLimit!!) {
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
-                            BK_MAX_PIPELINE_COUNT_PER_PROJECT,
+                            ERROR_MAX_PIPELINE_COUNT_PER_PROJECT,
                             I18nUtil.getLanguage(userId),
                             arrayOf("${projectVO.pipelineLimit}")
                         )

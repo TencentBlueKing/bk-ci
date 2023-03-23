@@ -36,6 +36,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServicePipelineViewResource
 import com.tencent.devops.process.constant.BK_VIEW_ID_AND_NAME_CANNOT_BE_EMPTY_TOGETHER
 import com.tencent.devops.process.constant.BK_VIEW_NOT_FOUND_IN_PROJECT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_VIEW_NOT_FOUND_IN_PROJECT
 import com.tencent.devops.process.pojo.Pipeline
 import com.tencent.devops.process.pojo.PipelineCollation
 import com.tencent.devops.process.pojo.PipelineSortType
@@ -75,7 +76,7 @@ class ServicePipelineViewResourceImpl @Autowired constructor(
             ?: throw CustomException(
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
-                    BK_VIEW_NOT_FOUND_IN_PROJECT,
+                    ERROR_VIEW_NOT_FOUND_IN_PROJECT,
                     I18nUtil.getLanguage(),
                     arrayOf(projectId, (if (isProject) "project" else "individual"), viewName)
                 )

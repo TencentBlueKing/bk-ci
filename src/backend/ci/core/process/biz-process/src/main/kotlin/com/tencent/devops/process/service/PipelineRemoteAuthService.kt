@@ -42,7 +42,7 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.model.process.tables.records.TPipelineRemoteAuthRecord
 import com.tencent.devops.process.api.service.ServiceBuildResource
 import com.tencent.devops.process.constant.BK_REMOTE_CALL_SOURCE_IP
-import com.tencent.devops.process.constant.ProcessMessageCode.BK_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_NO_MATCHING_PIPELINE
 import com.tencent.devops.process.dao.PipelineRemoteAuthDao
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
@@ -85,7 +85,7 @@ class PipelineRemoteAuthService @Autowired constructor(
         } catch (ignored: Throwable) {
             logger.warn("Fail to generate the remote pipeline token of pipeline $pipelineId - $projectId", ignored)
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED, I18nUtil.getLanguage(userId))
             )
         } finally {
             redisLock.unlock()

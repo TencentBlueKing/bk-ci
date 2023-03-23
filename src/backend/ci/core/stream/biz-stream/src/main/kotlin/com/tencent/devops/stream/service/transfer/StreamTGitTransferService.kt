@@ -44,6 +44,7 @@ import com.tencent.devops.repository.pojo.git.GitCreateFile
 import com.tencent.devops.repository.pojo.oauth.GitToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
 import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.USER_NOT_AUTHORIZED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -79,7 +80,7 @@ class StreamTGitTransferService @Autowired constructor(
         userId: String
     ): GitToken {
         return client.get(ServiceOauthResource::class).gitGet(userId).data ?: throw OauthForbiddenException(
-            message = MessageUtil.getMessageByLocale(StreamConstant.BK_USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
+            message = MessageUtil.getMessageByLocale(USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
         )
     }
 

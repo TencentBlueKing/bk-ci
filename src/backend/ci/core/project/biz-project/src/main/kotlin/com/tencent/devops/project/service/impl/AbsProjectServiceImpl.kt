@@ -48,11 +48,11 @@ import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
-import com.tencent.devops.project.constant.BK_AUTH_CENTER_CREATE_PROJECT_INFO
-import com.tencent.devops.project.constant.BK_BOUND_IAM_GRADIENT_ADMIN
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MAX_LENGTH
 import com.tencent.devops.project.constant.ProjectConstant.NAME_MIN_LENGTH
 import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.project.constant.ProjectMessageCode.BK_AUTH_CENTER_CREATE_PROJECT_INFO
+import com.tencent.devops.project.constant.ProjectMessageCode.BOUND_IAM_GRADIENT_ADMIN
 import com.tencent.devops.project.constant.ProjectMessageCode.PROJECT_NOT_EXIST
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -710,7 +710,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         if (!currentRelationId.isNullOrEmpty()) {
             throw InvalidParamException(
                 projectCode +
-                        MessageUtil.getMessageByLocale(BK_BOUND_IAM_GRADIENT_ADMIN, I18nUtil.getLanguage())
+                        MessageUtil.getMessageByLocale(BOUND_IAM_GRADIENT_ADMIN, I18nUtil.getLanguage())
             )
         }
         val updateCount = projectDao.updateRelationByCode(dslContext, projectCode, relationId)

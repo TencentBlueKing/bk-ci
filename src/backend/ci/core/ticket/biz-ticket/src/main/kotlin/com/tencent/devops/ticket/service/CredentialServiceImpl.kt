@@ -45,9 +45,9 @@ import com.tencent.devops.process.api.service.ServiceTemplateAcrossResource
 import com.tencent.devops.process.api.service.ServiceVarResource
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.pojo.TemplateAcrossInfoType
-import com.tencent.devops.ticket.constant.BK_CERT_NO_EXISTS
-import com.tencent.devops.ticket.constant.BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.constant.TicketMessageCode
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CredentialDao
 import com.tencent.devops.ticket.pojo.Credential
 import com.tencent.devops.ticket.pojo.CredentialCreate
@@ -81,7 +81,7 @@ class CredentialServiceImpl @Autowired constructor(
                 errorCode = TicketMessageCode.CREDENTIAL_NOT_FOUND,
                 params = arrayOf(credentialId),
                 defaultMessage = MessageUtil.getMessageByLocale(
-                    BK_CERT_NO_EXISTS,
+                    CERT_NOT_FOUND,
                     I18nUtil.getLanguage(userId),
                     arrayOf(credentialId)
                 )
@@ -139,7 +139,7 @@ class CredentialServiceImpl @Autowired constructor(
             projectId = projectId,
             authPermission = create,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -218,7 +218,7 @@ class CredentialServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = edit,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -249,7 +249,7 @@ class CredentialServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = edit,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -275,7 +275,7 @@ class CredentialServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = delete,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -431,7 +431,7 @@ class CredentialServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = view,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -476,7 +476,7 @@ class CredentialServiceImpl @Autowired constructor(
             credentialId,
             view,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,

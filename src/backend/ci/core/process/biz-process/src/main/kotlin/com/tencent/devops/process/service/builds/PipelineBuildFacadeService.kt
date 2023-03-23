@@ -65,9 +65,9 @@ import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.constant.BK_USER_NO_PIPELINE_EXECUTE_PERMISSIONS
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO
 import com.tencent.devops.process.engine.common.Timeout
 import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.compatibility.BuildParametersCompatibilityTransformer
@@ -185,11 +185,12 @@ class PipelineBuildFacadeService(
                 projectId = projectId,
                 pipelineId = pipelineId,
                 permission = permission,
-                message = arrayOf(
-                    userId,
-                    projectId,
-                    if (language == "zh_CN") permission.alias else permission.value,
-                    pipelineId
+                message = MessageUtil.getMessageByLocale(
+                    CommonMessageCode.USER_NOT_PERMISSIONS_OPERATE_PIPELINE,
+                    language,
+                    arrayOf(
+                        userId, projectId, if (language == "zh_CN") permission.alias else permission.value, pipelineId
+                    )
                 )
             )
         }
@@ -325,7 +326,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "")
             )
@@ -1297,7 +1298,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "detail")
                 )
@@ -1351,7 +1352,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "detail")
             )
@@ -1383,7 +1384,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "detail")
                 )
@@ -1414,7 +1415,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "build status")
                 )
@@ -1501,7 +1502,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "build variables")
                 )
@@ -1547,7 +1548,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "build the value of the variable")
                 )
@@ -1630,7 +1631,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     permission = AuthPermission.VIEW,
                     message = MessageUtil.getMessageByLocale(
-                        BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                        ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                         I18nUtil.getLanguage(userId),
                         arrayOf(userId, pipelineId, "history build")
                     )
@@ -1727,7 +1728,7 @@ class PipelineBuildFacadeService(
                     pipelineId = pipelineId,
                     permission = AuthPermission.VIEW,
                     message = MessageUtil.getMessageByLocale(
-                        BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                        ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                         I18nUtil.getLanguage(userId),
                         arrayOf(userId, pipelineId, "History build")
                     )
@@ -1834,7 +1835,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "history build")
             )
@@ -1853,7 +1854,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "history build")
             )
@@ -1868,7 +1869,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "history build")
             )
@@ -1888,7 +1889,7 @@ class PipelineBuildFacadeService(
             pipelineId = pipelineId,
             permission = AuthPermission.VIEW,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                 I18nUtil.getLanguage(userId),
                 arrayOf(userId, pipelineId, "history build")
             )
@@ -2206,7 +2207,7 @@ class PipelineBuildFacadeService(
                 pipelineId = pipelineId,
                 permission = AuthPermission.VIEW,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_PERMISSION_GET_PIPELINE_INFO,
+                    ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO,
                     I18nUtil.getLanguage(userId),
                     arrayOf(userId, pipelineId, "detail")
                 )

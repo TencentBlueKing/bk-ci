@@ -39,7 +39,6 @@ import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
-import java.text.MessageFormat
 
 /**
  * 运行时锁定
@@ -101,9 +100,11 @@ class RunLockInterceptor @Autowired constructor(
             } ?: 0
             if (concurrencyGroupRunningCount >= 1) {
                 logger.info("[$pipelineId] " +
-                        MessageFormat.format(
-                            MessageUtil.getMessageByLocale(BK_MUTEX_GROUP_SINGLE_BUILD, I18nUtil.getLanguage())),
-                    concurrencyGroup
+                        MessageUtil.getMessageByLocale(
+                            BK_MUTEX_GROUP_SINGLE_BUILD,
+                            I18nUtil.getLanguage(),
+                            arrayOf("$concurrencyGroup")
+                        )
                 )
                 Response(BuildStatus.QUEUE)
             } else {

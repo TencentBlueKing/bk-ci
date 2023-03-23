@@ -46,8 +46,8 @@ import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAto
 import com.tencent.devops.common.service.utils.CommonUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_BACKGROUND_SERVICE_RUNNING_ERROR
-import com.tencent.devops.process.constant.BK_BACKGROUND_SERVICE_TASK_EXECUTION_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_RUNNING_ERROR
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_BACKGROUND_SERVICE_TASK_EXECUTION
 import com.tencent.devops.process.engine.control.VmOperateTaskGenerator
 import com.tencent.devops.process.engine.exception.BuildTaskException
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask
@@ -116,8 +116,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorType = t.errorType
             atomResponse.errorCode = t.errorCode
             atomResponse.errorMsg = MessageUtil.getMessageByLocale(
-                BK_BACKGROUND_SERVICE_TASK_EXECUTION_ERROR,
-                I18nUtil.getLanguage()
+                ERROR_BACKGROUND_SERVICE_TASK_EXECUTION,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         } catch (ignored: Throwable) {
             buildLogPrinter.addRedLine(
@@ -130,8 +130,8 @@ class TaskAtomService @Autowired(required = false) constructor(
             atomResponse.errorType = ErrorType.SYSTEM
             atomResponse.errorCode = ErrorCode.SYSTEM_DAEMON_INTERRUPTED
             atomResponse.errorMsg = MessageUtil.getMessageByLocale(
-                BK_BACKGROUND_SERVICE_RUNNING_ERROR,
-                I18nUtil.getLanguage()
+                ERROR_BACKGROUND_SERVICE_RUNNING_ERROR,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
             logger.warn("[${task.buildId}]|Fail to execute the task [${task.taskName}]", ignored)
         } finally {

@@ -31,7 +31,7 @@ import com.tencent.devops.common.api.enums.ScmType
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.stream.constant.StreamConstant.BK_PARAM_INCORRECT
+import com.tencent.devops.stream.constant.StreamMessageCode.PARAM_INCORRECT
 import com.tencent.devops.stream.pojo.GitRequestEvent
 import com.tencent.devops.stream.pojo.isFork
 import org.slf4j.LoggerFactory
@@ -164,11 +164,11 @@ object GitCommonUtils {
             }
         } catch (e: Exception) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
+                MessageUtil.getMessageByLocale(PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
             )
         }
         throw OperationException(
-            MessageUtil.getMessageByLocale(BK_PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
+            MessageUtil.getMessageByLocale(PARAM_INCORRECT, I18nUtil.getLanguage(), arrayOf(projectId))
         )
     }
 

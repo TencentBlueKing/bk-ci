@@ -668,20 +668,20 @@ class QualityRuleCheckService @Autowired constructor(
 
             val sb = StringBuilder()
             if (it.pass) {
-                sb.append(MessageUtil.getMessageByLocale(BK_PASSED, I18nUtil.getLanguage()))
+                sb.append(MessageUtil.getMessageByLocale(BK_PASSED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
             } else {
-                sb.append(MessageUtil.getMessageByLocale(BK_BLOCKED, I18nUtil.getLanguage()))
+                sb.append(MessageUtil.getMessageByLocale(BK_BLOCKED, I18nUtil.getLanguage(I18nUtil.getRequestUserId())))
             }
             val nullMsg = if (it.actualValue == null) MessageUtil.getMessageByLocale(
                 BK_NO_TOOL_OR_RULE_ENABLED,
-                I18nUtil.getLanguage()
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) else ""
             val detailMsg = getDetailMsg(it, params)
             Triple(
                 sb.append(
                     MessageUtil.getMessageByLocale(
                         BK_VALIDATION_PASSED,
-                        I18nUtil.getLanguage(),
+                        I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                         arrayOf(it.indicatorName, "${it.actualValue}", "$thresholdOperationName${it.value}。 $nullMsg")
                     )
                 ).toString(),
@@ -798,8 +798,13 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
-        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(BK_INTERCEPTION_RULES, I18nUtil.getLanguage())
-        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(BK_INTERCEPTION_METRICS, I18nUtil.getLanguage())
+        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(
+            BK_INTERCEPTION_RULES, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
+        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(
+            BK_INTERCEPTION_METRICS,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         resultList.forEach { r ->
             messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
             messageResult.append("$bkInterceptionMetricsI18n：\n")
@@ -825,7 +830,7 @@ class QualityRuleCheckService @Autowired constructor(
             bodyParams = mapOf(
                 "title" to MessageUtil.getMessageByLocale(
                     BK_BUILD_INTERCEPTED_TO_BE_REVIEWED,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(pipelineName, buildNo, "$auditNotifyUserList")
                 ),
                 "projectName" to projectName,
@@ -879,8 +884,14 @@ class QualityRuleCheckService @Autowired constructor(
 
         val messageResult = StringBuilder()
         val emailResult = StringBuilder()
-        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(BK_INTERCEPTION_RULES, I18nUtil.getLanguage())
-        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(BK_INTERCEPTION_METRICS, I18nUtil.getLanguage())
+        val bkInterceptionRulesI18n = MessageUtil.getMessageByLocale(
+            BK_INTERCEPTION_RULES,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
+        val bkInterceptionMetricsI18n = MessageUtil.getMessageByLocale(
+            BK_INTERCEPTION_METRICS,
+            I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+        )
         resultList.forEach { r ->
             messageResult.append("$bkInterceptionRulesI18n：${r.ruleName}\n")
             messageResult.append("$bkInterceptionMetricsI18n：\n")
@@ -902,7 +913,7 @@ class QualityRuleCheckService @Autowired constructor(
             bodyParams = mapOf(
                 "title" to MessageUtil.getMessageByLocale(
                     BK_BUILD_INTERCEPTED_TERMINATED,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(pipelineName, buildNo)
                 ),
                 "projectName" to projectName,

@@ -38,6 +38,7 @@ import com.tencent.devops.quality.api.v2.ServiceQualityIndicatorResource
 import com.tencent.devops.quality.api.v2.ServiceQualityInterceptResource
 import com.tencent.devops.stream.config.StreamGitConfig
 import com.tencent.devops.stream.constant.StreamConstant
+import com.tencent.devops.stream.constant.StreamMessageCode.STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.trigger.actions.data.context.BuildFinishData
 import com.tencent.devops.stream.util.ElementUtils
 import com.tencent.devops.stream.util.StreamPipelineUtils
@@ -82,8 +83,8 @@ class StreamQualityService @Autowired constructor(
                 StreamPipelineUtils.genStreamV2BuildUrl(
                     homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                         MessageUtil.getMessageByLocale(
-                            StreamConstant.BK_STARTUP_CONFIG_MISSING,
-                            I18nUtil.getLanguage(),
+                            STARTUP_CONFIG_MISSING,
+                            I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             arrayOf(" streamUrl")
                         )
                     ),

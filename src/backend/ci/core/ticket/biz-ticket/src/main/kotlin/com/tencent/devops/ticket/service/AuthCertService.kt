@@ -36,8 +36,8 @@ import com.tencent.devops.common.auth.callback.FetchInstanceInfo
 import com.tencent.devops.common.auth.callback.ListInstanceInfo
 import com.tencent.devops.common.auth.callback.SearchInstanceInfo
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.ticket.constant.BK_NO_CERT
-import com.tencent.devops.ticket.constant.BK_NO_CREDENTIAL
+import com.tencent.devops.ticket.constant.TicketMessageCode.BK_NO_CERT
+import com.tencent.devops.ticket.constant.TicketMessageCode.BK_NO_CREDENTIAL
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Service

@@ -41,7 +41,7 @@ import com.tencent.devops.common.webhook.pojo.code.github.GithubPullRequestEvent
 import com.tencent.devops.common.webhook.pojo.code.github.GithubPushEvent
 import com.tencent.devops.process.yaml.v2.enums.StreamObjectKind
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant.BK_CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS
+import com.tencent.devops.stream.constant.StreamMessageCode.CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -234,8 +234,8 @@ class StreamTriggerRequestService @Autowired constructor(
             action = action,
             triggerReason = TriggerReason.PIPELINE_PREPARE_ERROR,
             reasonParams = listOf(MessageUtil.getMessageByLocale(
-                BK_CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
-                I18nUtil.getLanguage(),
+                CI_START_USER_NO_CURRENT_PROJECT_EXECUTE_PERMISSIONS,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 arrayOf(action.data.setting.enableUser)
             ))
         )

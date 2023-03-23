@@ -53,7 +53,7 @@ import com.tencent.devops.quality.api.v2.pojo.request.RuleCreateRequest
 import com.tencent.devops.quality.api.v3.pojo.request.BuildCheckParamsV3
 import com.tencent.devops.quality.api.v3.pojo.request.RuleCreateRequestV3
 import com.tencent.devops.quality.api.v3.pojo.response.RuleCreateResponseV3
-import com.tencent.devops.quality.constant.BK_CHANGE_QUALITY_GATE_VALUE
+import com.tencent.devops.quality.constant.QualityMessageCode.CHANGE_QUALITY_GATE_VALUE
 import com.tencent.devops.quality.dao.HistoryDao
 import com.tencent.devops.quality.dao.v2.QualityIndicatorDao
 import com.tencent.devops.quality.dao.v2.QualityRuleBuildHisDao
@@ -180,8 +180,8 @@ class QualityRuleBuildHisService constructor(
         }
         throw OperationException(
             MessageUtil.getMessageByLocale(
-                BK_CHANGE_QUALITY_GATE_VALUE,
-                I18nUtil.getLanguage(),
+                CHANGE_QUALITY_GATE_VALUE,
+                I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 arrayOf(requestIndicator.enName, "${indicator.thresholdType}", requestIndicator.threshold)
             )
         )

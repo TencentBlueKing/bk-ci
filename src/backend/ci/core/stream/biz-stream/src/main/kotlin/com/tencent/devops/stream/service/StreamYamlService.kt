@@ -33,7 +33,7 @@ import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.yaml.v2.enums.TemplateType
 import com.tencent.devops.process.yaml.v2.utils.ScriptYmlUtils
-import com.tencent.devops.stream.constant.StreamConstant.BK_PROJECT_NOT_OPEN_STREAM
+import com.tencent.devops.stream.constant.StreamMessageCode.PROJECT_NOT_OPEN_STREAM
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamGitYamlString
@@ -61,7 +61,9 @@ class StreamYamlService @Autowired constructor(
         logger.info("StreamYamlService|getYamlV2|buildId|$buildId|gitProjectId|$gitProjectId")
         streamSettingDao.getSetting(dslContext, gitProjectId) ?: throw CustomException(
             Response.Status.FORBIDDEN,
-            MessageUtil.getMessageByLocale(BK_PROJECT_NOT_OPEN_STREAM, I18nUtil.getLanguage())
+            MessageUtil.getMessageByLocale(
+                PROJECT_NOT_OPEN_STREAM, I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+            )
         )
         val eventBuild = gitRequestEventBuildDao.getByBuildId(dslContext, buildId) ?: return null
         // 针对V2版本做替换

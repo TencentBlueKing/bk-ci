@@ -38,18 +38,18 @@ import com.tencent.devops.common.auth.api.AuthPermission
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.process.api.service.ServiceBuildResource
-import com.tencent.devops.ticket.constant.BK_CERT_ALREADY_EXISTS
-import com.tencent.devops.ticket.constant.BK_CERT_NO_EXISTS
-import com.tencent.devops.ticket.constant.BK_NAME_ALREADY_EXISTS
-import com.tencent.devops.ticket.constant.BK_NAME_NO_EXISTS
-import com.tencent.devops.ticket.constant.BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS
-import com.tencent.devops.ticket.constant.BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_ALIAS_OR_PASSWORD_WRONG
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERTIFICATE_PASSWORD_WRONG
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_NOT_FOUND
 import com.tencent.devops.ticket.constant.TicketMessageCode.CERT_USED_BY_OTHERS
 import com.tencent.devops.ticket.constant.TicketMessageCode.FILE_SIZE_CANT_EXCEED
 import com.tencent.devops.ticket.constant.TicketMessageCode.ILLEGAL_FILE
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_ALREADY_EXISTS
+import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_NO_EXISTS
 import com.tencent.devops.ticket.constant.TicketMessageCode.NAME_SIZE_CANT_EXCEED
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS
+import com.tencent.devops.ticket.constant.TicketMessageCode.USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS
 import com.tencent.devops.ticket.dao.CertDao
 import com.tencent.devops.ticket.dao.CertEnterpriseDao
 import com.tencent.devops.ticket.dao.CertTlsDao
@@ -112,7 +112,7 @@ class CertServiceImpl @Autowired constructor(
             projectId,
             create,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -130,7 +130,7 @@ class CertServiceImpl @Autowired constructor(
                 resourceCode = certCredentialId,
                 authPermission = use,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                     I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
@@ -142,7 +142,7 @@ class CertServiceImpl @Autowired constructor(
         }
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -238,7 +238,7 @@ class CertServiceImpl @Autowired constructor(
             certId,
             edit,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -249,7 +249,7 @@ class CertServiceImpl @Autowired constructor(
         )
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_NAME_NO_EXISTS,  I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_NO_EXISTS,  I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -261,7 +261,7 @@ class CertServiceImpl @Autowired constructor(
                 resourceCode = certCredentialId,
                 authPermission = use,
                 message = MessageUtil.getMessageByLocale(
-                    BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                    USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                     I18nUtil.getLanguage(userId),
                     arrayOf(
                         userId,
@@ -356,7 +356,7 @@ class CertServiceImpl @Autowired constructor(
             projectId,
             create,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -368,7 +368,7 @@ class CertServiceImpl @Autowired constructor(
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -467,7 +467,7 @@ class CertServiceImpl @Autowired constructor(
             certId,
             edit,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -478,7 +478,7 @@ class CertServiceImpl @Autowired constructor(
         )
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -487,7 +487,7 @@ class CertServiceImpl @Autowired constructor(
         val mpFileContent = if (mpInputStream != null) read(mpInputStream) else null
         if (mpFileContent != null && mpFileContent.size > certMaxSize) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(NAME_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -570,7 +570,7 @@ class CertServiceImpl @Autowired constructor(
             projectId,
             create,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -586,7 +586,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = use,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -601,7 +601,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = aliasCredentialId,
             authPermission = AuthPermission.USE,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -613,7 +613,7 @@ class CertServiceImpl @Autowired constructor(
 
         if (certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_CERT_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(CERT_ALREADY_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
 
@@ -698,7 +698,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = certId,
             authPermission = edit,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -710,7 +710,7 @@ class CertServiceImpl @Autowired constructor(
 
         val certRecord = certDao.getOrNull(dslContext, projectId, certId)
             ?: throw OperationException(
-                MessageUtil.getMessageByLocale(BK_CERT_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
 
         val use = AuthPermission.USE
@@ -720,7 +720,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = credentialId,
             authPermission = use,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -736,7 +736,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = aliasCredentialId,
             authPermission = use,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CREDENTIAL_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -830,7 +830,7 @@ class CertServiceImpl @Autowired constructor(
             projectId,
             create,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -970,7 +970,7 @@ class CertServiceImpl @Autowired constructor(
             resourceCode = certId,
             authPermission = edit,
             message = MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,
@@ -981,7 +981,7 @@ class CertServiceImpl @Autowired constructor(
         )
         if (!certDao.has(dslContext, projectId, certId)) {
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_CERT_NO_EXISTS, I18nUtil.getLanguage(userId), arrayOf(certId))
+                MessageUtil.getMessageByLocale(CERT_NOT_FOUND, I18nUtil.getLanguage(userId), arrayOf(certId))
             )
         }
         val certTlsRecord = certTlsDao.get(dslContext, projectId, certId)
@@ -1102,7 +1102,7 @@ class CertServiceImpl @Autowired constructor(
             certId,
             delete,
             MessageUtil.getMessageByLocale(
-                BK_USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
+                USER_NO_ENGINEERING_CERT_OPERATE_PERMISSIONS,
                 I18nUtil.getLanguage(userId),
                 arrayOf(
                     userId,

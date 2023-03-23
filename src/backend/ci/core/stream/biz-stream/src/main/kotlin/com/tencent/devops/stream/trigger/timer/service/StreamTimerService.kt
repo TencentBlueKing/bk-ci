@@ -44,7 +44,7 @@ import com.tencent.devops.model.stream.tables.records.TStreamTimerRecord
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_DEL_PIPELINE_TIMER
 import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SAVE_PIPELINE_TIMER
-import com.tencent.devops.stream.constant.StreamConstant.BK_ERROR_SAVE_PIPELINE_TIMER
+import com.tencent.devops.stream.constant.StreamMessageCode.TIMER_PARAM_TOO_LONG
 import com.tencent.devops.stream.dao.StreamTimerDao
 import com.tencent.devops.stream.trigger.timer.pojo.StreamTimer
 import com.tencent.devops.stream.trigger.timer.pojo.event.StreamChangeEvent
@@ -101,7 +101,7 @@ class StreamTimerService @Autowired constructor(
                 )
                 Result(
                     ERROR_SAVE_PIPELINE_TIMER.toInt(),
-                    MessageUtil.getMessageByLocale(BK_ERROR_SAVE_PIPELINE_TIMER, I18nUtil.getLanguage(userId))
+                    MessageUtil.getMessageByLocale(TIMER_PARAM_TOO_LONG, I18nUtil.getLanguage(userId))
                 )
             }
         }
@@ -112,24 +112,25 @@ class StreamTimerService @Autowired constructor(
         val newCrontabExpressions = mutableSetOf<String>()
         if (crontabExpressions.isEmpty()) {
             throw ErrorCodeException(
-                defaultMessage = "定时触发器的定时参数不合法",
-                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB
+                errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
+                params = arrayOf(""),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         }
         crontabExpressions.forEach { crontabExpression ->
             val newConvertExpression = convertExpression(crontabExpression)
             if (!CronExpression.isValidExpression(newConvertExpression)) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数[$crontabExpression]不合法",
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_CRONTAB,
-                    params = arrayOf(crontabExpression)
+                    params = arrayOf(crontabExpression),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
             if (!CronExpressionUtils.isValidTimeInterval(newConvertExpression)) {
                 throw ErrorCodeException(
-                    defaultMessage = "定时触发器的定时参数[$crontabExpression]不能秒级触发",
                     errorCode = ProcessMessageCode.ILLEGAL_TIMER_INTERVAL_CRONTAB,
-                    params = arrayOf(crontabExpression)
+                    params = arrayOf(crontabExpression),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
             newCrontabExpressions.add(newConvertExpression)

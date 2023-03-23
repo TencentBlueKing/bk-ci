@@ -37,7 +37,7 @@ import com.tencent.devops.common.security.util.EnvironmentUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.log.api.ServiceLogResource
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant.BK_PIPELINE_NOT_FOUND_OR_DELETED
+import com.tencent.devops.stream.constant.StreamMessageCode.PIPELINE_NOT_FOUND_OR_DELETED
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.util.GitCommonUtils
 import org.jooq.DSLContext
@@ -150,6 +150,9 @@ class StreamLogService @Autowired constructor(
         gitPipelineResourceDao.getPipelineById(dslContext, gitProjectId, pipelineId)
             ?: throw CustomException(
                 Response.Status.FORBIDDEN,
-                MessageUtil.getMessageByLocale(BK_PIPELINE_NOT_FOUND_OR_DELETED, I18nUtil.getLanguage())
+                MessageUtil.getMessageByLocale(
+                    PIPELINE_NOT_FOUND_OR_DELETED,
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId())
+                )
             )
 }

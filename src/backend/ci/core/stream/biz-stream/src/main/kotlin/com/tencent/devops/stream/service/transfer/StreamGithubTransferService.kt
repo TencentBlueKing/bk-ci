@@ -53,7 +53,6 @@ import com.tencent.devops.repository.pojo.AuthorizeResult
 import com.tencent.devops.repository.pojo.enums.RedirectUrlTypeEnum
 import com.tencent.devops.repository.pojo.github.GithubToken
 import com.tencent.devops.scm.enums.GitAccessLevelEnum
-import com.tencent.devops.stream.constant.StreamConstant.BK_USER_NOT_AUTHORIZED
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -350,7 +349,7 @@ class StreamGithubTransferService @Autowired constructor(
         userId: String
     ): GithubToken {
         return client.get(ServiceGithubResource::class).getAccessToken(userId).data ?: throw OauthForbiddenException(
-            message = MessageUtil.getMessageByLocale(BK_USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
+            message = MessageUtil.getMessageByLocale(USER_NOT_AUTHORIZED, I18nUtil.getLanguage(userId))
         )
     }
 }

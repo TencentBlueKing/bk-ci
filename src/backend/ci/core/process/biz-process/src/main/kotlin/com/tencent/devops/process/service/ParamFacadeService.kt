@@ -41,7 +41,7 @@ import com.tencent.devops.common.pipeline.pojo.BuildFormProperty
 import com.tencent.devops.common.pipeline.pojo.BuildFormValue
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.BK_SUB_PIPELINE_PARAM_FILTER_FAILED
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.permission.PipelinePermissionService
 import com.tencent.devops.process.pojo.SubPipeline
@@ -281,7 +281,7 @@ class ParamFacadeService @Autowired constructor(
         } catch (t: Throwable) {
             logger.warn("[$userId|$projectId] Fail to filter the properties of subpipelines", t)
             throw OperationException(
-                MessageUtil.getMessageByLocale(BK_SUB_PIPELINE_PARAM_FILTER_FAILED, I18nUtil.getLanguage(userId))
+                MessageUtil.getMessageByLocale(ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED, I18nUtil.getLanguage(userId))
             )
         }
     }

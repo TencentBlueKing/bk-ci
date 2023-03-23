@@ -40,7 +40,6 @@ import com.tencent.devops.process.yaml.v2.enums.needInput
 import com.tencent.devops.process.yaml.v2.models.on.EnableType
 import com.tencent.devops.process.yaml.v2.utils.YamlCommonUtils
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant.BK_STARTUP_CONFIG_MISSING
 import com.tencent.devops.stream.dao.GitPipelineResourceDao
 import com.tencent.devops.stream.dao.GitRequestEventBuildDao
 import com.tencent.devops.stream.dao.StreamBasicSettingDao
@@ -169,7 +168,7 @@ abstract class BaseManualTriggerService @Autowired constructor(
             buildUrl = StreamPipelineUtils.genStreamV2BuildUrl(
                 homePage = streamGitConfig.streamUrl ?: throw ParamBlankException(
                     MessageUtil.getMessageByLocale(
-                        BK_STARTUP_CONFIG_MISSING,
+                        STARTUP_CONFIG_MISSING,
                         I18nUtil.getLanguage(userId),
                         arrayOf(" streamUrl")
                     )

@@ -138,7 +138,7 @@ class ModelContainer @Autowired(required = false) constructor(
                 Response.Status.BAD_REQUEST,
                 MessageUtil.getMessageByLocale(
                     BK_ENV_NOT_YET_SUPPORTED,
-                    I18nUtil.getLanguage(),
+                    I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     arrayOf(env.key, env.value)
                 )
             )

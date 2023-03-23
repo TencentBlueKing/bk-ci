@@ -103,7 +103,7 @@ object ProcessMessageCode {
     const val ERROR_PIPELINE_REPO_ID_NULL = "2101045" // 仓库ID为空
     const val ERROR_PIPELINE_REPO_NAME_NULL = "2101046" // 仓库名为空
     const val ERROR_PIPELINE_LOCK = "2101047" // 流水线锁定
-    const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数不合法
+    const val ILLEGAL_TIMER_CRONTAB = "2101048" // 定时触发器的定时参数[{0}]不合法
     const val ERROR_PIPELINE_QUEUE_FULL = "2101049" // 流水线队列满
     const val ERROR_PIPELINE_AGENT_STATUS_EXCEPTION = "2101050" // 第三方构建机状态异常
     const val ERROR_PIPELINE_DISPATCH_STORE_IMAGE_CODE_BLANK = "2101051" // 模型中使用了商店镜像，但code为空
@@ -150,7 +150,8 @@ object ProcessMessageCode {
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_QUANTITY_LIMIT_EXCEEDED = "2101093"// {0}配置Env数量超过100限制!
     const val ERROR_YAML_FORMAT_EXCEPTION_ENV_VARIABLE_LENGTH_LIMIT_EXCEEDED = "2101094"// {0}Env单变量{1}长度超过{2}字符!({3})
     const val BK_ADD_PIPELINE_TIMER_TRIGGER_SAVE_FAIL = "2101095"// 添加流水线的定时触发器保存失败！可能是定时器参数过长！
-    const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "ErrorYamlFormatExceptionVariableNameIllegal"// 变量名称必须是英文字母、数字或下划线(_)
+    const val ERROR_YAML_FORMAT_EXCEPTION_VARIABLE_NAME_ILLEGAL = "2101096"// 变量名称必须是英文字母、数字或下划线(_)
+    const val ERROR_JOB_MATRIX_YAML_CONFIG_ERROR = "2101097"// Job[{0]的矩阵YAML配置错误:
 
         // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败
@@ -164,6 +165,11 @@ object ProcessMessageCode {
     const val ERROR_ELEMENT_TOO_LONG = "2101906" // {0} element大小越界
     const val ERROR_JOB_RUNNING = "2101907" // job非完成态，不能进行重试
     const val ERROR_RETRY_STAGE_NOT_FAILED = "2101911" // stage非失败状态，不能进行重试
+    const val ERROR_PULLING_LATEST_VERSION_NUMBER_EXCEPTION = "2101912"// 拉取最新版本号出现异常,重试{0}次失败
+    const val ERROR_BACKGROUND_SERVICE_TASK_EXECUTION = "2101913"//后台服务任务执行出错
+    const val ERROR_BACKGROUND_SERVICE_RUNNING_ERROR = "2101914"// 后台服务运行出错
+    const val ERROR_VIEW_NOT_FOUND_IN_PROJECT = "2101915"// 在项目 {0} 下未找到{1}视图{2}
+    const val ERROR_MAX_PIPELINE_COUNT_PER_PROJECT = "2101916"// 该项目最多只能创建{0}条流水线
 
     const val ERROR_NO_BUILD_EXISTS_BY_ID = "2101100" // 流水线构建[{0}]不存在
     const val ERROR_NO_PIPELINE_EXISTS_BY_ID = "2101101" // 流水线[{0}]不存在
@@ -173,7 +179,13 @@ object ProcessMessageCode {
     const val ERROR_CONDITION_EXPRESSION_PARSE = "2101109" // 执行条件表达式解析失败
     const val ERROR_TRIGGER_REVIEW_ABORT = "2101110" // 触发审核未通过
     const val ERROR_TRIGGER_NOT_UNDER_REVIEW = "2101111" // 触发不在审核状态中
-    const val BK_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED = "2101112"// 生成远程触发token失败
+    const val ERROR_GENERATE_REMOTE_TRIGGER_TOKEN_FAILED = "2101112"// 生成远程触发token失败
+    const val ERROR_NO_BUILD_RECORD_FOR_CORRESPONDING_SUB_PIPELINE = "2101113"// 找不到对应子流水线的构建记录
+    const val ERROR_NO_CORRESPONDING_SUB_PIPELINE = "2101114"// "找不到对应子流水线"
+    const val ERROR_USER_NO_PERMISSION_GET_PIPELINE_INFO = "2101115"// 用户（{0}) 无权限获取流水线({1})信息({2})
+    const val ERROR_SUB_PIPELINE_PARAM_FILTER_FAILED = "2101116"// 子流水线参数过滤失败
+    const val ERROR_NO_PERMISSION_PLUGIN_IN_TEMPLATE = "2101117"// 模版下存在无权限的插件
+
 
     // 导出数据错误
     const val ERROR_EXPORT_OUTPUT_CONFLICT = "2101200" // 变量名[{0}]来源不唯一，请修改变量名称或增加插件输出命名空间：{1}

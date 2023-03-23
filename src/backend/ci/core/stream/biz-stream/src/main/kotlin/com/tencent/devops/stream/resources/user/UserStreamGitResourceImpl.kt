@@ -37,9 +37,9 @@ import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.project.api.service.ServiceProjectResource
 import com.tencent.devops.stream.api.user.UserStreamGitResource
 import com.tencent.devops.stream.config.StreamGitConfig
-import com.tencent.devops.stream.constant.StreamConstant.BK_BRANCH_INFO_ACCESS_DENIED
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_CI_FILE_DIR
 import com.tencent.devops.stream.constant.StreamConstant.STREAM_FILE_SUFFIX
+import com.tencent.devops.stream.constant.StreamMessageCode.BRANCH_INFO_ACCESS_DENIED
 import com.tencent.devops.stream.permission.StreamPermissionService
 import com.tencent.devops.stream.pojo.StreamCommitInfo
 import com.tencent.devops.stream.pojo.StreamCreateFileInfo
@@ -228,7 +228,7 @@ class UserStreamGitResourceImpl @Autowired constructor(
                     search = search
                 )
             }.fold({ it }, { throw PermissionForbiddenException(
-                "$userId ${MessageUtil.getMessageByLocale(BK_BRANCH_INFO_ACCESS_DENIED, I18nUtil.getLanguage(userId))}"
+                "$userId ${MessageUtil.getMessageByLocale(BRANCH_INFO_ACCESS_DENIED, I18nUtil.getLanguage(userId))}"
             ) })
         )
     }
