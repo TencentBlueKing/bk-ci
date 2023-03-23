@@ -28,7 +28,7 @@
 package com.tencent.devops.project.api.user
 
 import com.tencent.devops.common.api.pojo.Result
-import com.tencent.devops.project.pojo.LocaleInfo
+import com.tencent.devops.common.api.pojo.LocaleInfo
 import io.swagger.annotations.Api
 import io.swagger.annotations.ApiOperation
 import io.swagger.annotations.ApiParam

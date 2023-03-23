@@ -33,5 +33,6 @@ import javax.ws.rs.NameBinding
 @Retention(AnnotationRetention.RUNTIME)
 @NameBinding
 annotation class BkI18n(
-    val keyPrefixNames: Array<String> = []
+    val fixKeyPrefixName: String = "", // 固定字段前缀名称
+    val keyPrefixNames: Array<String> = [] // 字段前缀名称数组
 )

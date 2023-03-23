@@ -77,8 +77,8 @@ interface ServiceI18nMessageResource {
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = false)
-        @QueryParam("locale")
-        locale: String?
+        @QueryParam("language")
+        language: String?
     ): Result<Boolean>
 
     @ApiOperation("获取国际化信息")
@@ -95,8 +95,8 @@ interface ServiceI18nMessageResource {
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = true)
-        @QueryParam("locale")
-        locale: String
+        @QueryParam("language")
+        language: String
     ): Result<I18nMessage?>
 
     @ApiOperation("批量获取国际化信息")
@@ -112,7 +112,7 @@ interface ServiceI18nMessageResource {
         @QueryParam("moduleCode")
         moduleCode: SystemModuleEnum,
         @ApiParam("国际化语言信息", required = true)
-        @QueryParam("locale")
-        locale: String
+        @QueryParam("language")
+        language: String
     ): Result<List<I18nMessage>?>
 }

@@ -30,32 +30,50 @@ package com.tencent.devops.common.api.util
 import com.tencent.devops.common.api.annotation.BkI18n
 import com.tencent.devops.common.api.pojo.FieldLocaleInfo
 import com.tencent.devops.common.api.pojo.I18nFieldInfo
+import org.slf4j.LoggerFactory
 import java.lang.reflect.Field
+import java.text.MessageFormat
 import java.util.Locale
 import java.util.Properties
 import java.util.ResourceBundle
 
 object MessageUtil {
 
+    private val logger = LoggerFactory.getLogger(MessageUtil::class.java)
     private const val DEFAULT_BASE_NAME = "i18n/message"
 
     /**
      * 根据语言环境获取对应的描述信息
      * @param messageCode 消息标识
      * @param language 语言信息
+     * @param params 替换描述信息占位符的参数数组
      * @param baseName 基础资源名称
+     * @param defaultMessage 默认信息
      * @return 描述信息
      */
     fun getMessageByLocale(
         messageCode: String,
         language: String,
-        baseName: String = DEFAULT_BASE_NAME
+        params: Array<String>? = null,
+        baseName: String = DEFAULT_BASE_NAME,
+        defaultMessage: String? = null
     ): String {
         val localeObj = Locale(language)
         // 根据locale和baseName生成resourceBundle对象
         val resourceBundle = ResourceBundle.getBundle(baseName, localeObj)
         // 通过resourceBundle获取对应语言的描述信息
-        return String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        var message: String? = null
+        try {
+            message = String(resourceBundle.getString(messageCode).toByteArray(Charsets.ISO_8859_1), Charsets.UTF_8)
+        } catch (ignored: Throwable) {
+            logger.warn("Fail to get i18nMessage of messageCode[$messageCode]", ignored)
+        }
+        if (null != params && null != message) {
+            val mf = MessageFormat(message)
+            // 根据参数动态替换状态码描述里的占位符
+            message = mf.format(params)
+        }
+        return message ?: defaultMessage ?: messageCode
     }
 
     /**
@@ -114,17 +132,33 @@ object MessageUtil {
                 }
 
                 else -> {
-                    properties?.let {
-                        val propertyValue = properties[dataKey]?.toString()
-                        // 如果properties参数不为空则进行国际化内容替换
-                        propertyValue?.let { dataMap[key] = propertyValue }
-                    }
+                    handleProperties(properties, dataKey, dataMap, key)
                     // 如果value不是集合类型则直接加入字段列表中
                     fieldLocaleInfos.add(FieldLocaleInfo(dataKey, dataMap[key].toString()))
                 }
             }
         }
         return fieldLocaleInfos
+    }
+
+    /**
+     * 遍历map集合获取字段列表
+     * @param properties 国际化资源文件特性对象
+     * @param dataKey 带前缀的key
+     * @param dataMap map集合
+     * @param key 原始key
+     */
+    private fun handleProperties(
+        properties: Properties?,
+        dataKey: String,
+        dataMap: MutableMap<String, Any>,
+        key: String
+    ) {
+        properties?.let {
+            val propertyValue = properties[dataKey]?.toString()
+            // 如果properties参数不为空则进行国际化内容替换
+            propertyValue?.let { dataMap[key] = propertyValue }
+        }
     }
 
     /**

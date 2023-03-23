@@ -3,12 +3,15 @@ package com.tencent.devops.common.web.interceptor
 import com.tencent.devops.common.api.annotation.BkI18n
 import com.tencent.devops.common.api.auth.AUTH_HEADER_DEVOPS_SERVICE_NAME
 import com.tencent.devops.common.api.enums.SystemModuleEnum
+import com.tencent.devops.common.api.pojo.I18nFieldInfo
+import com.tencent.devops.common.api.pojo.I18nMessage
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.SpringContextUtil
 import com.tencent.devops.common.web.service.ServiceI18nMessageResource
+import com.tencent.devops.common.web.utils.I18nUtil
 import org.apache.commons.collections4.ListUtils
 import org.slf4j.LoggerFactory
 import org.springframework.web.context.request.RequestContextHolder
@@ -24,7 +27,8 @@ class BkWriterInterceptor : WriterInterceptor {
     companion object {
         private val logger = LoggerFactory.getLogger(BkWriterInterceptor::class.java)
         private const val ARRAY_WILDCARD_TEMPLATE = "[*]"
-        private const val ARRAY_REGEX_TEMPLATE = "(\\[)[0-9]+(\\])"
+        private const val ARRAY_REGEX_TEMPLATE = "(\\[)[0-9]+(])"
+        private const val SIZE = 50
     }
 
     /**
@@ -43,18 +47,15 @@ class BkWriterInterceptor : WriterInterceptor {
             context.proceed()
             return
         }
-        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
-        val moduleCode = getModuleCode(attributes)
+        val fixKeyPrefixName = bkI18nAnnotation.fixKeyPrefixName
         val keyPrefixNames = bkI18nAnnotation.keyPrefixNames
         // 获取实体对象里需要进行国际化翻译的字段集合
         val entity = context.entity
         val bkI18nFieldMap = MessageUtil.getBkI18nFieldMap(entity)
-        // 蓝盾的接口返回报文对象都是Result对象，故可以直接将entity转换为map
-        val dataMap = JsonUtil.toMap(entity)
         val keyPrefixMap = mutableMapOf<String, String>()
         // 从实体对象map中获取固定前缀名称的值
         keyPrefixNames.filter { !it.contains(ARRAY_WILDCARD_TEMPLATE) }.forEach { keyPrefixName ->
-            val keyPrefixValue = getKeyPrefixValue(keyPrefixName, dataMap)
+            val keyPrefixValue = getKeyPrefixValue(keyPrefixName, entity)
             keyPrefixValue?.let {
                 keyPrefixMap[keyPrefixName] = it
             }
@@ -62,25 +63,21 @@ class BkWriterInterceptor : WriterInterceptor {
         val i18nKeyMap = mutableMapOf<String, String>()
         // 获取需要进行国际化翻译的字段的国际化key值
         bkI18nFieldMap.forEach nextBkI18nField@{ fieldPath, i18nFieldInfo ->
-            val i18nKeySb = StringBuilder()
+            val i18nKeySb = if (fixKeyPrefixName.isBlank()) {
+                StringBuilder()
+            } else {
+                StringBuilder("$fixKeyPrefixName.")
+            }
             val fieldPathTemplateLastIndex = fieldPath.lastIndexOf(".")
             keyPrefixNames.forEach nextKeyPrefixName@{ keyPrefixName ->
                 if (keyPrefixName.contains(ARRAY_WILDCARD_TEMPLATE)) {
                     val keyPrefixTemplateLastIndex = keyPrefixName.lastIndexOf(".")
                     // 如果前缀名称不是固定的，需要将前缀名称往上退一级作为模板进行正则匹配替换
-                    val keyPrefixTemplate = if (keyPrefixTemplateLastIndex > 0) {
-                        keyPrefixName.substring(0, keyPrefixTemplateLastIndex)
-                    } else {
-                        keyPrefixName
-                    }
+                    val keyPrefixTemplate = getVarTemplate(keyPrefixTemplateLastIndex, keyPrefixName)
                     // 把前缀名称中数组的通配符换成正则表达式
                     val regex = keyPrefixTemplate.replace(ARRAY_WILDCARD_TEMPLATE, ARRAY_REGEX_TEMPLATE).toRegex()
                     // 如果前缀名称不是固定的，需要将字段路径往上退一级作为模板进行正则匹配替换
-                    val fieldPathTemplate = if (fieldPathTemplateLastIndex > 0) {
-                        fieldPath.substring(0, fieldPathTemplateLastIndex)
-                    } else {
-                        fieldPath
-                    }
+                    val fieldPathTemplate = getVarTemplate(fieldPathTemplateLastIndex, fieldPath)
                     // 通过字段路径模板获取真实的前缀名称
                     val matchResult = regex.find(fieldPathTemplate)
                     // 如果通过正则表达式获取不到真实的前缀名称则中断流程
@@ -90,40 +87,94 @@ class BkWriterInterceptor : WriterInterceptor {
                     // 生成真实的前缀名称
                     val convertKeyPrefixName = "$convertKeyPrefixTemplate.$keyPrefixLastNodeName"
                     // 从实体对象map中获取
-                    val keyPrefixValue = getKeyPrefixValue(convertKeyPrefixName, dataMap)
-                    keyPrefixValue?.let {
-                        i18nKeySb.append("$it.")
-                    }
+                    val keyPrefixValue = getKeyPrefixValue(convertKeyPrefixName, entity)
+                    appendI18nKeyNodeName(keyPrefixValue, i18nKeySb)
                 } else {
-                    keyPrefixMap[keyPrefixName]?.let {
-                        i18nKeySb.append("$it.")
-                    }
+                    appendI18nKeyNodeName(keyPrefixMap[keyPrefixName], i18nKeySb)
                 }
             }
             val fieldName = fieldPath.substring(fieldPathTemplateLastIndex + 1)
             i18nKeyMap[fieldPath] = i18nKeySb.append(fieldName).toString()
         }
+        // 为字段设置国际化信息
+        setI18nFieldValue(i18nKeyMap, bkI18nFieldMap)
+        context.proceed()
+    }
+
+    /**
+     * 获取变量名称模板
+     * @param lastIndex 点号在变量名称中最后位置
+     * @param varName 变量名称
+     * @return 变量名称模板
+     */
+    private fun getVarTemplate(lastIndex: Int, varName: String): String {
+        val keyPrefixTemplate = if (lastIndex > 0) {
+            varName.substring(0, lastIndex)
+        } else {
+            varName
+        }
+        return keyPrefixTemplate
+    }
+
+    /**
+     * 为国际化字段key添加节点名称
+     * @param nodeName 节点名称
+     * @param i18nKeySb 国际化key对应的StringBuilder对象
+     */
+    private fun appendI18nKeyNodeName(nodeName: String?, i18nKeySb: StringBuilder) {
+        nodeName?.let {
+            i18nKeySb.append("$it.")
+        }
+    }
+
+    /**
+     * 为字段设置国际化信息
+     * @param i18nKeyMap 国际化字段路径与国际化key映射map
+     * @param bkI18nFieldMap 国际化字段路径与字段信息映射map
+     */
+    private fun setI18nFieldValue(
+        i18nKeyMap: MutableMap<String, String>,
+        bkI18nFieldMap: MutableMap<String, I18nFieldInfo>
+    ) {
+        val attributes = RequestContextHolder.getRequestAttributes() as? ServletRequestAttributes
+        // 获取模块标识
+        val moduleCode = getModuleCode(attributes)
+        // 获取用户ID
+        val userId = I18nUtil.getRequestUserId()
+        // 根据用户ID获取语言信息
+        val language = I18nUtil.getLanguage(userId)
+        val i18nMessageMap = mutableMapOf<String, String>()
         val client = SpringContextUtil.getBean(Client::class.java)
         val i18nKeys = i18nKeyMap.values.toList()
-        ListUtils.partition(i18nKeys, 50).forEach { rids ->
-            val ruleObj = client.get(ServiceI18nMessageResource::class).getI18nMessages(
-                keys = rids,
-                moduleCode = moduleCode,
-                locale = ""
-            )
+        // 切割国际化key列表，分批获取key的国际化信息
+        ListUtils.partition(i18nKeys, SIZE).forEach { rids ->
+            var i18nMessages:List<I18nMessage>? = null
+            try {
+                i18nMessages = client.get(ServiceI18nMessageResource::class).getI18nMessages(
+                    keys = rids,
+                    moduleCode = moduleCode,
+                    language = language
+                ).data
+            } catch (ignored: Throwable) {
+                logger.warn("Fail to get i18nMessages of keys[$rids]", ignored)
+            }
+            i18nMessages?.forEach { i18nMessage ->
+                i18nMessageMap[i18nMessage.key] = i18nMessage.value
+            }
         }
         i18nKeyMap.forEach { (fieldPath, i18nKey) ->
             val i18nFieldInfo = bkI18nFieldMap[fieldPath]
-            i18nFieldInfo?.let {
-                val field = it.field
+            val i18nFieldValue = i18nMessageMap[i18nKey]
+            if (i18nFieldInfo != null && i18nFieldValue != null) {
+                val field = i18nFieldInfo.field
                 if (!field.isAccessible) {
                     // 设置字段为可访问
                     field.isAccessible = true
                 }
-                field.set(it.entity, i18nKey)
+                // 为需要进行国际化翻译的字段设置国际化信息
+                field.set(i18nFieldInfo.entity, i18nFieldValue)
             }
         }
-        context.proceed()
     }
 
     /**
@@ -135,8 +186,13 @@ class BkWriterInterceptor : WriterInterceptor {
         val moduleCode = if (null != attributes) {
             val request = attributes.request
             // 从请求头中获取服务名称
-            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME)
-            SystemModuleEnum.valueOf(serviceName.uppercase())
+            val serviceName = request.getHeader(AUTH_HEADER_DEVOPS_SERVICE_NAME) ?: SystemModuleEnum.COMMON.name
+            try {
+                SystemModuleEnum.valueOf(serviceName.uppercase())
+            } catch (ignored: Throwable) {
+                logger.warn("serviceName[$serviceName] is invalid", ignored)
+                SystemModuleEnum.COMMON
+            }
         } else {
             // 默认从公共模块获取国际化信息
             SystemModuleEnum.COMMON
