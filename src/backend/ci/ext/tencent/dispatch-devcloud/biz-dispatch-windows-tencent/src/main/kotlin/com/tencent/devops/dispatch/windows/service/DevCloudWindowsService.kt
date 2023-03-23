@@ -250,6 +250,4 @@ class DevCloudWindowsService @Autowired constructor() {
 
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
-
-
 }
