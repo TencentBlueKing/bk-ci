@@ -33,6 +33,7 @@
                 <template v-else-if="col.prop === 'material'" v-slot="props">
                     <template v-if="Array.isArray(props.row.material) && props.row.material.length > 0">
                         <div @click.stop="" v-for="material in props.row.material" :key="material.aliasName" class="material-item">
+                            <Logo v-if="material.scmType" :name="materialLogoMap[material.scmType]" size="12"></Logo>
                             <p v-bk-tooltips="{ content: generateMaterial(material) }" :class="{ 'show-commit-times': material.commitTimes > 1 }" @click="handleRowClick(props.row)">{{ generateMaterial(material) }}</p>
                             <span class="material-commit-id" v-if="material.newCommitId" :title="material.newCommitId" @click.stop="goCodeRecords(props.row, material.aliasName)">
                                 <span class="commit-nums">{{ material.newCommitId.slice(0, 8) }}</span>
@@ -189,7 +190,15 @@
                 visibleIndex: -1,
                 isShowAll: false,
                 retryingMap: {},
-                stoping: {}
+                stoping: {},
+                materialLogoMap: {
+                    CODE_SVN: 'SVN',
+                    CODE_GIT: 'Git',
+                    CODE_GITLAB: 'Gitlab',
+                    GITHUB: 'Github',
+                    CODE_TGIT: 'TGit',
+                    CODE_P4: 'P4'
+                }
             }
         },
         computed: {
@@ -314,6 +323,9 @@
             buildList () {
                 this.resetRemark()
             }
+        },
+        created () {
+            console.log(123, this.materialLogoMap)
         },
         methods: {
             isNotLatest ({ $index }) {
@@ -650,6 +662,7 @@
         }
         .material-item {
             display: flex;
+            align-items: center;
             p.show-commit-times  {
                 @include ellipsis();
             }
