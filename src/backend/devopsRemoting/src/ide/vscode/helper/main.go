@@ -88,6 +88,7 @@ func main() {
 	// 安装preci插件
 	args = append(args, "--install-extension", "/preci/preci-remote.vsix")
 	args = append(args, "--install-extension", "/preci/preci.vsix")
+	args = append(args, "--install-extension", "/preci/bkgpt.vsix")
 
 	args = append(args, os.Args[1:]...)
 	args = append(args, "--do-not-sync")
