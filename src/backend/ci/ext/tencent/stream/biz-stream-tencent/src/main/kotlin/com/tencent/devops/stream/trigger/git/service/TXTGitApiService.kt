@@ -84,7 +84,9 @@ class TXTGitApiService @Autowired constructor(
                 description = it.description,
                 avatarUrl = it.avatarUrl,
                 pathWithNamespace = it.pathWithNamespace,
-                nameWithNamespace = it.nameWithNamespace
+                nameWithNamespace = it.nameWithNamespace,
+                repoCreatedTime = it.createdAt ?: "",
+                repoCreatorId = it.creatorId ?: ""
             )
         }
     }

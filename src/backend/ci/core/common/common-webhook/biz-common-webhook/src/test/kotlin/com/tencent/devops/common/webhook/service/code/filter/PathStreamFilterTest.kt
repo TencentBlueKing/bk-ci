@@ -25,26 +25,22 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.pojo
+package com.tencent.devops.common.webhook.service.code.filter
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
+import org.junit.jupiter.api.Assertions
+import org.junit.jupiter.api.Test
 
-/**
- * 保存Git源项目信息，内容同
- * @see com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
- */
-data class StreamGitProjectCache(
-    override val gitProjectId: String,
-    override val defaultBranch: String?,
-    override val gitHttpUrl: String,
-    override val name: String,
-    override val gitSshUrl: String?,
-    override val homepage: String?,
-    override val gitHttpsUrl: String?,
-    override val description: String?,
-    override val avatarUrl: String?,
-    override val pathWithNamespace: String?,
-    override val nameWithNamespace: String,
-    override val repoCreatedTime: String,
-    override val repoCreatorId: String
-) : StreamGitProjectInfo
+class PathStreamFilterTest {
+    private val response = WebhookFilterResponse()
+
+    @Test
+    fun excludePaths() {
+        val pathStreamFilter = PathStreamFilter(
+            pipelineId = "p-8a49b34bfd834adda6e8dbaad01eedea",
+            triggerOnPath = listOf("Example/Tests/OWNERS", "OWNERS", ".ci/ci_env_print.yml"),
+            includedPaths = emptyList(),
+            excludedPaths = listOf(".ci/*", "OWNERS", "*/*/OWNERS")
+        )
+        Assertions.assertFalse(pathStreamFilter.doFilter(response))
+    }
+}

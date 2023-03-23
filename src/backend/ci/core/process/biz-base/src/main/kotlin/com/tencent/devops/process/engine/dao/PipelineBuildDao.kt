@@ -343,7 +343,7 @@ class PipelineBuildDao {
             if (pipelineId != null) {
                 select.and(PIPELINE_ID.eq(pipelineId))
             }
-            select.orderBy(QUEUE_TIME.asc()).limit(1)
+            select.orderBy(QUEUE_TIME.asc(), PIPELINE_ID, BUILD_NUM.asc()).limit(1)
             select.fetchAny()
         }
     }

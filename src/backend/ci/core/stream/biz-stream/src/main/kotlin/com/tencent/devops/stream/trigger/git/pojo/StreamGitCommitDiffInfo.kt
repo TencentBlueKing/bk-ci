@@ -25,26 +25,9 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  */
 
-package com.tencent.devops.stream.trigger.pojo
+package com.tencent.devops.stream.trigger.git.pojo
 
-import com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
-
-/**
- * 保存Git源项目信息，内容同
- * @see com.tencent.devops.stream.trigger.git.pojo.StreamGitProjectInfo
- */
-data class StreamGitProjectCache(
-    override val gitProjectId: String,
-    override val defaultBranch: String?,
-    override val gitHttpUrl: String,
-    override val name: String,
-    override val gitSshUrl: String?,
-    override val homepage: String?,
-    override val gitHttpsUrl: String?,
-    override val description: String?,
-    override val avatarUrl: String?,
-    override val pathWithNamespace: String?,
-    override val nameWithNamespace: String,
-    override val repoCreatedTime: String,
-    override val repoCreatorId: String
-) : StreamGitProjectInfo
+interface StreamGitCommitDiffInfo {
+    val newPath: String
+    val oldPath: String
+}

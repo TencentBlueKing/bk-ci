@@ -1,9 +1,13 @@
 package com.tencent.devops.stream.trigger.actions.streamActions
 
 import com.tencent.devops.common.client.Client
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.enums.StartType
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATE_TIME
+import com.tencent.devops.common.pipeline.utils.PIPELINE_GIT_REPO_CREATOR
 import com.tencent.devops.common.redis.RedisLock
 import com.tencent.devops.common.redis.RedisOperation
+import com.tencent.devops.process.utils.PipelineVarUtil
 import com.tencent.devops.process.yaml.v2.models.RepositoryHook
 import com.tencent.devops.process.yaml.v2.models.Variable
 import com.tencent.devops.process.yaml.v2.models.on.TriggerOn
@@ -22,6 +26,7 @@ import com.tencent.devops.stream.trigger.git.pojo.StreamGitCred
 import com.tencent.devops.stream.trigger.git.pojo.tgit.TGitCred
 import com.tencent.devops.stream.trigger.git.service.StreamGitApiService
 import com.tencent.devops.stream.trigger.parsers.StreamTriggerCache
+import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerBody
 import com.tencent.devops.stream.trigger.parsers.triggerMatch.TriggerResult
 import com.tencent.devops.stream.trigger.pojo.CheckType
 import com.tencent.devops.stream.trigger.pojo.YamlContent
@@ -106,6 +111,14 @@ class StreamRepoTriggerAction(
 
     override fun isMatch(triggerOn: TriggerOn): TriggerResult {
         triggerCheckRepoTriggerCredentials(triggerOn)
+        check(triggerOn.repoHook).let {
+            if (!it.trigger) return TriggerResult(
+                trigger = it,
+                triggerOn = triggerOn,
+                timeTrigger = false,
+                deleteTrigger = false
+            )
+        }
         return baseAction.isMatch(triggerOn)
     }
 
@@ -118,6 +131,8 @@ class StreamRepoTriggerAction(
     override fun needSendCommitCheck() = baseAction.needSendCommitCheck()
 
     override fun needUpdateLastModifyUser(filePath: String) = false
+
+    override fun checkIfModify() = baseAction.checkIfModify()
 
     override fun sendCommitCheck(
         buildId: String,
@@ -209,6 +224,16 @@ class StreamRepoTriggerAction(
             "StreamRepoTriggerActionafter|triggerCheckRepoTriggerCredentials" +
                 "|check repoTrigger credentials|repoTrigger|${this.data.context.repoTrigger}"
         )
+        streamTriggerCache.getAndSaveRequestGitProjectInfo(
+            gitProjectKey = data.eventCommon.gitProjectId,
+            action = this,
+            getProjectInfo = api::getGitProjectInfo
+        )?.let {
+            data.context.repoTrigger?.triggerGitHttpUrl = it.gitHttpUrl
+            data.context.repoCreatedTime = it.repoCreatedTime
+            data.context.repoCreatorId = it.repoCreatorId
+        }
+
         data.context.repoTrigger?.triggerGitHttpUrl = streamTriggerCache.getAndSaveRequestGitProjectInfo(
             gitProjectKey = data.eventCommon.gitProjectId,
             action = this,
@@ -276,5 +301,44 @@ class StreamRepoTriggerAction(
             )
         }
         return Pair(check, userInfo.username)
+    }
+
+    private fun check(repoHook: RepositoryHook?): TriggerBody {
+        if (repoHook == null) {
+            return TriggerBody()
+        }
+
+        repoHook.reposIgnore.forEach {
+            if (this.data.eventCommon.gitProjectName == it.removeSuffix(GitCommonUtils.gitEnd)) {
+                return TriggerBody().triggerFail("repo_hook.repos_ignore", "trigger repository($it) match")
+            }
+        }
+
+        repoHook.reposIgnoreCondition.let {
+            if (it.isEmpty()) return@let
+            baseAction.parseStreamTriggerContext()
+            val supportVar = PipelineVarUtil.fillContextVarMap(
+                mapOf(
+                    PIPELINE_GIT_REPO_CREATE_TIME to (data.context.repoCreatedTime ?: ""),
+                    PIPELINE_GIT_REPO_CREATOR to (data.context.repoCreatorId ?: "")
+                )
+            )
+            it.forEach { condition ->
+                // 进行表达式计算
+                if (EnvReplacementParser.parse(
+                        value = "\${{ $condition }}",
+                        contextMap = supportVar,
+                        onlyExpression = true
+                    ).contains("false")
+                ) {
+                    return TriggerBody().triggerFail(
+                        "repo_hook.repos_ignore_condition",
+                        "trigger repository not match($condition), ci.repo_create_time" +
+                            " is ${data.context.repoCreatedTime}, ci.repo_creator is ${data.context.repoCreatorId}"
+                    )
+                }
+            }
+        }
+        return TriggerBody()
     }
 }
