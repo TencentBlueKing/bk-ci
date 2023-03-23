@@ -68,5 +68,11 @@ data class GitProjectInfo(
     val description: String?,
     @ApiModelProperty("项目的头像信息", name = "avatar_url")
     @JsonProperty("avatar_url")
-    val avatarUrl: String?
+    val avatarUrl: String?,
+    @ApiModelProperty("项目创建时间", name = "created_at")
+    @JsonProperty("created_at")
+    val createdAt: String?,
+    @ApiModelProperty("项目创建人id", name = "creator_id")
+    @JsonProperty("creator_id")
+    val creatorId: String?
 )
