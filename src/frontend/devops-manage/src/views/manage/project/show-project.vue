@@ -32,6 +32,13 @@ const projectDiffData = ref<any>({});
 const isLoading = ref(false);
 const userName = ref('');
 const hasPermission = ref(true)
+const showException = ref(false);
+const exceptionObj = ref({
+  type: '',
+  title: '',
+  description: '',
+  showBtn: false
+})
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -48,13 +55,23 @@ const fetchProjectData = async () => {
       }
     })
     .catch((err) => {
+      showException.value = true
       if (err.code === 403) {
         hasPermission.value = false
-      } else {
-        Message({
-          theme: 'error',
-          message: err.message || err,
-        })
+        exceptionObj.value.showBtn = true;
+        exceptionObj.value.type = '403';
+        exceptionObj.value.title = t('无项目权限');
+        exceptionObj.value.description = t('你没有项目的查看权限，请先申请', [projectCode]);
+      } else if (err.code === 404)  {
+        exceptionObj.value.showBtn = false;
+        exceptionObj.value.type = '404';
+        exceptionObj.value.title = t('项目不存在');
+        exceptionObj.value.description = '';
+      } else if (err.code === 2119042) {
+        exceptionObj.value.showBtn = false;
+        exceptionObj.value.type = '403';
+        exceptionObj.value.title = t('项目创建中');
+        exceptionObj.value.description = t('项目正在创建审批中，请耐心等待', [projectCode]);
       }
     });
   isLoading.value = false;
@@ -448,13 +465,13 @@ onMounted(async () => {
           </template>
         </template>
         <bk-exception
-          v-else
+          v-if="showException"
           class="content-main mt20"
-          type="403"
-          :title="t('无查看项目权限')"
-          :description="t('你没有项目的查看权限，请先申请', [projectCode])"
+          :type="exceptionObj.type"
+          :title="exceptionObj.title"
+          :description="exceptionObj.description"
         >
-          <bk-button theme="primary" @click="handleNoPermission">
+          <bk-button v-if="exceptionObj.showBtn" theme="primary" @click="handleNoPermission">
             {{ t('去申请') }}
           </bk-button>
         </bk-exception>
