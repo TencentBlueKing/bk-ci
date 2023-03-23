@@ -27,11 +27,11 @@
 
 package com.tencent.devops.process.util
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ETH1_NETWORK_CARD_IP_EMPTY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FAILED_GET_NETWORK_CARD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_ETH1_NETWORK_CARD_IP_EMPTY
-import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_GET_NETWORK_CARD
-import com.tencent.devops.process.constant.ProcessCode.BK_LOOPBACK_ADDRESS_OR_NIC_EMPTY
 import org.apache.commons.lang3.StringUtils
 import org.slf4j.LoggerFactory
 import java.net.Inet4Address

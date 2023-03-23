@@ -28,12 +28,10 @@
 package com.tencent.devops.process.extends
 
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.pipeline.container.Stage
 import com.tencent.devops.common.pipeline.container.TriggerContainer
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_STAGE_EMPTY
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.extend.DefaultModelCheckPlugin
 import com.tencent.devops.process.pojo.config.JobCommonSettingConfig
@@ -64,11 +62,8 @@ class TencentModelCheckPlugin constructor(
      */
     override fun checkTriggerContainer(stage: Stage) {
         (stage.containers.getOrNull(0) ?: throw ErrorCodeException(
-            defaultMessage = MessageUtil.getMessageByLocale(
-                messageCode = BK_PIPELINE_STAGE_EMPTY,
-                language = I18nUtil.getLanguage()
-            ),
-            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB
+            errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NEED_JOB,
+            language = I18nUtil.getDefaultLocaleLanguage()
         )) as TriggerContainer
     }
 }

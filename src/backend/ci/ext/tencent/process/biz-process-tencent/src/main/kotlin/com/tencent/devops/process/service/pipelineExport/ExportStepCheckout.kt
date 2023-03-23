@@ -39,7 +39,7 @@ object ExportStepCheckout {
         val repo = allInfo.getRepoInfo(allInfo.pipelineInfo.projectId, input.getRepositoryConfig())
         val url = repo?.url ?: input.repositoryName?.ifBlank { null } ?: MessageUtil.getMessageByLocale(
             messageCode = LIMIT_MESSAGE,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         )
 
         val toCheckoutAtom = CheckoutAtomParam(input)

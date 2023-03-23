@@ -1,5 +1,9 @@
 package com.tencent.devops.process.service.pipelineExport
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
+import com.tencent.devops.common.api.constant.I18NConstant.BK_OLD_PLUG_NOT_SUPPORT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_USE_STAGE_AUDIT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLUG_NOT_SUPPORTED
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.container.Container
 import com.tencent.devops.common.pipeline.pojo.element.agent.LinuxScriptElement
@@ -8,10 +12,6 @@ import com.tencent.devops.common.pipeline.pojo.element.agent.WindowsScriptElemen
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildLessAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_FIND_RECOMMENDED_REPLACEMENT_PLUG
-import com.tencent.devops.process.constant.ProcessCode.BK_OLD_PLUG_NOT_SUPPORT
-import com.tencent.devops.process.constant.ProcessCode.BK_PLEASE_USE_STAGE_AUDIT
-import com.tencent.devops.process.constant.ProcessCode.BK_PLUG_NOT_SUPPORTED
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportContext
 import com.tencent.devops.process.pojo.PipelineExportInfo
@@ -264,7 +264,7 @@ object ExportStep {
                             ifFiled = null,
                             uses = "### [${step.name}] " + MessageUtil.getMessageByLocale(
                                 messageCode = BK_PLEASE_USE_STAGE_AUDIT,
-                                language = I18nUtil.getLanguage()
+                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                             ),
                             with = null,
                             timeoutMinutes = null,
@@ -282,11 +282,11 @@ object ExportStep {
                     context.yamlSb.append(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_PLUG_NOT_SUPPORTED,
-                            language = I18nUtil.getLanguage(),
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             params = arrayOf(element.name, element.getClassType())
                         ) + "," + MessageUtil.getMessageByLocale(
                             messageCode = BK_FIND_RECOMMENDED_REPLACEMENT_PLUG,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ) + "\n"
                     )
                     stepList.add(
@@ -296,7 +296,7 @@ object ExportStep {
                             ifFiled = null,
                             uses = "### [${element.name}] " + MessageUtil.getMessageByLocale(
                                 messageCode = BK_OLD_PLUG_NOT_SUPPORT,
-                                language = I18nUtil.getLanguage()
+                                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                             ),
                             with = null,
                             timeoutMinutes = null,

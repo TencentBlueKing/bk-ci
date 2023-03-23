@@ -137,6 +137,17 @@ object ProcessMessageCode {
     const val ERROR_START_BUILD_PROJECT_UNENABLE = "2101080" // 流水线: 已禁用的项目不能启动
     const val ERROR_BUILD_EXPIRED_CANT_RETRY = "2101081" // 构建数据已过期，请使用rebuild进行重试/Please use rebuild
     const val ERROR_PIPELINE_STAGE_REVIEW_VARIABLES_OUT_OF_LENGTH = "2101082" // Stage审核参数{0}超出4000长度限制
+    const val INCORRECT_EXCEL_FORMAT = "2101083" // Excel格式错误，或文件不存在
+    const val ILLEGAL_MAXIMUM_QUEUE_LENGTH = "2101084" // 最大排队时长非法
+    const val ILLEGAL_MAXIMUM_NUMBER = "2101085" // 最大排队数量非法
+    const val TCLS_ENVIRONMENT_MESSAGE = "2101086" // 获取 TCLS 环境失败，请检查用户名密码是否正确，错误信息：
+    const val TCLS_ENVIRONMENT = "2101087" // 获取 TCLS 环境失败，请检查用户名密码是否正确
+    const val USER_NOT_PERMISSION_DOWNLOAD = "2101088" // 用户({0})在工程({1})下没有流水线{2}下载构建权限
+    const val PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST = "2101089" // 公共构建资源池不存在，请检查yml配置.
+    const val FAILED_GET_USER_INFORMATION = "2101090" // 获取用户{0} 信息失败
+
+
+
 
     // 通用参数错误
     const val ERROR_RETRY_3_FAILED = "2101989" // 重试3次失败

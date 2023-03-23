@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BUILD_TRIGGER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PULL_GIT_WAREHOUSE_CODE
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.MessageUtil
@@ -52,8 +54,6 @@ import com.tencent.devops.common.pipeline.pojo.element.trigger.ManualTriggerElem
 import com.tencent.devops.common.pipeline.pojo.git.GitPullMode
 import com.tencent.devops.common.pipeline.type.docker.DockerDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_BUILD_TRIGGER
-import com.tencent.devops.process.constant.ProcessCode.BK_PULL_GIT_WAREHOUSE_CODE
 import com.tencent.devops.process.pojo.pipeline.ExtServiceBuildInitPipelineResp
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
 import com.tencent.devops.store.pojo.dto.ExtServiceBaseInfoDTO

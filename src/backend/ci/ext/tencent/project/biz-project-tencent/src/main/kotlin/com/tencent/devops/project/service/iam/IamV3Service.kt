@@ -45,7 +45,6 @@ import com.tencent.devops.auth.api.ServiceGroupResource
 import com.tencent.devops.auth.api.service.ServiceDeptResource
 import com.tencent.devops.auth.pojo.dto.GroupDTO
 import com.tencent.devops.common.api.exception.ErrorCodeException
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.Watcher
 import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.DefaultGroupType
@@ -53,10 +52,8 @@ import com.tencent.devops.common.auth.api.pojo.ResourceRegisterInfo
 import com.tencent.devops.common.auth.utils.IamGroupUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.utils.LogUtils
-import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_FAILED_GET_USER_INFORMATION
-import com.tencent.devops.project.constant.ProjectMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.FAILED_GET_USER_INFORMATION
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.UserDao
 import com.tencent.devops.project.dispatch.ProjectDispatcher
@@ -148,16 +145,9 @@ class IamV3Service @Autowired constructor(
         val bgName = userDao.get(dslContext, userId)?.bgName!!
         val deptInfo = client.get(ServiceDeptResource::class).getDeptByName(userId, bgName).data
             ?: throw ErrorCodeException(
-                errorCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                defaultMessage = MessageCodeUtil.getCodeLanMessage(
-                    messageCode = ProjectMessageCode.QUERY_USER_INFO_FAIL,
-                    defaultMessage = MessageUtil.getMessageByLocale(
-                        messageCode = BK_FAILED_GET_USER_INFORMATION,
-                        language = I18nUtil.getLanguage(userId),
-                        params = arrayOf(userId)
-                    ),
-                    params = arrayOf(userId)
-                )
+                errorCode = FAILED_GET_USER_INFORMATION,
+                params = arrayOf(userId),
+                language = I18nUtil.getLanguage(userId)
             )
         val bgId = deptInfo.results[0].id
         logger.info("user $userId bg: $bgId bgName: $bgName")

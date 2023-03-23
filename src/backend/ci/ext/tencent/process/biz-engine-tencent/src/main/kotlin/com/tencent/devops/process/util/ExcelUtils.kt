@@ -29,7 +29,7 @@ package com.tencent.devops.process.util
 
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_INCORRECT_EXCEL_FORMAT
+import com.tencent.devops.process.constant.ProcessMessageCode.INCORRECT_EXCEL_FORMAT
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.ss.usermodel.CellType
 import org.apache.poi.ss.usermodel.Workbook
@@ -76,8 +76,8 @@ object ExcelUtils {
             logger.error("Excel format error!", e)
             throw RuntimeException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_INCORRECT_EXCEL_FORMAT,
-                    language = I18nUtil.getLanguage()
+                    messageCode = INCORRECT_EXCEL_FORMAT,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 )
             )
         } finally {

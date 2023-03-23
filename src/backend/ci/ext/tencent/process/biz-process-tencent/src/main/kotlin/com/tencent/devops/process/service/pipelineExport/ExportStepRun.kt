@@ -3,10 +3,8 @@ package com.tencent.devops.process.service.pipelineExport
 import com.fasterxml.jackson.core.type.TypeReference
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.JsonUtil
-import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.pipeline.pojo.element.market.MarketBuildAtomElement
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_VARIABLE_NAME_NOT_UNIQUE
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.pojo.MarketBuildAtomElementWithLocation
 import com.tencent.devops.process.pojo.PipelineExportContext
@@ -220,12 +218,8 @@ object ExportStepRun {
                 throw ErrorCodeException(
                     statusCode = Response.Status.BAD_REQUEST.statusCode,
                     errorCode = ProcessMessageCode.ERROR_EXPORT_OUTPUT_CONFLICT,
-                    defaultMessage = MessageUtil.getMessageByLocale(
-                        messageCode = BK_VARIABLE_NAME_NOT_UNIQUE,
-                        language = I18nUtil.getLanguage(),
-                        params = arrayOf(key)
-                    ) + "$names",
-                    params = arrayOf(key, names.toString())
+                    params = arrayOf(key, names.toString()),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             }
             return

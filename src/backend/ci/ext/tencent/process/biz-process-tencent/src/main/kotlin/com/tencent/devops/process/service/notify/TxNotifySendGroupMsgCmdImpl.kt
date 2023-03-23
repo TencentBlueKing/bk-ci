@@ -28,6 +28,7 @@
 package com.tencent.devops.process.service.notify
 
 import com.tencent.bkrepo.common.api.util.toJsonString
+import com.tencent.devops.common.api.constant.I18NConstant.BK_VIEW_DETAILS
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.common.wechatwork.WechatWorkRobotService
@@ -43,7 +44,6 @@ import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextT
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextTextText
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextView
 import com.tencent.devops.common.wechatwork.model.sendmessage.richtext.RichtextViewLink
-import com.tencent.devops.process.constant.ProcessCode.BK_VIEW_DETAILS
 import com.tencent.devops.process.notify.command.BuildNotifyContext
 import com.tencent.devops.process.notify.command.NotifyCmd
 import org.slf4j.LoggerFactory
@@ -133,7 +133,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
                     RichtextView(
                         RichtextViewLink(text = MessageUtil.getMessageByLocale(
                             messageCode = BK_VIEW_DETAILS,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ), key = detailUrl, browser = 1)
                     )
                 )
@@ -155,7 +155,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             val textContent = if (detailFlag) {
                 "$content\n[" + MessageUtil.getMessageByLocale(
                     messageCode = BK_VIEW_DETAILS,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + "]($detailUrl)"
             } else content
             val msg = RobotMarkdownSendMsg(
@@ -169,7 +169,7 @@ class TxNotifySendGroupMsgCmdImpl @Autowired constructor(
             val textContent = if (detailFlag) {
                 "$content\n\n" + MessageUtil.getMessageByLocale(
                         messageCode = BK_VIEW_DETAILS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 ) + ": $detailUrl"
             } else content
             val msg = RobotTextSendMsg(

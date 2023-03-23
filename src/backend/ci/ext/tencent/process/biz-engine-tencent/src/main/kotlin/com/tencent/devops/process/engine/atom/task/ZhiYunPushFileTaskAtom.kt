@@ -27,6 +27,9 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MATCHING_FILE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_START_UPLOADING_CORRESPONDING_FILES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_UPLOAD_CORRESPONDING_FILE
 import com.tencent.devops.common.api.exception.TaskExecuteException
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
@@ -40,9 +43,6 @@ import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.plugin.api.ServiceZhiyunResource
 import com.tencent.devops.plugin.pojo.zhiyun.ZhiyunUploadParam
-import com.tencent.devops.process.constant.ProcessCode.BK_MATCHING_FILE
-import com.tencent.devops.process.constant.ProcessCode.BK_START_UPLOADING_CORRESPONDING_FILES
-import com.tencent.devops.process.constant.ProcessCode.BK_UPLOAD_CORRESPONDING_FILE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.pojo.PipelineBuildTask

@@ -39,8 +39,8 @@ import com.tencent.devops.common.api.util.OkhttpUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_TCLS_ENVIRONMENT
-import com.tencent.devops.process.constant.ProcessCode.BK_TCLS_ENVIRONMENT_MESSAGE
+import com.tencent.devops.process.constant.ProcessMessageCode.TCLS_ENVIRONMENT
+import com.tencent.devops.process.constant.ProcessMessageCode.TCLS_ENVIRONMENT_MESSAGE
 import com.tencent.devops.process.pojo.third.tcls.TclsEnv
 import com.tencent.devops.process.pojo.third.tcls.TclsType
 import com.tencent.devops.ticket.api.ServiceCredentialResource
@@ -136,7 +136,7 @@ class UserTclsResourceImpl @Autowired constructor(
                     logger.warn("get env list failed: $msg")
                     throw OperationException(
                         MessageUtil.getMessageByLocale(
-                        messageCode = BK_TCLS_ENVIRONMENT_MESSAGE,
+                        messageCode = TCLS_ENVIRONMENT_MESSAGE,
                         language = I18nUtil.getLanguage(userId)
                     ) + "$msg")
                 }
@@ -156,7 +156,7 @@ class UserTclsResourceImpl @Autowired constructor(
                 logger.error("get env list failed", e)
                 throw OperationException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_TCLS_ENVIRONMENT,
+                        messageCode = TCLS_ENVIRONMENT,
                         language = I18nUtil.getLanguage(userId)
                     )
                 )

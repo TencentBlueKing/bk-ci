@@ -52,7 +52,7 @@ import com.tencent.devops.common.pipeline.type.gitci.GitCIDispatchType
 import com.tencent.devops.common.pipeline.type.macos.MacOSDispatchType
 import com.tencent.devops.common.pipeline.type.windows.WindowsDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
+import com.tencent.devops.process.constant.ProcessMessageCode.PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST
 import com.tencent.devops.process.pojo.BuildTemplateAcrossInfo
 import com.tencent.devops.process.yaml.modelCreate.pojo.enums.DispatchBizType
 import com.tencent.devops.process.yaml.utils.StreamDispatchUtils
@@ -271,8 +271,8 @@ object TXStreamDispatchUtils {
         } else {
             throw CustomException(Response.Status.NOT_FOUND,
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
-                    language = I18nUtil.getLanguage()
+                    messageCode = PUBLIC_BUILD_RESOURCE_POOL_NOT_EXIST,
+                    language = I18nUtil.getDefaultLocaleLanguage()
                 ))
         }
     }

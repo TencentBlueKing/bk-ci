@@ -34,6 +34,19 @@ import com.fasterxml.jackson.databind.ser.impl.SimpleFilterProvider
 import com.fasterxml.jackson.dataformat.yaml.YAMLFactory
 import com.fasterxml.jackson.dataformat.yaml.YAMLGenerator
 import com.fasterxml.jackson.module.kotlin.registerKotlinModule
+import com.tencent.devops.common.api.constant.I18NConstant.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ENTER_URL_ADDRESS_IMAGE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPORT_SYSTEM_CREDENTIALS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPORT_TIME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_IDENTIFIED_SENSITIVE_INFORMATION
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_RIGHT_EXPORT_PIPELINE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PARAMETERS_BE_EXPORTED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINED_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINE_NAME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_STREAM_NOT_SUPPORT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_UNKNOWN_CONTEXT_EXISTS
 import com.tencent.devops.common.api.enums.RepositoryConfig
 import com.tencent.devops.common.api.exception.ErrorCodeException
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -49,19 +62,6 @@ import com.tencent.devops.common.pipeline.enums.DockerVersion
 import com.tencent.devops.common.pipeline.type.StoreDispatchType
 import com.tencent.devops.common.pipeline.type.docker.ImageType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_AUTOMATIC_EXPORT_NOT_SUPPORTED_IMAGE
-import com.tencent.devops.process.constant.ProcessCode.BK_ENTER_URL_ADDRESS_IMAGE
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_SYSTEM_CREDENTIALS
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_TIME
-import com.tencent.devops.process.constant.ProcessCode.BK_IDENTIFIED_SENSITIVE_INFORMATION
-import com.tencent.devops.process.constant.ProcessCode.BK_NO_RIGHT_EXPORT_PIPELINE
-import com.tencent.devops.process.constant.ProcessCode.BK_PARAMETERS_BE_EXPORTED
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINED_ID
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_NAME
-import com.tencent.devops.process.constant.ProcessCode.BK_PROJECT_ID
-import com.tencent.devops.process.constant.ProcessCode.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
-import com.tencent.devops.process.constant.ProcessCode.BK_STREAM_NOT_SUPPORT
-import com.tencent.devops.process.constant.ProcessCode.BK_UNKNOWN_CONTEXT_EXISTS
 import com.tencent.devops.process.constant.ProcessMessageCode
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.store.StoreImageHelper
@@ -161,14 +161,14 @@ class TXPipelineExportService @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-                defaultMessage = "流水线不存在",
-                params = arrayOf(pipelineId)
+                params = arrayOf(pipelineId),
+                language = I18nUtil.getLanguage(userId)
             )
 
         val baseModel = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw ErrorCodeException(
             statusCode = Response.Status.BAD_REQUEST.statusCode,
             errorCode = ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS,
-            defaultMessage = "流水线已不存在，请检查"
+            language = I18nUtil.getLanguage(userId)
         )
 
         val pipelineGroupsMap = mutableMapOf<String, String>()
@@ -326,60 +326,60 @@ class TXPipelineExportService @Autowired constructor(
         yamlSb.append(
             MessageUtil.getMessageByLocale(
             messageCode = BK_PROJECT_ID,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + " $projectId \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
             messageCode = BK_PIPELINED_ID,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ) + " $pipelineId \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_PIPELINE_NAME,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) + " ${model.name} \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_EXPORT_TIME,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) + " ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_EXPORT_SYSTEM_CREDENTIALS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         if (isGitCI) {
             yamlSb.append(
                 MessageUtil.getMessageByLocale(
                     messageCode = BK_STREAM_NOT_SUPPORT,
-                    language = I18nUtil.getLanguage()
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                 )
             )
         }
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_PARAMETERS_BE_EXPORTED,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_IDENTIFIED_SENSITIVE_INFORMATION,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_UNKNOWN_CONTEXT_EXISTS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         )
         yamlSb.append(

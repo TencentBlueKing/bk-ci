@@ -33,8 +33,8 @@ import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.web.RestResource
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_ILLEGAL_MAXIMUM_NUMBER
-import com.tencent.devops.process.constant.ProcessCode.BK_ILLEGAL_MAXIMUM_QUEUE_LENGTH
+import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_MAXIMUM_NUMBER
+import com.tencent.devops.process.constant.ProcessMessageCode.ILLEGAL_MAXIMUM_QUEUE_LENGTH
 import com.tencent.devops.process.pojo.setting.PipelineRunLockType
 import com.tencent.devops.process.pojo.setting.PipelineSetting
 import com.tencent.devops.process.service.DockerBuildService
@@ -93,8 +93,8 @@ class TXUserPipelineResourceImpl @Autowired constructor(
             ) {
                 throw InvalidParamException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_ILLEGAL_MAXIMUM_QUEUE_LENGTH,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ILLEGAL_MAXIMUM_QUEUE_LENGTH,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }
@@ -103,8 +103,8 @@ class TXUserPipelineResourceImpl @Autowired constructor(
             ) {
                 throw InvalidParamException(
                     MessageUtil.getMessageByLocale(
-                        messageCode = BK_ILLEGAL_MAXIMUM_NUMBER,
-                        language = I18nUtil.getLanguage()
+                        messageCode = ILLEGAL_MAXIMUM_NUMBER,
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     )
                 )
             }

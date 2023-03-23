@@ -27,6 +27,12 @@
 
 package com.tencent.devops.process.engine.atom.task
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_INVALID_NOTIFICATION_RECIPIENT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MOBILE_VIEW_DETAILS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_WECOM_CONTENT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_WECOM_CONTENT_FAILED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEND_WECOM_CONTENT_SUCCESSFULLY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_WECOM_NOTICE
 import com.tencent.devops.common.api.pojo.ErrorCode
 import com.tencent.devops.common.api.pojo.ErrorType
 import com.tencent.devops.common.api.util.JsonUtil
@@ -40,12 +46,6 @@ import com.tencent.devops.common.service.utils.HomeHostUtil
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.notify.api.service.ServiceNotifyResource
 import com.tencent.devops.notify.pojo.WechatNotifyMessage
-import com.tencent.devops.process.constant.ProcessCode.BK_INVALID_NOTIFICATION_RECIPIENT
-import com.tencent.devops.process.constant.ProcessCode.BK_MOBILE_VIEW_DETAILS
-import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT
-import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT_FAILED
-import com.tencent.devops.process.constant.ProcessCode.BK_SEND_WECOM_CONTENT_SUCCESSFULLY
-import com.tencent.devops.process.constant.ProcessCode.BK_WECOM_NOTICE
 import com.tencent.devops.process.engine.atom.AtomResponse
 import com.tencent.devops.process.engine.atom.IAtomTask
 import com.tencent.devops.process.engine.atom.defaultFailAtomResponse
@@ -148,8 +148,8 @@ class WechatTaskAtom @Autowired constructor(
                 buildLogPrinter.addRedLine(buildId, MessageUtil.getMessageByLocale(
                     messageCode = BK_SEND_WECOM_CONTENT_FAILED,
                     language = I18nUtil.getLanguage(),
-                    params = arrayOf(message.body, receiversStr, resp.message.toString())
-                ), taskId, task.containerHashId, task.executeCount ?: 1)
+                    params = arrayOf(message.body, receiversStr)
+                ) + "${resp.message}", taskId, task.containerHashId, task.executeCount ?: 1)
                 return false
             }
         }).tryDoIt()

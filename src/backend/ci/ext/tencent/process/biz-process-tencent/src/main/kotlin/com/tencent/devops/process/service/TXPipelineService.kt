@@ -29,6 +29,30 @@ package com.tencent.devops.process.service
 
 import com.fasterxml.jackson.core.type.TypeReference
 import com.fasterxml.jackson.databind.ObjectMapper
+import com.tencent.devops.common.api.constant.I18NConstant.BK_BEE_CI_NOT_SUPPORT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CHECK_INTEGRITY_YAML
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CHECK_OPERATING_SYSTEM_CORRECT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CHECK_POOL_FIELD
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_CONTACT_PLUG_DEVELOPER
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPORT
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPORT_SYSTEM_CREDENTIALS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_EXPORT_TIME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_MODIFICATION_GUIDELINES
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NOT_CONFIRMED_CAN_EXECUTED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NOT_EXIST_UNDER_NEW_BUSINESS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_NO_RIGHT_EXPORT_PIPELINE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_ONLY_VISIBLE_PCG_BUSINESS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINED_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PIPELINE_NAME
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLEASE_MANUALLY_MODIFY
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PLUG_NOT_SUPPORTED
+import com.tencent.devops.common.api.constant.I18NConstant.BK_PROJECT_ID
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SEARCH_STORE
+import com.tencent.devops.common.api.constant.I18NConstant.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
+import com.tencent.devops.common.api.constant.I18NConstant.BK_WORKER_BEE_CI_NOT_SUPPORT
 import com.tencent.devops.common.api.exception.CustomException
 import com.tencent.devops.common.api.model.SQLLimit
 import com.tencent.devops.common.api.util.DateTimeUtil
@@ -80,31 +104,7 @@ import com.tencent.devops.common.pipeline.type.pcg.PCGDispatchType
 import com.tencent.devops.common.web.utils.I18nUtil
 import com.tencent.devops.environment.api.thirdPartyAgent.ServiceThirdPartyAgentResource
 import com.tencent.devops.process.api.quality.pojo.PipelineListRequest
-import com.tencent.devops.process.constant.ProcessCode
-import com.tencent.devops.process.constant.ProcessCode.BK_BEE_CI_NOT_SUPPORT
-import com.tencent.devops.process.constant.ProcessCode.BK_CHECK_INTEGRITY_YAML
-import com.tencent.devops.process.constant.ProcessCode.BK_CHECK_OPERATING_SYSTEM_CORRECT
-import com.tencent.devops.process.constant.ProcessCode.BK_CHECK_POOL_FIELD
-import com.tencent.devops.process.constant.ProcessCode.BK_CONSTRUCTION_MACHINE_NOT_SUPPORTED
-import com.tencent.devops.process.constant.ProcessCode.BK_CONTACT_PLUG_DEVELOPER
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_SYSTEM_CREDENTIALS
-import com.tencent.devops.process.constant.ProcessCode.BK_EXPORT_TIME
-import com.tencent.devops.process.constant.ProcessCode.BK_MODIFICATION_GUIDELINES
-import com.tencent.devops.process.constant.ProcessCode.BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS
-import com.tencent.devops.process.constant.ProcessCode.BK_NOT_CONFIRMED_CAN_EXECUTED
-import com.tencent.devops.process.constant.ProcessCode.BK_NOT_EXIST_UNDER_NEW_BUSINESS
-import com.tencent.devops.process.constant.ProcessCode.BK_NOT_SUPPORT_CURRENT_CONSTRUCTION_MACHINE
-import com.tencent.devops.process.constant.ProcessCode.BK_NO_RIGHT_EXPORT_PIPELINE
-import com.tencent.devops.process.constant.ProcessCode.BK_ONLY_VISIBLE_PCG_BUSINESS
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINED_ID
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_NAME
-import com.tencent.devops.process.constant.ProcessCode.BK_PLEASE_MANUALLY_MODIFY
-import com.tencent.devops.process.constant.ProcessCode.BK_PLUG_NOT_SUPPORTED
-import com.tencent.devops.process.constant.ProcessCode.BK_PROJECT_ID
-import com.tencent.devops.process.constant.ProcessCode.BK_SEARCH_STORE
-import com.tencent.devops.process.constant.ProcessCode.BK_SENSITIVE_INFORMATION_IN_PARAMETERS
-import com.tencent.devops.process.constant.ProcessCode.BK_WORKER_BEE_CI_NOT_SUPPORT
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.service.PipelineRepositoryService
 import com.tencent.devops.process.engine.service.PipelineRuntimeService
 import com.tencent.devops.process.jmx.api.ProcessJmxApi
@@ -466,11 +466,11 @@ class TXPipelineService @Autowired constructor(
             val gitCINotSupportTip =
                 "# ======== " + MessageUtil.getMessageByLocale(
                     messageCode = BK_NOT_CONFIRMED_CAN_EXECUTED,
-                    language = I18nUtil.getLanguage(),
+                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                     params = arrayOf(it.name)
                 ) + MessageUtil.getMessageByLocale(
                             messageCode = BK_CONTACT_PLUG_DEVELOPER,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         ) + "（https://iwiki.woa.com/x/CqARHg） ======== "
             when (it.getClassType()) {
                 LinuxScriptElement.classType -> {
@@ -605,11 +605,11 @@ class TXPipelineService @Autowired constructor(
                     comment.append(
                         MessageUtil.getMessageByLocale(
                             messageCode = BK_PLUG_NOT_SUPPORTED,
-                            language = I18nUtil.getLanguage(),
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                             params = arrayOf(it.name, it.getClassType())
                         ) + "！" + MessageUtil.getMessageByLocale(
                             messageCode = BK_CHECK_INTEGRITY_YAML,
-                            language = I18nUtil.getLanguage()
+                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                         )+ "。\n"
                     )
                     if (isGitCI) {
@@ -623,11 +623,11 @@ class TXPipelineService @Autowired constructor(
                                 task,
                                 "# ======== " + MessageUtil.getMessageByLocale(
                                     messageCode = BK_BEE_CI_NOT_SUPPORT,
-                                    language = I18nUtil.getLanguage()
+                                    language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                 ) + " ${it.name} ，" +
                                         MessageUtil.getMessageByLocale(
                                             messageCode = BK_SEARCH_STORE,
-                                            language = I18nUtil.getLanguage()
+                                            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                                         ) + " ======== \n ${it.getClassType()}@latest",
                                 toYamlStr(task)
                             )
@@ -748,11 +748,11 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_NOT_EXIST_UNDER_NEW_BUSINESS,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_AGENT_ENV.value, dispatchType.value)
             ) + MessageUtil.getMessageByLocale(
                         messageCode = BK_CHECK_OPERATING_SYSTEM_CORRECT,
-                        language = I18nUtil.getLanguage()
+                        language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
                     ) + "! \n"
         )
         return if (dispatchType is ThirdPartyAgentEnvDispatchType) {
@@ -813,11 +813,11 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_NODE_NOT_EXIST_UNDER_NEW_BUSINESS,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_AGENT_ID.value, dispatchType.value)
             ) + MessageUtil.getMessageByLocale(
                 messageCode = BK_PLEASE_MANUALLY_MODIFY,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             ) + "！ \n"
         )
         return if (dispatchType is ThirdPartyAgentIDDispatchType) {
@@ -875,7 +875,7 @@ class TXPipelineService @Autowired constructor(
         comment.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_ONLY_VISIBLE_PCG_BUSINESS,
-                language = I18nUtil.getLanguage(),
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
                 params = arrayOf(BuildType.THIRD_PARTY_PCG.value)
             ))
         return if (dispatchType is PCGDispatchType) {
@@ -1177,7 +1177,7 @@ class TXPipelineService @Autowired constructor(
         val model = pipelineRepositoryService.getModel(projectId, pipelineId) ?: throw CustomException(
             Response.Status.BAD_REQUEST,
             MessageUtil.getMessageByLocale(
-                messageCode = ProcessCode.BK_PIPELINE_NOT_EXIST,
+                messageCode = ERROR_PIPELINE_NOT_EXISTS,
                 language = I18nUtil.getLanguage(userId)
             ) + "！"
         )
@@ -1187,34 +1187,34 @@ class TXPipelineService @Autowired constructor(
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_PROJECT_ID,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             ) + " $projectId \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_PIPELINED_ID,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             ) + " $pipelineId \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_PIPELINE_NAME,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             ) + " ${model.name} \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_EXPORT_TIME,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             ) + " ${DateTimeUtil.toDateTime(LocalDateTime.now())} \n")
         yamlSb.append("# \n")
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_EXPORT_SYSTEM_CREDENTIALS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             )
         )
         yamlSb.append(
             MessageUtil.getMessageByLocale(
                 messageCode = BK_SENSITIVE_INFORMATION_IN_PARAMETERS,
-                language = I18nUtil.getLanguage()
+                language = I18nUtil.getLanguage(userId)
             )
         )
         if (isGitCI) {

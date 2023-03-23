@@ -37,7 +37,7 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_USER_NOT_PERMISSION_DOWNLOAD
+import com.tencent.devops.process.constant.ProcessMessageCode.USER_NOT_PERMISSION_DOWNLOAD
 import com.tencent.devops.process.pojo.ipt.IptBuildArtifactoryInfo
 import com.tencent.devops.repository.api.ServiceGitCommitResource
 import org.slf4j.LoggerFactory
@@ -90,7 +90,7 @@ class IptRepoService @Autowired constructor(
         )
         if (!result) throw PermissionForbiddenException(
             MessageUtil.getMessageByLocale(
-                messageCode = BK_USER_NOT_PERMISSION_DOWNLOAD,
+                messageCode = USER_NOT_PERMISSION_DOWNLOAD,
                 language = I18nUtil.getLanguage(userId),
                 params = arrayOf(userId, projectId, pipelineId)
             )

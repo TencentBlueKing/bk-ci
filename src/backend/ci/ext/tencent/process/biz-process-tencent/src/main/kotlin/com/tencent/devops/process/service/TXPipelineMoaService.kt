@@ -27,6 +27,8 @@
 
 package com.tencent.devops.process.service
 
+import com.tencent.devops.common.api.constant.I18NConstant.BK_QUICK_APPROVAL_MOA
+import com.tencent.devops.common.api.constant.I18NConstant.BK_QUICK_APPROVAL_PC
 import com.tencent.devops.common.api.pojo.Result
 import com.tencent.devops.common.api.util.MessageUtil
 import com.tencent.devops.common.api.util.ShaUtils
@@ -35,8 +37,6 @@ import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.pipeline.enums.ManualReviewAction
 import com.tencent.devops.common.pipeline.pojo.element.atom.ManualReviewParamType
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_QUICK_APPROVAL_MOA
-import com.tencent.devops.process.constant.ProcessCode.BK_QUICK_APPROVAL_PC
 import com.tencent.devops.process.engine.service.PipelineTaskService
 import com.tencent.devops.process.pojo.pipeline.ExtServiceMoaWorkItemReq
 import com.tencent.devops.process.service.builds.PipelineBuildFacadeService
@@ -61,11 +61,11 @@ class TXPipelineMoaService @Autowired constructor(
     private val ignoredMoaMessage = listOf(
         MessageUtil.getMessageByLocale(
             messageCode = BK_QUICK_APPROVAL_MOA,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ),
         MessageUtil.getMessageByLocale(
             messageCode = BK_QUICK_APPROVAL_PC,
-            language = I18nUtil.getLanguage()
+            language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
         ))
 
     /**

@@ -39,9 +39,8 @@ import com.tencent.devops.common.auth.api.AuthResourceType
 import com.tencent.devops.common.auth.api.pojo.BkAuthGroup
 import com.tencent.devops.common.auth.code.BSPipelineAuthServiceCode
 import com.tencent.devops.common.web.utils.I18nUtil
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_CHOREOGRAPHY_NOT_EXIST
-import com.tencent.devops.process.constant.ProcessCode.BK_PIPELINE_NOT_EXIST
 import com.tencent.devops.process.constant.ProcessMessageCode
+import com.tencent.devops.process.constant.ProcessMessageCode.ERROR_PIPELINE_NOT_EXISTS
 import com.tencent.devops.process.engine.dao.PipelineInfoDao
 import org.jooq.DSLContext
 import org.springframework.beans.factory.annotation.Autowired
@@ -120,7 +119,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
         if (iamId.isNullOrEmpty()) {
             throw PermissionForbiddenException(
                 MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_NOT_EXIST,
+                    messageCode = ERROR_PIPELINE_NOT_EXISTS,
                     language = I18nUtil.getLanguage(userId)
                 )
             )
@@ -202,10 +201,7 @@ class V3PipelinePermissionServiceImpl @Autowired constructor(
             ?: throw ErrorCodeException(
                 statusCode = Response.Status.NOT_FOUND.statusCode,
                 errorCode = ProcessMessageCode.ERROR_PIPELINE_MODEL_NOT_EXISTS,
-                defaultMessage = MessageUtil.getMessageByLocale(
-                    messageCode = BK_PIPELINE_CHOREOGRAPHY_NOT_EXIST,
-                    language = I18nUtil.getLanguage()
-                )
+                language = I18nUtil.getLanguage(I18nUtil.getRequestUserId())
             )
         return pipelineInfo.id.toString()
     }
