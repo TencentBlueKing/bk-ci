@@ -11,10 +11,9 @@ import bkui from 'bkui-vue';
 import 'bkui-vue/dist/style.css';
 
 // 引入权限指令相关资源
-import { handleProjectManageNoPermission } from './utils/permission'
-import ajax from './http/fetch/index'
-import { AuthorityDirectiveV3 } from '../../common-lib/permission/authority-directive'
-import { bkTooltips } from 'bkui-vue/lib/directives';
+import { handleProjectManageNoPermission } from './utils/permission';
+import { PermissionDirective } from 'bk-permission';
+import 'bk-permission/dist/style.css';
 
 // i18n
 import { getCookies } from './common/util';
@@ -39,6 +38,6 @@ app
   .use(createPinia())
   .use(bkui)
   .use(i18n)
-  .use(AuthorityDirectiveV3(handleProjectManageNoPermission, ajax))
+  .use(PermissionDirective(handleProjectManageNoPermission))
   .mount('.app');
 app.directive('bk-tooltips', bkTooltips)

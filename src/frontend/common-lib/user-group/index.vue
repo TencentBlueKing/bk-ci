@@ -17,6 +17,7 @@
                         @update-enable="handelUpdateEnable"
                     />
                     <iam-iframe
+                        v-bkloading="{ isLoading: !path }"
                         class="group-frame"
                         :path="path"
                     />

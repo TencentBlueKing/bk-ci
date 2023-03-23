@@ -15,10 +15,12 @@
             @create-group="handleCreateGroup"
             @update-enable="handelUpdateEnable"
           />
-          <iam-iframe
-            class="group-frame"
-            :path="path"
-          />
+          <bk-loading :loading="!path">
+            <iam-iframe
+              class="group-frame"
+              :path="path"
+            />
+          </bk-loading>
         </div>
         <!-- 项目维度 -> 无权限 -->
         <no-permission

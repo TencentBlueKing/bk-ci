@@ -8,7 +8,6 @@
         :is-loading="isLoading"
         :is-open-manage-loading="isOpenManageLoading"
         :member-group-list="memberGroupList"
-        :iam-iframe-path="iamIframePath"
         :has-permission="hasPermission"
         :is-enable-permission="isEnablePermission"
         :open-manage="handleOpenManage"
@@ -31,7 +30,6 @@
             return {
                 hasPermission: false,
                 isEnablePermission: false,
-                iamIframePath: 'user-group-detail/29912',
                 resourceType: 'pipeline_group',
                 groupList: [],
                 memberGroupList: [],

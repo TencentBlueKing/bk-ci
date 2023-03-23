@@ -1,17 +1,16 @@
-import ajax from '../http/fetch/index';
 import * as BKUI from 'bkui-vue';
 import {
     AngleDown
 } from 'bkui-vue/lib/icon';
 import {
-    handleNoPermissionV3
-} from '../../../common-lib/permission/permission';
+    handleNoPermission
+} from 'bk-permission';
 import {
     h
 } from 'vue';
 
 export const handleProjectManageNoPermission = (query) => {
-    return handleNoPermissionV3(
+    return handleNoPermission(
         {
             AngleDown,
             ...BKUI
@@ -20,7 +19,6 @@ export const handleProjectManageNoPermission = (query) => {
             resourceType: 'project',
             ...query
         },
-        ajax,
         h
     );
 };
