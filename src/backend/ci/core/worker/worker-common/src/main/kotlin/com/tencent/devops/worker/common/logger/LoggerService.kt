@@ -32,6 +32,8 @@ import com.tencent.devops.common.log.pojo.enums.LogStorageMode
 import com.tencent.devops.common.log.pojo.enums.LogType
 import com.tencent.devops.common.log.pojo.message.LogMessage
 import com.tencent.devops.common.service.utils.CommonUtils
+import com.tencent.devops.common.service.utils.ZipUtil
+import com.tencent.devops.common.util.HttpRetryUtils
 import com.tencent.devops.log.meta.Ansi
 import com.tencent.devops.process.pojo.BuildVariables
 import com.tencent.devops.process.utils.PIPELINE_START_USER_ID
@@ -49,10 +51,9 @@ import com.tencent.devops.worker.common.api.archive.pojo.TokenType
 import com.tencent.devops.worker.common.api.log.LogSDKApi
 import com.tencent.devops.worker.common.env.AgentEnv
 import com.tencent.devops.worker.common.service.RepoServiceFactory
+import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.ArchiveUtils
 import com.tencent.devops.worker.common.utils.FileUtils
-import com.tencent.devops.common.util.HttpRetryUtils
-import com.tencent.devops.worker.common.service.SensitiveValueService
 import com.tencent.devops.worker.common.utils.WorkspaceUtils
 import org.slf4j.LoggerFactory
 import java.io.File
@@ -345,15 +346,6 @@ object LoggerService {
                 // 如果不是LOCAL状态直接跳过
                 if (property.logStorageMode != LogStorageMode.LOCAL) return@forEach
 
-                // 如果日志文件过大，则取消归档
-                if (property.logFile.length() > LOG_FILE_LENGTH_LIMIT) {
-                    logger.warn(
-                        "Cancel archiving task[$elementId] build log " +
-                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
-                    )
-                    return@forEach
-                }
-
                 if (!property.logFile.exists()) {
                     logger.warn(
                         "Cancel archiving task[$elementId] build log " +
@@ -362,6 +354,15 @@ object LoggerService {
                     return@forEach
                 }
 
+                val zipLog = ZipUtil.zipDir(property.logFile, property.logFile.absolutePath + ".zip")
+                // 如果日志文件过大，则取消归档
+                if (zipLog.length() > LOG_FILE_LENGTH_LIMIT) {
+                    logger.warn(
+                        "Cancel archiving task[$elementId] build log " +
+                            "file(${property.logFile.absolutePath}), length(${property.logFile.length()})"
+                    )
+                    return@forEach
+                }
                 // 开始归档符合归档条件的日志文件
                 logger.info("Archive task[$elementId] build log file(${property.logFile.absolutePath})")
                 try {
@@ -370,8 +371,8 @@ object LoggerService {
                         retryPeriodMills = 1000
                     ) {
                         ArchiveUtils.archiveLogFile(
-                            file = property.logFile,
-                            destFullPath = property.childPath,
+                            file = zipLog,
+                            destFullPath = property.childZipPath,
                             buildVariables = buildVariables!!,
                             token = token
                         )
