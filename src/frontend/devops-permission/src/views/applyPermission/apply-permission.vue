@@ -194,6 +194,19 @@ const getProjectByName = () => {
     curProject.value = res.records[0];
   })
 }
+
+const handleToProjectManage = (project) => {
+  const { routerTag, englishName } = project;
+  switch (routerTag) {
+    case 'v0':
+        window.open(`/console/perm/apply-join-project?project_code=${englishName}`)
+        break
+    case 'v3':
+        window.open(`${window.BK_IAM_URL_PREFIX}/apply-join-user-group`)
+        break
+  }
+}
+
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
   formData.value.projectCode = route?.query.project_code || '';
@@ -230,9 +243,21 @@ onMounted(() => {
                   v-for="(project, index) in projectList"
                   :key="index"
                   :value="project.englishName"
-                  :disabled="project.routerTag !== 'rbac'"
+                  :disabled="['v0', 'v3'].includes(project.routerTag)"
                   :label="project.projectName"
-              />
+              >
+                <div
+                  class="option-item">
+                  {{ project.projectName }}
+                  <i
+                    v-if="['v0', 'v3'].includes(project.routerTag)"
+                    v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
+                    class="permission-icon permission-icon-edit edit-icon"
+                    @click="handleToProjectManage(project)"
+                  >
+                  </i>
+                </div>
+              </bk-option>
             </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('选择用户组')" required>
@@ -402,6 +427,22 @@ onMounted(() => {
       cursor: pointer;
       color: #989ca7;
       font-size: 16px;
+    }
+  }
+  .option-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &:hover {
+      .edit-icon {
+        display: block;
+      }
+    }
+    .edit-icon {
+      display: none;
+      color: blue;
+      cursor: pointer;
     }
   }
 </style>

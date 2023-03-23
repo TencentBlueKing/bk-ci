@@ -8,6 +8,7 @@ import './css/index.css';
 import bkui from 'bkui-vue';
 // 全量引入 bkui-vue 样式
 import 'bkui-vue/dist/style.css';
+import { bkTooltips } from 'bkui-vue/lib/directives';
 
 // i18n
 import { getCookies } from './common/util';
@@ -27,8 +28,10 @@ const i18n = createI18n({
 });
 
 const app = createApp(App)
+app
   .use(router)
   .use(createPinia())
   .use(bkui)
   .use(i18n)
   .mount('.app');
+app.directive('bk-tooltips', bkTooltips)
