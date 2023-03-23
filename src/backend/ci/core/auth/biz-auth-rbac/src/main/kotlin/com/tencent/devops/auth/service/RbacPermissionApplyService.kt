@@ -36,7 +36,7 @@ import com.tencent.devops.common.auth.utils.RbacAuthUtils
 import com.tencent.devops.common.client.Client
 import com.tencent.devops.common.service.config.CommonConfig
 import com.tencent.devops.process.api.user.UserPipelineViewResource
-import com.tencent.devops.project.api.service.ServiceProjectResource
+import com.tencent.devops.project.api.service.ServiceProjectTagResource
 import org.jooq.DSLContext
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
@@ -174,15 +174,10 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun verifyProjectRouterTag(projectId: String) {
-        val dbProjectInfo = client.get(ServiceProjectResource::class)
-            .get(projectId).data ?: throw ErrorCodeException(
-            errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
-            params = arrayOf(projectId),
-            defaultMessage = "the project not exists, projectCode:$projectId"
-        )
-        val routerTag = dbProjectInfo.routerTag
+        val routerTag = client.get(ServiceProjectTagResource::class)
+            .getProjectRouterTag(projectId).data
         // 校验项目是否为RBAC,若不是，则抛出异常
-        if (routerTag.isNullOrBlank() || !routerTag.contains("rbac")) {
+        if (routerTag != null && !routerTag.contains(RBAC_PERMISSION_CENTER)) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_PROJECT_NOT_UPGRADE,
                 params = arrayOf(projectId),
@@ -504,5 +499,6 @@ class RbacPermissionApplyService @Autowired constructor(
 
     companion object {
         private val logger = LoggerFactory.getLogger(GroupUserService::class.java)
+        private const val RBAC_PERMISSION_CENTER = "rbac"
     }
 }
