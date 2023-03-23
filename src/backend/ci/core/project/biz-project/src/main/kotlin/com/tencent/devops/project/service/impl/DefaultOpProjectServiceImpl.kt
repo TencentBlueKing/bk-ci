@@ -29,11 +29,11 @@ package com.tencent.devops.project.service.impl
 
 import com.tencent.devops.common.api.exception.OperationException
 import com.tencent.devops.common.api.util.timestampmilli
+import com.tencent.devops.common.event.dispatcher.SampleEventDispatcher
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.project.SECRECY_PROJECT_REDIS_KEY
 import com.tencent.devops.project.dao.ProjectDao
 import com.tencent.devops.project.dao.ProjectLabelRelDao
-import com.tencent.devops.project.dispatch.ProjectDispatcher
 import com.tencent.devops.project.pojo.OpProjectUpdateInfoRequest
 import com.tencent.devops.project.pojo.ProjectProperties
 import com.tencent.devops.project.pojo.ProjectUpdateInfo
@@ -50,7 +50,7 @@ class DefaultOpProjectServiceImpl @Autowired constructor(
     private val dslContext: DSLContext,
     private val projectDao: ProjectDao,
     private val projectLabelRelDao: ProjectLabelRelDao,
-    private val projectDispatcher: ProjectDispatcher,
+    private val projectDispatcher: SampleEventDispatcher,
     private val redisOperation: RedisOperation
 ) : AbsOpProjectServiceImpl(
     dslContext = dslContext,

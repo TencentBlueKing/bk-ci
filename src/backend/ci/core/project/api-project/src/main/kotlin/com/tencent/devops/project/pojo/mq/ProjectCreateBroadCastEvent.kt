@@ -27,11 +27,11 @@
 
 package com.tencent.devops.project.pojo.mq
 
-import com.tencent.devops.common.event.annotation.RabbitEvent
-import com.tencent.devops.common.event.dispatcher.pipeline.mq.MQ
+import com.tencent.devops.common.event.annotation.Event
+import com.tencent.devops.common.stream.constants.StreamBinding
 import com.tencent.devops.project.pojo.ProjectCreateInfo
 
-@RabbitEvent(exchange = MQ.EXCHANGE_PROJECT_CREATE_FANOUT)
+@Event(destination = StreamBinding.EXCHANGE_PROJECT_CREATE_FANOUT)
 data class ProjectCreateBroadCastEvent(
     override val userId: String,
     override val projectId: String,
