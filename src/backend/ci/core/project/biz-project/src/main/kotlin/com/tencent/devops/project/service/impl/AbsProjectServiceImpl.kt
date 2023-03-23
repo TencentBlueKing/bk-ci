@@ -567,8 +567,8 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
                     projectName = it.value1(),
                     englishName = it.value2(),
                     permission = hasVisitPermissionProjectIds.contains(it.value2()),
-                    // todo routerTag 的处理还存在问题，得进一步修正
-                    routerTag = getRouterTag(it.value3())
+                    // todo routerTag 是灰度的项目，跳转去哪里申请权限
+                    routerTag = buildRouterTag(it.value3())
                 )
             )
         }
@@ -1045,7 +1045,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         projectCode: String
     )
 
-    abstract fun getRouterTag(routerTag: String?): String
+    abstract fun buildRouterTag(routerTag: String?): String?
 
     companion object {
         const val MAX_PROJECT_NAME_LENGTH = 64
@@ -1054,6 +1054,7 @@ abstract class AbsProjectServiceImpl @Autowired constructor(
         private const val ALL_MEMBERS = "*"
         private const val ALL_MEMBERS_NAME = "全体成员"
         private const val FIRST_PAGE = 1
+
         // 项目tips默认展示时间
         private const val DEFAULT_TIPS_SHOW_TIME = 7
     }

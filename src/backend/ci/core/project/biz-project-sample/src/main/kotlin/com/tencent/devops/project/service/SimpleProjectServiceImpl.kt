@@ -165,9 +165,12 @@ abstract class SimpleProjectServiceImpl @Autowired constructor(
         return true
     }
 
-    override fun getRouterTag(routerTag: String?): String {
+    override fun getProjectRouteTag(userId: String, projectId: String): String? = buildRouterTag(projectId)
+
+    override fun buildRouterTag(routerTag: String?): String? {
         return RBAC_PERMISSION_CENTER
     }
+
 
     companion object {
         private val logger = LoggerFactory.getLogger(SimpleProjectServiceImpl::class.java)

@@ -218,4 +218,6 @@ interface ProjectService {
     fun cancelCreateProject(userId: String, projectId: String): Boolean
 
     fun cancelUpdateProject(userId: String, projectId: String): Boolean
+
+    fun getProjectRouteTag(userId: String, projectId: String): String?
 }
