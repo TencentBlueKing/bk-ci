@@ -33,6 +33,7 @@ import com.tencent.devops.artifactory.service.bkrepo.BkRepoDownloadService
 import com.tencent.devops.artifactory.service.bkrepo.BkRepoService
 import com.tencent.devops.artifactory.service.bkrepo.GitCIBkRepoDownloadService
 import com.tencent.devops.artifactory.service.permission.DefaultPipelineServiceImpl
+import com.tencent.devops.artifactory.service.permission.RbacArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.StreamArtPipelineServiceImpl
 import com.tencent.devops.artifactory.service.permission.TxV3ArtPipelineServiceImpl
 import com.tencent.devops.common.archive.client.BkRepoClient
@@ -118,4 +119,11 @@ class ArtifactoryTencentServiceConfig {
         client: Client,
         tokenCheckService: ClientTokenService
     ) = TxV3ArtPipelineServiceImpl(client, tokenCheckService)
+
+    @Bean
+    @ConditionalOnProperty(prefix = "auth", name = ["idProvider"], havingValue = "rbac")
+    fun rbacArtPipelineServiceImpl(
+        client: Client,
+        tokenCheckService: ClientTokenService
+    ) = RbacArtPipelineServiceImpl(client, tokenCheckService)
 }
