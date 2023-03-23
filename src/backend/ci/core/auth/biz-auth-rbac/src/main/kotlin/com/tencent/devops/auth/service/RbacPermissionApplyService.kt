@@ -174,14 +174,15 @@ class RbacPermissionApplyService @Autowired constructor(
     }
 
     private fun verifyProjectRouterTag(projectId: String) {
-        val routerTag = client.get(ServiceProjectResource::class)
-            .get(projectId).data?.routerTag ?: throw ErrorCodeException(
+        val dbProjectInfo = client.get(ServiceProjectResource::class)
+            .get(projectId).data ?: throw ErrorCodeException(
             errorCode = AuthMessageCode.RESOURCE_NOT_FOUND,
             params = arrayOf(projectId),
             defaultMessage = "the project not exists, projectCode:$projectId"
         )
+        val routerTag = dbProjectInfo.routerTag
         // 校验项目是否为RBAC,若不是，则抛出异常
-        if (routerTag.isBlank() || !routerTag.contains("rbac")) {
+        if (routerTag.isNullOrBlank() || !routerTag.contains("rbac")) {
             throw ErrorCodeException(
                 errorCode = AuthMessageCode.ERROR_PROJECT_NOT_UPGRADE,
                 params = arrayOf(projectId),
