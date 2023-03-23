@@ -16,7 +16,7 @@ metadata:
   {{- end }}
 spec:
   scaleTargetRef:
-    apiVersion: {{ include "common.capabilities.stateful.apiVersion" . }}
+    apiVersion: {{ include "common.capabilities.statefulset.apiVersion" . }}
     kind: StatefulSet
     name: {{ include "bkci.names.fullname" . }}-websocket
   minReplicas: {{ .Values.websocket.autoscaling.minReplicas }}
