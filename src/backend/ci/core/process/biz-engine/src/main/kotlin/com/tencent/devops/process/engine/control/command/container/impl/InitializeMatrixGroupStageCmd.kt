@@ -292,7 +292,10 @@ class InitializeMatrixGroupStageCmd(
                         baseOS = customBaseOS ?: modelContainer.baseOS,
                         vmNames = modelContainer.vmNames,
                         dockerBuildVersion = modelContainer.dockerBuildVersion,
-                        dispatchType = customDispatchType ?: modelContainer.dispatchType,
+                        dispatchType = customDispatchType ?: modelContainer.dispatchType?.let { itd ->
+                            itd.replaceVariable(allContext) // 只处理${{matrix.xxx}}, 其余在DispatchVMStartupTaskAtom处理
+                            itd
+                        },
                         buildEnv = customBuildEnv ?: modelContainer.buildEnv,
                         thirdPartyAgentId = modelContainer.thirdPartyAgentId?.let { self ->
                             EnvReplacementParser.parse(self, allContext, asCodeEnabled, contextPair)
@@ -540,7 +543,7 @@ class InitializeMatrixGroupStageCmd(
             matrixGroupId = matrixGroupId,
             executeCount = parentContainer.executeCount,
             buildStatus = commandContext.buildStatus,
-            controlOption = parentContainer.controlOption!!.copy(matrixControlOption = matrixOption),
+            controlOption = parentContainer.controlOption.copy(matrixControlOption = matrixOption),
             modelContainer = modelContainer
         )
 

@@ -31,11 +31,14 @@ import com.google.common.cache.CacheBuilder
 import com.google.common.cache.CacheLoader
 import com.google.common.cache.LoadingCache
 import com.tencent.devops.common.api.util.Watcher
+import com.tencent.devops.common.log.utils.BuildLogPrinter
 import com.tencent.devops.common.pipeline.enums.BuildStatus
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.prometheus.BkTimed
 import com.tencent.devops.common.service.utils.LogUtils
 import com.tencent.devops.common.service.utils.SpringContextUtil
+import com.tencent.devops.process.engine.common.Timeout
+import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.control.command.container.ContainerCmd
 import com.tencent.devops.process.engine.control.command.container.ContainerCmdChain
 import com.tencent.devops.process.engine.control.command.container.ContainerContext
@@ -67,13 +70,13 @@ import org.springframework.stereotype.Service
  */
 @Service
 class ContainerControl @Autowired constructor(
+    private val buildLogPrinter: BuildLogPrinter,
     private val redisOperation: RedisOperation,
     private val pipelineStageService: PipelineStageService,
     private val pipelineContainerService: PipelineContainerService,
     private val pipelineTaskService: PipelineTaskService,
     private val buildVariableService: BuildVariableService,
-    private val pipelineAsCodeService: PipelineAsCodeService,
-    private val mutexControl: MutexControl
+    private val pipelineAsCodeService: PipelineAsCodeService
 ) {
 
     companion object {
@@ -179,6 +182,11 @@ class ContainerControl @Autowired constructor(
             pipelineAsCodeEnabled = pipelineAsCodeEnabled,
             executeCount = executeCount
         )
+
+        if (status.isReadyToRun()) {
+            context.setUpExt()
+        }
+
         watcher.stop()
 
         val commandList = listOf(
@@ -195,5 +203,46 @@ class ContainerControl @Autowired constructor(
         )
 
         ContainerCmdChain(commandList).doCommand(context)
+    }
+
+    private fun ContainerContext.setUpExt() {
+
+        // #7954 初次时解析变量替换真正的Job超时时间
+        val timeoutStr = container.controlOption.jobControlOption.timeoutVar?.trim()
+        if (!timeoutStr.isNullOrBlank()) {
+            val obj = Timeout.decTimeout(timeoutStr, contextMap = variables)
+            if (needUpdateControlOption == null) {
+                needUpdateControlOption = container.controlOption
+            }
+            // 替换成真正的超时分钟数int
+            needUpdateControlOption?.jobControlOption?.timeout = obj.minutes
+
+            val msg = if (obj.change && obj.replaceByVar) {
+                "[SystemLog]Job#${container.seq} " +
+                    "reset illegal timeout var[$timeoutStr=${obj.beforeChangeStr}]: ${obj.minutes} minutes"
+            } else if (obj.replaceByVar) {
+                "[SystemLog]Job#${container.seq} set timeout var[$timeoutStr]: ${obj.minutes} minutes"
+            } else if (obj.change) {
+                "[SystemLog]Job#${container.seq} reset illegal timeout[$timeoutStr]: ${obj.minutes} minutes"
+            } else {
+                "[SystemLog]Job#${container.seq} set timeout: ${obj.minutes} minutes"
+            }
+
+            buildLogPrinter.addWarnLine(
+                buildId = container.buildId,
+                message = msg,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                jobId = container.containerHashId ?: "",
+                executeCount = executeCount
+            )
+        } else {
+            buildLogPrinter.addDebugLine(
+                buildId = container.buildId,
+                message = "JobTimeout| Set(${container.controlOption.jobControlOption.timeout}) minutes",
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                jobId = container.containerHashId ?: "",
+                executeCount = executeCount
+            )
+        }
     }
 }

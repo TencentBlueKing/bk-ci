@@ -50,7 +50,7 @@ class CheckMutexContainerCmd(
 
     override fun canExecute(commandContext: ContainerContext): Boolean {
         return commandContext.cmdFlowState == CmdFlowState.CONTINUE &&
-            commandContext.container.controlOption?.mutexGroup?.enable == true &&
+            commandContext.container.controlOption.mutexGroup?.enable == true &&
             commandContext.container.matrixGroupFlag != true // 矩阵组不做互斥判断
     }
 
@@ -65,18 +65,20 @@ class CheckMutexContainerCmd(
         val event = commandContext.event
         val container = commandContext.container
         // 到了真正进入互斥环节时，修正互斥组中引用的变量或排队耗时
-        if (container.controlOption?.mutexGroup?.inited != true) { // 未初始化
-            val mg = mutexControl.decorateMutexGroup(container.controlOption?.mutexGroup, commandContext.variables)
-            if (mg?.inited != container.controlOption?.mutexGroup?.inited) {
+        if (container.controlOption.mutexGroup?.inited != true) { // 未初始化
+            val mg = mutexControl.decorateMutexGroup(container.controlOption.mutexGroup, commandContext.variables)
+            if (mg?.inited != container.controlOption.mutexGroup?.inited) {
                 // 对于互斥组Job的锁定优化，防止重复锁定以及锁名称因变量的变化带来的锁变化，造成前锁无法被清理等，做变化替换
-                container.controlOption?.mutexGroup = mg
-                commandContext.needUpdateControlOption = container.controlOption
+                container.controlOption.mutexGroup = mg
+                if (commandContext.needUpdateControlOption == null) {
+                    commandContext.needUpdateControlOption = container.controlOption
+                }
             }
         }
 
         if (commandContext.buildStatus.isReadyToRun()) { // 锁定之后进入RUNNING态，不再检查锁
 
-            val mutexResult = mutexControl.acquireMutex(container.controlOption?.mutexGroup, container = container)
+            val mutexResult = mutexControl.acquireMutex(container.controlOption.mutexGroup, container = container)
             with(event) {
                 when (mutexResult) {
                     ContainerMutexStatus.CANCELED -> {
@@ -104,7 +106,7 @@ class CheckMutexContainerCmd(
             }
         } else if (container.status.isFinish()) { // 对于存在重放的结束消息做闭环
             // 原在ContainerControl 处的逻辑移到这里来：当状态是结束的时候，直接返回
-            commandContext.container.controlOption?.mutexGroup?.let { mutexGroup ->
+            commandContext.container.controlOption.mutexGroup?.let { mutexGroup ->
 
                 LOG.info(
                     "ENGINE|${event.buildId}|${event.source}|${event.stageId}" +

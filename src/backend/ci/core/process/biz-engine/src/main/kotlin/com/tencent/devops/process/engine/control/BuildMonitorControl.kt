@@ -224,14 +224,23 @@ class BuildMonitorControl @Autowired constructor(
 
     private fun PipelineBuildContainer.checkNextContainerMonitorIntervals(userId: String): Long {
 
-        val (minute: Int, timeoutMills: Long) = Timeout.transMinuteTimeoutToMills(
-            timeoutMinutes = controlOption?.jobControlOption?.timeout
-        )
         val usedTimeMills: Long = if (status.isRunning() && startTime != null) {
             System.currentTimeMillis() - startTime!!.timestampmilli()
         } else {
             0
         }
+
+        val minute = (controlOption.jobControlOption.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN).toLong()
+        val timeoutMills = TimeUnit.MINUTES.toMillis(minute)
+
+        buildLogPrinter.addDebugLine(
+            buildId = buildId,
+            message = "[SystemLog]Check job timeout: ${controlOption.jobControlOption.timeout} minutes, " +
+                "${TimeUnit.MILLISECONDS.toSeconds(usedTimeMills)} seconds passed!",
+            tag = VMUtils.genStartVMTaskId(containerId),
+            jobId = containerHashId,
+            executeCount = executeCount
+        )
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {
@@ -241,7 +250,7 @@ class BuildMonitorControl @Autowired constructor(
             )
             buildLogPrinter.addRedLine(
                 buildId = buildId,
-                message = errorInfo.message ?: "Job timeout($minute) min",
+                message = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                 tag = VMUtils.genStartVMTaskId(containerId),
                 jobId = containerHashId,
                 executeCount = executeCount
@@ -259,7 +268,7 @@ class BuildMonitorControl @Autowired constructor(
                     containerHashId = containerHashId,
                     containerType = containerType,
                     actionType = ActionType.TERMINATE,
-                    reason = errorInfo.message ?: "Job timeout($minute) min!",
+                    reason = errorInfo.message ?: "[SystemLog]Job timeout: $minute minutes!",
                     errorCode = ErrorCode.USER_JOB_OUTTIME_LIMIT,
                     errorTypeName = ErrorType.USER.name
                 )
@@ -313,6 +322,15 @@ class BuildMonitorControl @Autowired constructor(
         } else {
             0
         }
+
+        buildLogPrinter.addDebugLine(
+            buildId = buildId,
+            message = "Monitor| check stage review($inOrOut) timeout($hours) hours, " +
+                "(${TimeUnit.MILLISECONDS.toSeconds(usedTimeMills)}) seconds passed!",
+            tag = stageId,
+            jobId = "",
+            executeCount = executeCount
+        )
 
         val interval = timeoutMills - usedTimeMills
         if (interval <= 0) {

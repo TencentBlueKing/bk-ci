@@ -155,4 +155,11 @@ data class VMBuildContainer(
     override fun fetchMatrixContext(): Map<String, String>? {
         return matrixContext
     }
+
+    override fun transformCompatibility() {
+        if (jobControlOption?.timeoutVar.isNullOrBlank()) {
+            jobControlOption?.timeoutVar = jobControlOption?.timeout.toString()
+        }
+        super.transformCompatibility()
+    }
 }

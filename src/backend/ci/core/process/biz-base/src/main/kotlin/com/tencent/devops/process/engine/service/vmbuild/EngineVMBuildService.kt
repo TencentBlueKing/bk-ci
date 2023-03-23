@@ -211,7 +211,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                     val (containerEnv, context, timeoutMills) = when (c) {
                         is VMBuildContainer -> {
                             val envList = mutableListOf<BuildEnv>()
-                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, c.customBuildEnv, c.matrixContext, asCodeSettings?.enable)
                             val asCodeEnabled = asCodeSettings?.enable == true
@@ -227,7 +227,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                         onlyExpression = asCodeEnabled,
                                         contextPair = contextPair
                                     ),
-                                    os = c.baseOS.name.toLowerCase()
+                                    os = c.baseOS.name.lowercase()
                                 ).data?.let { self -> envList.add(self) }
                             }
 
@@ -249,13 +249,13 @@ class EngineVMBuildService @Autowired(required = false) constructor(
                                 )
                             }?.let { self -> variablesWithType.addAll(self) }
 
-                            Triple(envList, contextMap, timeoutMills)
+                            Triple(envList, contextMap, tm)
                         }
                         is NormalContainer -> {
-                            val timeoutMills = transMinuteTimeoutToMills(c.jobControlOption?.timeout).second
+                            val tm = transMinuteTimeoutToMills(container.controlOption.jobControlOption.timeout)
                             val contextMap = pipelineContextService.getAllBuildContext(variables).toMutableMap()
                             fillContainerContext(contextMap, null, c.matrixContext, asCodeSettings?.enable)
-                            Triple(mutableListOf(), contextMap, timeoutMills)
+                            Triple(mutableListOf(), contextMap, tm)
                         }
                         else -> throw OperationException("vmName($vmName) is an illegal container type: $c")
                     }
@@ -683,6 +683,7 @@ class EngineVMBuildService @Autowired(required = false) constructor(
         val updateTaskStatusInfos = taskBuildRecordService.taskEnd(endParam)
         updateTaskStatusInfos.forEach { updateTaskStatusInfo ->
             pipelineTaskService.updateTaskStatusInfo(
+                task = null,
                 updateTaskInfo = UpdateTaskInfo(
                     projectId = projectId,
                     buildId = buildId,

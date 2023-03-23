@@ -102,7 +102,7 @@ class UpdateStateContainerCmdFinally(
      * 释放[commandContext]中指定的互斥组
      */
     private fun mutexRelease(commandContext: ContainerContext) {
-        commandContext.container.controlOption?.mutexGroup?.let { mutexGroup ->
+        commandContext.container.controlOption.mutexGroup?.let { mutexGroup ->
             mutexControl.releaseContainerMutex(
                 projectId = commandContext.event.projectId,
                 pipelineId = commandContext.event.pipelineId,

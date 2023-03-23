@@ -88,7 +88,7 @@ class PipelineBuildContainerDao {
                         buildContainer.endTime,
                         buildContainer.cost,
                         buildContainer.executeCount,
-                        buildContainer.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) }
+                        buildContainer.controlOption.let { self -> JsonUtil.toJson(self, formatted = false) }
                     )
                     .execute()
             }
@@ -114,7 +114,7 @@ class PipelineBuildContainerDao {
                     .set(END_TIME, it.endTime)
                     .set(COST, it.cost)
                     .set(EXECUTE_COUNT, it.executeCount)
-                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(CONDITIONS, it.controlOption.let { self -> JsonUtil.toJson(self, formatted = false) })
                     .onDuplicateKeyUpdate()
                     .set(STATUS, it.status.ordinal)
                     .set(START_TIME, it.startTime)
@@ -140,7 +140,7 @@ class PipelineBuildContainerDao {
                     .set(END_TIME, it.endTime)
                     .set(COST, it.cost)
                     .set(EXECUTE_COUNT, it.executeCount)
-                    .set(CONDITIONS, it.controlOption?.let { self -> JsonUtil.toJson(self, formatted = false) })
+                    .set(CONDITIONS, it.controlOption.let { self -> JsonUtil.toJson(self, formatted = false) })
                     .where(BUILD_ID.eq(it.buildId).and(STAGE_ID.eq(it.stageId)).and(SEQ.eq(it.seq)))
                     .execute()
             }
@@ -308,15 +308,6 @@ class PipelineBuildContainerDao {
                 .and(PIPELINE_ID.eq(pipelineId))
                 .and(BUILD_ID.eq(buildId))
                 .and(MATRIX_GROUP_ID.eq(matrixGroupId))
-                .execute()
-        }
-    }
-
-    fun deletePipelineBuildContainers(dslContext: DSLContext, projectId: String, pipelineId: String): Int {
-        return with(T_PIPELINE_BUILD_CONTAINER) {
-            dslContext.delete(this)
-                .where(PROJECT_ID.eq(projectId))
-                .and(PIPELINE_ID.eq(pipelineId))
                 .execute()
         }
     }

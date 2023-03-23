@@ -376,7 +376,10 @@ class PipelineBuildDao {
                 .set(STATUS, buildStatus.ordinal)
                 .set(END_TIME, LocalDateTime.now())
                 .set(EXECUTE_TIME, executeTime)
-                .set(RECOMMEND_VERSION, recommendVersion)
+
+            if (!recommendVersion.isNullOrBlank()) {
+                baseQuery.set(RECOMMEND_VERSION, recommendVersion)
+            }
 
             if (!remark.isNullOrBlank()) {
                 baseQuery.set(REMARK, remark)

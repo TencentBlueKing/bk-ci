@@ -89,9 +89,27 @@ import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_SOURCE_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_BRANCH
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TARGET_URL
 import com.tencent.devops.common.webhook.pojo.code.PIPELINE_WEBHOOK_TYPE
+import java.util.regex.Pattern
 
 @Suppress("TooManyFunctions")
 object PipelineVarUtil {
+
+    private val tPattern = Pattern.compile("\\$[{]{2}(?<double>[^$^{}]+)[}]{2}")
+
+    /**
+     * 检查[keyword]字符串是不是一个变量语法， ${{ varName }}， 如果不是则返回false
+     * 注意：已不再支持 ${ var } 旧的语法定义变量，只支持全新 ${{ var }} 的语法
+     */
+    fun isVar(keyword: String?): Boolean {
+        return !keyword.isNullOrBlank() && tPattern.matcher(keyword).matches()
+    }
+
+    /**
+     * 检查[keyword]串中有没有变量，比如  "abc_${{ varName }} is true" 将识别出存在 varName变量，会返回true
+     */
+    fun haveVar(keyword: String): Boolean {
+        return tPattern.matcher(keyword).find()
+    }
 
     /**
      * 前置拼接
@@ -429,9 +447,10 @@ object PipelineVarUtil {
      */
     fun getRecommendVersion(buildParameters: List<BuildParameters>): String? {
         val recommendVersionPrefix = getRecommendVersionPrefix(buildParameters) ?: return null
-        val buildNo = if (!buildParameters.none { it.key == BUILD_NO || it.key == "BuildNo" }) {
-            buildParameters.filter { it.key == BUILD_NO || it.key == "BuildNo" }[0].value.toString()
-        } else return null
+
+        val buildNo = buildParameters.firstOrNull { it.key == BUILD_NO || it.key == "BuildNo" }?.value?.toString()
+            ?: return null
+
         return CommonUtils.interceptStringInLength("$recommendVersionPrefix.$buildNo", MAX_VERSION_LEN)
     }
 
@@ -441,18 +460,15 @@ object PipelineVarUtil {
      * 需要注意的是，旧的参数命名继续兼容有效，由{MarjorVersion}.{MinorVersion}.{FixVersion} 组成，所以启动参数切记
      * 不要与此命名相同造成了冲突
      */
-    private fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
-        val majorVersion = if (!buildParameters.none { it.key == MAJORVERSION || it.key == "MajorVersion" }) {
-            buildParameters.filter { it.key == MAJORVERSION || it.key == "MajorVersion" }[0].value.toString()
-        } else return null
+    fun getRecommendVersionPrefix(buildParameters: List<BuildParameters>): String? {
+        val majorVersion = buildParameters.firstOrNull { it.key == MAJORVERSION || it.key == "MajorVersion" }
+            ?.value?.toString() ?: return null
 
-        val minorVersion = if (!buildParameters.none { it.key == MINORVERSION || it.key == "MinorVersion" }) {
-            buildParameters.filter { it.key == MINORVERSION || it.key == "MinorVersion" }[0].value.toString()
-        } else return null
+        val minorVersion = buildParameters.firstOrNull { it.key == MINORVERSION || it.key == "MinorVersion" }
+            ?.value?.toString() ?: return null
 
-        val fixVersion = if (!buildParameters.none { it.key == FIXVERSION || it.key == "FixVersion" }) {
-            buildParameters.filter { it.key == FIXVERSION || it.key == "FixVersion" }[0].value.toString()
-        } else return null
+        val fixVersion = buildParameters.firstOrNull { it.key == FIXVERSION || it.key == "FixVersion" }
+            ?.value?.toString() ?: return null
 
         return "$majorVersion.$minorVersion.$fixVersion"
     }

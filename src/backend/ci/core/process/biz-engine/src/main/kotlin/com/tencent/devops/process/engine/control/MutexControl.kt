@@ -31,6 +31,7 @@ import com.tencent.devops.common.api.util.EnvUtils
 import com.tencent.devops.common.api.util.timestamp
 import com.tencent.devops.common.api.util.timestampmilli
 import com.tencent.devops.common.log.utils.BuildLogPrinter
+import com.tencent.devops.common.pipeline.EnvReplacementParser
 import com.tencent.devops.common.pipeline.container.MutexGroup
 import com.tencent.devops.common.pipeline.enums.BuildRecordTimeStamp
 import com.tencent.devops.common.pipeline.enums.ContainerMutexStatus
@@ -43,6 +44,7 @@ import com.tencent.devops.process.engine.common.VMUtils
 import com.tencent.devops.process.engine.pojo.PipelineBuildContainer
 import com.tencent.devops.process.engine.service.PipelineContainerService
 import com.tencent.devops.process.engine.service.record.ContainerBuildRecordService
+import com.tencent.devops.process.utils.PipelineVarUtil
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
@@ -98,8 +100,8 @@ class MutexControl @Autowired constructor(
     private fun parseTimeoutVar(mutexGroup: MutexGroup, variables: Map<String, String>) =
         (if (!mutexGroup.timeoutVar.isNullOrBlank()) {
             try {
-                if (mutexGroup.timeoutVar?.startsWith("\${") == true) { //
-                    EnvUtils.parseEnv(mutexGroup.timeoutVar!!, variables).toInt()
+                if (PipelineVarUtil.isVar(mutexGroup.timeoutVar)) { // ${{ xx }} 变量
+                    EnvReplacementParser.parse(mutexGroup.timeoutVar, contextMap = variables).toInt()
                 } else {
                     mutexGroup.timeoutVar!!.toInt()
                 }
@@ -245,7 +247,7 @@ class MutexControl @Autowired constructor(
      * 如果是以前的设置0的情况，则设置为最大超时时间
      */
     private fun getTimeoutSec(container: PipelineBuildContainer): Long {
-        var tm = (container.controlOption?.jobControlOption?.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN)
+        var tm = (container.controlOption.jobControlOption.timeout ?: Timeout.DEFAULT_TIMEOUT_MIN)
         // 兼容设置为0的情况（最大默认值）
         if (tm == 0) {
             tm = Timeout.MAX_MINUTES
