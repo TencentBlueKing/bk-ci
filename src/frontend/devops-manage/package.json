@@ -23,6 +23,7 @@
   "license": "ISC",
   "dependencies": {
     "bkui-vue": "0.0.1-beta.217",
+    "bk-permission": "0.0.1-beta.1",
     "dayjs": "^1.11.2",
     "pinia": "^2.0.23",
     "vue": "^3.2.41",
@@ -31,7 +32,7 @@
   },
   "devDependencies": {
     "@blueking/babel-preset-bk": "^2.1.0-beta7",
-    "@blueking/cli-service-webpack": "0.0.0-beta.59",
+    "@blueking/cli-service-webpack": "0.0.0-beta.73",
     "@blueking/eslint-config-bk": "2.1.0-beta.12",
     "@blueking/stylelint-config-bk": "^2.1.0-beta.9",
     "enhanced-resolve": "^5.10.0",
@@ -44,9 +45,5 @@
     "postcss-simple-vars": "^7.0.0",
     "postcss-url": "^10.1.3",
     "typescript": "^4.8.4"
-  },
-  "engines": {
-    "node": ">= 14.16.1",
-    "npm": ">= 6.4.1 <7"
   }
 }

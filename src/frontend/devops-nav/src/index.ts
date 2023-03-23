@@ -15,7 +15,6 @@ import AsideNav from '@/components/AsideNav/index.vue'
 import ContentHeader from '@/components/ContentHeader/index.vue'
 import BigSelect from '@/components/Select/index.vue'
 import App from '@/views/App.vue'
-import { actionMap, resourceMap, resourceTypeMap } from '../../common-lib/permission-conf'
 
 import createLocale from '../../locale'
 
@@ -24,15 +23,14 @@ import validationENMessages from 'vee-validate/dist/locale/en'
 import validationCNMessages from 'vee-validate/dist/locale/zh_CN'
 import ExtendsCustomRules from './utils/customRules'
 import validDictionary from './utils/validDictionary'
-import showAskPermissionDialog from './components/AskPermissionDialog'
 import bsWebSocket from '@/utils/bsWebSocket.js'
 import '@/assets/scss/index.scss'
 import { judgementLsVersion } from './utils/util'
 import '@icon-cool/bk-icon-devops/src/index'
+import { PermissionDirective, handleNoPermission } from 'bk-permission'
+import 'bk-permission/dist/main.css'
 import { handleProjectNoPermission } from './utils/permission'
-import { handleNoPermission } from '../../common-lib/permission/permission'
-import { AuthorityDirectiveV2 } from '../../common-lib/permission/authority-directive'
-import ajax from './utils/request'
+import VueCompositionAPI from '@vue/composition-api'
 
 // 全量引入 bk-magic-vue
 import bkMagic from 'bk-magic-vue'
@@ -43,7 +41,6 @@ declare module 'vue/types/vue' {
     interface Vue {
         $bkMessage: any
         $bkInfo: any
-        $showAskPermissionDialog: any
         $showTips: any
         iframeUtil: any
         handleNoPermission: any
@@ -51,7 +48,8 @@ declare module 'vue/types/vue' {
 }
 
 Vue.use(bkMagic)
-Vue.use(AuthorityDirectiveV2(handleProjectNoPermission, ajax))
+Vue.use(PermissionDirective(handleProjectNoPermission))
+Vue.use(VueCompositionAPI)
 Vue.component('AsideNav', AsideNav)
 Vue.component('ContentHeader', ContentHeader)
 Vue.component('Logo', Logo)
@@ -88,12 +86,8 @@ router.beforeEach((to, from, next) => {
 window.eventBus = eventBus
 window.vuexStore = store
 Vue.prototype.iframeUtil = iframeUtil(router)
-Vue.prototype.$showAskPermissionDialog = showAskPermissionDialog
 Vue.prototype.$setLocale = setLocale
 Vue.prototype.$localeList = localeList
-Vue.prototype.$permissionActionMap = actionMap
-Vue.prototype.$permissionResourceMap = resourceMap
-Vue.prototype.$permissionResourceTypeMap = resourceTypeMap
 Vue.prototype.$bkMessage = function (config) {
     config.ellipsisLine = config.ellipsisLine || 3
     bkMagic.bkMessage(config)
@@ -139,7 +133,6 @@ Vue.mixin({
             return handleNoPermission(
                 bkMagic,
                 query,
-                ajax,
                 (window.devops as any).$createElement
             )
         }

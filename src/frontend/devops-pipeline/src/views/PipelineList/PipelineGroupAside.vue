@@ -310,28 +310,28 @@
                             }
                         ]
                         : []),
-                    {
-                        text: this.$t('pipelineGroupAuth'),
-                        handler: () => {
-                            this.$router.push({
-                                name: 'PipelineListAuth',
-                                params: {
-                                    id: group.id
-                                },
-                                query: {
-                                    groupName: group.name
-                                }
-                            })
-                        },
-                        hasPermission: this.isManage,
-                        disablePermissionApi: true,
-                        permissionData: {
-                            projectId: this.$route.params.projectId,
-                            resourceType: 'project',
-                            resourceCode: this.$route.params.projectId,
-                            action: PROJECT_RESOURCE_ACTION.MANAGE
-                        }
-                    },
+                    // {
+                    //     text: this.$t('pipelineGroupAuth'),
+                    //     handler: () => {
+                    //         this.$router.push({
+                    //             name: 'PipelineListAuth',
+                    //             params: {
+                    //                 id: group.id
+                    //             },
+                    //             query: {
+                    //                 groupName: group.name
+                    //             }
+                    //         })
+                    //     },
+                    //     hasPermission: this.isManage,
+                    //     disablePermissionApi: true,
+                    //     permissionData: {
+                    //         projectId: this.$route.params.projectId,
+                    //         resourceType: 'project',
+                    //         resourceCode: this.$route.params.projectId,
+                    //         action: PROJECT_RESOURCE_ACTION.MANAGE
+                    //     }
+                    // },
                     {
                         text: this.$t(group.top ? 'unStickyTop' : 'stickyTop'),
                         disabled: this.isSticking,

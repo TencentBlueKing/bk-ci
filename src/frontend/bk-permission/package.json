@@ -1,0 +1,39 @@
+{
+  "name": "bk-permission",
+  "version": "0.0.1-beta.01",
+  "description": "",
+  "main": "./dist/main.js",
+  "scripts": {
+    "dev": "bk-cli-service-webpack dev",
+    "build": "bk-cli-service-webpack build",
+    "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix"
+  },
+  "keywords": [
+    "bk-ci",
+    "webpack-5"
+  ],
+  "files": [
+    "./dist"
+  ],
+  "author": "bk",
+  "license": "ISC",
+  "devDependencies": {
+    "@blueking/babel-preset-bk": "^2.1.0-beta7",
+    "@blueking/cli-service-webpack": "0.0.0-beta.73",
+    "@blueking/eslint-config-bk": "2.1.0-beta.12",
+    "@blueking/stylelint-config-bk": "^2.1.0-beta.9",
+    "enhanced-resolve": "^5.10.0",
+    "postcss": "~8.4.16",
+    "postcss-import": "^15.0.0",
+    "postcss-mixins": "^9.0.4",
+    "postcss-nested": "^6.0.0",
+    "postcss-nested-ancestors": "^3.0.0",
+    "postcss-preset-env": "^7.8.2",
+    "postcss-simple-vars": "^7.0.0",
+    "postcss-url": "^10.1.3"
+  },
+  "peerDependencies": {
+    "@vue/composition-api": "^1.0.0",
+    "vue": "^3.2.41"
+  }
+}
