@@ -243,18 +243,23 @@ class StreamRepoTriggerAction(
     }
 
     private fun checkRepoTriggerCredentials(repoHook: RepositoryHook): Pair<Boolean, String?> {
-        val token = when {
-            repoHook.credentialsForTicketId != null ->
+        this.data.context.repoTrigger?.repoTriggerCred = when {
+            repoHook.credentialsForTicketId != null -> {
                 try {
-                    CommonCredentialUtils.getCredential(
+                    val credential = CommonCredentialUtils.getCredential(
                         client = client,
                         projectId = GitCommonUtils.getCiProjectId(
                             this.data.getGitProjectId(),
                             streamGitConfig.getScmType()
                         ),
                         credentialId = repoHook.credentialsForTicketId!!,
-                        type = CredentialType.ACCESSTOKEN
-                    )["v1"] ?: return Pair(false, null)
+                        typeCheck = listOf(CredentialType.ACCESSTOKEN, CredentialType.OAUTHTOKEN)
+                    )
+                    TGitCred(
+                        userId = null,
+                        accessToken = credential.v1,
+                        useAccessToken = credential.credentialType == CredentialType.OAUTHTOKEN
+                    )
                 } catch (e: Throwable) {
                     throw StreamTriggerException(
                         action = this,
@@ -262,19 +267,19 @@ class StreamRepoTriggerAction(
                         reasonParams = listOf("Credential [${repoHook.credentialsForTicketId}] does not exist")
                     )
                 }
-            repoHook.credentialsForToken != null -> repoHook.credentialsForToken!!
+            }
+            repoHook.credentialsForToken != null -> TGitCred(
+                userId = null,
+                accessToken = repoHook.credentialsForToken!!,
+                useAccessToken = false
+            )
+
             else -> throw StreamTriggerException(
                 action = this,
                 triggerReason = TriggerReason.REPO_TRIGGER_FAILED,
                 reasonParams = listOf("credentials cannot be null")
             )
         }
-
-        this.data.context.repoTrigger?.repoTriggerCred = TGitCred(
-            userId = null,
-            accessToken = token,
-            useAccessToken = false
-        )
         // stream 侧需要的是user 数字id 而不是 rtx
         val userInfo = try {
             this.api.getUserInfoByToken(
