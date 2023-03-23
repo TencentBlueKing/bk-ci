@@ -3,7 +3,7 @@
         class="bk-scroll-load-list"
         @scroll.passive="handleScroll"
     >
-        <li v-for="item in list">
+        <li v-for="(item, index) in list" :key="index">
             <slot :data="item"></slot>
         </li>
     </ul>

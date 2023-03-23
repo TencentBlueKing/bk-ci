@@ -8,6 +8,9 @@ import {
   nextTick,
   watch,
 } from 'vue';
+import {
+  bkTooltips
+} from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -224,10 +227,11 @@ onMounted(() => {
               :remote-method="handleSearchProject"
             >
               <bk-option
-                v-for="(project, index) in projectList"
-                :key="index"
-                :value="project.englishName"
-                :label="project.projectName"
+                  v-for="(project, index) in projectList"
+                  :key="index"
+                  :value="project.englishName"
+                  :disabled="project.routerTag !== 'rbac'"
+                  :label="project.projectName"
               />
             </bk-select>
           </bk-form-item>

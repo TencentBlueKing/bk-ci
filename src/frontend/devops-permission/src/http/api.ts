@@ -20,9 +20,12 @@ export default {
     return fetch.get(`${applyFix}/listActions?resourceType=${resourceType}`);
   },
   // 获取资源列表
-  getResourceList(params: any) {
+  getResourceList(params: any, pageInfo: any) {
     const { projectId, resourceType, resourceName } = params;
-    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources`)
+    return fetch.get(`${IAM_PERFIX}/${projectId}/${resourceType}/listResources`, {
+      ...pageInfo,
+      resourceName
+    })
   },
   // 获取用户组列表
   getUserGroupList(params: any) {

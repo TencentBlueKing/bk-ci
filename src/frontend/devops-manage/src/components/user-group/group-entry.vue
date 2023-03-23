@@ -28,8 +28,6 @@
           :resource-action="resourceAction"
         >
         </no-permission>
-        <!-- 普通成员 -->
-        <!-- <group-table v-else-if="!hasPermission && resourceType !== 'project'" v-bind="$props" /> -->
       </template>
       <!-- 未开启权限管理 -->
       <not-open-manage
@@ -42,7 +40,6 @@
 
 <script>
 import GroupAside from './group-aside.vue';
-import GroupTable from './group-table.vue';
 import NotOpenManage from './not-open-manage.vue';
 import NoPermission from './no-permission.vue';
 import IamIframe from '../IAM-Iframe';
@@ -53,7 +50,6 @@ import {
 export default {
   components: {
     GroupAside,
-    GroupTable,
     NotOpenManage,
     IamIframe,
     NoPermission,

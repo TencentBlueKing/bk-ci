@@ -25,8 +25,7 @@
           :disableOutsideClick="true"
           :arrow="false"
           :isShow="showMenuPopover"
-          placement='bottom-start'
-          :boundary="boundary">
+          placement='bottom-start'>
           <div
             class="div-input"
             v-if="isDisabled"
@@ -81,21 +80,25 @@
             <template v-else>
               <!-- 条件已选中操作或资源实例场景 -->
               <template v-if="hasResourceCode || hasActionId">
-                <ul class="search-list-menu">
-                  <div v-if="resourceActionsList.length">
-                    <div v-for="item in resourceActionsList" :key="item.id">
-                      <li
-                        class="menu-item"
-                        :class="{ 'is-hover': hoverId === item.id }"
-                        :key="item.id"
-                        @click="handleResourceSelect(item)">
-                        {{ item.name }}
-                      </li>
+                <scroll-load-list
+                  ref="loadList"
+                  :list="resourceActionsList"
+                  :hasLoadEnd="hasLoadEnd"
+                  :getDataMethod="getDataMethod"
+                  :resourceType="resourceType"
+                  :showMenu="showMenu"
+                  :titleType="titleType"
+                  @change="changeKeyWords"
+                >
+                  <template v-slot="{ data }">
+                    <div
+                      :class="{ 'is-hover': hoverId === data.id }"
+                      :key="data.id"
+                      @click="handleResourceSelect(data)">
+                      {{ data.name }}
                     </div>
-                  </div>
-                  <p v-else-if="!isLoading && !resourceActionsList.length" class="no-search-data">{{ '查询无数据' }}</p>
-                  <div v-if="isLoading" class="loading-panel">{{ $t('正在加载中...') }}</div>
-                </ul>
+                  </template>
+                </scroll-load-list>
               </template>
               <template v-else>
                 <section class="cascader-menu">
@@ -115,21 +118,27 @@
                     <p v-else class="no-search-data">{{ '查询无数据' }}</p>
                   </ul>
                   <div>
-                    <div v-if="showMenu && !isLoading && resourceActionsList.length" class="cascader-panel">
-                      <ul>
-                        <div v-for="item in resourceActionsList" :key="item.id">
-                          <li
-                            class="menu-item"
-                            :class="{ 'is-hover': hoverId === item.id }"
-                            :key="item.id"
-                            @click="handleResourceSelect(item)">
-                            {{ item.name }}
-                          </li>
-                        </div>
-                      </ul>
+                    <div v-if="showMenu" class="cascader-panel">
+                      <scroll-load-list
+                        ref="loadList"
+                        :list="resourceActionsList"
+                        :hasLoadEnd="hasLoadEnd"
+                        :getDataMethod="getDataMethod"
+                        :resourceType="resourceType"
+                        :showMenu="showMenu"
+                        :titleType="titleType"
+                        @change="changeKeyWords"
+                      >
+                        <template v-slot="{ data }">
+                          <div
+                            :class="{ 'is-hover': hoverId === data.id }"
+                            @click="handleResourceSelect(data)"
+                          >
+                            {{ data.name }}
+                          </div>
+                        </template>
+                      </scroll-load-list>
                     </div>
-                    <div v-if="showMenu && !isLoading && !resourceActionsList.length" class="loading-panel">{{ $t('查询无数据') }}</div>
-                    <div v-if="isLoading" class="loading-panel">{{ $t('正在加载中...') }}</div>
                   </div>
                 </section>
               </template>
@@ -149,6 +158,7 @@ import tools from '../../utils/tools.js'
 import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
+import scrollLoadList from '@/components/scroll-load-list.vue'
 
 export default {
   name: 'searchSelect',
@@ -158,6 +168,7 @@ export default {
   components: {
     selectTag,
     Search,
+    scrollLoadList,
   },
   model: {
     prop: 'values',
@@ -248,6 +259,12 @@ export default {
       if (this.resourceList.length) return this.resourceList;
       return this.actionsList;
     },
+    getDataMethod() {
+      if (this.selectInfo.id === 'actionId') {
+        return this.getActionsList;
+      }
+      return this.getResourceList;
+    }
   },
   watch: {
     searchList: {
@@ -291,6 +308,8 @@ export default {
       resourceTypeName: '',
       hasResourceCode: false,
       hasActionId: false,
+      hasLoadEnd: false,
+      titleType: ''
     }
   },
   async created() {
@@ -358,9 +377,12 @@ export default {
         this.searchSelectValue.push(resourceCodeParams);
       }
     },
+    changeKeyWords() {
+      this.resourceList = [];
+    },
     async getActionsList() {
       this.isLoading = true;
-      await http.getActionsList(this.resourceType).then(res => {
+      return await http.getActionsList(this.resourceType).then(res => {
         this.actionsList = res.map(item => {
           return {
             ...item,
@@ -368,11 +390,11 @@ export default {
             name: item.actionName,
           }
         });
+        this.hasLoadEnd = true;
       }).catch(() => []);
-      this.isLoading = false;
     },
     
-    async getResourceList() {
+    async getResourceList(page, pageSize, keyWords) {
       if (!this.projectCode) {
         Message({
           theme: 'error',
@@ -380,19 +402,29 @@ export default {
         });
         return;
       };
-      this.isLoading = true;
-      await http.getResourceList({
-        resourceType: this.resourceType,
-        projectId: this.projectCode,
-      }).then(res => {
-        this.resourceList = res.records.map(item => {
+      this.isLoading = true
+      return await http.getResourceList(
+        {
+          resourceType: this.resourceType,
+          projectId: this.projectCode,
+          resourceName: keyWords
+        },
+        {
+          page,
+          pageSize
+        }
+      )
+      .then(res => {
+        this.hasLoadEnd = !res.hasNext;
+        const list = res.records.map(item => {
           return {
             ...item,
             name: item.resourceName,
           }
         });
-      }).catch(() => []);
-      this.isLoading = false;
+        this.resourceList = [...this.resourceList, ...list]
+        this.isLoading = false
+      });
     },
     // 获取资源类型列表
     async getResourceTypesList() {
@@ -419,9 +451,6 @@ export default {
       if (!this.selectInfo.id || this.selectInfo.children) {
         this.showMenuPopover = true;
       }
-    },
-    handleWrapClickOutSide() {
-      this.showMenuPopover = false;
     },
     // 点击到searchSelect外面
     handleInputClickOutSide(e) {
@@ -462,13 +491,14 @@ export default {
       this.resourceList = [];
       this.hasResourceCode = this.searchSelectValue.some(item => item.id === 'resourceCode');
       this.hasActionId = this.searchSelectValue.some(item => item.id === 'actionId');
-      if (this.hasResourceCode && val.id === 'actionId') {
-        this.getActionsList();
-      }
+      this.titleType = val.id;
+      // if (this.hasResourceCode && val.id === 'actionId') {
+      //   this.getActionsList();
+      // }
 
-      if (this.hasActionId && val.id === 'resourceCode') {
-        this.getResourceList();
-      }
+      // if (this.hasActionId && val.id === 'resourceCode') {
+      //   this.getResourceList();
+      // }
 
       this.selectInfo = tools.deepClone(val);
       const inputDom = this.$refs.input;
@@ -485,17 +515,21 @@ export default {
     },
     
     async handleOptionSelect(val) {
+      if (this.showMenu && (this.resourceType === val.resourceType)) return
       this.showMenu = true;
+      this.hasLoadEnd = false;
+      this.actionsList = [];
+      this.resourceList = [];
       const { resourceType, name } = val
       this.resourceType = resourceType;
       this.resourceTypeName = name;
       this.hoverId = resourceType;
       this.isLoading = true;
-      if (this.selectInfo.id === 'actionId') {
-        await this.getActionsList();
-      } else {
-        await this.getResourceList();
-      }
+      // if (this.selectInfo.id === 'actionId') {
+      //   await this.getActionsList();
+      // } else {
+      //   await this.getResourceList();
+      // }
       this.isLoading = false;
     },
 
@@ -706,7 +740,9 @@ export default {
       const index = this.searchSelectValue.findIndex(item => item.id === id);
       this.searchSelectValue.splice(index, 1);
       this.setInputFocus();
-      this.showMenuPopover = true;
+      setTimeout(() => {
+        this.showMenuPopover = true;
+      }, 100);
     },
   }
 }
@@ -820,7 +856,6 @@ export default {
   .bk-popover {
     padding: 0 !important;
     padding-bottom: 0 !important;
-    .cascader-panel,
     .loading-panel,
     .search-list-menu,
     .select-list-menu {
@@ -892,6 +927,7 @@ export default {
       display: flex;
       .cascader-panel {
         width: 160px;
+        height: 100%;
       }
     }
     .no-search-data {
