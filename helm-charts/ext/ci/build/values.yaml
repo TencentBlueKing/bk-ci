@@ -718,7 +718,7 @@ remotedev:
     minReplicas: 1
     maxReplicas: 3
     targetCPU: 80
-    targetMemory: 80M
+    targetMemory: 80
 
 # environment Deployment
 environment:
