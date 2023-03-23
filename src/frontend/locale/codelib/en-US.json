@@ -46,7 +46,7 @@
     "githubRule": "start by https://github.com/",
     "svnSshRule": "start by svn+ssh:// and the correct one",
     "gitlabSshRule": "start by git@ and end with .git",
-    "httpRule": "start by http:// or svn:// and the correct one",
+    "httpRule": "start by http:// or https:// and the correct one",
     "httpsRule": "start by https:// and end with .git",
     "httpOrHttpsRule": "start by http:// or https:// and end with .git",
     "paramBeString": "parameter must be string",
@@ -58,5 +58,7 @@
     "TGit": "TGit",
     "authType": "Authorization method",
     "authIdentity": "Authorized identity",
-    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port"
+    "portTips": "The name of the machine hosting the shared version control service, TCP/IP and PORT must be specified.If using SSL to connect to P4, use ssl:host:port",
+    "sshExampleTips": "eg: svn+ssh://svn.sample.com/test_proj",
+    "httpExampleTips": "eg: http://svn.sample.com/test_proj or https://svn.sample.com/test_proj"
 }

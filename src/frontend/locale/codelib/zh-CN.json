@@ -46,7 +46,7 @@
   "githubRule": "请输入以https://github.com/开头的",
   "svnSshRule": "请输入以svn+ssh://开头的正确的",
   "gitlabSshRule": "请输入以 git@ 开头，以 .git 结尾的",
-  "httpRule": "请输入以http://或svn://开头的正确的",
+  "httpRule": "请输入以http://或https://开头的正确的",
   "httpsRule": "请输入以https://开头，以.git结尾的",
   "httpOrHttpsRule": "请输入以 http://或 https://开头，以.git结尾的",
   "paramBeString": "参数必须为字符串",
@@ -60,5 +60,7 @@
   "P4": "P4",
   "authType": "授权方式",
   "authIdentity": "授权身份",
-  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port"
+  "portTips": "托管共享版本控制服务的机器名称，必须指定TCP/IP和PORT。如果使用SSL连接到P4，则用ssl:host:port",
+  "sshExampleTips": "示例：svn+ssh://svn.sample.com/test_proj",
+  "httpExampleTips": "示例：http://svn.sample.com/test_proj 或 https://svn.sample.com/test_proj"
 }
