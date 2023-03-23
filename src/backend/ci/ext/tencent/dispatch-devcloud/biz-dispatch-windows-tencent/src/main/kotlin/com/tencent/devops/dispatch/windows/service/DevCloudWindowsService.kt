@@ -6,7 +6,7 @@ import com.fasterxml.jackson.module.kotlin.jacksonObjectMapper
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.tencent.devops.common.api.util.JsonUtil
 import com.tencent.devops.common.api.util.OkhttpUtils
-import com.tencent.devops.common.api.util.ShaUtils
+import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
 import com.tencent.devops.dispatch.windows.enums.DevCloudCreateWindowsStatus
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreate
 import com.tencent.devops.dispatch.windows.pojo.DevCloudWindowsCreateEnv
@@ -19,14 +19,10 @@ import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_LANDUN_ENV
 import com.tencent.devops.dispatch.windows.pojo.ENV_KEY_PROJECT_ID
 import com.tencent.devops.dispatch.windows.pojo.QueryTaskStatusResponse
 import com.tencent.devops.dispatch.windows.pojo.WindowsMachineGetResponse
-import com.tencent.devops.common.environment.agent.utils.SmartProxyUtil
-
 import okhttp3.Headers.Companion.toHeaders
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.Request
 import okhttp3.RequestBody
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.commons.lang3.RandomStringUtils
 import org.slf4j.LoggerFactory
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -88,7 +84,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("getWindowsMachine|url=$url|body=$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -154,7 +150,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.debug("queryTaskStatus|url=$url")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .get()
             .build()
         OkhttpUtils.doHttp(request).use { response ->
@@ -228,7 +224,7 @@ class DevCloudWindowsService @Autowired constructor() {
         logger.info("DevCloudWindowsService|deleteWindowsMachine|deleteVM|$url|$body")
         val request = Request.Builder()
             .url(toIdcUrl(url))
-            .headers(makeHeaders(devCloudAppId, devCloudToken, creator, smartProxyToken).toHeaders())
+            .headers(SmartProxyUtil.makeIdcProxyHeaders(devCloudAppId, devCloudToken, creator).toHeaders())
             .post(RequestBody.create("application/json; charset=utf-8".toMediaTypeOrNull(), body.toString()))
             .build()
         var result: Boolean = true
@@ -255,18 +251,5 @@ class DevCloudWindowsService @Autowired constructor() {
     fun toIdcUrl(realUrl: String) = "$devopsIdcProxyGateway/proxy-devnet?" +
         "url=${URLEncoder.encode(realUrl, "UTF-8")}"
 
-    fun makeHeaders(appId: String, token: String, staffname: String, proxyToken: String): Map<String, String> {
-        val headerBuilder = mutableMapOf<String, String>()
-        headerBuilder["APPID"] = appId
-        val random = RandomStringUtils.randomAlphabetic(8)
-        headerBuilder["RANDOM"] = random
-        val timestamp = (System.currentTimeMillis() / 1000).toString()
-        headerBuilder["TIMESTP"] = timestamp
-        val encKey = DigestUtils.md5Hex("$token$timestamp$random")
-        headerBuilder["ENCKEY"] = encKey
-        headerBuilder["TIMESTAMP"] = timestamp
-        headerBuilder["X-STAFFNAME"] = staffname
 
-        return headerBuilder
-    }
 }
