@@ -102,52 +102,49 @@ class CheckConditionalSkipContainerCmd constructor(
         // condition check
         val container = containerContext.container
         val containerControlOption = container.controlOption
-        var needSkip = false
-        if (containerControlOption != null) {
-            val jobControlOption = containerControlOption.jobControlOption
-            val conditions = jobControlOption.customVariables ?: emptyList()
+        val jobControlOption = containerControlOption.jobControlOption
+        val conditions = jobControlOption.customVariables ?: emptyList()
 
-            val message = StringBuilder()
-            needSkip = if (containerControlOption.inFinallyStage) {
-                skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
-            } else {
-                val contextMap = pipelineContextService.buildContext(
-                    projectId = container.projectId,
-                    pipelineId = container.pipelineId,
-                    buildId = container.buildId,
-                    stageId = container.stageId,
-                    containerId = container.containerId,
-                    taskId = null,
-                    variables = containerContext.variables
-                )
-                ControlUtils.checkJobSkipCondition(
-                    conditions = conditions,
-                    variables = containerContext.variables.plus(contextMap),
-                    buildId = container.buildId,
-                    runCondition = jobControlOption.runCondition,
-                    customCondition = jobControlOption.customCondition,
-                    message = message,
-                    asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
-                )
-            }
+        val message = StringBuilder()
+        val needSkip = if (containerControlOption.inFinallyStage) {
+            skipFinallyStageJob(jobControlOption, containerContext.event.previousStageStatus, message)
+        } else {
+            val contextMap = pipelineContextService.buildContext(
+                projectId = container.projectId,
+                pipelineId = container.pipelineId,
+                buildId = container.buildId,
+                stageId = container.stageId,
+                containerId = container.containerId,
+                taskId = null,
+                variables = containerContext.variables
+            )
+            ControlUtils.checkJobSkipCondition(
+                conditions = conditions,
+                variables = containerContext.variables.plus(contextMap),
+                buildId = container.buildId,
+                runCondition = jobControlOption.runCondition,
+                customCondition = jobControlOption.customCondition,
+                message = message,
+                asCodeEnabled = containerContext.pipelineAsCodeEnabled == true
+            )
+        }
 
-            if (message.isNotBlank()) {
-                // #6366 增加日志明确展示跳过的原因
-                buildLogPrinter.addDebugLine(
-                    executeCount = containerContext.executeCount,
-                    tag = VMUtils.genStartVMTaskId(container.containerId),
-                    buildId = container.buildId,
-                    message = message.toString(),
-                    jobId = container.containerHashId
-                )
-            }
+        if (message.isNotBlank()) {
+            // #6366 增加日志明确展示跳过的原因
+            buildLogPrinter.addDebugLine(
+                executeCount = containerContext.executeCount,
+                tag = VMUtils.genStartVMTaskId(container.containerId),
+                buildId = container.buildId,
+                message = message.toString(),
+                jobId = container.containerHashId
+            )
+        }
 
-            if (needSkip) {
-                LOG.info(
-                    "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
-                        "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
-                )
-            }
+        if (needSkip) {
+            LOG.info(
+                "ENGINE|${container.buildId}|${containerContext.event.source}|CONTAINER_SKIP" +
+                    "|${container.stageId}|j(${container.containerId})|conditions=$jobControlOption"
+            )
         }
         return needSkip
     }
@@ -163,14 +160,17 @@ class CheckConditionalSkipContainerCmd constructor(
                 message.append("[上游 Stage 取消时](Previous Stage Cancel): ")
                 previousStatus != null && !previousStatus.isCancel() // null will pass
             }
+
             JobRunCondition.PREVIOUS_STAGE_FAILED -> {
                 message.append("[上游 Stage 失败时](Previous Stage Failed): ")
                 previousStatus != null && !previousStatus.isFailure() // null will pass
             }
+
             JobRunCondition.PREVIOUS_STAGE_SUCCESS -> { // null will pass
                 message.append("[上游 Stage 成功时](Previous Stage Success): ")
                 previousStatus != null && !previousStatus.isSuccess() && previousStatus != BuildStatus.STAGE_SUCCESS
             }
+
             JobRunCondition.STAGE_RUNNING -> false // 当前 Finally Stage 开始时， 无视之前的状态，不跳过
             else -> true // finallyStage 下除上述4种条件之外，都是不合法的，要跳过
         } /* need skip */

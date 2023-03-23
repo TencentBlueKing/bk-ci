@@ -795,6 +795,7 @@ class PipelineInfoFacadeService @Autowired constructor(
                 if (it.name.isNullOrBlank()) it.name = it.id
                 if (it.tag == null) it.tag = defaultTagId?.let { self -> listOf(self) }
                 it.resetBuildOption()
+                it.transformCompatibility()
             }
 
             // 部分老的模板实例没有templateId，需要手动加上

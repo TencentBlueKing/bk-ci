@@ -82,6 +82,7 @@ import com.tencent.devops.process.service.BuildVariableService
 import com.tencent.devops.process.service.scm.ScmProxyService
 import com.tencent.devops.process.utils.BUILD_NO
 import com.tencent.devops.process.utils.PIPELINE_TIME_START
+import com.tencent.devops.process.utils.PipelineVarUtil
 import io.micrometer.core.instrument.Counter
 import io.micrometer.core.instrument.MeterRegistry
 import org.slf4j.LoggerFactory
@@ -95,7 +96,7 @@ import kotlin.math.max
  * @version 1.0
  */
 @Service
-@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount")
+@Suppress("TooManyFunctions", "LongParameterList", "ReturnCount", "NestedBlockDepth")
 class BuildStartControl @Autowired constructor(
     private val pipelineEventDispatcher: PipelineEventDispatcher,
     private val redisOperation: RedisOperation,
@@ -350,6 +351,10 @@ class BuildStartControl @Autowired constructor(
         return checkStart
     }
 
+    /**
+     * 这方法存在bug的，但用户将错就错，也有这么用，功能暂时不能下线，不再修改。不建议用他
+     */
+    @Deprecated("这方法存在bug的，但用户将错就错，也有这么用，功能暂时不能下线，不再修改。不建议用他")
     private fun PipelineBuildStartEvent.handleBuildNo() {
         if (buildNoType == BuildNoType.SUCCESS_BUILD_INCREMENT) {
             // 防止"每次构建成功+1"读取到相同buildNo的情况正式启动前为var表设置最新的buildNo
@@ -369,6 +374,15 @@ class BuildStartControl @Autowired constructor(
                         varName = BUILD_NO,
                         varValue = buildNo
                     )
+                    val buildParameters = pipelineRuntimeService.getBuildParametersFromStartup(projectId, buildId)
+                    val recommendVersionPrefix = PipelineVarUtil.getRecommendVersionPrefix(buildParameters)
+                    if (recommendVersionPrefix != null) {
+                        pipelineRuntimeService.updateRecommendVersion(
+                            projectId = projectId,
+                            buildId = buildId,
+                            recommendVersion = "$recommendVersionPrefix.$buildNo"
+                        )
+                    }
                 }
             } finally {
                 buildNoLock.unlock()
@@ -533,6 +547,7 @@ class BuildStartControl @Autowired constructor(
                                     return@nextElement
                                 }
                             }
+
                             is CodeGitElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -542,11 +557,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is CodeGitlabElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -556,11 +573,13 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     !ele.branchName.isNullOrBlank() -> EnvUtils.parseEnv(ele.branchName!!, variables)
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             is GithubElement -> {
                                 val branchName = when {
                                     ele.gitPullMode != null -> {
@@ -570,10 +589,12 @@ class BuildStartControl @Autowired constructor(
                                             return@nextElement
                                         }
                                     }
+
                                     else -> return@nextElement
                                 }
                                 RepositoryConfigUtils.buildConfig(ele) to branchName
                             }
+
                             else -> return@nextElement
                         }
 
@@ -593,6 +614,7 @@ class BuildStartControl @Autowired constructor(
                                     ele.revision = latestRevision.data!!.revision
                                     ele.specifyRevision = true
                                 }
+
                                 is CodeGitElement -> ele.revision = latestRevision.data!!.revision
                                 is GithubElement -> ele.revision = latestRevision.data!!.revision
                                 is CodeGitlabElement -> ele.revision = latestRevision.data!!.revision
