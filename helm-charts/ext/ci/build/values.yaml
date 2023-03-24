@@ -104,6 +104,8 @@ mongodb:
   enabled: false
 kubernetes-manager:
   enabled: false
+pulsar:
+  enabled: false
 
 #外部数据库
 externalMysql:

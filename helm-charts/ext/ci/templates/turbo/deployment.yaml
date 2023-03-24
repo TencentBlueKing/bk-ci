@@ -3,10 +3,10 @@
 apiVersion: {{ include "common.capabilities.deployment.apiVersion" . }}
 kind: Deployment
 metadata:
-  name: {{ include "bkci.names.fullname" . }}-turbo
+  name: {{ include "bkci.names.fullname" . }}-turbo-new
   labels: {{- include "bkci.labels.standard" . | nindent 4 }}
-    app.kubernetes.io/name: turbo
-    app.kubernetes.io/component: microservice-turbo
+    app.kubernetes.io/name: turbo-new
+    app.kubernetes.io/component: microservice-turbo-new
     {{- if .Values.commonLabels }}
       {{- include "common.tplvalues.render" (dict "value" .Values.commonLabels "context" $) | nindent 4 }}
     {{- end }}
@@ -16,16 +16,16 @@ metadata:
 spec:
   selector:
     matchLabels: {{- include "bkci.labels.matchLabels" . | nindent 6 }}
-      app.kubernetes.io/name: turbo
-      app.kubernetes.io/component: microservice-turbo
+      app.kubernetes.io/name: turbo-new
+      app.kubernetes.io/component: microservice-turbo-new
   {{- if not .Values.turbo.autoscaling.enabled }}
   replicas: {{ default 1 .Values.turbo.replicaCount }}
   {{- end }}
   template:
     metadata:
       labels: {{- include "bkci.labels.standard" . | nindent 8 }}
-        app.kubernetes.io/name: turbo
-        app.kubernetes.io/component: microservice-turbo
+        app.kubernetes.io/name: turbo-new
+        app.kubernetes.io/component: microservice-turbo-new
         {{- if .Values.turbo.podLabels }}
         {{- include "common.tplvalues.render" (dict "value" .Values.turbo.podLabels "context" $) | nindent 8 }}
         {{- end }}
@@ -55,7 +55,7 @@ spec:
       securityContext: {{- omit .Values.turbo.podSecurityContext "enabled" | toYaml | nindent 8 }}
       {{- end }}
       containers:
-        - name: turbo
+        - name: turbo-new
           image: {{ include "common.images.image" ( dict "imageRoot" .Values.turbo.image "global" .Values.global) }}
           imagePullPolicy: {{ .Values.turbo.image.pullPolicy }}
           {{- if .Values.turbo.containerSecurityContext.enabled }}
