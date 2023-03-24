@@ -246,7 +246,7 @@ export default {
   height: 40px;
   line-height: 40px;
   font-size: 14px;
-  padding-left: 24px;
+  padding: 0 12px;
   color: #63656E;
   cursor: pointer;
   &:hover {

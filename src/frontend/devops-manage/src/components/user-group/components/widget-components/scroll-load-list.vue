@@ -4,7 +4,7 @@
         @scroll.passive="handleScroll"
     >
         <li v-for="(item, index) in list" :key="index">
-            <slot :data="item"></slot>
+            <slot :data="item" :index="index"></slot>
         </li>
     </ul>
 </template>

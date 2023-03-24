@@ -26,6 +26,9 @@ export const handleNoPermission = (ui, params, ajax, h, data = undefined) => {
             prop: 'resourceName'
         }
     ]
+
+    if (!params.action) columns.shift()
+
     const renderException = () => {
         return h(
             ui.bkException,
@@ -254,6 +257,8 @@ export const handleNoPermissionV3 = (ui, params, ajax, h, data) => {
             prop: 'resourceName'
         }
     ]
+
+    if (!params.action) columns.shift()
     const renderException = () => {
         return h(
             ui.Exception,

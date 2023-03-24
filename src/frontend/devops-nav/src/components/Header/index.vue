@@ -48,7 +48,7 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <icon name="appyl" size="14" />
+                                <logo name="apply" size="14" />
                                 <span class="text">{{ $t('applyProject') }}</span>
                             </span>
                             <span class="extension-line" />
@@ -276,7 +276,8 @@
         }
 
         handleApplyProject () {
-            this.$refs.applyProjectDialog.isShow = true
+            // this.$refs.applyProjectDialog.isShow = true
+            this.to('/console/permission/apply')
         }
 
         closeTooltip (): void {

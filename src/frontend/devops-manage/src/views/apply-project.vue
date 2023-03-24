@@ -56,7 +56,7 @@ const handleConfirm = () => {
     infoBoxInstance.value = InfoBox({
       isShow: true,
       infoType: 'warning',
-      title: t('创建项目需您的上级审批，确认提交吗'),
+      title: t('创建项目需你的上级审批，确认提交吗'),
       contentAlign: 'center',
       headerAlign: 'center',
       footerAlign: 'center',

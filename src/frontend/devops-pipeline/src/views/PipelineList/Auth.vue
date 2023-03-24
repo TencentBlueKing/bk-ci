@@ -5,6 +5,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
+        :project-name="projectName"
     />
 </template>
 
@@ -12,13 +13,13 @@
     import { PermissionComponent } from 'bk-permission'
 
     export default {
-        name: 'pipeline-list-auth',
+        name: 'auth-tab',
         components: {
             PermissionComponent
         },
         data () {
             return {
-                resourceType: 'pipeline_group',
+                resourceType: 'pipeline_group'
             }
         },
         computed: {
@@ -28,12 +29,6 @@
             resourceCode () {
                 return this.$route.params.id
             }
-        },
+        }
     }
 </script>
-
-<style lang="scss" scoped>
-    .pipeline-list-auth {
-        padding: 30px;
-    }
-</style>

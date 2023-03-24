@@ -2,7 +2,7 @@
   <section
     ref="wrap"
     class="search-select"
-    :class="{ 'is-focus': input.focus }"
+    :class="{ 'is-focus': input.focus, 'disabled': isDisabled }"
     @click="handleWrapClick">
     <div
       class="search-input"
@@ -14,6 +14,7 @@
           :key="tagInfo.id"
           :list="list"
           :tag-info="tagInfo"
+          :is-disabled="isDisabled"
           @handleTagClear="handleTagClear">
         </select-tag>
       </template>
@@ -24,9 +25,15 @@
           :disableOutsideClick="true"
           :arrow="false"
           :isShow="showMenuPopover"
-          placement='bottom-start'
-          :boundary="boundary">
+          placement='bottom-start'>
           <div
+            class="div-input-disabled"
+            v-if="isDisabled"
+            :data-placeholder="disabledPlaceholder"
+          >
+          </div>
+          <div
+            v-else
             ref="input"
             class="div-input"
             :class="{ 'input-before': isShowPlaceholder }"
@@ -74,21 +81,25 @@
             <template v-else>
               <!-- 条件已选中操作或资源实例场景 -->
               <template v-if="hasResourceCode || hasActionId">
-                <ul class="search-list-menu">
-                  <div v-if="resourceActionsList.length">
-                    <div v-for="item in resourceActionsList" :key="item.id">
-                      <li
-                        class="menu-item"
-                        :class="{ 'is-hover': hoverId === item.id }"
-                        :key="item.id"
-                        @click="handleResourceSelect(item)">
-                        {{ item.name }}
-                      </li>
+                <scroll-load-list
+                  ref="loadList"
+                  :list="resourceActionsList"
+                  :hasLoadEnd="hasLoadEnd"
+                  :getDataMethod="getDataMethod"
+                  :resourceType="resourceType"
+                  :showMenu="showMenu"
+                  :titleType="titleType"
+                  @change="changeKeyWords"
+                >
+                  <template v-slot="{ data }">
+                    <div
+                      :class="{ 'is-hover': hoverId === data.id }"
+                      :key="data.id"
+                      @click="handleResourceSelect(data)">
+                      {{ data.name }}
                     </div>
-                  </div>
-                  <p v-else-if="!isLoading && !resourceActionsList.length" class="no-search-data">{{ '查询无数据' }}</p>
-                  <div v-if="isLoading" class="loading-panel">{{ $t('正在加载中...') }}</div>
-                </ul>
+                  </template>
+                </scroll-load-list>
               </template>
               <template v-else>
                 <section class="cascader-menu">
@@ -108,21 +119,27 @@
                     <p v-else class="no-search-data">{{ '查询无数据' }}</p>
                   </ul>
                   <div>
-                    <div v-if="showMenu && !isLoading && resourceActionsList.length" class="cascader-panel">
-                      <ul>
-                        <div v-for="item in resourceActionsList" :key="item.id">
-                          <li
-                            class="menu-item"
-                            :class="{ 'is-hover': hoverId === item.id }"
-                            :key="item.id"
-                            @click="handleResourceSelect(item)">
-                            {{ item.name }}
-                          </li>
-                        </div>
-                      </ul>
+                    <div v-if="showMenu" class="cascader-panel">
+                      <scroll-load-list
+                        ref="loadList"
+                        :list="resourceActionsList"
+                        :hasLoadEnd="hasLoadEnd"
+                        :getDataMethod="getDataMethod"
+                        :resourceType="resourceType"
+                        :showMenu="showMenu"
+                        :titleType="titleType"
+                        @change="changeKeyWords"
+                      >
+                        <template v-slot="{ data }">
+                          <div
+                            :class="{ 'is-hover': hoverId === data.id }"
+                            @click="handleResourceSelect(data)"
+                          >
+                            {{ data.name }}
+                          </div>
+                        </template>
+                      </scroll-load-list>
                     </div>
-                    <div v-if="showMenu && !isLoading && !resourceActionsList.length" class="loading-panel">{{ $t('查询无数据') }}</div>
-                    <div v-if="isLoading" class="loading-panel">{{ $t('正在加载中...') }}</div>
                   </div>
                 </section>
               </template>
@@ -142,6 +159,7 @@ import tools from '../../utils/tools.js'
 import { clickoutside, Message } from 'bkui-vue';
 import selectTag from './selectTag'
 import { Search } from 'bkui-vue/lib/icon'
+import scrollLoadList from '@/components/scroll-load-list.vue'
 
 export default {
   name: 'searchSelect',
@@ -151,6 +169,7 @@ export default {
   components: {
     selectTag,
     Search,
+    scrollLoadList,
   },
   model: {
     prop: 'values',
@@ -159,7 +178,7 @@ export default {
   props: {
     placeholder: {
       type: String,
-      default: '用户组/描述/资源实例/操作',
+      default: '资源实例/用户组/描述/操作/ID',
     },
     searchList: {
       type: Array,
@@ -192,6 +211,9 @@ export default {
     projectCode: {
       type: String,
       default: '',
+    },
+    isDisabled: {
+      type: Boolean,
     }
   },
   computed: {
@@ -238,6 +260,12 @@ export default {
       if (this.resourceList.length) return this.resourceList;
       return this.actionsList;
     },
+    getDataMethod() {
+      if (this.selectInfo.id === 'actionId') {
+        return this.getActionsList;
+      }
+      return this.getResourceList;
+    }
   },
   watch: {
     searchList: {
@@ -253,6 +281,12 @@ export default {
       },
       deep: true
     },
+    projectCode: {
+      handler (val) {
+        this.searchSelectValue = []
+      },
+      deep: true
+    }
   },
   data() {
     return {
@@ -275,6 +309,9 @@ export default {
       resourceTypeName: '',
       hasResourceCode: false,
       hasActionId: false,
+      hasLoadEnd: false,
+      titleType: '',
+      disabledPlaceholder: this.$t('尚未加入项目，请先加入后再开启搜索')
     }
   },
   async created() {
@@ -283,8 +320,8 @@ export default {
   },
   methods: {
     async initApplyQuery() {
-      const { resourceType, action, iamResourceCode, groupId } = this.$route.query;
-      if (resourceType && iamResourceCode && action && iamResourceCode) {
+      const { resourceType, action, iamResourceCode, groupId, groupName } = this.$route.query;
+      if (resourceType && iamResourceCode && action) {
         this.resourceType = resourceType;
         if (groupId) {
           await this.getResourceList();
@@ -318,11 +355,36 @@ export default {
           }
           this.searchSelectValue.push(actionParams);
         }
+
+        if (groupName) {
+          const nameParams = {
+            id: 'name',
+            name: this.$t('用户组名'),
+            values: [groupName]
+          }
+          this.searchSelectValue.push(nameParams);
+        }
+      } else if (resourceType && iamResourceCode) {
+        this.resourceType = resourceType;
+        await this.getResourceList();
+        await this.getActionsList();
+        const resourceTypeName = this.resourcesTypeList.find(i => i.resourceType === resourceType).name
+        const resourceValue = this.resourceList.find(i => i.iamResourceCode === iamResourceCode);
+        resourceValue.name = `${resourceTypeName}/${resourceValue.resourceName}`
+        const resourceCodeParams = {
+          id: 'resourceCode',
+          name: this.$t('资源实例'),
+          values: [resourceValue],
+        };
+        this.searchSelectValue.push(resourceCodeParams);
       }
+    },
+    changeKeyWords() {
+      this.resourceList = [];
     },
     async getActionsList() {
       this.isLoading = true;
-      await http.getActionsList(this.resourceType).then(res => {
+      return await http.getActionsList(this.resourceType).then(res => {
         this.actionsList = res.map(item => {
           return {
             ...item,
@@ -330,11 +392,11 @@ export default {
             name: item.actionName,
           }
         });
+        this.hasLoadEnd = true;
       }).catch(() => []);
-      this.isLoading = false;
     },
     
-    async getResourceList() {
+    async getResourceList(page, pageSize, keyWords) {
       if (!this.projectCode) {
         Message({
           theme: 'error',
@@ -342,19 +404,29 @@ export default {
         });
         return;
       };
-      this.isLoading = true;
-      await http.getResourceList({
-        resourceType: this.resourceType,
-        projectId: this.projectCode,
-      }).then(res => {
-        this.resourceList = res.records.map(item => {
+      this.isLoading = true
+      return await http.getResourceList(
+        {
+          resourceType: this.resourceType,
+          projectId: this.projectCode,
+          resourceName: keyWords
+        },
+        {
+          page,
+          pageSize
+        }
+      )
+      .then(res => {
+        this.hasLoadEnd = !res.hasNext;
+        const list = res.records.map(item => {
           return {
             ...item,
             name: item.resourceName,
           }
         });
-      }).catch(() => []);
-      this.isLoading = false;
+        this.resourceList = [...this.resourceList, ...list]
+        this.isLoading = false
+      });
     },
     // 获取资源类型列表
     async getResourceTypesList() {
@@ -374,15 +446,13 @@ export default {
     },
     // searchSelect点击事件
     handleWrapClick() {
+      if (this.isDisabled) return
       if (this.shrink) {
         this.setInputFocus();
       }
       if (!this.selectInfo.id || this.selectInfo.children) {
         this.showMenuPopover = true;
       }
-    },
-    handleWrapClickOutSide() {
-      this.showMenuPopover = false;
     },
     // 点击到searchSelect外面
     handleInputClickOutSide(e) {
@@ -401,6 +471,7 @@ export default {
     },
     // 文本框获取焦点
     handleInputFocus() {
+      if (this.isDisabled) return
       this.input.focus = true
       const input = this.$refs.input;
       // 设置文本框焦点显示位置
@@ -422,13 +493,14 @@ export default {
       this.resourceList = [];
       this.hasResourceCode = this.searchSelectValue.some(item => item.id === 'resourceCode');
       this.hasActionId = this.searchSelectValue.some(item => item.id === 'actionId');
-      if (this.hasResourceCode && val.id === 'actionId') {
-        this.getActionsList();
-      }
+      this.titleType = val.id;
+      // if (this.hasResourceCode && val.id === 'actionId') {
+      //   this.getActionsList();
+      // }
 
-      if (this.hasActionId && val.id === 'resourceCode') {
-        this.getResourceList();
-      }
+      // if (this.hasActionId && val.id === 'resourceCode') {
+      //   this.getResourceList();
+      // }
 
       this.selectInfo = tools.deepClone(val);
       const inputDom = this.$refs.input;
@@ -445,17 +517,21 @@ export default {
     },
     
     async handleOptionSelect(val) {
+      if (this.showMenu && (this.resourceType === val.resourceType)) return
       this.showMenu = true;
+      this.hasLoadEnd = false;
+      this.actionsList = [];
+      this.resourceList = [];
       const { resourceType, name } = val
       this.resourceType = resourceType;
       this.resourceTypeName = name;
       this.hoverId = resourceType;
       this.isLoading = true;
-      if (this.selectInfo.id === 'actionId') {
-        await this.getActionsList();
-      } else {
-        await this.getResourceList();
-      }
+      // if (this.selectInfo.id === 'actionId') {
+      //   await this.getActionsList();
+      // } else {
+      //   await this.getResourceList();
+      // }
       this.isLoading = false;
     },
 
@@ -503,7 +579,9 @@ export default {
 
     // 快速清空
     handleClear() {
-      this.$refs.input.innerText = '';
+      if (!this.isDisabled) {
+        this.$refs.input.innerText = '';
+      }
       this.setInputFocus();
       this.input.value = '';
       this.selectInfo = {};
@@ -529,6 +607,9 @@ export default {
 
     // 文本框按键事件
     handleInputKeyup (e) {
+      if (this.isDisabled) {
+        return
+      }
       switch (e.code) {
         case 'Enter':
         case 'NumpadEnter':
@@ -661,7 +742,9 @@ export default {
       const index = this.searchSelectValue.findIndex(item => item.id === id);
       this.searchSelectValue.splice(index, 1);
       this.setInputFocus();
-      this.showMenuPopover = true;
+      setTimeout(() => {
+        this.showMenuPopover = true;
+      }, 100);
     },
   }
 }
@@ -702,6 +785,9 @@ export default {
     &.is-focus {
       border-color: #3a84ff;
     }
+    &.disabled {
+      cursor: not-allowed;
+    }
     transition: all .5s;
   }
   .search-input {
@@ -741,6 +827,13 @@ export default {
           padding-left: 2px;
         }
       }
+      .div-input-disabled {
+        &:before {
+          content: attr(data-placeholder);
+          color: #c4c6cc;
+          padding-left: 2px;
+        }
+      }
       :deep(.bk-tooltip) {
           width: 100%;
           .bk-tooltip-ref {
@@ -772,7 +865,6 @@ export default {
   .bk-popover {
     padding: 0 !important;
     padding-bottom: 0 !important;
-    .cascader-panel,
     .loading-panel,
     .search-list-menu,
     .select-list-menu {
@@ -817,7 +909,7 @@ export default {
       }
       &:hover,
       &.is-hover {
-        background: #FFF5F7FA;
+        background: #f5f7fa;
       }
     }
     .search-menu-item {
@@ -844,6 +936,7 @@ export default {
       display: flex;
       .cascader-panel {
         width: 160px;
+        height: 100%;
       }
     }
     .no-search-data {

@@ -56,3 +56,12 @@ url("fonts/iconcool.eot?#iefix") format("embedded-opentype");
 .permission-icon-wodeshenpi:before {
 	content: "\e10a";
 }
+.permission-icon-zuzhijiagou_fill:before {
+	content: "\e10c";
+}
+.permission-icon-jiaruxiangmu:before {
+	content: "\e10d";
+}
+.permission-icon-edit:before {
+	content: "\e10e";
+}

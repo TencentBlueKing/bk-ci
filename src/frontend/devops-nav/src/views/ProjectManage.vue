@@ -20,6 +20,7 @@
                     <bk-input
                         v-model="inputValue"
                         class="search-input"
+                        clearable
                         right-icon="bk-icon icon-search"
                         :placeholder="$t('searchProject')"
                     ></bk-input>
@@ -87,25 +88,25 @@
                                     class="mr5"
                                     size="small"
                                     theme="primary"
-                                    :disabled="[1, 3].includes(row.approvalStatus)"
+                                    :disabled="[1, 3, 4].includes(row.approvalStatus)"
                                 />
                                 <span class="mr5">
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
                                 </span>
-                                <icon
+                                <div
                                     v-bk-tooltips="{ content: $t('新建项目申请已拒绝') }"
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
-                                    :size="16"
-                                    name="warning-circle-small"
-                                />
-                                <icon
+                                >
+                                    <img src="../assets/scss/logo/warning-circle-small.svg" alt="">
+                                </div>
+                                <div
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
-                                    :size="16"
-                                    name="wait-small"
-                                />
+                                >
+                                    <img src="../assets/scss/logo/wait-small.svg" alt="">
+                                </div>
                             </span>
                         </template>
                     </bk-table-column>
@@ -116,12 +117,14 @@
                             <bk-button
                                 class="mr5"
                                 text
+                                :disabled="row.approvalStatus === 1"
                                 @click="handleGoUserGroup(row)"
                             >
                                 {{ $t('userGroupManage') }}
                             </bk-button>
                             <bk-button
                                 text
+                                :disabled="row.approvalStatus === 1"
                                 @click="handleGoExtend(row)"
                             >
                                 {{ $t('extendManage') }}
@@ -234,13 +237,13 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}`)
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/manage/${projectCode}/group?x-devops-project-id=${projectCode}`
                         break
                 }
             },
@@ -251,10 +254,10 @@
                 switch (projectTag) {
                     case 'v0':
                     case 'v3':
-                        window.open(`/console/store/serviceManage/${projectCode}`)
+                        window.location.href = `/console/store/serviceManage/${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/expand`)
+                        window.location.href = `/console/manage/${projectCode}/expand`
                         break
                 }
             },
@@ -273,17 +276,18 @@
                 const projectTag = this.getProjectTag(routerTag)
                 switch (projectTag) {
                     case 'v0':
-                        window.open(`/console/perm/my-project?project_code=${projectCode}`)
+                        window.location.href = `/console/perm/my-project?project_code=${projectCode}`
                         break
                     case 'v3':
-                        window.open(`/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/ps/${projectCode}/${relationId}/member?x-devops-project-id=${projectCode}`
                         break
                     case 'rbac':
-                        window.open(`/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`)
+                        window.location.href = `/console/manage/${projectCode}/show?x-devops-project-id=${projectCode}`
                         break
                 }
             },
             handleChangeEnabled (row) {
+                if ([1, 3, 4].includes(row.approvalStatus)) return
                 const { englishName: projectCode, enabled, projectName, routerTag } = row
                 this.toggleProjectEnable({
                     projectCode: projectCode,
@@ -513,6 +517,7 @@
         cursor: pointer;
     }
     .status-icon {
+        width: 16px;
         margin-right: 5px;
     }
 </style>

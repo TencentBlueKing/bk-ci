@@ -115,6 +115,12 @@
             },
             isOpenManageLoading: {
                 type: Boolean
+            },
+            projectName: {
+                type: String
+            },
+            groupName: {
+                type: String
             }
         },
 

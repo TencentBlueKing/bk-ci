@@ -19,6 +19,7 @@ const route = useRoute();
 const props = defineProps({
   groupList: Array,
   projectCode: String,
+  isDisabled: Boolean,
 });
 
 const { t } = useI18n();
@@ -43,16 +44,16 @@ const isSelectedAll = ref(false);
 const searchList = computed(() => {
   const datas = [
     {
-      name: t('用户组名'),
-      isDefaultOption: true,
-      id: 'name',
-      multiple: false,
-    },
-    {
       name: t('资源实例'),
       id: 'resourceCode',
       multiple: false,
       children: [],
+    },
+    {
+      name: t('用户组名'),
+      isDefaultOption: true,
+      id: 'name',
+      multiple: false,
     },
     {
       name: t('操作'),
@@ -85,7 +86,10 @@ const handleChangeSelectGroup = (values) => {
 const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined));
 
 watch(() => props.projectCode, () => {
-  if (props.projectCode && !route.query.resourceType) {
+  if ((props.projectCode && !route.query.resourceType)
+    || (props.projectCode && !route.query.action)
+    || (props.projectCode && route.query.action && route.query.resourceType)) {
+    filter.value = [];
     fetchGroupList();
   };
 })
@@ -109,7 +113,9 @@ watch(() => userGroupList.value, () => {
   const { groupId } = route?.query;
   if (groupId && filter.value.length) {
     const group = userGroupList.value.find(group => String(group.id) === groupId);
-    group && selections.value.push(group);
+    if (group && selections.value.findIndex(selection => String(selection.id) === groupId) === -1) {
+      selections.value.push(group);
+    }
   }
   checkSelectedAll();
   checkIndeterminate();
@@ -141,7 +147,9 @@ const initTable = () => {
 
 const handleChangeSearch = (data) => {
   filter.value = data;
-  fetchGroupList(data);
+  if (data.length) {
+    fetchGroupList(data);
+  }
 };
 
 const fetchGroupList = async (payload = []) => {
@@ -224,6 +232,8 @@ const renderSelectionCell = ({ row, column }) => {
     {
       modelValue: row.joined ? row.joined : selections.value.some(item => item.id === row.id),
       disabled: row.joined,
+      class: 'label-text',
+      title: row.joined ? t('你已获得该权限') : '',
       onChange(val) {
         handleSelectRow(val, row)
       }
@@ -291,7 +301,6 @@ const columns = [
   },
   {
     label: t('描述'),
-    field: 'description',
     render ({ cell, row }) {
       return h(
         'span',
@@ -314,9 +323,11 @@ const columns = [
       class="group-search-filter"
       v-model="filter"
       :search-list="searchList"
+      :is-disabled="isDisabled"
       :project-code="projectCode"
       @change="handleChangeSearch">
     </search-select>
+    <!-- <div v-if="isDisabled" style="color: #c4c6cd; font-size: 12px;">{{ $t('无该项目的权限，请先选择下方用户组申请加入项目') }}</div> -->
     <bk-loading
       class="group-table"
       :loading="isLoading">

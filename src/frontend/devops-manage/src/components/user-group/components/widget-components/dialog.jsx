@@ -16,6 +16,21 @@ export default defineComponent({
         },
         width: {
             type: Number
+        },
+        theme: {
+            type: String
+        },
+        dialogType: {
+            type: String
+        },
+        quickClose: {
+            type: String
+        },
+        extCls: {
+            type: String
+        },
+        headerAlign: {
+            type: String
         }
     },
 
@@ -55,14 +70,20 @@ export default defineComponent({
             />
         }
         return <bk-dialog
+            dialogType={this.dialogType}
             isShow={this.isShow}
             title={this.title}
             loading={this.loading}
             width={this.width}
+            theme={this.theme}
+            quickClose={this.quickClose}
+            extCls={this.extCls}
+            headerAlign={this.headerAlign}
             {...{on: listeners }}
         >
             {{
                 default: () => $slots.default?.(),
+                header: () => $slots.header?.(),
                 footer: () => $slots.footer?.()
             }}
         </bk-dialog>

@@ -4,6 +4,7 @@
         :resource-code="resourceCode"
         :project-code="projectCode"
         :show-create-group="false"
+        :project-name="projectName"
     />
 </template>
 
@@ -30,16 +31,10 @@
             },
             resourceCode () {
                 return this.$route.params.pipelineId
+            },
+            projectName () {
+                return this.curProject.projectName
             }
         }
     }
 </script>
-
-<style lang="scss">
-    .close-manage-dialog {
-        .bk-dialog-header-inner {
-            overflow: initial !important;
-            white-space: normal !important;
-        }
-    }
-</style>

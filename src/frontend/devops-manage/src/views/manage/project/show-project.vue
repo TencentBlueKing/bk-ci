@@ -32,6 +32,13 @@ const projectDiffData = ref<any>({});
 const isLoading = ref(false);
 const userName = ref('');
 const hasPermission = ref(true)
+const showException = ref(false);
+const exceptionObj = ref({
+  type: '',
+  title: '',
+  description: '',
+  showBtn: false
+})
 
 const fetchProjectData = async () => {
   isLoading.value = true;
@@ -48,13 +55,23 @@ const fetchProjectData = async () => {
       }
     })
     .catch((err) => {
+      showException.value = true
       if (err.code === 403) {
         hasPermission.value = false
-      } else {
-        Message({
-          theme: 'error',
-          message: err.message || err,
-        })
+        exceptionObj.value.showBtn = true;
+        exceptionObj.value.type = '403';
+        exceptionObj.value.title = t('无项目权限');
+        exceptionObj.value.description = t('你没有项目的查看权限，请先申请', [projectCode]);
+      } else if (err.code === 404)  {
+        exceptionObj.value.showBtn = false;
+        exceptionObj.value.type = '404';
+        exceptionObj.value.title = t('项目不存在');
+        exceptionObj.value.description = '';
+      } else if (err.code === 2119042) {
+        exceptionObj.value.showBtn = false;
+        exceptionObj.value.type = '403';
+        exceptionObj.value.title = t('项目创建中');
+        exceptionObj.value.description = t('项目正在创建审批中，请耐心等待', [projectCode]);
       }
     });
   isLoading.value = false;
@@ -223,7 +240,6 @@ const handleCancelCreation = () => {
 
 const handleNoPermission = () => {
   handleProjectManageNoPermission({
-    action: RESOURCE_ACTION.VIEW,
     projectId: projectCode,
     resourceCode: projectCode,
   })
@@ -301,7 +317,7 @@ onMounted(async () => {
                       <svg v-else aria-hidden="true" class="enable-status-icon">
                         <use xlink:href="#manage-icon-unknown"></use>
                       </svg>
-                      {{ projectData.enabled ? t('已启用') : t('未启用') }}
+                      {{ projectData.enabled ? t('已启用') : t('已停用') }}
                     </span>
                   </div>
                   <div class="diff-content" v-if="projectData.afterLogoAddr || projectData.afterProjectName">
@@ -323,7 +339,7 @@ onMounted(async () => {
                   </div>
                 </bk-form-item>
                 <bk-form-item :label="t('项目所属组织')" property="bg">
-                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.afterCenterName ? '-' : '' }} {{ projectData.centerName }}</span>
+                  <span>{{ projectData.bgName }} - {{ projectData.deptName }} {{ projectData.centerName ? '-' : '' }} {{ projectData.centerName }}</span>
                   <div class="diff-content" v-if="projectData.afterBgName || projectData.afterDeptName || projectData.afterCenterName">
                     <p class="update-title">
                       {{ t('本次更新：') }}
@@ -449,13 +465,13 @@ onMounted(async () => {
           </template>
         </template>
         <bk-exception
-          v-else
+          v-if="showException"
           class="content-main mt20"
-          type="403"
-          :title="t('无查看项目权限')"
-          :description="t('你没有项目的查看权限，请先申请', [projectCode])"
+          :type="exceptionObj.type"
+          :title="exceptionObj.title"
+          :description="exceptionObj.description"
         >
-          <bk-button theme="primary" @click="handleNoPermission">
+          <bk-button v-if="exceptionObj.showBtn" theme="primary" @click="handleNoPermission">
             {{ t('去申请') }}
           </bk-button>
         </bk-exception>
@@ -517,6 +533,7 @@ onMounted(async () => {
     margin-left: 5px;
   }
   .content-main {
+    color: #313238;
     padding: 32px 48px;
   }
   .detail-content-form {

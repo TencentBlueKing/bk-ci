@@ -6,7 +6,11 @@ import {
   ref,
   onMounted,
   nextTick,
+  watch,
 } from 'vue';
+import {
+  bkTooltips
+} from 'bkui-vue';
 import { useI18n } from 'vue-i18n';
 import { Message } from 'bkui-vue';
 import { useRoute, useRouter } from 'vue-router';
@@ -33,6 +37,17 @@ const timeFilters = ref({
 });
 const formRef = ref();
 const isLoading = ref(false);
+const scrollLoading = ref(false);
+const pageInfo = ref({
+  page: 1,
+  pageSize: 10,
+  projectName: '',
+  loadEnd: false,
+})
+
+const projectName = ref(route?.query.projectName);
+const curProject = ref(null);
+const isDisabled = ref(false);
 
 const rules = {
   projectCode: [
@@ -50,6 +65,25 @@ const rules = {
     },
   ],
 };
+
+watch(() => formData.value.projectCode, (val) => {
+  groupList.value = [];
+  const project = projectList.value.find(i => i.englishName === val)
+  if (project) {
+    isDisabled.value = !project.permission
+  }
+}, {
+  deep: true,
+})
+
+
+watch(() => curProject.value, (val) => {
+  if (curProject.value) {
+    isDisabled.value = !val.permission
+  }
+}, {
+  deep: true,
+})
 
 const handleChangeTime = (value) => {
   currentActive.value = Number(value)
@@ -122,16 +156,65 @@ const getUserInfo = () => {
   });
 };
 
-const getAllProjectList = () => {
-  http.getAllProjectList().then(res => {
-    projectList.value = res;
+const handleSearchProject = (val) => {
+  pageInfo.value.loadEnd = false;
+  pageInfo.value.page = 1;
+  pageInfo.value.projectName = val;
+  projectList.value = [];
+  getAllProjectList(val);
+}
+
+const getAllProjectList = (name = '') => {
+  if (pageInfo.value.loadEnd || scrollLoading.value) {
+    return
+  }
+  const { page, pageSize, projectName } = pageInfo.value;
+  scrollLoading.value = true;
+  http.getAllProjectList({
+    page: page,
+    pageSize: pageSize,
+    projectName: projectName ? projectName : undefined,
+  }).then(res => {
+    pageInfo.value.loadEnd = !res.hasNext;
+    pageInfo.value.page += 1;
+    projectList.value.push(...res.records);
+  }).finally(() => {
+    scrollLoading.value = false;
   });
 };
+
+const getProjectByName = () => {
+  const params = <any>{}
+  if (projectName.value) {
+    params.projectName = projectName.value
+  } else if (route?.query.project_code) {
+    params.english_name = route?.query.project_code
+  }
+  http.getAllProjectList(params).then(res => {
+    curProject.value = res.records[0];
+  })
+}
+
+const handleToProjectManage = (project) => {
+  const { routerTag, englishName } = project;
+  switch (routerTag) {
+    case 'v0':
+        window.open(`/console/perm/apply-join-project?project_code=${englishName}`)
+        break
+    case 'v3':
+        window.open(`${window.BK_IAM_URL_PREFIX}/apply-join-user-group`)
+        break
+  }
+}
+
 onMounted(() => {
   formData.value.expiredAt = formatTimes(2592000);
   formData.value.projectCode = route?.query.project_code || '';
   getUserInfo();
   getAllProjectList();
+  if (projectName.value || route?.query.project_code) {
+    getProjectByName();
+  }
 });
 
 </script>
@@ -152,18 +235,35 @@ onMounted(() => {
               filterable
               :input-search="false"
               class="project-select"
+              :scroll-loading="scrollLoading"
+              @scroll-end="getAllProjectList"
+              :remote-method="handleSearchProject"
             >
               <bk-option
-                v-for="(project, index) in projectList"
-                :key="index"
-                :value="project.projectCode"
-                :label="project.projectName"
-              />
+                  v-for="(project, index) in projectList"
+                  :key="index"
+                  :value="project.englishName"
+                  :disabled="['v0', 'v3'].includes(project.routerTag)"
+                  :label="project.projectName"
+              >
+                <div
+                  class="option-item">
+                  {{ project.projectName }}
+                  <i
+                    v-if="['v0', 'v3'].includes(project.routerTag)"
+                    v-bk-tooltips="$t('项目尚未升级到新版权限系统，点击前往旧版权限中心申请')"
+                    class="permission-icon permission-icon-edit edit-icon"
+                    @click="handleToProjectManage(project)"
+                  >
+                  </i>
+                </div>
+              </bk-option>
             </bk-select>
           </bk-form-item>
           <bk-form-item :label="t('选择用户组')" required>
             <group-search
               :groupList="groupList"
+              :is-disabled="isDisabled"
               :project-code="formData.projectCode"
               @handle-change-select-group="handleChangeGroup"
             ></group-search>
@@ -327,6 +427,22 @@ onMounted(() => {
       cursor: pointer;
       color: #989ca7;
       font-size: 16px;
+    }
+  }
+  .option-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    &:hover {
+      .edit-icon {
+        display: block;
+      }
+    }
+    .edit-icon {
+      display: none;
+      color: blue;
+      cursor: pointer;
     }
   }
 </style>

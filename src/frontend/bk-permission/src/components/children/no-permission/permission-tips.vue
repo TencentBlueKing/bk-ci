@@ -17,7 +17,7 @@ export default {
   props: {
     title: {
       type: String,
-      default: '',
+      default: this.$t('无该项目用户组管理权限'),
     },
   },
 };

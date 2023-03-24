@@ -31,7 +31,7 @@
     "moreDetail": "View more",
     "accessDeny": {
         "title": "No access to this project",
-        "desc": "You are not a member of the project or the project is not existed, please apply for permission or switch the project",
+        "desc": "You are not a project member, or the project does not exist, please apply for permission or switch projects",
         "switchProject": "Switch project",
         "applyJoin": "Apply to join",
         "projectBan": "Project banned",

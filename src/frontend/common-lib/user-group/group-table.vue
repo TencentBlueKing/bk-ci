@@ -270,16 +270,16 @@
         margin-right: 5px;
     }
     .detail-content {
-        padding: 20px;
+        padding: 24px;
         .title {
             font-size: 14px;
             color: #313238;
-            margin-left: 20px;
+            margin-left: 12px;
             &::before {
                 content: '';
                 position: absolute;
-                left: 30px;
-                top: 22px;
+                left: 24px;
+                top: 26px;
                 width: 4px;
                 height: 16px;
                 background: #699DF4;

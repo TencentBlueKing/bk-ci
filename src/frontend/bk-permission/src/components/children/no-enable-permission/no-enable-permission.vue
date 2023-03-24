@@ -6,15 +6,15 @@
         type="403"
         scene="part"
         :class="{ 'exception-gray': isGray }"
+        :title="title"
       >
-        <div>{{ title }}</div>
         <bk-button
           class="mt10"
           theme="primary"
           :disabled="!hasPermission"
           :loading="isOpenManageLoading"
           @click="openManage"
-        >{{ '开启权限管理' }}</bk-button>
+        >{{ $t('开启权限管理') }}</bk-button>
       </bk-exception>
     </div>
   </article>
@@ -83,19 +83,22 @@ export default {
 
 <style lang="scss" scoped>
 .no-enable-permission {
-    height: 100%;
+  height: 100%;
 }
 .content-wrapper {
-    display: flex;
-    align-items: center;
-    flex-direction: column;
-    padding-top: 10%;
-    width: 100%;
-    height: 100%;
-    background-color: #fff;
-    box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
-    text-align: center;
-    font-size: 14px;
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  padding-top: 10%;
+  width: 100%;
+  height: 100%;
+  background-color: #fff;
+  box-shadow: 0 2px 2px 0 rgba(0,0,0,0.15);
+  text-align: center;
+  font-size: 14px;
+}
+::v-deep .bk-exception-img {
+  height: 240px;
 }
 .mt10 {
   margin-top: 10px;

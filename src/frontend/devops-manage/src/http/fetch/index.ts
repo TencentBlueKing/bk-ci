@@ -35,7 +35,6 @@ const allMethods = [...methodsWithoutData, ...methodsWithData];
 const getFetchConfig = (method: string, payload: any, config: IFetchConfig) => {
   let headers = {
     'X-Requested-With': 'fetch',
-    'X-Gateway-Tag': 'kubernetes-dev-rbac',
     'Content-Type': contentTypeMap[config.responseType] || 'application/json'
   }
   if (config.disabledResponseType) {
