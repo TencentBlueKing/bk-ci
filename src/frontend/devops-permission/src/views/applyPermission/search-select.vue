@@ -27,8 +27,9 @@
           :isShow="showMenuPopover"
           placement='bottom-start'>
           <div
-            class="div-input"
+            class="div-input-disabled"
             v-if="isDisabled"
+            :data-placeholder="disabledPlaceholder"
           >
           </div>
           <div
@@ -309,7 +310,8 @@ export default {
       hasResourceCode: false,
       hasActionId: false,
       hasLoadEnd: false,
-      titleType: ''
+      titleType: '',
+      disabledPlaceholder: this.$t('尚未加入项目，请先加入后再开启搜索')
     }
   },
   async created() {
@@ -819,6 +821,13 @@ export default {
         }
       }
       .input-before {
+        &:before {
+          content: attr(data-placeholder);
+          color: #c4c6cc;
+          padding-left: 2px;
+        }
+      }
+      .div-input-disabled {
         &:before {
           content: attr(data-placeholder);
           color: #c4c6cc;

@@ -88,7 +88,7 @@ const optionGroupList = computed(() => userGroupList.value.filter(i => !i.joined
 watch(() => props.projectCode, () => {
   if ((props.projectCode && !route.query.resourceType)
     || (props.projectCode && !route.query.action)
-    || (props.projectCode && route.query.action && route.query.resourceType) {
+    || (props.projectCode && route.query.action && route.query.resourceType)) {
     filter.value = [];
     fetchGroupList();
   };
