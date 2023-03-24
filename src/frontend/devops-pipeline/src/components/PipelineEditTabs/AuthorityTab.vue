@@ -38,12 +38,3 @@
         }
     }
 </script>
-
-<style lang="scss">
-    .close-manage-dialog {
-        .bk-dialog-header-inner {
-            overflow: initial !important;
-            white-space: normal !important;
-        }
-    }
-</style>

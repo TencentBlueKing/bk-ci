@@ -1,40 +1,28 @@
 <template>
-    <user-group
-        class="pipeline-list-auth"
+    <permission-component
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"
-        :group-list="groupList"
-        :is-loading="isLoading"
-        :is-open-manage-loading="isOpenManageLoading"
-        :member-group-list="memberGroupList"
-        :has-permission="hasPermission"
-        :is-enable-permission="isEnablePermission"
-        :open-manage="handleOpenManage"
-        :close-manage="handleCloseManage"
         :show-create-group="false"
-        :group-name="groupName"
+        :project-name="projectName"
     />
 </template>
 
 <script>
-    import UserGroup from '../../../../common-lib/user-group/index.vue'
-    import { mapActions } from 'vuex'
+    import {
+        PermissionComponent
+    } from 'bk-permission'
+    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
 
     export default {
-        name: 'pipeline-list-auth',
+        name: 'auth-tab',
         components: {
-            UserGroup
+            PermissionComponent
         },
+        mixins: [pipelineOperateMixin],
         data () {
             return {
-                hasPermission: false,
-                isEnablePermission: false,
-                resourceType: 'pipeline_group',
-                groupList: [],
-                memberGroupList: [],
-                isLoading: false,
-                isOpenManageLoading: false
+                resourceType: 'pipeline_group'
             }
         },
         computed: {
@@ -44,195 +32,9 @@
             resourceCode () {
                 return this.$route.params.id
             },
-            groupName () {
-                return this.$route.query.groupName
-            }
-        },
-        async created () {
-            await this.fetchHasManagerPermissionFromApi()
-            await this.fetchEnablePermissionFromApi()
-            await this.getUserList()
-        },
-        methods: {
-            ...mapActions('pipelines', [
-                'fetchHasManagerPermission',
-                'fetchEnablePermission',
-                // 'fetchEnablePermissionFromApi',
-                'enableGroupPermission',
-                'disableGroupPermission',
-                'fetchUserGroupList',
-                'fetchGroupMember',
-                'deleteGroup'
-            ]),
-            async getUserList () {
-                // 普通成员获取成员数据
-                if (this.isEnablePermission && !this.hasPermission && this.resourceType !== 'project') {
-                    await this.fetchMemberGroupList()
-                }
-            },
-            /**
-             * 是否为资源的管理员
-             */
-            fetchHasManagerPermissionFromApi () {
-                this.isLoading = true
-                const {
-                    projectCode,
-                    resourceType,
-                    resourceCode
-                } = this
-
-                return this
-                    .fetchHasManagerPermission({
-                        projectCode,
-                        resourceType,
-                        resourceCode
-                    })
-                    .then((res) => {
-                        this.hasPermission = res?.data
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-                    .finally(() => {
-                        this.isLoading = false
-                    })
-            },
-            /**
-             * 是否开启了权限管理
-             */
-            fetchEnablePermissionFromApi () {
-                this.isLoading = true
-                const {
-                    projectCode,
-                    resourceType,
-                    resourceCode
-                } = this
-
-                return this
-                    .fetchEnablePermission({
-                        projectCode,
-                        resourceType,
-                        resourceCode
-                    })
-                    .then((res) => {
-                        this.isEnablePermission = res?.data
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-                    .finally(() => {
-                        this.isLoading = false
-                    })
-            },
-            /**
-             * 开启权限管理
-             */
-            handleOpenManage () {
-                const {
-                    resourceType,
-                    resourceCode,
-                    projectCode
-                } = this
-
-                this.isOpenManageLoading = true
-
-                return this
-                    .enableGroupPermission({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        if (res?.data) {
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('开启成功')
-                            })
-                            this.isEnablePermission = true
-                            this.getUserList()
-                        }
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-                    .finally(() => {
-                        this.isOpenManageLoading = false
-                    })
-            },
-            /**
-             * 关闭权限管理
-             */
-            handleCloseManage () {
-                const {
-                    resourceType,
-                    resourceCode,
-                    projectCode
-                } = this
-
-                return this
-                    .disableGroupPermission({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        if (res?.data) {
-                            this.isEnablePermission = false
-                            this.$bkMessage({
-                                theme: 'success',
-                                message: this.$t('关闭成功')
-                            })
-                        }
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
-            },
-
-            /**
-             * 获取用户所属组 (普通成员)
-             */
-            fetchMemberGroupList () {
-                const {
-                    resourceType,
-                    resourceCode,
-                    projectCode
-                } = this
-
-                return this
-                    .fetchGroupMember({
-                        resourceType,
-                        resourceCode,
-                        projectCode
-                    })
-                    .then((res) => {
-                        this.memberGroupList = res.data
-                    })
-                    .catch((err) => {
-                        this.$bkMessage({
-                            theme: 'error',
-                            message: err.message || err
-                        })
-                    })
+            projectName () {
+                return this.curProject.projectName
             }
         }
     }
 </script>
-
-<style lang="scss" scoped>
-    .pipeline-list-auth {
-        padding: 30px;
-    }
-</style>
