@@ -179,10 +179,10 @@ class LabelServiceImpl @Autowired constructor(
      */
     override fun addLabelToLabelList(it: Record, labelList: MutableList<Label>) {
         val labelCode = it[KEY_LABEL_CODE] as String
-        val storeType = StoreTypeEnum.getStoreTypeObj((it[KEY_LABEL_TYPE] as Byte).toInt())
+        val labelType = StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt())
         val labelName = it[KEY_LABEL_NAME] as String
         val labelLanName = MessageUtil.getMessageByLocale(
-            messageCode = "${storeType?.name}.label.$labelCode",
+            messageCode = "$labelType.label.$labelCode",
             language = I18nUtil.getLanguage(I18nUtil.getRequestUserId()),
             defaultMessage = labelName
         )
@@ -191,7 +191,7 @@ class LabelServiceImpl @Autowired constructor(
                 id = it[KEY_LABEL_ID] as String,
                 labelCode = labelCode,
                 labelName = labelLanName,
-                labelType = storeType?.name ?: "",
+                labelType = labelType,
                 createTime = (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
                 updateTime = (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
             )

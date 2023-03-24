@@ -66,7 +66,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         private val logger = LoggerFactory.getLogger(StoreI18nMessageServiceImpl::class.java)
     }
 
-    override fun parseJsonMap(
+    override fun parseJsonMapI18nInfo(
         userId: String,
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
@@ -109,7 +109,7 @@ abstract class StoreI18nMessageServiceImpl : StoreI18nMessageService {
         return jsonMap
     }
 
-    override fun parseErrorCode(
+    override fun parseErrorCodeI18nInfo(
         userId: String,
         projectCode: String,
         errorCodes: Set<Int>,

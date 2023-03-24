@@ -40,7 +40,7 @@ interface StoreI18nMessageService {
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
-    fun parseJsonMap(
+    fun parseJsonMapI18nInfo(
         userId: String,
         projectCode: String,
         jsonMap: MutableMap<String, Any>,
@@ -59,12 +59,23 @@ interface StoreI18nMessageService {
      * @param repositoryHashId 代码库哈希ID
      * @return 替换成蓝盾默认语言对应的值的map集合
      */
-    fun parseErrorCode(
+    fun parseErrorCodeI18nInfo(
         userId: String,
         projectCode: String,
         errorCodes: Set<Int>,
         fileDir: String,
         keyPrefix: String? = null,
         repositoryHashId: String? = null
+    )
+
+    /**
+     * 解析json字符串，把json字符串中的国际化字段进行国际化翻译
+     * @param jsonStr json字符串
+     * @param keyPrefix key的前缀
+     * @return 翻译后的json字符串
+     */
+    fun parseJsonStrI18nInfo(
+        jsonStr: String,
+        keyPrefix: String
     )
 }

@@ -533,21 +533,7 @@ abstract class AtomServiceImpl @Autowired constructor() : AtomService {
             } else {
                 val atomClassify = classifyService.getClassify(pipelineAtomRecord.classifyId).data
                 val versionList = getPipelineAtomVersions(projectCode, atomCode).data
-                val atomLabelList = mutableListOf<Label>()
-                // 查询插件标签信息
-                val atomLabelRecords = atomLabelRelDao.getLabelsByAtomIds(dslContext, setOf(pipelineAtomRecord.id))
-                atomLabelRecords?.forEach {
-                    atomLabelList.add(
-                        Label(
-                            it[KEY_LABEL_ID] as String,
-                            it[KEY_LABEL_CODE] as String,
-                            it[KEY_LABEL_NAME] as String,
-                            StoreTypeEnum.getStoreType((it[KEY_LABEL_TYPE] as Byte).toInt()),
-                            (it[KEY_CREATE_TIME] as LocalDateTime).timestampmilli(),
-                            (it[KEY_UPDATE_TIME] as LocalDateTime).timestampmilli()
-                        )
-                    )
-                }
+                val atomLabelList = atomLabelService.getLabelsByAtomId(pipelineAtomRecord.id)
                 val atomFeature = atomFeatureDao.getAtomFeature(dslContext, atomCode)
                 PipelineAtom(
                     id = pipelineAtomRecord.id,
