@@ -1,5 +1,6 @@
 <template>
     <permission-component
+        class="pipeline-list-auth"
         :resource-type="resourceType"
         :resource-code="resourceCode"
         :project-code="projectCode"
@@ -9,10 +10,7 @@
 </template>
 
 <script>
-    import {
-        PermissionComponent
-    } from 'bk-permission'
-    import pipelineOperateMixin from '@/mixins/pipeline-operate-mixin'
+    import { PermissionComponent } from 'bk-permission'
 
     export default {
         name: 'auth-tab',
@@ -22,7 +20,7 @@
         mixins: [pipelineOperateMixin],
         data () {
             return {
-                resourceType: 'pipeline_group'
+                resourceType: 'pipeline_group',
             }
         },
         computed: {
@@ -31,10 +29,7 @@
             },
             resourceCode () {
                 return this.$route.params.id
-            },
-            projectName () {
-                return this.curProject.projectName
             }
-        }
+        },
     }
 </script>

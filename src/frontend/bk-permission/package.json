@@ -6,7 +6,12 @@
   "scripts": {
     "dev": "bk-cli-service-webpack dev",
     "build": "bk-cli-service-webpack build",
-    "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix"
+    "lint:style": "stylelint **/*.{html,vue,css,sass,scss,less} --fix",
+    "public": "bk-cli-service-webpack build",
+    "public:dev": "bk-cli-service-webpack build",
+    "public:test": "bk-cli-service-webpack build",
+    "public:master": "bk-cli-service-webpack build",
+    "public:external": "bk-cli-service-webpack build"
   },
   "keywords": [
     "bk-ci",

@@ -9,6 +9,7 @@ module.exports = {
   open: false,
   replaceStatic: false,
   typescript: true,
+  parseNodeModules: false,
   resource: {
     main: {
       entry: './src/main',
