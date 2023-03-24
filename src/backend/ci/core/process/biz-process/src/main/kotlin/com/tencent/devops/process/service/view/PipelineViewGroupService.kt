@@ -40,6 +40,7 @@ import com.tencent.devops.common.client.ClientTokenService
 import com.tencent.devops.common.pipeline.enums.ChannelCode
 import com.tencent.devops.common.redis.RedisOperation
 import com.tencent.devops.common.service.utils.LogUtils
+import com.tencent.devops.common.service.utils.MessageCodeUtil
 import com.tencent.devops.common.util.PinyinUtil
 import com.tencent.devops.model.process.tables.records.TPipelineInfoRecord
 import com.tencent.devops.model.process.tables.records.TPipelineViewRecord
@@ -494,7 +495,7 @@ class PipelineViewGroupService @Autowired constructor(
         projectViewList.add(
             PipelineViewDict.ViewInfo(
                 viewId = PIPELINE_VIEW_UNCLASSIFIED,
-                viewName = "未分组",
+                viewName = ungroupedName(),
                 pipelineList = pipelineInfoMap.values
                     .filterNot { classifiedPipelineIds.contains(it.pipelineId) }
                     .map {
@@ -658,7 +659,7 @@ class PipelineViewGroupService @Autowired constructor(
                 0, PipelineNewViewSummary(
                     id = PIPELINE_VIEW_UNCLASSIFIED,
                     projectId = projectId,
-                    name = "未分组",
+                    name = ungroupedName(),
                     projected = true,
                     createTime = LocalDateTime.now().timestamp(),
                     updateTime = LocalDateTime.now().timestamp(),
@@ -755,6 +756,8 @@ class PipelineViewGroupService @Autowired constructor(
             }
         }
     }
+
+    private fun ungroupedName() = MessageCodeUtil.getMessageByLocale("未分组", "Ungrouped")
 
     companion object {
         private val logger = LoggerFactory.getLogger(PipelineViewGroupService::class.java)
