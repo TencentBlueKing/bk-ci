@@ -48,7 +48,7 @@
                                 class="bk-selector-create-item"
                                 @click.stop.prevent="handleApplyProject"
                             >
-                                <logo name="appyl" size="14" />
+                                <logo name="apply" size="14" />
                                 <span class="text">{{ $t('applyProject') }}</span>
                             </span>
                             <span class="extension-line" />

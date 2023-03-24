@@ -88,25 +88,25 @@
                                     class="mr5"
                                     size="small"
                                     theme="primary"
-                                    :disabled="[1, 3].includes(row.approvalStatus)"
+                                    :disabled="[1, 3, 4].includes(row.approvalStatus)"
                                 />
                                 <span class="mr5">
                                     {{ row.enabled ? approvalStatusMap[row.approvalStatus] : $t('已停用') }}
                                 </span>
-                                <icon
+                                <div
                                     v-bk-tooltips="{ content: $t('新建项目申请已拒绝') }"
                                     v-if="row.approvalStatus === 3"
                                     class="devops-icon status-icon"
-                                    :size="16"
-                                    name="warning-circle-small"
-                                />
-                                <icon
+                                >
+                                    <img src="../assets/scss/logo/warning-circle-small.svg" alt="">
+                                </div>
+                                <div
                                     v-bk-tooltips="{ content: $t('项目信息修改申请审批中') }"
                                     v-if="row.approvalStatus === 4"
                                     class="devops-icon status-icon"
-                                    :size="16"
-                                    name="wait-small"
-                                />
+                                >
+                                    <img src="../assets/scss/logo/wait-small.svg" alt="">
+                                </div>
                             </span>
                         </template>
                     </bk-table-column>
@@ -117,12 +117,14 @@
                             <bk-button
                                 class="mr5"
                                 text
+                                :disabled="row.approvalStatus === 1"
                                 @click="handleGoUserGroup(row)"
                             >
                                 {{ $t('userGroupManage') }}
                             </bk-button>
                             <bk-button
                                 text
+                                :disabled="row.approvalStatus === 1"
                                 @click="handleGoExtend(row)"
                             >
                                 {{ $t('extendManage') }}
@@ -285,6 +287,7 @@
                 }
             },
             handleChangeEnabled (row) {
+                if ([1, 3, 4].includes(row.approvalStatus)) return
                 const { englishName: projectCode, enabled, projectName, routerTag } = row
                 this.toggleProjectEnable({
                     projectCode: projectCode,
@@ -514,6 +517,7 @@
         cursor: pointer;
     }
     .status-icon {
+        width: 16px;
         margin-right: 5px;
     }
 </style>
