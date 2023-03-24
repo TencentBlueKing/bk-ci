@@ -17,6 +17,6 @@
 //     exports[key] = Vue[key]
 // });
 
-export * from '@vue/composition-api';
+export * from 'vue';
 
-export const version = 2;
+export const version = 3;
