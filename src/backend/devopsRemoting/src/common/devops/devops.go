@@ -1,4 +1,4 @@
-package types
+package devops
 
 type DevopsHttpResult struct {
 	Data    any    `json:"data"`

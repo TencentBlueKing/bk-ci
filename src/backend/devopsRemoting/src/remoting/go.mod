@@ -17,7 +17,7 @@ require (
 	golang.org/x/net v0.0.0-20220722155237-a158d28d115b
 	golang.org/x/sync v0.1.0
 	gopkg.in/yaml.v3 v3.0.1
-	remotingapi v0.0.0-00010101000000-000000000000
+	remoting/api v0.0.0-00010101000000-000000000000
 )
 
 require (
@@ -49,4 +49,4 @@ require (
 
 replace common => ../common
 
-replace remotingapi => ../remoting-api
+replace remoting/api => ../remoting-api

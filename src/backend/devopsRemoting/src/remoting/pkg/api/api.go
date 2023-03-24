@@ -9,7 +9,7 @@ import (
 	"net/http/httputil"
 	"os"
 	"reflect"
-	apitypes "remotingapi/pkg/types"
+	"common/devops"
 	"remoting/pkg/config"
 	"remoting/pkg/constant"
 	"runtime/debug"
@@ -79,7 +79,7 @@ func okFail(c *gin.Context, code int, err error) {
 	if code == http.StatusInternalServerError {
 		logs.WithField("uri", c.Request.RequestURI).WithError(err).Error("request error.")
 	}
-	c.JSON(http.StatusOK, &apitypes.DevopsHttpResult{
+	c.JSON(http.StatusOK, &devops.DevopsHttpResult{
 		Data:    nil,
 		Status:  code,
 		Message: err.Error(),
@@ -87,7 +87,7 @@ func okFail(c *gin.Context, code int, err error) {
 }
 
 func ok(c *gin.Context, data any) {
-	c.JSON(http.StatusOK, &apitypes.DevopsHttpResult{
+	c.JSON(http.StatusOK, &devops.DevopsHttpResult{
 		Data:   data,
 		Status: 0,
 	})
@@ -125,7 +125,7 @@ func ginRecovery(stack bool) gin.HandlerFunc {
 					logs.Error(fmt.Sprintf("[Recovery from panic] %v %s. ", err, string(httpRequest)))
 				}
 				c.AbortWithStatus(http.StatusInternalServerError)
-				c.JSON(http.StatusInternalServerError, &apitypes.DevopsHttpResult{
+				c.JSON(http.StatusInternalServerError, &devops.DevopsHttpResult{
 					Data:    nil,
 					Status:  http.StatusInternalServerError,
 					Message: "devops remoting server err",

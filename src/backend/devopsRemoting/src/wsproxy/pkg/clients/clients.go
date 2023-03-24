@@ -1,7 +1,7 @@
 package clients
 
 import (
-	apitypes "remotingapi/pkg/types"
+	"common/devops"
 	"encoding/json"
 
 	"github.com/pkg/errors"
@@ -16,7 +16,7 @@ func init() {
 }
 
 func IntoDevopsResult[T any](body []byte) (*T, error) {
-	res := &apitypes.DevopsHttpResult{}
+	res := &devops.DevopsHttpResult{}
 	err := json.Unmarshal(body, res)
 	if err != nil {
 		return nil, errors.Wrap(err, "parse devops result error")

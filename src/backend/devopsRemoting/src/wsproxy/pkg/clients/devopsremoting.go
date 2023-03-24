@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	apitypes "remotingapi/pkg/types"
+	apitypes "remoting/api"
 	"wsproxy/pkg/constant"
 
 	"github.com/pkg/errors"

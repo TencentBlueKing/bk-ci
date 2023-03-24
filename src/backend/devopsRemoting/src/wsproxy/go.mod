@@ -15,7 +15,7 @@ require (
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
 	k8s.io/client-go v0.25.0
-	remotingapi v0.0.0-00010101000000-000000000000
+	remoting/api v0.0.0-00010101000000-000000000000
 	sigs.k8s.io/controller-runtime v0.13.1
 )
 
@@ -83,4 +83,4 @@ require (
 
 replace common => ../common
 
-replace remotingapi => ../remoting-api
+replace remoting/api => ../remoting-api

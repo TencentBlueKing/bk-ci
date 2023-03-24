@@ -11,7 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
-	apitypes "remotingapi/pkg/types"
+	apitypes "remoting/api"
 	"remoting/pkg/config"
 	"remoting/pkg/constant"
 	"remoting/pkg/modules/user"

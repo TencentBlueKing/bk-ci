@@ -7,6 +7,7 @@
         { "path": "src/ide" },
         { "path": "src/wsproxy" },
         { "path": "src/registry-facade" },
+        { "path": "src/registry-facade-api" },
     ],
     "settings": {
         "[json]": {
