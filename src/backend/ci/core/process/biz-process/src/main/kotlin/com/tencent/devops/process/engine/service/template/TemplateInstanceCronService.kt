@@ -87,7 +87,11 @@ class TemplateInstanceCronService @Autowired constructor(
         val profile = SpringContextUtil.getBean(Profile::class.java)
         val activeProfiles = profile.getActiveProfiles()
         val key = if (activeProfiles.size > 1) {
-            "${activeProfiles[0]}:$LOCK_KEY"
+            val sb = StringBuilder()
+            activeProfiles.forEach { activeProfile ->
+                sb.append("$activeProfile:")
+            }
+            sb.append(LOCK_KEY)
         } else {
             LOCK_KEY
         }
