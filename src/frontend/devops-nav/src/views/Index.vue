@@ -54,7 +54,6 @@
             </main>
         </template>
 
-        <ask-permission-dialog />
         <apply-project-dialog ref="applyProjectDialog" :project-code="curProjectCode" />
     </div>
 </template>
@@ -62,7 +61,6 @@
 <script lang="ts">
     import Vue from 'vue'
     import Header from '../components/Header/index.vue'
-    import AskPermissionDialog from '../components/AskPermissionDialog/AskPermissionDialog.vue'
     import ApplyProjectDialog from '../components/ApplyProjectDialog/index.vue'
     import { Component } from 'vue-property-decorator'
     import { State, Getter } from 'vuex-class'
@@ -71,7 +69,6 @@
     @Component({
         components: {
             Header,
-            AskPermissionDialog,
             ApplyProjectDialog
         }
     })

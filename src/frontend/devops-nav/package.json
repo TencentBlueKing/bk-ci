@@ -35,7 +35,7 @@
     "@typescript-eslint/eslint-plugin": "^1.9.0",
     "@typescript-eslint/parser": "^1.9.0",
     "@vue/babel-preset-jsx": "^1.2.4",
-    "@vue/composition-api": "1.7.1",
+    "@vue/composition-api": "^1.2.4",
     "add-asset-html-webpack-plugin": "^5.0.2",
     "babel-helper-vue-jsx-merge-props": "^2.0.3",
     "babel-loader": "^8.2.2",
